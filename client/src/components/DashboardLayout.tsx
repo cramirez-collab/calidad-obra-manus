@@ -48,7 +48,9 @@ import {
   CheckCircle2,
   AlertTriangle,
   FileImage,
-  FolderKanban
+  FolderKanban,
+  ListOrdered,
+  FileSpreadsheet
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -94,6 +96,8 @@ const getMenuItems = (role: string) => {
     { icon: Users, label: "Usuarios", path: "/usuarios", shortLabel: "" },
     { icon: FileImage, label: "Reportes", path: "/reportes", shortLabel: "" },
     { icon: History, label: "Bitácora", path: "/bitacora", shortLabel: "" },
+    { icon: ListOrdered, label: "Secuencias", path: "https://www.appsheet.com/start/bad5370e-61b3-4a42-8347-643e96d15f32?platform=desktop#appName=Secuencias-226234876&vss=H4sIAAAAAAAAA6WQwU7EIBCG32XOYADb7ZaretgYPejGg-KBFpoQW2iAqpuGdxd0jR68qMf5Z74vf2aFZ6NfbqPsn4A_rF_TpT4Ah1XA_jBrAVzAmbPRu1EAEnAtp2O46BCNs9IbJyBBekSfjqgD8PX3Cv7_FgiM0jaawWhffIXOniOb14UswTcOEoJpibIb9Xv5wh2Bn64R3DgXczo4P-XpXEaZuWnOESOsxpRhQveM8YpyUp1UrKkZq-9Lt7CzF8rEK6eyNvpFI4he2iD7ot-prOi3XUNOhy1WVLa4aliLO8IoZq3qN5SQtt_UkFLuPLh-CVrd5Zf98VWlzussrfooNMgx6PQGxeoKAhkCAAA=&view=Cuestionario", shortLabel: "", external: true },
+    { icon: FileSpreadsheet, label: "Visor", path: "https://docs.google.com/spreadsheets/d/1QhfpVCXE2SwpTazhH96wrc2Q0HIFMS3SpO6GXvS2DJA/edit?gid=464225867#gid=464225867", shortLabel: "", external: true },
   ];
 
   const configItems = [
@@ -300,7 +304,11 @@ function DashboardLayoutContent({
                 <button
                   key={item.path}
                   onClick={() => {
-                    setLocation(item.path);
+                    if ((item as any).external) {
+                      window.open(item.path, '_blank');
+                    } else {
+                      setLocation(item.path);
+                    }
                     setMobileMenuOpen(false);
                   }}
                   className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-colors ${
@@ -381,7 +389,13 @@ function DashboardLayoutContent({
                       <TooltipTrigger asChild>
                         <SidebarMenuButton
                           isActive={isActive}
-                          onClick={() => setLocation(item.path)}
+                          onClick={() => {
+                            if ((item as any).external) {
+                              window.open(item.path, '_blank');
+                            } else {
+                              setLocation(item.path);
+                            }
+                          }}
                           tooltip={item.label}
                           className={`h-10 transition-all font-normal`}
                         >

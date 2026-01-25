@@ -443,3 +443,9 @@
 - [x] Restringir formulario de alta de usuarios a Admin/Superadmin
 - [x] Agregar campo de contraseña para nuevos usuarios
 - [x] Validar permisos en backend
+
+
+## Enlace Secuencias y Visor (Enero 2026)
+- [x] Agregar enlace "Secuencias" al menú lateral
+- [x] Agregar enlace "Visor" al menú lateral
+- [x] Abrir URLs externas en nueva pestaña
