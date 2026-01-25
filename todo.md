@@ -430,11 +430,14 @@
 ## URGENTE: Escáner QR y Usuarios (Enero 2026)
 
 ### Escáner QR - MANDATORIO
-- [x] Corregir lectura de códigos QR con cámara (html5-qrcode)
-- [x] Implementar librería de escaneo más robusta
+- [x] Corregir lectura de códigos QR con cámara (@zxing/browser)
+- [x] Implementar librería de escaneo más robusta y estable
 - [x] Optimizar para dispositivos móviles
 - [x] Manejar errores de permisos correctamente
 - [x] Fallback a cámara frontal si trasera no disponible
+- [x] Escaneo continuo automático
+- [x] Navegación directa al ítem al detectar QR
+- [x] Marco visual de escaneo con animación
 
 ### Alta de Usuarios - Solo Admin/Superadmin
 - [x] Restringir formulario de alta de usuarios a Admin/Superadmin
