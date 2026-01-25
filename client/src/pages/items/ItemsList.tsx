@@ -54,6 +54,7 @@ export default function ItemsList() {
     empresaId: "",
     unidadId: "",
     especialidadId: "",
+    atributoId: "",
     status: "",
     busqueda: "",
   });
@@ -61,7 +62,16 @@ export default function ItemsList() {
 
   const { data: empresas } = trpc.empresas.list.useQuery();
   const { data: unidades } = trpc.unidades.list.useQuery();
-  const { data: especialidades } = trpc.especialidades.list.useQuery();
+  const { data: especialidades } = trpc.especialidades.listConAtributos.useQuery();
+  
+  // Filtrar atributos según especialidad seleccionada
+  const atributosFiltrados = useMemo(() => {
+    if (!filters.especialidadId || filters.especialidadId === "all") {
+      return especialidades?.flatMap((e: any) => e.atributos || []) || [];
+    }
+    const esp = especialidades?.find((e: any) => e.id === parseInt(filters.especialidadId));
+    return (esp as any)?.atributos || [];
+  }, [filters.especialidadId, especialidades]);
 
   const queryFilters = useMemo(() => ({
     empresaId: filters.empresaId ? parseInt(filters.empresaId) : undefined,
@@ -77,13 +87,13 @@ export default function ItemsList() {
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return "-";
-    return new Date(date).toLocaleDateString("es-MX", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = String(d.getFullYear()).slice(-2);
+    const hours = String(d.getHours()).padStart(2, '0');
+    const mins = String(d.getMinutes()).padStart(2, '0');
+    return `${day}-${month}-${year} ${hours}:${mins}`;
   };
 
   const getEmpresaNombre = (id: number) => empresas?.find(e => e.id === id)?.nombre || "-";
@@ -95,6 +105,7 @@ export default function ItemsList() {
       empresaId: "",
       unidadId: "",
       especialidadId: "",
+      atributoId: "",
       status: "",
       busqueda: "",
     });
@@ -215,7 +226,7 @@ export default function ItemsList() {
 
                   <Select
                     value={filters.especialidadId}
-                    onValueChange={(value) => setFilters({ ...filters, especialidadId: value })}
+                    onValueChange={(value) => setFilters({ ...filters, especialidadId: value, atributoId: "" })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Especialidad" />
@@ -236,8 +247,24 @@ export default function ItemsList() {
                     </SelectContent>
                   </Select>
 
+                  <Select
+                    value={filters.atributoId}
+                    onValueChange={(value) => setFilters({ ...filters, atributoId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Atributo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los atributos</SelectItem>
+                      {atributosFiltrados.map((attr: any) => (
+                        <SelectItem key={attr.id} value={attr.id.toString()}>
+                          {attr.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {hasActiveFilters && (
-                    <Button variant="ghost" onClick={clearFilters} className="lg:col-start-4">
+                    <Button variant="ghost" onClick={clearFilters} className="col-span-full md:col-span-1">
                       Limpiar filtros
                     </Button>
                   )}

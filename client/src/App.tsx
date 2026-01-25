@@ -13,10 +13,12 @@ import Usuarios from "./pages/Usuarios";
 import Estadisticas from "./pages/Estadisticas";
 import Seguimiento from "./pages/Seguimiento";
 import KPIs from "./pages/KPIs";
+import GenerarQR from "./pages/GenerarQR";
 import OfflineIndicator from "./components/OfflineIndicator";
 
 // Catálogos
 import Empresas from "./pages/catalogos/Empresas";
+import EmpresaDetalle from "./pages/catalogos/EmpresaDetalle";
 import Unidades from "./pages/catalogos/Unidades";
 import Especialidades from "./pages/catalogos/Especialidades";
 import Atributos from "./pages/catalogos/Atributos";
@@ -44,6 +46,7 @@ function Router() {
       
       {/* Catálogos */}
       <Route path="/empresas" component={Empresas} />
+      <Route path="/empresas/:id" component={EmpresaDetalle} />
       <Route path="/unidades" component={Unidades} />
       <Route path="/especialidades" component={Especialidades} />
       <Route path="/atributos" component={Atributos} />
@@ -62,6 +65,7 @@ function Router() {
       
       {/* Seguimiento público (QR) */}
       <Route path="/seguimiento/:codigo" component={Seguimiento} />
+      <Route path="/generar-qr" component={GenerarQR} />
       
       {/* 404 */}
       <Route path="/404" component={NotFound} />

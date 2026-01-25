@@ -66,6 +66,7 @@ const getMenuItems = (role: string) => {
   const adminItems = [
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
     { icon: TrendingUp, label: "KPIs", path: "/kpis" },
+    { icon: QrCode, label: "Generar QR", path: "/generar-qr" },
     { icon: Building2, label: "Empresas", path: "/empresas" },
     { icon: MapPin, label: "Unidades", path: "/unidades" },
     { icon: Wrench, label: "Especialidades", path: "/especialidades" },

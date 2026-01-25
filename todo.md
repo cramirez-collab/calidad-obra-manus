@@ -180,3 +180,25 @@
 - [x] Supervisores → Ítems aprobados/rechazados
 - [x] Jefes de Residente → Ítems revisados
 - [x] Cada entidad con sus estadísticas
+
+
+## Mejoras de UX y QR (Séptima Iteración)
+
+### Formato de Fechas
+- [x] Cambiar formato a dd-mm-aa en toda la aplicación
+- [x] Aplicar en listas, detalles y reportes
+
+### QR Mejorado
+- [x] QR con código OQC visible impreso debajo
+- [x] Generador de QR por rangos (ej: OQC-00001 a OQC-00100)
+- [x] Vista de impresión optimizada para pegar en sitio
+- [x] QR escaneable que lleva directo al ítem
+
+### Vistas de Detalle Enriquecidas
+- [x] Detalle de empresa con usuarios, unidades, ítems y gráficos
+- [x] Detalle de residente con especialidades, atributos y estadísticas
+- [x] Detalle de unidad con empresas y especialidades
+
+### Filtros Inteligentes
+- [x] Al seleccionar especialidad, mostrar solo sus atributos
+- [x] Filtros en cascada (empresa → unidad → especialidad → atributo)
