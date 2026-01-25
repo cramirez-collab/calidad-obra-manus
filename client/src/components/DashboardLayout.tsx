@@ -43,6 +43,8 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 import NotificationCenter from "./NotificationCenter";
+import OnlineUsers from "./OnlineUsers";
+import { useRealTimeItems } from "@/hooks/useRealTimeData";
 
 // Definición de menú según rol
 const getMenuItems = (role: string) => {
@@ -173,6 +175,9 @@ function DashboardLayoutContent({
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
+  
+  // Activar sincronización en tiempo real
+  useRealTimeItems();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
@@ -326,6 +331,7 @@ function DashboardLayoutContent({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <OnlineUsers />
             <NotificationCenter />
           </div>
         </div>

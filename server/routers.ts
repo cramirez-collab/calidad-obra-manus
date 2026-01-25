@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import { socketEvents } from "./socket";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
@@ -329,6 +330,9 @@ export const appRouter = router({
           comentario: 'Ítem creado',
         });
         
+        // Emitir evento de tiempo real
+        socketEvents.itemCreated(result);
+        
         // Notificar a jefes de residente sobre nuevo ítem pendiente
         await db.notificarJefesResidente(
           result.id,
@@ -404,6 +408,9 @@ export const appRouter = router({
           comentario: input.comentario || 'Foto después agregada',
         });
         
+        // Emitir evento de tiempo real
+        socketEvents.itemPhotoUploaded({ ...item, status: 'pendiente_aprobacion' });
+        
         // Notificar a supervisores sobre ítem pendiente de aprobación
         await db.notificarSupervisores(
           input.itemId,
@@ -457,6 +464,9 @@ export const appRouter = router({
           comentario: input.comentario || 'Ítem aprobado',
         });
         
+        // Emitir evento de tiempo real
+        socketEvents.itemApproved({ ...item, status: 'aprobado' });
+        
         // Notificar al residente que su ítem fue aprobado
         await db.createNotificacion({
           usuarioId: item.residenteId,
@@ -504,6 +514,9 @@ export const appRouter = router({
           statusNuevo: 'rechazado',
           comentario: input.comentario,
         });
+        
+        // Emitir evento de tiempo real
+        socketEvents.itemRejected({ ...item, status: 'rechazado' });
         
         // Notificar al residente que su ítem fue rechazado
         await db.createNotificacion({
