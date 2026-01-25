@@ -167,6 +167,7 @@ export const appRouter = router({
     
     create: adminProcedure
       .input(z.object({
+        proyectoId: z.number().optional(),
         nombre: z.string().min(1),
         rfc: z.string().optional(),
         contacto: z.string().optional(),
@@ -181,6 +182,7 @@ export const appRouter = router({
     update: adminProcedure
       .input(z.object({
         id: z.number(),
+        proyectoId: z.number().optional(),
         nombre: z.string().min(1).optional(),
         rfc: z.string().optional(),
         contacto: z.string().optional(),
@@ -227,6 +229,8 @@ export const appRouter = router({
     
     create: adminProcedure
       .input(z.object({
+        proyectoId: z.number().optional(),
+        empresaId: z.number().optional(),
         nombre: z.string().min(1),
         codigo: z.string().optional(),
         descripcion: z.string().optional(),
@@ -240,6 +244,8 @@ export const appRouter = router({
     update: adminProcedure
       .input(z.object({
         id: z.number(),
+        proyectoId: z.number().optional(),
+        empresaId: z.number().optional(),
         nombre: z.string().min(1).optional(),
         codigo: z.string().optional(),
         descripcion: z.string().optional(),
@@ -285,6 +291,7 @@ export const appRouter = router({
     
     create: adminProcedure
       .input(z.object({
+        proyectoId: z.number().optional(),
         nombre: z.string().min(1),
         codigo: z.string().optional(),
         descripcion: z.string().optional(),
@@ -298,6 +305,7 @@ export const appRouter = router({
     update: adminProcedure
       .input(z.object({
         id: z.number(),
+        proyectoId: z.number().optional(),
         nombre: z.string().min(1).optional(),
         codigo: z.string().optional(),
         descripcion: z.string().optional(),
@@ -410,6 +418,7 @@ export const appRouter = router({
     
     create: protectedProcedure
       .input(z.object({
+        proyectoId: z.number().optional(),
         empresaId: z.number(),
         unidadId: z.number(),
         especialidadId: z.number(),
@@ -948,6 +957,7 @@ export const appRouter = router({
     // Obtener items para reporte fotográfico
     itemsParaReporte: protectedProcedure
       .input(z.object({
+        proyectoId: z.number().optional(),
         empresaId: z.number().optional(),
         unidadId: z.number().optional(),
         especialidadId: z.number().optional(),
@@ -959,6 +969,147 @@ export const appRouter = router({
       }).optional())
       .query(async ({ input }) => {
         return await db.getItemsParaReporte(input || {});
+      }),
+  }),
+
+  // ==================== PROYECTOS ====================
+  proyectos: router({
+    // Listar todos los proyectos
+    list: protectedProcedure.query(async () => {
+      return await db.getAllProyectos();
+    }),
+    
+    // Listar con estadísticas
+    listConEstadisticas: protectedProcedure.query(async () => {
+      return await db.getAllProyectosConEstadisticas();
+    }),
+    
+    // Obtener proyecto por ID
+    get: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getProyectoById(input.id);
+      }),
+    
+    // Obtener proyecto con estadísticas completas
+    getConEstadisticas: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getProyectoConEstadisticas(input.id);
+      }),
+    
+    // Crear proyecto
+    create: adminProcedure
+      .input(z.object({
+        nombre: z.string().min(1),
+        nombreReporte: z.string().optional(),
+        codigo: z.string().optional(),
+        descripcion: z.string().optional(),
+        logoUrl: z.string().optional(),
+        direccion: z.string().optional(),
+        cliente: z.string().optional(),
+        fechaInicio: z.date().optional(),
+        fechaFin: z.date().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createProyecto(input);
+        return { id, success: true };
+      }),
+    
+    // Actualizar proyecto
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        nombre: z.string().min(1).optional(),
+        nombreReporte: z.string().optional(),
+        codigo: z.string().optional(),
+        descripcion: z.string().optional(),
+        logoUrl: z.string().optional(),
+        direccion: z.string().optional(),
+        cliente: z.string().optional(),
+        fechaInicio: z.date().optional(),
+        fechaFin: z.date().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateProyecto(id, data);
+        return { success: true };
+      }),
+    
+    // Eliminar proyecto (soft delete)
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteProyecto(input.id);
+        return { success: true };
+      }),
+    
+    // Obtener usuarios del proyecto
+    usuarios: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getUsuariosByProyecto(input.proyectoId);
+      }),
+    
+    // Obtener proyectos del usuario actual
+    misProyectos: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getProyectosByUsuario(ctx.user.id);
+    }),
+    
+    // Asignar usuario a proyecto
+    asignarUsuario: adminProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        usuarioId: z.number(),
+        rolEnProyecto: z.enum(['admin', 'supervisor', 'jefe_residente', 'residente']),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.asignarUsuarioAProyecto(input);
+        return { id, success: true };
+      }),
+    
+    // Remover usuario de proyecto
+    removerUsuario: adminProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        usuarioId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.removerUsuarioDeProyecto(input.proyectoId, input.usuarioId);
+        return { success: true };
+      }),
+    
+    // Actualizar rol de usuario en proyecto
+    actualizarRolUsuario: adminProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        usuarioId: z.number(),
+        rolEnProyecto: z.enum(['admin', 'supervisor', 'jefe_residente', 'residente']),
+      }))
+      .mutation(async ({ input }) => {
+        await db.actualizarRolEnProyecto(input.proyectoId, input.usuarioId, input.rolEnProyecto);
+        return { success: true };
+      }),
+    
+    // Obtener empresas del proyecto
+    empresas: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getEmpresasByProyecto(input.proyectoId);
+      }),
+    
+    // Obtener unidades del proyecto
+    unidades: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getUnidadesByProyecto(input.proyectoId);
+      }),
+    
+    // Obtener especialidades del proyecto
+    especialidades: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getEspecialidadesByProyecto(input.proyectoId);
       }),
   }),
 });

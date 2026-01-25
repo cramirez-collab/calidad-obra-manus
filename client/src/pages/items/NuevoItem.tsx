@@ -32,6 +32,7 @@ export default function NuevoItem() {
   const [, setLocation] = useLocation();
   const [step, setStep] = useState<Step>("info");
   const [formData, setFormData] = useState({
+    proyectoId: "",
     empresaId: "",
     unidadId: "",
     especialidadId: "",
@@ -49,10 +50,22 @@ export default function NuevoItem() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: empresas } = trpc.empresas.list.useQuery();
-  const { data: unidades } = trpc.unidades.list.useQuery();
-  const { data: especialidades } = trpc.especialidades.list.useQuery();
+  const { data: proyectos } = trpc.proyectos.list.useQuery();
+  const { data: allEmpresas } = trpc.empresas.list.useQuery();
+  const { data: allUnidades } = trpc.unidades.list.useQuery();
+  const { data: allEspecialidades } = trpc.especialidades.list.useQuery();
   const { data: atributos } = trpc.atributos.list.useQuery();
+  
+  // Filtrar por proyecto seleccionado
+  const empresas = formData.proyectoId 
+    ? allEmpresas?.filter(e => e.proyectoId === parseInt(formData.proyectoId))
+    : allEmpresas;
+  const unidades = formData.proyectoId
+    ? allUnidades?.filter(u => u.proyectoId === parseInt(formData.proyectoId))
+    : allUnidades;
+  const especialidades = formData.proyectoId
+    ? allEspecialidades?.filter(e => e.proyectoId === parseInt(formData.proyectoId))
+    : allEspecialidades;
   
   // Defectos filtrados por especialidad seleccionada
   const { data: defectos } = trpc.defectos.byEspecialidad.useQuery(
@@ -93,7 +106,7 @@ export default function NuevoItem() {
 
   const validateStep = (currentStep: Step): boolean => {
     if (currentStep === "info") {
-      if (!formData.empresaId || !formData.unidadId || !formData.especialidadId || !formData.titulo) {
+      if (!formData.proyectoId || !formData.empresaId || !formData.unidadId || !formData.especialidadId || !formData.titulo) {
         toast.error("Por favor completa todos los campos requeridos");
         return false;
       }
@@ -129,6 +142,7 @@ export default function NuevoItem() {
     try {
       // Crear el ítem
       const result = await createItemMutation.mutateAsync({
+        proyectoId: parseInt(formData.proyectoId),
         empresaId: parseInt(formData.empresaId),
         unidadId: parseInt(formData.unidadId),
         especialidadId: parseInt(formData.especialidadId),
@@ -200,6 +214,33 @@ export default function NuevoItem() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Selector de Proyecto */}
+              <div className="grid gap-2">
+                <Label>Proyecto *</Label>
+                <Select
+                  value={formData.proyectoId}
+                  onValueChange={(value) => setFormData({ 
+                    ...formData, 
+                    proyectoId: value,
+                    empresaId: "",
+                    unidadId: "",
+                    especialidadId: "",
+                    defectoId: ""
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar proyecto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {proyectos?.map((proyecto) => (
+                      <SelectItem key={proyecto.id} value={proyecto.id.toString()}>
+                        {proyecto.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="grid gap-2">
                 <Label htmlFor="titulo">Título del problema *</Label>
                 <Input
@@ -210,15 +251,16 @@ export default function NuevoItem() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label>Empresa *</Label>
                   <Select
                     value={formData.empresaId}
                     onValueChange={(value) => setFormData({ ...formData, empresaId: value })}
+                    disabled={!formData.proyectoId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar empresa" />
+                      <SelectValue placeholder={formData.proyectoId ? "Seleccionar empresa" : "Selecciona proyecto primero"} />
                     </SelectTrigger>
                     <SelectContent>
                       {empresas?.map((empresa) => (
@@ -235,9 +277,10 @@ export default function NuevoItem() {
                   <Select
                     value={formData.unidadId}
                     onValueChange={(value) => setFormData({ ...formData, unidadId: value })}
+                    disabled={!formData.proyectoId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar unidad" />
+                      <SelectValue placeholder={formData.proyectoId ? "Seleccionar unidad" : "Selecciona proyecto primero"} />
                     </SelectTrigger>
                     <SelectContent>
                       {unidades?.map((unidad) => (
@@ -250,15 +293,16 @@ export default function NuevoItem() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label>Especialidad *</Label>
                   <Select
                     value={formData.especialidadId}
                     onValueChange={(value) => setFormData({ ...formData, especialidadId: value, defectoId: "" })}
+                    disabled={!formData.proyectoId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar especialidad" />
+                      <SelectValue placeholder={formData.proyectoId ? "Seleccionar especialidad" : "Selecciona proyecto primero"} />
                     </SelectTrigger>
                     <SelectContent>
                       {especialidades?.map((esp) => (

@@ -27,10 +27,48 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /**
+ * Tabla de proyectos - entidad principal que agrupa todo
+ */
+export const proyectos = mysqlTable("proyectos", {
+  id: int("id").autoincrement().primaryKey(),
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  nombreReporte: varchar("nombreReporte", { length: 255 }), // Nombre personalizado para reportes
+  codigo: varchar("codigo", { length: 50 }),
+  descripcion: text("descripcion"),
+  logoUrl: text("logoUrl"),
+  direccion: varchar("direccion", { length: 500 }),
+  cliente: varchar("cliente", { length: 255 }),
+  fechaInicio: timestamp("fechaInicio"),
+  fechaFin: timestamp("fechaFin"),
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Proyecto = typeof proyectos.$inferSelect;
+export type InsertProyecto = typeof proyectos.$inferInsert;
+
+/**
+ * Tabla de relación proyecto-usuario
+ */
+export const proyectoUsuarios = mysqlTable("proyecto_usuarios", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  usuarioId: int("usuarioId").notNull(),
+  rolEnProyecto: mysqlEnum("rolEnProyecto", ["admin", "supervisor", "jefe_residente", "residente"]).default("residente").notNull(),
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ProyectoUsuario = typeof proyectoUsuarios.$inferSelect;
+export type InsertProyectoUsuario = typeof proyectoUsuarios.$inferInsert;
+
+/**
  * Tabla de empresas/contratistas
  */
 export const empresas = mysqlTable("empresas", {
   id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId"), // Relación con proyecto
   nombre: varchar("nombre", { length: 255 }).notNull(),
   rfc: varchar("rfc", { length: 20 }),
   contacto: varchar("contacto", { length: 255 }),
@@ -49,6 +87,8 @@ export type InsertEmpresa = typeof empresas.$inferInsert;
  */
 export const unidades = mysqlTable("unidades", {
   id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId"), // Relación con proyecto
+  empresaId: int("empresaId"), // Relación con empresa
   nombre: varchar("nombre", { length: 255 }).notNull(),
   codigo: varchar("codigo", { length: 50 }),
   descripcion: text("descripcion"),
@@ -66,6 +106,7 @@ export type InsertUnidad = typeof unidades.$inferInsert;
  */
 export const especialidades = mysqlTable("especialidades", {
   id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId"), // Relación con proyecto
   nombre: varchar("nombre", { length: 255 }).notNull(),
   codigo: varchar("codigo", { length: 50 }),
   descripcion: text("descripcion"),
@@ -104,6 +145,7 @@ export const items = mysqlTable("items", {
   qrCode: varchar("qrCode", { length: 255 }),
   
   // Relaciones
+  proyectoId: int("proyectoId"), // Relación con proyecto
   empresaId: int("empresaId").notNull(),
   unidadId: int("unidadId").notNull(),
   especialidadId: int("especialidadId").notNull(),

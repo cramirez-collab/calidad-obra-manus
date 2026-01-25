@@ -12,6 +12,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -20,7 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { Building2, Edit, Plus, Trash2 } from "lucide-react";
+import { Building2, Edit, Plus, Trash2, FolderKanban } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -31,21 +38,30 @@ type Empresa = {
   contacto?: string | null;
   telefono?: string | null;
   email?: string | null;
+  proyectoId?: number | null;
 };
 
 export default function Empresas() {
   const [isOpen, setIsOpen] = useState(false);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
+  const [selectedProyectoId, setSelectedProyectoId] = useState<string>("all");
   const [formData, setFormData] = useState({
     nombre: "",
     rfc: "",
     contacto: "",
     telefono: "",
     email: "",
+    proyectoId: "",
   });
 
   const utils = trpc.useUtils();
   const { data: empresas, isLoading } = trpc.empresas.list.useQuery();
+  const { data: proyectos } = trpc.proyectos.list.useQuery();
+
+  // Filtrar empresas por proyecto seleccionado
+  const empresasFiltradas = selectedProyectoId === "all" 
+    ? empresas 
+    : empresas?.filter(e => e.proyectoId === parseInt(selectedProyectoId));
 
   const createMutation = trpc.empresas.create.useMutation({
     onSuccess: () => {
@@ -88,10 +104,18 @@ export default function Empresas() {
         contacto: empresa.contacto || "",
         telefono: empresa.telefono || "",
         email: empresa.email || "",
+        proyectoId: empresa.proyectoId?.toString() || "",
       });
     } else {
       setEditingEmpresa(null);
-      setFormData({ nombre: "", rfc: "", contacto: "", telefono: "", email: "" });
+      setFormData({ 
+        nombre: "", 
+        rfc: "", 
+        contacto: "", 
+        telefono: "", 
+        email: "",
+        proyectoId: selectedProyectoId !== "all" ? selectedProyectoId : "",
+      });
     }
     setIsOpen(true);
   };
@@ -99,7 +123,7 @@ export default function Empresas() {
   const handleClose = () => {
     setIsOpen(false);
     setEditingEmpresa(null);
-    setFormData({ nombre: "", rfc: "", contacto: "", telefono: "", email: "" });
+    setFormData({ nombre: "", rfc: "", contacto: "", telefono: "", email: "", proyectoId: "" });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -115,6 +139,7 @@ export default function Empresas() {
       contacto: formData.contacto || undefined,
       telefono: formData.telefono || undefined,
       email: formData.email || undefined,
+      proyectoId: formData.proyectoId ? parseInt(formData.proyectoId) : undefined,
     };
 
     if (editingEmpresa) {
@@ -130,10 +155,16 @@ export default function Empresas() {
     }
   };
 
+  const getProyectoNombre = (proyectoId: number | null | undefined) => {
+    if (!proyectoId) return "-";
+    const proyecto = proyectos?.find(p => p.id === proyectoId);
+    return proyecto?.nombre || "-";
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Empresas</h1>
             <p className="text-muted-foreground">
@@ -146,11 +177,36 @@ export default function Empresas() {
           </Button>
         </div>
 
+        {/* Filtro de proyecto */}
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex items-center gap-2">
+                <FolderKanban className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Filtrar por proyecto:</span>
+              </div>
+              <Select value={selectedProyectoId} onValueChange={setSelectedProyectoId}>
+                <SelectTrigger className="w-full sm:w-[250px]">
+                  <SelectValue placeholder="Todos los proyectos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los proyectos</SelectItem>
+                  {proyectos?.map((proyecto) => (
+                    <SelectItem key={proyecto.id} value={proyecto.id.toString()}>
+                      {proyecto.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Lista de Empresas
+              Lista de Empresas ({empresasFiltradas?.length || 0})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -158,58 +214,62 @@ export default function Empresas() {
               <div className="text-center py-8 text-muted-foreground">
                 Cargando...
               </div>
-            ) : empresas?.length === 0 ? (
+            ) : empresasFiltradas?.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No hay empresas registradas
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>RFC</TableHead>
-                    <TableHead>Contacto</TableHead>
-                    <TableHead>Teléfono</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead className="w-[100px]">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {empresas?.map((empresa) => (
-                    <TableRow key={empresa.id}>
-                      <TableCell className="font-medium">{empresa.nombre}</TableCell>
-                      <TableCell>{empresa.rfc || "-"}</TableCell>
-                      <TableCell>{empresa.contacto || "-"}</TableCell>
-                      <TableCell>{empresa.telefono || "-"}</TableCell>
-                      <TableCell>{empresa.email || "-"}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpen(empresa)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(empresa.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead className="hidden sm:table-cell">Proyecto</TableHead>
+                      <TableHead className="hidden md:table-cell">RFC</TableHead>
+                      <TableHead className="hidden lg:table-cell">Contacto</TableHead>
+                      <TableHead className="hidden lg:table-cell">Teléfono</TableHead>
+                      <TableHead className="w-[100px]">Acciones</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {empresasFiltradas?.map((empresa) => (
+                      <TableRow key={empresa.id}>
+                        <TableCell className="font-medium">{empresa.nombre}</TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          {getProyectoNombre(empresa.proyectoId)}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">{empresa.rfc || "-"}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{empresa.contacto || "-"}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{empresa.telefono || "-"}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpen(empresa)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(empresa.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
 
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
                 {editingEmpresa ? "Editar Empresa" : "Nueva Empresa"}
@@ -222,6 +282,24 @@ export default function Empresas() {
             </DialogHeader>
             <form onSubmit={handleSubmit}>
               <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="proyectoId">Proyecto</Label>
+                  <Select
+                    value={formData.proyectoId}
+                    onValueChange={(value) => setFormData({ ...formData, proyectoId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar proyecto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {proyectos?.map((proyecto) => (
+                        <SelectItem key={proyecto.id} value={proyecto.id.toString()}>
+                          {proyecto.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="grid gap-2">
                   <Label htmlFor="nombre">Nombre *</Label>
                   <Input
@@ -255,7 +333,7 @@ export default function Empresas() {
                     placeholder="Nombre del contacto"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="telefono">Teléfono</Label>
                     <Input

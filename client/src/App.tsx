@@ -27,6 +27,9 @@ const Configuracion = lazy(() => import("./pages/Configuracion"));
 const Metas = lazy(() => import("./pages/Metas"));
 const OfflineIndicator = lazy(() => import("./components/OfflineIndicator"));
 
+// Proyectos
+const Proyectos = lazy(() => import("./pages/Proyectos"));
+
 // Catálogos
 const Empresas = lazy(() => import("./pages/catalogos/Empresas"));
 const EmpresaDetalle = lazy(() => import("./pages/catalogos/EmpresaDetalle"));
@@ -51,6 +54,9 @@ function Router() {
         <Route path="/" component={Bienvenida} />
         <Route path="/dashboard" component={Home} />
         <Route path="/bienvenida" component={Bienvenida} />
+        
+        {/* Proyectos */}
+        <Route path="/proyectos" component={Proyectos} />
         
         {/* Items */}
         <Route path="/items" component={ItemsList} />

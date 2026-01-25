@@ -47,7 +47,8 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  FileImage
+  FileImage,
+  FolderKanban
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -79,6 +80,7 @@ const getMenuItems = (role: string) => {
   ];
 
   const adminItems = [
+    { icon: FolderKanban, label: "Proyectos", path: "/proyectos", shortLabel: "" },
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas", shortLabel: "" },
     { icon: TrendingUp, label: "KPIs", path: "/kpis", shortLabel: "" },
     { icon: QrCode, label: "QR", path: "/generar-qr", shortLabel: "" },

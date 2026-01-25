@@ -44,11 +44,13 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ReporteFotografico() {
-  const { data: empresas } = trpc.empresas.list.useQuery();
-  const { data: unidades } = trpc.unidades.list.useQuery();
-  const { data: especialidades } = trpc.especialidades.list.useQuery();
+  const { data: proyectos } = trpc.proyectos.list.useQuery();
+  const { data: allEmpresas } = trpc.empresas.list.useQuery();
+  const { data: allUnidades } = trpc.unidades.list.useQuery();
+  const { data: allEspecialidades } = trpc.especialidades.list.useQuery();
 
   const [filters, setFilters] = useState({
+    proyectoId: "",
     empresaId: "",
     unidadId: "",
     especialidadId: "",
@@ -57,11 +59,26 @@ export default function ReporteFotografico() {
     fechaHasta: "",
   });
 
+  // Filtrar por proyecto seleccionado
+  const empresas = filters.proyectoId && filters.proyectoId !== "all"
+    ? allEmpresas?.filter(e => e.proyectoId === parseInt(filters.proyectoId))
+    : allEmpresas;
+  const unidades = filters.proyectoId && filters.proyectoId !== "all"
+    ? allUnidades?.filter(u => u.proyectoId === parseInt(filters.proyectoId))
+    : allUnidades;
+  const especialidades = filters.proyectoId && filters.proyectoId !== "all"
+    ? allEspecialidades?.filter(e => e.proyectoId === parseInt(filters.proyectoId))
+    : allEspecialidades;
+  
+  // Obtener nombre del proyecto para el reporte
+  const proyectoSeleccionado = proyectos?.find(p => p.id.toString() === filters.proyectoId);
+
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Construir filtros para la query
   const queryFilters = useMemo(() => {
     const f: any = {};
+    if (filters.proyectoId && filters.proyectoId !== "all") f.proyectoId = parseInt(filters.proyectoId);
     if (filters.empresaId && filters.empresaId !== "all") f.empresaId = parseInt(filters.empresaId);
     if (filters.unidadId && filters.unidadId !== "all") f.unidadId = parseInt(filters.unidadId);
     if (filters.especialidadId && filters.especialidadId !== "all") f.especialidadId = parseInt(filters.especialidadId);
@@ -145,7 +162,7 @@ export default function ReporteFotografico() {
 <body>
   <div class="header">
     <div>
-      <div class="title">Reporte Fotográfico</div>
+      <div class="title">Reporte Fotográfico${proyectoSeleccionado ? ` - ${proyectoSeleccionado.nombreReporte || proyectoSeleccionado.nombre}` : ''}</div>
       <div class="subtitle">ObjetivaQC - Control de Calidad de Obra</div>
       <div class="subtitle">Generado: ${formatDate(new Date())} | Total: ${items.length} ítems</div>
     </div>
@@ -322,7 +339,40 @@ export default function ReporteFotografico() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+            {/* Selector de Proyecto */}
+            <div className="mb-4 pb-4 border-b">
+              <Label className="flex items-center gap-1 mb-2">
+                <FileImage className="h-3 w-3" /> Proyecto *
+              </Label>
+              <Select
+                value={filters.proyectoId}
+                onValueChange={(value) => setFilters({ 
+                  ...filters, 
+                  proyectoId: value,
+                  empresaId: "",
+                  unidadId: "",
+                  especialidadId: ""
+                })}
+              >
+                <SelectTrigger className="w-full sm:w-[300px]">
+                  <SelectValue placeholder="Seleccionar proyecto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {proyectos?.map((p) => (
+                    <SelectItem key={p.id} value={p.id.toString()}>
+                      {p.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {proyectoSeleccionado?.nombreReporte && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Nombre en reporte: {proyectoSeleccionado.nombreReporte}
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
                   <Building2 className="h-3 w-3" /> Empresa
@@ -330,6 +380,7 @@ export default function ReporteFotografico() {
                 <Select
                   value={filters.empresaId}
                   onValueChange={(value) => setFilters({ ...filters, empresaId: value })}
+                  disabled={!filters.proyectoId}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Todas" />
@@ -352,6 +403,7 @@ export default function ReporteFotografico() {
                 <Select
                   value={filters.unidadId}
                   onValueChange={(value) => setFilters({ ...filters, unidadId: value })}
+                  disabled={!filters.proyectoId}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Todas" />
@@ -374,6 +426,7 @@ export default function ReporteFotografico() {
                 <Select
                   value={filters.especialidadId}
                   onValueChange={(value) => setFilters({ ...filters, especialidadId: value })}
+                  disabled={!filters.proyectoId}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Todas" />

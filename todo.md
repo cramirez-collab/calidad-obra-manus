@@ -333,3 +333,34 @@
 - [x] Definir especialidades estándar para construcción
 - [x] Definir atributos estándar por especialidad
 - [x] Documentar catálogo para referencia
+
+
+## Sistema Multiproyecto (Decimotercera Iteración)
+
+### Base de Datos - Proyectos
+- [x] Crear tabla de proyectos con nombre, descripción, logo, fechas
+- [x] Crear tabla de relación proyecto-usuario
+- [x] Agregar campo proyectoId a tabla de empresas
+- [x] Agregar campo proyectoId a tabla de unidades
+- [x] Agregar campo proyectoId a tabla de especialidades
+- [x] Agregar campo proyectoId a tabla de ítems
+- [ ] Migrar datos existentes al proyecto por defecto
+
+### Backend - Endpoints de Proyectos
+- [x] Router CRUD de proyectos
+- [x] Endpoint para asignar usuarios a proyectos
+- [x] Endpoint para listar usuarios por proyecto
+- [x] Filtros en cascada desde proyecto en todos los routers
+- [x] Estadísticas por proyecto
+
+### Frontend - Gestión de Proyectos
+- [x] Página de listado de proyectos
+- [x] Formulario de crear/editar proyecto
+- [x] Asignación de usuarios a proyectos
+- [x] Selector de proyecto activo en header/sidebar
+- [x] Filtros en cascada desde proyecto en todas las páginas
+
+### Reportes con Nombre de Proyecto
+- [x] Campo de nombre personalizado en proyecto
+- [x] Mostrar nombre de proyecto en reportes PDF
+- [ ] Logo del proyecto en reportes (opcional)

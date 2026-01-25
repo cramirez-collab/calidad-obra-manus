@@ -2,6 +2,8 @@ import { eq, and, gte, lte, like, desc, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users, 
+  proyectos, InsertProyecto,
+  proyectoUsuarios, InsertProyectoUsuario,
   empresas, InsertEmpresa, 
   unidades, InsertUnidad,
   especialidades, InsertEspecialidad,
@@ -1489,4 +1491,255 @@ export async function getItemsParaReporte(filters: ItemFilters = {}) {
     jefeResidente: item.jefeResidenteId ? usuariosMap.get(item.jefeResidenteId) : null,
     supervisor: item.supervisorId ? usuariosMap.get(item.supervisorId) : null
   }));
+}
+
+
+// ==================== PROYECTOS ====================
+
+export async function getAllProyectos() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(proyectos).where(eq(proyectos.activo, true)).orderBy(proyectos.nombre);
+}
+
+export async function getProyectoById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(proyectos).where(eq(proyectos.id, id)).limit(1);
+  return result[0];
+}
+
+export async function createProyecto(data: InsertProyecto) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(proyectos).values(data);
+  return result[0].insertId;
+}
+
+export async function updateProyecto(id: number, data: Partial<InsertProyecto>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(proyectos).set(data).where(eq(proyectos.id, id));
+}
+
+export async function deleteProyecto(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(proyectos).set({ activo: false }).where(eq(proyectos.id, id));
+}
+
+// Obtener proyecto con estadísticas completas
+export async function getProyectoConEstadisticas(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const proyecto = await db.select().from(proyectos).where(eq(proyectos.id, id)).limit(1);
+  if (!proyecto[0]) return undefined;
+  
+  // Obtener usuarios del proyecto
+  const usuariosProyecto = await db.select()
+    .from(proyectoUsuarios)
+    .where(and(eq(proyectoUsuarios.proyectoId, id), eq(proyectoUsuarios.activo, true)));
+  
+  const usuarioIds = usuariosProyecto.map(pu => pu.usuarioId);
+  const todosUsuarios = usuarioIds.length > 0
+    ? await db.select().from(users).where(inArray(users.id, usuarioIds))
+    : [];
+  
+  // Obtener empresas del proyecto
+  const empresasProyecto = await db.select().from(empresas)
+    .where(and(eq(empresas.proyectoId, id), eq(empresas.activo, true)));
+  
+  // Obtener unidades del proyecto
+  const unidadesProyecto = await db.select().from(unidades)
+    .where(and(eq(unidades.proyectoId, id), eq(unidades.activo, true)));
+  
+  // Obtener ítems del proyecto
+  const itemsProyecto = await db.select().from(items).where(eq(items.proyectoId, id));
+  
+  const aprobados = itemsProyecto.filter(i => i.status === 'aprobado').length;
+  const rechazados = itemsProyecto.filter(i => i.status === 'rechazado').length;
+  const pendientes = itemsProyecto.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+  
+  return {
+    ...proyecto[0],
+    usuarios: usuariosProyecto.map(pu => ({
+      ...pu,
+      usuario: todosUsuarios.find(u => u.id === pu.usuarioId)
+    })),
+    empresas: empresasProyecto,
+    unidades: unidadesProyecto,
+    items: {
+      total: itemsProyecto.length,
+      aprobados,
+      rechazados,
+      pendientes
+    },
+    estadisticas: {
+      tasaAprobacion: itemsProyecto.length > 0 ? Math.round((aprobados / itemsProyecto.length) * 100) : 0,
+      tasaRechazo: itemsProyecto.length > 0 ? Math.round((rechazados / itemsProyecto.length) * 100) : 0
+    }
+  };
+}
+
+// Obtener todos los proyectos con estadísticas básicas
+export async function getAllProyectosConEstadisticas() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const todosProyectos = await db.select().from(proyectos).where(eq(proyectos.activo, true)).orderBy(proyectos.nombre);
+  const todosItems = await db.select().from(items);
+  const todasEmpresas = await db.select().from(empresas).where(eq(empresas.activo, true));
+  const todasUnidades = await db.select().from(unidades).where(eq(unidades.activo, true));
+  const todosUsuariosProyecto = await db.select().from(proyectoUsuarios).where(eq(proyectoUsuarios.activo, true));
+  
+  return todosProyectos.map(proyecto => {
+    const itemsProyecto = todosItems.filter(i => i.proyectoId === proyecto.id);
+    const empresasProyecto = todasEmpresas.filter(e => e.proyectoId === proyecto.id);
+    const unidadesProyecto = todasUnidades.filter(u => u.proyectoId === proyecto.id);
+    const usuariosProyecto = todosUsuariosProyecto.filter(pu => pu.proyectoId === proyecto.id);
+    
+    const aprobados = itemsProyecto.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsProyecto.filter(i => i.status === 'rechazado').length;
+    const pendientes = itemsProyecto.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+    
+    return {
+      ...proyecto,
+      conteo: {
+        empresas: empresasProyecto.length,
+        unidades: unidadesProyecto.length,
+        usuarios: usuariosProyecto.length,
+        items: itemsProyecto.length
+      },
+      items: {
+        total: itemsProyecto.length,
+        aprobados,
+        rechazados,
+        pendientes
+      },
+      tasaAprobacion: itemsProyecto.length > 0 ? Math.round((aprobados / itemsProyecto.length) * 100) : 0
+    };
+  });
+}
+
+// ==================== PROYECTO-USUARIOS ====================
+
+export async function getUsuariosByProyecto(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const relaciones = await db.select()
+    .from(proyectoUsuarios)
+    .where(and(eq(proyectoUsuarios.proyectoId, proyectoId), eq(proyectoUsuarios.activo, true)));
+  
+  if (relaciones.length === 0) return [];
+  
+  const usuarioIds = relaciones.map(r => r.usuarioId);
+  const todosUsuarios = await db.select().from(users).where(inArray(users.id, usuarioIds));
+  
+  return relaciones.map(rel => ({
+    ...rel,
+    usuario: todosUsuarios.find(u => u.id === rel.usuarioId)
+  }));
+}
+
+export async function getProyectosByUsuario(usuarioId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const relaciones = await db.select()
+    .from(proyectoUsuarios)
+    .where(and(eq(proyectoUsuarios.usuarioId, usuarioId), eq(proyectoUsuarios.activo, true)));
+  
+  if (relaciones.length === 0) return [];
+  
+  const proyectoIds = relaciones.map(r => r.proyectoId);
+  const todosProyectos = await db.select().from(proyectos)
+    .where(and(inArray(proyectos.id, proyectoIds), eq(proyectos.activo, true)));
+  
+  return relaciones.map(rel => ({
+    ...rel,
+    proyecto: todosProyectos.find(p => p.id === rel.proyectoId)
+  }));
+}
+
+export async function asignarUsuarioAProyecto(data: InsertProyectoUsuario) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Verificar si ya existe la relación
+  const existente = await db.select()
+    .from(proyectoUsuarios)
+    .where(and(
+      eq(proyectoUsuarios.proyectoId, data.proyectoId),
+      eq(proyectoUsuarios.usuarioId, data.usuarioId)
+    ))
+    .limit(1);
+  
+  if (existente.length > 0) {
+    // Actualizar si existe
+    await db.update(proyectoUsuarios)
+      .set({ activo: true, rolEnProyecto: data.rolEnProyecto })
+      .where(eq(proyectoUsuarios.id, existente[0].id));
+    return existente[0].id;
+  }
+  
+  const result = await db.insert(proyectoUsuarios).values(data);
+  return result[0].insertId;
+}
+
+export async function removerUsuarioDeProyecto(proyectoId: number, usuarioId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(proyectoUsuarios)
+    .set({ activo: false })
+    .where(and(
+      eq(proyectoUsuarios.proyectoId, proyectoId),
+      eq(proyectoUsuarios.usuarioId, usuarioId)
+    ));
+}
+
+export async function actualizarRolEnProyecto(proyectoId: number, usuarioId: number, rol: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(proyectoUsuarios)
+    .set({ rolEnProyecto: rol as any })
+    .where(and(
+      eq(proyectoUsuarios.proyectoId, proyectoId),
+      eq(proyectoUsuarios.usuarioId, usuarioId)
+    ));
+}
+
+// ==================== FUNCIONES CON FILTRO DE PROYECTO ====================
+
+export async function getEmpresasByProyecto(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(empresas)
+    .where(and(eq(empresas.proyectoId, proyectoId), eq(empresas.activo, true)))
+    .orderBy(empresas.nombre);
+}
+
+export async function getUnidadesByProyecto(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(unidades)
+    .where(and(eq(unidades.proyectoId, proyectoId), eq(unidades.activo, true)))
+    .orderBy(unidades.nombre);
+}
+
+export async function getEspecialidadesByProyecto(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(especialidades)
+    .where(and(eq(especialidades.proyectoId, proyectoId), eq(especialidades.activo, true)))
+    .orderBy(especialidades.nombre);
+}
+
+export async function getItemsByProyecto(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(items)
+    .where(eq(items.proyectoId, proyectoId))
+    .orderBy(desc(items.fechaCreacion));
 }
