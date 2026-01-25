@@ -1,0 +1,324 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { trpc } from "@/lib/trpc";
+import { 
+  ArrowLeft, 
+  Camera, 
+  CheckCircle2, 
+  XCircle, 
+  Clock,
+  Building2,
+  MapPin,
+  Wrench,
+  Calendar,
+  ClipboardCheck
+} from "lucide-react";
+import { useParams, useLocation } from "wouter";
+
+const statusLabels: Record<string, string> = {
+  pendiente_foto_despues: "En Proceso - Pendiente Corrección",
+  pendiente_aprobacion: "Corregido - Pendiente Aprobación",
+  aprobado: "Aprobado - Completado",
+  rechazado: "Rechazado - Requiere Atención",
+};
+
+const statusDescriptions: Record<string, string> = {
+  pendiente_foto_despues: "El problema ha sido registrado y está pendiente de corrección por el equipo de obra.",
+  pendiente_aprobacion: "La corrección ha sido realizada y está pendiente de aprobación por el supervisor.",
+  aprobado: "El problema ha sido corregido y aprobado satisfactoriamente.",
+  rechazado: "La corrección no fue aprobada y requiere atención adicional.",
+};
+
+const statusColors: Record<string, string> = {
+  pendiente_foto_despues: "bg-amber-100 text-amber-800 border-amber-200",
+  pendiente_aprobacion: "bg-blue-100 text-blue-800 border-blue-200",
+  aprobado: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  rechazado: "bg-red-100 text-red-800 border-red-200",
+};
+
+const statusIcons: Record<string, typeof Clock> = {
+  pendiente_foto_despues: Clock,
+  pendiente_aprobacion: Camera,
+  aprobado: CheckCircle2,
+  rechazado: XCircle,
+};
+
+export default function Seguimiento() {
+  const { codigo } = useParams<{ codigo: string }>();
+  const [, setLocation] = useLocation();
+
+  const { data: item, isLoading, error } = trpc.items.getByCodigo.useQuery(
+    { codigo: codigo || "" },
+    { enabled: !!codigo }
+  );
+
+  const formatDate = (date: Date | string | null) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleDateString("es-MX", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-muted-foreground">Cargando información...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !item) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 text-center">
+            <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Ítem no encontrado</h2>
+            <p className="text-muted-foreground mb-4">
+              El código de seguimiento no existe o ha sido eliminado.
+            </p>
+            <p className="text-sm text-muted-foreground font-mono mb-4">
+              Código: {codigo}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const StatusIcon = statusIcons[item.status];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      {/* Header */}
+      <header className="bg-white border-b sticky top-0 z-10">
+        <div className="container max-w-3xl py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ClipboardCheck className="h-6 w-6 text-primary" />
+              <div>
+                <h1 className="font-semibold">Control de Calidad</h1>
+                <p className="text-xs text-muted-foreground">Seguimiento de Ítem</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="font-mono">
+              {item.codigo}
+            </Badge>
+          </div>
+        </div>
+      </header>
+
+      <main className="container max-w-3xl py-6 space-y-6">
+        {/* Status Card */}
+        <Card className={`border-2 ${statusColors[item.status].replace('bg-', 'border-').replace('-100', '-300')}`}>
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <div className={`p-3 rounded-full ${statusColors[item.status]}`}>
+                <StatusIcon className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-lg font-semibold">{statusLabels[item.status]}</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {statusDescriptions[item.status]}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Item Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{item.titulo}</CardTitle>
+            {item.descripcion && (
+              <CardDescription>{item.descripcion}</CardDescription>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Empresa:</span>
+                <span className="font-medium">{item.empresa?.nombre || "-"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Unidad:</span>
+                <span className="font-medium">{item.unidad?.nombre || "-"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Wrench className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Especialidad:</span>
+                <span className="font-medium">{item.especialidad?.nombre || "-"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Fecha:</span>
+                <span className="font-medium">{formatDate(item.fechaCreacion)}</span>
+              </div>
+            </div>
+
+            {item.ubicacionDetalle && (
+              <div className="pt-2 border-t">
+                <p className="text-sm">
+                  <span className="text-muted-foreground">Ubicación específica: </span>
+                  {item.ubicacionDetalle}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Photos */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Evidencia Fotográfica</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Foto Antes */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-amber-500" />
+                  <h4 className="font-medium text-sm">Antes (Problema detectado)</h4>
+                </div>
+                <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100">
+                  {item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
+                    <img
+                      src={item.fotoAntesMarcadaUrl || item.fotoAntesUrl || ""}
+                      alt="Foto antes"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <Camera className="h-12 w-12" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Registrado: {formatDate(item.fechaCreacion)}
+                </p>
+              </div>
+
+              {/* Foto Después */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <h4 className="font-medium text-sm">Después (Corrección)</h4>
+                </div>
+                <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100">
+                  {item.fotoDespuesUrl ? (
+                    <img
+                      src={item.fotoDespuesUrl}
+                      alt="Foto después"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground flex-col gap-2">
+                      <Clock className="h-12 w-12" />
+                      <span className="text-sm">Pendiente</span>
+                    </div>
+                  )}
+                </div>
+                {item.fechaFotoDespues && (
+                  <p className="text-xs text-muted-foreground">
+                    Corregido: {formatDate(item.fechaFotoDespues)}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Timeline */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Línea de Tiempo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Creación */}
+              <div className="flex gap-4">
+                <div className="flex flex-col items-center">
+                  <div className="h-3 w-3 rounded-full bg-blue-500" />
+                  <div className="w-0.5 flex-1 bg-border mt-2" />
+                </div>
+                <div className="flex-1 pb-4">
+                  <p className="font-medium text-sm">Problema Registrado</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDate(item.fechaCreacion)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Foto después */}
+              {item.fechaFotoDespues && (
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="h-3 w-3 rounded-full bg-amber-500" />
+                    <div className="w-0.5 flex-1 bg-border mt-2" />
+                  </div>
+                  <div className="flex-1 pb-4">
+                    <p className="font-medium text-sm">Corrección Realizada</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(item.fechaFotoDespues)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Aprobación */}
+              {item.fechaAprobacion && (
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className={`h-3 w-3 rounded-full ${
+                      item.status === "aprobado" ? "bg-emerald-500" : "bg-red-500"
+                    }`} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">
+                      {item.status === "aprobado" ? "Aprobado" : "Rechazado"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(item.fechaAprobacion)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Pendiente */}
+              {!item.fechaAprobacion && (
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="h-3 w-3 rounded-full bg-slate-300 animate-pulse" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-sm text-muted-foreground">
+                      {item.status === "pendiente_foto_despues" 
+                        ? "Pendiente corrección..." 
+                        : "Pendiente aprobación..."}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Footer */}
+        <div className="text-center text-xs text-muted-foreground py-4">
+          <p>Sistema de Control de Calidad de Obra</p>
+          <p className="mt-1">Código de seguimiento: {item.codigo}</p>
+        </div>
+      </main>
+    </div>
+  );
+}

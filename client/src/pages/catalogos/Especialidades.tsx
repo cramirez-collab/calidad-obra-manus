@@ -1,0 +1,314 @@
+import DashboardLayout from "@/components/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { trpc } from "@/lib/trpc";
+import { Wrench, Edit, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+type Especialidad = {
+  id: number;
+  nombre: string;
+  codigo?: string | null;
+  descripcion?: string | null;
+  color?: string | null;
+};
+
+const defaultColors = [
+  "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
+  "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1"
+];
+
+export default function Especialidades() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [editingEspecialidad, setEditingEspecialidad] = useState<Especialidad | null>(null);
+  const [formData, setFormData] = useState({
+    nombre: "",
+    codigo: "",
+    descripcion: "",
+    color: "#3B82F6",
+  });
+
+  const utils = trpc.useUtils();
+  const { data: especialidades, isLoading } = trpc.especialidades.list.useQuery();
+
+  const createMutation = trpc.especialidades.create.useMutation({
+    onSuccess: () => {
+      utils.especialidades.list.invalidate();
+      toast.success("Especialidad creada correctamente");
+      handleClose();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const updateMutation = trpc.especialidades.update.useMutation({
+    onSuccess: () => {
+      utils.especialidades.list.invalidate();
+      toast.success("Especialidad actualizada correctamente");
+      handleClose();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const deleteMutation = trpc.especialidades.delete.useMutation({
+    onSuccess: () => {
+      utils.especialidades.list.invalidate();
+      toast.success("Especialidad eliminada correctamente");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const handleOpen = (especialidad?: Especialidad) => {
+    if (especialidad) {
+      setEditingEspecialidad(especialidad);
+      setFormData({
+        nombre: especialidad.nombre,
+        codigo: especialidad.codigo || "",
+        descripcion: especialidad.descripcion || "",
+        color: especialidad.color || "#3B82F6",
+      });
+    } else {
+      setEditingEspecialidad(null);
+      setFormData({ nombre: "", codigo: "", descripcion: "", color: "#3B82F6" });
+    }
+    setIsOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setEditingEspecialidad(null);
+    setFormData({ nombre: "", codigo: "", descripcion: "", color: "#3B82F6" });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.nombre.trim()) {
+      toast.error("El nombre es requerido");
+      return;
+    }
+
+    const data = {
+      nombre: formData.nombre,
+      codigo: formData.codigo || undefined,
+      descripcion: formData.descripcion || undefined,
+      color: formData.color || undefined,
+    };
+
+    if (editingEspecialidad) {
+      updateMutation.mutate({ id: editingEspecialidad.id, ...data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("¿Estás seguro de eliminar esta especialidad?")) {
+      deleteMutation.mutate({ id });
+    }
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Especialidades</h1>
+            <p className="text-muted-foreground">
+              Gestiona las especialidades o disciplinas de trabajo
+            </p>
+          </div>
+          <Button onClick={() => handleOpen()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Especialidad
+          </Button>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wrench className="h-5 w-5" />
+              Lista de Especialidades
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Cargando...
+              </div>
+            ) : especialidades?.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No hay especialidades registradas
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[60px]">Color</TableHead>
+                    <TableHead>Código</TableHead>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead className="w-[100px]">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {especialidades?.map((especialidad) => (
+                    <TableRow key={especialidad.id}>
+                      <TableCell>
+                        <div
+                          className="h-6 w-6 rounded-full border"
+                          style={{ backgroundColor: especialidad.color || "#3B82F6" }}
+                        />
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {especialidad.codigo || "-"}
+                      </TableCell>
+                      <TableCell className="font-medium">{especialidad.nombre}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {especialidad.descripcion || "-"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpen(especialidad)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(especialidad.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingEspecialidad ? "Editar Especialidad" : "Nueva Especialidad"}
+              </DialogTitle>
+              <DialogDescription>
+                {editingEspecialidad
+                  ? "Modifica los datos de la especialidad"
+                  : "Ingresa los datos de la nueva especialidad"}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="nombre">Nombre *</Label>
+                    <Input
+                      id="nombre"
+                      value={formData.nombre}
+                      onChange={(e) =>
+                        setFormData({ ...formData, nombre: e.target.value })
+                      }
+                      placeholder="Ej: Electricidad"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="codigo">Código</Label>
+                    <Input
+                      id="codigo"
+                      value={formData.codigo}
+                      onChange={(e) =>
+                        setFormData({ ...formData, codigo: e.target.value })
+                      }
+                      placeholder="Ej: ELEC"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Color</Label>
+                  <div className="flex gap-2 flex-wrap">
+                    {defaultColors.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`h-8 w-8 rounded-full border-2 transition-all ${
+                          formData.color === color
+                            ? "border-foreground scale-110"
+                            : "border-transparent"
+                        }`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setFormData({ ...formData, color })}
+                      />
+                    ))}
+                    <Input
+                      type="color"
+                      value={formData.color}
+                      onChange={(e) =>
+                        setFormData({ ...formData, color: e.target.value })
+                      }
+                      className="h-8 w-8 p-0 border-0 cursor-pointer"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="descripcion">Descripción</Label>
+                  <Textarea
+                    id="descripcion"
+                    value={formData.descripcion}
+                    onChange={(e) =>
+                      setFormData({ ...formData, descripcion: e.target.value })
+                    }
+                    placeholder="Descripción de la especialidad"
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={handleClose}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {editingEspecialidad ? "Guardar Cambios" : "Crear Especialidad"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </DashboardLayout>
+  );
+}

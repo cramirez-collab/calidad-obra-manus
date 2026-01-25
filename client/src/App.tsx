@@ -4,32 +4,63 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+
+// Pages
 import Home from "./pages/Home";
+import Usuarios from "./pages/Usuarios";
+import Estadisticas from "./pages/Estadisticas";
+import Seguimiento from "./pages/Seguimiento";
+
+// Catálogos
+import Empresas from "./pages/catalogos/Empresas";
+import Unidades from "./pages/catalogos/Unidades";
+import Especialidades from "./pages/catalogos/Especialidades";
+import Atributos from "./pages/catalogos/Atributos";
+
+// Items
+import ItemsList from "./pages/items/ItemsList";
+import NuevoItem from "./pages/items/NuevoItem";
+import ItemDetail from "./pages/items/ItemDetail";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
+      {/* Dashboard */}
+      <Route path="/" component={Home} />
+      
+      {/* Items */}
+      <Route path="/items" component={ItemsList} />
+      <Route path="/items/nuevo" component={NuevoItem} />
+      <Route path="/items/revision" component={ItemsList} />
+      <Route path="/items/aprobacion" component={ItemsList} />
+      <Route path="/items/:id" component={ItemDetail} />
+      
+      {/* Catálogos */}
+      <Route path="/catalogos/empresas" component={Empresas} />
+      <Route path="/catalogos/unidades" component={Unidades} />
+      <Route path="/catalogos/especialidades" component={Especialidades} />
+      <Route path="/catalogos/atributos" component={Atributos} />
+      
+      {/* Usuarios */}
+      <Route path="/usuarios" component={Usuarios} />
+      
+      {/* Estadísticas */}
+      <Route path="/estadisticas" component={Estadisticas} />
+      
+      {/* Seguimiento público (QR) */}
+      <Route path="/seguimiento/:codigo" component={Seguimiento} />
+      
+      {/* 404 */}
+      <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
           <Router />

@@ -4,6 +4,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -21,21 +22,79 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  LogOut, 
+  PanelLeft, 
+  Building2, 
+  MapPin, 
+  Wrench, 
+  Tags, 
+  Users, 
+  ClipboardCheck, 
+  BarChart3,
+  QrCode,
+  Settings,
+  Camera
+} from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
-];
+// Definición de menú según rol
+const getMenuItems = (role: string) => {
+  const baseItems = [
+    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+    { icon: Camera, label: "Nuevo Ítem", path: "/items/nuevo" },
+    { icon: ClipboardCheck, label: "Mis Ítems", path: "/items" },
+  ];
+
+  const jefeResidenteItems = [
+    { icon: ClipboardCheck, label: "Pendientes Revisión", path: "/items/revision" },
+  ];
+
+  const supervisorItems = [
+    { icon: ClipboardCheck, label: "Pendientes Aprobación", path: "/items/aprobacion" },
+  ];
+
+  const adminItems = [
+    { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
+    { icon: Building2, label: "Empresas", path: "/catalogos/empresas" },
+    { icon: MapPin, label: "Unidades", path: "/catalogos/unidades" },
+    { icon: Wrench, label: "Especialidades", path: "/catalogos/especialidades" },
+    { icon: Tags, label: "Atributos", path: "/catalogos/atributos" },
+    { icon: Users, label: "Usuarios", path: "/usuarios" },
+  ];
+
+  let items = [...baseItems];
+
+  if (role === 'jefe_residente' || role === 'supervisor' || role === 'admin') {
+    items = [...items, ...jefeResidenteItems];
+  }
+
+  if (role === 'supervisor' || role === 'admin') {
+    items = [...items, ...supervisorItems];
+  }
+
+  if (role === 'admin') {
+    items = [...items, ...adminItems];
+  }
+
+  return items;
+};
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
-const DEFAULT_WIDTH = 280;
+const DEFAULT_WIDTH = 260;
 const MIN_WIDTH = 200;
-const MAX_WIDTH = 480;
+const MAX_WIDTH = 400;
+
+const roleLabels: Record<string, string> = {
+  admin: "Administrador",
+  supervisor: "Supervisor",
+  jefe_residente: "Jefe de Residente",
+  residente: "Residente",
+};
 
 export default function DashboardLayout({
   children,
@@ -58,14 +117,17 @@ export default function DashboardLayout({
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
-          <div className="flex flex-col items-center gap-6">
-            <h1 className="text-2xl font-semibold tracking-tight text-center">
-              Sign in to continue
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-slate-100">
+        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full bg-white rounded-2xl shadow-xl">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <ClipboardCheck className="h-8 w-8 text-primary" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-center">
+              Control de Calidad
             </h1>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Access to this dashboard requires authentication. Continue to launch the login flow.
+              Sistema de gestión y seguimiento de calidad de obra. Inicia sesión para continuar.
             </p>
           </div>
           <Button
@@ -75,7 +137,7 @@ export default function DashboardLayout({
             size="lg"
             className="w-full shadow-lg hover:shadow-xl transition-all"
           >
-            Sign in
+            Iniciar Sesión
           </Button>
         </div>
       </div>
@@ -112,7 +174,8 @@ function DashboardLayoutContent({
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const activeMenuItem = menuItems.find(item => item.path === location);
+  const menuItems = getMenuItems(user?.role || 'residente');
+  const activeMenuItem = menuItems.find(item => location.startsWith(item.path) && item.path !== '/') || menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -159,7 +222,7 @@ function DashboardLayoutContent({
           className="border-r-0"
           disableTransition={isResizing}
         >
-          <SidebarHeader className="h-16 justify-center">
+          <SidebarHeader className="h-16 justify-center border-b">
             <div className="flex items-center gap-3 px-2 transition-all w-full">
               <button
                 onClick={toggleSidebar}
@@ -170,18 +233,18 @@ function DashboardLayoutContent({
               </button>
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-semibold tracking-tight truncate">
-                    Navigation
+                  <span className="font-bold tracking-tight truncate text-primary">
+                    Calidad de Obra
                   </span>
                 </div>
               ) : null}
             </div>
           </SidebarHeader>
 
-          <SidebarContent className="gap-0">
+          <SidebarContent className="gap-0 py-2">
             <SidebarMenu className="px-2 py-1">
               {menuItems.map(item => {
-                const isActive = location === item.path;
+                const isActive = item.path === '/' ? location === '/' : location.startsWith(item.path);
                 return (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
@@ -201,32 +264,37 @@ function DashboardLayoutContent({
             </SidebarMenu>
           </SidebarContent>
 
-          <SidebarFooter className="p-3">
+          <SidebarFooter className="p-3 border-t">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <Avatar className="h-9 w-9 border shrink-0">
-                    <AvatarFallback className="text-xs font-medium">
-                      {user?.name?.charAt(0).toUpperCase()}
+                    <AvatarFallback className="text-xs font-medium bg-primary/10 text-primary">
+                      {user?.name?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
                     <p className="text-sm font-medium truncate leading-none">
                       {user?.name || "-"}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate mt-1.5">
-                      {user?.email || "-"}
+                    <p className="text-xs text-muted-foreground truncate mt-1">
+                      {roleLabels[user?.role || 'residente']}
                     </p>
                   </div>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium">{user?.name}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                </div>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={logout}
                   className="cursor-pointer text-destructive focus:text-destructive"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign out</span>
+                  <span>Cerrar Sesión</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -249,15 +317,15 @@ function DashboardLayoutContent({
               <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
               <div className="flex items-center gap-3">
                 <div className="flex flex-col gap-1">
-                  <span className="tracking-tight text-foreground">
-                    {activeMenuItem?.label ?? "Menu"}
+                  <span className="tracking-tight text-foreground font-medium">
+                    {activeMenuItem?.label ?? "Menú"}
                   </span>
                 </div>
               </div>
             </div>
           </div>
         )}
-        <main className="flex-1 p-4">{children}</main>
+        <main className="flex-1 p-4 md:p-6">{children}</main>
       </SidebarInset>
     </>
   );

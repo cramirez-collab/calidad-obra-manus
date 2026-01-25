@@ -174,4 +174,28 @@
       max-width: 1280px; /* Standard content width */
     }
   }
+  
+  /* Status badges */
+  .badge-pendiente {
+    @apply bg-amber-100 text-amber-800;
+  }
+  .badge-aprobado {
+    @apply bg-emerald-100 text-emerald-800;
+  }
+  .badge-rechazado {
+    @apply bg-red-100 text-red-800;
+  }
+  
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
+  }
+  
+  /* Dashboard sidebar item */
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors;
+  }
+  .sidebar-item-active {
+    @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground;
+  }
 }

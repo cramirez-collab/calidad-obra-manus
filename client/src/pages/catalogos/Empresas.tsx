@@ -1,0 +1,301 @@
+import DashboardLayout from "@/components/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { trpc } from "@/lib/trpc";
+import { Building2, Edit, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+type Empresa = {
+  id: number;
+  nombre: string;
+  rfc?: string | null;
+  contacto?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+};
+
+export default function Empresas() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
+  const [formData, setFormData] = useState({
+    nombre: "",
+    rfc: "",
+    contacto: "",
+    telefono: "",
+    email: "",
+  });
+
+  const utils = trpc.useUtils();
+  const { data: empresas, isLoading } = trpc.empresas.list.useQuery();
+
+  const createMutation = trpc.empresas.create.useMutation({
+    onSuccess: () => {
+      utils.empresas.list.invalidate();
+      toast.success("Empresa creada correctamente");
+      handleClose();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const updateMutation = trpc.empresas.update.useMutation({
+    onSuccess: () => {
+      utils.empresas.list.invalidate();
+      toast.success("Empresa actualizada correctamente");
+      handleClose();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const deleteMutation = trpc.empresas.delete.useMutation({
+    onSuccess: () => {
+      utils.empresas.list.invalidate();
+      toast.success("Empresa eliminada correctamente");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const handleOpen = (empresa?: Empresa) => {
+    if (empresa) {
+      setEditingEmpresa(empresa);
+      setFormData({
+        nombre: empresa.nombre,
+        rfc: empresa.rfc || "",
+        contacto: empresa.contacto || "",
+        telefono: empresa.telefono || "",
+        email: empresa.email || "",
+      });
+    } else {
+      setEditingEmpresa(null);
+      setFormData({ nombre: "", rfc: "", contacto: "", telefono: "", email: "" });
+    }
+    setIsOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setEditingEmpresa(null);
+    setFormData({ nombre: "", rfc: "", contacto: "", telefono: "", email: "" });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.nombre.trim()) {
+      toast.error("El nombre es requerido");
+      return;
+    }
+
+    const data = {
+      nombre: formData.nombre,
+      rfc: formData.rfc || undefined,
+      contacto: formData.contacto || undefined,
+      telefono: formData.telefono || undefined,
+      email: formData.email || undefined,
+    };
+
+    if (editingEmpresa) {
+      updateMutation.mutate({ id: editingEmpresa.id, ...data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("¿Estás seguro de eliminar esta empresa?")) {
+      deleteMutation.mutate({ id });
+    }
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Empresas</h1>
+            <p className="text-muted-foreground">
+              Gestiona las empresas contratistas del proyecto
+            </p>
+          </div>
+          <Button onClick={() => handleOpen()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Empresa
+          </Button>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Lista de Empresas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Cargando...
+              </div>
+            ) : empresas?.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No hay empresas registradas
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>RFC</TableHead>
+                    <TableHead>Contacto</TableHead>
+                    <TableHead>Teléfono</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead className="w-[100px]">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {empresas?.map((empresa) => (
+                    <TableRow key={empresa.id}>
+                      <TableCell className="font-medium">{empresa.nombre}</TableCell>
+                      <TableCell>{empresa.rfc || "-"}</TableCell>
+                      <TableCell>{empresa.contacto || "-"}</TableCell>
+                      <TableCell>{empresa.telefono || "-"}</TableCell>
+                      <TableCell>{empresa.email || "-"}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpen(empresa)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(empresa.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingEmpresa ? "Editar Empresa" : "Nueva Empresa"}
+              </DialogTitle>
+              <DialogDescription>
+                {editingEmpresa
+                  ? "Modifica los datos de la empresa"
+                  : "Ingresa los datos de la nueva empresa"}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="nombre">Nombre *</Label>
+                  <Input
+                    id="nombre"
+                    value={formData.nombre}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nombre: e.target.value })
+                    }
+                    placeholder="Nombre de la empresa"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="rfc">RFC</Label>
+                  <Input
+                    id="rfc"
+                    value={formData.rfc}
+                    onChange={(e) =>
+                      setFormData({ ...formData, rfc: e.target.value })
+                    }
+                    placeholder="RFC de la empresa"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="contacto">Contacto</Label>
+                  <Input
+                    id="contacto"
+                    value={formData.contacto}
+                    onChange={(e) =>
+                      setFormData({ ...formData, contacto: e.target.value })
+                    }
+                    placeholder="Nombre del contacto"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="telefono">Teléfono</Label>
+                    <Input
+                      id="telefono"
+                      value={formData.telefono}
+                      onChange={(e) =>
+                        setFormData({ ...formData, telefono: e.target.value })
+                      }
+                      placeholder="Teléfono"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      placeholder="correo@empresa.com"
+                    />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={handleClose}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {editingEmpresa ? "Guardar Cambios" : "Crear Empresa"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </DashboardLayout>
+  );
+}
