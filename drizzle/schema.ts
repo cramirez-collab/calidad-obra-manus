@@ -161,3 +161,35 @@ export const itemHistorial = mysqlTable("item_historial", {
 
 export type ItemHistorial = typeof itemHistorial.$inferSelect;
 export type InsertItemHistorial = typeof itemHistorial.$inferInsert;
+
+/**
+ * Tabla de notificaciones
+ */
+export const notificaciones = mysqlTable("notificaciones", {
+  id: int("id").autoincrement().primaryKey(),
+  usuarioId: int("usuarioId").notNull(),
+  itemId: int("itemId"),
+  tipo: varchar("tipo", { length: 50 }).notNull(), // 'item_pendiente', 'item_aprobado', 'item_rechazado', etc.
+  titulo: varchar("titulo", { length: 255 }).notNull(),
+  mensaje: text("mensaje"),
+  leida: boolean("leida").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Notificacion = typeof notificaciones.$inferSelect;
+export type InsertNotificacion = typeof notificaciones.$inferInsert;
+
+/**
+ * Tabla de comentarios de ítems
+ */
+export const comentarios = mysqlTable("comentarios", {
+  id: int("id").autoincrement().primaryKey(),
+  itemId: int("itemId").notNull(),
+  usuarioId: int("usuarioId").notNull(),
+  etapa: varchar("etapa", { length: 50 }).notNull(), // 'creacion', 'revision', 'aprobacion'
+  texto: text("texto").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Comentario = typeof comentarios.$inferSelect;
+export type InsertComentario = typeof comentarios.$inferInsert;

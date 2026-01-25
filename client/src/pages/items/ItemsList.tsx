@@ -21,7 +21,8 @@ import {
   CheckCircle2,
   XCircle,
   QrCode,
-  Plus
+  Plus,
+  Download
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
@@ -101,6 +102,15 @@ export default function ItemsList() {
 
   const hasActiveFilters = Object.values(filters).some(v => v !== "");
 
+  const exportToExcel = () => {
+    const params = new URLSearchParams();
+    if (filters.empresaId) params.append("empresaId", filters.empresaId);
+    if (filters.unidadId) params.append("unidadId", filters.unidadId);
+    if (filters.especialidadId) params.append("especialidadId", filters.especialidadId);
+    if (filters.status) params.append("status", filters.status);
+    window.open(`/api/export/items?${params.toString()}`, "_blank");
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -111,10 +121,16 @@ export default function ItemsList() {
               {data?.total || 0} ítems encontrados
             </p>
           </div>
-          <Button onClick={() => setLocation("/items/nuevo")}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nuevo Ítem
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={exportToExcel}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar
+            </Button>
+            <Button onClick={() => setLocation("/items/nuevo")}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Ítem
+            </Button>
+          </div>
         </div>
 
         {/* Barra de búsqueda y filtros */}

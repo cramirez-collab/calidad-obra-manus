@@ -68,10 +68,39 @@ export default function ItemDetail() {
   const utils = trpc.useUtils();
   const { data: item, isLoading } = trpc.items.get.useQuery({ id: itemId });
   const { data: historial } = trpc.items.historial.useQuery({ itemId });
+  const { data: comentarios, refetch: refetchComentarios } = trpc.comentarios.byItem.useQuery({ itemId });
   const { data: empresas } = trpc.empresas.list.useQuery();
   const { data: unidades } = trpc.unidades.list.useQuery();
   const { data: especialidades } = trpc.especialidades.list.useQuery();
   const { data: users } = trpc.users.list.useQuery();
+
+  const [nuevoComentario, setNuevoComentario] = useState("");
+  const [enviandoComentario, setEnviandoComentario] = useState(false);
+
+  const createComentarioMutation = trpc.comentarios.create.useMutation({
+    onSuccess: () => {
+      refetchComentarios();
+      setNuevoComentario("");
+      toast.success("Comentario agregado");
+    },
+    onError: () => {
+      toast.error("Error al agregar comentario");
+    },
+  });
+
+  const handleAddComentario = async () => {
+    if (!nuevoComentario.trim()) return;
+    setEnviandoComentario(true);
+    try {
+      await createComentarioMutation.mutateAsync({
+        itemId,
+        etapa: item?.status || "general",
+        texto: nuevoComentario,
+      });
+    } finally {
+      setEnviandoComentario(false);
+    }
+  };
 
   const uploadFotoDespuesMutation = trpc.items.uploadFotoDespues.useMutation({
     onSuccess: () => {
@@ -383,6 +412,60 @@ export default function ItemDetail() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Comentarios */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Comentarios y Observaciones
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Lista de comentarios */}
+                <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                  {comentarios && comentarios.length > 0 ? (
+                    comentarios.map((c: any) => (
+                      <div key={c.id} className="bg-muted/50 rounded-lg p-3 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">
+                            {c.usuario?.name || "Usuario"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(c.createdAt)}
+                          </span>
+                        </div>
+                        <p className="text-sm">{c.texto}</p>
+                        <Badge variant="outline" className="text-xs">
+                          {statusLabels[c.etapa] || c.etapa}
+                        </Badge>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No hay comentarios aún
+                    </p>
+                  )}
+                </div>
+
+                {/* Agregar comentario */}
+                <div className="border-t pt-4 space-y-2">
+                  <Textarea
+                    value={nuevoComentario}
+                    onChange={(e) => setNuevoComentario(e.target.value)}
+                    placeholder="Escribe un comentario u observación..."
+                    rows={2}
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleAddComentario}
+                    disabled={!nuevoComentario.trim() || enviandoComentario}
+                  >
+                    {enviandoComentario ? "Enviando..." : "Agregar Comentario"}
+                  </Button>
                 </div>
               </CardContent>
             </Card>

@@ -328,6 +328,14 @@ export const appRouter = router({
           comentario: 'Ítem creado',
         });
         
+        // Notificar a jefes de residente sobre nuevo ítem pendiente
+        await db.notificarJefesResidente(
+          result.id,
+          input.empresaId,
+          'Nuevo Ítem Pendiente',
+          `Se ha registrado un nuevo ítem "${input.titulo}" pendiente de revisión.`
+        );
+        
         return result;
       }),
     
@@ -395,6 +403,13 @@ export const appRouter = router({
           comentario: input.comentario || 'Foto después agregada',
         });
         
+        // Notificar a supervisores sobre ítem pendiente de aprobación
+        await db.notificarSupervisores(
+          input.itemId,
+          'Ítem Pendiente de Aprobación',
+          `El ítem "${item.titulo}" está listo para revisión y aprobación.`
+        );
+        
         return { success: true, fotoUrl };
       }),
     
@@ -423,6 +438,15 @@ export const appRouter = router({
           statusAnterior: 'pendiente_aprobacion',
           statusNuevo: 'aprobado',
           comentario: input.comentario || 'Ítem aprobado',
+        });
+        
+        // Notificar al residente que su ítem fue aprobado
+        await db.createNotificacion({
+          usuarioId: item.residenteId,
+          itemId: input.itemId,
+          tipo: 'item_aprobado',
+          titulo: 'Ítem Aprobado',
+          mensaje: `El ítem "${item.titulo}" ha sido aprobado por el supervisor.`,
         });
         
         return { success: true };
@@ -454,6 +478,15 @@ export const appRouter = router({
           comentario: input.comentario,
         });
         
+        // Notificar al residente que su ítem fue rechazado
+        await db.createNotificacion({
+          usuarioId: item.residenteId,
+          itemId: input.itemId,
+          tipo: 'item_rechazado',
+          titulo: 'Ítem Rechazado',
+          mensaje: `El ítem "${item.titulo}" ha sido rechazado. Motivo: ${input.comentario}`,
+        });
+        
         return { success: true };
       }),
     
@@ -478,6 +511,56 @@ export const appRouter = router({
       }).optional())
       .query(async ({ input }) => {
         return await db.getEstadisticas(input || {});
+      }),
+  }),
+
+  // ==================== NOTIFICACIONES ====================
+  notificaciones: router({
+    list: protectedProcedure
+      .input(z.object({ soloNoLeidas: z.boolean().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        return await db.getNotificacionesByUsuario(ctx.user.id, input?.soloNoLeidas);
+      }),
+    
+    count: protectedProcedure.query(async ({ ctx }) => {
+      return await db.contarNotificacionesNoLeidas(ctx.user.id);
+    }),
+    
+    marcarLeida: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.marcarNotificacionLeida(input.id);
+        return { success: true };
+      }),
+    
+    marcarTodasLeidas: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.marcarTodasNotificacionesLeidas(ctx.user.id);
+      return { success: true };
+    }),
+  }),
+
+  // ==================== COMENTARIOS ====================
+  comentarios: router({
+    byItem: protectedProcedure
+      .input(z.object({ itemId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getComentariosByItem(input.itemId);
+      }),
+    
+    create: protectedProcedure
+      .input(z.object({
+        itemId: z.number(),
+        etapa: z.string(),
+        texto: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.createComentario({
+          itemId: input.itemId,
+          usuarioId: ctx.user.id,
+          etapa: input.etapa,
+          texto: input.texto,
+        });
+        return { id, success: true };
       }),
   }),
 });

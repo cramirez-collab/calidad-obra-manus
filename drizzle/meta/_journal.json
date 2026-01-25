@@ -15,6 +15,13 @@
       "when": 1769311172831,
       "tag": "0001_clumsy_freak",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1769312231734,
+      "tag": "0002_romantic_captain_flint",
+      "breakpoints": true
     }
   ]
 }

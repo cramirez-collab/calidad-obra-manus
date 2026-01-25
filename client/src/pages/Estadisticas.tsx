@@ -95,6 +95,14 @@ export default function Estadisticas() {
 
   const hasActiveFilters = Object.values(filters).some(v => v !== "");
 
+  const exportToExcel = () => {
+    const params = new URLSearchParams();
+    if (filters.empresaId) params.append("empresaId", filters.empresaId);
+    if (filters.unidadId) params.append("unidadId", filters.unidadId);
+    if (filters.especialidadId) params.append("especialidadId", filters.especialidadId);
+    window.open(`/api/export/estadisticas?${params.toString()}`, "_blank");
+  };
+
   // Preparar datos para gráficos
   const statusData = useMemo(() => {
     if (!stats?.porStatus) return [];
@@ -140,6 +148,10 @@ export default function Estadisticas() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={exportToExcel}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar Excel
+            </Button>
             <Button variant="outline" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Actualizar

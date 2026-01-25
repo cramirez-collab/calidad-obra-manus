@@ -55,3 +55,23 @@
 - [x] Diseño responsivo (móvil, tablet, desktop)
 - [x] Tema profesional corporativo
 - [x] Navegación clara por rol
+
+
+## Mejoras Adicionales (Nueva Iteración)
+
+### Notificaciones Push
+- [x] Notificación al supervisor cuando hay ítems pendientes de aprobación
+- [x] Notificación al jefe de residente cuando hay ítems pendientes de foto después
+- [x] Notificación al residente cuando su ítem es aprobado o rechazado
+- [x] Centro de notificaciones en el dashboard
+
+### Exportación de Reportes
+- [x] Exportar listado de ítems a Excel
+- [x] Exportar estadísticas a Excel
+- [x] Filtros aplicados en la exportación
+
+### Sistema de Comentarios
+- [x] Tabla de comentarios en base de datos
+- [x] Agregar comentarios en cada etapa del flujo
+- [x] Mostrar historial de comentarios en detalle del ítem
+- [x] Comentarios obligatorios al rechazar (ya implementado)

@@ -7,7 +7,9 @@ import {
   especialidades, InsertEspecialidad,
   atributos, InsertAtributo,
   items, InsertItem,
-  itemHistorial, InsertItemHistorial
+  itemHistorial, InsertItemHistorial,
+  notificaciones, InsertNotificacion,
+  comentarios, InsertComentario
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -431,4 +433,129 @@ export async function getEstadisticas(filters: ItemFilters = {}) {
     porEspecialidad: porEspecialidadResult,
     porEmpresa: porEmpresaResult
   };
+}
+
+
+// ==================== NOTIFICACIONES ====================
+
+export async function createNotificacion(data: InsertNotificacion) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(notificaciones).values(data);
+  return result[0].insertId;
+}
+
+export async function getNotificacionesByUsuario(usuarioId: number, soloNoLeidas: boolean = false) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const conditions = [eq(notificaciones.usuarioId, usuarioId)];
+  if (soloNoLeidas) {
+    conditions.push(eq(notificaciones.leida, false));
+  }
+  
+  return await db
+    .select()
+    .from(notificaciones)
+    .where(and(...conditions))
+    .orderBy(desc(notificaciones.createdAt))
+    .limit(50);
+}
+
+export async function marcarNotificacionLeida(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(notificaciones).set({ leida: true }).where(eq(notificaciones.id, id));
+}
+
+export async function marcarTodasNotificacionesLeidas(usuarioId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(notificaciones).set({ leida: true }).where(eq(notificaciones.usuarioId, usuarioId));
+}
+
+export async function contarNotificacionesNoLeidas(usuarioId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(notificaciones)
+    .where(and(eq(notificaciones.usuarioId, usuarioId), eq(notificaciones.leida, false)));
+  return result[0]?.count || 0;
+}
+
+// Función para notificar a supervisores sobre ítems pendientes
+export async function notificarSupervisores(itemId: number, titulo: string, mensaje: string) {
+  const db = await getDb();
+  if (!db) return;
+  
+  const supervisores = await db
+    .select()
+    .from(users)
+    .where(inArray(users.role, ['admin', 'supervisor']));
+  
+  for (const supervisor of supervisores) {
+    await createNotificacion({
+      usuarioId: supervisor.id,
+      itemId,
+      tipo: 'item_pendiente_aprobacion',
+      titulo,
+      mensaje,
+    });
+  }
+}
+
+// Función para notificar a jefes de residente sobre ítems pendientes de foto
+export async function notificarJefesResidente(itemId: number, empresaId: number | null, titulo: string, mensaje: string) {
+  const db = await getDb();
+  if (!db) return;
+  
+  const conditions = [inArray(users.role, ['jefe_residente'])];
+  if (empresaId) {
+    conditions.push(eq(users.empresaId, empresaId));
+  }
+  
+  const jefes = await db
+    .select()
+    .from(users)
+    .where(and(...conditions));
+  
+  for (const jefe of jefes) {
+    await createNotificacion({
+      usuarioId: jefe.id,
+      itemId,
+      tipo: 'item_pendiente_foto',
+      titulo,
+      mensaje,
+    });
+  }
+}
+
+// ==================== COMENTARIOS ====================
+
+export async function createComentario(data: InsertComentario) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(comentarios).values(data);
+  return result[0].insertId;
+}
+
+export async function getComentariosByItem(itemId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      comentario: comentarios,
+      usuario: users,
+    })
+    .from(comentarios)
+    .leftJoin(users, eq(comentarios.usuarioId, users.id))
+    .where(eq(comentarios.itemId, itemId))
+    .orderBy(comentarios.createdAt);
+  
+  return result.map(r => ({
+    ...r.comentario,
+    usuario: r.usuario,
+  }));
 }
