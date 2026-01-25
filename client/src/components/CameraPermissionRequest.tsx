@@ -102,13 +102,13 @@ export function CameraPermissionRequest() {
 
   return (
     <Dialog open={showDialog} onOpenChange={setShowDialog}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby="camera-permission-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5 text-primary" />
             Permiso de Cámara
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="camera-permission-description">
             Para escanear códigos QR en obra, necesitamos acceso a tu cámara.
           </DialogDescription>
         </DialogHeader>

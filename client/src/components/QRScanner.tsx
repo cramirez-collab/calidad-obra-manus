@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { QrCode, Camera, Search, Keyboard } from "lucide-react";
 import { useLocation } from "wouter";
@@ -218,6 +219,9 @@ export function QRScannerButton() {
               <QrCode className="h-5 w-5 text-[#02B381]" />
               {cameraState === 'manual' ? 'Ingresar Código' : 'Escanear Código QR'}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Escanea un código QR o ingresa el código manualmente para navegar al ítem
+            </DialogDescription>
           </DialogHeader>
 
           {cameraState === 'manual' ? (

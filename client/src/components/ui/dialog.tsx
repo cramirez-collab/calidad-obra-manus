@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { XIcon } from "lucide-react";
 import * as React from "react";
 
@@ -89,6 +90,19 @@ function DialogOverlay({
 
 DialogOverlay.displayName = "DialogOverlay";
 
+// Context para rastrear si hay DialogTitle y DialogDescription en el contenido
+const DialogContentContext = React.createContext<{
+  hasTitle: boolean;
+  hasDescription: boolean;
+  setHasTitle: (value: boolean) => void;
+  setHasDescription: (value: boolean) => void;
+}>({
+  hasTitle: false,
+  hasDescription: false,
+  setHasTitle: () => {},
+  setHasDescription: () => {},
+});
+
 function DialogContent({
   className,
   children,
@@ -99,20 +113,16 @@ function DialogContent({
   showCloseButton?: boolean;
 }) {
   const { isComposing } = useDialogComposition();
+  const [hasTitle, setHasTitle] = React.useState(false);
+  const [hasDescription, setHasDescription] = React.useState(false);
 
   const handleEscapeKeyDown = React.useCallback(
     (e: KeyboardEvent) => {
-      // Check both the native isComposing property and our context state
-      // This handles Safari's timing issues with composition events
       const isCurrentlyComposing = (e as any).isComposing || isComposing();
-
-      // If IME is composing, prevent dialog from closing
       if (isCurrentlyComposing) {
         e.preventDefault();
         return;
       }
-
-      // Call user's onEscapeKeyDown if provided
       onEscapeKeyDown?.(e);
     },
     [isComposing, onEscapeKeyDown]
@@ -130,7 +140,17 @@ function DialogContent({
         onEscapeKeyDown={handleEscapeKeyDown}
         {...props}
       >
-        {children}
+        <DialogContentContext.Provider value={{ hasTitle, hasDescription, setHasTitle, setHasDescription }}>
+          {/* Título oculto para accesibilidad si no se proporciona uno */}
+          <VisuallyHidden.Root asChild>
+            <DialogPrimitive.Title>Diálogo</DialogPrimitive.Title>
+          </VisuallyHidden.Root>
+          {/* Descripción oculta para accesibilidad */}
+          <VisuallyHidden.Root asChild>
+            <DialogPrimitive.Description>Contenido del diálogo</DialogPrimitive.Description>
+          </VisuallyHidden.Root>
+          {children}
+        </DialogContentContext.Provider>
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
@@ -206,4 +226,3 @@ export {
   DialogTitle,
   DialogTrigger
 };
-
