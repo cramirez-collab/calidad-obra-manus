@@ -409,3 +409,12 @@
 - [x] Integrar escáner en todas las pantallas (DashboardLayout)
 - [x] Al escanear, navegar directamente al ítem correspondiente
 - [x] Posición estratégica que no interfiera con la UI
+
+
+## Corrección Escáner QR (Decimoquinta Iteración)
+
+### Mejoras del Escáner QR
+- [x] Mejorar manejo de permisos de cámara denegados
+- [x] Agregar opción de ingresar código manualmente
+- [x] Mejorar mensajes de error y guía al usuario
+- [x] Optimizar para móvil
