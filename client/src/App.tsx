@@ -33,6 +33,10 @@ const EmpresaDetalle = lazy(() => import("./pages/catalogos/EmpresaDetalle"));
 const Unidades = lazy(() => import("./pages/catalogos/Unidades"));
 const Especialidades = lazy(() => import("./pages/catalogos/Especialidades"));
 const Atributos = lazy(() => import("./pages/catalogos/Atributos"));
+const Defectos = lazy(() => import("./pages/Defectos"));
+
+// Reportes
+const ReporteFotografico = lazy(() => import("./pages/ReporteFotografico"));
 
 // Items
 const ItemsList = lazy(() => import("./pages/items/ItemsList"));
@@ -66,6 +70,12 @@ function Router() {
         <Route path="/catalogos/unidades" component={Unidades} />
         <Route path="/catalogos/especialidades" component={Especialidades} />
         <Route path="/catalogos/atributos" component={Atributos} />
+        <Route path="/defectos" component={Defectos} />
+        <Route path="/catalogos/defectos" component={Defectos} />
+        
+        {/* Reportes */}
+        <Route path="/reportes" component={ReporteFotografico} />
+        <Route path="/reporte-fotografico" component={ReporteFotografico} />
         
         {/* Usuarios y Bitácora */}
         <Route path="/usuarios" component={Usuarios} />

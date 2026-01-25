@@ -1,6 +1,9 @@
+import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -16,12 +19,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Users, Shield } from "lucide-react";
+import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search } from "lucide-react";
 import { toast } from "sonner";
 
 const roleLabels: Record<string, string> = {
+  superadmin: "Superadmin",
   admin: "Administrador",
   supervisor: "Supervisor",
   jefe_residente: "Jefe de Residente",
@@ -29,44 +42,103 @@ const roleLabels: Record<string, string> = {
 };
 
 const roleColors: Record<string, string> = {
+  superadmin: "bg-red-100 text-red-800",
   admin: "bg-purple-100 text-purple-800",
   supervisor: "bg-blue-100 text-blue-800",
   jefe_residente: "bg-emerald-100 text-emerald-800",
   residente: "bg-slate-100 text-slate-800",
 };
 
+interface UserFormData {
+  name: string;
+  email: string;
+  role: string;
+  empresaId: number | null;
+}
+
 export default function Usuarios() {
   const utils = trpc.useUtils();
-  const { data: usuarios, isLoading } = trpc.users.list.useQuery();
+  const { data: usuarios, isLoading } = trpc.users.listConEmpresa.useQuery();
   const { data: empresas } = trpc.empresas.list.useQuery();
 
-  const updateRoleMutation = trpc.users.updateRole.useMutation({
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState<string>("all");
+  const [filterEmpresa, setFilterEmpresa] = useState<string>("all");
+
+  const [formData, setFormData] = useState<UserFormData>({
+    name: "",
+    email: "",
+    role: "residente",
+    empresaId: null,
+  });
+
+  const createUserMutation = trpc.users.create.useMutation({
     onSuccess: () => {
-      utils.users.list.invalidate();
-      toast.success("Rol actualizado correctamente");
+      utils.users.listConEmpresa.invalidate();
+      setIsCreateOpen(false);
+      setFormData({ name: "", email: "", role: "residente", empresaId: null });
+      toast.success("Usuario creado correctamente");
     },
     onError: (error) => {
       toast.error(error.message);
     },
   });
 
-  const updateEmpresaMutation = trpc.users.updateEmpresa.useMutation({
+  const updateUserMutation = trpc.users.update.useMutation({
     onSuccess: () => {
-      utils.users.list.invalidate();
-      toast.success("Empresa asignada correctamente");
+      utils.users.listConEmpresa.invalidate();
+      setIsEditOpen(false);
+      setEditingUser(null);
+      toast.success("Usuario actualizado correctamente");
     },
     onError: (error) => {
       toast.error(error.message);
     },
   });
 
-  const handleRoleChange = (userId: number, role: string) => {
-    updateRoleMutation.mutate({ userId, role: role as any });
+  const handleCreate = () => {
+    if (!formData.name.trim()) {
+      toast.error("El nombre es requerido");
+      return;
+    }
+    createUserMutation.mutate({
+      name: formData.name,
+      email: formData.email || undefined,
+      role: formData.role as any,
+      empresaId: formData.empresaId,
+    });
   };
 
-  const handleEmpresaChange = (userId: number, empresaId: string) => {
-    const id = empresaId === "none" ? null : parseInt(empresaId);
-    updateEmpresaMutation.mutate({ userId, empresaId: id });
+  const handleEdit = (usuario: any) => {
+    setEditingUser(usuario);
+    setFormData({
+      name: usuario.name || "",
+      email: usuario.email || "",
+      role: usuario.role,
+      empresaId: usuario.empresaId,
+    });
+    setIsEditOpen(true);
+  };
+
+  const handleUpdate = () => {
+    if (!editingUser) return;
+    updateUserMutation.mutate({
+      id: editingUser.id,
+      name: formData.name,
+      email: formData.email || undefined,
+      role: formData.role as any,
+      empresaId: formData.empresaId,
+    });
+  };
+
+  const handleToggleActivo = (usuario: any) => {
+    updateUserMutation.mutate({
+      id: usuario.id,
+      activo: !usuario.activo,
+    });
   };
 
   const formatDate = (date: Date | string) => {
@@ -77,23 +149,265 @@ export default function Usuarios() {
     return `${day}-${month}-${year}`;
   };
 
+  // Filtrar usuarios
+  const filteredUsuarios = usuarios?.filter(usuario => {
+    const matchesSearch = !searchTerm || 
+      usuario.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      usuario.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = filterRole === "all" || usuario.role === filterRole;
+    const matchesEmpresa = filterEmpresa === "all" || 
+      (filterEmpresa === "none" && !usuario.empresaId) ||
+      usuario.empresaId?.toString() === filterEmpresa;
+    return matchesSearch && matchesRole && matchesEmpresa;
+  });
+
+  // Estadísticas
+  const stats = {
+    total: usuarios?.length || 0,
+    activos: usuarios?.filter(u => u.activo).length || 0,
+    porRol: {
+      superadmin: usuarios?.filter(u => u.role === 'superadmin').length || 0,
+      admin: usuarios?.filter(u => u.role === 'admin').length || 0,
+      supervisor: usuarios?.filter(u => u.role === 'supervisor').length || 0,
+      jefe_residente: usuarios?.filter(u => u.role === 'jefe_residente').length || 0,
+      residente: usuarios?.filter(u => u.role === 'residente').length || 0,
+    },
+    sinEmpresa: usuarios?.filter(u => !u.empresaId).length || 0,
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Usuarios</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Gestión de Usuarios</h1>
             <p className="text-muted-foreground">
-              Gestiona los usuarios y sus roles en el sistema
+              Alta, edición y asignación de roles y empresas
             </p>
           </div>
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#02B381] hover:bg-[#029970]">
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Usuario
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Crear Nuevo Usuario</DialogTitle>
+                <DialogDescription>
+                  Ingresa los datos del nuevo usuario y asígnale un rol y empresa.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nombre *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Nombre completo"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="correo@ejemplo.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Rol *</Label>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(value) => setFormData({ ...formData, role: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="superadmin">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-3 w-3 text-red-600" />
+                          Superadministrador
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="admin">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-3 w-3 text-purple-600" />
+                          Administrador
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                      <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
+                      <SelectItem value="residente">Residente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="empresa">Empresa</Label>
+                  <Select
+                    value={formData.empresaId?.toString() || "none"}
+                    onValueChange={(value) => setFormData({ 
+                      ...formData, 
+                      empresaId: value === "none" ? null : parseInt(value) 
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sin asignar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sin asignar</SelectItem>
+                      {empresas?.map((empresa) => (
+                        <SelectItem key={empresa.id} value={empresa.id.toString()}>
+                          {empresa.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button 
+                  onClick={handleCreate}
+                  disabled={createUserMutation.isPending}
+                  className="bg-[#02B381] hover:bg-[#029970]"
+                >
+                  {createUserMutation.isPending ? "Creando..." : "Crear Usuario"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
+        {/* Estadísticas */}
+        <div className="grid gap-4 md:grid-cols-5">
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-100">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-xs text-muted-foreground">Total</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-100">
+                  <UserCheck className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.activos}</p>
+                  <p className="text-xs text-muted-foreground">Activos</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-purple-100">
+                  <Shield className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.porRol.admin + stats.porRol.superadmin}</p>
+                  <p className="text-xs text-muted-foreground">Admins</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-100">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.porRol.supervisor}</p>
+                  <p className="text-xs text-muted-foreground">Supervisores</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-100">
+                  <Building2 className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.sinEmpresa}</p>
+                  <p className="text-xs text-muted-foreground">Sin Empresa</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filtros */}
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nombre o email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              <Select value={filterRole} onValueChange={setFilterRole}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por rol" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los roles</SelectItem>
+                  <SelectItem value="superadmin">Superadmin</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                  <SelectItem value="supervisor">Supervisor</SelectItem>
+                  <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
+                  <SelectItem value="residente">Residente</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterEmpresa} onValueChange={setFilterEmpresa}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las empresas</SelectItem>
+                  <SelectItem value="none">Sin empresa</SelectItem>
+                  {empresas?.map((empresa) => (
+                    <SelectItem key={empresa.id} value={empresa.id.toString()}>
+                      {empresa.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tabla de usuarios */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Lista de Usuarios
+              Lista de Usuarios ({filteredUsuarios?.length || 0})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -101,9 +415,9 @@ export default function Usuarios() {
               <div className="text-center py-8 text-muted-foreground">
                 Cargando...
               </div>
-            ) : usuarios?.length === 0 ? (
+            ) : filteredUsuarios?.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No hay usuarios registrados
+                No se encontraron usuarios
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -116,15 +430,16 @@ export default function Usuarios() {
                       <TableHead>Empresa</TableHead>
                       <TableHead>Último Acceso</TableHead>
                       <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {usuarios?.map((usuario) => (
+                    {filteredUsuarios?.map((usuario) => (
                       <TableRow key={usuario.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
-                              <span className="text-sm font-medium text-primary">
+                            <div className="h-9 w-9 rounded-full bg-[#002C63]/10 flex items-center justify-center">
+                              <span className="text-sm font-medium text-[#002C63]">
                                 {usuario.name?.charAt(0).toUpperCase() || "U"}
                               </span>
                             </div>
@@ -140,43 +455,19 @@ export default function Usuarios() {
                           {usuario.email || "-"}
                         </TableCell>
                         <TableCell>
-                          <Select
-                            value={usuario.role}
-                            onValueChange={(value) => handleRoleChange(usuario.id, value)}
-                          >
-                            <SelectTrigger className="w-[160px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">
-                                <div className="flex items-center gap-2">
-                                  <Shield className="h-3 w-3" />
-                                  Administrador
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="supervisor">Supervisor</SelectItem>
-                              <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
-                              <SelectItem value="residente">Residente</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <Badge className={roleColors[usuario.role]}>
+                            {roleLabels[usuario.role]}
+                          </Badge>
                         </TableCell>
                         <TableCell>
-                          <Select
-                            value={usuario.empresaId?.toString() || "none"}
-                            onValueChange={(value) => handleEmpresaChange(usuario.id, value)}
-                          >
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue placeholder="Sin asignar" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">Sin asignar</SelectItem>
-                              {empresas?.map((empresa) => (
-                                <SelectItem key={empresa.id} value={empresa.id.toString()}>
-                                  {empresa.nombre}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          {usuario.empresa ? (
+                            <div className="flex items-center gap-2">
+                              <Building2 className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">{usuario.empresa.nombre}</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Sin asignar</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {formatDate(usuario.lastSignedIn)}
@@ -188,6 +479,30 @@ export default function Usuarios() {
                           >
                             {usuario.activo ? "Activo" : "Inactivo"}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(usuario)}
+                              title="Editar"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleToggleActivo(usuario)}
+                              title={usuario.activo ? "Desactivar" : "Activar"}
+                            >
+                              {usuario.activo ? (
+                                <UserX className="h-4 w-4 text-red-500" />
+                              ) : (
+                                <UserCheck className="h-4 w-4 text-emerald-500" />
+                              )}
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -204,14 +519,21 @@ export default function Usuarios() {
             <CardTitle className="text-base">Permisos por Rol</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+              <div className="p-3 rounded-lg border">
+                <Badge className={roleColors.superadmin}>Superadmin</Badge>
+                <ul className="mt-2 text-xs text-muted-foreground space-y-1">
+                  <li>• Acceso total al sistema</li>
+                  <li>• Configuración y metas</li>
+                  <li>• Gestión de usuarios</li>
+                </ul>
+              </div>
               <div className="p-3 rounded-lg border">
                 <Badge className={roleColors.admin}>Administrador</Badge>
                 <ul className="mt-2 text-xs text-muted-foreground space-y-1">
-                  <li>• Gestión completa del sistema</li>
-                  <li>• Administrar usuarios y catálogos</li>
+                  <li>• Gestión de catálogos</li>
+                  <li>• Administrar usuarios</li>
                   <li>• Ver estadísticas globales</li>
-                  <li>• Aprobar/rechazar ítems</li>
                 </ul>
               </div>
               <div className="p-3 rounded-lg border">
@@ -241,6 +563,101 @@ export default function Usuarios() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Dialog de edición */}
+        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Usuario</DialogTitle>
+              <DialogDescription>
+                Modifica los datos del usuario.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Nombre *</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Nombre completo"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-role">Rol *</Label>
+                <Select
+                  value={formData.role}
+                  onValueChange={(value) => setFormData({ ...formData, role: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="superadmin">
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-3 w-3 text-red-600" />
+                        Superadministrador
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="admin">
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-3 w-3 text-purple-600" />
+                        Administrador
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
+                    <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
+                    <SelectItem value="residente">Residente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-empresa">Empresa</Label>
+                <Select
+                  value={formData.empresaId?.toString() || "none"}
+                  onValueChange={(value) => setFormData({ 
+                    ...formData, 
+                    empresaId: value === "none" ? null : parseInt(value) 
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin asignar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin asignar</SelectItem>
+                    {empresas?.map((empresa) => (
+                      <SelectItem key={empresa.id} value={empresa.id.toString()}>
+                        {empresa.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleUpdate}
+                disabled={updateUserMutation.isPending}
+                className="bg-[#02B381] hover:bg-[#029970]"
+              >
+                {updateUserMutation.isPending ? "Guardando..." : "Guardar Cambios"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

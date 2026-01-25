@@ -43,6 +43,13 @@
       "when": 1769316809972,
       "tag": "0005_clear_tusk",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1769320305454,
+      "tag": "0006_silky_trish_tilby",
+      "breakpoints": true
     }
   ]
 }

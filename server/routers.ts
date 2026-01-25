@@ -60,6 +60,11 @@ export const appRouter = router({
       return await db.getAllUsers();
     }),
     
+    // Lista de usuarios con empresa relacionada
+    listConEmpresa: adminProcedure.query(async () => {
+      return await db.getAllUsersConEmpresa();
+    }),
+    
     // Lista de residentes con estadísticas completas
     residentes: protectedProcedure.query(async () => {
       return await db.getAllResidentesConEstadisticas();
@@ -72,10 +77,53 @@ export const appRouter = router({
         return await db.getResidenteConDatosCompletos(input.id);
       }),
     
+    // Obtener usuario por ID
+    get: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getUserById(input.id);
+      }),
+    
     byRole: adminProcedure
       .input(z.object({ role: z.string() }))
       .query(async ({ input }) => {
         return await db.getUsersByRole(input.role);
+      }),
+    
+    // Usuarios por empresa
+    byEmpresa: adminProcedure
+      .input(z.object({ empresaId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getUsersByEmpresa(input.empresaId);
+      }),
+    
+    // Crear usuario manualmente
+    create: adminProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        email: z.string().email().optional(),
+        role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente']),
+        empresaId: z.number().nullable().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createUser(input);
+        return { id, success: true };
+      }),
+    
+    // Actualizar usuario completo
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        email: z.string().email().optional(),
+        role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente']).optional(),
+        empresaId: z.number().nullable().optional(),
+        activo: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateUser(id, data);
+        return { success: true };
       }),
     
     updateRole: adminProcedure
@@ -366,6 +414,7 @@ export const appRouter = router({
         unidadId: z.number(),
         especialidadId: z.number(),
         atributoId: z.number().optional(),
+        defectoId: z.number().optional(),
         titulo: z.string().min(1),
         descripcion: z.string().optional(),
         ubicacionDetalle: z.string().optional(),
@@ -816,6 +865,100 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         await db.deleteMeta(input.id);
         return { success: true };
+      }),
+  }),
+
+  // ==================== DEFECTOS ====================
+  defectos: router({
+    list: protectedProcedure.query(async () => {
+      return await db.getAllDefectos();
+    }),
+    
+    // Lista con estadísticas de uso
+    listConEstadisticas: protectedProcedure.query(async () => {
+      return await db.getDefectosConEstadisticas();
+    }),
+    
+    get: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getDefectoById(input.id);
+      }),
+    
+    // Defectos por especialidad
+    byEspecialidad: protectedProcedure
+      .input(z.object({ especialidadId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getDefectosByEspecialidad(input.especialidadId);
+      }),
+    
+    create: adminProcedure
+      .input(z.object({
+        nombre: z.string().min(1),
+        codigo: z.string().optional(),
+        descripcion: z.string().optional(),
+        especialidadId: z.number().optional(),
+        severidad: z.enum(['leve', 'moderado', 'grave', 'critico']).optional(),
+        tiempoEstimadoResolucion: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createDefecto(input);
+        return { id, success: true };
+      }),
+    
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        nombre: z.string().min(1).optional(),
+        codigo: z.string().optional(),
+        descripcion: z.string().optional(),
+        especialidadId: z.number().optional(),
+        severidad: z.enum(['leve', 'moderado', 'grave', 'critico']).optional(),
+        tiempoEstimadoResolucion: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateDefecto(id, data);
+        return { success: true };
+      }),
+    
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteDefecto(input.id);
+        return { success: true };
+      }),
+    
+    // Estadísticas de defectos con filtros
+    estadisticas: protectedProcedure
+      .input(z.object({
+        empresaId: z.number().optional(),
+        unidadId: z.number().optional(),
+        especialidadId: z.number().optional(),
+        fechaDesde: z.date().optional(),
+        fechaHasta: z.date().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await db.getEstadisticasDefectos(input || {});
+      }),
+  }),
+
+  // ==================== REPORTES ====================
+  reportes: router({
+    // Obtener items para reporte fotográfico
+    itemsParaReporte: protectedProcedure
+      .input(z.object({
+        empresaId: z.number().optional(),
+        unidadId: z.number().optional(),
+        especialidadId: z.number().optional(),
+        atributoId: z.number().optional(),
+        residenteId: z.number().optional(),
+        status: z.string().optional(),
+        fechaDesde: z.date().optional(),
+        fechaHasta: z.date().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await db.getItemsParaReporte(input || {});
       }),
   }),
 });

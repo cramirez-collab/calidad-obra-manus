@@ -108,6 +108,7 @@ export const items = mysqlTable("items", {
   unidadId: int("unidadId").notNull(),
   especialidadId: int("especialidadId").notNull(),
   atributoId: int("atributoId"),
+  defectoId: int("defectoId"), // Relación con catálogo de defectos
   
   // Usuarios involucrados
   residenteId: int("residenteId").notNull(),
@@ -251,3 +252,23 @@ export const metas = mysqlTable("metas", {
 
 export type Meta = typeof metas.$inferSelect;
 export type InsertMeta = typeof metas.$inferInsert;
+
+
+/**
+ * Catálogo de defectos - tipos estandarizados para estadísticas
+ */
+export const defectos = mysqlTable("defectos", {
+  id: int("id").autoincrement().primaryKey(),
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  codigo: varchar("codigo", { length: 50 }),
+  descripcion: text("descripcion"),
+  especialidadId: int("especialidadId"), // Relación con especialidad
+  severidad: mysqlEnum("severidad", ["leve", "moderado", "grave", "critico"]).default("moderado").notNull(),
+  tiempoEstimadoResolucion: int("tiempoEstimadoResolucion"), // en horas
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Defecto = typeof defectos.$inferSelect;
+export type InsertDefecto = typeof defectos.$inferInsert;

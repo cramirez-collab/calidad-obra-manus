@@ -277,3 +277,40 @@
 - [x] Exportar estadísticas a Excel
 - [x] Exportar estadísticas a CSV
 - [x] Reportes con logo Objetiva
+
+
+## Gestión Avanzada de Usuarios y Defectos (Undécima Iteración)
+
+### Gestión de Usuarios con Roles y Empresas
+- [x] Alta de usuarios manualmente
+- [x] Edición de datos de usuarios
+- [x] Asignación de roles (Superadmin, Admin, Supervisor, Jefe Residente, Residente)
+- [x] Vinculación de usuarios a empresas
+- [x] Filtros por rol y empresa
+- [x] Estadísticas de usuarios por rol
+- [x] Activar/desactivar usuarios
+
+### Catálogo de Defectos
+- [x] Tabla de defectos en base de datos
+- [x] CRUD completo de defectos
+- [x] Código único por defecto
+- [x] Severidad (leve, moderado, grave, crítico)
+- [x] Tiempo estimado de resolución
+- [x] Vinculación defecto-especialidad
+- [x] Defectos filtrados por especialidad en formulario de ítem
+
+### Estadísticas de Defectos
+- [x] Gráfico de top 10 tipos de defectos
+- [x] Distribución por severidad (pie chart)
+- [x] Tasa de aprobación por defecto
+- [x] KPIs de defectos graves y críticos
+- [x] Integración en página de estadísticas
+
+### Reporte Fotográfico PDF
+- [x] Página de generación de reportes
+- [x] Multifiltro (empresa, unidad, especialidad, estado, fechas)
+- [x] Vista previa de ítems seleccionados
+- [x] Generación de PDF con fotos antes/después
+- [x] Logo de Objetiva en encabezado
+- [x] Estadísticas en el reporte
+- [x] Exportación a CSV adicional

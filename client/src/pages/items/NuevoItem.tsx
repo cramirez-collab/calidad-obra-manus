@@ -36,6 +36,7 @@ export default function NuevoItem() {
     unidadId: "",
     especialidadId: "",
     atributoId: "",
+    defectoId: "",
     titulo: "",
     descripcion: "",
     ubicacionDetalle: "",
@@ -52,6 +53,13 @@ export default function NuevoItem() {
   const { data: unidades } = trpc.unidades.list.useQuery();
   const { data: especialidades } = trpc.especialidades.list.useQuery();
   const { data: atributos } = trpc.atributos.list.useQuery();
+  
+  // Defectos filtrados por especialidad seleccionada
+  const { data: defectos } = trpc.defectos.byEspecialidad.useQuery(
+    { especialidadId: parseInt(formData.especialidadId) },
+    { enabled: !!formData.especialidadId }
+  );
+  const { data: todosDefectos } = trpc.defectos.list.useQuery();
 
   const createItemMutation = trpc.items.create.useMutation();
   const uploadFotoMutation = trpc.items.uploadFotoAntes.useMutation();
@@ -125,6 +133,7 @@ export default function NuevoItem() {
         unidadId: parseInt(formData.unidadId),
         especialidadId: parseInt(formData.especialidadId),
         atributoId: formData.atributoId ? parseInt(formData.atributoId) : undefined,
+        defectoId: formData.defectoId ? parseInt(formData.defectoId) : undefined,
         titulo: formData.titulo,
         descripcion: formData.descripcion || undefined,
         ubicacionDetalle: formData.ubicacionDetalle || undefined,
@@ -246,7 +255,7 @@ export default function NuevoItem() {
                   <Label>Especialidad *</Label>
                   <Select
                     value={formData.especialidadId}
-                    onValueChange={(value) => setFormData({ ...formData, especialidadId: value })}
+                    onValueChange={(value) => setFormData({ ...formData, especialidadId: value, defectoId: "" })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar especialidad" />
@@ -285,6 +294,48 @@ export default function NuevoItem() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Tipo de Defecto</Label>
+                <Select
+                  value={formData.defectoId}
+                  onValueChange={(value) => setFormData({ ...formData, defectoId: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar defecto (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {formData.especialidadId && defectos && defectos.length > 0 ? (
+                      defectos.map((def) => (
+                        <SelectItem key={def.id} value={def.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <span className={`h-2 w-2 rounded-full ${
+                              def.severidad === 'leve' ? 'bg-green-500' :
+                              def.severidad === 'moderado' ? 'bg-yellow-500' :
+                              def.severidad === 'grave' ? 'bg-orange-500' : 'bg-red-500'
+                            }`} />
+                            {def.nombre}
+                          </div>
+                        </SelectItem>
+                      ))
+                    ) : todosDefectos?.map((def) => (
+                      <SelectItem key={def.id} value={def.id.toString()}>
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full ${
+                            def.severidad === 'leve' ? 'bg-green-500' :
+                            def.severidad === 'moderado' ? 'bg-yellow-500' :
+                            def.severidad === 'grave' ? 'bg-orange-500' : 'bg-red-500'
+                          }`} />
+                          {def.nombre}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Selecciona una especialidad para ver defectos relacionados
+                </p>
               </div>
 
               <div className="grid gap-2">

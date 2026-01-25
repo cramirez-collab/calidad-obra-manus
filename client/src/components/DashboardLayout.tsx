@@ -45,7 +45,9 @@ import {
   ChevronRight,
   FileCheck,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  AlertTriangle,
+  FileImage
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -84,7 +86,9 @@ const getMenuItems = (role: string) => {
     { icon: MapPin, label: "Unidades", path: "/unidades", shortLabel: "" },
     { icon: Wrench, label: "Especialidades", path: "/especialidades", shortLabel: "" },
     { icon: Tags, label: "Atributos", path: "/atributos", shortLabel: "" },
+    { icon: AlertTriangle, label: "Defectos", path: "/defectos", shortLabel: "" },
     { icon: Users, label: "Usuarios", path: "/usuarios", shortLabel: "" },
+    { icon: FileImage, label: "Reportes", path: "/reportes", shortLabel: "" },
     { icon: History, label: "Bitácora", path: "/bitacora", shortLabel: "" },
   ];
 

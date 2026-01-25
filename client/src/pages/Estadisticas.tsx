@@ -29,7 +29,8 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Camera
+  Camera,
+  AlertTriangle
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import {
@@ -88,6 +89,7 @@ export default function Estadisticas() {
   }), [filters]);
 
   const { data: stats, isLoading, refetch } = trpc.estadisticas.general.useQuery(queryFilters);
+  const { data: defectosStats } = trpc.defectos.estadisticas.useQuery();
 
   const clearFilters = () => {
     setFilters({
@@ -148,6 +150,41 @@ export default function Estadisticas() {
       };
     });
   }, [stats, especialidades]);
+
+  // Datos de defectos para gráficos
+  const defectosData = useMemo(() => {
+    if (!defectosStats?.porDefecto) return [];
+    return defectosStats.porDefecto.slice(0, 10).map(item => ({
+      name: item.defecto?.nombre || 'Sin nombre',
+      total: item.total,
+      aprobados: item.aprobados,
+      rechazados: item.rechazados,
+    }));
+  }, [defectosStats]);
+
+  // Calcular tasa de aprobación global
+  const tasaAprobacionGlobal = useMemo(() => {
+    if (!defectosStats?.porDefecto) return 0;
+    const totalItems = defectosStats.porDefecto.reduce((acc, d) => acc + d.total, 0);
+    const totalAprobados = defectosStats.porDefecto.reduce((acc, d) => acc + d.aprobados, 0);
+    return totalItems > 0 ? (totalAprobados / totalItems) * 100 : 0;
+  }, [defectosStats]);
+
+  const severidadColors: Record<string, string> = {
+    leve: "#10B981",
+    moderado: "#F59E0B",
+    grave: "#F97316",
+    critico: "#EF4444",
+  };
+
+  const severidadData = useMemo(() => {
+    if (!defectosStats?.porSeveridad) return [];
+    return defectosStats.porSeveridad.map(item => ({
+      name: item.severidad.charAt(0).toUpperCase() + item.severidad.slice(1),
+      value: item.total,
+      color: severidadColors[item.severidad] || "#6B7280",
+    }));
+  }, [defectosStats]);
 
   const residentes = usuarios?.filter(u => u.role === 'residente' || u.role === 'jefe_residente') || [];
   const supervisores = usuarios?.filter(u => u.role === 'supervisor' || u.role === 'admin') || [];
@@ -491,6 +528,144 @@ export default function Estadisticas() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        {/* Estadísticas de Defectos */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            Estadísticas de Defectos
+          </h2>
+          
+          {/* KPIs de Defectos */}
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-100">
+                    <AlertTriangle className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{defectosStats?.totalItems || 0}</p>
+                    <p className="text-xs text-muted-foreground">Total con Defecto</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-emerald-100">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-emerald-600">
+                      {tasaAprobacionGlobal.toFixed(1)}%
+                    </p>
+                    <p className="text-xs text-muted-foreground">Tasa Aprobación</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-orange-100">
+                    <AlertTriangle className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-orange-600">
+                      {defectosStats?.porSeveridad?.find(s => s.severidad === 'grave')?.total || 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Defectos Graves</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-red-100">
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-red-600">
+                      {defectosStats?.porSeveridad?.find(s => s.severidad === 'critico')?.total || 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Defectos Críticos</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Por Tipo de Defecto */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Top 10 Tipos de Defectos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {defectosData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={defectosData} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="aprobados" stackId="a" fill="#10B981" name="Aprobados" />
+                      <Bar dataKey="rechazados" stackId="a" fill="#EF4444" name="Rechazados" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    No hay datos de defectos disponibles
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Por Severidad */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5" />
+                  Distribución por Severidad
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {severidadData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsPie>
+                      <Pie
+                        data={severidadData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={2}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      >
+                        {severidadData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </RechartsPie>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    No hay datos de severidad disponibles
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </DashboardLayout>

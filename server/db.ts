@@ -1219,3 +1219,274 @@ export async function getMetasConProgreso() {
   
   return metasConProgreso;
 }
+
+
+// ==================== DEFECTOS ====================
+
+import { defectos, InsertDefecto } from "../drizzle/schema";
+
+export async function getAllDefectos() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(defectos).where(eq(defectos.activo, true)).orderBy(defectos.nombre);
+}
+
+export async function getDefectoById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(defectos).where(eq(defectos.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getDefectosByEspecialidad(especialidadId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(defectos)
+    .where(and(
+      eq(defectos.especialidadId, especialidadId),
+      eq(defectos.activo, true)
+    ))
+    .orderBy(defectos.nombre);
+}
+
+export async function createDefecto(data: InsertDefecto) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(defectos).values(data);
+  return result[0].insertId;
+}
+
+export async function updateDefecto(id: number, data: Partial<InsertDefecto>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(defectos).set(data).where(eq(defectos.id, id));
+}
+
+export async function deleteDefecto(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(defectos).set({ activo: false }).where(eq(defectos.id, id));
+}
+
+// Obtener defectos con estadísticas de uso
+export async function getDefectosConEstadisticas() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const todosDefectos = await db.select().from(defectos).where(eq(defectos.activo, true)).orderBy(defectos.nombre);
+  const todosItems = await db.select().from(items);
+  const todasEspecialidades = await db.select().from(especialidades);
+  
+  const especialidadesMap = new Map(todasEspecialidades.map(e => [e.id, e]));
+  
+  return todosDefectos.map(defecto => {
+    const itemsConDefecto = todosItems.filter(i => i.defectoId === defecto.id);
+    const aprobados = itemsConDefecto.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsConDefecto.filter(i => i.status === 'rechazado').length;
+    const pendientes = itemsConDefecto.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+    
+    return {
+      ...defecto,
+      especialidad: defecto.especialidadId ? especialidadesMap.get(defecto.especialidadId) : null,
+      estadisticas: {
+        total: itemsConDefecto.length,
+        aprobados,
+        rechazados,
+        pendientes,
+        tasaAprobacion: itemsConDefecto.length > 0 ? Math.round((aprobados / itemsConDefecto.length) * 100) : 0
+      }
+    };
+  });
+}
+
+// ==================== USUARIOS MEJORADO ====================
+
+// Crear usuario manualmente (para dar de alta usuarios)
+export async function createUser(data: { 
+  name: string; 
+  email?: string; 
+  role: string; 
+  empresaId?: number | null;
+  openId?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Generar openId único si no se proporciona
+  const openId = data.openId || `manual_${nanoid(16)}`;
+  
+  const result = await db.insert(users).values({
+    openId,
+    name: data.name,
+    email: data.email || null,
+    role: data.role as any,
+    empresaId: data.empresaId || null,
+    activo: true,
+    lastSignedIn: new Date(),
+  });
+  
+  return result[0].insertId;
+}
+
+// Actualizar usuario completo
+export async function updateUser(id: number, data: {
+  name?: string;
+  email?: string;
+  role?: string;
+  empresaId?: number | null;
+  activo?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) return;
+  
+  const updateData: any = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.role !== undefined) updateData.role = data.role;
+  if (data.empresaId !== undefined) updateData.empresaId = data.empresaId;
+  if (data.activo !== undefined) updateData.activo = data.activo;
+  
+  await db.update(users).set(updateData).where(eq(users.id, id));
+}
+
+// Obtener usuarios con empresa relacionada
+export async function getAllUsersConEmpresa() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const todosUsuarios = await db.select().from(users).orderBy(desc(users.createdAt));
+  const todasEmpresas = await db.select().from(empresas);
+  
+  const empresasMap = new Map(todasEmpresas.map(e => [e.id, e]));
+  
+  return todosUsuarios.map(usuario => ({
+    ...usuario,
+    empresa: usuario.empresaId ? empresasMap.get(usuario.empresaId) : null
+  }));
+}
+
+// Obtener usuarios por empresa
+export async function getUsersByEmpresa(empresaId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(users)
+    .where(eq(users.empresaId, empresaId))
+    .orderBy(users.name);
+}
+
+// ==================== ESTADÍSTICAS DE DEFECTOS ====================
+
+export async function getEstadisticasDefectos(filters: ItemFilters = {}) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const conditions = [];
+  if (filters.empresaId) conditions.push(eq(items.empresaId, filters.empresaId));
+  if (filters.unidadId) conditions.push(eq(items.unidadId, filters.unidadId));
+  if (filters.especialidadId) conditions.push(eq(items.especialidadId, filters.especialidadId));
+  if (filters.fechaDesde) conditions.push(gte(items.fechaCreacion, filters.fechaDesde));
+  if (filters.fechaHasta) conditions.push(lte(items.fechaCreacion, filters.fechaHasta));
+  
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  
+  // Obtener todos los items con filtros
+  const itemsFiltrados = await db.select().from(items).where(whereClause);
+  
+  // Obtener todos los defectos
+  const todosDefectos = await db.select().from(defectos).where(eq(defectos.activo, true));
+  const todasEspecialidades = await db.select().from(especialidades);
+  
+  const especialidadesMap = new Map(todasEspecialidades.map(e => [e.id, e]));
+  
+  // Agrupar por defecto
+  const porDefecto = todosDefectos.map(defecto => {
+    const itemsDefecto = itemsFiltrados.filter(i => i.defectoId === defecto.id);
+    const aprobados = itemsDefecto.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsDefecto.filter(i => i.status === 'rechazado').length;
+    const pendientes = itemsDefecto.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+    
+    return {
+      defecto: {
+        ...defecto,
+        especialidad: defecto.especialidadId ? especialidadesMap.get(defecto.especialidadId) : null
+      },
+      total: itemsDefecto.length,
+      aprobados,
+      rechazados,
+      pendientes,
+      tasaAprobacion: itemsDefecto.length > 0 ? Math.round((aprobados / itemsDefecto.length) * 100) : 0
+    };
+  }).filter(d => d.total > 0).sort((a, b) => b.total - a.total);
+  
+  // Agrupar por severidad
+  const porSeveridad = ['leve', 'moderado', 'grave', 'critico'].map(severidad => {
+    const defectosConSeveridad = todosDefectos.filter(d => d.severidad === severidad);
+    const defectoIds = defectosConSeveridad.map(d => d.id);
+    const itemsSeveridad = itemsFiltrados.filter(i => i.defectoId && defectoIds.includes(i.defectoId));
+    
+    return {
+      severidad,
+      total: itemsSeveridad.length,
+      aprobados: itemsSeveridad.filter(i => i.status === 'aprobado').length,
+      rechazados: itemsSeveridad.filter(i => i.status === 'rechazado').length,
+      pendientes: itemsSeveridad.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length
+    };
+  });
+  
+  return {
+    porDefecto,
+    porSeveridad,
+    totalItems: itemsFiltrados.length,
+    itemsConDefecto: itemsFiltrados.filter(i => i.defectoId).length,
+    itemsSinDefecto: itemsFiltrados.filter(i => !i.defectoId).length
+  };
+}
+
+// ==================== REPORTE FOTOGRÁFICO ====================
+
+export async function getItemsParaReporte(filters: ItemFilters = {}) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const conditions = [];
+  if (filters.empresaId) conditions.push(eq(items.empresaId, filters.empresaId));
+  if (filters.unidadId) conditions.push(eq(items.unidadId, filters.unidadId));
+  if (filters.especialidadId) conditions.push(eq(items.especialidadId, filters.especialidadId));
+  if (filters.atributoId) conditions.push(eq(items.atributoId, filters.atributoId));
+  if (filters.residenteId) conditions.push(eq(items.residenteId, filters.residenteId));
+  if (filters.status) conditions.push(eq(items.status, filters.status as any));
+  if (filters.fechaDesde) conditions.push(gte(items.fechaCreacion, filters.fechaDesde));
+  if (filters.fechaHasta) conditions.push(lte(items.fechaCreacion, filters.fechaHasta));
+  
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  
+  // Obtener items con todas las relaciones
+  const itemsResult = await db.select().from(items).where(whereClause).orderBy(desc(items.fechaCreacion));
+  
+  // Obtener datos relacionados
+  const todasEmpresas = await db.select().from(empresas);
+  const todasUnidades = await db.select().from(unidades);
+  const todasEspecialidades = await db.select().from(especialidades);
+  const todosAtributos = await db.select().from(atributos);
+  const todosDefectos = await db.select().from(defectos);
+  const todosUsuarios = await db.select().from(users);
+  
+  const empresasMap = new Map(todasEmpresas.map(e => [e.id, e]));
+  const unidadesMap = new Map(todasUnidades.map(u => [u.id, u]));
+  const especialidadesMap = new Map(todasEspecialidades.map(e => [e.id, e]));
+  const atributosMap = new Map(todosAtributos.map(a => [a.id, a]));
+  const defectosMap = new Map(todosDefectos.map(d => [d.id, d]));
+  const usuariosMap = new Map(todosUsuarios.map(u => [u.id, u]));
+  
+  return itemsResult.map(item => ({
+    ...item,
+    empresa: empresasMap.get(item.empresaId),
+    unidad: unidadesMap.get(item.unidadId),
+    especialidad: especialidadesMap.get(item.especialidadId),
+    atributo: item.atributoId ? atributosMap.get(item.atributoId) : null,
+    defecto: item.defectoId ? defectosMap.get(item.defectoId) : null,
+    residente: usuariosMap.get(item.residenteId),
+    jefeResidente: item.jefeResidenteId ? usuariosMap.get(item.jefeResidenteId) : null,
+    supervisor: item.supervisorId ? usuariosMap.get(item.supervisorId) : null
+  }));
+}
