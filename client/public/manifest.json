@@ -1,11 +1,11 @@
 {
-  "name": "Control de Calidad de Obra",
-  "short_name": "Calidad Obra",
-  "description": "Sistema de gestión de calidad de obra con captura de fotos y flujo de aprobación",
+  "name": "ObjetivaQC",
+  "short_name": "ObjetivaQC",
+  "description": "ObjetivaQC - Sistema de gestión de calidad de obra",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#3B82F6",
+  "theme_color": "#02B381",
   "orientation": "portrait-primary",
   "icons": [
     {

@@ -9,6 +9,16 @@ const removeAccents = (str: string): string => {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 };
 
+// Formatear fecha dd-mm-aa
+const formatDate = (date: Date | string | null): string => {
+  if (!date) return "";
+  const d = new Date(date);
+  const day = d.getDate().toString().padStart(2, "0");
+  const month = (d.getMonth() + 1).toString().padStart(2, "0");
+  const year = d.getFullYear().toString().slice(-2);
+  return `${day}-${month}-${year}`;
+};
+
 // Exportar ítems a Excel
 router.get("/api/export/items", async (req, res) => {
   try {
@@ -21,7 +31,6 @@ router.get("/api/export/items", async (req, res) => {
     const result = await db.getItems(filters, 1, 10000);
     const items = result?.items || [];
     
-    // Obtener catálogos para mapear IDs a nombres
     const [empresas, unidades, especialidades] = await Promise.all([
       db.getAllEmpresas(),
       db.getAllUnidades(),
@@ -33,7 +42,7 @@ router.get("/api/export/items", async (req, res) => {
     const especialidadesMap = new Map(especialidades?.map(e => [e.id, e.nombre]) || []);
     
     const statusLabels: Record<string, string> = {
-      pendiente_foto_despues: "Pendiente Foto Despues",
+      pendiente_foto_despues: "Pendiente Foto",
       pendiente_aprobacion: "Pendiente Aprobacion",
       aprobado: "Aprobado",
       rechazado: "Rechazado",
@@ -41,18 +50,16 @@ router.get("/api/export/items", async (req, res) => {
     
     const wb = XLSX.utils.book_new();
     
-    // Hoja de encabezado con información de Objetiva
     const headerData = [
+      ["ObjetivaQC - Sistema de Control de Calidad de Obra"],
       ["OBJETIVA - Innovacion en Desarrollos Inmobiliarios"],
-      ["Sistema de Control de Calidad de Obra (OQC)"],
       [""],
       ["Reporte de Items"],
-      [`Fecha de generacion: ${new Date().toLocaleDateString("es-MX")} ${new Date().toLocaleTimeString("es-MX")}`],
-      [`Total de registros: ${items.length}`],
+      [`Fecha: ${formatDate(new Date())} ${new Date().toLocaleTimeString("es-MX")}`],
+      [`Total: ${items.length} registros`],
       [""],
     ];
     
-    // Transformar datos para Excel (sin acentos)
     const data = items.map((item: any) => ({
       "Codigo": removeAccents(item.codigo || ""),
       "Titulo": removeAccents(item.titulo || ""),
@@ -62,40 +69,89 @@ router.get("/api/export/items", async (req, res) => {
       "Especialidad": removeAccents(especialidadesMap.get(item.especialidadId) || ""),
       "Estado": statusLabels[item.status] || item.status,
       "Ubicacion": removeAccents(item.ubicacionDetalle || ""),
-      "Fecha Creacion": item.fechaCreacion ? new Date(item.fechaCreacion).toLocaleDateString("es-MX") : "",
-      "Fecha Foto Despues": item.fechaFotoDespues ? new Date(item.fechaFotoDespues).toLocaleDateString("es-MX") : "",
-      "Fecha Aprobacion": item.fechaAprobacion ? new Date(item.fechaAprobacion).toLocaleDateString("es-MX") : "",
+      "Creacion": formatDate(item.fechaCreacion),
+      "Foto Despues": formatDate(item.fechaFotoDespues),
+      "Aprobacion": formatDate(item.fechaAprobacion),
     }));
     
-    // Crear hoja con encabezado
     const ws = XLSX.utils.aoa_to_sheet(headerData);
     XLSX.utils.sheet_add_json(ws, data, { origin: "A8" });
     
-    // Ajustar anchos de columna
     ws["!cols"] = [
-      { wch: 15 }, // Código
-      { wch: 30 }, // Título
-      { wch: 40 }, // Descripción
-      { wch: 20 }, // Empresa
-      { wch: 15 }, // Unidad
-      { wch: 20 }, // Especialidad
-      { wch: 20 }, // Estado
-      { wch: 25 }, // Ubicación
-      { wch: 15 }, // Fecha Creación
-      { wch: 18 }, // Fecha Foto Después
-      { wch: 18 }, // Fecha Aprobación
+      { wch: 12 }, { wch: 25 }, { wch: 35 }, { wch: 18 }, { wch: 12 },
+      { wch: 18 }, { wch: 18 }, { wch: 20 }, { wch: 10 }, { wch: 12 }, { wch: 12 },
     ];
     
     XLSX.utils.book_append_sheet(wb, ws, "Items OQC");
     
-    // Generar buffer
     const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
     
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=OQC_Items_${new Date().toISOString().split("T")[0]}.xlsx`);
+    res.setHeader("Content-Disposition", `attachment; filename=ObjetivaQC_Items_${formatDate(new Date()).replace(/-/g, "")}.xlsx`);
     res.send(buffer);
   } catch (error) {
     console.error("Error exporting items:", error);
+    res.status(500).json({ error: "Error al exportar items" });
+  }
+});
+
+// Exportar ítems a CSV
+router.get("/api/export/items/csv", async (req, res) => {
+  try {
+    const filters: any = {};
+    if (req.query.empresaId) filters.empresaId = parseInt(req.query.empresaId as string);
+    if (req.query.unidadId) filters.unidadId = parseInt(req.query.unidadId as string);
+    if (req.query.especialidadId) filters.especialidadId = parseInt(req.query.especialidadId as string);
+    if (req.query.status) filters.status = req.query.status as string;
+    
+    const result = await db.getItems(filters, 1, 10000);
+    const items = result?.items || [];
+    
+    const [empresas, unidades, especialidades] = await Promise.all([
+      db.getAllEmpresas(),
+      db.getAllUnidades(),
+      db.getAllEspecialidades(),
+    ]);
+    
+    const empresasMap = new Map(empresas?.map(e => [e.id, e.nombre]) || []);
+    const unidadesMap = new Map(unidades?.map(u => [u.id, u.nombre]) || []);
+    const especialidadesMap = new Map(especialidades?.map(e => [e.id, e.nombre]) || []);
+    
+    const statusLabels: Record<string, string> = {
+      pendiente_foto_despues: "Pendiente Foto",
+      pendiente_aprobacion: "Pendiente Aprobacion",
+      aprobado: "Aprobado",
+      rechazado: "Rechazado",
+    };
+    
+    // CSV header
+    const csvHeader = "Codigo,Titulo,Descripcion,Empresa,Unidad,Especialidad,Estado,Ubicacion,Creacion,Foto Despues,Aprobacion\n";
+    
+    // CSV rows
+    const csvRows = items.map((item: any) => {
+      const row = [
+        removeAccents(item.codigo || ""),
+        `"${removeAccents(item.titulo || "").replace(/"/g, '""')}"`,
+        `"${removeAccents(item.descripcion || "").replace(/"/g, '""')}"`,
+        `"${removeAccents(empresasMap.get(item.empresaId) || "")}"`,
+        `"${removeAccents(unidadesMap.get(item.unidadId) || "")}"`,
+        `"${removeAccents(especialidadesMap.get(item.especialidadId) || "")}"`,
+        statusLabels[item.status] || item.status,
+        `"${removeAccents(item.ubicacionDetalle || "").replace(/"/g, '""')}"`,
+        formatDate(item.fechaCreacion),
+        formatDate(item.fechaFotoDespues),
+        formatDate(item.fechaAprobacion),
+      ];
+      return row.join(",");
+    }).join("\n");
+    
+    const csv = csvHeader + csvRows;
+    
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename=ObjetivaQC_Items_${formatDate(new Date()).replace(/-/g, "")}.csv`);
+    res.send("\uFEFF" + csv); // BOM for Excel UTF-8
+  } catch (error) {
+    console.error("Error exporting items CSV:", error);
     res.status(500).json({ error: "Error al exportar items" });
   }
 });
@@ -122,7 +178,7 @@ router.get("/api/export/estadisticas", async (req, res) => {
     const especialidadesMap = new Map(especialidades?.map(e => [e.id, e.nombre]) || []);
     
     const statusLabels: Record<string, string> = {
-      pendiente_foto_despues: "Pendiente Foto Despues",
+      pendiente_foto_despues: "Pendiente Foto",
       pendiente_aprobacion: "Pendiente Aprobacion",
       aprobado: "Aprobado",
       rechazado: "Rechazado",
@@ -130,13 +186,12 @@ router.get("/api/export/estadisticas", async (req, res) => {
     
     const wb = XLSX.utils.book_new();
     
-    // Hoja de resumen con encabezado Objetiva
     const resumenHeader = [
+      ["ObjetivaQC - Sistema de Control de Calidad de Obra"],
       ["OBJETIVA - Innovacion en Desarrollos Inmobiliarios"],
-      ["Sistema de Control de Calidad de Obra (OQC)"],
       [""],
       ["Reporte de Estadisticas"],
-      [`Fecha de generacion: ${new Date().toLocaleDateString("es-MX")} ${new Date().toLocaleTimeString("es-MX")}`],
+      [`Fecha: ${formatDate(new Date())} ${new Date().toLocaleTimeString("es-MX")}`],
       [""],
       ["RESUMEN GENERAL"],
       [""],
@@ -151,38 +206,71 @@ router.get("/api/export/estadisticas", async (req, res) => {
     
     const wsResumen = XLSX.utils.aoa_to_sheet(resumenHeader);
     XLSX.utils.sheet_add_json(wsResumen, resumenData, { origin: "A9" });
-    wsResumen["!cols"] = [{ wch: 35 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen OQC");
+    wsResumen["!cols"] = [{ wch: 30 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen");
     
-    // Hoja por empresa
     const empresaData = stats.porEmpresa.map((e: any) => ({
       "Empresa": removeAccents(empresasMap.get(e.empresaId) || `ID: ${e.empresaId}`),
       "Cantidad": Number(e.count),
     }));
     if (empresaData.length > 0) {
       const wsEmpresa = XLSX.utils.json_to_sheet(empresaData);
-      wsEmpresa["!cols"] = [{ wch: 35 }, { wch: 15 }];
+      wsEmpresa["!cols"] = [{ wch: 30 }, { wch: 12 }];
       XLSX.utils.book_append_sheet(wb, wsEmpresa, "Por Empresa");
     }
     
-    // Hoja por especialidad
     const especialidadData = stats.porEspecialidad.map((e: any) => ({
       "Especialidad": removeAccents(especialidadesMap.get(e.especialidadId) || `ID: ${e.especialidadId}`),
       "Cantidad": Number(e.count),
     }));
     if (especialidadData.length > 0) {
       const wsEspecialidad = XLSX.utils.json_to_sheet(especialidadData);
-      wsEspecialidad["!cols"] = [{ wch: 35 }, { wch: 15 }];
+      wsEspecialidad["!cols"] = [{ wch: 30 }, { wch: 12 }];
       XLSX.utils.book_append_sheet(wb, wsEspecialidad, "Por Especialidad");
     }
     
     const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
     
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=OQC_Estadisticas_${new Date().toISOString().split("T")[0]}.xlsx`);
+    res.setHeader("Content-Disposition", `attachment; filename=ObjetivaQC_Estadisticas_${formatDate(new Date()).replace(/-/g, "")}.xlsx`);
     res.send(buffer);
   } catch (error) {
     console.error("Error exporting estadisticas:", error);
+    res.status(500).json({ error: "Error al exportar estadisticas" });
+  }
+});
+
+// Exportar estadísticas a CSV
+router.get("/api/export/estadisticas/csv", async (req, res) => {
+  try {
+    const filters: any = {};
+    if (req.query.empresaId) filters.empresaId = parseInt(req.query.empresaId as string);
+    if (req.query.unidadId) filters.unidadId = parseInt(req.query.unidadId as string);
+    if (req.query.especialidadId) filters.especialidadId = parseInt(req.query.especialidadId as string);
+    
+    const stats = await db.getEstadisticas(filters);
+    if (!stats) {
+      return res.status(500).json({ error: "Error al obtener estadisticas" });
+    }
+    
+    const statusLabels: Record<string, string> = {
+      pendiente_foto_despues: "Pendiente Foto",
+      pendiente_aprobacion: "Pendiente Aprobacion",
+      aprobado: "Aprobado",
+      rechazado: "Rechazado",
+    };
+    
+    let csv = "Metrica,Valor\n";
+    csv += `Total de Items,${stats.total}\n`;
+    stats.porStatus.forEach((s: any) => {
+      csv += `${statusLabels[s.status] || s.status},${Number(s.count)}\n`;
+    });
+    
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename=ObjetivaQC_Estadisticas_${formatDate(new Date()).replace(/-/g, "")}.csv`);
+    res.send("\uFEFF" + csv);
+  } catch (error) {
+    console.error("Error exporting estadisticas CSV:", error);
     res.status(500).json({ error: "Error al exportar estadisticas" });
   }
 });

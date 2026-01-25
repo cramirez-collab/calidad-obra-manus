@@ -10,6 +10,12 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { trpc } from "@/lib/trpc";
 import { 
   BarChart3, 
@@ -17,6 +23,8 @@ import {
   TrendingUp, 
   Filter,
   Download,
+  FileSpreadsheet,
+  FileText,
   RefreshCw,
   CheckCircle2,
   XCircle,
@@ -95,12 +103,20 @@ export default function Estadisticas() {
 
   const hasActiveFilters = Object.values(filters).some(v => v !== "");
 
-  const exportToExcel = () => {
+  const getExportParams = () => {
     const params = new URLSearchParams();
     if (filters.empresaId) params.append("empresaId", filters.empresaId);
     if (filters.unidadId) params.append("unidadId", filters.unidadId);
     if (filters.especialidadId) params.append("especialidadId", filters.especialidadId);
-    window.open(`/api/export/estadisticas?${params.toString()}`, "_blank");
+    return params.toString();
+  };
+
+  const exportToExcel = () => {
+    window.open(`/api/export/estadisticas?${getExportParams()}`, "_blank");
+  };
+
+  const exportToCSV = () => {
+    window.open(`/api/export/estadisticas/csv?${getExportParams()}`, "_blank");
   };
 
   // Preparar datos para gráficos
@@ -148,11 +164,25 @@ export default function Estadisticas() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={exportToExcel}>
-              <Download className="h-4 w-4 mr-2" />
-              Exportar Excel
-            </Button>
-            <Button variant="outline" onClick={() => refetch()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Exportar</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={exportToExcel}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+                  Excel (.xlsx)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToCSV}>
+                  <FileText className="h-4 w-4 mr-2 text-blue-600" />
+                  CSV (.csv)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Actualizar
             </Button>

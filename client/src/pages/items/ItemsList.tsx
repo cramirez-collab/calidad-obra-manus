@@ -10,6 +10,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { FileSpreadsheet, FileText } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { 
   ClipboardCheck, 
@@ -113,13 +120,21 @@ export default function ItemsList() {
 
   const hasActiveFilters = Object.values(filters).some(v => v !== "");
 
-  const exportToExcel = () => {
+  const getExportParams = () => {
     const params = new URLSearchParams();
     if (filters.empresaId) params.append("empresaId", filters.empresaId);
     if (filters.unidadId) params.append("unidadId", filters.unidadId);
     if (filters.especialidadId) params.append("especialidadId", filters.especialidadId);
     if (filters.status) params.append("status", filters.status);
-    window.open(`/api/export/items?${params.toString()}`, "_blank");
+    return params.toString();
+  };
+
+  const exportToExcel = () => {
+    window.open(`/api/export/items?${getExportParams()}`, "_blank");
+  };
+
+  const exportToCSV = () => {
+    window.open(`/api/export/items/csv?${getExportParams()}`, "_blank");
   };
 
   return (
@@ -133,13 +148,27 @@ export default function ItemsList() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={exportToExcel}>
-              <Download className="h-4 w-4 mr-2" />
-              Exportar
-            </Button>
-            <Button onClick={() => setLocation("/items/nuevo")}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Ítem
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Exportar</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={exportToExcel}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+                  Excel (.xlsx)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToCSV}>
+                  <FileText className="h-4 w-4 mr-2 text-blue-600" />
+                  CSV (.csv)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button size="sm" onClick={() => setLocation("/items/nuevo")}>
+              <Plus className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Nuevo</span>
             </Button>
           </div>
         </div>

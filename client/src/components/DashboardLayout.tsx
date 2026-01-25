@@ -161,7 +161,7 @@ export default function DashboardLayout({
         <div className="flex flex-col items-center gap-6 p-6 sm:p-8 max-w-sm w-full mx-4 bg-white rounded-2xl shadow-xl">
           <img 
             src="/logo-objetiva.jpg" 
-            alt="Objetiva" 
+            alt="ObjetivaQC" 
             className="h-12 object-contain"
           />
           <div className="flex flex-col items-center gap-2 text-center">
@@ -279,7 +279,7 @@ function DashboardLayoutContent({
           <div className="flex items-center justify-between p-4 border-b">
             <img 
               src="/logo-objetiva.jpg" 
-              alt="Objetiva" 
+              alt="ObjetivaQC" 
               className="h-8 object-contain"
             />
           </div>
@@ -356,7 +356,7 @@ function DashboardLayoutContent({
               {!isCollapsed && (
                 <img 
                   src="/logo-objetiva.jpg" 
-                  alt="Objetiva" 
+                  alt="ObjetivaQC" 
                   className="h-7 object-contain"
                 />
               )}
@@ -450,7 +450,7 @@ function DashboardLayoutContent({
             <div className="md:hidden">
               <img 
                 src="/logo-objetiva.jpg" 
-                alt="Objetiva" 
+                alt="ObjetivaQC" 
                 className="h-7 object-contain"
               />
             </div>
