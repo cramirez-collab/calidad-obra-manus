@@ -13,7 +13,8 @@ import {
   MapPin,
   Wrench,
   Users,
-  Tag
+  Tag,
+  BarChart3
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -33,10 +34,10 @@ export default function Home() {
 
   const statCards = [
     { icon: ClipboardCheck, label: "Total", value: stats?.total || 0, color: "text-[#002C63]", bg: "bg-[#002C63]/10" },
-    { icon: Clock, label: "Foto", value: statusCounts['pendiente_foto_despues'] || 0, color: "text-amber-500", bg: "bg-amber-50" },
-    { icon: Clock, label: "Aprobar", value: statusCounts['pendiente_aprobacion'] || 0, color: "text-blue-500", bg: "bg-blue-50" },
+    { icon: Clock, label: "Foto", value: statusCounts['pendiente_foto_despues'] || 0, color: "text-[#002C63]", bg: "bg-[#002C63]/5" },
+    { icon: Clock, label: "Aprobar", value: statusCounts['pendiente_aprobacion'] || 0, color: "text-[#002C63]", bg: "bg-[#002C63]/5" },
     { icon: CheckCircle2, label: "OK", value: statusCounts['aprobado'] || 0, color: "text-[#02B381]", bg: "bg-[#02B381]/10" },
-    { icon: XCircle, label: "No", value: statusCounts['rechazado'] || 0, color: "text-red-500", bg: "bg-red-50" },
+    { icon: XCircle, label: "No", value: statusCounts['rechazado'] || 0, color: "text-red-600", bg: "bg-red-50" },
   ];
 
   const catalogCards = [
@@ -57,13 +58,13 @@ export default function Home() {
           {statCards.map((stat, i) => (
             <Tooltip key={i}>
               <TooltipTrigger asChild>
-                <Card className="cursor-default">
+                <Card className="cursor-default border-0 shadow-sm">
                   <CardContent className="p-2 sm:p-3 flex flex-col items-center text-center">
                     <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-lg ${stat.bg} flex items-center justify-center mb-1`}>
                       <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.color}`} />
                     </div>
-                    <span className="text-lg sm:text-xl font-bold">{stat.value}</span>
-                    <span className="text-[10px] sm:text-xs text-muted-foreground">{stat.label}</span>
+                    <span className="text-lg sm:text-xl font-bold text-[#002C63]">{stat.value}</span>
+                    <span className="text-[10px] sm:text-xs text-[#6E6E6E]">{stat.label}</span>
                   </CardContent>
                 </Card>
               </TooltipTrigger>
@@ -72,13 +73,13 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Acciones rápidas */}
+        {/* Acciones rápidas - Colores corporativos Objetiva */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={() => setLocation('/nuevo-item')}
-                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl bg-[#02B381] text-white hover:opacity-90 transition-all active:scale-95"
+                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl bg-[#02B381] text-white hover:bg-[#02B381]/90 transition-all active:scale-95 shadow-md"
               >
                 <Camera className="h-8 w-8 sm:h-10 sm:w-10" />
                 <span className="text-xs sm:text-sm mt-2 font-medium">Nuevo</span>
@@ -91,7 +92,7 @@ export default function Home() {
             <TooltipTrigger asChild>
               <button
                 onClick={() => setLocation('/items')}
-                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl bg-[#002C63] text-white hover:opacity-90 transition-all active:scale-95"
+                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl bg-[#002C63] text-white hover:bg-[#002C63]/90 transition-all active:scale-95 shadow-md"
               >
                 <ClipboardCheck className="h-8 w-8 sm:h-10 sm:w-10" />
                 <span className="text-xs sm:text-sm mt-2 font-medium">Ítems</span>
@@ -104,9 +105,9 @@ export default function Home() {
             <TooltipTrigger asChild>
               <button
                 onClick={() => setLocation('/estadisticas')}
-                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl bg-amber-500 text-white hover:opacity-90 transition-all active:scale-95"
+                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl bg-[#002C63]/80 text-white hover:bg-[#002C63]/70 transition-all active:scale-95 shadow-md"
               >
-                <Clock className="h-8 w-8 sm:h-10 sm:w-10" />
+                <BarChart3 className="h-8 w-8 sm:h-10 sm:w-10" />
                 <span className="text-xs sm:text-sm mt-2 font-medium">Stats</span>
               </button>
             </TooltipTrigger>
@@ -122,13 +123,13 @@ export default function Home() {
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => setLocation(cat.path)}
-                    className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl bg-accent hover:bg-accent/80 transition-all active:scale-95"
+                    className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl bg-[#E5E5E5]/50 hover:bg-[#E5E5E5] border border-[#E5E5E5] transition-all active:scale-95"
                   >
-                    <cat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+                    <cat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-[#002C63]" />
                     {cat.value !== undefined && (
-                      <span className="text-sm sm:text-base font-semibold mt-1">{cat.value}</span>
+                      <span className="text-sm sm:text-base font-semibold mt-1 text-[#002C63]">{cat.value}</span>
                     )}
-                    <span className="text-[9px] sm:text-[10px] text-muted-foreground">{cat.label}</span>
+                    <span className="text-[9px] sm:text-[10px] text-[#6E6E6E]">{cat.label}</span>
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>{cat.label}</TooltipContent>
