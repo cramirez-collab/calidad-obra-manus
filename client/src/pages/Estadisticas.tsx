@@ -667,7 +667,241 @@ export default function Estadisticas() {
             </Card>
           </div>
         </div>
+
+        {/* Estadísticas de Rendimiento por Usuario */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-blue-500" />
+            Rendimiento por Usuario
+          </h2>
+          
+          <RendimientoUsuarios />
+        </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+// Componente de Rendimiento de Usuarios
+function RendimientoUsuarios() {
+  const { data: rendimiento, isLoading } = trpc.estadisticasAvanzadas.rendimientoUsuarios.useQuery();
+  const { data: defectosPorUsuario } = trpc.estadisticasAvanzadas.defectosPorUsuario.useQuery();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  // Preparar datos de defectos por usuario
+  const defectosData = defectosPorUsuario?.slice(0, 10).map((item: any) => ({
+    name: item.usuarioNombre || 'Usuario',
+    defectos: item.totalDefectos,
+    aprobados: item.aprobados,
+    rechazados: item.rechazados,
+  })) || [];
+
+  // Preparar datos de tiempos de respuesta
+  const tiemposData = rendimiento?.slice(0, 10).map((item: any) => ({
+    name: item.usuarioNombre || 'Usuario',
+    tiempoPromedio: item.tiempoPromedioHoras || 0,
+    itemsCompletados: item.itemsCompletados || 0,
+  })) || [];
+
+  return (
+    <div className="space-y-6">
+      {/* KPIs de Rendimiento */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{rendimiento?.length || 0}</p>
+                <p className="text-xs text-muted-foreground">Usuarios Activos</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-emerald-100">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-emerald-600">
+                  {rendimiento?.reduce((acc: number, u: any) => acc + (u.aprobados || 0), 0) || 0}
+                </p>
+                <p className="text-xs text-muted-foreground">Total Aprobados</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-100">
+                <Clock className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-amber-600">
+                  {rendimiento && rendimiento.length > 0 
+                    ? (rendimiento.reduce((acc: number, u: any) => acc + (u.tiempoPromedioHoras || 0), 0) / rendimiento.length).toFixed(1)
+                    : 0}h
+                </p>
+                <p className="text-xs text-muted-foreground">Tiempo Promedio</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-100">
+                <BarChart3 className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-purple-600">
+                  {rendimiento?.reduce((acc: number, u: any) => acc + (u.okSupervisor || 0), 0) || 0}
+                </p>
+                <p className="text-xs text-muted-foreground">OK Supervisor</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Defectos por Usuario */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Defectos por Usuario (Top 10)
+            </CardTitle>
+            <CardDescription>
+              Ranking de usuarios por número de defectos registrados
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {defectosData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={defectosData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="aprobados" stackId="a" fill="#10B981" name="Aprobados" />
+                  <Bar dataKey="rechazados" stackId="a" fill="#EF4444" name="Rechazados" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No hay datos disponibles
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Tiempos de Respuesta */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Tiempos de Respuesta por Usuario
+            </CardTitle>
+            <CardDescription>
+              Tiempo promedio en horas para completar ítems
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {tiemposData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={tiemposData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" unit="h" />
+                  <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 10 }} />
+                  <Tooltip formatter={(value: number) => [`${value.toFixed(1)}h`, 'Tiempo Promedio']} />
+                  <Bar dataKey="tiempoPromedio" fill="#3B82F6" name="Tiempo (horas)" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No hay datos disponibles
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabla de Rendimiento Detallado */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Rendimiento Detallado por Usuario</CardTitle>
+          <CardDescription>
+            Métricas completas de productividad y calidad
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left p-2 font-medium">Usuario</th>
+                  <th className="text-left p-2 font-medium">Rol</th>
+                  <th className="text-center p-2 font-medium">Total Ítems</th>
+                  <th className="text-center p-2 font-medium">Aprobados</th>
+                  <th className="text-center p-2 font-medium">Rechazados</th>
+                  <th className="text-center p-2 font-medium">OK Supervisor</th>
+                  <th className="text-center p-2 font-medium">Tiempo Prom.</th>
+                  <th className="text-center p-2 font-medium">Eficiencia</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rendimiento?.map((usuario: any, index: number) => {
+                  const eficiencia = usuario.itemsCompletados > 0 
+                    ? ((usuario.aprobados / usuario.itemsCompletados) * 100).toFixed(0)
+                    : 0;
+                  return (
+                    <tr key={index} className="border-b hover:bg-muted/30">
+                      <td className="p-2 font-medium">{usuario.usuarioNombre}</td>
+                      <td className="p-2">
+                        <span className={`px-2 py-0.5 rounded text-xs ${
+                          usuario.usuarioRol === 'supervisor' ? 'bg-emerald-100 text-emerald-800' :
+                          usuario.usuarioRol === 'jefe_residente' ? 'bg-amber-100 text-amber-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {usuario.usuarioRol}
+                        </span>
+                      </td>
+                      <td className="p-2 text-center">{usuario.itemsCompletados}</td>
+                      <td className="p-2 text-center text-emerald-600 font-medium">{usuario.aprobados}</td>
+                      <td className="p-2 text-center text-red-600 font-medium">{usuario.rechazados}</td>
+                      <td className="p-2 text-center text-blue-600 font-medium">{usuario.okSupervisor}</td>
+                      <td className="p-2 text-center">{usuario.tiempoPromedioHoras?.toFixed(1) || 0}h</td>
+                      <td className="p-2 text-center">
+                        <span className={`font-medium ${
+                          Number(eficiencia) >= 80 ? 'text-emerald-600' :
+                          Number(eficiencia) >= 60 ? 'text-amber-600' :
+                          'text-red-600'
+                        }`}>
+                          {eficiencia}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

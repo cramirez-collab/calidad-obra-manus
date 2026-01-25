@@ -56,6 +56,8 @@ import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 import NotificationCenter from "./NotificationCenter";
 import OnlineUsers from "./OnlineUsers";
+import { BadgeNotifications } from "./BadgeNotifications";
+import { QRScannerButton } from "./QRScanner";
 import { useRealTimeItems } from "@/hooks/useRealTimeData";
 import {
   Sheet,
@@ -471,6 +473,7 @@ function DashboardLayoutContent({
           
           {/* Lado derecho - Acciones */}
           <div className="flex items-center gap-1 sm:gap-2">
+            <BadgeNotifications />
             <OnlineUsers />
             <NotificationCenter />
             {/* Menú hamburguesa a la DERECHA en móvil */}
@@ -511,6 +514,9 @@ function DashboardLayoutContent({
         
         {/* Espaciador para la barra inferior en móvil */}
         <div className="h-14 md:hidden" />
+        
+        {/* Botón flotante de escáner QR */}
+        <QRScannerButton />
       </SidebarInset>
     </>
   );

@@ -1112,6 +1112,173 @@ export const appRouter = router({
         return await db.getEspecialidadesByProyecto(input.proyectoId);
       }),
   }),
+
+  // ==================== MENSAJES (CHAT POR ÍTEM) ====================
+  mensajes: router({
+    // Obtener mensajes de un ítem
+    byItem: protectedProcedure
+      .input(z.object({ itemId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getMensajesByItem(input.itemId);
+      }),
+    
+    // Crear mensaje
+    create: protectedProcedure
+      .input(z.object({
+        itemId: z.number(),
+        texto: z.string().min(1),
+        menciones: z.array(z.number()).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.createMensaje({
+          itemId: input.itemId,
+          usuarioId: ctx.user.id,
+          texto: input.texto,
+          menciones: input.menciones,
+        });
+        
+        // Registrar en auditoría
+        await db.createAuditoria({
+          usuarioId: ctx.user.id,
+          usuarioNombre: ctx.user.name || 'Usuario',
+          usuarioRol: ctx.user.role,
+          accion: 'crear_mensaje',
+          categoria: 'item',
+          entidadTipo: 'mensaje',
+          entidadId: id,
+          detalles: `Mensaje creado en ítem #${input.itemId}`,
+        });
+        
+        // Incrementar badge de mensajes no leídos para usuarios mencionados
+        if (input.menciones && input.menciones.length > 0) {
+          for (const userId of input.menciones) {
+            await db.incrementBadge(userId, 'mensajesNoLeidos');
+            // Crear notificación
+            await db.createNotificacion({
+              usuarioId: userId,
+              itemId: input.itemId,
+              tipo: 'mencion',
+              titulo: 'Te mencionaron en un comentario',
+              mensaje: `${ctx.user.name || 'Un usuario'} te mencionó en el ítem #${input.itemId}`,
+            });
+          }
+          // Emitir evento de socket para notificaciones en tiempo real
+          socketEvents.itemUpdated({ id: input.itemId, action: 'mensaje_nuevo' });
+        }
+        
+        return { id, success: true };
+      }),
+    
+    // Editar mensaje (solo admin/superadmin o autor)
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        texto: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Solo admin/superadmin pueden editar cualquier mensaje
+        if (!['superadmin', 'admin', 'supervisor'].includes(ctx.user.role)) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para editar este mensaje' });
+        }
+        await db.updateMensaje(input.id, input.texto);
+        return { success: true };
+      }),
+    
+    // Eliminar mensaje (solo admin/superadmin)
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteMensaje(input.id);
+        await db.createAuditoria({
+          usuarioId: ctx.user.id,
+          usuarioNombre: ctx.user.name || 'Usuario',
+          usuarioRol: ctx.user.role,
+          accion: 'eliminar_mensaje',
+          categoria: 'item',
+          entidadTipo: 'mensaje',
+          entidadId: input.id,
+          detalles: `Mensaje eliminado`,
+        });
+        return { success: true };
+      }),
+  }),
+
+  // ==================== BADGES DE USUARIO ====================
+  badges: router({
+    // Obtener badges del usuario actual
+    me: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUserBadges(ctx.user.id);
+    }),
+    
+    // Obtener badges de un usuario específico (admin)
+    byUser: adminProcedure
+      .input(z.object({ usuarioId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getUserBadges(input.usuarioId);
+      }),
+    
+    // Marcar mensajes como leídos
+    marcarMensajesLeidos: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.resetBadge(ctx.user.id, 'mensajesNoLeidos');
+      return { success: true };
+    }),
+  }),
+
+  // ==================== AUDITORÍA ====================
+  auditoria: router({
+    // Listar auditoría (solo admin/superadmin)
+    list: adminProcedure
+      .input(z.object({
+        usuarioId: z.number().optional(),
+        categoria: z.string().optional(),
+        entidadTipo: z.string().optional(),
+        entidadId: z.number().optional(),
+        fechaDesde: z.date().optional(),
+        fechaHasta: z.date().optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await db.getAuditoria(input || {});
+      }),
+    
+    // Contar registros de auditoría
+    count: adminProcedure
+      .input(z.object({
+        usuarioId: z.number().optional(),
+        categoria: z.string().optional(),
+        fechaDesde: z.date().optional(),
+        fechaHasta: z.date().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await db.getAuditoriaCount(input || {});
+      }),
+    
+    // Obtener auditoría de un usuario específico
+    byUsuario: adminProcedure
+      .input(z.object({ usuarioId: z.number(), limit: z.number().optional() }))
+      .query(async ({ input }) => {
+        return await db.getAuditoriaByUsuario(input.usuarioId, input.limit);
+      }),
+  }),
+
+  // ==================== ESTADÍSTICAS AVANZADAS ====================
+  estadisticasAvanzadas: router({
+    // Rendimiento por usuario
+    rendimientoUsuarios: adminProcedure.query(async () => {
+      return await db.getEstadisticasRendimientoUsuarios();
+    }),
+    
+    // Estadísticas de supervisores
+    supervisores: adminProcedure.query(async () => {
+      return await db.getEstadisticasSupervisores();
+    }),
+    
+    // Defectos por usuario
+    defectosPorUsuario: adminProcedure.query(async () => {
+      return await db.getDefectosPorUsuario();
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

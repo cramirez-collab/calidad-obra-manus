@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
+import { ItemChat } from "@/components/ItemChat";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -534,6 +535,13 @@ export default function ItemDetail() {
                     <p className="text-sm">{item.descripcion}</p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Chat del Ítem */}
+            <Card className="lg:col-span-1">
+              <CardContent className="p-0 h-[400px]">
+                <ItemChat itemId={itemId} itemCodigo={item.codigo} />
               </CardContent>
             </Card>
 

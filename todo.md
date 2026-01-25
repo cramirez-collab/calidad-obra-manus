@@ -364,3 +364,48 @@
 - [x] Campo de nombre personalizado en proyecto
 - [x] Mostrar nombre de proyecto en reportes PDF
 - [ ] Logo del proyecto en reportes (opcional)
+
+
+## Sistema de Mensajería, Badges y Auditoría (Decimocuarta Iteración)
+
+### Sistema de Mensajería con @mentions
+- [x] Crear tabla de mensajes por ítem en base de datos
+- [x] Implementar hilos de conversación por ítem
+- [x] Sistema de @mentions para etiquetar usuarios
+- [x] Notificaciones cuando te mencionan
+- [x] Componente de chat en detalle de ítem
+
+### Sistema de Badges con Conteo
+- [x] Badge rojo: ítems rechazados (pendientes de corrección)
+- [x] Badge verde: ítems aprobados por jefe de residente
+- [x] Badge azul: ítems aprobados por supervisor (OK final)
+- [x] Contadores visibles en el header
+- [x] Actualización en tiempo real de badges
+
+### Permisos Avanzados
+- [x] Admin/Superadmin pueden eliminar ítems aprobados
+- [x] Admin/Superadmin pueden rechazar ítems ya aprobados
+- [x] Registro de quién hizo cada acción con fecha/hora
+
+### Bitácora de Auditoría
+- [x] Tabla de auditoría con todas las acciones
+- [x] Registro: usuario, acción, fecha, hora, ítem afectado
+- [x] Página de bitácora solo para Admin/Superadmin
+- [x] Exportación a PDF
+- [x] Exportación a CSV
+
+### Estadísticas Avanzadas de Rendimiento
+- [x] Ranking de defectos por usuario (mayor a menor)
+- [x] Ranking de aprobaciones por usuario
+- [x] Ranking de OK de supervisor por usuario
+- [x] Tiempos de respuesta por usuario
+- [x] Tiempo promedio para aprobar
+- [x] Tiempo promedio para lograr OK de supervisor
+- [x] Métricas adicionales para toma de decisiones
+
+
+### Escáner QR Flotante Global
+- [x] Crear componente de botón flotante de escáner QR
+- [x] Integrar escáner en todas las pantallas (DashboardLayout)
+- [x] Al escanear, navegar directamente al ítem correspondiente
+- [x] Posición estratégica que no interfiera con la UI

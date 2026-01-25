@@ -14,7 +14,11 @@ import {
   comentarios, InsertComentario,
   bitacora, InsertBitacora,
   configuracion, InsertConfiguracion,
-  metas, InsertMeta
+  metas, InsertMeta,
+  defectos, InsertDefecto,
+  mensajes, InsertMensaje,
+  userBadges, InsertUserBadge,
+  auditoria, InsertAuditoria
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -1225,8 +1229,6 @@ export async function getMetasConProgreso() {
 
 // ==================== DEFECTOS ====================
 
-import { defectos, InsertDefecto } from "../drizzle/schema";
-
 export async function getAllDefectos() {
   const db = await getDb();
   if (!db) return [];
@@ -1742,4 +1744,371 @@ export async function getItemsByProyecto(proyectoId: number) {
   return await db.select().from(items)
     .where(eq(items.proyectoId, proyectoId))
     .orderBy(desc(items.fechaCreacion));
+}
+
+
+// ==================== MENSAJES (CHAT POR ÍTEM) ====================
+
+export async function getMensajesByItem(itemId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const mensajesData = await db.select().from(mensajes)
+    .where(and(eq(mensajes.itemId, itemId), eq(mensajes.eliminado, false)))
+    .orderBy(mensajes.createdAt);
+  
+  // Obtener usuarios de los mensajes
+  const usuarioIds = Array.from(new Set(mensajesData.map(m => m.usuarioId)));
+  if (usuarioIds.length === 0) return [];
+  
+  const usuariosData = await db.select().from(users)
+    .where(inArray(users.id, usuarioIds));
+  
+  return mensajesData.map(m => ({
+    ...m,
+    usuario: usuariosData.find(u => u.id === m.usuarioId),
+    menciones: m.menciones ? JSON.parse(m.menciones) : []
+  }));
+}
+
+export async function createMensaje(data: { itemId: number; usuarioId: number; texto: string; menciones?: number[] }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(mensajes).values({
+    itemId: data.itemId,
+    usuarioId: data.usuarioId,
+    texto: data.texto,
+    menciones: data.menciones ? JSON.stringify(data.menciones) : null
+  });
+  
+  return result[0].insertId;
+}
+
+export async function updateMensaje(id: number, texto: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(mensajes)
+    .set({ texto, editado: true })
+    .where(eq(mensajes.id, id));
+}
+
+export async function deleteMensaje(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(mensajes)
+    .set({ eliminado: true })
+    .where(eq(mensajes.id, id));
+}
+
+// ==================== BADGES DE USUARIO ====================
+
+export async function getUserBadges(usuarioId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const badges = await db.select().from(userBadges)
+    .where(eq(userBadges.usuarioId, usuarioId))
+    .limit(1);
+  
+  if (badges.length === 0) {
+    // Crear registro de badges si no existe
+    await db.insert(userBadges).values({ usuarioId });
+    return { usuarioId, rechazados: 0, aprobadosJefe: 0, aprobadosSupervisor: 0, mensajesNoLeidos: 0 };
+  }
+  
+  return badges[0];
+}
+
+export async function incrementBadge(usuarioId: number, tipo: 'rechazados' | 'aprobadosJefe' | 'aprobadosSupervisor' | 'mensajesNoLeidos') {
+  const db = await getDb();
+  if (!db) return;
+  
+  // Verificar si existe el registro
+  const existing = await db.select().from(userBadges)
+    .where(eq(userBadges.usuarioId, usuarioId))
+    .limit(1);
+  
+  if (existing.length === 0) {
+    // Crear con el badge incrementado
+    const values: any = { usuarioId, rechazados: 0, aprobadosJefe: 0, aprobadosSupervisor: 0, mensajesNoLeidos: 0 };
+    values[tipo] = 1;
+    await db.insert(userBadges).values(values);
+  } else {
+    // Incrementar el badge
+    await db.update(userBadges)
+      .set({ [tipo]: sql`${userBadges[tipo]} + 1` })
+      .where(eq(userBadges.usuarioId, usuarioId));
+  }
+}
+
+export async function decrementBadge(usuarioId: number, tipo: 'rechazados' | 'aprobadosJefe' | 'aprobadosSupervisor' | 'mensajesNoLeidos') {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.update(userBadges)
+    .set({ [tipo]: sql`GREATEST(${userBadges[tipo]} - 1, 0)` })
+    .where(eq(userBadges.usuarioId, usuarioId));
+}
+
+export async function resetBadge(usuarioId: number, tipo: 'rechazados' | 'aprobadosJefe' | 'aprobadosSupervisor' | 'mensajesNoLeidos') {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.update(userBadges)
+    .set({ [tipo]: 0 })
+    .where(eq(userBadges.usuarioId, usuarioId));
+}
+
+// ==================== AUDITORÍA ====================
+
+export async function createAuditoria(data: {
+  usuarioId: number;
+  usuarioNombre?: string;
+  usuarioRol?: string;
+  accion: string;
+  categoria: string;
+  entidadTipo?: string;
+  entidadId?: number;
+  entidadCodigo?: string;
+  valorAnterior?: any;
+  valorNuevo?: any;
+  detalles?: string;
+  ip?: string;
+  userAgent?: string;
+}) {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.insert(auditoria).values({
+    ...data,
+    valorAnterior: data.valorAnterior ? JSON.stringify(data.valorAnterior) : null,
+    valorNuevo: data.valorNuevo ? JSON.stringify(data.valorNuevo) : null
+  });
+}
+
+export async function getAuditoria(filtros?: {
+  usuarioId?: number;
+  categoria?: string;
+  entidadTipo?: string;
+  entidadId?: number;
+  fechaDesde?: Date;
+  fechaHasta?: Date;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  let query = db.select().from(auditoria);
+  const conditions = [];
+  
+  if (filtros?.usuarioId) conditions.push(eq(auditoria.usuarioId, filtros.usuarioId));
+  if (filtros?.categoria) conditions.push(eq(auditoria.categoria, filtros.categoria));
+  if (filtros?.entidadTipo) conditions.push(eq(auditoria.entidadTipo, filtros.entidadTipo));
+  if (filtros?.entidadId) conditions.push(eq(auditoria.entidadId, filtros.entidadId));
+  if (filtros?.fechaDesde) conditions.push(gte(auditoria.createdAt, filtros.fechaDesde));
+  if (filtros?.fechaHasta) conditions.push(lte(auditoria.createdAt, filtros.fechaHasta));
+  
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  const result = await query.orderBy(desc(auditoria.createdAt))
+    .limit(filtros?.limit || 100)
+    .offset(filtros?.offset || 0);
+  
+  return result;
+}
+
+export async function getAuditoriaByUsuario(usuarioId: number, limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(auditoria)
+    .where(eq(auditoria.usuarioId, usuarioId))
+    .orderBy(desc(auditoria.createdAt))
+    .limit(limit);
+}
+
+export async function getAuditoriaCount(filtros?: {
+  usuarioId?: number;
+  categoria?: string;
+  fechaDesde?: Date;
+  fechaHasta?: Date;
+}) {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const conditions = [];
+  if (filtros?.usuarioId) conditions.push(eq(auditoria.usuarioId, filtros.usuarioId));
+  if (filtros?.categoria) conditions.push(eq(auditoria.categoria, filtros.categoria));
+  if (filtros?.fechaDesde) conditions.push(gte(auditoria.createdAt, filtros.fechaDesde));
+  if (filtros?.fechaHasta) conditions.push(lte(auditoria.createdAt, filtros.fechaHasta));
+  
+  let query = db.select({ count: sql<number>`count(*)` }).from(auditoria);
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+  
+  const result = await query;
+  return result[0]?.count || 0;
+}
+
+// ==================== ESTADÍSTICAS AVANZADAS DE RENDIMIENTO ====================
+
+export async function getEstadisticasRendimientoUsuarios() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Obtener todos los usuarios activos
+  const usuariosData = await db.select().from(users)
+    .where(eq(users.activo, true));
+  
+  // Obtener todos los items
+  const itemsData = await db.select().from(items);
+  
+  // Calcular estadísticas por usuario
+  const estadisticas = usuariosData.map(usuario => {
+    const itemsUsuario = itemsData.filter(i => i.residenteId === usuario.id);
+    const itemsAprobados = itemsUsuario.filter(i => i.status === 'aprobado');
+    const itemsRechazados = itemsUsuario.filter(i => i.status === 'rechazado');
+    const itemsPendientes = itemsUsuario.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion');
+    
+    // Calcular tiempos promedio
+    let tiempoPromedioAprobacion = 0;
+    let tiempoPromedioResolucion = 0;
+    
+    const itemsConAprobacion = itemsAprobados.filter(i => i.fechaAprobacion);
+    if (itemsConAprobacion.length > 0) {
+      const tiempos = itemsConAprobacion.map(i => {
+        const inicio = new Date(i.fechaCreacion).getTime();
+        const fin = new Date(i.fechaAprobacion!).getTime();
+        return (fin - inicio) / (1000 * 60 * 60); // horas
+      });
+      tiempoPromedioAprobacion = tiempos.reduce((a, b) => a + b, 0) / tiempos.length;
+    }
+    
+    const itemsConFotoDespues = itemsUsuario.filter(i => i.fechaFotoDespues);
+    if (itemsConFotoDespues.length > 0) {
+      const tiempos = itemsConFotoDespues.map(i => {
+        const inicio = new Date(i.fechaCreacion).getTime();
+        const fin = new Date(i.fechaFotoDespues!).getTime();
+        return (fin - inicio) / (1000 * 60 * 60); // horas
+      });
+      tiempoPromedioResolucion = tiempos.reduce((a, b) => a + b, 0) / tiempos.length;
+    }
+    
+    // Contar OK de supervisor (items aprobados que tienen fecha de aprobación)
+    const okSupervisor = itemsAprobados.filter(i => i.fechaAprobacion).length;
+    
+    return {
+      usuarioId: usuario.id,
+      usuarioNombre: usuario.name,
+      usuarioRol: usuario.role,
+      itemsCompletados: itemsUsuario.length,
+      aprobados: itemsAprobados.length,
+      rechazados: itemsRechazados.length,
+      pendientes: itemsPendientes.length,
+      okSupervisor,
+      tasaAprobacion: itemsUsuario.length > 0 
+        ? Math.round((itemsAprobados.length / itemsUsuario.length) * 100) 
+        : 0,
+      tiempoPromedioHoras: Math.round(tiempoPromedioAprobacion * 10) / 10,
+      tiempoPromedioResolucion: Math.round(tiempoPromedioResolucion * 10) / 10
+    };
+  });
+  
+  // Ordenar por total de items (mayor a menor)
+  return estadisticas.sort((a, b) => b.itemsCompletados - a.itemsCompletados);
+}
+
+export async function getEstadisticasSupervisores() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Obtener supervisores
+  const supervisores = await db.select().from(users)
+    .where(and(
+      eq(users.activo, true),
+      inArray(users.role, ['supervisor', 'admin', 'superadmin'])
+    ));
+  
+  // Obtener items aprobados
+  const itemsData = await db.select().from(items)
+    .where(eq(items.status, 'aprobado'));
+  
+  return supervisores.map(supervisor => {
+    const itemsAprobados = itemsData.filter(i => i.supervisorId === supervisor.id);
+    
+    // Calcular tiempo promedio de aprobación
+    let tiempoPromedio = 0;
+    const itemsConTiempos = itemsAprobados.filter(i => i.fechaAprobacion && i.fechaFotoDespues);
+    if (itemsConTiempos.length > 0) {
+      const tiempos = itemsConTiempos.map(i => {
+        const inicio = new Date(i.fechaFotoDespues!).getTime();
+        const fin = new Date(i.fechaAprobacion!).getTime();
+        return (fin - inicio) / (1000 * 60 * 60); // horas
+      });
+      tiempoPromedio = tiempos.reduce((a, b) => a + b, 0) / tiempos.length;
+    }
+    
+    return {
+      supervisor: {
+        id: supervisor.id,
+        name: supervisor.name,
+        role: supervisor.role
+      },
+      totalAprobados: itemsAprobados.length,
+      tiempoPromedioAprobacion: Math.round(tiempoPromedio * 10) / 10
+    };
+  }).sort((a, b) => b.totalAprobados - a.totalAprobados);
+}
+
+export async function getDefectosPorUsuario() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Obtener items con defectos
+  const itemsData = await db.select().from(items)
+    .where(sql`${items.defectoId} IS NOT NULL`);
+  
+  // Obtener usuarios
+  const usuariosData = await db.select().from(users)
+    .where(eq(users.activo, true));
+  
+  // Obtener defectos
+  const defectosData = await db.select().from(defectos);
+  
+  return usuariosData.map(usuario => {
+    const itemsUsuario = itemsData.filter(i => i.residenteId === usuario.id);
+    const aprobados = itemsUsuario.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsUsuario.filter(i => i.status === 'rechazado').length;
+    
+    // Contar defectos por tipo
+    const defectosCounts: Record<number, number> = {};
+    itemsUsuario.forEach(item => {
+      if (item.defectoId) {
+        defectosCounts[item.defectoId] = (defectosCounts[item.defectoId] || 0) + 1;
+      }
+    });
+    
+    const defectosDetalle = Object.entries(defectosCounts).map(([defectoId, count]) => {
+      const defecto = defectosData.find(d => d.id === parseInt(defectoId));
+      return {
+        defecto: defecto || { id: parseInt(defectoId), nombre: 'Desconocido' },
+        cantidad: count
+      };
+    }).sort((a, b) => b.cantidad - a.cantidad);
+    
+    return {
+      usuarioId: usuario.id,
+      usuarioNombre: usuario.name,
+      usuarioRol: usuario.role,
+      totalDefectos: itemsUsuario.length,
+      aprobados,
+      rechazados,
+      defectosDetalle
+    };
+  }).filter(u => u.totalDefectos > 0).sort((a, b) => b.totalDefectos - a.totalDefectos);
 }

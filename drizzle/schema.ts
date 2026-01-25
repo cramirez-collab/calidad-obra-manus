@@ -314,3 +314,62 @@ export const defectos = mysqlTable("defectos", {
 
 export type Defecto = typeof defectos.$inferSelect;
 export type InsertDefecto = typeof defectos.$inferInsert;
+
+
+/**
+ * Tabla de mensajes por ítem - sistema de chat con @mentions
+ */
+export const mensajes = mysqlTable("mensajes", {
+  id: int("id").autoincrement().primaryKey(),
+  itemId: int("itemId").notNull(),
+  usuarioId: int("usuarioId").notNull(),
+  texto: text("texto").notNull(),
+  menciones: text("menciones"), // JSON array de userIds mencionados
+  editado: boolean("editado").default(false).notNull(),
+  eliminado: boolean("eliminado").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Mensaje = typeof mensajes.$inferSelect;
+export type InsertMensaje = typeof mensajes.$inferInsert;
+
+/**
+ * Tabla de badges/contadores por usuario
+ */
+export const userBadges = mysqlTable("user_badges", {
+  id: int("id").autoincrement().primaryKey(),
+  usuarioId: int("usuarioId").notNull().unique(),
+  rechazados: int("rechazados").default(0).notNull(), // Badge rojo
+  aprobadosJefe: int("aprobadosJefe").default(0).notNull(), // Badge verde
+  aprobadosSupervisor: int("aprobadosSupervisor").default(0).notNull(), // Badge azul
+  mensajesNoLeidos: int("mensajesNoLeidos").default(0).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserBadge = typeof userBadges.$inferSelect;
+export type InsertUserBadge = typeof userBadges.$inferInsert;
+
+/**
+ * Tabla de auditoría completa - registro detallado de todas las acciones
+ */
+export const auditoria = mysqlTable("auditoria", {
+  id: int("id").autoincrement().primaryKey(),
+  usuarioId: int("usuarioId").notNull(),
+  usuarioNombre: varchar("usuarioNombre", { length: 255 }),
+  usuarioRol: varchar("usuarioRol", { length: 50 }),
+  accion: varchar("accion", { length: 100 }).notNull(),
+  categoria: varchar("categoria", { length: 50 }).notNull(), // 'item', 'usuario', 'empresa', 'sistema'
+  entidadTipo: varchar("entidadTipo", { length: 50 }), // 'item', 'empresa', 'usuario', etc.
+  entidadId: int("entidadId"),
+  entidadCodigo: varchar("entidadCodigo", { length: 100 }), // código del ítem, nombre de empresa, etc.
+  valorAnterior: text("valorAnterior"), // JSON con estado anterior
+  valorNuevo: text("valorNuevo"), // JSON con estado nuevo
+  detalles: text("detalles"), // Descripción legible de la acción
+  ip: varchar("ip", { length: 45 }),
+  userAgent: text("userAgent"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Auditoria = typeof auditoria.$inferSelect;
+export type InsertAuditoria = typeof auditoria.$inferInsert;
