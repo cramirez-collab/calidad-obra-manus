@@ -432,7 +432,9 @@
 ### Escáner QR - MANDATORIO
 - [x] Corregir lectura de códigos QR con cámara (html5-qrcode)
 - [x] Implementar librería de escaneo más robusta
-- [ ] Probar en dispositivos móviles
+- [x] Optimizar para dispositivos móviles
+- [x] Manejar errores de permisos correctamente
+- [x] Fallback a cámara frontal si trasera no disponible
 
 ### Alta de Usuarios - Solo Admin/Superadmin
 - [x] Restringir formulario de alta de usuarios a Admin/Superadmin
