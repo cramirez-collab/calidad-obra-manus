@@ -35,7 +35,8 @@ import {
   BarChart3,
   QrCode,
   Settings,
-  Camera
+  Camera,
+  TrendingUp
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -61,6 +62,7 @@ const getMenuItems = (role: string) => {
 
   const adminItems = [
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
+    { icon: TrendingUp, label: "KPIs", path: "/kpis" },
     { icon: Building2, label: "Empresas", path: "/catalogos/empresas" },
     { icon: MapPin, label: "Unidades", path: "/catalogos/unidades" },
     { icon: Wrench, label: "Especialidades", path: "/catalogos/especialidades" },

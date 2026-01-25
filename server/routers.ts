@@ -7,6 +7,7 @@ import { TRPCError } from "@trpc/server";
 import * as db from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
+import { sendEmail, getAprobadoEmailTemplate, getRechazadoEmailTemplate, getPendienteAprobacionEmailTemplate } from "./emailService";
 
 // Middleware para verificar rol de admin
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -410,6 +411,22 @@ export const appRouter = router({
           `El ítem "${item.titulo}" está listo para revisión y aprobación.`
         );
         
+        // Enviar email a supervisores
+        const supervisores = await db.getUsersByRole('supervisor');
+        const admins = await db.getUsersByRole('admin');
+        const residenteInfo = await db.getUserById(item.residenteId);
+        const todosRevisores = [...supervisores, ...admins];
+        
+        for (const revisor of todosRevisores) {
+          if (revisor.email) {
+            await sendEmail({
+              to: revisor.email,
+              subject: `⏳ Ítem Pendiente de Aprobación: ${item.titulo}`,
+              html: getPendienteAprobacionEmailTemplate(item.titulo, item.codigo, residenteInfo?.name || 'Residente'),
+            });
+          }
+        }
+        
         return { success: true, fotoUrl };
       }),
     
@@ -449,6 +466,16 @@ export const appRouter = router({
           mensaje: `El ítem "${item.titulo}" ha sido aprobado por el supervisor.`,
         });
         
+        // Enviar email al residente
+        const residente = await db.getUserById(item.residenteId);
+        if (residente?.email) {
+          await sendEmail({
+            to: residente.email,
+            subject: `✓ Ítem Aprobado: ${item.titulo}`,
+            html: getAprobadoEmailTemplate(item.titulo, item.codigo, ctx.user.name || 'Supervisor'),
+          });
+        }
+        
         return { success: true };
       }),
     
@@ -487,6 +514,16 @@ export const appRouter = router({
           mensaje: `El ítem "${item.titulo}" ha sido rechazado. Motivo: ${input.comentario}`,
         });
         
+        // Enviar email al residente
+        const residenteRechazado = await db.getUserById(item.residenteId);
+        if (residenteRechazado?.email) {
+          await sendEmail({
+            to: residenteRechazado.email,
+            subject: `✗ Ítem Rechazado: ${item.titulo}`,
+            html: getRechazadoEmailTemplate(item.titulo, item.codigo, ctx.user.name || 'Supervisor', input.comentario),
+          });
+        }
+        
         return { success: true };
       }),
     
@@ -511,6 +548,18 @@ export const appRouter = router({
       }).optional())
       .query(async ({ input }) => {
         return await db.getEstadisticas(input || {});
+      }),
+    
+    kpis: protectedProcedure
+      .input(z.object({
+        empresaId: z.number().optional(),
+        unidadId: z.number().optional(),
+        especialidadId: z.number().optional(),
+        fechaDesde: z.date().optional(),
+        fechaHasta: z.date().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await db.getKPIs(input || {});
       }),
   }),
 

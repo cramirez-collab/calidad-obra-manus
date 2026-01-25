@@ -120,6 +120,13 @@ export async function updateUserEmpresa(userId: number, empresaId: number | null
   await db.update(users).set({ empresaId }).where(eq(users.id, userId));
 }
 
+export async function getUserById(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 // ==================== EMPRESAS ====================
 
 export async function getAllEmpresas() {
@@ -558,4 +565,135 @@ export async function getComentariosByItem(itemId: number) {
     ...r.comentario,
     usuario: r.usuario,
   }));
+}
+
+
+// ==================== KPIs Y MÉTRICAS ====================
+
+export async function getKPIs(filtros: {
+  empresaId?: number;
+  unidadId?: number;
+  especialidadId?: number;
+  fechaDesde?: Date;
+  fechaHasta?: Date;
+} = {}) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const conditions: any[] = [];
+  if (filtros.empresaId) conditions.push(eq(items.empresaId, filtros.empresaId));
+  if (filtros.unidadId) conditions.push(eq(items.unidadId, filtros.unidadId));
+  if (filtros.especialidadId) conditions.push(eq(items.especialidadId, filtros.especialidadId));
+  if (filtros.fechaDesde) conditions.push(gte(items.fechaCreacion, filtros.fechaDesde));
+  if (filtros.fechaHasta) conditions.push(lte(items.fechaCreacion, filtros.fechaHasta));
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  // Total de ítems
+  const totalResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(items)
+    .where(whereClause);
+  const total = totalResult[0]?.count || 0;
+
+  // Ítems aprobados
+  const aprobadosResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(items)
+    .where(whereClause ? and(whereClause, eq(items.status, 'aprobado')) : eq(items.status, 'aprobado'));
+  const aprobados = aprobadosResult[0]?.count || 0;
+
+  // Ítems rechazados
+  const rechazadosResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(items)
+    .where(whereClause ? and(whereClause, eq(items.status, 'rechazado')) : eq(items.status, 'rechazado'));
+  const rechazados = rechazadosResult[0]?.count || 0;
+
+  // Tasa de aprobación
+  const tasaAprobacion = total > 0 ? ((aprobados / total) * 100).toFixed(1) : '0';
+  const tasaRechazo = total > 0 ? ((rechazados / total) * 100).toFixed(1) : '0';
+
+  // Tiempo promedio de resolución (desde creación hasta aprobación)
+  const tiempoPromedioResult = await db
+    .select({
+      avgTime: sql<number>`AVG(TIMESTAMPDIFF(HOUR, fechaCreacion, fechaAprobacion))`
+    })
+    .from(items)
+    .where(whereClause 
+      ? and(whereClause, eq(items.status, 'aprobado'), sql`fechaAprobacion IS NOT NULL`)
+      : and(eq(items.status, 'aprobado'), sql`fechaAprobacion IS NOT NULL`)
+    );
+  const tiempoPromedioHoras = tiempoPromedioResult[0]?.avgTime || 0;
+
+  // Rendimiento por supervisor
+  const rendimientoSupervisores = await db
+    .select({
+      supervisorId: items.supervisorId,
+      aprobados: sql<number>`SUM(CASE WHEN status = 'aprobado' THEN 1 ELSE 0 END)`,
+      rechazados: sql<number>`SUM(CASE WHEN status = 'rechazado' THEN 1 ELSE 0 END)`,
+      total: sql<number>`count(*)`
+    })
+    .from(items)
+    .where(whereClause 
+      ? and(whereClause, sql`supervisorId IS NOT NULL`)
+      : sql`supervisorId IS NOT NULL`
+    )
+    .groupBy(items.supervisorId);
+
+  // Tendencia mensual (últimos 6 meses)
+  const tendenciaMensual = await db
+    .select({
+      mes: sql<string>`DATE_FORMAT(fechaCreacion, '%Y-%m')`,
+      total: sql<number>`count(*)`,
+      aprobados: sql<number>`SUM(CASE WHEN status = 'aprobado' THEN 1 ELSE 0 END)`,
+      rechazados: sql<number>`SUM(CASE WHEN status = 'rechazado' THEN 1 ELSE 0 END)`,
+      pendientes: sql<number>`SUM(CASE WHEN status IN ('pendiente_foto_despues', 'pendiente_aprobacion') THEN 1 ELSE 0 END)`
+    })
+    .from(items)
+    .where(sql`fechaCreacion >= DATE_SUB(NOW(), INTERVAL 6 MONTH)`)
+    .groupBy(sql`DATE_FORMAT(fechaCreacion, '%Y-%m')`)
+    .orderBy(sql`DATE_FORMAT(fechaCreacion, '%Y-%m')`);
+
+  // Comparativa por empresa
+  const comparativaEmpresas = await db
+    .select({
+      empresaId: items.empresaId,
+      total: sql<number>`count(*)`,
+      aprobados: sql<number>`SUM(CASE WHEN status = 'aprobado' THEN 1 ELSE 0 END)`,
+      rechazados: sql<number>`SUM(CASE WHEN status = 'rechazado' THEN 1 ELSE 0 END)`,
+      tasaAprobacion: sql<number>`ROUND(SUM(CASE WHEN status = 'aprobado' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1)`
+    })
+    .from(items)
+    .where(whereClause)
+    .groupBy(items.empresaId);
+
+  // Comparativa por unidad
+  const comparativaUnidades = await db
+    .select({
+      unidadId: items.unidadId,
+      total: sql<number>`count(*)`,
+      aprobados: sql<number>`SUM(CASE WHEN status = 'aprobado' THEN 1 ELSE 0 END)`,
+      rechazados: sql<number>`SUM(CASE WHEN status = 'rechazado' THEN 1 ELSE 0 END)`,
+      tasaAprobacion: sql<number>`ROUND(SUM(CASE WHEN status = 'aprobado' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1)`
+    })
+    .from(items)
+    .where(whereClause)
+    .groupBy(items.unidadId);
+
+  return {
+    resumen: {
+      total,
+      aprobados,
+      rechazados,
+      pendientes: total - aprobados - rechazados,
+      tasaAprobacion: parseFloat(tasaAprobacion),
+      tasaRechazo: parseFloat(tasaRechazo),
+      tiempoPromedioHoras: Math.round(tiempoPromedioHoras),
+    },
+    rendimientoSupervisores,
+    tendenciaMensual,
+    comparativaEmpresas,
+    comparativaUnidades,
+  };
 }

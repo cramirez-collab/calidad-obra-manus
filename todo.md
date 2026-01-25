@@ -75,3 +75,26 @@
 - [x] Agregar comentarios en cada etapa del flujo
 - [x] Mostrar historial de comentarios en detalle del ítem
 - [x] Comentarios obligatorios al rechazar (ya implementado)
+
+
+## Mejoras Avanzadas (Tercera Iteración)
+
+### Notificaciones por Email
+- [x] Configurar servicio de envío de emails
+- [x] Enviar email al supervisor cuando hay ítems pendientes de aprobación
+- [x] Enviar email al residente cuando su ítem es aprobado o rechazado
+- [x] Plantillas HTML para emails profesionales
+
+### Dashboard de KPIs
+- [x] Tiempo promedio de resolución por ítem
+- [x] Tasa de aprobación vs rechazo
+- [x] Métricas por supervisor (rendimiento)
+- [x] Tendencias mensuales con gráficos
+- [x] Comparativa entre empresas/unidades
+
+### Modo Offline (PWA)
+- [x] Configurar Service Worker
+- [x] Manifest.json para instalación
+- [x] Cache de recursos estáticos
+- [x] Captura de fotos offline con IndexedDB
+- [x] Sincronización automática al reconectar

@@ -10,6 +10,8 @@ import Home from "./pages/Home";
 import Usuarios from "./pages/Usuarios";
 import Estadisticas from "./pages/Estadisticas";
 import Seguimiento from "./pages/Seguimiento";
+import KPIs from "./pages/KPIs";
+import OfflineIndicator from "./components/OfflineIndicator";
 
 // Catálogos
 import Empresas from "./pages/catalogos/Empresas";
@@ -46,6 +48,7 @@ function Router() {
       
       {/* Estadísticas */}
       <Route path="/estadisticas" component={Estadisticas} />
+      <Route path="/kpis" component={KPIs} />
       
       {/* Seguimiento público (QR) */}
       <Route path="/seguimiento/:codigo" component={Seguimiento} />
@@ -63,6 +66,7 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
+          <OfflineIndicator />
           <Router />
         </TooltipProvider>
       </ThemeProvider>
