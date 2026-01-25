@@ -92,8 +92,11 @@ export const unidades = mysqlTable("unidades", {
   empresaId: int("empresaId"), // Relación con empresa
   nombre: varchar("nombre", { length: 255 }).notNull(),
   codigo: varchar("codigo", { length: 50 }),
+  nivel: int("nivel"), // Nivel/piso para vista panorámica
   descripcion: text("descripcion"),
   ubicacion: varchar("ubicacion", { length: 255 }),
+  fechaInicio: timestamp("fechaInicio"), // Fecha inicio de trabajos
+  fechaFin: timestamp("fechaFin"), // Fecha fin de trabajos
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

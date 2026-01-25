@@ -265,6 +265,30 @@ export const appRouter = router({
         await db.deleteUnidad(input.id);
         return { success: true };
       }),
+    
+    // Vista panorámica: obtener unidades con estadísticas para cuadrícula visual
+    panoramica: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getUnidadesParaPanoramica(input.proyectoId);
+      }),
+    
+    // Importar unidades desde Excel
+    importarExcel: adminProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        unidades: z.array(z.object({
+          nombre: z.string().min(1),
+          codigo: z.string().optional(),
+          nivel: z.number().optional(),
+          fechaInicio: z.date().optional(),
+          fechaFin: z.date().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const ids = await db.importarUnidadesDesdeExcel(input.proyectoId, input.unidades);
+        return { ids, success: true, count: ids.length };
+      }),
   }),
 
   // ==================== ESPECIALIDADES ====================

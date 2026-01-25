@@ -429,6 +429,90 @@ export async function getAllUnidadesConEstadisticas() {
   });
 }
 
+// Obtener unidades con estadísticas para vista panorámica (filtrado por proyecto)
+export async function getUnidadesParaPanoramica(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const todasUnidades = await db.select().from(unidades)
+    .where(and(eq(unidades.activo, true), eq(unidades.proyectoId, proyectoId)))
+    .orderBy(unidades.nivel, unidades.nombre);
+  
+  const todosItems = await db.select().from(items).where(eq(items.proyectoId, proyectoId));
+  
+  return todasUnidades.map(unidad => {
+    const itemsUnidad = todosItems.filter(i => i.unidadId === unidad.id);
+    const aprobados = itemsUnidad.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsUnidad.filter(i => i.status === 'rechazado').length;
+    // Contar ítems aprobados con supervisor asignado (OK final)
+    const okSupervisor = itemsUnidad.filter(i => i.status === 'aprobado' && i.supervisorId !== null).length;
+    const pendientes = itemsUnidad.length - aprobados - rechazados;
+    
+    // Determinar estado de la unidad
+    // Azul = 100% completado (todos aprobados con OK supervisor)
+    // Rojo = tiene rechazados
+    // Verde = tiene pendientes
+    // Gris = sin ítems
+    let estado: 'completado' | 'rechazado' | 'pendiente' | 'sin_items' = 'sin_items';
+    if (itemsUnidad.length > 0) {
+      if (rechazados > 0) {
+        estado = 'rechazado';
+      } else if (pendientes > 0) {
+        estado = 'pendiente';
+      } else if (aprobados === itemsUnidad.length && okSupervisor === itemsUnidad.length) {
+        estado = 'completado';
+      } else {
+        estado = 'pendiente';
+      }
+    }
+    
+    return {
+      id: unidad.id,
+      nombre: unidad.nombre,
+      codigo: unidad.codigo,
+      nivel: unidad.nivel || 1,
+      fechaInicio: unidad.fechaInicio,
+      fechaFin: unidad.fechaFin,
+      estado,
+      items: {
+        total: itemsUnidad.length,
+        aprobados,
+        rechazados,
+        pendientes,
+        okSupervisor
+      },
+      porcentaje: itemsUnidad.length > 0 ? Math.round((okSupervisor / itemsUnidad.length) * 100) : 0
+    };
+  });
+}
+
+// Importar unidades desde Excel
+export async function importarUnidadesDesdeExcel(proyectoId: number, unidadesData: Array<{
+  nombre: string;
+  codigo?: string;
+  nivel?: number;
+  fechaInicio?: Date;
+  fechaFin?: Date;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const resultados = [];
+  for (const u of unidadesData) {
+    const result = await db.insert(unidades).values({
+      proyectoId,
+      nombre: u.nombre,
+      codigo: u.codigo,
+      nivel: u.nivel || 1,
+      fechaInicio: u.fechaInicio,
+      fechaFin: u.fechaFin,
+      activo: true,
+    });
+    resultados.push(result[0].insertId);
+  }
+  return resultados;
+}
+
 export async function createUnidad(data: InsertUnidad) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

@@ -507,3 +507,28 @@
 - [x] Superadmin ve todos los proyectos
 - [x] Usuarios normales solo ven proyectos asignados
 - [ ] Validación en backend de permisos por proyecto
+
+
+## Módulo Vista Panorámica de Obra (Decimosexta Iteración)
+
+### Backend
+- [x] Agregar campos nivel, fechaInicio, fechaFin a tabla unidades
+- [x] Crear endpoint para obtener unidades con estadísticas de ítems
+- [x] Endpoint para importar unidades desde Excel
+
+### Frontend - Vista Panorámica
+- [x] Crear página VistaPanoramica.tsx con cuadrícula visual
+- [x] Cuadrícula organizada por niveles (filas) y unidades (columnas)
+- [x] Badges de color: Rojo=rechazados, Verde=pendientes, Azul Objetiva=100% completado
+- [x] Click en cuadro navega a ítems filtrados por unidad
+- [x] Mostrar fechas inicio/fin de cada unidad
+
+### Carga de Excel
+- [x] Componente para subir archivo Excel
+- [x] Parser de Excel con columnas: Nivel, Unidad, FechaInicio, FechaFin
+- [x] Validación y preview antes de importar
+
+### Segundo Proyecto de Prueba
+- [x] Proyecto "Torre Mayas" ya existe para validar aislamiento
+- [x] Verificar que datos se separan correctamente por proyecto
+- [x] Asignar usuario Carlos Ramirez al proyecto

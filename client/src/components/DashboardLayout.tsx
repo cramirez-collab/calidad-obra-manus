@@ -51,7 +51,8 @@ import {
   FolderKanban,
   ListOrdered,
   FileSpreadsheet,
-  FolderOpen
+  FolderOpen,
+  Layers
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -87,6 +88,7 @@ const getMenuItems = (role: string) => {
 
   const adminItems = [
     { icon: FolderKanban, label: "Proyectos", path: "/proyectos", shortLabel: "" },
+    { icon: Layers, label: "Panorámica", path: "/panoramica", shortLabel: "" },
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas", shortLabel: "" },
     { icon: TrendingUp, label: "KPIs", path: "/kpis", shortLabel: "" },
     { icon: QrCode, label: "QR", path: "/generar-qr", shortLabel: "" },

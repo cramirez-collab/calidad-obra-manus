@@ -31,6 +31,8 @@ const CameraPermissionRequest = lazy(() => import("./components/CameraPermission
 
 // Proyectos
 const Proyectos = lazy(() => import("./pages/Proyectos"));
+const VistaPanoramica = lazy(() => import("./pages/VistaPanoramica"));
+const ImportarUnidades = lazy(() => import("./pages/ImportarUnidades"));
 
 // Catálogos
 const Empresas = lazy(() => import("./pages/catalogos/Empresas"));
@@ -59,6 +61,8 @@ function Router() {
         
         {/* Proyectos */}
         <Route path="/proyectos" component={Proyectos} />
+        <Route path="/panoramica" component={VistaPanoramica} />
+        <Route path="/unidades/importar" component={ImportarUnidades} />
         
         {/* Items */}
         <Route path="/items" component={ItemsList} />
