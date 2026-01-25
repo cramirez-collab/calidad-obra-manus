@@ -24,6 +24,7 @@ import { trpc } from "@/lib/trpc";
 import { MapPin, Edit, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useProject } from "@/contexts/ProjectContext";
 
 type Unidad = {
   id: number;
@@ -31,9 +32,11 @@ type Unidad = {
   codigo?: string | null;
   descripcion?: string | null;
   ubicacion?: string | null;
+  proyectoId?: number | null;
 };
 
 export default function Unidades() {
+  const { selectedProjectId } = useProject();
   const [isOpen, setIsOpen] = useState(false);
   const [editingUnidad, setEditingUnidad] = useState<Unidad | null>(null);
   const [formData, setFormData] = useState({
@@ -44,7 +47,12 @@ export default function Unidades() {
   });
 
   const utils = trpc.useUtils();
-  const { data: unidades, isLoading } = trpc.unidades.list.useQuery();
+  const { data: allUnidades, isLoading } = trpc.unidades.list.useQuery();
+  
+  // Filtrar unidades por proyecto seleccionado (aislamiento por proyecto)
+  const unidades = selectedProjectId
+    ? allUnidades?.filter(u => u.proyectoId === selectedProjectId)
+    : allUnidades;
 
   const createMutation = trpc.unidades.create.useMutation({
     onSuccess: () => {

@@ -1,0 +1,1 @@
+ALTER TABLE `defectos` ADD `proyectoId` int;

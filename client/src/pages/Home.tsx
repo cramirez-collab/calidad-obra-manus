@@ -17,15 +17,31 @@ import {
   BarChart3
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { useProject } from "@/contexts/ProjectContext";
 
 export default function Home() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const { selectedProjectId } = useProject();
   
-  const { data: stats } = trpc.estadisticas.general.useQuery({});
-  const { data: empresas } = trpc.empresas.list.useQuery();
-  const { data: unidades } = trpc.unidades.list.useQuery();
-  const { data: especialidades } = trpc.especialidades.list.useQuery();
+  // Estadísticas filtradas por proyecto
+  const { data: stats } = trpc.estadisticas.general.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : {}
+  );
+  const { data: allEmpresas } = trpc.empresas.list.useQuery();
+  const { data: allUnidades } = trpc.unidades.list.useQuery();
+  const { data: allEspecialidades } = trpc.especialidades.list.useQuery();
+  
+  // Filtrar por proyecto seleccionado
+  const empresas = selectedProjectId
+    ? allEmpresas?.filter(e => e.proyectoId === selectedProjectId)
+    : allEmpresas;
+  const unidades = selectedProjectId
+    ? allUnidades?.filter(u => u.proyectoId === selectedProjectId)
+    : allUnidades;
+  const especialidades = selectedProjectId
+    ? allEspecialidades?.filter(e => e.proyectoId === selectedProjectId)
+    : allEspecialidades;
 
   const statusCounts = stats?.porStatus?.reduce((acc, item) => {
     acc[item.status] = Number(item.count);

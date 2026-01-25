@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { AlertTriangle, Plus, Pencil, Trash2, Search, Clock, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
+import { useProject } from "@/contexts/ProjectContext";
 
 const severidadLabels: Record<string, string> = {
   leve: "Leve",
@@ -58,9 +59,18 @@ interface DefectoFormData {
 }
 
 export default function Defectos() {
+  const { selectedProjectId } = useProject();
   const utils = trpc.useUtils();
-  const { data: defectos, isLoading } = trpc.defectos.listConEstadisticas.useQuery();
-  const { data: especialidades } = trpc.especialidades.list.useQuery();
+  const { data: allDefectos, isLoading } = trpc.defectos.listConEstadisticas.useQuery();
+  const { data: allEspecialidades } = trpc.especialidades.list.useQuery();
+  
+  // Filtrar por proyecto seleccionado (aislamiento por proyecto)
+  const especialidades = selectedProjectId
+    ? allEspecialidades?.filter(e => e.proyectoId === selectedProjectId)
+    : allEspecialidades;
+  const defectos = selectedProjectId
+    ? allDefectos?.filter(d => d.proyectoId === selectedProjectId)
+    : allDefectos;
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);

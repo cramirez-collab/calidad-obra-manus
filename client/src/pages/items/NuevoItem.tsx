@@ -22,14 +22,16 @@ import {
   Pencil,
   Image as ImageIcon
 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import { useProject } from "@/contexts/ProjectContext";
 
 type Step = "info" | "foto" | "marcado" | "confirmar";
 
 export default function NuevoItem() {
   const [, setLocation] = useLocation();
+  const { selectedProjectId } = useProject();
   const [step, setStep] = useState<Step>("info");
   const [formData, setFormData] = useState({
     proyectoId: "",
@@ -56,16 +58,23 @@ export default function NuevoItem() {
   const { data: allEspecialidades } = trpc.especialidades.list.useQuery();
   const { data: atributos } = trpc.atributos.list.useQuery();
   
-  // Filtrar por proyecto seleccionado
-  const empresas = formData.proyectoId 
-    ? allEmpresas?.filter(e => e.proyectoId === parseInt(formData.proyectoId))
+  // Filtrar por proyecto seleccionado del contexto global
+  const empresas = selectedProjectId 
+    ? allEmpresas?.filter(e => e.proyectoId === selectedProjectId)
     : allEmpresas;
-  const unidades = formData.proyectoId
-    ? allUnidades?.filter(u => u.proyectoId === parseInt(formData.proyectoId))
+  const unidades = selectedProjectId
+    ? allUnidades?.filter(u => u.proyectoId === selectedProjectId)
     : allUnidades;
-  const especialidades = formData.proyectoId
-    ? allEspecialidades?.filter(e => e.proyectoId === parseInt(formData.proyectoId))
+  const especialidades = selectedProjectId
+    ? allEspecialidades?.filter(e => e.proyectoId === selectedProjectId)
     : allEspecialidades;
+  
+  // Sincronizar proyectoId del formulario con el proyecto seleccionado
+  useEffect(() => {
+    if (selectedProjectId && formData.proyectoId !== selectedProjectId.toString()) {
+      setFormData(prev => ({ ...prev, proyectoId: selectedProjectId.toString() }));
+    }
+  }, [selectedProjectId]);
   
   // Defectos filtrados por especialidad seleccionada
   const { data: defectos } = trpc.defectos.byEspecialidad.useQuery(

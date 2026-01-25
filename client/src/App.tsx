@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { ProjectProvider } from "./contexts/ProjectContext";
 import { Suspense, lazy } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -112,16 +113,18 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
-        <TooltipProvider>
-          <Toaster />
-          <Suspense fallback={null}>
-            <OfflineIndicator />
-          </Suspense>
-          <Suspense fallback={null}>
-            <CameraPermissionRequest />
-          </Suspense>
-          <Router />
-        </TooltipProvider>
+        <ProjectProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Suspense fallback={null}>
+              <OfflineIndicator />
+            </Suspense>
+            <Suspense fallback={null}>
+              <CameraPermissionRequest />
+            </Suspense>
+            <Router />
+          </TooltipProvider>
+        </ProjectProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

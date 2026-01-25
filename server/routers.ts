@@ -375,6 +375,7 @@ export const appRouter = router({
   items: router({
     list: protectedProcedure
       .input(z.object({
+        proyectoId: z.number().optional(),
         empresaId: z.number().optional(),
         unidadId: z.number().optional(),
         especialidadId: z.number().optional(),
@@ -688,6 +689,7 @@ export const appRouter = router({
   estadisticas: router({
     general: protectedProcedure
       .input(z.object({
+        proyectoId: z.number().optional(),
         empresaId: z.number().optional(),
         unidadId: z.number().optional(),
         especialidadId: z.number().optional(),

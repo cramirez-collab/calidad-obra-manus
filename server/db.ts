@@ -606,6 +606,7 @@ export async function updateItem(id: number, data: Partial<InsertItem>) {
 }
 
 export interface ItemFilters {
+  proyectoId?: number;
   empresaId?: number;
   unidadId?: number;
   especialidadId?: number;
@@ -625,6 +626,8 @@ export async function getItems(filters: ItemFilters = {}, limit = 100, offset = 
 
   const conditions = [];
   
+  // Filtro por proyecto (CRITICO para aislamiento)
+  if (filters.proyectoId) conditions.push(eq(items.proyectoId, filters.proyectoId));
   if (filters.empresaId) conditions.push(eq(items.empresaId, filters.empresaId));
   if (filters.unidadId) conditions.push(eq(items.unidadId, filters.unidadId));
   if (filters.especialidadId) conditions.push(eq(items.especialidadId, filters.especialidadId));
@@ -692,6 +695,8 @@ export async function getEstadisticas(filters: ItemFilters = {}) {
   if (!db) return null;
 
   const conditions = [];
+  // Filtro por proyecto (CRITICO para aislamiento)
+  if (filters.proyectoId) conditions.push(eq(items.proyectoId, filters.proyectoId));
   if (filters.empresaId) conditions.push(eq(items.empresaId, filters.empresaId));
   if (filters.unidadId) conditions.push(eq(items.unidadId, filters.unidadId));
   if (filters.especialidadId) conditions.push(eq(items.especialidadId, filters.especialidadId));

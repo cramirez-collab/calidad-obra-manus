@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
+import { useProject } from "@/contexts/ProjectContext";
 
 const statusLabels: Record<string, string> = {
   pendiente_foto_despues: "Pendiente Foto",
@@ -57,6 +58,7 @@ const statusIcons: Record<string, typeof Clock> = {
 
 export default function ItemsList() {
   const [, setLocation] = useLocation();
+  const { selectedProjectId } = useProject();
   const [filters, setFilters] = useState({
     empresaId: "",
     unidadId: "",
@@ -81,6 +83,7 @@ export default function ItemsList() {
   }, [filters.especialidadId, especialidades]);
 
   const queryFilters = useMemo(() => ({
+    proyectoId: selectedProjectId || undefined,
     empresaId: filters.empresaId ? parseInt(filters.empresaId) : undefined,
     unidadId: filters.unidadId ? parseInt(filters.unidadId) : undefined,
     especialidadId: filters.especialidadId ? parseInt(filters.especialidadId) : undefined,
@@ -88,7 +91,7 @@ export default function ItemsList() {
     busqueda: filters.busqueda || undefined,
     limit: 100,
     offset: 0,
-  }), [filters]);
+  }), [filters, selectedProjectId]);
 
   const { data, isLoading } = trpc.items.list.useQuery(queryFilters);
 

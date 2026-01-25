@@ -28,8 +28,9 @@ import {
 } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
 import { Building2, Edit, Plus, Trash2, FolderKanban } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useProject } from "@/contexts/ProjectContext";
 
 type Empresa = {
   id: number;
@@ -42,9 +43,9 @@ type Empresa = {
 };
 
 export default function Empresas() {
+  const { selectedProjectId } = useProject();
   const [isOpen, setIsOpen] = useState(false);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
-  const [selectedProyectoId, setSelectedProyectoId] = useState<string>("all");
   const [formData, setFormData] = useState({
     nombre: "",
     rfc: "",
@@ -58,10 +59,10 @@ export default function Empresas() {
   const { data: empresas, isLoading } = trpc.empresas.list.useQuery();
   const { data: proyectos } = trpc.proyectos.list.useQuery();
 
-  // Filtrar empresas por proyecto seleccionado
-  const empresasFiltradas = selectedProyectoId === "all" 
-    ? empresas 
-    : empresas?.filter(e => e.proyectoId === parseInt(selectedProyectoId));
+  // Filtrar empresas por proyecto seleccionado (aislamiento por proyecto)
+  const empresasFiltradas = selectedProjectId
+    ? empresas?.filter(e => e.proyectoId === selectedProjectId)
+    : empresas;
 
   const createMutation = trpc.empresas.create.useMutation({
     onSuccess: () => {
@@ -114,7 +115,7 @@ export default function Empresas() {
         contacto: "", 
         telefono: "", 
         email: "",
-        proyectoId: selectedProyectoId !== "all" ? selectedProyectoId : "",
+        proyectoId: selectedProjectId?.toString() || "",
       });
     }
     setIsOpen(true);
@@ -177,30 +178,6 @@ export default function Empresas() {
           </Button>
         </div>
 
-        {/* Filtro de proyecto */}
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="flex items-center gap-2">
-                <FolderKanban className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Filtrar por proyecto:</span>
-              </div>
-              <Select value={selectedProyectoId} onValueChange={setSelectedProyectoId}>
-                <SelectTrigger className="w-full sm:w-[250px]">
-                  <SelectValue placeholder="Todos los proyectos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los proyectos</SelectItem>
-                  {proyectos?.map((proyecto) => (
-                    <SelectItem key={proyecto.id} value={proyecto.id.toString()}>
-                      {proyecto.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>

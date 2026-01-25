@@ -24,6 +24,7 @@ import { trpc } from "@/lib/trpc";
 import { Wrench, Edit, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useProject } from "@/contexts/ProjectContext";
 
 type Especialidad = {
   id: number;
@@ -31,6 +32,7 @@ type Especialidad = {
   codigo?: string | null;
   descripcion?: string | null;
   color?: string | null;
+  proyectoId?: number | null;
 };
 
 const defaultColors = [
@@ -39,6 +41,7 @@ const defaultColors = [
 ];
 
 export default function Especialidades() {
+  const { selectedProjectId } = useProject();
   const [isOpen, setIsOpen] = useState(false);
   const [editingEspecialidad, setEditingEspecialidad] = useState<Especialidad | null>(null);
   const [formData, setFormData] = useState({
@@ -49,7 +52,12 @@ export default function Especialidades() {
   });
 
   const utils = trpc.useUtils();
-  const { data: especialidades, isLoading } = trpc.especialidades.list.useQuery();
+  const { data: allEspecialidades, isLoading } = trpc.especialidades.list.useQuery();
+  
+  // Filtrar especialidades por proyecto seleccionado (aislamiento por proyecto)
+  const especialidades = selectedProjectId
+    ? allEspecialidades?.filter(e => e.proyectoId === selectedProjectId)
+    : allEspecialidades;
 
   const createMutation = trpc.especialidades.create.useMutation({
     onSuccess: () => {

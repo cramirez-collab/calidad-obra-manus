@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useProject } from "@/contexts/ProjectContext";
 
 const roleLabels: Record<string, string> = {
   superadmin: "Superadmin",
@@ -59,10 +60,28 @@ interface UserFormData {
 }
 
 export default function Usuarios() {
+  const { selectedProjectId } = useProject();
   const utils = trpc.useUtils();
   const { user } = useAuth();
-  const { data: usuarios, isLoading } = trpc.users.listConEmpresa.useQuery();
-  const { data: empresas } = trpc.empresas.list.useQuery();
+  const { data: allUsuarios, isLoading } = trpc.users.listConEmpresa.useQuery();
+  const { data: allEmpresas } = trpc.empresas.list.useQuery();
+  const { data: proyectoUsuarios } = trpc.proyectos.usuarios.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId }
+  );
+  
+  // Filtrar empresas por proyecto seleccionado
+  const empresas = selectedProjectId
+    ? allEmpresas?.filter(e => e.proyectoId === selectedProjectId)
+    : allEmpresas;
+  
+  // Filtrar usuarios por proyecto seleccionado (solo mostrar usuarios asignados al proyecto)
+  const usuariosDelProyecto = selectedProjectId && proyectoUsuarios
+    ? proyectoUsuarios.map(pu => pu.usuarioId)
+    : null;
+  const usuarios = usuariosDelProyecto
+    ? allUsuarios?.filter(u => usuariosDelProyecto.includes(u.id))
+    : allUsuarios;
   
   // Solo admin y superadmin pueden crear/editar usuarios
   const canManageUsers = user?.role === 'superadmin' || user?.role === 'admin';

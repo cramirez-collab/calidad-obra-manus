@@ -125,6 +125,7 @@ export type InsertEspecialidad = typeof especialidades.$inferInsert;
  */
 export const atributos = mysqlTable("atributos", {
   id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId"), // Relación con proyecto
   nombre: varchar("nombre", { length: 255 }).notNull(),
   categoria: varchar("categoria", { length: 100 }),
   descripcion: text("descripcion"),
@@ -302,6 +303,7 @@ export type InsertMeta = typeof metas.$inferInsert;
  */
 export const defectos = mysqlTable("defectos", {
   id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId"), // Relación con proyecto
   nombre: varchar("nombre", { length: 255 }).notNull(),
   codigo: varchar("codigo", { length: 50 }),
   descripcion: text("descripcion"),

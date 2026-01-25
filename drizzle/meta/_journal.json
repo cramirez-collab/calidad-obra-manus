@@ -71,6 +71,20 @@
       "when": 1769324439376,
       "tag": "0009_tiny_microbe",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1769374854234,
+      "tag": "0010_known_black_panther",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1769374915486,
+      "tag": "0011_fluffy_ozymandias",
+      "breakpoints": true
     }
   ]
 }

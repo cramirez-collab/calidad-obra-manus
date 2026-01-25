@@ -24,15 +24,18 @@ import { trpc } from "@/lib/trpc";
 import { Tags, Edit, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useProject } from "@/contexts/ProjectContext";
 
 type Atributo = {
   id: number;
   nombre: string;
   categoria?: string | null;
   descripcion?: string | null;
+  proyectoId?: number | null;
 };
 
 export default function Atributos() {
+  const { selectedProjectId } = useProject();
   const [isOpen, setIsOpen] = useState(false);
   const [editingAtributo, setEditingAtributo] = useState<Atributo | null>(null);
   const [formData, setFormData] = useState({
@@ -42,7 +45,12 @@ export default function Atributos() {
   });
 
   const utils = trpc.useUtils();
-  const { data: atributos, isLoading } = trpc.atributos.list.useQuery();
+  const { data: allAtributos, isLoading } = trpc.atributos.list.useQuery();
+  
+  // Filtrar atributos por proyecto seleccionado (aislamiento por proyecto)
+  const atributos = selectedProjectId
+    ? allAtributos?.filter(a => a.proyectoId === selectedProjectId)
+    : allAtributos;
 
   const createMutation = trpc.atributos.create.useMutation({
     onSuccess: () => {

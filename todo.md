@@ -456,3 +456,54 @@
 - [x] Agregar selector de proyecto en el menú lateral
 - [x] Guardar proyecto seleccionado en localStorage
 - [ ] Filtrar datos según proyecto activo (pendiente integración)
+
+
+## Aislamiento por Proyecto (Enero 2026)
+
+### Backend - Filtrado por Proyecto
+- [ ] Filtrar usuarios por proyectos asignados
+- [ ] Filtrar empresas por proyecto
+- [ ] Filtrar unidades por proyecto
+- [ ] Filtrar especialidades por proyecto
+- [ ] Filtrar ítems por proyecto
+- [ ] Superadmin ve todos los proyectos
+- [ ] Admin/Supervisor designados por proyecto
+
+### Frontend - Integración de Proyecto Activo
+- [ ] Usar proyecto seleccionado en todas las consultas
+- [ ] Mostrar solo proyectos asignados al usuario
+- [ ] Filtrar listas según proyecto activo
+
+
+## Aislamiento por Proyecto (Decimoquinta Iteración)
+
+### Contexto Global de Proyecto
+- [x] Crear ProjectContext para compartir proyecto seleccionado
+- [x] Integrar ProjectProvider en App.tsx
+- [x] Actualizar ProjectSelector para usar contexto global
+- [x] Persistir proyecto seleccionado en localStorage
+
+### Filtrado de Datos por Proyecto
+- [x] Agregar proyectoId a ItemFilters en db.ts
+- [x] Filtrar items por proyecto en getItems()
+- [x] Filtrar estadísticas por proyecto en getEstadisticas()
+- [x] Filtrar empresas por proyecto en frontend
+- [x] Filtrar unidades por proyecto en frontend
+- [x] Filtrar especialidades por proyecto en frontend
+
+### Actualización de Páginas
+- [x] ItemsList: usar useProject para filtrar items
+- [x] NuevoItem: usar proyecto del contexto
+- [x] Home: estadísticas filtradas por proyecto
+- [x] Empresas: filtrar por proyecto activo
+- [x] Unidades: filtrar por proyecto activo
+- [x] Especialidades: filtrar por proyecto activo
+- [x] Atributos: filtrar por proyecto activo
+- [x] Defectos: filtrar por proyecto activo
+- [x] Usuarios: filtrar por proyecto activo
+
+### Permisos por Proyecto
+- [x] Verificar que usuario pertenece al proyecto seleccionado
+- [x] Superadmin ve todos los proyectos
+- [x] Usuarios normales solo ven proyectos asignados
+- [ ] Validación en backend de permisos por proyecto
