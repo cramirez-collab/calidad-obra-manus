@@ -445,7 +445,8 @@
 - [x] Validar permisos en backend
 
 
-## Enlace Secuencias y Visor (Enero 2026)
-- [x] Agregar enlace "Secuencias" al menú lateral
-- [x] Agregar enlace "Visor" al menú lateral
+## Enlaces Externos (Enero 2026)
+- [x] Agregar enlace "Secuencias" al menú lateral (AppSheet)
+- [x] Agregar enlace "Visor" al menú lateral (Google Sheets)
+- [x] Agregar enlace "Planos" al menú lateral (Google Drive)
 - [x] Abrir URLs externas en nueva pestaña

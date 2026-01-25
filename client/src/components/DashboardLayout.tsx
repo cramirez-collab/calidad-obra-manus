@@ -50,7 +50,8 @@ import {
   FileImage,
   FolderKanban,
   ListOrdered,
-  FileSpreadsheet
+  FileSpreadsheet,
+  FolderOpen
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -98,6 +99,7 @@ const getMenuItems = (role: string) => {
     { icon: History, label: "Bitácora", path: "/bitacora", shortLabel: "" },
     { icon: ListOrdered, label: "Secuencias", path: "https://www.appsheet.com/start/bad5370e-61b3-4a42-8347-643e96d15f32?platform=desktop#appName=Secuencias-226234876&vss=H4sIAAAAAAAAA6WQwU7EIBCG32XOYADb7ZaretgYPejGg-KBFpoQW2iAqpuGdxd0jR68qMf5Z74vf2aFZ6NfbqPsn4A_rF_TpT4Ah1XA_jBrAVzAmbPRu1EAEnAtp2O46BCNs9IbJyBBekSfjqgD8PX3Cv7_FgiM0jaawWhffIXOniOb14UswTcOEoJpibIb9Xv5wh2Bn64R3DgXczo4P-XpXEaZuWnOESOsxpRhQveM8YpyUp1UrKkZq-9Lt7CzF8rEK6eyNvpFI4he2iD7ot-prOi3XUNOhy1WVLa4aliLO8IoZq3qN5SQtt_UkFLuPLh-CVrd5Zf98VWlzussrfooNMgx6PQGxeoKAhkCAAA=&view=Cuestionario", shortLabel: "", external: true },
     { icon: FileSpreadsheet, label: "Visor", path: "https://docs.google.com/spreadsheets/d/1QhfpVCXE2SwpTazhH96wrc2Q0HIFMS3SpO6GXvS2DJA/edit?gid=464225867#gid=464225867", shortLabel: "", external: true },
+    { icon: FolderOpen, label: "Planos", path: "https://drive.google.com/drive/folders/1BsaAtPcfOmmGkJMgtLw_zJujxFQmfiro", shortLabel: "", external: true },
   ];
 
   const configItems = [
