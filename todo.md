@@ -122,3 +122,42 @@
 - [x] Indicadores discretos de estado
 - [x] Interfaz limpia y minimalista
 - [x] Animaciones suaves no bloqueantes
+
+
+## Mejoras de Usabilidad y Branding (Quinta Iteración)
+
+### Responsividad y Uso en Obra
+- [x] Diseño optimizado para tablet en obra
+- [x] Diseño optimizado para móvil
+- [x] Interfaz rápida y fluida en todos los dispositivos
+- [x] Botones grandes para uso con guantes
+
+### Fotos sin Pérdida de Resolución
+- [x] Almacenamiento en calidad original
+- [x] Sin compresión de imágenes
+- [x] Visualización en alta resolución
+
+### Bitácora de Uso
+- [x] Tabla de registro de actividades
+- [x] Registro por usuario de todas las acciones
+- [x] Historial de accesos y modificaciones
+
+### Roles Mejorados
+- [x] Superadministrador con acceso total
+- [x] Supervisor sin acceso a configuración crítica
+- [x] Permisos granulares por rol
+
+### Página de Bienvenida
+- [x] Dashboard personalizado por usuario
+- [x] Listado de pendientes ordenados del más antiguo al más nuevo
+- [x] Acceso rápido a tareas asignadas
+
+### Código Progresivo
+- [x] Formato OQC-00001
+- [x] Incremento automático de 1 en 1
+- [x] Único y secuencial
+
+### Branding Objetiva
+- [x] Logo en pantallas principales
+- [x] Logo en reportes exportados
+- [x] Colores corporativos Objetiva (#02B381 verde, #002C63 azul)

@@ -10,9 +10,17 @@ import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { sendEmail, getAprobadoEmailTemplate, getRechazadoEmailTemplate, getPendienteAprobacionEmailTemplate } from "./emailService";
 
-// Middleware para verificar rol de admin
+// Middleware para verificar rol de superadmin (acceso total)
+const superadminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== 'superadmin') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Acceso denegado. Se requiere rol de superadministrador.' });
+  }
+  return next({ ctx });
+});
+
+// Middleware para verificar rol de admin o superadmin
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.role !== 'admin') {
+  if (!['superadmin', 'admin'].includes(ctx.user.role)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Acceso denegado. Se requiere rol de administrador.' });
   }
   return next({ ctx });
@@ -20,7 +28,7 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 
 // Middleware para verificar rol de supervisor o superior
 const supervisorProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (!['admin', 'supervisor'].includes(ctx.user.role)) {
+  if (!['superadmin', 'admin', 'supervisor'].includes(ctx.user.role)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Acceso denegado. Se requiere rol de supervisor.' });
   }
   return next({ ctx });
@@ -28,7 +36,7 @@ const supervisorProcedure = protectedProcedure.use(({ ctx, next }) => {
 
 // Middleware para verificar rol de jefe de residente o superior
 const jefeResidenteProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (!['admin', 'supervisor', 'jefe_residente'].includes(ctx.user.role)) {
+  if (!['superadmin', 'admin', 'supervisor', 'jefe_residente'].includes(ctx.user.role)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Acceso denegado. Se requiere rol de jefe de residente.' });
   }
   return next({ ctx });
@@ -354,23 +362,38 @@ export const appRouter = router({
         const item = await db.getItemById(input.itemId);
         if (!item) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ítem no encontrado' });
         
-        // Subir foto original
+        // Detectar tipo de imagen para preservar resolución original
+        const mimeMatch = input.fotoBase64.match(/^data:(image\/\w+);base64,/);
+        const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+        const extension = mimeType === 'image/jpeg' ? 'jpg' : mimeType === 'image/png' ? 'png' : 'webp';
+        
+        // Subir foto original SIN COMPRESIÓN - preservar resolución
         const fotoBuffer = Buffer.from(input.fotoBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-        const fotoKey = `items/${item.codigo}/antes-${nanoid(8)}.jpg`;
-        const { url: fotoUrl } = await storagePut(fotoKey, fotoBuffer, 'image/jpeg');
+        const fotoKey = `items/${item.codigo}/antes-${nanoid(8)}.${extension}`;
+        const { url: fotoUrl } = await storagePut(fotoKey, fotoBuffer, mimeType);
         
         const updateData: any = { fotoAntesUrl: fotoUrl, fotoAntesKey: fotoKey };
         
-        // Subir foto marcada si existe
+        // Subir foto marcada si existe (PNG para preservar marcas)
         if (input.fotoMarcadaBase64) {
           const fotoMarcadaBuffer = Buffer.from(input.fotoMarcadaBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-          const fotoMarcadaKey = `items/${item.codigo}/antes-marcada-${nanoid(8)}.jpg`;
-          const { url: fotoMarcadaUrl } = await storagePut(fotoMarcadaKey, fotoMarcadaBuffer, 'image/jpeg');
+          const fotoMarcadaKey = `items/${item.codigo}/antes-marcada-${nanoid(8)}.png`;
+          const { url: fotoMarcadaUrl } = await storagePut(fotoMarcadaKey, fotoMarcadaBuffer, 'image/png');
           updateData.fotoAntesMarcadaUrl = fotoMarcadaUrl;
           updateData.fotoAntesMarcadaKey = fotoMarcadaKey;
         }
         
         await db.updateItem(input.itemId, updateData);
+        
+        // Registrar en bitácora
+        await db.registrarActividad({
+          usuarioId: ctx.user.id,
+          accion: 'subir_foto',
+          entidad: 'item',
+          entidadId: input.itemId,
+          detalles: `Foto antes subida para ${item.codigo}`,
+        });
+        
         return { success: true, fotoUrl };
       }),
     
@@ -387,9 +410,15 @@ export const appRouter = router({
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'El ítem no está pendiente de foto después' });
         }
         
+        // Detectar tipo de imagen para preservar resolución original
+        const mimeMatch = input.fotoBase64.match(/^data:(image\/\w+);base64,/);
+        const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+        const extension = mimeType === 'image/jpeg' ? 'jpg' : mimeType === 'image/png' ? 'png' : 'webp';
+        
+        // Subir foto SIN COMPRESIÓN - preservar resolución original
         const fotoBuffer = Buffer.from(input.fotoBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-        const fotoKey = `items/${item.codigo}/despues-${nanoid(8)}.jpg`;
-        const { url: fotoUrl } = await storagePut(fotoKey, fotoBuffer, 'image/jpeg');
+        const fotoKey = `items/${item.codigo}/despues-${nanoid(8)}.${extension}`;
+        const { url: fotoUrl } = await storagePut(fotoKey, fotoBuffer, mimeType);
         
         await db.updateItem(input.itemId, {
           fotoDespuesUrl: fotoUrl,
@@ -623,6 +652,61 @@ export const appRouter = router({
           texto: input.texto,
         });
         return { id, success: true };
+      }),
+  }),
+
+  // ==================== BITÁCORA ====================
+  bitacora: router({
+    list: adminProcedure
+      .input(z.object({
+        usuarioId: z.number().optional(),
+        accion: z.string().optional(),
+        entidad: z.string().optional(),
+        fechaDesde: z.date().optional(),
+        fechaHasta: z.date().optional(),
+        limit: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await db.getBitacoraGeneral(input || {}, input?.limit || 200);
+      }),
+    
+    miActividad: protectedProcedure
+      .input(z.object({ limit: z.number().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        return await db.getBitacoraByUsuario(ctx.user.id, input?.limit || 50);
+      }),
+  }),
+
+  // ==================== PENDIENTES POR USUARIO ====================
+  pendientes: router({
+    misPendientes: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getPendientesByUsuario(ctx.user.id, ctx.user.role);
+    }),
+  }),
+
+  // ==================== CONFIGURACIÓN ====================
+  configuracion: router({
+    list: adminProcedure.query(async ({ ctx }) => {
+      const isSuperadmin = ctx.user.role === 'superadmin';
+      return await db.getAllConfiguracion(isSuperadmin);
+    }),
+    
+    get: adminProcedure
+      .input(z.object({ clave: z.string() }))
+      .query(async ({ input }) => {
+        return await db.getConfiguracion(input.clave);
+      }),
+    
+    set: superadminProcedure
+      .input(z.object({
+        clave: z.string(),
+        valor: z.string(),
+        descripcion: z.string().optional(),
+        soloSuperadmin: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.setConfiguracion(input.clave, input.valor, input.descripcion, input.soloSuperadmin);
+        return { success: true };
       }),
   }),
 });

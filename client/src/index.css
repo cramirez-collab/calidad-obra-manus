@@ -3,6 +3,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* 
+ * Paleta Corporativa OBJETIVA
+ * Verde primario: #02B381 - Botones, indicadores positivos, KPIs
+ * Azul institucional: #002C63 - Encabezados, bordes, estructura
+ * Grises: #2E2E2E (oscuro), #6E6E6E (medio), #E5E5E5 (claro)
+ * Regla 60-30-10: 60% blanco/gris, 30% azul, 10% verde
+ */
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -40,77 +48,102 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Colores Objetiva */
+  --color-objetiva-green: #02B381;
+  --color-objetiva-blue: #002C63;
+  --color-objetiva-gray-dark: #2E2E2E;
+  --color-objetiva-gray-medium: #6E6E6E;
+  --color-objetiva-gray-light: #E5E5E5;
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
+  /* Verde Objetiva como primario para botones y acciones */
+  --primary: oklch(0.65 0.17 165);
+  --primary-foreground: oklch(1 0 0);
+  
+  /* Azul Objetiva para sidebar y estructura */
+  --sidebar-primary: oklch(0.25 0.08 250);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  
+  /* Charts con paleta Objetiva */
+  --chart-1: oklch(0.65 0.17 165);
+  --chart-2: oklch(0.25 0.08 250);
+  --chart-3: oklch(0.55 0.14 165);
+  --chart-4: oklch(0.35 0.06 250);
+  --chart-5: oklch(0.45 0.10 165);
+  
+  --radius: 0.5rem;
+  
+  /* Fondos claros (60% de la regla) */
+  --background: oklch(0.995 0 0);
+  --foreground: oklch(0.18 0.02 250);
+  
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
+  --card-foreground: oklch(0.18 0.02 250);
+  
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  --popover-foreground: oklch(0.18 0.02 250);
+  
+  /* Secundarios con gris Objetiva */
+  --secondary: oklch(0.96 0 0);
+  --secondary-foreground: oklch(0.35 0.01 250);
+  
+  --muted: oklch(0.94 0 0);
+  --muted-foreground: oklch(0.5 0.01 250);
+  
+  --accent: oklch(0.96 0 0);
+  --accent-foreground: oklch(0.18 0.02 250);
+  
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+  
+  --border: oklch(0.91 0 0);
+  --input: oklch(0.91 0 0);
+  --ring: oklch(0.65 0.17 165);
+  
+  /* Sidebar con azul Objetiva */
+  --sidebar: oklch(0.995 0 0);
+  --sidebar-foreground: oklch(0.18 0.02 250);
+  --sidebar-accent: oklch(0.96 0.01 165);
+  --sidebar-accent-foreground: oklch(0.18 0.02 250);
+  --sidebar-border: oklch(0.91 0 0);
+  --sidebar-ring: oklch(0.65 0.17 165);
 }
 
 .dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
+  --primary: oklch(0.7 0.17 165);
+  --primary-foreground: oklch(0.1 0 0);
+  --sidebar-primary: oklch(0.65 0.17 165);
+  --sidebar-primary-foreground: oklch(0.1 0 0);
+  --background: oklch(0.12 0.02 250);
+  --foreground: oklch(0.92 0 0);
+  --card: oklch(0.16 0.02 250);
+  --card-foreground: oklch(0.92 0 0);
+  --popover: oklch(0.16 0.02 250);
+  --popover-foreground: oklch(0.92 0 0);
+  --secondary: oklch(0.2 0.02 250);
+  --secondary-foreground: oklch(0.8 0 0);
+  --muted: oklch(0.22 0.02 250);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.22 0.02 250);
+  --accent-foreground: oklch(0.92 0 0);
+  --destructive: oklch(0.6 0.2 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.25 0.02 250);
+  --input: oklch(0.25 0.02 250);
+  --ring: oklch(0.7 0.17 165);
+  --chart-1: oklch(0.7 0.17 165);
+  --chart-2: oklch(0.45 0.08 250);
+  --chart-3: oklch(0.6 0.14 165);
+  --chart-4: oklch(0.55 0.06 250);
+  --chart-5: oklch(0.5 0.10 165);
+  --sidebar: oklch(0.14 0.02 250);
+  --sidebar-foreground: oklch(0.92 0 0);
+  --sidebar-accent: oklch(0.2 0.02 250);
+  --sidebar-accent-foreground: oklch(0.92 0 0);
+  --sidebar-border: oklch(0.25 0.02 250);
+  --sidebar-ring: oklch(0.7 0.17 165);
 }
 
 @layer base {
@@ -119,6 +152,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -134,24 +168,11 @@
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
 
@@ -162,25 +183,26 @@
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem; /* 32px - desktop padding */
+      padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1280px;
     }
   }
   
-  /* Status badges */
+  /* Status badges con colores Objetiva */
   .badge-pendiente {
     @apply bg-amber-100 text-amber-800;
   }
   .badge-aprobado {
-    @apply bg-emerald-100 text-emerald-800;
+    background-color: rgba(2, 179, 129, 0.15);
+    color: #02B381;
   }
   .badge-rechazado {
     @apply bg-red-100 text-red-800;
@@ -191,11 +213,56 @@
     @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
   }
   
-  /* Dashboard sidebar item */
+  /* Sidebar item con colores Objetiva */
   .sidebar-item {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors;
   }
   .sidebar-item-active {
     @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground;
+  }
+  
+  /* Botones táctiles grandes para uso en obra */
+  .btn-touch {
+    @apply min-h-[48px] min-w-[48px] text-base font-medium;
+  }
+  
+  /* Header con azul Objetiva */
+  .header-objetiva {
+    background-color: #002C63;
+    color: white;
+  }
+  
+  /* Acento verde Objetiva */
+  .accent-objetiva {
+    color: #02B381;
+  }
+  
+  /* Borde azul Objetiva */
+  .border-objetiva {
+    border-color: #002C63;
+  }
+}
+
+/* Responsive touch targets para móvil/tablet en obra */
+@media (max-width: 768px) {
+  button, 
+  [role="button"],
+  .btn,
+  input[type="submit"],
+  input[type="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Espaciado más generoso en móvil */
+  .card {
+    padding: 1rem;
+  }
+}
+
+/* Tablet landscape optimizado para obra */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .sidebar-collapsed {
+    width: 64px;
   }
 }

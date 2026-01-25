@@ -36,7 +36,8 @@ import {
   QrCode,
   Settings,
   Camera,
-  TrendingUp
+  TrendingUp,
+  History
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -50,7 +51,7 @@ import { useRealTimeItems } from "@/hooks/useRealTimeData";
 const getMenuItems = (role: string) => {
   const baseItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-    { icon: Camera, label: "Nuevo Ítem", path: "/items/nuevo" },
+    { icon: Camera, label: "Nuevo Ítem", path: "/nuevo-item" },
     { icon: ClipboardCheck, label: "Mis Ítems", path: "/items" },
   ];
 
@@ -65,24 +66,25 @@ const getMenuItems = (role: string) => {
   const adminItems = [
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
     { icon: TrendingUp, label: "KPIs", path: "/kpis" },
-    { icon: Building2, label: "Empresas", path: "/catalogos/empresas" },
-    { icon: MapPin, label: "Unidades", path: "/catalogos/unidades" },
-    { icon: Wrench, label: "Especialidades", path: "/catalogos/especialidades" },
-    { icon: Tags, label: "Atributos", path: "/catalogos/atributos" },
+    { icon: Building2, label: "Empresas", path: "/empresas" },
+    { icon: MapPin, label: "Unidades", path: "/unidades" },
+    { icon: Wrench, label: "Especialidades", path: "/especialidades" },
+    { icon: Tags, label: "Atributos", path: "/atributos" },
     { icon: Users, label: "Usuarios", path: "/usuarios" },
+    { icon: History, label: "Bitácora", path: "/bitacora" },
   ];
 
   let items = [...baseItems];
 
-  if (role === 'jefe_residente' || role === 'supervisor' || role === 'admin') {
+  if (role === 'jefe_residente' || role === 'supervisor' || role === 'admin' || role === 'superadmin') {
     items = [...items, ...jefeResidenteItems];
   }
 
-  if (role === 'supervisor' || role === 'admin') {
+  if (role === 'supervisor' || role === 'admin' || role === 'superadmin') {
     items = [...items, ...supervisorItems];
   }
 
-  if (role === 'admin') {
+  if (role === 'admin' || role === 'superadmin') {
     items = [...items, ...adminItems];
   }
 
@@ -95,6 +97,7 @@ const MIN_WIDTH = 200;
 const MAX_WIDTH = 400;
 
 const roleLabels: Record<string, string> = {
+  superadmin: "Superadministrador",
   admin: "Administrador",
   supervisor: "Supervisor",
   jefe_residente: "Jefe de Residente",
@@ -241,9 +244,11 @@ function DashboardLayoutContent({
               </button>
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-bold tracking-tight truncate text-primary">
-                    Calidad de Obra
-                  </span>
+                  <img 
+                    src="/logo-objetiva.jpg" 
+                    alt="Objetiva" 
+                    className="h-8 object-contain"
+                  />
                 </div>
               ) : null}
             </div>

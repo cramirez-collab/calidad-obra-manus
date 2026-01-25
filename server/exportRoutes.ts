@@ -4,6 +4,11 @@ import * as db from "./db";
 
 const router = Router();
 
+// Función para remover acentos (evitar problemas en Excel)
+const removeAccents = (str: string): string => {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+};
+
 // Exportar ítems a Excel
 router.get("/api/export/items", async (req, res) => {
   try {
@@ -28,33 +33,46 @@ router.get("/api/export/items", async (req, res) => {
     const especialidadesMap = new Map(especialidades?.map(e => [e.id, e.nombre]) || []);
     
     const statusLabels: Record<string, string> = {
-      pendiente_foto_despues: "Pendiente Foto Después",
-      pendiente_aprobacion: "Pendiente Aprobación",
+      pendiente_foto_despues: "Pendiente Foto Despues",
+      pendiente_aprobacion: "Pendiente Aprobacion",
       aprobado: "Aprobado",
       rechazado: "Rechazado",
     };
     
-    // Transformar datos para Excel
+    const wb = XLSX.utils.book_new();
+    
+    // Hoja de encabezado con información de Objetiva
+    const headerData = [
+      ["OBJETIVA - Innovacion en Desarrollos Inmobiliarios"],
+      ["Sistema de Control de Calidad de Obra (OQC)"],
+      [""],
+      ["Reporte de Items"],
+      [`Fecha de generacion: ${new Date().toLocaleDateString("es-MX")} ${new Date().toLocaleTimeString("es-MX")}`],
+      [`Total de registros: ${items.length}`],
+      [""],
+    ];
+    
+    // Transformar datos para Excel (sin acentos)
     const data = items.map((item: any) => ({
-      "Código": item.codigo,
-      "Título": item.titulo,
-      "Descripción": item.descripcion || "",
-      "Empresa": empresasMap.get(item.empresaId) || "",
-      "Unidad": unidadesMap.get(item.unidadId) || "",
-      "Especialidad": especialidadesMap.get(item.especialidadId) || "",
+      "Codigo": removeAccents(item.codigo || ""),
+      "Titulo": removeAccents(item.titulo || ""),
+      "Descripcion": removeAccents(item.descripcion || ""),
+      "Empresa": removeAccents(empresasMap.get(item.empresaId) || ""),
+      "Unidad": removeAccents(unidadesMap.get(item.unidadId) || ""),
+      "Especialidad": removeAccents(especialidadesMap.get(item.especialidadId) || ""),
       "Estado": statusLabels[item.status] || item.status,
-      "Ubicación": item.ubicacionDetalle || "",
-      "Fecha Creación": item.fechaCreacion ? new Date(item.fechaCreacion).toLocaleDateString("es-MX") : "",
-      "Fecha Foto Después": item.fechaFotoDespues ? new Date(item.fechaFotoDespues).toLocaleDateString("es-MX") : "",
-      "Fecha Aprobación": item.fechaAprobacion ? new Date(item.fechaAprobacion).toLocaleDateString("es-MX") : "",
+      "Ubicacion": removeAccents(item.ubicacionDetalle || ""),
+      "Fecha Creacion": item.fechaCreacion ? new Date(item.fechaCreacion).toLocaleDateString("es-MX") : "",
+      "Fecha Foto Despues": item.fechaFotoDespues ? new Date(item.fechaFotoDespues).toLocaleDateString("es-MX") : "",
+      "Fecha Aprobacion": item.fechaAprobacion ? new Date(item.fechaAprobacion).toLocaleDateString("es-MX") : "",
     }));
     
-    // Crear workbook
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data);
+    // Crear hoja con encabezado
+    const ws = XLSX.utils.aoa_to_sheet(headerData);
+    XLSX.utils.sheet_add_json(ws, data, { origin: "A8" });
     
     // Ajustar anchos de columna
-    const colWidths = [
+    ws["!cols"] = [
       { wch: 15 }, // Código
       { wch: 30 }, // Título
       { wch: 40 }, // Descripción
@@ -67,19 +85,18 @@ router.get("/api/export/items", async (req, res) => {
       { wch: 18 }, // Fecha Foto Después
       { wch: 18 }, // Fecha Aprobación
     ];
-    ws["!cols"] = colWidths;
     
-    XLSX.utils.book_append_sheet(wb, ws, "Ítems");
+    XLSX.utils.book_append_sheet(wb, ws, "Items OQC");
     
     // Generar buffer
     const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
     
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=items_${new Date().toISOString().split("T")[0]}.xlsx`);
+    res.setHeader("Content-Disposition", `attachment; filename=OQC_Items_${new Date().toISOString().split("T")[0]}.xlsx`);
     res.send(buffer);
   } catch (error) {
     console.error("Error exporting items:", error);
-    res.status(500).json({ error: "Error al exportar ítems" });
+    res.status(500).json({ error: "Error al exportar items" });
   }
 });
 
@@ -93,7 +110,7 @@ router.get("/api/export/estadisticas", async (req, res) => {
     
     const stats = await db.getEstadisticas(filters);
     if (!stats) {
-      return res.status(500).json({ error: "Error al obtener estadísticas" });
+      return res.status(500).json({ error: "Error al obtener estadisticas" });
     }
     
     const [empresas, especialidades] = await Promise.all([
@@ -105,55 +122,68 @@ router.get("/api/export/estadisticas", async (req, res) => {
     const especialidadesMap = new Map(especialidades?.map(e => [e.id, e.nombre]) || []);
     
     const statusLabels: Record<string, string> = {
-      pendiente_foto_despues: "Pendiente Foto Después",
-      pendiente_aprobacion: "Pendiente Aprobación",
+      pendiente_foto_despues: "Pendiente Foto Despues",
+      pendiente_aprobacion: "Pendiente Aprobacion",
       aprobado: "Aprobado",
       rechazado: "Rechazado",
     };
     
     const wb = XLSX.utils.book_new();
     
-    // Hoja de resumen
+    // Hoja de resumen con encabezado Objetiva
+    const resumenHeader = [
+      ["OBJETIVA - Innovacion en Desarrollos Inmobiliarios"],
+      ["Sistema de Control de Calidad de Obra (OQC)"],
+      [""],
+      ["Reporte de Estadisticas"],
+      [`Fecha de generacion: ${new Date().toLocaleDateString("es-MX")} ${new Date().toLocaleTimeString("es-MX")}`],
+      [""],
+      ["RESUMEN GENERAL"],
+      [""],
+    ];
+    
     const resumenData = [
-      { "Métrica": "Total de Ítems", "Valor": stats.total },
+      { "Metrica": "Total de Items", "Valor": stats.total },
     ];
     stats.porStatus.forEach((s: any) => {
-      resumenData.push({ "Métrica": statusLabels[s.status] || s.status, "Valor": Number(s.count) });
+      resumenData.push({ "Metrica": statusLabels[s.status] || s.status, "Valor": Number(s.count) });
     });
-    const wsResumen = XLSX.utils.json_to_sheet(resumenData);
-    wsResumen["!cols"] = [{ wch: 30 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen");
+    
+    const wsResumen = XLSX.utils.aoa_to_sheet(resumenHeader);
+    XLSX.utils.sheet_add_json(wsResumen, resumenData, { origin: "A9" });
+    wsResumen["!cols"] = [{ wch: 35 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen OQC");
     
     // Hoja por empresa
     const empresaData = stats.porEmpresa.map((e: any) => ({
-      "Empresa": empresasMap.get(e.empresaId) || `ID: ${e.empresaId}`,
+      "Empresa": removeAccents(empresasMap.get(e.empresaId) || `ID: ${e.empresaId}`),
       "Cantidad": Number(e.count),
     }));
     if (empresaData.length > 0) {
       const wsEmpresa = XLSX.utils.json_to_sheet(empresaData);
-      wsEmpresa["!cols"] = [{ wch: 30 }, { wch: 15 }];
+      wsEmpresa["!cols"] = [{ wch: 35 }, { wch: 15 }];
       XLSX.utils.book_append_sheet(wb, wsEmpresa, "Por Empresa");
     }
     
     // Hoja por especialidad
     const especialidadData = stats.porEspecialidad.map((e: any) => ({
-      "Especialidad": especialidadesMap.get(e.especialidadId) || `ID: ${e.especialidadId}`,
+      "Especialidad": removeAccents(especialidadesMap.get(e.especialidadId) || `ID: ${e.especialidadId}`),
       "Cantidad": Number(e.count),
     }));
     if (especialidadData.length > 0) {
       const wsEspecialidad = XLSX.utils.json_to_sheet(especialidadData);
-      wsEspecialidad["!cols"] = [{ wch: 30 }, { wch: 15 }];
+      wsEspecialidad["!cols"] = [{ wch: 35 }, { wch: 15 }];
       XLSX.utils.book_append_sheet(wb, wsEspecialidad, "Por Especialidad");
     }
     
     const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
     
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename=estadisticas_${new Date().toISOString().split("T")[0]}.xlsx`);
+    res.setHeader("Content-Disposition", `attachment; filename=OQC_Estadisticas_${new Date().toISOString().split("T")[0]}.xlsx`);
     res.send(buffer);
   } catch (error) {
     console.error("Error exporting estadisticas:", error);
-    res.status(500).json({ error: "Error al exportar estadísticas" });
+    res.status(500).json({ error: "Error al exportar estadisticas" });
   }
 });
 

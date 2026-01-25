@@ -7,6 +7,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 
 // Pages
 import Home from "./pages/Home";
+import Bienvenida from "./pages/Bienvenida";
+import Bitacora from "./pages/Bitacora";
 import Usuarios from "./pages/Usuarios";
 import Estadisticas from "./pages/Estadisticas";
 import Seguimiento from "./pages/Seguimiento";
@@ -27,24 +29,32 @@ import ItemDetail from "./pages/items/ItemDetail";
 function Router() {
   return (
     <Switch>
-      {/* Dashboard */}
-      <Route path="/" component={Home} />
+      {/* Dashboard y Bienvenida */}
+      <Route path="/" component={Bienvenida} />
+      <Route path="/dashboard" component={Home} />
+      <Route path="/bienvenida" component={Bienvenida} />
       
       {/* Items */}
       <Route path="/items" component={ItemsList} />
+      <Route path="/nuevo-item" component={NuevoItem} />
       <Route path="/items/nuevo" component={NuevoItem} />
       <Route path="/items/revision" component={ItemsList} />
       <Route path="/items/aprobacion" component={ItemsList} />
       <Route path="/items/:id" component={ItemDetail} />
       
       {/* Catálogos */}
+      <Route path="/empresas" component={Empresas} />
+      <Route path="/unidades" component={Unidades} />
+      <Route path="/especialidades" component={Especialidades} />
+      <Route path="/atributos" component={Atributos} />
       <Route path="/catalogos/empresas" component={Empresas} />
       <Route path="/catalogos/unidades" component={Unidades} />
       <Route path="/catalogos/especialidades" component={Especialidades} />
       <Route path="/catalogos/atributos" component={Atributos} />
       
-      {/* Usuarios */}
+      {/* Usuarios y Bitácora */}
       <Route path="/usuarios" component={Usuarios} />
+      <Route path="/bitacora" component={Bitacora} />
       
       {/* Estadísticas */}
       <Route path="/estadisticas" component={Estadisticas} />

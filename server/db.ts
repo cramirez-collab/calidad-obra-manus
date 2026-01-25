@@ -9,7 +9,9 @@ import {
   items, InsertItem,
   itemHistorial, InsertItemHistorial,
   notificaciones, InsertNotificacion,
-  comentarios, InsertComentario
+  comentarios, InsertComentario,
+  bitacora, InsertBitacora,
+  configuracion, InsertConfiguracion
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -265,17 +267,12 @@ export async function deleteAtributo(id: number) {
 
 // ==================== ITEMS ====================
 
-export function generateItemCode() {
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = nanoid(6).toUpperCase();
-  return `QC-${timestamp}-${random}`;
-}
-
 export async function createItem(data: Omit<InsertItem, 'codigo'>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const codigo = generateItemCode();
+  // Generar código OQC progresivo
+  const codigo = await getNextOQCCode();
   const result = await db.insert(items).values({ ...data, codigo });
   return { id: result[0].insertId, codigo };
 }
@@ -696,4 +693,157 @@ export async function getKPIs(filtros: {
     comparativaEmpresas,
     comparativaUnidades,
   };
+}
+
+
+// ==================== BITÁCORA DE ACTIVIDADES ====================
+
+export async function registrarActividad(data: InsertBitacora) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(bitacora).values(data);
+  return result[0].insertId;
+}
+
+export async function getBitacoraByUsuario(usuarioId: number, limit = 100) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(bitacora)
+    .where(eq(bitacora.usuarioId, usuarioId))
+    .orderBy(desc(bitacora.createdAt))
+    .limit(limit);
+}
+
+export async function getBitacoraGeneral(filtros: {
+  usuarioId?: number;
+  accion?: string;
+  entidad?: string;
+  fechaDesde?: Date;
+  fechaHasta?: Date;
+} = {}, limit = 200) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const conditions = [];
+  if (filtros.usuarioId) conditions.push(eq(bitacora.usuarioId, filtros.usuarioId));
+  if (filtros.accion) conditions.push(eq(bitacora.accion, filtros.accion));
+  if (filtros.entidad) conditions.push(eq(bitacora.entidad, filtros.entidad));
+  if (filtros.fechaDesde) conditions.push(gte(bitacora.createdAt, filtros.fechaDesde));
+  if (filtros.fechaHasta) conditions.push(lte(bitacora.createdAt, filtros.fechaHasta));
+  
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  
+  const result = await db
+    .select({
+      bitacora: bitacora,
+      usuario: users,
+    })
+    .from(bitacora)
+    .leftJoin(users, eq(bitacora.usuarioId, users.id))
+    .where(whereClause)
+    .orderBy(desc(bitacora.createdAt))
+    .limit(limit);
+  
+  return result.map(r => ({
+    ...r.bitacora,
+    usuario: r.usuario,
+  }));
+}
+
+// ==================== CÓDIGO OQC PROGRESIVO ====================
+
+export async function getNextOQCCode(): Promise<string> {
+  const db = await getDb();
+  if (!db) return 'OQC-00001';
+  
+  const result = await db
+    .select({ codigo: items.codigo })
+    .from(items)
+    .orderBy(desc(items.id))
+    .limit(1);
+  
+  if (result.length === 0) {
+    return 'OQC-00001';
+  }
+  
+  const lastCode = result[0].codigo;
+  const match = lastCode.match(/OQC-(\d+)/);
+  if (!match) {
+    return 'OQC-00001';
+  }
+  
+  const nextNumber = parseInt(match[1], 10) + 1;
+  return `OQC-${nextNumber.toString().padStart(5, '0')}`;
+}
+
+// ==================== PENDIENTES POR USUARIO ====================
+
+export async function getPendientesByUsuario(userId: number, role: string) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  let whereCondition;
+  
+  if (role === 'superadmin' || role === 'admin') {
+    // Admin ve todos los pendientes
+    whereCondition = inArray(items.status, ['pendiente_foto_despues', 'pendiente_aprobacion']);
+  } else if (role === 'supervisor') {
+    // Supervisor ve pendientes de aprobación
+    whereCondition = eq(items.status, 'pendiente_aprobacion');
+  } else if (role === 'jefe_residente') {
+    // Jefe de residente ve pendientes de foto después
+    whereCondition = eq(items.status, 'pendiente_foto_despues');
+  } else {
+    // Residente ve sus propios ítems pendientes
+    whereCondition = and(
+      eq(items.residenteId, userId),
+      inArray(items.status, ['pendiente_foto_despues', 'pendiente_aprobacion', 'rechazado'])
+    );
+  }
+  
+  // Ordenar del más antiguo al más nuevo (ASC)
+  return await db
+    .select()
+    .from(items)
+    .where(whereCondition)
+    .orderBy(items.fechaCreacion); // ASC = más antiguo primero
+}
+
+// ==================== CONFIGURACIÓN ====================
+
+export async function getConfiguracion(clave: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db
+    .select()
+    .from(configuracion)
+    .where(eq(configuracion.clave, clave))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function setConfiguracion(clave: string, valor: string, descripcion?: string, soloSuperadmin = false) {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db
+    .insert(configuracion)
+    .values({ clave, valor, descripcion, soloSuperadmin })
+    .onDuplicateKeyUpdate({ set: { valor, descripcion, soloSuperadmin } });
+}
+
+export async function getAllConfiguracion(includeSuperadmin = false) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  if (includeSuperadmin) {
+    return await db.select().from(configuracion);
+  }
+  
+  return await db
+    .select()
+    .from(configuracion)
+    .where(eq(configuracion.soloSuperadmin, false));
 }

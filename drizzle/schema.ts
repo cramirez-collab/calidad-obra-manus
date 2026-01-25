@@ -1,7 +1,7 @@
 import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
 
-// Enum para roles de usuario
-export const userRoleEnum = mysqlEnum("role", ["admin", "supervisor", "jefe_residente", "residente"]);
+// Enum para roles de usuario (superadmin tiene acceso total, admin/supervisor limitado en config)
+export const userRoleEnum = mysqlEnum("role", ["superadmin", "admin", "supervisor", "jefe_residente", "residente"]);
 
 // Enum para estados de ítems
 export const itemStatusEnum = mysqlEnum("status", ["pendiente_foto_despues", "pendiente_aprobacion", "aprobado", "rechazado"]);
@@ -15,7 +15,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["admin", "supervisor", "jefe_residente", "residente"]).default("residente").notNull(),
+  role: mysqlEnum("role", ["superadmin", "admin", "supervisor", "jefe_residente", "residente"]).default("residente").notNull(),
   empresaId: int("empresaId"),
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -193,3 +193,37 @@ export const comentarios = mysqlTable("comentarios", {
 
 export type Comentario = typeof comentarios.$inferSelect;
 export type InsertComentario = typeof comentarios.$inferInsert;
+
+
+/**
+ * Tabla de bitácora de actividades - registro de todas las acciones de usuarios
+ */
+export const bitacora = mysqlTable("bitacora", {
+  id: int("id").autoincrement().primaryKey(),
+  usuarioId: int("usuarioId").notNull(),
+  accion: varchar("accion", { length: 100 }).notNull(), // 'login', 'logout', 'crear_item', 'aprobar_item', etc.
+  entidad: varchar("entidad", { length: 50 }), // 'item', 'empresa', 'usuario', etc.
+  entidadId: int("entidadId"),
+  detalles: text("detalles"), // JSON con información adicional
+  ip: varchar("ip", { length: 45 }),
+  userAgent: varchar("userAgent", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Bitacora = typeof bitacora.$inferSelect;
+export type InsertBitacora = typeof bitacora.$inferInsert;
+
+/**
+ * Tabla de configuración del sistema
+ */
+export const configuracion = mysqlTable("configuracion", {
+  id: int("id").autoincrement().primaryKey(),
+  clave: varchar("clave", { length: 100 }).notNull().unique(),
+  valor: text("valor"),
+  descripcion: varchar("descripcion", { length: 255 }),
+  soloSuperadmin: boolean("soloSuperadmin").default(false).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Configuracion = typeof configuracion.$inferSelect;
+export type InsertConfiguracion = typeof configuracion.$inferInsert;
