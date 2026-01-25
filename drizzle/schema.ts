@@ -214,6 +214,25 @@ export type InsertItemHistorial = typeof itemHistorial.$inferInsert;
 /**
  * Tabla de notificaciones
  */
+/**
+ * Tabla de suscripciones push para notificaciones al celular
+ */
+export const pushSubscriptions = mysqlTable("push_subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  usuarioId: int("usuarioId").notNull(),
+  endpoint: text("endpoint").notNull(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscription = typeof pushSubscriptions.$inferInsert;
+
+/**
+ * Tabla de notificaciones
+ */
 export const notificaciones = mysqlTable("notificaciones", {
   id: int("id").autoincrement().primaryKey(),
   usuarioId: int("usuarioId").notNull(),

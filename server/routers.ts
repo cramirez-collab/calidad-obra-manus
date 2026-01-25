@@ -9,6 +9,7 @@ import * as db from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { sendEmail, getAprobadoEmailTemplate, getRechazadoEmailTemplate, getPendienteAprobacionEmailTemplate } from "./emailService";
+import pushService from "./pushService";
 
 // Middleware para verificar rol de superadmin (acceso total)
 const superadminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -761,6 +762,52 @@ export const appRouter = router({
     marcarTodasLeidas: protectedProcedure.mutation(async ({ ctx }) => {
       await db.marcarTodasNotificacionesLeidas(ctx.user.id);
       return { success: true };
+    }),
+    
+    // Obtener clave pública VAPID para push
+    getVapidPublicKey: publicProcedure.query(() => {
+      return { publicKey: pushService.getVapidPublicKey() };
+    }),
+    
+    // Suscribirse a notificaciones push
+    subscribePush: protectedProcedure
+      .input(z.object({
+        endpoint: z.string(),
+        p256dh: z.string(),
+        auth: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.savePushSubscription({
+          usuarioId: ctx.user.id,
+          endpoint: input.endpoint,
+          p256dh: input.p256dh,
+          auth: input.auth,
+        });
+        return { id, success: true };
+      }),
+    
+    // Desuscribirse de notificaciones push
+    unsubscribePush: protectedProcedure
+      .input(z.object({ endpoint: z.string() }))
+      .mutation(async ({ input }) => {
+        await db.deletePushSubscription(input.endpoint);
+        return { success: true };
+      }),
+    
+    // Enviar notificación push de prueba
+    testPush: protectedProcedure.mutation(async ({ ctx }) => {
+      const subscriptions = await db.getPushSubscriptionsByUsuario(ctx.user.id);
+      if (subscriptions.length === 0) {
+        return { success: false, message: "No hay suscripciones activas" };
+      }
+      
+      const result = await pushService.sendPushToMultiple(subscriptions, {
+        title: "ObjetivaQC - Prueba",
+        body: "Las notificaciones push están funcionando correctamente.",
+        data: { url: "/" }
+      });
+      
+      return { ...result, success: result.success > 0 };
     }),
   }),
 

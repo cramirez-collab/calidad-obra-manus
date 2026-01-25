@@ -19,7 +19,8 @@ import {
   defectos, InsertDefecto,
   mensajes, InsertMensaje,
   userBadges, InsertUserBadge,
-  auditoria, InsertAuditoria
+  auditoria, InsertAuditoria,
+  pushSubscriptions, InsertPushSubscription
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -2261,4 +2262,61 @@ export async function getDefectosPorUsuario() {
       defectosDetalle
     };
   }).filter(u => u.totalDefectos > 0).sort((a, b) => b.totalDefectos - a.totalDefectos);
+}
+
+
+// ==================== PUSH SUBSCRIPTIONS ====================
+
+export async function savePushSubscription(data: InsertPushSubscription) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Verificar si ya existe una suscripción con el mismo endpoint
+  const existing = await db.select()
+    .from(pushSubscriptions)
+    .where(eq(pushSubscriptions.endpoint, data.endpoint))
+    .limit(1);
+  
+  if (existing.length > 0) {
+    // Actualizar si existe
+    await db.update(pushSubscriptions)
+      .set({ usuarioId: data.usuarioId, p256dh: data.p256dh, auth: data.auth, activo: true })
+      .where(eq(pushSubscriptions.id, existing[0].id));
+    return existing[0].id;
+  }
+  
+  const result = await db.insert(pushSubscriptions).values(data);
+  return result[0].insertId;
+}
+
+export async function getPushSubscriptionsByUsuario(usuarioId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select()
+    .from(pushSubscriptions)
+    .where(and(eq(pushSubscriptions.usuarioId, usuarioId), eq(pushSubscriptions.activo, true)));
+}
+
+export async function getPushSubscriptionsByUsuarios(usuarioIds: number[]) {
+  const db = await getDb();
+  if (!db || usuarioIds.length === 0) return [];
+  return await db.select()
+    .from(pushSubscriptions)
+    .where(and(inArray(pushSubscriptions.usuarioId, usuarioIds), eq(pushSubscriptions.activo, true)));
+}
+
+export async function deletePushSubscription(endpoint: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(pushSubscriptions)
+    .set({ activo: false })
+    .where(eq(pushSubscriptions.endpoint, endpoint));
+}
+
+export async function getAllActivePushSubscriptions() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select()
+    .from(pushSubscriptions)
+    .where(eq(pushSubscriptions.activo, true));
 }

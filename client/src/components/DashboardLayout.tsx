@@ -59,6 +59,7 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 import NotificationCenter from "./NotificationCenter";
+import { NotificationBell } from "./NotificationBell";
 import OnlineUsers from "./OnlineUsers";
 import { BadgeNotifications } from "./BadgeNotifications";
 import { QRScannerButton } from "./QRScanner";
@@ -495,6 +496,7 @@ function DashboardLayoutContent({
           <div className="flex items-center gap-1 sm:gap-2">
             <BadgeNotifications />
             <OnlineUsers />
+            <NotificationBell />
             <NotificationCenter />
             {/* Menú hamburguesa a la DERECHA en móvil */}
             <MobileMenu />

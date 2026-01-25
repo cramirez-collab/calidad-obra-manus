@@ -532,3 +532,24 @@
 - [x] Proyecto "Torre Mayas" ya existe para validar aislamiento
 - [x] Verificar que datos se separan correctamente por proyecto
 - [x] Asignar usuario Carlos Ramirez al proyecto
+
+
+## Notificaciones Personalizadas (Decimoséptima Iteración)
+
+### Notificaciones Push al Celular
+- [x] Configurar Web Push API con VAPID keys
+- [x] Crear endpoint para suscripción de push
+- [x] Guardar suscripciones en base de datos
+- [x] Service worker para recibir notificaciones push
+- [ ] Enviar push automático cuando hay ítems pendientes
+- [ ] Enviar push automático cuando aprueban/rechazan un ítem
+- [ ] Enviar push automático cuando te mencionan (@mention)
+
+### Notificaciones In-App Mejoradas
+- [x] Campana con contador de notificaciones no leídas
+- [x] Panel desplegable con lista de notificaciones
+- [x] Marcar como leída individual y todas
+- [x] Tipos: pendientes, aprobaciones, rechazos, menciones
+- [x] Navegación directa al ítem desde la notificación
+- [x] Configuración de push en panel de notificaciones
+- [x] Botón de prueba de notificación push
