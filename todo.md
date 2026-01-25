@@ -450,3 +450,9 @@
 - [x] Agregar enlace "Visor" al menú lateral (Google Sheets)
 - [x] Agregar enlace "Planos" al menú lateral (Google Drive)
 - [x] Abrir URLs externas en nueva pestaña
+
+
+## Selector de Proyectos (Enero 2026)
+- [x] Agregar selector de proyecto en el menú lateral
+- [x] Guardar proyecto seleccionado en localStorage
+- [ ] Filtrar datos según proyecto activo (pendiente integración)

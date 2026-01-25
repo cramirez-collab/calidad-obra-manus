@@ -61,6 +61,7 @@ import NotificationCenter from "./NotificationCenter";
 import OnlineUsers from "./OnlineUsers";
 import { BadgeNotifications } from "./BadgeNotifications";
 import { QRScannerButton } from "./QRScanner";
+import { ProjectSelector } from "./ProjectSelector";
 import { useRealTimeItems } from "@/hooks/useRealTimeData";
 import {
   Sheet,
@@ -362,8 +363,8 @@ function DashboardLayoutContent({
           className="border-r-0"
           disableTransition={isResizing}
         >
-          <SidebarHeader className="h-14 justify-center border-b">
-            <div className="flex items-center gap-2 px-2 transition-all w-full">
+          <SidebarHeader className="border-b">
+            <div className="h-14 flex items-center gap-2 px-2 transition-all w-full">
               <button
                 onClick={toggleSidebar}
                 className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none shrink-0"
@@ -379,6 +380,7 @@ function DashboardLayoutContent({
                 />
               )}
             </div>
+            <ProjectSelector collapsed={isCollapsed} />
           </SidebarHeader>
 
           <SidebarContent className="gap-0 py-2">
