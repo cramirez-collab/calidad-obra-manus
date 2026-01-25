@@ -202,3 +202,29 @@
 ### Filtros Inteligentes
 - [x] Al seleccionar especialidad, mostrar solo sus atributos
 - [x] Filtros en cascada (empresa → unidad → especialidad → atributo)
+
+
+## Responsividad y Configuración (Octava Iteración)
+
+### Responsividad Optimizada
+- [x] Diseño mobile-first para móvil
+- [x] Diseño optimizado para tablet en obra
+- [x] Diseño completo para PC/desktop
+- [x] Menú hamburguesa a la derecha en móvil
+- [x] Botones táctiles grandes para uso en obra
+- [x] Cards compactas en móvil, expandidas en desktop
+
+### Módulo de Configuración y Metas
+- [x] Página de Configuración solo para superadmin/supervisor
+- [x] Gestión de metas por empresa/unidad
+- [x] Configuración de umbrales de alertas
+- [x] Configuración de tiempos límite
+- [x] Gestión de parámetros del sistema
+
+### UI Minimalista con Iconos
+- [x] Reducir textos, usar más iconos
+- [x] Iconos monocromáticos profesionales
+- [x] Tooltips en hover para explicar iconos
+- [x] Navegación intuitiva sin necesidad de leer
+- [x] Acciones rápidas con iconos grandes
+

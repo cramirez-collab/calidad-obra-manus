@@ -11,7 +11,8 @@ import {
   notificaciones, InsertNotificacion,
   comentarios, InsertComentario,
   bitacora, InsertBitacora,
-  configuracion, InsertConfiguracion
+  configuracion, InsertConfiguracion,
+  metas, InsertMeta
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -1125,4 +1126,96 @@ export async function getAllConfiguracion(includeSuperadmin = false) {
     .select()
     .from(configuracion)
     .where(eq(configuracion.soloSuperadmin, false));
+}
+
+
+// ==================== METAS ====================
+
+export async function getAllMetas() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(metas).where(eq(metas.activo, true)).orderBy(desc(metas.createdAt));
+}
+
+export async function getMetaById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(metas).where(eq(metas.id, id)).limit(1);
+  return result[0];
+}
+
+export async function createMeta(data: InsertMeta) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(metas).values(data);
+  return result[0].insertId;
+}
+
+export async function updateMeta(id: number, data: Partial<InsertMeta>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(metas).set(data).where(eq(metas.id, id));
+}
+
+export async function deleteMeta(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(metas).set({ activo: false }).where(eq(metas.id, id));
+}
+
+export async function getMetasConProgreso() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const metasActivas = await db.select().from(metas).where(eq(metas.activo, true));
+  
+  const metasConProgreso = await Promise.all(metasActivas.map(async (meta) => {
+    let valorActual = 0;
+    
+    const conditions = [];
+    if (meta.empresaId) conditions.push(eq(items.empresaId, meta.empresaId));
+    if (meta.unidadId) conditions.push(eq(items.unidadId, meta.unidadId));
+    if (meta.fechaInicio) conditions.push(gte(items.fechaCreacion, meta.fechaInicio));
+    if (meta.fechaFin) conditions.push(lte(items.fechaCreacion, meta.fechaFin));
+    
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    
+    if (meta.tipo === 'aprobacion') {
+      // Tasa de aprobación
+      const totalResult = await db.select({ count: sql<number>`count(*)` }).from(items).where(whereClause);
+      const aprobadosResult = await db.select({ count: sql<number>`count(*)` }).from(items)
+        .where(whereClause ? and(whereClause, eq(items.status, 'aprobado')) : eq(items.status, 'aprobado'));
+      const total = totalResult[0]?.count || 0;
+      const aprobados = aprobadosResult[0]?.count || 0;
+      valorActual = total > 0 ? Math.round((aprobados / total) * 100) : 0;
+    } else if (meta.tipo === 'tiempo_resolucion') {
+      // Tiempo promedio de resolución en días
+      const tiempoResult = await db.select({
+        avgTime: sql<number>`AVG(TIMESTAMPDIFF(DAY, fechaCreacion, fechaAprobacion))`
+      }).from(items).where(whereClause ? and(whereClause, eq(items.status, 'aprobado')) : eq(items.status, 'aprobado'));
+      valorActual = Math.round(tiempoResult[0]?.avgTime || 0);
+    } else if (meta.tipo === 'items_mes') {
+      // Ítems completados este mes
+      const inicioMes = new Date();
+      inicioMes.setDate(1);
+      inicioMes.setHours(0, 0, 0, 0);
+      const itemsResult = await db.select({ count: sql<number>`count(*)` }).from(items)
+        .where(and(
+          whereClause || sql`1=1`,
+          eq(items.status, 'aprobado'),
+          gte(items.fechaAprobacion, inicioMes)
+        ));
+      valorActual = itemsResult[0]?.count || 0;
+    }
+    
+    const progreso = meta.valorObjetivo > 0 ? Math.min(100, Math.round((valorActual / meta.valorObjetivo) * 100)) : 0;
+    
+    return {
+      ...meta,
+      valorActual,
+      progreso,
+    };
+  }));
+  
+  return metasConProgreso;
 }

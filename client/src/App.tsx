@@ -14,6 +14,8 @@ import Estadisticas from "./pages/Estadisticas";
 import Seguimiento from "./pages/Seguimiento";
 import KPIs from "./pages/KPIs";
 import GenerarQR from "./pages/GenerarQR";
+import Configuracion from "./pages/Configuracion";
+import Metas from "./pages/Metas";
 import OfflineIndicator from "./components/OfflineIndicator";
 
 // Catálogos
@@ -66,6 +68,10 @@ function Router() {
       {/* Seguimiento público (QR) */}
       <Route path="/seguimiento/:codigo" component={Seguimiento} />
       <Route path="/generar-qr" component={GenerarQR} />
+      
+      {/* Configuración y Metas */}
+      <Route path="/configuracion" component={Configuracion} />
+      <Route path="/metas" component={Metas} />
       
       {/* 404 */}
       <Route path="/404" component={NotFound} />

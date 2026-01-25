@@ -228,3 +228,26 @@ export const configuracion = mysqlTable("configuracion", {
 
 export type Configuracion = typeof configuracion.$inferSelect;
 export type InsertConfiguracion = typeof configuracion.$inferInsert;
+
+
+/**
+ * Tabla de metas - objetivos de calidad por empresa/unidad
+ */
+export const metas = mysqlTable("metas", {
+  id: int("id").autoincrement().primaryKey(),
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  descripcion: text("descripcion"),
+  tipo: varchar("tipo", { length: 50 }).notNull(), // 'aprobacion', 'tiempo_resolucion', 'items_mes'
+  valorObjetivo: int("valorObjetivo").notNull(),
+  unidadMedida: varchar("unidadMedida", { length: 50 }), // '%', 'días', 'items'
+  empresaId: int("empresaId"), // null = aplica a todas
+  unidadId: int("unidadId"), // null = aplica a todas
+  fechaInicio: timestamp("fechaInicio"),
+  fechaFin: timestamp("fechaFin"),
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Meta = typeof metas.$inferSelect;
+export type InsertMeta = typeof metas.$inferInsert;

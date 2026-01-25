@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { trpc } from "@/lib/trpc";
 import { 
   Camera, 
@@ -9,20 +9,13 @@ import {
   Clock, 
   CheckCircle2, 
   XCircle, 
-  ArrowRight,
   Building2,
   MapPin,
   Wrench,
-  Users
+  Users,
+  Tag
 } from "lucide-react";
 import { useLocation } from "wouter";
-
-const roleLabels: Record<string, string> = {
-  admin: "Administrador",
-  supervisor: "Supervisor",
-  jefe_residente: "Jefe de Residente",
-  residente: "Residente",
-};
 
 export default function Home() {
   const { user } = useAuth();
@@ -38,184 +31,109 @@ export default function Home() {
     return acc;
   }, {} as Record<string, number>) || {};
 
-  const quickActions = [
-    { 
-      icon: Camera, 
-      label: "Registrar Nuevo Ítem", 
-      description: "Capturar foto y crear registro",
-      path: "/items/nuevo",
-      color: "bg-blue-500",
-      roles: ['admin', 'supervisor', 'jefe_residente', 'residente']
-    },
-    { 
-      icon: ClipboardCheck, 
-      label: "Revisar Pendientes", 
-      description: "Ítems pendientes de foto después",
-      path: "/items/revision",
-      color: "bg-amber-500",
-      roles: ['admin', 'supervisor', 'jefe_residente']
-    },
-    { 
-      icon: CheckCircle2, 
-      label: "Aprobar Ítems", 
-      description: "Ítems pendientes de aprobación",
-      path: "/items/aprobacion",
-      color: "bg-emerald-500",
-      roles: ['admin', 'supervisor']
-    },
+  const statCards = [
+    { icon: ClipboardCheck, label: "Total", value: stats?.total || 0, color: "text-[#002C63]", bg: "bg-[#002C63]/10" },
+    { icon: Clock, label: "Foto", value: statusCounts['pendiente_foto_despues'] || 0, color: "text-amber-500", bg: "bg-amber-50" },
+    { icon: Clock, label: "Aprobar", value: statusCounts['pendiente_aprobacion'] || 0, color: "text-blue-500", bg: "bg-blue-50" },
+    { icon: CheckCircle2, label: "OK", value: statusCounts['aprobado'] || 0, color: "text-[#02B381]", bg: "bg-[#02B381]/10" },
+    { icon: XCircle, label: "No", value: statusCounts['rechazado'] || 0, color: "text-red-500", bg: "bg-red-50" },
   ];
 
-  const filteredActions = quickActions.filter(action => 
-    action.roles.includes(user?.role || 'residente')
-  );
+  const catalogCards = [
+    { icon: Building2, label: "Empresas", value: empresas?.length || 0, path: "/empresas" },
+    { icon: MapPin, label: "Unidades", value: unidades?.length || 0, path: "/unidades" },
+    { icon: Wrench, label: "Especialidades", value: especialidades?.length || 0, path: "/especialidades" },
+    { icon: Tag, label: "Atributos", path: "/atributos" },
+    { icon: Users, label: "Usuarios", path: "/usuarios" },
+  ];
+
+  const isAdmin = user?.role === 'superadmin' || user?.role === 'admin';
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">
-            Bienvenido, {user?.name?.split(' ')[0] || 'Usuario'}
-          </h1>
-          <p className="text-muted-foreground">
-            {roleLabels[user?.role || 'residente']} · Panel de Control de Calidad
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Ítems
-              </CardTitle>
-              <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.total || 0}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Pendiente Foto
-              </CardTitle>
-              <Clock className="h-4 w-4 text-amber-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-amber-600">
-                {statusCounts['pendiente_foto_despues'] || 0}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Pendiente Aprobación
-              </CardTitle>
-              <Clock className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {statusCounts['pendiente_aprobacion'] || 0}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Aprobados
-              </CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-emerald-600">
-                {statusCounts['aprobado'] || 0}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredActions.map((action) => (
-            <Card 
-              key={action.path} 
-              className="card-hover cursor-pointer"
-              onClick={() => setLocation(action.path)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-lg ${action.color} flex items-center justify-center`}>
-                    <action.icon className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base">{action.label}</CardTitle>
-                    <CardDescription className="text-xs mt-0.5">
-                      {action.description}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Button variant="ghost" size="sm" className="w-full justify-between">
-                  Ir ahora
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
+      <div className="space-y-4 sm:space-y-6">
+        {/* Stats - Grid compacto */}
+        <div className="grid grid-cols-5 gap-2 sm:gap-3">
+          {statCards.map((stat, i) => (
+            <Tooltip key={i}>
+              <TooltipTrigger asChild>
+                <Card className="cursor-default">
+                  <CardContent className="p-2 sm:p-3 flex flex-col items-center text-center">
+                    <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-lg ${stat.bg} flex items-center justify-center mb-1`}>
+                      <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.color}`} />
+                    </div>
+                    <span className="text-lg sm:text-xl font-bold">{stat.value}</span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground">{stat.label}</span>
+                  </CardContent>
+                </Card>
+              </TooltipTrigger>
+              <TooltipContent>{stat.label}</TooltipContent>
+            </Tooltip>
           ))}
         </div>
 
-        {/* Admin Stats */}
-        {user?.role === 'admin' && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setLocation('/catalogos/empresas')}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Empresas</CardTitle>
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{empresas?.length || 0}</div>
-                <p className="text-xs text-muted-foreground">registradas</p>
-              </CardContent>
-            </Card>
+        {/* Acciones rápidas */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setLocation('/nuevo-item')}
+                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl bg-[#02B381] text-white hover:opacity-90 transition-all active:scale-95"
+              >
+                <Camera className="h-8 w-8 sm:h-10 sm:w-10" />
+                <span className="text-xs sm:text-sm mt-2 font-medium">Nuevo</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Registrar nuevo ítem</TooltipContent>
+          </Tooltip>
 
-            <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setLocation('/catalogos/unidades')}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Unidades</CardTitle>
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{unidades?.length || 0}</div>
-                <p className="text-xs text-muted-foreground">registradas</p>
-              </CardContent>
-            </Card>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setLocation('/items')}
+                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl bg-[#002C63] text-white hover:opacity-90 transition-all active:scale-95"
+              >
+                <ClipboardCheck className="h-8 w-8 sm:h-10 sm:w-10" />
+                <span className="text-xs sm:text-sm mt-2 font-medium">Ítems</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Ver todos los ítems</TooltipContent>
+          </Tooltip>
 
-            <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setLocation('/catalogos/especialidades')}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Especialidades</CardTitle>
-                <Wrench className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{especialidades?.length || 0}</div>
-                <p className="text-xs text-muted-foreground">registradas</p>
-              </CardContent>
-            </Card>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setLocation('/estadisticas')}
+                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl bg-amber-500 text-white hover:opacity-90 transition-all active:scale-95"
+              >
+                <Clock className="h-8 w-8 sm:h-10 sm:w-10" />
+                <span className="text-xs sm:text-sm mt-2 font-medium">Stats</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Ver estadísticas</TooltipContent>
+          </Tooltip>
+        </div>
 
-            <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setLocation('/usuarios')}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Usuarios</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">-</div>
-                <p className="text-xs text-muted-foreground">gestionar</p>
-              </CardContent>
-            </Card>
+        {/* Catálogos - Solo admin */}
+        {isAdmin && (
+          <div className="grid grid-cols-5 gap-2 sm:gap-3">
+            {catalogCards.map((cat, i) => (
+              <Tooltip key={i}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setLocation(cat.path)}
+                    className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl bg-accent hover:bg-accent/80 transition-all active:scale-95"
+                  >
+                    <cat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+                    {cat.value !== undefined && (
+                      <span className="text-sm sm:text-base font-semibold mt-1">{cat.value}</span>
+                    )}
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground">{cat.label}</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{cat.label}</TooltipContent>
+              </Tooltip>
+            ))}
           </div>
         )}
       </div>

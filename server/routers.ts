@@ -757,6 +757,67 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // ==================== METAS ====================
+  metas: router({
+    list: adminProcedure.query(async () => {
+      return await db.getAllMetas();
+    }),
+    
+    listConProgreso: adminProcedure.query(async () => {
+      return await db.getMetasConProgreso();
+    }),
+    
+    get: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getMetaById(input.id);
+      }),
+    
+    create: superadminProcedure
+      .input(z.object({
+        nombre: z.string(),
+        descripcion: z.string().optional(),
+        tipo: z.string(),
+        valorObjetivo: z.number(),
+        unidadMedida: z.string().optional(),
+        empresaId: z.number().optional(),
+        unidadId: z.number().optional(),
+        fechaInicio: z.date().optional(),
+        fechaFin: z.date().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createMeta(input);
+        return { id };
+      }),
+    
+    update: superadminProcedure
+      .input(z.object({
+        id: z.number(),
+        nombre: z.string().optional(),
+        descripcion: z.string().optional(),
+        tipo: z.string().optional(),
+        valorObjetivo: z.number().optional(),
+        unidadMedida: z.string().optional(),
+        empresaId: z.number().optional(),
+        unidadId: z.number().optional(),
+        fechaInicio: z.date().optional(),
+        fechaFin: z.date().optional(),
+        activo: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateMeta(id, data);
+        return { success: true };
+      }),
+    
+    delete: superadminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteMeta(input.id);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

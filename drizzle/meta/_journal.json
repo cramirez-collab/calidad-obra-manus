@@ -36,6 +36,13 @@
       "when": 1769314866614,
       "tag": "0004_sturdy_blink",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1769316809972,
+      "tag": "0005_clear_tusk",
+      "breakpoints": true
     }
   ]
 }
