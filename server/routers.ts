@@ -60,6 +60,18 @@ export const appRouter = router({
       return await db.getAllUsers();
     }),
     
+    // Lista de residentes con estadísticas completas
+    residentes: protectedProcedure.query(async () => {
+      return await db.getAllResidentesConEstadisticas();
+    }),
+    
+    // Obtener residente con datos completos en cadena
+    residenteCompleto: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getResidenteConDatosCompletos(input.id);
+      }),
+    
     byRole: adminProcedure
       .input(z.object({ role: z.string() }))
       .query(async ({ input }) => {
@@ -87,10 +99,22 @@ export const appRouter = router({
       return await db.getAllEmpresas();
     }),
     
+    // Lista con estadísticas de ítems
+    listConEstadisticas: protectedProcedure.query(async () => {
+      return await db.getAllEmpresasConEstadisticas();
+    }),
+    
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         return await db.getEmpresaById(input.id);
+      }),
+    
+    // Obtener con datos completos en cadena (usuarios, unidades, ítems)
+    getCompleta: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getEmpresaConDatosCompletos(input.id);
       }),
     
     create: adminProcedure
@@ -135,10 +159,22 @@ export const appRouter = router({
       return await db.getAllUnidades();
     }),
     
+    // Lista con estadísticas de ítems
+    listConEstadisticas: protectedProcedure.query(async () => {
+      return await db.getAllUnidadesConEstadisticas();
+    }),
+    
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         return await db.getUnidadById(input.id);
+      }),
+    
+    // Obtener con datos completos en cadena (empresas, especialidades, ítems)
+    getCompleta: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getUnidadConDatosCompletos(input.id);
       }),
     
     create: adminProcedure
@@ -181,10 +217,22 @@ export const appRouter = router({
       return await db.getAllEspecialidades();
     }),
     
+    // Lista con atributos relacionados en cadena
+    listConAtributos: protectedProcedure.query(async () => {
+      return await db.getAllEspecialidadesConAtributos();
+    }),
+    
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         return await db.getEspecialidadById(input.id);
+      }),
+    
+    // Obtener con atributos relacionados
+    getConAtributos: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getEspecialidadConAtributos(input.id);
       }),
     
     create: adminProcedure

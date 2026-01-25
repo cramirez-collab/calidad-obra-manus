@@ -86,6 +86,7 @@ export const atributos = mysqlTable("atributos", {
   nombre: varchar("nombre", { length: 255 }).notNull(),
   categoria: varchar("categoria", { length: 100 }),
   descripcion: text("descripcion"),
+  especialidadId: int("especialidadId"), // Relación con especialidad
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

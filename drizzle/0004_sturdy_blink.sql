@@ -1,0 +1,1 @@
+ALTER TABLE `atributos` ADD `especialidadId` int;

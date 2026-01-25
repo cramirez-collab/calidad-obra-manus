@@ -161,3 +161,22 @@
 - [x] Logo en pantallas principales
 - [x] Logo en reportes exportados
 - [x] Colores corporativos Objetiva (#02B381 verde, #002C63 azul)
+
+
+## Relaciones en Cadena (Sexta Iteración)
+
+### Especialidades con Atributos
+- [x] Al jalar especialidad, traer sus atributos asociados
+- [x] Relación especialidad → atributos en DB
+
+### Residentes con Datos Completos
+- [x] Al jalar residente, traer sus especialidades
+- [x] Al jalar residente, traer sus atributos
+- [x] Al jalar residente, traer sus ítems
+- [x] Estadísticas por residente (rechazados, aprobados, pendientes)
+
+### Cadena de Relaciones
+- [x] Empresas → Unidades → Ítems
+- [x] Supervisores → Ítems aprobados/rechazados
+- [x] Jefes de Residente → Ítems revisados
+- [x] Cada entidad con sus estadísticas

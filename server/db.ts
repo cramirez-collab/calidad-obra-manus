@@ -129,6 +129,108 @@ export async function getUserById(userId: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+// Obtener residente con todos sus datos relacionados en cadena
+export async function getResidenteConDatosCompletos(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  // Obtener usuario
+  const usuario = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!usuario[0]) return undefined;
+  
+  // Obtener empresa del usuario
+  let empresa = null;
+  if (usuario[0].empresaId) {
+    const empresaResult = await db.select().from(empresas).where(eq(empresas.id, usuario[0].empresaId)).limit(1);
+    empresa = empresaResult[0] || null;
+  }
+  
+  // Obtener todos los ítems del residente
+  const itemsResidente = await db.select().from(items).where(eq(items.residenteId, userId));
+  
+  // Obtener especialidades únicas de los ítems del residente
+  const especialidadIds = Array.from(new Set(itemsResidente.map(i => i.especialidadId)));
+  const especialidadesResidente = especialidadIds.length > 0 
+    ? await db.select().from(especialidades).where(inArray(especialidades.id, especialidadIds))
+    : [];
+  
+  // Obtener atributos de esas especialidades
+  const atributosResidente = especialidadIds.length > 0
+    ? await db.select().from(atributos).where(and(
+        inArray(atributos.especialidadId, especialidadIds),
+        eq(atributos.activo, true)
+      ))
+    : [];
+  
+  // Calcular estadísticas
+  const itemsAprobados = itemsResidente.filter(i => i.status === 'aprobado');
+  const itemsRechazados = itemsResidente.filter(i => i.status === 'rechazado');
+  const itemsPendientes = itemsResidente.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion');
+  
+  return {
+    ...usuario[0],
+    empresa,
+    especialidades: especialidadesResidente.map(esp => ({
+      ...esp,
+      atributos: atributosResidente.filter(attr => attr.especialidadId === esp.id)
+    })),
+    items: {
+      total: itemsResidente.length,
+      aprobados: itemsAprobados.length,
+      rechazados: itemsRechazados.length,
+      pendientes: itemsPendientes.length,
+      lista: itemsResidente
+    },
+    estadisticas: {
+      tasaAprobacion: itemsResidente.length > 0 
+        ? Math.round((itemsAprobados.length / itemsResidente.length) * 100) 
+        : 0,
+      tasaRechazo: itemsResidente.length > 0 
+        ? Math.round((itemsRechazados.length / itemsResidente.length) * 100) 
+        : 0
+    }
+  };
+}
+
+// Obtener todos los residentes con sus datos básicos y estadísticas
+export async function getAllResidentesConEstadisticas() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Obtener todos los residentes
+  const residentes = await db.select().from(users)
+    .where(eq(users.role, 'residente'))
+    .orderBy(users.name);
+  
+  // Obtener todas las empresas
+  const todasEmpresas = await db.select().from(empresas);
+  const empresasMap = new Map(todasEmpresas.map(e => [e.id, e]));
+  
+  // Obtener todos los ítems
+  const todosItems = await db.select().from(items);
+  
+  return residentes.map(residente => {
+    const itemsResidente = todosItems.filter(i => i.residenteId === residente.id);
+    const aprobados = itemsResidente.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsResidente.filter(i => i.status === 'rechazado').length;
+    const pendientes = itemsResidente.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+    
+    return {
+      ...residente,
+      empresa: residente.empresaId ? empresasMap.get(residente.empresaId) : null,
+      items: {
+        total: itemsResidente.length,
+        aprobados,
+        rechazados,
+        pendientes
+      },
+      tasaAprobacion: itemsResidente.length > 0 
+        ? Math.round((aprobados / itemsResidente.length) * 100) 
+        : 0
+    };
+  });
+}
+
 // ==================== EMPRESAS ====================
 
 export async function getAllEmpresas() {
@@ -142,6 +244,78 @@ export async function getEmpresaById(id: number) {
   if (!db) return undefined;
   const result = await db.select().from(empresas).where(eq(empresas.id, id)).limit(1);
   return result[0];
+}
+
+// Obtener empresa con todos sus datos relacionados en cadena
+export async function getEmpresaConDatosCompletos(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const empresa = await db.select().from(empresas).where(eq(empresas.id, id)).limit(1);
+  if (!empresa[0]) return undefined;
+  
+  // Obtener usuarios de la empresa
+  const usuariosEmpresa = await db.select().from(users).where(eq(users.empresaId, id));
+  
+  // Obtener ítems de la empresa
+  const itemsEmpresa = await db.select().from(items).where(eq(items.empresaId, id));
+  
+  // Obtener unidades únicas de los ítems
+  const unidadIds = Array.from(new Set(itemsEmpresa.map(i => i.unidadId)));
+  const unidadesEmpresa = unidadIds.length > 0
+    ? await db.select().from(unidades).where(inArray(unidades.id, unidadIds))
+    : [];
+  
+  // Calcular estadísticas
+  const aprobados = itemsEmpresa.filter(i => i.status === 'aprobado').length;
+  const rechazados = itemsEmpresa.filter(i => i.status === 'rechazado').length;
+  const pendientes = itemsEmpresa.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+  
+  return {
+    ...empresa[0],
+    usuarios: usuariosEmpresa,
+    unidades: unidadesEmpresa,
+    items: {
+      total: itemsEmpresa.length,
+      aprobados,
+      rechazados,
+      pendientes,
+      lista: itemsEmpresa
+    },
+    estadisticas: {
+      tasaAprobacion: itemsEmpresa.length > 0 ? Math.round((aprobados / itemsEmpresa.length) * 100) : 0,
+      tasaRechazo: itemsEmpresa.length > 0 ? Math.round((rechazados / itemsEmpresa.length) * 100) : 0
+    }
+  };
+}
+
+// Obtener todas las empresas con estadísticas
+export async function getAllEmpresasConEstadisticas() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const todasEmpresas = await db.select().from(empresas).where(eq(empresas.activo, true)).orderBy(empresas.nombre);
+  const todosItems = await db.select().from(items);
+  const todosUsuarios = await db.select().from(users);
+  
+  return todasEmpresas.map(empresa => {
+    const itemsEmpresa = todosItems.filter(i => i.empresaId === empresa.id);
+    const usuariosEmpresa = todosUsuarios.filter(u => u.empresaId === empresa.id);
+    const aprobados = itemsEmpresa.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsEmpresa.filter(i => i.status === 'rechazado').length;
+    
+    return {
+      ...empresa,
+      totalUsuarios: usuariosEmpresa.length,
+      items: {
+        total: itemsEmpresa.length,
+        aprobados,
+        rechazados,
+        pendientes: itemsEmpresa.length - aprobados - rechazados
+      },
+      tasaAprobacion: itemsEmpresa.length > 0 ? Math.round((aprobados / itemsEmpresa.length) * 100) : 0
+    };
+  });
 }
 
 export async function createEmpresa(data: InsertEmpresa) {
@@ -178,6 +352,75 @@ export async function getUnidadById(id: number) {
   return result[0];
 }
 
+// Obtener unidad con todos sus datos relacionados
+export async function getUnidadConDatosCompletos(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const unidad = await db.select().from(unidades).where(eq(unidades.id, id)).limit(1);
+  if (!unidad[0]) return undefined;
+  
+  // Obtener ítems de la unidad
+  const itemsUnidad = await db.select().from(items).where(eq(items.unidadId, id));
+  
+  // Obtener empresas únicas de los ítems
+  const empresaIds = Array.from(new Set(itemsUnidad.map(i => i.empresaId)));
+  const empresasUnidad = empresaIds.length > 0
+    ? await db.select().from(empresas).where(inArray(empresas.id, empresaIds))
+    : [];
+  
+  // Obtener especialidades únicas de los ítems
+  const especialidadIds = Array.from(new Set(itemsUnidad.map(i => i.especialidadId)));
+  const especialidadesUnidad = especialidadIds.length > 0
+    ? await db.select().from(especialidades).where(inArray(especialidades.id, especialidadIds))
+    : [];
+  
+  const aprobados = itemsUnidad.filter(i => i.status === 'aprobado').length;
+  const rechazados = itemsUnidad.filter(i => i.status === 'rechazado').length;
+  
+  return {
+    ...unidad[0],
+    empresas: empresasUnidad,
+    especialidades: especialidadesUnidad,
+    items: {
+      total: itemsUnidad.length,
+      aprobados,
+      rechazados,
+      pendientes: itemsUnidad.length - aprobados - rechazados,
+      lista: itemsUnidad
+    },
+    estadisticas: {
+      tasaAprobacion: itemsUnidad.length > 0 ? Math.round((aprobados / itemsUnidad.length) * 100) : 0
+    }
+  };
+}
+
+// Obtener todas las unidades con estadísticas
+export async function getAllUnidadesConEstadisticas() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const todasUnidades = await db.select().from(unidades).where(eq(unidades.activo, true)).orderBy(unidades.nombre);
+  const todosItems = await db.select().from(items);
+  
+  return todasUnidades.map(unidad => {
+    const itemsUnidad = todosItems.filter(i => i.unidadId === unidad.id);
+    const aprobados = itemsUnidad.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsUnidad.filter(i => i.status === 'rechazado').length;
+    
+    return {
+      ...unidad,
+      items: {
+        total: itemsUnidad.length,
+        aprobados,
+        rechazados,
+        pendientes: itemsUnidad.length - aprobados - rechazados
+      },
+      tasaAprobacion: itemsUnidad.length > 0 ? Math.round((aprobados / itemsUnidad.length) * 100) : 0
+    };
+  });
+}
+
 export async function createUnidad(data: InsertUnidad) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -210,6 +453,42 @@ export async function getEspecialidadById(id: number) {
   if (!db) return undefined;
   const result = await db.select().from(especialidades).where(eq(especialidades.id, id)).limit(1);
   return result[0];
+}
+
+// Obtener especialidad con sus atributos relacionados
+export async function getEspecialidadConAtributos(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const especialidad = await db.select().from(especialidades).where(eq(especialidades.id, id)).limit(1);
+  if (!especialidad[0]) return undefined;
+  
+  const atributosRelacionados = await db.select().from(atributos)
+    .where(and(eq(atributos.especialidadId, id), eq(atributos.activo, true)))
+    .orderBy(atributos.nombre);
+  
+  return {
+    ...especialidad[0],
+    atributos: atributosRelacionados
+  };
+}
+
+// Obtener todas las especialidades con sus atributos
+export async function getAllEspecialidadesConAtributos() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const todasEspecialidades = await db.select().from(especialidades)
+    .where(eq(especialidades.activo, true))
+    .orderBy(especialidades.nombre);
+  
+  const todosAtributos = await db.select().from(atributos)
+    .where(eq(atributos.activo, true));
+  
+  return todasEspecialidades.map(esp => ({
+    ...esp,
+    atributos: todosAtributos.filter(attr => attr.especialidadId === esp.id)
+  }));
 }
 
 export async function createEspecialidad(data: InsertEspecialidad) {
