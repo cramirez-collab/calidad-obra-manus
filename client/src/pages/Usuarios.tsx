@@ -288,7 +288,7 @@ export default function Usuarios() {
         </div>
 
         {/* Estadísticas */}
-        <div className="grid gap-4 md:grid-cols-5">
+        <div className="grid gap-2 sm:gap-4 grid-cols-3 sm:grid-cols-5">
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
@@ -359,45 +359,45 @@ export default function Usuarios() {
         {/* Filtros */}
         <Card>
           <CardContent className="pt-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nombre o email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
+            <div className="flex flex-col gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-              <Select value={filterRole} onValueChange={setFilterRole}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filtrar por rol" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los roles</SelectItem>
-                  <SelectItem value="superadmin">Superadmin</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
-                  <SelectItem value="supervisor">Supervisor</SelectItem>
-                  <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
-                  <SelectItem value="residente">Residente</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filterEmpresa} onValueChange={setFilterEmpresa}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filtrar por empresa" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las empresas</SelectItem>
-                  <SelectItem value="none">Sin empresa</SelectItem>
-                  {empresas?.map((empresa) => (
-                    <SelectItem key={empresa.id} value={empresa.id.toString()}>
-                      {empresa.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-2 gap-2">
+                <Select value={filterRole} onValueChange={setFilterRole}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los roles</SelectItem>
+                    <SelectItem value="superadmin">Superadmin</SelectItem>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
+                    <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
+                    <SelectItem value="residente">Residente</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterEmpresa} onValueChange={setFilterEmpresa}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="none">Sin empresa</SelectItem>
+                    {empresas?.map((empresa) => (
+                      <SelectItem key={empresa.id} value={empresa.id.toString()}>
+                        {empresa.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -410,7 +410,7 @@ export default function Usuarios() {
               Lista de Usuarios ({filteredUsuarios?.length || 0})
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 sm:p-6">
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">
                 Cargando...
@@ -420,95 +420,158 @@ export default function Usuarios() {
                 No se encontraron usuarios
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Usuario</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Rol</TableHead>
-                      <TableHead>Empresa</TableHead>
-                      <TableHead>Último Acceso</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead className="text-right">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsuarios?.map((usuario) => (
-                      <TableRow key={usuario.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-[#002C63]/10 flex items-center justify-center">
-                              <span className="text-sm font-medium text-[#002C63]">
-                                {usuario.name?.charAt(0).toUpperCase() || "U"}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="font-medium">{usuario.name || "Sin nombre"}</p>
-                              <p className="text-xs text-muted-foreground">
-                                ID: {usuario.id}
-                              </p>
-                            </div>
+              <>
+                {/* Vista móvil - Cards */}
+                <div className="sm:hidden divide-y">
+                  {filteredUsuarios?.map((usuario) => (
+                    <div key={usuario.id} className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-[#002C63]/10 flex items-center justify-center">
+                            <span className="text-sm font-medium text-[#002C63]">
+                              {usuario.name?.charAt(0).toUpperCase() || "U"}
+                            </span>
                           </div>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {usuario.email || "-"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={roleColors[usuario.role]}>
-                            {roleLabels[usuario.role]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {usuario.empresa ? (
-                            <div className="flex items-center gap-2">
-                              <Building2 className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">{usuario.empresa.nombre}</span>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">Sin asignar</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDate(usuario.lastSignedIn)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={usuario.activo ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"}
+                          <div>
+                            <p className="font-medium text-sm">{usuario.name || "Sin nombre"}</p>
+                            <p className="text-xs text-muted-foreground">{usuario.email || "-"}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleEdit(usuario)}
                           >
-                            {usuario.activo ? "Activo" : "Inactivo"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(usuario)}
-                              title="Editar"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleToggleActivo(usuario)}
-                              title={usuario.activo ? "Desactivar" : "Activar"}
-                            >
-                              {usuario.activo ? (
-                                <UserX className="h-4 w-4 text-red-500" />
-                              ) : (
-                                <UserCheck className="h-4 w-4 text-emerald-500" />
-                              )}
-                            </Button>
-                          </div>
-                        </TableCell>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleToggleActivo(usuario)}
+                          >
+                            {usuario.activo ? (
+                              <UserX className="h-4 w-4 text-red-500" />
+                            ) : (
+                              <UserCheck className="h-4 w-4 text-emerald-500" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge className={roleColors[usuario.role] + " text-xs"}>
+                          {roleLabels[usuario.role]}
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className={(usuario.activo ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200") + " text-xs"}
+                        >
+                          {usuario.activo ? "Activo" : "Inactivo"}
+                        </Badge>
+                      </div>
+                      {usuario.empresa && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Building2 className="h-3 w-3" />
+                          {usuario.empresa.nombre}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Vista desktop - Tabla */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Usuario</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Rol</TableHead>
+                        <TableHead>Empresa</TableHead>
+                        <TableHead>Último Acceso</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsuarios?.map((usuario) => (
+                        <TableRow key={usuario.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-[#002C63]/10 flex items-center justify-center">
+                                <span className="text-sm font-medium text-[#002C63]">
+                                  {usuario.name?.charAt(0).toUpperCase() || "U"}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="font-medium">{usuario.name || "Sin nombre"}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  ID: {usuario.id}
+                                </p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {usuario.email || "-"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={roleColors[usuario.role]}>
+                              {roleLabels[usuario.role]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {usuario.empresa ? (
+                              <div className="flex items-center gap-2">
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm">{usuario.empresa.nombre}</span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">Sin asignar</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {formatDate(usuario.lastSignedIn)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className={usuario.activo ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"}
+                            >
+                              {usuario.activo ? "Activo" : "Inactivo"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEdit(usuario)}
+                                title="Editar"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleToggleActivo(usuario)}
+                                title={usuario.activo ? "Desactivar" : "Activar"}
+                              >
+                                {usuario.activo ? (
+                                  <UserX className="h-4 w-4 text-red-500" />
+                                ) : (
+                                  <UserCheck className="h-4 w-4 text-emerald-500" />
+                                )}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

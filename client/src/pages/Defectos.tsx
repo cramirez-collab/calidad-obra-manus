@@ -322,7 +322,7 @@ export default function Defectos() {
         </div>
 
         {/* Estadísticas */}
-        <div className="grid gap-4 md:grid-cols-5">
+        <div className="grid gap-2 sm:gap-4 grid-cols-3 sm:grid-cols-5">
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
@@ -393,43 +393,43 @@ export default function Defectos() {
         {/* Filtros */}
         <Card>
           <CardContent className="pt-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nombre o código..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
+            <div className="flex flex-col gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-              <Select value={filterEspecialidad} onValueChange={setFilterEspecialidad}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Especialidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {especialidades?.map((esp) => (
-                    <SelectItem key={esp.id} value={esp.id.toString()}>
-                      {esp.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={filterSeveridad} onValueChange={setFilterSeveridad}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Severidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="leve">Leve</SelectItem>
-                  <SelectItem value="moderado">Moderado</SelectItem>
-                  <SelectItem value="grave">Grave</SelectItem>
-                  <SelectItem value="critico">Crítico</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-2 gap-2">
+                <Select value={filterEspecialidad} onValueChange={setFilterEspecialidad}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Especialidad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {especialidades?.map((esp) => (
+                      <SelectItem key={esp.id} value={esp.id.toString()}>
+                        {esp.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={filterSeveridad} onValueChange={setFilterSeveridad}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Severidad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="leve">Leve</SelectItem>
+                    <SelectItem value="moderado">Moderado</SelectItem>
+                    <SelectItem value="grave">Grave</SelectItem>
+                    <SelectItem value="critico">Crítico</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -442,7 +442,7 @@ export default function Defectos() {
               Catálogo ({filteredDefectos?.length || 0})
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 sm:p-6">
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">
                 Cargando...
@@ -452,104 +452,163 @@ export default function Defectos() {
                 No se encontraron defectos
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Código</TableHead>
-                      <TableHead>Nombre</TableHead>
-                      <TableHead>Especialidad</TableHead>
-                      <TableHead>Severidad</TableHead>
-                      <TableHead>Tiempo Est.</TableHead>
-                      <TableHead>Ítems</TableHead>
-                      <TableHead>Tasa Aprob.</TableHead>
-                      <TableHead className="text-right">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredDefectos?.map((defecto) => (
-                      <TableRow key={defecto.id}>
-                        <TableCell className="font-mono text-sm">
-                          {defecto.codigo || "-"}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{defecto.nombre}</p>
-                            {defecto.descripcion && (
-                              <p className="text-xs text-muted-foreground line-clamp-1">
-                                {defecto.descripcion}
-                              </p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {defecto.especialidad ? (
-                            <Badge variant="outline">
-                              {defecto.especialidad.nombre}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">General</span>
+              <>
+                {/* Vista móvil - Cards */}
+                <div className="sm:hidden divide-y">
+                  {filteredDefectos?.map((defecto) => (
+                    <div key={defecto.id} className="p-4 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-medium text-sm">{defecto.nombre}</p>
+                          {defecto.codigo && (
+                            <p className="text-xs font-mono text-muted-foreground">{defecto.codigo}</p>
                           )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={severidadColors[defecto.severidad]}>
-                            {severidadLabels[defecto.severidad]}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleEdit(defecto)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleDelete(defecto.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge className={severidadColors[defecto.severidad] + " text-xs"}>
+                          {severidadLabels[defecto.severidad]}
+                        </Badge>
+                        {defecto.especialidad && (
+                          <Badge variant="outline" className="text-xs">
+                            {defecto.especialidad.nombre}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {defecto.tiempoEstimadoResolucion ? (
-                            <div className="flex items-center gap-1 text-sm">
-                              <Clock className="h-3 w-3" />
-                              {defecto.tiempoEstimadoResolucion}h
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <BarChart3 className="h-3 w-3 text-muted-foreground" />
-                            <span className="font-medium">{defecto.estadisticas?.total || 0}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {defecto.estadisticas?.total > 0 ? (
-                            <span className={`font-medium ${
-                              defecto.estadisticas.tasaAprobacion >= 80 ? 'text-emerald-600' :
-                              defecto.estadisticas.tasaAprobacion >= 50 ? 'text-yellow-600' :
-                              'text-red-600'
-                            }`}>
-                              {defecto.estadisticas.tasaAprobacion}%
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(defecto)}
-                              title="Editar"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(defecto.id)}
-                              title="Eliminar"
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <BarChart3 className="h-3 w-3" />
+                          {defecto.estadisticas?.total || 0} ítems
+                        </span>
+                        {defecto.tiempoEstimadoResolucion && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {defecto.tiempoEstimadoResolucion}h
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Vista desktop - Tabla */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Código</TableHead>
+                        <TableHead>Nombre</TableHead>
+                        <TableHead>Especialidad</TableHead>
+                        <TableHead>Severidad</TableHead>
+                        <TableHead>Tiempo Est.</TableHead>
+                        <TableHead>Ítems</TableHead>
+                        <TableHead>Tasa Aprob.</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDefectos?.map((defecto) => (
+                        <TableRow key={defecto.id}>
+                          <TableCell className="font-mono text-sm">
+                            {defecto.codigo || "-"}
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{defecto.nombre}</p>
+                              {defecto.descripcion && (
+                                <p className="text-xs text-muted-foreground line-clamp-1">
+                                  {defecto.descripcion}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {defecto.especialidad ? (
+                              <Badge variant="outline">
+                                {defecto.especialidad.nombre}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">General</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={severidadColors[defecto.severidad]}>
+                              {severidadLabels[defecto.severidad]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {defecto.tiempoEstimadoResolucion ? (
+                              <div className="flex items-center gap-1 text-sm">
+                                <Clock className="h-3 w-3" />
+                                {defecto.tiempoEstimadoResolucion}h
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <BarChart3 className="h-3 w-3 text-muted-foreground" />
+                              <span className="font-medium">{defecto.estadisticas?.total || 0}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {defecto.estadisticas?.total > 0 ? (
+                              <span className={`font-medium ${
+                                defecto.estadisticas.tasaAprobacion >= 80 ? 'text-emerald-600' :
+                                defecto.estadisticas.tasaAprobacion >= 50 ? 'text-yellow-600' :
+                                'text-red-600'
+                              }`}>
+                                {defecto.estadisticas.tasaAprobacion}%
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEdit(defecto)}
+                                title="Editar"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(defecto.id)}
+                                title="Eliminar"
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

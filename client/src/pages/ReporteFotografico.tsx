@@ -322,7 +322,7 @@ export default function ReporteFotografico() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
                   <Building2 className="h-3 w-3" /> Empresa
@@ -436,7 +436,7 @@ export default function ReporteFotografico() {
         </Card>
 
         {/* Estadísticas */}
-        <div className="grid gap-4 md:grid-cols-5">
+        <div className="grid gap-2 sm:gap-4 grid-cols-3 sm:grid-cols-5">
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">

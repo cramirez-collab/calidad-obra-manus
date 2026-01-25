@@ -314,3 +314,22 @@
 - [x] Logo de Objetiva en encabezado
 - [x] Estadísticas en el reporte
 - [x] Exportación a CSV adicional
+
+
+## Mejoras de Responsividad y Estandarización (Duodécima Iteración)
+
+### Responsividad Móvil
+- [x] Corregir botones que salen de pantalla en móvil
+- [x] Ajustar grids y contenedores para pantallas pequeñas
+- [x] Optimizar cards y formularios para móvil
+- [x] Verificar navegación en dispositivos táctiles
+
+### Favicon OQC
+- [x] Crear favicon circular con fondo blanco
+- [x] Letras "OQC" en verde Objetiva (#02B381)
+- [x] Actualizar manifest.json con nuevo favicon
+
+### Catálogo Estándar
+- [x] Definir especialidades estándar para construcción
+- [x] Definir atributos estándar por especialidad
+- [x] Documentar catálogo para referencia
