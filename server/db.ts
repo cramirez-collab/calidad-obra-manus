@@ -1,5 +1,6 @@
 import { eq, and, gte, lte, like, desc, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import bcrypt from 'bcryptjs';
 import { 
   InsertUser, users, 
   proyectos, InsertProyecto,
@@ -1330,6 +1331,66 @@ export async function createUser(data: {
   });
   
   return result[0].insertId;
+}
+
+// Crear usuario con contraseña (para admin/superadmin)
+
+export async function createUserWithPassword(data: { 
+  name: string; 
+  email?: string;
+  password: string;
+  role: string; 
+  empresaId?: number | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Generar openId único para usuarios manuales
+  const openId = `manual_${nanoid(16)}`;
+  
+  // Hash de la contraseña
+  const passwordHash = await bcrypt.hash(data.password, 10);
+  
+  const result = await db.insert(users).values({
+    openId,
+    name: data.name,
+    email: data.email || null,
+    passwordHash,
+    loginMethod: 'password',
+    role: data.role as any,
+    empresaId: data.empresaId || null,
+    activo: true,
+    lastSignedIn: new Date(),
+  });
+  
+  return result[0].insertId;
+}
+
+// Actualizar usuario con contraseña opcional
+export async function updateUserWithPassword(id: number, data: {
+  name?: string;
+  email?: string;
+  password?: string;
+  role?: string;
+  empresaId?: number | null;
+  activo?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) return;
+  
+  const updateData: any = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.role !== undefined) updateData.role = data.role;
+  if (data.empresaId !== undefined) updateData.empresaId = data.empresaId;
+  if (data.activo !== undefined) updateData.activo = data.activo;
+  
+  // Si se proporciona contraseña, hacer hash
+  if (data.password) {
+    updateData.passwordHash = await bcrypt.hash(data.password, 10);
+  }
+  
+  await db.update(users).set(updateData).where(eq(users.id, id));
 }
 
 // Actualizar usuario completo

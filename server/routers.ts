@@ -102,11 +102,12 @@ export const appRouter = router({
       .input(z.object({
         name: z.string().min(1),
         email: z.string().email().optional(),
+        password: z.string().min(6),
         role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente']),
         empresaId: z.number().nullable().optional(),
       }))
       .mutation(async ({ input }) => {
-        const id = await db.createUser(input);
+        const id = await db.createUserWithPassword(input);
         return { id, success: true };
       }),
     
@@ -116,13 +117,14 @@ export const appRouter = router({
         id: z.number(),
         name: z.string().optional(),
         email: z.string().email().optional(),
+        password: z.string().min(6).optional(),
         role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente']).optional(),
         empresaId: z.number().nullable().optional(),
         activo: z.boolean().optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
-        await db.updateUser(id, data);
+        await db.updateUserWithPassword(id, data);
         return { success: true };
       }),
     

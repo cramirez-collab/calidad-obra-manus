@@ -14,6 +14,7 @@ export const users = mysqlTable("users", {
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
+  passwordHash: varchar("passwordHash", { length: 255 }), // Para usuarios creados manualmente
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["superadmin", "admin", "supervisor", "jefe_residente", "residente"]).default("residente").notNull(),
   empresaId: int("empresaId"),

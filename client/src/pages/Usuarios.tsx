@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,14 +53,19 @@ const roleColors: Record<string, string> = {
 interface UserFormData {
   name: string;
   email: string;
+  password: string;
   role: string;
   empresaId: number | null;
 }
 
 export default function Usuarios() {
   const utils = trpc.useUtils();
+  const { user } = useAuth();
   const { data: usuarios, isLoading } = trpc.users.listConEmpresa.useQuery();
   const { data: empresas } = trpc.empresas.list.useQuery();
+  
+  // Solo admin y superadmin pueden crear/editar usuarios
+  const canManageUsers = user?.role === 'superadmin' || user?.role === 'admin';
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -71,6 +77,7 @@ export default function Usuarios() {
   const [formData, setFormData] = useState<UserFormData>({
     name: "",
     email: "",
+    password: "",
     role: "residente",
     empresaId: null,
   });
@@ -79,7 +86,7 @@ export default function Usuarios() {
     onSuccess: () => {
       utils.users.listConEmpresa.invalidate();
       setIsCreateOpen(false);
-      setFormData({ name: "", email: "", role: "residente", empresaId: null });
+      setFormData({ name: "", email: "", password: "", role: "residente", empresaId: null });
       toast.success("Usuario creado correctamente");
     },
     onError: (error) => {
@@ -100,13 +107,26 @@ export default function Usuarios() {
   });
 
   const handleCreate = () => {
+    if (!canManageUsers) {
+      toast.error("No tienes permisos para crear usuarios");
+      return;
+    }
     if (!formData.name.trim()) {
       toast.error("El nombre es requerido");
+      return;
+    }
+    if (!formData.password.trim()) {
+      toast.error("La contraseña es requerida");
+      return;
+    }
+    if (formData.password.length < 6) {
+      toast.error("La contraseña debe tener al menos 6 caracteres");
       return;
     }
     createUserMutation.mutate({
       name: formData.name,
       email: formData.email || undefined,
+      password: formData.password,
       role: formData.role as any,
       empresaId: formData.empresaId,
     });
@@ -117,6 +137,7 @@ export default function Usuarios() {
     setFormData({
       name: usuario.name || "",
       email: usuario.email || "",
+      password: "",
       role: usuario.role,
       empresaId: usuario.empresaId,
     });
@@ -124,11 +145,16 @@ export default function Usuarios() {
   };
 
   const handleUpdate = () => {
+    if (!canManageUsers) {
+      toast.error("No tienes permisos para editar usuarios");
+      return;
+    }
     if (!editingUser) return;
     updateUserMutation.mutate({
       id: editingUser.id,
       name: formData.name,
       email: formData.email || undefined,
+      password: formData.password || undefined,
       role: formData.role as any,
       empresaId: formData.empresaId,
     });
@@ -186,6 +212,7 @@ export default function Usuarios() {
               Alta, edición y asignación de roles y empresas
             </p>
           </div>
+          {canManageUsers && (
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button className="bg-[#02B381] hover:bg-[#029970]">
@@ -219,6 +246,17 @@ export default function Usuarios() {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="correo@ejemplo.com"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Contraseña *</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Mínimo 6 caracteres"
+                  />
+                  <p className="text-xs text-muted-foreground">Esta contraseña será usada por el usuario para iniciar sesión</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Rol *</Label>
@@ -285,6 +323,7 @@ export default function Usuarios() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          )}
         </div>
 
         {/* Estadísticas */}

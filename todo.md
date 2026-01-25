@@ -425,3 +425,16 @@
 - [x] Solicitar permiso de cámara después del login exitoso
 - [x] Guardar estado de permiso en localStorage
 - [x] No volver a solicitar si ya fue concedido
+
+
+## URGENTE: Escáner QR y Usuarios (Enero 2026)
+
+### Escáner QR - MANDATORIO
+- [x] Corregir lectura de códigos QR con cámara (html5-qrcode)
+- [x] Implementar librería de escaneo más robusta
+- [ ] Probar en dispositivos móviles
+
+### Alta de Usuarios - Solo Admin/Superadmin
+- [x] Restringir formulario de alta de usuarios a Admin/Superadmin
+- [x] Agregar campo de contraseña para nuevos usuarios
+- [x] Validar permisos en backend

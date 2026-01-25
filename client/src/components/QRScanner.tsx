@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -7,10 +7,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { QrCode, Camera, Search, Keyboard } from "lucide-react";
+import { QrCode, Camera, Search, Keyboard, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library';
+import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
 
 export function QRScannerButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,108 +20,160 @@ export function QRScannerButton() {
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualCode, setManualCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const readerRef = useRef<BrowserMultiFormatReader | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const scanningRef = useRef(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerContainerId = "qr-scanner-container";
 
-  const startScanner = async () => {
+  const stopScanner = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        const state = scannerRef.current.getState();
+        if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
+          await scannerRef.current.stop();
+        }
+      } catch (err) {
+        console.log("Error stopping scanner:", err);
+      }
+      try {
+        scannerRef.current.clear();
+      } catch (err) {
+        console.log("Error clearing scanner:", err);
+      }
+      scannerRef.current = null;
+    }
+    setIsScanning(false);
+  }, []);
+
+  const navigateToItem = useCallback((result: string) => {
+    // Intentar extraer el código del ítem del QR
+    let codigo = result.trim();
+    
+    // Si es una URL, extraer el código
+    if (codigo.includes('/seguimiento/')) {
+      const parts = codigo.split('/seguimiento/');
+      codigo = parts[parts.length - 1];
+    } else if (codigo.includes('/items/')) {
+      const parts = codigo.split('/items/');
+      codigo = parts[parts.length - 1];
+    }
+    
+    // Limpiar el código de cualquier parámetro de URL
+    codigo = codigo.split('?')[0].split('#')[0];
+
+    toast.success(`Navegando a: ${codigo}`);
+    
+    // Navegar al ítem - primero intentar por código, si es número ir directo
+    if (/^\d+$/.test(codigo)) {
+      setLocation(`/items/${codigo}`);
+    } else {
+      // Buscar por código en la página de seguimiento
+      setLocation(`/seguimiento/${codigo}`);
+    }
+  }, [setLocation]);
+
+  const handleScanSuccess = useCallback((decodedText: string) => {
+    console.log("QR Code detected:", decodedText);
+    toast.success("¡Código QR detectado!");
+    stopScanner();
+    setIsOpen(false);
+    navigateToItem(decodedText);
+  }, [stopScanner, navigateToItem]);
+
+  const startScanner = useCallback(async () => {
     setIsLoading(true);
+    setErrorMessage(null);
+    
     try {
       // Verificar si el navegador soporta getUserMedia
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setHasPermission(false);
+        setErrorMessage("Tu navegador no soporta el acceso a la cámara");
         setShowManualInput(true);
-        toast.error('Tu navegador no soporta el acceso a la cámara');
+        setIsLoading(false);
         return;
       }
 
-      // Solicitar permiso de cámara
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      });
-      streamRef.current = stream;
+      // Limpiar scanner anterior si existe
+      await stopScanner();
+
+      // Esperar a que el contenedor esté en el DOM
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const container = document.getElementById(scannerContainerId);
+      if (!container) {
+        setErrorMessage("Error interno: contenedor no encontrado");
+        setIsLoading(false);
+        return;
+      }
+
+      // Crear instancia del scanner
+      const html5QrCode = new Html5Qrcode(scannerContainerId);
+      scannerRef.current = html5QrCode;
+
+      // Obtener cámaras disponibles
+      const cameras = await Html5Qrcode.getCameras();
+      
+      if (!cameras || cameras.length === 0) {
+        setHasPermission(false);
+        setErrorMessage("No se encontraron cámaras disponibles");
+        setShowManualInput(true);
+        setIsLoading(false);
+        return;
+      }
+
+      // Preferir cámara trasera
+      let cameraId = cameras[0].id;
+      const backCamera = cameras.find(cam => 
+        cam.label.toLowerCase().includes('back') || 
+        cam.label.toLowerCase().includes('rear') ||
+        cam.label.toLowerCase().includes('trasera') ||
+        cam.label.toLowerCase().includes('environment')
+      );
+      if (backCamera) {
+        cameraId = backCamera.id;
+      }
+
       setHasPermission(true);
       setIsScanning(true);
-      scanningRef.current = true;
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-
-        // Configurar el lector de QR
-        const hints = new Map();
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
-        
-        const reader = new BrowserMultiFormatReader(hints);
-        readerRef.current = reader;
-
-        // Escanear continuamente
-        const scanLoop = async () => {
-          if (!scanningRef.current || !videoRef.current) return;
-          
-          try {
-            const result = await reader.decodeFromVideoElement(videoRef.current);
-            if (result) {
-              const text = result.getText();
-              handleScanResult(text);
-              return;
-            }
-          } catch {
-            // Continuar escaneando si no se encontró QR
+      // Iniciar escaneo
+      await html5QrCode.start(
+        cameraId,
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+        },
+        handleScanSuccess,
+        (errorMessage) => {
+          // Ignorar errores de "no QR found" - son normales durante el escaneo
+          if (!errorMessage.includes("No MultiFormat Readers") && 
+              !errorMessage.includes("NotFoundException")) {
+            console.log("QR scan error:", errorMessage);
           }
-          
-          if (scanningRef.current) {
-            requestAnimationFrame(scanLoop);
-          }
-        };
-        
-        // Pequeño delay para asegurar que el video esté listo
-        setTimeout(scanLoop, 500);
-      }
+        }
+      );
+
+      setIsLoading(false);
     } catch (err: any) {
-      console.error('Error al acceder a la cámara:', err);
+      console.error('Error al iniciar escáner:', err);
+      setIsLoading(false);
       setHasPermission(false);
       
       // Mostrar mensaje específico según el error
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        toast.error('Permiso de cámara denegado. Usa el ingreso manual.');
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        toast.error('No se encontró cámara. Usa el ingreso manual.');
-      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-        toast.error('La cámara está en uso por otra aplicación.');
+      if (err.name === 'NotAllowedError' || err.message?.includes('Permission')) {
+        setErrorMessage("Permiso de cámara denegado. Por favor, permite el acceso a la cámara en la configuración de tu navegador.");
+      } else if (err.name === 'NotFoundError' || err.message?.includes('not found')) {
+        setErrorMessage("No se encontró cámara disponible.");
+      } else if (err.name === 'NotReadableError' || err.message?.includes('in use')) {
+        setErrorMessage("La cámara está siendo usada por otra aplicación.");
       } else {
-        toast.error('No se pudo acceder a la cámara');
+        setErrorMessage(`Error: ${err.message || 'No se pudo acceder a la cámara'}`);
       }
       
       setShowManualInput(true);
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  const stopScanner = () => {
-    scanningRef.current = false;
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (readerRef.current) {
-      readerRef.current.reset();
-      readerRef.current = null;
-    }
-    setIsScanning(false);
-  };
-
-  const handleScanResult = (result: string) => {
-    stopScanner();
-    setIsOpen(false);
-    navigateToItem(result);
-  };
+  }, [stopScanner, handleScanSuccess]);
 
   const handleManualSubmit = () => {
     if (!manualCode.trim()) {
@@ -134,50 +186,37 @@ export function QRScannerButton() {
     setShowManualInput(false);
   };
 
-  const navigateToItem = (result: string) => {
-    // Intentar extraer el código del ítem del QR
-    let codigo = result;
-    
-    // Si es una URL, extraer el código
-    if (result.includes('/seguimiento/')) {
-      const parts = result.split('/seguimiento/');
-      codigo = parts[parts.length - 1];
-    } else if (result.includes('/items/')) {
-      const parts = result.split('/items/');
-      codigo = parts[parts.length - 1];
-    }
-    
-    // Limpiar el código de cualquier parámetro de URL
-    codigo = codigo.split('?')[0].split('#')[0];
-
-    toast.success(`Buscando: ${codigo}`);
-    
-    // Navegar al ítem - primero intentar por código, si es número ir directo
-    if (/^\d+$/.test(codigo)) {
-      setLocation(`/items/${codigo}`);
-    } else {
-      // Buscar por código en la página de seguimiento
-      setLocation(`/seguimiento/${codigo}`);
-    }
-  };
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     stopScanner();
     setIsOpen(false);
     setShowManualInput(false);
     setManualCode("");
     setHasPermission(null);
-  };
+    setErrorMessage(null);
+  }, [stopScanner]);
+
+  const handleRetryCamera = useCallback(() => {
+    setShowManualInput(false);
+    setHasPermission(null);
+    setErrorMessage(null);
+    startScanner();
+  }, [startScanner]);
 
   useEffect(() => {
     if (isOpen && !showManualInput) {
-      startScanner();
+      // Pequeño delay para asegurar que el DOM esté listo
+      const timer = setTimeout(() => {
+        startScanner();
+      }, 200);
+      return () => clearTimeout(timer);
     }
+  }, [isOpen, showManualInput, startScanner]);
 
+  useEffect(() => {
     return () => {
       stopScanner();
     };
-  }, [isOpen, showManualInput]);
+  }, [stopScanner]);
 
   return (
     <>
@@ -204,6 +243,12 @@ export function QRScannerButton() {
           {showManualInput ? (
             // Vista de ingreso manual
             <div className="p-4 pt-0 space-y-4">
+              {errorMessage && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {errorMessage}
+                </div>
+              )}
+              
               <p className="text-sm text-muted-foreground">
                 Ingresa el código del ítem manualmente (ej: OQC-00001)
               </p>
@@ -226,10 +271,7 @@ export function QRScannerButton() {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => {
-                  setShowManualInput(false);
-                  setHasPermission(null);
-                }}
+                onClick={handleRetryCamera}
               >
                 <Camera className="h-4 w-4 mr-2" />
                 Intentar con cámara
@@ -238,18 +280,19 @@ export function QRScannerButton() {
           ) : (
             // Vista del escáner
             <>
-              <div className="relative aspect-square bg-black">
+              <div className="relative bg-black" style={{ minHeight: '350px' }}>
                 {isLoading ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                     <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
                     <p className="text-sm">Iniciando cámara...</p>
+                    <p className="text-xs text-gray-400 mt-2">Permite el acceso cuando el navegador lo solicite</p>
                   </div>
                 ) : hasPermission === false ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-4 text-center">
                     <Camera className="h-12 w-12 mb-4 opacity-50" />
                     <p className="text-lg font-medium mb-2">Cámara no disponible</p>
                     <p className="text-sm text-gray-400 mb-4">
-                      No se pudo acceder a la cámara. Puedes ingresar el código manualmente.
+                      {errorMessage || "No se pudo acceder a la cámara. Puedes ingresar el código manualmente."}
                     </p>
                     <div className="flex flex-col gap-2 w-full max-w-xs">
                       <Button 
@@ -262,10 +305,7 @@ export function QRScannerButton() {
                       </Button>
                       <Button 
                         variant="outline" 
-                        onClick={() => {
-                          setHasPermission(null);
-                          startScanner();
-                        }}
+                        onClick={handleRetryCamera}
                         className="w-full"
                       >
                         <Camera className="h-4 w-4 mr-2" />
@@ -275,36 +315,22 @@ export function QRScannerButton() {
                   </div>
                 ) : (
                   <>
-                    <video
-                      ref={videoRef}
-                      className="w-full h-full object-cover"
-                      playsInline
-                      muted
+                    {/* Contenedor del scanner - html5-qrcode lo llenará */}
+                    <div 
+                      id={scannerContainerId} 
+                      className="w-full"
+                      style={{ minHeight: '350px' }}
                     />
                     
-                    {/* Overlay con guías */}
-                    <div className="absolute inset-0 pointer-events-none">
-                      {/* Marco de escaneo */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-64 h-64 relative">
-                          {/* Esquinas del marco */}
-                          <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg" />
-                          <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-lg" />
-                          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-lg" />
-                          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg" />
-                          
-                          {/* Línea de escaneo animada */}
-                          {isScanning && (
-                            <div className="absolute left-2 right-2 h-0.5 bg-primary animate-scan" />
-                          )}
+                    {/* Indicador de escaneo activo */}
+                    {isScanning && (
+                      <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                        <div className="bg-black/70 text-white px-4 py-2 rounded-full text-sm flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                          Escaneando...
                         </div>
                       </div>
-                      
-                      {/* Sombra exterior */}
-                      <div className="absolute inset-0 bg-black/50" style={{
-                        clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0, calc(50% - 128px) calc(50% - 128px), calc(50% - 128px) calc(50% + 128px), calc(50% + 128px) calc(50% + 128px), calc(50% + 128px) calc(50% - 128px), calc(50% - 128px) calc(50% - 128px))'
-                      }} />
-                    </div>
+                    )}
                   </>
                 )}
               </div>
@@ -317,7 +343,10 @@ export function QRScannerButton() {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => setShowManualInput(true)}
+                  onClick={() => {
+                    stopScanner();
+                    setShowManualInput(true);
+                  }}
                 >
                   <Keyboard className="h-4 w-4 mr-2" />
                   Ingresar código manualmente
@@ -327,17 +356,6 @@ export function QRScannerButton() {
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Estilos para la animación */}
-      <style>{`
-        @keyframes scan {
-          0%, 100% { top: 8px; }
-          50% { top: calc(100% - 8px); }
-        }
-        .animate-scan {
-          animation: scan 2s ease-in-out infinite;
-        }
-      `}</style>
     </>
   );
 }
