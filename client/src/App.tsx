@@ -26,6 +26,7 @@ const GenerarQR = lazy(() => import("./pages/GenerarQR"));
 const Configuracion = lazy(() => import("./pages/Configuracion"));
 const Metas = lazy(() => import("./pages/Metas"));
 const OfflineIndicator = lazy(() => import("./components/OfflineIndicator"));
+const CameraPermissionRequest = lazy(() => import("./components/CameraPermissionRequest").then(m => ({ default: m.CameraPermissionRequest })));
 
 // Proyectos
 const Proyectos = lazy(() => import("./pages/Proyectos"));
@@ -115,6 +116,9 @@ function App() {
           <Toaster />
           <Suspense fallback={null}>
             <OfflineIndicator />
+          </Suspense>
+          <Suspense fallback={null}>
+            <CameraPermissionRequest />
           </Suspense>
           <Router />
         </TooltipProvider>

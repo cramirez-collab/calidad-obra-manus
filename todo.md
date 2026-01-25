@@ -418,3 +418,10 @@
 - [x] Agregar opción de ingresar código manualmente
 - [x] Mejorar mensajes de error y guía al usuario
 - [x] Optimizar para móvil
+
+
+## Permiso de Cámara al Login (Decimosexta Iteración)
+
+- [x] Solicitar permiso de cámara después del login exitoso
+- [x] Guardar estado de permiso en localStorage
+- [x] No volver a solicitar si ya fue concedido
