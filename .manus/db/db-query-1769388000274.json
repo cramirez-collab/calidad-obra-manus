@@ -1,0 +1,19 @@
+{
+  "query": "SELECT pu.*, p.nombre as proyecto_nombre FROM proyecto_usuarios pu JOIN proyectos p ON pu.proyectoId = p.id WHERE pu.usuarioId = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT pu.*, p.nombre as proyecto_nombre FROM proyecto_usuarios pu JOIN proyectos p ON pu.proyectoId = p.id WHERE pu.usuarioId = 1;",
+  "rows": [
+    {
+      "id": "1",
+      "proyectoId": "30001",
+      "usuarioId": "1",
+      "rolEnProyecto": "admin",
+      "activo": "1",
+      "createdAt": "2026-01-25 22:58:41",
+      "proyecto_nombre": "Torre Mayas"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tproyectoId\tusuarioId\trolEnProyecto\tactivo\tcreatedAt\tproyecto_nombre\n1\t30001\t1\tadmin\t1\t2026-01-25 22:58:41\tTorre Mayas\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

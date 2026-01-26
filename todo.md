@@ -590,3 +590,11 @@
 - [x] Eliminar localStorage para proyecto seleccionado
 - [x] Usar base de datos para proyecto activo
 - [x] Actualizar en tiempo real cuando cambia el proyecto
+
+
+## Correcciones de Navegación (Vigésima Iteración)
+
+- [x] Hidalma ahora aparece en lista de proyectos (se asignó usuario)
+- [x] Pantalla de selección de proyectos funciona correctamente
+- [x] Menú lateral despliega correctamente al seleccionar proyecto
+- [x] Nombre del proyecto se actualiza en el sidebar al cambiar de proyecto

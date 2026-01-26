@@ -124,12 +124,16 @@ function App() {
         <ProjectProvider>
           <TooltipProvider>
             <Toaster />
+            {/* Temporalmente desactivado mientras se resuelve el conflicto de React hooks
             <Suspense fallback={null}>
               <OfflineIndicator />
             </Suspense>
+            */}
+            {/* Temporalmente desactivado mientras se resuelve el conflicto de React hooks
             <Suspense fallback={null}>
               <CameraPermissionRequest />
             </Suspense>
+            */}
             <Router />
           </TooltipProvider>
         </ProjectProvider>
