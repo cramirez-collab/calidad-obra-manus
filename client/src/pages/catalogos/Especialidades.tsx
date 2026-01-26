@@ -21,7 +21,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { Wrench, Edit, Plus, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Wrench, Edit, Plus, Trash2, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
@@ -33,6 +40,7 @@ type Especialidad = {
   descripcion?: string | null;
   color?: string | null;
   proyectoId?: number | null;
+  residenteId?: number | null;
 };
 
 const defaultColors = [
@@ -49,7 +57,11 @@ export default function Especialidades() {
     codigo: "",
     descripcion: "",
     color: "#3B82F6",
+    residenteId: "" as string,
   });
+
+  // Obtener usuarios del proyecto para asignar como residente
+  const { data: usuarios } = trpc.users.list.useQuery();
 
   const utils = trpc.useUtils();
   // Obtener especialidades filtradas por proyecto desde el backend
@@ -98,10 +110,11 @@ export default function Especialidades() {
         codigo: especialidad.codigo || "",
         descripcion: especialidad.descripcion || "",
         color: especialidad.color || "#3B82F6",
+        residenteId: especialidad.residenteId?.toString() || "",
       });
     } else {
       setEditingEspecialidad(null);
-      setFormData({ nombre: "", codigo: "", descripcion: "", color: "#3B82F6" });
+      setFormData({ nombre: "", codigo: "", descripcion: "", color: "#3B82F6", residenteId: "" });
     }
     setIsOpen(true);
   };
@@ -109,7 +122,7 @@ export default function Especialidades() {
   const handleClose = () => {
     setIsOpen(false);
     setEditingEspecialidad(null);
-    setFormData({ nombre: "", codigo: "", descripcion: "", color: "#3B82F6" });
+    setFormData({ nombre: "", codigo: "", descripcion: "", color: "#3B82F6", residenteId: "" });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -125,6 +138,7 @@ export default function Especialidades() {
       descripcion: formData.descripcion || undefined,
       color: formData.color || undefined,
       proyectoId: selectedProjectId || undefined,
+      residenteId: formData.residenteId && formData.residenteId !== 'none' ? parseInt(formData.residenteId) : undefined,
     };
 
     if (editingEspecialidad) {
@@ -184,6 +198,7 @@ export default function Especialidades() {
                     <TableHead>Código</TableHead>
                     <TableHead>Nombre</TableHead>
                     <TableHead>Descripción</TableHead>
+                    <TableHead>Residente</TableHead>
                     <TableHead className="w-[100px]">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -202,6 +217,11 @@ export default function Especialidades() {
                       <TableCell className="font-medium">{especialidad.nombre}</TableCell>
                       <TableCell className="max-w-[200px] truncate">
                         {especialidad.descripcion || "-"}
+                      </TableCell>
+                      <TableCell>
+                        {especialidad.residenteId 
+                          ? usuarios?.find(u => u.id === especialidad.residenteId)?.name || "-"
+                          : "-"}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
@@ -304,6 +324,30 @@ export default function Especialidades() {
                     placeholder="Descripción de la especialidad"
                     rows={3}
                   />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Residente Responsable</Label>
+                  <Select
+                    value={formData.residenteId || "none"}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, residenteId: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar residente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sin residente asignado</SelectItem>
+                      {usuarios?.filter(u => u.role === 'residente' || u.role === 'jefe_residente').map((usuario) => (
+                        <SelectItem key={usuario.id} value={usuario.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            {usuario.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <DialogFooter>

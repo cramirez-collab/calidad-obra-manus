@@ -672,3 +672,28 @@
 - [x] Ejecutar migración de base de datos
 - [x] Actualizar routers para incluir especialidad
 - [x] Actualizar UI de empresas para seleccionar especialidad
+
+## Sistema de Espacios y relaciones
+- [x] Crear tabla de espacios (sala, comedor, cocina, recámaras, baños, etc.)
+- [x] Ligar espacios a unidades (campo unidadId)
+- [x] especialidadId ya existía en atributos
+- [x] especialidadId ya existía en defectos
+- [x] Agregar residenteId a especialidades
+- [ ] Crear routers CRUD para espacios
+- [ ] Crear UI para gestionar espacios por unidad
+- [ ] Actualizar UI de atributos para filtrar por especialidad
+- [ ] Actualizar UI de defectos para filtrar por especialidad
+- [ ] Implementar sugerencias de atributos/defectos por especialidad
+
+
+## Sistema de Espacios (Enero 2026)
+- [x] Crear tabla de espacios en base de datos
+- [x] Ligar espacios a unidades (campo unidadId)
+- [x] Agregar residenteId a especialidades
+- [x] Crear router y funciones CRUD para espacios
+- [x] Crear página de gestión de Espacios con plantilla
+- [x] Espacios sugeridos (Sala, Comedor, Cocina, Recámaras, Baños, etc.)
+- [x] Copiar espacios plantilla a unidades
+- [x] Agregar Espacios al menú de configuración
+- [x] Actualizar UI de especialidades para agregar residente responsable
+- [ ] Integrar espacios en formulario de nuevo ítem

@@ -397,6 +397,7 @@ export const appRouter = router({
         codigo: z.string().optional(),
         descripcion: z.string().optional(),
         color: z.string().optional(),
+        residenteId: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const id = await db.createEspecialidad(input);
@@ -411,6 +412,7 @@ export const appRouter = router({
         codigo: z.string().optional(),
         descripcion: z.string().optional(),
         color: z.string().optional(),
+        residenteId: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
@@ -422,6 +424,100 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteEspecialidad(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ==================== ESPACIOS ====================
+  espacios: router({
+    list: protectedProcedure
+      .input(z.object({ 
+        proyectoId: z.number().optional(),
+        unidadId: z.number().optional() 
+      }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllEspacios(input?.proyectoId, input?.unidadId);
+      }),
+    
+    // Espacios por unidad específica
+    byUnidad: protectedProcedure
+      .input(z.object({ unidadId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getEspaciosByUnidad(input.unidadId);
+      }),
+    
+    // Espacios genéricos del proyecto (plantilla)
+    plantilla: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getEspaciosPlantilla(input.proyectoId);
+      }),
+    
+    get: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getEspacioById(input.id);
+      }),
+    
+    create: adminProcedure
+      .input(z.object({
+        proyectoId: z.number().optional(),
+        unidadId: z.number().optional(),
+        nombre: z.string().min(1),
+        codigo: z.string().optional(),
+        descripcion: z.string().optional(),
+        orden: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createEspacio(input);
+        return { id, success: true };
+      }),
+    
+    // Crear múltiples espacios de una vez (para copiar plantilla a unidad)
+    createBulk: adminProcedure
+      .input(z.object({
+        unidadId: z.number(),
+        espacios: z.array(z.object({
+          nombre: z.string().min(1),
+          codigo: z.string().optional(),
+          descripcion: z.string().optional(),
+          orden: z.number().optional(),
+        }))
+      }))
+      .mutation(async ({ input }) => {
+        const ids = await db.createEspaciosBulk(input.unidadId, input.espacios);
+        return { ids, success: true };
+      }),
+    
+    // Copiar espacios plantilla a una unidad
+    copiarPlantilla: adminProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        unidadId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const count = await db.copiarEspaciosPlantillaAUnidad(input.proyectoId, input.unidadId);
+        return { count, success: true };
+      }),
+    
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        nombre: z.string().min(1).optional(),
+        codigo: z.string().optional(),
+        descripcion: z.string().optional(),
+        orden: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateEspacio(id, data);
+        return { success: true };
+      }),
+    
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteEspacio(input.id);
         return { success: true };
       }),
   }),

@@ -7,6 +7,7 @@ import {
   proyectoUsuarios, InsertProyectoUsuario,
   empresas, InsertEmpresa, 
   unidades, InsertUnidad,
+  espacios, InsertEspacio,
   especialidades, InsertEspecialidad,
   atributos, InsertAtributo,
   items, InsertItem,
@@ -640,6 +641,111 @@ export async function deleteEspecialidad(id: number) {
   const db = await getDb();
   if (!db) return;
   await db.update(especialidades).set({ activo: false }).where(eq(especialidades.id, id));
+}
+
+// ==================== ESPACIOS ====================
+
+export async function getAllEspacios(proyectoId?: number, unidadId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const conditions = [eq(espacios.activo, true)];
+  if (proyectoId) conditions.push(eq(espacios.proyectoId, proyectoId));
+  if (unidadId) conditions.push(eq(espacios.unidadId, unidadId));
+  
+  return await db.select().from(espacios)
+    .where(and(...conditions))
+    .orderBy(espacios.orden, espacios.nombre);
+}
+
+export async function getEspaciosByUnidad(unidadId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(espacios)
+    .where(and(eq(espacios.unidadId, unidadId), eq(espacios.activo, true)))
+    .orderBy(espacios.orden, espacios.nombre);
+}
+
+export async function getEspaciosPlantilla(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  // Espacios plantilla son los que no tienen unidadId (genéricos del proyecto)
+  return await db.select().from(espacios)
+    .where(and(
+      eq(espacios.proyectoId, proyectoId),
+      sql`${espacios.unidadId} IS NULL`,
+      eq(espacios.activo, true)
+    ))
+    .orderBy(espacios.orden, espacios.nombre);
+}
+
+export async function getEspacioById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(espacios).where(eq(espacios.id, id)).limit(1);
+  return result[0];
+}
+
+export async function createEspacio(data: InsertEspacio) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(espacios).values(data);
+  return result[0].insertId;
+}
+
+export async function createEspaciosBulk(unidadId: number, espaciosData: Omit<InsertEspacio, 'unidadId'>[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Obtener proyectoId de la unidad
+  const unidad = await db.select().from(unidades).where(eq(unidades.id, unidadId)).limit(1);
+  const proyectoId = unidad[0]?.proyectoId;
+  
+  const ids: number[] = [];
+  for (const espacio of espaciosData) {
+    const result = await db.insert(espacios).values({
+      ...espacio,
+      unidadId,
+      proyectoId
+    });
+    ids.push(result[0].insertId);
+  }
+  return ids;
+}
+
+export async function copiarEspaciosPlantillaAUnidad(proyectoId: number, unidadId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Obtener espacios plantilla del proyecto
+  const plantilla = await getEspaciosPlantilla(proyectoId);
+  
+  // Copiar cada espacio a la unidad
+  let count = 0;
+  for (const espacio of plantilla) {
+    await db.insert(espacios).values({
+      proyectoId,
+      unidadId,
+      nombre: espacio.nombre,
+      codigo: espacio.codigo,
+      descripcion: espacio.descripcion,
+      orden: espacio.orden
+    });
+    count++;
+  }
+  return count;
+}
+
+export async function updateEspacio(id: number, data: Partial<InsertEspacio>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(espacios).set(data).where(eq(espacios.id, id));
+}
+
+export async function deleteEspacio(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(espacios).set({ activo: false }).where(eq(espacios.id, id));
 }
 
 // ==================== ATRIBUTOS ====================

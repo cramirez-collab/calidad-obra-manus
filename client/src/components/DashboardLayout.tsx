@@ -115,6 +115,7 @@ const getMenuItems = (role: string): MenuItem[] => {
     { icon: QrCode, label: "QR", path: "/generar-qr", shortLabel: "" },
     { icon: Building2, label: "Empresas", path: "/empresas", shortLabel: "" },
     { icon: MapPin, label: "Unidades", path: "/unidades", shortLabel: "" },
+    { icon: Layers, label: "Espacios", path: "/espacios", shortLabel: "" },
     { icon: Wrench, label: "Especialidades", path: "/especialidades", shortLabel: "" },
     { icon: Tags, label: "Atributos", path: "/atributos", shortLabel: "" },
     { icon: AlertTriangle, label: "Defectos", path: "/defectos", shortLabel: "" },

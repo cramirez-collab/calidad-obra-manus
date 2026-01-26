@@ -110,11 +110,31 @@ export type Unidad = typeof unidades.$inferSelect;
 export type InsertUnidad = typeof unidades.$inferInsert;
 
 /**
+ * Tabla de espacios - áreas dentro de cada unidad (sala, comedor, recámaras, baños, etc.)
+ */
+export const espacios = mysqlTable("espacios", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId"), // Relación con proyecto
+  unidadId: int("unidadId"), // Relación con unidad (null = espacio genérico del proyecto)
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  codigo: varchar("codigo", { length: 50 }),
+  descripcion: text("descripcion"),
+  orden: int("orden").default(0), // Orden para mostrar
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Espacio = typeof espacios.$inferSelect;
+export type InsertEspacio = typeof espacios.$inferInsert;
+
+/**
  * Tabla de especialidades (electricidad, plomería, acabados, etc.)
  */
 export const especialidades = mysqlTable("especialidades", {
   id: int("id").autoincrement().primaryKey(),
   proyectoId: int("proyectoId"), // Relación con proyecto
+  residenteId: int("residenteId"), // Usuario residente responsable de esta especialidad
   nombre: varchar("nombre", { length: 255 }).notNull(),
   codigo: varchar("codigo", { length: 50 }),
   descripcion: text("descripcion"),
