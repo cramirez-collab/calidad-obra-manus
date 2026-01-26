@@ -631,3 +631,9 @@
 - [x] Implementar drag & drop en Stacking con espacios vacíos
 - [x] Permitir insertar unidades intermedias en Stacking
 - [x] Interacción móvil: tap para stats, segundo tap para ítems
+
+
+## QR Consecutivos por Proyecto (Enero 2026)
+- [ ] Modificar esquema de QR para numeración consecutiva por proyecto
+- [ ] Actualizar lógica de generación de QR para usar numeración por proyecto
+- [ ] Cada proyecto tiene su propia secuencia (Proyecto A: QR-001, QR-002... Proyecto B: QR-001, QR-002...)

@@ -654,8 +654,8 @@ export async function createItem(data: Omit<InsertItem, 'codigo'>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  // Generar código OQC progresivo
-  const codigo = await getNextOQCCode();
+  // Generar código QR progresivo por proyecto
+  const codigo = await getNextOQCCode(data.proyectoId ?? undefined);
   const result = await db.insert(items).values({ ...data, codigo });
   return { id: result[0].insertId, codigo };
 }
@@ -1142,28 +1142,49 @@ export async function getBitacoraGeneral(filtros: {
 
 // ==================== CÓDIGO OQC PROGRESIVO ====================
 
-export async function getNextOQCCode(): Promise<string> {
+export async function getNextOQCCode(proyectoId?: number): Promise<string> {
   const db = await getDb();
   if (!db) return 'OQC-00001';
   
-  const result = await db
-    .select({ codigo: items.codigo })
-    .from(items)
-    .orderBy(desc(items.id))
-    .limit(1);
+  // Si hay proyectoId, obtener el código del proyecto para el prefijo
+  let prefix = 'OQC';
+  if (proyectoId) {
+    const proyecto = await db.select({ codigo: proyectos.codigo }).from(proyectos).where(eq(proyectos.id, proyectoId)).limit(1);
+    if (proyecto.length > 0 && proyecto[0].codigo) {
+      prefix = proyecto[0].codigo;
+    }
+  }
+  
+  // Buscar el último código de este proyecto específico
+  let result;
+  if (proyectoId) {
+    result = await db
+      .select({ codigo: items.codigo })
+      .from(items)
+      .where(eq(items.proyectoId, proyectoId))
+      .orderBy(desc(items.id))
+      .limit(1);
+  } else {
+    result = await db
+      .select({ codigo: items.codigo })
+      .from(items)
+      .orderBy(desc(items.id))
+      .limit(1);
+  }
   
   if (result.length === 0) {
-    return 'OQC-00001';
+    return `${prefix}-00001`;
   }
   
   const lastCode = result[0].codigo;
-  const match = lastCode.match(/OQC-(\d+)/);
+  // Extraer el número del código (formato: PREFIJO-XXXXX)
+  const match = lastCode.match(/[A-Za-z0-9]+-?(\d+)/);
   if (!match) {
-    return 'OQC-00001';
+    return `${prefix}-00001`;
   }
   
   const nextNumber = parseInt(match[1], 10) + 1;
-  return `OQC-${nextNumber.toString().padStart(5, '0')}`;
+  return `${prefix}-${nextNumber.toString().padStart(5, '0')}`;
 }
 
 // ==================== PENDIENTES POR USUARIO ====================

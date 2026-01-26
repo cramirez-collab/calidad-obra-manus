@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { QrCode, Printer, Download, AlertCircle } from "lucide-react";
+import { QrCode, Printer, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
+import { useProject } from "@/contexts/ProjectContext";
+import { trpc } from "@/lib/trpc";
 
 interface QRItem {
   codigo: string;
@@ -16,6 +18,7 @@ interface QRItem {
 }
 
 export default function GenerarQR() {
+  const { selectedProjectId } = useProject();
   const [rangoInicio, setRangoInicio] = useState(1);
   const [rangoFin, setRangoFin] = useState(10);
   const [tamano, setTamano] = useState<"small" | "medium" | "large">("medium");
@@ -23,10 +26,17 @@ export default function GenerarQR() {
   const [isGenerating, setIsGenerating] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Obtener datos del proyecto seleccionado
+  const { data: proyectos } = trpc.proyectos.list.useQuery();
+  const proyectoActual = proyectos?.find(p => p.id === selectedProjectId);
+  
+  // Usar el código del proyecto o "OQC" por defecto
+  const codigoProyecto = proyectoActual?.codigo || "OQC";
+
   const baseUrl = window.location.origin;
 
   const formatCodigo = (num: number) => {
-    return `OQC-${String(num).padStart(5, '0')}`;
+    return `${codigoProyecto}-${String(num).padStart(5, '0')}`;
   };
 
   const getSizeConfig = () => {
@@ -41,6 +51,10 @@ export default function GenerarQR() {
   };
 
   const generarQRs = async () => {
+    if (!selectedProjectId) {
+      toast.error("Selecciona un proyecto primero");
+      return;
+    }
     if (rangoInicio > rangoFin) {
       toast.error("El rango inicial debe ser menor al final");
       return;
@@ -72,7 +86,7 @@ export default function GenerarQR() {
       }
 
       setQrItems(items);
-      toast.success(`${items.length} códigos QR generados`);
+      toast.success(`${items.length} códigos QR generados para ${proyectoActual?.nombre || 'el proyecto'}`);
     } catch (error) {
       toast.error("Error al generar QR");
       console.error(error);
@@ -91,14 +105,14 @@ export default function GenerarQR() {
       return;
     }
 
-    const { qrSize, fontSize } = getSizeConfig();
+    const { qrSize } = getSizeConfig();
     const cardWidth = tamano === "small" ? "7rem" : tamano === "large" ? "13rem" : "10rem";
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>QR Codes - Objetiva</title>
+          <title>QR Codes - ${proyectoActual?.nombre || 'Objetiva'}</title>
           <style>
             @page {
               size: letter;
@@ -135,6 +149,11 @@ export default function GenerarQR() {
               margin-top: 4px;
               letter-spacing: 1px;
             }
+            .proyecto {
+              font-size: ${tamano === "small" ? "7px" : tamano === "large" ? "10px" : "8px"};
+              color: #666;
+              margin-top: 2px;
+            }
             .logo {
               font-size: ${tamano === "small" ? "8px" : tamano === "large" ? "12px" : "10px"};
               color: #02B381;
@@ -155,6 +174,7 @@ export default function GenerarQR() {
               <div class="qr-card">
                 <img src="${item.qrDataUrl}" alt="${item.codigo}" />
                 <div class="codigo">${item.codigo}</div>
+                <div class="proyecto">${proyectoActual?.nombre || ''}</div>
                 <div class="logo">OBJETIVA</div>
               </div>
             `).join('')}
@@ -183,6 +203,11 @@ export default function GenerarQR() {
           <p className="text-muted-foreground">
             Genera códigos QR por rangos para imprimir y pegar en obra
           </p>
+          {proyectoActual && (
+            <p className="text-sm text-primary font-medium mt-1">
+              Proyecto: {proyectoActual.nombre} (Prefijo: {codigoProyecto})
+            </p>
+          )}
         </div>
 
         <Card>
@@ -192,7 +217,7 @@ export default function GenerarQR() {
               Configuración de Rango
             </CardTitle>
             <CardDescription>
-              Define el rango de códigos OQC a generar (máximo 100 por vez)
+              Define el rango de códigos {codigoProyecto} a generar (máximo 100 por vez)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -237,7 +262,7 @@ export default function GenerarQR() {
               <div className="flex items-end">
                 <Button 
                   onClick={generarQRs} 
-                  disabled={isGenerating}
+                  disabled={isGenerating || !selectedProjectId}
                   className="w-full"
                 >
                   {isGenerating ? (
@@ -254,6 +279,13 @@ export default function GenerarQR() {
                 </Button>
               </div>
             </div>
+
+            {!selectedProjectId && (
+              <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-sm">Selecciona un proyecto del menú lateral para generar QR</span>
+              </div>
+            )}
 
             {rangoFin - rangoInicio > 100 && (
               <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
@@ -297,6 +329,9 @@ export default function GenerarQR() {
                     <div className={`font-bold text-[#002C63] ${fontSize} tracking-wider`}>
                       {item.codigo}
                     </div>
+                    <div className="text-[10px] text-gray-500">
+                      {proyectoActual?.nombre}
+                    </div>
                     <div className="text-[#02B381] text-[10px] font-medium">
                       OBJETIVA
                     </div>
@@ -311,6 +346,7 @@ export default function GenerarQR() {
           <CardContent className="pt-6">
             <h3 className="font-semibold mb-2">Instrucciones de uso:</h3>
             <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+              <li>Selecciona el proyecto en el menú lateral (cada proyecto tiene su propia numeración)</li>
               <li>Define el rango de códigos que necesitas (ej: 1 a 50 para las primeras 50 unidades)</li>
               <li>Selecciona el tamaño según donde los pegarás</li>
               <li>Genera los QR y revisa la vista previa</li>
