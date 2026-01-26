@@ -605,3 +605,9 @@
 - [x] Pantalla de selección de proyecto es la primera después de autenticarse
 - [x] Ruta raíz (/) ahora muestra selección de proyecto
 - [x] Al seleccionar proyecto navega a /bienvenida (dashboard)
+
+## Logo y Portadas de Proyecto (Vigésima Segunda Iteración)
+- [x] Corregir logo de Objetiva que no se muestra
+- [x] Agregar campo imagenPortada en tabla proyectos
+- [x] Permitir subir foto de portada para cada proyecto
+- [x] Mostrar foto de portada en tarjetas de selección de proyecto

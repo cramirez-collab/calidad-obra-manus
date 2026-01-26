@@ -57,7 +57,7 @@ export default function SeleccionProyecto() {
       <header className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="Objetiva" className="h-8" />
+            <img src="/logo-objetiva.jpg" alt="Objetiva" className="h-10" />
             <span className="text-xl font-bold text-slate-800">ObjetivaOQC</span>
           </div>
           
@@ -118,9 +118,16 @@ export default function SeleccionProyecto() {
                   className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 group"
                   onClick={() => handleSelectProject(proyecto)}
                 >
-                  {/* Color Header */}
-                  <div className={`h-24 bg-gradient-to-r ${getProjectColor(index)} relative`}>
-                    <div className="absolute inset-0 bg-black/10" />
+                  {/* Imagen de Portada o Color Header */}
+                  <div className={`h-32 relative ${!proyecto.imagenPortadaUrl ? `bg-gradient-to-r ${getProjectColor(index)}` : ''}`}>
+                    {proyecto.imagenPortadaUrl ? (
+                      <img 
+                        src={proyecto.imagenPortadaUrl} 
+                        alt={proyecto.nombre}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : null}
+                    <div className="absolute inset-0 bg-black/20" />
                     <div className="absolute bottom-3 left-4 right-4">
                       <Badge variant="secondary" className="bg-white/90 text-slate-800">
                         {proyecto.codigo}

@@ -1100,13 +1100,28 @@ export const appRouter = router({
         codigo: z.string().optional(),
         descripcion: z.string().optional(),
         logoUrl: z.string().optional(),
+        imagenPortadaUrl: z.string().optional(),
         direccion: z.string().optional(),
         cliente: z.string().optional(),
         fechaInicio: z.date().optional(),
         fechaFin: z.date().optional(),
       }))
       .mutation(async ({ input }) => {
-        const id = await db.createProyecto(input);
+        let imagenUrl = input.imagenPortadaUrl;
+        
+        // Si la imagen es base64, subirla a storage
+        if (imagenUrl && imagenUrl.startsWith('data:')) {
+          const mimeMatch = imagenUrl.match(/^data:(image\/\w+);base64,/);
+          const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+          const extension = mimeType === 'image/jpeg' ? 'jpg' : mimeType === 'image/png' ? 'png' : 'webp';
+          
+          const imageBuffer = Buffer.from(imagenUrl.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+          const imageKey = `proyectos/${input.codigo || nanoid(6)}/portada-${nanoid(8)}.${extension}`;
+          const { url } = await storagePut(imageKey, imageBuffer, mimeType);
+          imagenUrl = url;
+        }
+        
+        const id = await db.createProyecto({ ...input, imagenPortadaUrl: imagenUrl });
         return { id, success: true };
       }),
     
@@ -1119,6 +1134,7 @@ export const appRouter = router({
         codigo: z.string().optional(),
         descripcion: z.string().optional(),
         logoUrl: z.string().optional(),
+        imagenPortadaUrl: z.string().optional(),
         direccion: z.string().optional(),
         cliente: z.string().optional(),
         fechaInicio: z.date().optional(),
@@ -1204,6 +1220,32 @@ export const appRouter = router({
       .input(z.object({ proyectoId: z.number() }))
       .query(async ({ input }) => {
         return await db.getEspecialidadesByProyecto(input.proyectoId);
+      }),
+    
+    // Subir imagen de portada del proyecto
+    uploadImagenPortada: adminProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        imagenBase64: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const proyecto = await db.getProyectoById(input.proyectoId);
+        if (!proyecto) throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+        
+        // Detectar tipo de imagen
+        const mimeMatch = input.imagenBase64.match(/^data:(image\/\w+);base64,/);
+        const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        const extension = mimeType === 'image/jpeg' ? 'jpg' : mimeType === 'image/png' ? 'png' : 'webp';
+        
+        // Subir imagen
+        const imageBuffer = Buffer.from(input.imagenBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+        const imageKey = `proyectos/${proyecto.codigo || proyecto.id}/portada-${nanoid(8)}.${extension}`;
+        const { url: imageUrl } = await storagePut(imageKey, imageBuffer, mimeType);
+        
+        // Actualizar proyecto
+        await db.updateProyecto(input.proyectoId, { imagenPortadaUrl: imageUrl });
+        
+        return { success: true, url: imageUrl };
       }),
   }),
 

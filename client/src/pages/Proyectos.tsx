@@ -20,7 +20,9 @@ import {
   FolderKanban,
   BarChart3,
   UserPlus,
-  X
+  X,
+  ImagePlus,
+  Upload
 } from "lucide-react";
 
 export default function Proyectos() {
@@ -36,7 +38,9 @@ export default function Proyectos() {
     descripcion: "",
     direccion: "",
     cliente: "",
+    imagenPortadaUrl: "",
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [asignarUsuarioData, setAsignarUsuarioData] = useState({
     usuarioId: "",
     rolEnProyecto: "residente" as "admin" | "supervisor" | "jefe_residente" | "residente",
@@ -112,6 +116,7 @@ export default function Proyectos() {
       descripcion: "",
       direccion: "",
       cliente: "",
+      imagenPortadaUrl: "",
     });
     setEditingProyecto(null);
   };
@@ -125,16 +130,78 @@ export default function Proyectos() {
       descripcion: proyecto.descripcion || "",
       direccion: proyecto.direccion || "",
       cliente: proyecto.cliente || "",
+      imagenPortadaUrl: proyecto.imagenPortadaUrl || "",
     });
     setDialogOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor selecciona una imagen válida');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no debe superar 5MB');
+      return;
+    }
+    
+    setUploadingImage(true);
+    try {
+      // Convertir archivo a base64
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64 = event.target?.result as string;
+        setFormData(prev => ({ ...prev, imagenPortadaUrl: base64 }));
+        toast.success('Imagen cargada correctamente');
+        setUploadingImage(false);
+      };
+      reader.onerror = () => {
+        toast.error('Error al leer la imagen');
+        setUploadingImage(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast.error('Error al cargar la imagen');
+      console.error(error);
+      setUploadingImage(false);
+    }
+  };
+
+  const uploadImageMutation = trpc.proyectos.uploadImagenPortada.useMutation();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    let dataToSend = { ...formData };
+    
+    // Si la imagen es base64 (nueva imagen), necesitamos subirla primero
+    // pero solo si estamos editando un proyecto existente
+    // Para proyectos nuevos, guardamos la URL base64 temporalmente
+    if (formData.imagenPortadaUrl && formData.imagenPortadaUrl.startsWith('data:')) {
+      if (editingProyecto) {
+        // Subir imagen al servidor
+        try {
+          const result = await uploadImageMutation.mutateAsync({
+            proyectoId: editingProyecto.id,
+            imagenBase64: formData.imagenPortadaUrl,
+          });
+          dataToSend.imagenPortadaUrl = result.url;
+        } catch (error) {
+          toast.error('Error al subir la imagen de portada');
+          return;
+        }
+      }
+      // Para proyectos nuevos, enviamos el base64 y el backend lo procesará
+    }
+    
     if (editingProyecto) {
-      updateMutation.mutate({ id: editingProyecto.id, ...formData });
+      updateMutation.mutate({ id: editingProyecto.id, ...dataToSend });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(dataToSend);
     }
   };
 
@@ -274,6 +341,57 @@ export default function Proyectos() {
                   placeholder="Descripción del proyecto..."
                   rows={3}
                 />
+              </div>
+              
+              {/* Imagen de Portada */}
+              <div className="space-y-2">
+                <Label>Imagen de Portada</Label>
+                <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                  {formData.imagenPortadaUrl ? (
+                    <div className="relative">
+                      <img 
+                        src={formData.imagenPortadaUrl} 
+                        alt="Portada" 
+                        className="w-full h-32 object-cover rounded-md"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 h-6 w-6"
+                        onClick={() => setFormData(prev => ({ ...prev, imagenPortadaUrl: "" }))}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer flex flex-col items-center gap-2 py-4">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                      />
+                      {uploadingImage ? (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
+                          <span>Subiendo...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <ImagePlus className="h-8 w-8 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            Haz clic para subir una imagen de portada
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            Esta imagen se mostrará en la tarjeta del proyecto
+                          </span>
+                        </>
+                      )}
+                    </label>
+                  )}
+                </div>
               </div>
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>

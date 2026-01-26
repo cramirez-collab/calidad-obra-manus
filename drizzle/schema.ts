@@ -38,6 +38,7 @@ export const proyectos = mysqlTable("proyectos", {
   codigo: varchar("codigo", { length: 50 }),
   descripcion: text("descripcion"),
   logoUrl: text("logoUrl"),
+  imagenPortadaUrl: text("imagenPortadaUrl"), // Imagen de portada para tarjeta de proyecto
   direccion: varchar("direccion", { length: 500 }),
   cliente: varchar("cliente", { length: 255 }),
   fechaInicio: timestamp("fechaInicio"),
