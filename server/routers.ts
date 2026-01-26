@@ -303,6 +303,19 @@ export const appRouter = router({
         return await db.getUnidadesParaPanoramica(input.proyectoId);
       }),
     
+    // Actualizar orden de unidades (para drag & drop en stacking)
+    updateOrden: adminProcedure
+      .input(z.object({
+        unidades: z.array(z.object({
+          id: z.number(),
+          orden: z.number(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateUnidadesOrden(input.unidades);
+        return { success: true };
+      }),
+
     // Importar unidades desde Excel
     importarExcel: adminProcedure
       .input(z.object({

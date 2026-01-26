@@ -95,6 +95,7 @@ export const unidades = mysqlTable("unidades", {
   nombre: varchar("nombre", { length: 255 }).notNull(),
   codigo: varchar("codigo", { length: 50 }),
   nivel: int("nivel"), // Nivel/piso para vista panorámica
+  orden: int("orden").default(0), // Orden dentro del nivel para drag & drop
   descripcion: text("descripcion"),
   ubicacion: varchar("ubicacion", { length: 255 }),
   fechaInicio: timestamp("fechaInicio"), // Fecha inicio de trabajos

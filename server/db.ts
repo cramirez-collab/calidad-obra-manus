@@ -472,6 +472,7 @@ export async function getUnidadesParaPanoramica(proyectoId: number) {
       nombre: unidad.nombre,
       codigo: unidad.codigo,
       nivel: unidad.nivel || 1,
+      orden: unidad.orden || 0,
       fechaInicio: unidad.fechaInicio,
       fechaFin: unidad.fechaFin,
       estado,
@@ -531,6 +532,16 @@ export async function deleteUnidad(id: number) {
   const db = await getDb();
   if (!db) return;
   await db.update(unidades).set({ activo: false }).where(eq(unidades.id, id));
+}
+
+// Actualizar orden de múltiples unidades (para drag & drop en stacking)
+export async function updateUnidadesOrden(updates: Array<{ id: number; orden: number }>) {
+  const db = await getDb();
+  if (!db) return;
+  
+  for (const update of updates) {
+    await db.update(unidades).set({ orden: update.orden }).where(eq(unidades.id, update.id));
+  }
 }
 
 // ==================== ESPECIALIDADES ====================

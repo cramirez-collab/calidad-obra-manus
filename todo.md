@@ -624,3 +624,10 @@
 - [x] Verificar vinculación de Defectos a proyecto
 - [ ] Verificar estructura completa de Items con filtros
 - [ ] Asegurar reportes muestren datos reales del proyecto
+
+
+## Mejoras Stacking y Configuración (Ene 26)
+- [x] Corregir submenú Configuración para que se despliegue
+- [x] Implementar drag & drop en Stacking con espacios vacíos
+- [x] Permitir insertar unidades intermedias en Stacking
+- [x] Interacción móvil: tap para stats, segundo tap para ítems
