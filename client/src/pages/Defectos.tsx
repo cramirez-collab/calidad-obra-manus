@@ -138,6 +138,10 @@ export default function Defectos() {
       toast.error("El nombre es requerido");
       return;
     }
+    if (!selectedProjectId) {
+      toast.error("Debes seleccionar un proyecto primero");
+      return;
+    }
     createMutation.mutate({
       nombre: formData.nombre,
       codigo: formData.codigo || undefined,
@@ -145,6 +149,7 @@ export default function Defectos() {
       especialidadId: formData.especialidadId || undefined,
       severidad: formData.severidad as any,
       tiempoEstimadoResolucion: formData.tiempoEstimadoResolucion || undefined,
+      proyectoId: selectedProjectId,
     });
   };
 

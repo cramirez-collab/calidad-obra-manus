@@ -617,3 +617,10 @@
 - [x] Actualizar PWA para mostrar ícono correcto en instalación
 - [x] BUG: Especialidades no se muestran después de crear
 - [x] BUG: Especialidades no se vinculan a proyecto
+- [x] BUG: Empresas no se muestran después de crear - vincular a proyecto
+- [x] BUG: Usuarios no se muestran después de crear - vincular a proyecto
+- [x] Verificar vinculación de Unidades a proyecto y empresa
+- [x] Verificar vinculación de Atributos a proyecto
+- [x] Verificar vinculación de Defectos a proyecto
+- [ ] Verificar estructura completa de Items con filtros
+- [ ] Asegurar reportes muestren datos reales del proyecto

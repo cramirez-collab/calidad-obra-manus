@@ -106,9 +106,19 @@ export const appRouter = router({
         password: z.string().min(6),
         role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente']),
         empresaId: z.number().nullable().optional(),
+        proyectoId: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
-        const id = await db.createUserWithPassword(input);
+        const { proyectoId, ...userData } = input;
+        const id = await db.createUserWithPassword(userData);
+        // Si se especificó un proyecto, asignar el usuario al proyecto
+        if (proyectoId && id) {
+          await db.asignarUsuarioAProyecto({
+            proyectoId,
+            usuarioId: id,
+            rolEnProyecto: input.role === 'superadmin' ? 'admin' : input.role as any,
+          });
+        }
         return { id, success: true };
       }),
     
@@ -1003,6 +1013,7 @@ export const appRouter = router({
         especialidadId: z.number().optional(),
         severidad: z.enum(['leve', 'moderado', 'grave', 'critico']).optional(),
         tiempoEstimadoResolucion: z.number().optional(),
+        proyectoId: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const id = await db.createDefecto(input);

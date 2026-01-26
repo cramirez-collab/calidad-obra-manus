@@ -142,12 +142,17 @@ export default function Usuarios() {
       toast.error("La contraseña debe tener al menos 6 caracteres");
       return;
     }
+    if (!selectedProjectId) {
+      toast.error("Debes seleccionar un proyecto primero");
+      return;
+    }
     createUserMutation.mutate({
       name: formData.name,
       email: formData.email || undefined,
       password: formData.password,
       role: formData.role as any,
       empresaId: formData.empresaId,
+      proyectoId: selectedProjectId,
     });
   };
 

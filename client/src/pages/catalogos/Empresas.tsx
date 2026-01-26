@@ -134,13 +134,21 @@ export default function Empresas() {
       return;
     }
 
+    // Usar el proyecto seleccionado del contexto si no se especificó uno
+    const proyectoIdFinal = formData.proyectoId ? parseInt(formData.proyectoId) : selectedProjectId;
+    
+    if (!proyectoIdFinal && !editingEmpresa) {
+      toast.error("Debes seleccionar un proyecto primero");
+      return;
+    }
+
     const data = {
       nombre: formData.nombre,
       rfc: formData.rfc || undefined,
       contacto: formData.contacto || undefined,
       telefono: formData.telefono || undefined,
       email: formData.email || undefined,
-      proyectoId: formData.proyectoId ? parseInt(formData.proyectoId) : undefined,
+      proyectoId: proyectoIdFinal || undefined,
     };
 
     if (editingEmpresa) {

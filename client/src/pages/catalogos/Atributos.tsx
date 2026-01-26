@@ -116,11 +116,16 @@ export default function Atributos() {
       nombre: formData.nombre,
       categoria: formData.categoria || undefined,
       descripcion: formData.descripcion || undefined,
+      proyectoId: selectedProjectId || undefined,
     };
 
     if (editingAtributo) {
       updateMutation.mutate({ id: editingAtributo.id, ...data });
     } else {
+      if (!selectedProjectId) {
+        toast.error("Debes seleccionar un proyecto primero");
+        return;
+      }
       createMutation.mutate(data);
     }
   };

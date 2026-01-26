@@ -120,11 +120,16 @@ export default function Unidades() {
       codigo: formData.codigo || undefined,
       descripcion: formData.descripcion || undefined,
       ubicacion: formData.ubicacion || undefined,
+      proyectoId: selectedProjectId || undefined,
     };
 
     if (editingUnidad) {
       updateMutation.mutate({ id: editingUnidad.id, ...data });
     } else {
+      if (!selectedProjectId) {
+        toast.error("Debes seleccionar un proyecto primero");
+        return;
+      }
       createMutation.mutate(data);
     }
   };
