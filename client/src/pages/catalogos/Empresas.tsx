@@ -156,7 +156,7 @@ export default function Empresas() {
       telefono: formData.telefono || undefined,
       email: formData.email || undefined,
       proyectoId: proyectoIdFinal || undefined,
-      especialidadId: formData.especialidadId ? parseInt(formData.especialidadId) : undefined,
+      especialidadId: formData.especialidadId && formData.especialidadId !== 'none' ? parseInt(formData.especialidadId) : undefined,
     };
 
     if (editingEmpresa) {
@@ -313,7 +313,7 @@ export default function Empresas() {
                       <SelectValue placeholder="Seleccionar especialidad" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Sin especialidad</SelectItem>
+                      <SelectItem value="none">Sin especialidad</SelectItem>
                       {especialidades?.map((especialidad) => (
                         <SelectItem key={especialidad.id} value={especialidad.id.toString()}>
                           {especialidad.nombre}
