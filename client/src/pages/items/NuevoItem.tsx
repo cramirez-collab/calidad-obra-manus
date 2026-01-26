@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -17,42 +16,34 @@ import {
   Camera, 
   Upload, 
   ArrowLeft, 
-  ArrowRight, 
   Check,
   Pencil,
-  Image as ImageIcon
+  X
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
 
-type Step = "info" | "foto" | "marcado" | "confirmar";
-
 export default function NuevoItem() {
   const [, setLocation] = useLocation();
   const { selectedProjectId } = useProject();
-  const [step, setStep] = useState<Step>("info");
   const [formData, setFormData] = useState({
-    proyectoId: "",
     empresaId: "",
     unidadId: "",
     especialidadId: "",
-    atributoId: "",
     defectoId: "",
+    espacioId: "",
     titulo: "",
-    descripcion: "",
-    ubicacionDetalle: "",
-    comentarioResidente: "",
   });
   const [fotoAntes, setFotoAntes] = useState<string | null>(null);
   const [fotoAntesMarcada, setFotoAntesMarcada] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showMarker, setShowMarker] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: proyectos } = trpc.proyectos.list.useQuery();
   // Obtener datos filtrados por proyecto desde el backend
   const { data: empresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
@@ -66,24 +57,35 @@ export default function NuevoItem() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
-  const { data: atributos } = trpc.atributos.list.useQuery();
   
-  // Sincronizar proyectoId del formulario con el proyecto seleccionado
-  useEffect(() => {
-    if (selectedProjectId && formData.proyectoId !== selectedProjectId.toString()) {
-      setFormData(prev => ({ ...prev, proyectoId: selectedProjectId.toString() }));
-    }
-  }, [selectedProjectId]);
+  // Espacios filtrados por unidad seleccionada
+  const { data: espacios } = trpc.espacios.byUnidad.useQuery(
+    { unidadId: parseInt(formData.unidadId) },
+    { enabled: !!formData.unidadId }
+  );
   
   // Defectos filtrados por especialidad seleccionada
   const { data: defectos } = trpc.defectos.byEspecialidad.useQuery(
     { especialidadId: parseInt(formData.especialidadId) },
     { enabled: !!formData.especialidadId }
   );
-  const { data: todosDefectos } = trpc.defectos.list.useQuery();
 
   const createItemMutation = trpc.items.create.useMutation();
   const uploadFotoMutation = trpc.items.uploadFotoAntes.useMutation();
+
+  // Auto-seleccionar especialidad cuando se selecciona empresa
+  useEffect(() => {
+    if (formData.empresaId && empresas) {
+      const empresa = empresas.find(e => e.id.toString() === formData.empresaId);
+      if (empresa?.especialidadId) {
+        setFormData(prev => ({ 
+          ...prev, 
+          especialidadId: empresa.especialidadId!.toString(),
+          defectoId: "" // Reset defecto al cambiar especialidad
+        }));
+      }
+    }
+  }, [formData.empresaId, empresas]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -97,50 +99,23 @@ export default function NuevoItem() {
     const reader = new FileReader();
     reader.onload = (event) => {
       setFotoAntes(event.target?.result as string);
-      setStep("marcado");
+      setFotoAntesMarcada(null);
     };
     reader.readAsDataURL(file);
   };
 
   const handleMarkedImage = (markedImageBase64: string) => {
     setFotoAntesMarcada(markedImageBase64);
-    setStep("confirmar");
-  };
-
-  const skipMarking = () => {
-    setFotoAntesMarcada(null);
-    setStep("confirmar");
-  };
-
-  const validateStep = (currentStep: Step): boolean => {
-    if (currentStep === "info") {
-      if (!formData.proyectoId || !formData.empresaId || !formData.unidadId || !formData.especialidadId || !formData.titulo) {
-        toast.error("Por favor completa todos los campos requeridos");
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const nextStep = () => {
-    if (!validateStep(step)) return;
-
-    const steps: Step[] = ["info", "foto", "marcado", "confirmar"];
-    const currentIndex = steps.indexOf(step);
-    if (currentIndex < steps.length - 1) {
-      setStep(steps[currentIndex + 1]);
-    }
-  };
-
-  const prevStep = () => {
-    const steps: Step[] = ["info", "foto", "marcado", "confirmar"];
-    const currentIndex = steps.indexOf(step);
-    if (currentIndex > 0) {
-      setStep(steps[currentIndex - 1]);
-    }
+    setShowMarker(false);
   };
 
   const handleSubmit = async () => {
+    // Validación mínima
+    if (!formData.empresaId || !formData.unidadId || !formData.titulo) {
+      toast.error("Por favor completa: Empresa, Unidad y Título");
+      return;
+    }
+
     if (!fotoAntes) {
       toast.error("Se requiere una foto");
       return;
@@ -150,16 +125,13 @@ export default function NuevoItem() {
     try {
       // Crear el ítem
       const result = await createItemMutation.mutateAsync({
-        proyectoId: parseInt(formData.proyectoId),
+        proyectoId: selectedProjectId || 0,
         empresaId: parseInt(formData.empresaId),
         unidadId: parseInt(formData.unidadId),
-        especialidadId: parseInt(formData.especialidadId),
-        atributoId: formData.atributoId ? parseInt(formData.atributoId) : undefined,
+        especialidadId: formData.especialidadId ? parseInt(formData.especialidadId) : undefined,
         defectoId: formData.defectoId ? parseInt(formData.defectoId) : undefined,
+        espacioId: formData.espacioId ? parseInt(formData.espacioId) : undefined,
         titulo: formData.titulo,
-        descripcion: formData.descripcion || undefined,
-        ubicacionDetalle: formData.ubicacionDetalle || undefined,
-        comentarioResidente: formData.comentarioResidente || undefined,
       });
 
       // Subir las fotos
@@ -178,346 +150,11 @@ export default function NuevoItem() {
     }
   };
 
-  const getStepNumber = () => {
-    const steps: Step[] = ["info", "foto", "marcado", "confirmar"];
-    return steps.indexOf(step) + 1;
-  };
-
-  return (
-    <DashboardLayout>
-      <div className="max-w-3xl mx-auto space-y-6">
-        {/* Header con progreso */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Nuevo Ítem de Calidad</h1>
-            <p className="text-muted-foreground">
-              Paso {getStepNumber()} de 4
-            </p>
-          </div>
-          <Button variant="ghost" onClick={() => setLocation("/items")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Cancelar
-          </Button>
-        </div>
-
-        {/* Progress bar */}
-        <div className="flex gap-2">
-          {["info", "foto", "marcado", "confirmar"].map((s, i) => (
-            <div
-              key={s}
-              className={`h-2 flex-1 rounded-full transition-colors ${
-                i < getStepNumber() ? "bg-primary" : "bg-muted"
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* Step: Información */}
-        {step === "info" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Información del Ítem</CardTitle>
-              <CardDescription>
-                Ingresa los datos básicos del problema detectado
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Selector de Proyecto */}
-              <div className="grid gap-2">
-                <Label>Proyecto *</Label>
-                <Select
-                  value={formData.proyectoId}
-                  onValueChange={(value) => setFormData({ 
-                    ...formData, 
-                    proyectoId: value,
-                    empresaId: "",
-                    unidadId: "",
-                    especialidadId: "",
-                    defectoId: ""
-                  })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar proyecto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {proyectos?.map((proyecto) => (
-                      <SelectItem key={proyecto.id} value={proyecto.id.toString()}>
-                        {proyecto.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="titulo">Título del problema *</Label>
-                <Input
-                  id="titulo"
-                  value={formData.titulo}
-                  onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                  placeholder="Ej: Fisura en muro de baño"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Empresa *</Label>
-                  <Select
-                    value={formData.empresaId}
-                    onValueChange={(value) => setFormData({ ...formData, empresaId: value })}
-                    disabled={!formData.proyectoId}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={formData.proyectoId ? "Seleccionar empresa" : "Selecciona proyecto primero"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {empresas?.map((empresa) => (
-                        <SelectItem key={empresa.id} value={empresa.id.toString()}>
-                          {empresa.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label>Unidad *</Label>
-                  <Select
-                    value={formData.unidadId}
-                    onValueChange={(value) => setFormData({ ...formData, unidadId: value })}
-                    disabled={!formData.proyectoId}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={formData.proyectoId ? "Seleccionar unidad" : "Selecciona proyecto primero"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {unidades?.map((unidad) => (
-                        <SelectItem key={unidad.id} value={unidad.id.toString()}>
-                          {unidad.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Especialidad *</Label>
-                  <Select
-                    value={formData.especialidadId}
-                    onValueChange={(value) => setFormData({ ...formData, especialidadId: value, defectoId: "" })}
-                    disabled={!formData.proyectoId}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={formData.proyectoId ? "Seleccionar especialidad" : "Selecciona proyecto primero"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {especialidades?.map((esp) => (
-                        <SelectItem key={esp.id} value={esp.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="h-3 w-3 rounded-full"
-                              style={{ backgroundColor: esp.color || "#3B82F6" }}
-                            />
-                            {esp.nombre}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label>Atributo/Tipo</Label>
-                  <Select
-                    value={formData.atributoId}
-                    onValueChange={(value) => setFormData({ ...formData, atributoId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar (opcional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {atributos?.map((attr) => (
-                        <SelectItem key={attr.id} value={attr.id.toString()}>
-                          {attr.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label>Tipo de Defecto</Label>
-                <Select
-                  value={formData.defectoId}
-                  onValueChange={(value) => setFormData({ ...formData, defectoId: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar defecto (opcional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {formData.especialidadId && defectos && defectos.length > 0 ? (
-                      defectos.map((def) => (
-                        <SelectItem key={def.id} value={def.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <span className={`h-2 w-2 rounded-full ${
-                              def.severidad === 'leve' ? 'bg-green-500' :
-                              def.severidad === 'moderado' ? 'bg-yellow-500' :
-                              def.severidad === 'grave' ? 'bg-orange-500' : 'bg-red-500'
-                            }`} />
-                            {def.nombre}
-                          </div>
-                        </SelectItem>
-                      ))
-                    ) : todosDefectos?.map((def) => (
-                      <SelectItem key={def.id} value={def.id.toString()}>
-                        <div className="flex items-center gap-2">
-                          <span className={`h-2 w-2 rounded-full ${
-                            def.severidad === 'leve' ? 'bg-green-500' :
-                            def.severidad === 'moderado' ? 'bg-yellow-500' :
-                            def.severidad === 'grave' ? 'bg-orange-500' : 'bg-red-500'
-                          }`} />
-                          {def.nombre}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Selecciona una especialidad para ver defectos relacionados
-                </p>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="ubicacion">Ubicación específica</Label>
-                <Input
-                  id="ubicacion"
-                  value={formData.ubicacionDetalle}
-                  onChange={(e) => setFormData({ ...formData, ubicacionDetalle: e.target.value })}
-                  placeholder="Ej: Muro norte, junto a la ventana"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="descripcion">Descripción</Label>
-                <Textarea
-                  id="descripcion"
-                  value={formData.descripcion}
-                  onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                  placeholder="Describe el problema con más detalle..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="comentario">Comentario adicional</Label>
-                <Textarea
-                  id="comentario"
-                  value={formData.comentarioResidente}
-                  onChange={(e) => setFormData({ ...formData, comentarioResidente: e.target.value })}
-                  placeholder="Notas o comentarios adicionales..."
-                  rows={2}
-                />
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <Button onClick={nextStep}>
-                  Siguiente
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step: Foto */}
-        {step === "foto" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Captura de Foto "Antes"</CardTitle>
-              <CardDescription>
-                Toma o selecciona una foto del problema
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-
-              {fotoAntes ? (
-                <div className="space-y-4">
-                  <div className="relative rounded-lg overflow-hidden border">
-                    <img
-                      src={fotoAntes}
-                      alt="Foto antes"
-                      className="w-full h-auto max-h-[400px] object-contain bg-slate-100"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setFotoAntes(null);
-                        setFotoAntesMarcada(null);
-                      }}
-                    >
-                      Cambiar foto
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    variant="outline"
-                    className="h-32 flex-col gap-2"
-                    onClick={() => cameraInputRef.current?.click()}
-                  >
-                    <Camera className="h-8 w-8" />
-                    <span>Tomar Foto</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-32 flex-col gap-2"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="h-8 w-8" />
-                    <span>Subir Imagen</span>
-                  </Button>
-                </div>
-              )}
-
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={prevStep}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Anterior
-                </Button>
-                {fotoAntes && (
-                  <Button onClick={nextStep}>
-                    Siguiente
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step: Marcado */}
-        {step === "marcado" && fotoAntes && (
+  // Modal de marcado
+  if (showMarker && fotoAntes) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-4xl mx-auto">
           <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2">
@@ -533,108 +170,269 @@ export default function NuevoItem() {
                 <ImageMarker
                   imageUrl={fotoAntes}
                   onSave={handleMarkedImage}
-                  onCancel={() => setStep("foto")}
+                  onCancel={() => setShowMarker(false)}
                 />
               </div>
-              <div className="p-4 border-t flex justify-between">
-                <Button variant="outline" onClick={prevStep}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Anterior
-                </Button>
-                <Button variant="ghost" onClick={skipMarking}>
-                  Omitir marcado
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </div>
             </CardContent>
           </Card>
-        )}
+        </div>
+      </DashboardLayout>
+    );
+  }
 
-        {/* Step: Confirmar */}
-        {step === "confirmar" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Confirmar y Crear</CardTitle>
-              <CardDescription>
-                Revisa la información antes de crear el ítem
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Resumen */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-3">
-                  <h3 className="font-semibold">Información</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Título:</span>
-                      <span className="font-medium">{formData.titulo}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Empresa:</span>
-                      <span>{empresas?.find(e => e.id.toString() === formData.empresaId)?.nombre}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Unidad:</span>
-                      <span>{unidades?.find(u => u.id.toString() === formData.unidadId)?.nombre}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Especialidad:</span>
-                      <span>{especialidades?.find(e => e.id.toString() === formData.especialidadId)?.nombre}</span>
-                    </div>
-                    {formData.ubicacionDetalle && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Ubicación:</span>
-                        <span>{formData.ubicacionDetalle}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+  return (
+    <DashboardLayout>
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Nuevo Ítem de Calidad</h1>
+            <p className="text-muted-foreground">
+              Registra un problema detectado
+            </p>
+          </div>
+          <Button variant="ghost" onClick={() => setLocation("/items")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Cancelar
+          </Button>
+        </div>
 
-                <div className="space-y-3">
-                  <h3 className="font-semibold">Foto</h3>
-                  <div className="rounded-lg overflow-hidden border bg-slate-100">
-                    <img
-                      src={fotoAntesMarcada || fotoAntes || ""}
-                      alt="Foto del problema"
-                      className="w-full h-48 object-contain"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {fotoAntesMarcada ? "Con marcado" : "Sin marcado"}
-                  </p>
-                </div>
+        <Card>
+          <CardContent className="pt-6 space-y-6">
+            {/* Inputs ocultos para cámara/archivo */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+
+            {/* Título */}
+            <div className="grid gap-2">
+              <Label htmlFor="titulo">Título del problema *</Label>
+              <Input
+                id="titulo"
+                value={formData.titulo}
+                onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                placeholder="Ej: Fisura en muro de baño"
+              />
+            </div>
+
+            {/* Empresa y Unidad */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Empresa *</Label>
+                <Select
+                  value={formData.empresaId}
+                  onValueChange={(value) => setFormData({ ...formData, empresaId: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {empresas?.map((empresa) => (
+                      <SelectItem key={empresa.id} value={empresa.id.toString()}>
+                        {empresa.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {formData.descripcion && (
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-sm">Descripción</h3>
-                  <p className="text-sm text-muted-foreground">{formData.descripcion}</p>
+              <div className="grid gap-2">
+                <Label>Unidad *</Label>
+                <Select
+                  value={formData.unidadId}
+                  onValueChange={(value) => setFormData({ ...formData, unidadId: value, espacioId: "" })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar unidad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {unidades?.map((unidad) => (
+                      <SelectItem key={unidad.id} value={unidad.id.toString()}>
+                        {unidad.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Especialidad y Defecto (cascada) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Especialidad</Label>
+                <Select
+                  value={formData.especialidadId}
+                  onValueChange={(value) => setFormData({ ...formData, especialidadId: value, defectoId: "" })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Auto o seleccionar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {especialidades?.map((esp) => (
+                      <SelectItem key={esp.id} value={esp.id.toString()}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: esp.color || "#3B82F6" }}
+                          />
+                          {esp.nombre}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Se selecciona automáticamente según la empresa
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Tipo de Defecto</Label>
+                <Select
+                  value={formData.defectoId}
+                  onValueChange={(value) => setFormData({ ...formData, defectoId: value })}
+                  disabled={!formData.especialidadId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={formData.especialidadId ? "Seleccionar defecto" : "Selecciona especialidad"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {defectos?.map((def) => (
+                      <SelectItem key={def.id} value={def.id.toString()}>
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full ${
+                            def.severidad === 'leve' ? 'bg-green-500' :
+                            def.severidad === 'moderado' ? 'bg-yellow-500' :
+                            def.severidad === 'grave' ? 'bg-orange-500' : 'bg-red-500'
+                          }`} />
+                          {def.nombre}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Espacio */}
+            <div className="grid gap-2">
+              <Label>Espacio</Label>
+              <Select
+                value={formData.espacioId}
+                onValueChange={(value) => setFormData({ ...formData, espacioId: value })}
+                disabled={!formData.unidadId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={formData.unidadId ? "Seleccionar espacio" : "Selecciona unidad primero"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {espacios?.map((espacio) => (
+                    <SelectItem key={espacio.id} value={espacio.id.toString()}>
+                      {espacio.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Sala, Cocina, Recámara, Baño, etc.
+              </p>
+            </div>
+
+            {/* Foto */}
+            <div className="grid gap-2">
+              <Label>Foto del problema *</Label>
+              {fotoAntes ? (
+                <div className="space-y-3">
+                  <div className="relative rounded-lg overflow-hidden border bg-slate-100">
+                    <img
+                      src={fotoAntesMarcada || fotoAntes}
+                      alt="Foto del problema"
+                      className="w-full h-auto max-h-[300px] object-contain"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-8 w-8"
+                      onClick={() => {
+                        setFotoAntes(null);
+                        setFotoAntesMarcada(null);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowMarker(true)}
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      {fotoAntesMarcada ? "Editar marcado" : "Marcar problema"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => cameraInputRef.current?.click()}
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Cambiar foto
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    variant="outline"
+                    className="h-24 flex-col gap-2"
+                    onClick={() => cameraInputRef.current?.click()}
+                  >
+                    <Camera className="h-6 w-6" />
+                    <span className="text-sm">Tomar Foto</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-24 flex-col gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-6 w-6" />
+                    <span className="text-sm">Subir Imagen</span>
+                  </Button>
                 </div>
               )}
+            </div>
 
-              <div className="flex justify-between pt-4 border-t">
-                <Button variant="outline" onClick={prevStep}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Anterior
-                </Button>
-                <Button 
-                  onClick={handleSubmit} 
-                  disabled={isSubmitting}
-                  className="bg-emerald-600 hover:bg-emerald-700"
-                >
-                  {isSubmitting ? (
-                    "Creando..."
-                  ) : (
-                    <>
-                      <Check className="h-4 w-4 mr-2" />
-                      Crear Ítem
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+            {/* Botón de crear */}
+            <div className="flex justify-end pt-4 border-t">
+              <Button 
+                onClick={handleSubmit} 
+                disabled={isSubmitting || !fotoAntes || !formData.titulo || !formData.empresaId || !formData.unidadId}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                {isSubmitting ? (
+                  "Creando..."
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Crear Ítem
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );

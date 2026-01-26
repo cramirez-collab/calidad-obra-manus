@@ -697,3 +697,26 @@
 - [x] Agregar Espacios al menú de configuración
 - [x] Actualizar UI de especialidades para agregar residente responsable
 - [ ] Integrar espacios en formulario de nuevo ítem
+
+## Simplificación del formulario de Nuevo Ítem (Enero 26)
+- [ ] QR de ítem: agregar opción de foto "después" y validar
+- [ ] Empresa → Especialidad automática al seleccionar empresa
+- [ ] Proyecto automático (sin selector, usa el proyecto activo)
+- [ ] Tipo de problema opcional (no obligatorio)
+- [ ] Eliminar campo de atributos del formulario
+- [ ] Defectos en cascada por especialidad con sugerencias típicas
+- [ ] Reemplazar "Ubicación Específica" por selector de Espacios
+- [ ] Eliminar campos descripción y comentario adicional
+- [ ] Formulario en una sola pantalla (sin botón "Siguiente")
+
+
+## Simplificación del formulario de nuevo ítem (Enero 2026)
+- [x] Eliminar selector de proyecto (usar proyecto activo automáticamente)
+- [x] Empresa → Especialidad automática
+- [x] Tipo de problema opcional (defectoId opcional)
+- [x] Eliminar atributos del formulario
+- [x] Defectos en cascada por especialidad
+- [x] Espacios en lugar de "Ubicación Específica"
+- [x] Eliminar descripción y comentario
+- [x] Formulario en una sola pantalla con fotos
+- [x] QR de ítem: agregar opción de foto "después" y validar

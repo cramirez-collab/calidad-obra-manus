@@ -159,8 +159,8 @@ export async function getResidenteConDatosCompletos(userId: number) {
   // Obtener todos los ítems del residente
   const itemsResidente = await db.select().from(items).where(eq(items.residenteId, userId));
   
-  // Obtener especialidades únicas de los ítems del residente
-  const especialidadIds = Array.from(new Set(itemsResidente.map(i => i.especialidadId)));
+  // Obtener especialidades únicas de los ítems del residente (filtrar nulls)
+  const especialidadIds = Array.from(new Set(itemsResidente.map(i => i.especialidadId).filter((id): id is number => id !== null)));
   const especialidadesResidente = especialidadIds.length > 0 
     ? await db.select().from(especialidades).where(inArray(especialidades.id, especialidadIds))
     : [];
@@ -394,8 +394,8 @@ export async function getUnidadConDatosCompletos(id: number) {
     ? await db.select().from(empresas).where(inArray(empresas.id, empresaIds))
     : [];
   
-  // Obtener especialidades únicas de los ítems
-  const especialidadIds = Array.from(new Set(itemsUnidad.map(i => i.especialidadId)));
+  // Obtener especialidades únicas de los ítems (filtrar nulls)
+  const especialidadIds = Array.from(new Set(itemsUnidad.map(i => i.especialidadId).filter((id): id is number => id !== null)));
   const especialidadesUnidad = especialidadIds.length > 0
     ? await db.select().from(especialidades).where(inArray(especialidades.id, especialidadIds))
     : [];
@@ -1803,7 +1803,7 @@ export async function getItemsParaReporte(filters: ItemFilters = {}) {
     ...item,
     empresa: empresasMap.get(item.empresaId),
     unidad: unidadesMap.get(item.unidadId),
-    especialidad: especialidadesMap.get(item.especialidadId),
+    especialidad: item.especialidadId ? especialidadesMap.get(item.especialidadId) : null,
     atributo: item.atributoId ? atributosMap.get(item.atributoId) : null,
     defecto: item.defectoId ? defectosMap.get(item.defectoId) : null,
     residente: usuariosMap.get(item.residenteId),

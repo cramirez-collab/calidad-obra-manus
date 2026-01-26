@@ -332,7 +332,7 @@ export default function ItemsList() {
           ) : (
             data?.items.map((item) => {
               const StatusIcon = statusIcons[item.status];
-              const especialidad = getEspecialidadInfo(item.especialidadId);
+              const especialidad = item.especialidadId ? getEspecialidadInfo(item.especialidadId) : null;
               
               return (
                 <Card 

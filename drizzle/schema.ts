@@ -177,9 +177,10 @@ export const items = mysqlTable("items", {
   proyectoId: int("proyectoId"), // Relación con proyecto
   empresaId: int("empresaId").notNull(),
   unidadId: int("unidadId").notNull(),
-  especialidadId: int("especialidadId").notNull(),
+  especialidadId: int("especialidadId"), // Opcional
   atributoId: int("atributoId"),
   defectoId: int("defectoId"), // Relación con catálogo de defectos
+  espacioId: int("espacioId"), // Relación con espacio (Sala, Cocina, etc.)
   
   // Usuarios involucrados
   residenteId: int("residenteId").notNull(),

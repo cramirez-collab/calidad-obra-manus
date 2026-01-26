@@ -1,9 +1,8 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { 
-  ArrowLeft, 
   Camera, 
   CheckCircle2, 
   XCircle, 
@@ -12,9 +11,15 @@ import {
   MapPin,
   Wrench,
   Calendar,
-  ClipboardCheck
+  ClipboardCheck,
+  Upload,
+  Check,
+  X
 } from "lucide-react";
-import { useParams, useLocation } from "wouter";
+import { useParams } from "wouter";
+import { useState, useRef } from "react";
+import { toast } from "sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const statusLabels: Record<string, string> = {
   pendiente_foto_despues: "En Proceso - Pendiente Corrección",
@@ -46,12 +51,50 @@ const statusIcons: Record<string, typeof Clock> = {
 
 export default function Seguimiento() {
   const { codigo } = useParams<{ codigo: string }>();
-  const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [fotoDespues, setFotoDespues] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUploadSection, setShowUploadSection] = useState(false);
 
+  const utils = trpc.useUtils();
   const { data: item, isLoading, error } = trpc.items.getByCodigo.useQuery(
     { codigo: codigo || "" },
     { enabled: !!codigo }
   );
+
+  const uploadFotoDespuesMutation = trpc.items.uploadFotoDespues.useMutation({
+    onSuccess: () => {
+      utils.items.getByCodigo.invalidate({ codigo: codigo || "" });
+      toast.success("Foto después agregada correctamente");
+      setFotoDespues(null);
+      setShowUploadSection(false);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const aprobarMutation = trpc.items.aprobar.useMutation({
+    onSuccess: () => {
+      utils.items.getByCodigo.invalidate({ codigo: codigo || "" });
+      toast.success("Ítem aprobado correctamente");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const rechazarMutation = trpc.items.rechazar.useMutation({
+    onSuccess: () => {
+      utils.items.getByCodigo.invalidate({ codigo: codigo || "" });
+      toast.success("Ítem rechazado");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return "-";
@@ -63,6 +106,67 @@ export default function Seguimiento() {
     const mins = String(d.getMinutes()).padStart(2, '0');
     return `${day}-${month}-${year} ${hours}:${mins}`;
   };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setFotoDespues(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadFotoDespues = async () => {
+    if (!fotoDespues || !item) {
+      toast.error("Selecciona una foto");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await uploadFotoDespuesMutation.mutateAsync({
+        itemId: item.id,
+        fotoBase64: fotoDespues,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAprobar = async () => {
+    if (!item) return;
+    setIsSubmitting(true);
+    try {
+      await aprobarMutation.mutateAsync({ itemId: item.id });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRechazar = async () => {
+    if (!item) return;
+    setIsSubmitting(true);
+    try {
+      await rechazarMutation.mutateAsync({ itemId: item.id, comentario: "Rechazado desde QR" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Determinar permisos del usuario
+  const canUploadFotoDespues = user && (
+    user.role === "admin" || 
+    user.role === "superadmin" || 
+    user.role === "jefe_residente" ||
+    user.role === "residente"
+  );
+
+  const canValidate = user && (
+    user.role === "admin" || 
+    user.role === "superadmin" || 
+    user.role === "supervisor"
+  );
 
   if (isLoading) {
     return (
@@ -133,6 +237,122 @@ export default function Seguimiento() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Acciones rápidas para usuarios autenticados */}
+        {user && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                Acciones Rápidas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Subir foto después */}
+              {item.status === "pendiente_foto_despues" && canUploadFotoDespues && (
+                <div className="space-y-3">
+                  {!showUploadSection ? (
+                    <Button 
+                      onClick={() => setShowUploadSection(true)}
+                      className="w-full"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Subir Foto Después (Corrección)
+                    </Button>
+                  ) : (
+                    <div className="space-y-3 p-4 bg-white rounded-lg border">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                      />
+                      
+                      {fotoDespues ? (
+                        <div className="space-y-3">
+                          <img 
+                            src={fotoDespues} 
+                            alt="Preview" 
+                            className="w-full max-h-48 object-contain rounded-lg border"
+                          />
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              className="flex-1"
+                              onClick={() => {
+                                setFotoDespues(null);
+                                setShowUploadSection(false);
+                              }}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button 
+                              className="flex-1"
+                              onClick={handleUploadFotoDespues}
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? "Subiendo..." : "Confirmar"}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          className="w-full h-24 border-dashed"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <div className="text-center">
+                            <Camera className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                            <span className="text-sm">Tomar o seleccionar foto</span>
+                          </div>
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Validar (aprobar/rechazar) */}
+              {item.status === "pendiente_aprobacion" && canValidate && (
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline"
+                    className="flex-1 border-red-200 text-red-600 hover:bg-red-50"
+                    onClick={handleRechazar}
+                    disabled={isSubmitting}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Rechazar
+                  </Button>
+                  <Button 
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                    onClick={handleAprobar}
+                    disabled={isSubmitting}
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Aprobar
+                  </Button>
+                </div>
+              )}
+
+              {/* Mensaje si ya está aprobado o rechazado */}
+              {(item.status === "aprobado" || item.status === "rechazado") && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Este ítem ya ha sido {item.status === "aprobado" ? "aprobado" : "rechazado"}.
+                </p>
+              )}
+
+              {/* Mensaje si no tiene permisos */}
+              {!canUploadFotoDespues && !canValidate && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Inicia sesión para realizar acciones en este ítem.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Item Info */}
         <Card>

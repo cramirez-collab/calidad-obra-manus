@@ -262,7 +262,7 @@ export default function ItemDetail() {
     );
   }
 
-  const especialidad = getEspecialidadInfo(item.especialidadId);
+  const especialidad = item.especialidadId ? getEspecialidadInfo(item.especialidadId) : null;
 
   return (
     <DashboardLayout>
