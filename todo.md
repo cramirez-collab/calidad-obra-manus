@@ -651,3 +651,8 @@
 - [x] Corregir especialidades.list para filtrar por proyectoId en backend
 - [x] Actualizar todas las páginas frontend para pasar proyectoId a las queries
 - [x] Verificar aislamiento correcto de datos por proyecto
+
+## BUG: Ruta /proyectos/nuevo no existe
+- [x] Verificar si la ruta está registrada en App.tsx
+- [x] Crear página NuevoProyecto.tsx
+- [x] Registrar la ruta correctamente
