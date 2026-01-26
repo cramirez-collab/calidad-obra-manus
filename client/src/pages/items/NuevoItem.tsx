@@ -1,9 +1,9 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import ImageMarker from "@/components/ImageMarker";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -18,9 +18,15 @@ import {
   ArrowLeft, 
   Check,
   Pencil,
-  X
+  X,
+  Zap,
+  Building2,
+  MapPin,
+  Wrench,
+  AlertTriangle,
+  Layers
 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
@@ -40,9 +46,16 @@ export default function NuevoItem() {
   const [fotoAntesMarcada, setFotoAntesMarcada] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMarker, setShowMarker] = useState(false);
+  const [modoRapido, setModoRapido] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Datos de prellenado del usuario
+  const { data: datosPrellena } = trpc.flujoRapido.datosPrellena.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : {},
+    { enabled: !!selectedProjectId }
+  );
 
   // Obtener datos filtrados por proyecto desde el backend
   const { data: empresas } = trpc.empresas.list.useQuery(
@@ -73,6 +86,16 @@ export default function NuevoItem() {
   const createItemMutation = trpc.items.create.useMutation();
   const uploadFotoMutation = trpc.items.uploadFotoAntes.useMutation();
 
+  // Prellenar empresa del usuario si tiene una asignada
+  useEffect(() => {
+    if (datosPrellena?.empresa && !formData.empresaId) {
+      setFormData(prev => ({ 
+        ...prev, 
+        empresaId: datosPrellena.empresa!.id.toString() 
+      }));
+    }
+  }, [datosPrellena]);
+
   // Auto-seleccionar especialidad cuando se selecciona empresa
   useEffect(() => {
     if (formData.empresaId && empresas) {
@@ -86,6 +109,12 @@ export default function NuevoItem() {
       }
     }
   }, [formData.empresaId, empresas]);
+
+  // Defectos frecuentes para acceso rápido
+  const defectosFrecuentes = useMemo(() => {
+    if (!datosPrellena?.defectosFrecuentes) return [];
+    return datosPrellena.defectosFrecuentes;
+  }, [datosPrellena]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -107,6 +136,16 @@ export default function NuevoItem() {
   const handleMarkedImage = (markedImageBase64: string) => {
     setFotoAntesMarcada(markedImageBase64);
     setShowMarker(false);
+  };
+
+  const handleDefectoRapido = (defecto: any) => {
+    // Auto-completar título con el nombre del defecto
+    setFormData(prev => ({
+      ...prev,
+      defectoId: defecto.id.toString(),
+      titulo: prev.titulo || defecto.nombre,
+      especialidadId: defecto.especialidadId?.toString() || prev.especialidadId
+    }));
   };
 
   const handleSubmit = async () => {
@@ -155,16 +194,7 @@ export default function NuevoItem() {
     return (
       <DashboardLayout>
         <div className="max-w-4xl mx-auto">
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2">
-                <Pencil className="h-5 w-5 text-red-500" />
-                Marcar Problema
-              </CardTitle>
-              <CardDescription>
-                Usa el lápiz rojo para señalar el área del problema
-              </CardDescription>
-            </CardHeader>
+          <Card className="overflow-hidden border-0 shadow-lg">
             <CardContent className="p-0">
               <div className="h-[500px]">
                 <ImageMarker
@@ -182,61 +212,162 @@ export default function NuevoItem() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header */}
+      <div className="max-w-lg mx-auto space-y-4">
+        {/* Header compacto */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Nuevo Ítem de Calidad</h1>
-            <p className="text-muted-foreground">
-              Registra un problema detectado
-            </p>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => setLocation("/items")}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-lg font-bold text-[#002C63]">Nuevo Ítem</h1>
           </div>
-          <Button variant="ghost" onClick={() => setLocation("/items")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Cancelar
+          <Button 
+            variant={modoRapido ? "default" : "outline"}
+            size="sm"
+            onClick={() => setModoRapido(!modoRapido)}
+            className={modoRapido ? "bg-[#02B381] hover:bg-[#02B381]/90" : ""}
+          >
+            <Zap className="h-3 w-3 mr-1" />
+            Rápido
           </Button>
         </div>
 
-        <Card>
-          <CardContent className="pt-6 space-y-6">
-            {/* Inputs ocultos para cámara/archivo */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
+        {/* Inputs ocultos para cámara/archivo */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
 
-            {/* Título */}
-            <div className="grid gap-2">
-              <Label htmlFor="titulo">Título del problema *</Label>
-              <Input
-                id="titulo"
-                value={formData.titulo}
-                onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                placeholder="Ej: Fisura en muro de baño"
-              />
+        {/* PASO 1: Foto primero (más importante) */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4">
+            {fotoAntes ? (
+              <div className="space-y-3">
+                <div className="relative rounded-lg overflow-hidden bg-slate-100">
+                  <img
+                    src={fotoAntesMarcada || fotoAntes}
+                    alt="Foto del problema"
+                    className="w-full h-auto max-h-[200px] object-contain"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-7 w-7"
+                    onClick={() => {
+                      setFotoAntes(null);
+                      setFotoAntesMarcada(null);
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setShowMarker(true)}
+                  >
+                    <Pencil className="h-3 w-3 mr-1" />
+                    {fotoAntesMarcada ? "Editar" : "Marcar"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => cameraInputRef.current?.click()}
+                  >
+                    <Camera className="h-3 w-3 mr-1" />
+                    Cambiar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="h-20 flex-col gap-1 border-2 border-dashed hover:border-[#02B381] hover:bg-[#02B381]/5"
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  <Camera className="h-6 w-6 text-[#02B381]" />
+                  <span className="text-xs">Tomar Foto</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-20 flex-col gap-1 border-2 border-dashed"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-6 w-6 text-gray-400" />
+                  <span className="text-xs">Subir</span>
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* PASO 2: Título y Defecto rápido */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4 space-y-3">
+            <Input
+              value={formData.titulo}
+              onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+              placeholder="¿Qué problema encontraste?"
+              className="text-base border-0 border-b rounded-none px-0 focus-visible:ring-0"
+            />
+            
+            {/* Defectos frecuentes (acceso rápido) */}
+            {modoRapido && defectosFrecuentes.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide">Defectos frecuentes</p>
+                <div className="flex flex-wrap gap-1">
+                  {defectosFrecuentes.map((defecto: any) => (
+                    <Badge
+                      key={defecto.id}
+                      variant={formData.defectoId === defecto.id.toString() ? "default" : "outline"}
+                      className={`cursor-pointer text-[10px] ${
+                        formData.defectoId === defecto.id.toString() 
+                          ? "bg-[#02B381] hover:bg-[#02B381]/90" 
+                          : "hover:bg-gray-100"
+                      }`}
+                      onClick={() => handleDefectoRapido(defecto)}
+                    >
+                      {defecto.nombre}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* PASO 3: Ubicación (empresa, unidad, espacio) */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+              <MapPin className="h-3 w-3" />
+              Ubicación
             </div>
-
-            {/* Empresa y Unidad */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Empresa *</Label>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {/* Empresa */}
+              <div>
                 <Select
                   value={formData.empresaId}
                   onValueChange={(value) => setFormData({ ...formData, empresaId: value })}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar empresa" />
+                  <SelectTrigger className="h-9 text-xs">
+                    <Building2 className="h-3 w-3 mr-1 text-gray-400" />
+                    <SelectValue placeholder="Empresa" />
                   </SelectTrigger>
                   <SelectContent>
                     {empresas?.map((empresa) => (
@@ -248,14 +379,15 @@ export default function NuevoItem() {
                 </Select>
               </div>
 
-              <div className="grid gap-2">
-                <Label>Unidad *</Label>
+              {/* Unidad */}
+              <div>
                 <Select
                   value={formData.unidadId}
                   onValueChange={(value) => setFormData({ ...formData, unidadId: value, espacioId: "" })}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar unidad" />
+                  <SelectTrigger className="h-9 text-xs">
+                    <MapPin className="h-3 w-3 mr-1 text-gray-400" />
+                    <SelectValue placeholder="Unidad" />
                   </SelectTrigger>
                   <SelectContent>
                     {unidades?.map((unidad) => (
@@ -268,23 +400,52 @@ export default function NuevoItem() {
               </div>
             </div>
 
-            {/* Especialidad y Defecto (cascada) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Especialidad</Label>
+            {/* Espacio (solo si hay unidad) */}
+            {formData.unidadId && espacios && espacios.length > 0 && (
+              <Select
+                value={formData.espacioId}
+                onValueChange={(value) => setFormData({ ...formData, espacioId: value })}
+              >
+                <SelectTrigger className="h-9 text-xs">
+                  <Layers className="h-3 w-3 mr-1 text-gray-400" />
+                  <SelectValue placeholder="Espacio (Sala, Cocina, Baño...)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {espacios.map((espacio) => (
+                    <SelectItem key={espacio.id} value={espacio.id.toString()}>
+                      {espacio.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* PASO 4: Clasificación (solo si no está en modo rápido o quiere más detalle) */}
+        {!modoRapido && (
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                <Wrench className="h-3 w-3" />
+                Clasificación
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {/* Especialidad */}
                 <Select
                   value={formData.especialidadId}
                   onValueChange={(value) => setFormData({ ...formData, especialidadId: value, defectoId: "" })}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Auto o seleccionar" />
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder="Especialidad" />
                   </SelectTrigger>
                   <SelectContent>
                     {especialidades?.map((esp) => (
                       <SelectItem key={esp.id} value={esp.id.toString()}>
                         <div className="flex items-center gap-2">
                           <div
-                            className="h-3 w-3 rounded-full"
+                            className="h-2 w-2 rounded-full"
                             style={{ backgroundColor: esp.color || "#3B82F6" }}
                           />
                           {esp.nombre}
@@ -293,20 +454,16 @@ export default function NuevoItem() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  Se selecciona automáticamente según la empresa
-                </p>
-              </div>
 
-              <div className="grid gap-2">
-                <Label>Tipo de Defecto</Label>
+                {/* Defecto */}
                 <Select
                   value={formData.defectoId}
                   onValueChange={(value) => setFormData({ ...formData, defectoId: value })}
                   disabled={!formData.especialidadId}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder={formData.especialidadId ? "Seleccionar defecto" : "Selecciona especialidad"} />
+                  <SelectTrigger className="h-9 text-xs">
+                    <AlertTriangle className="h-3 w-3 mr-1 text-gray-400" />
+                    <SelectValue placeholder="Defecto" />
                   </SelectTrigger>
                   <SelectContent>
                     {defectos?.map((def) => (
@@ -324,115 +481,28 @@ export default function NuevoItem() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+        )}
 
-            {/* Espacio */}
-            <div className="grid gap-2">
-              <Label>Espacio</Label>
-              <Select
-                value={formData.espacioId}
-                onValueChange={(value) => setFormData({ ...formData, espacioId: value })}
-                disabled={!formData.unidadId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={formData.unidadId ? "Seleccionar espacio" : "Selecciona unidad primero"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {espacios?.map((espacio) => (
-                    <SelectItem key={espacio.id} value={espacio.id.toString()}>
-                      {espacio.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Sala, Cocina, Recámara, Baño, etc.
-              </p>
+        {/* Botón de crear - Siempre visible */}
+        <Button 
+          onClick={handleSubmit} 
+          disabled={isSubmitting || !fotoAntes || !formData.titulo || !formData.empresaId || !formData.unidadId}
+          className="w-full h-12 bg-[#02B381] hover:bg-[#02B381]/90 text-white font-semibold"
+        >
+          {isSubmitting ? (
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Creando...
             </div>
-
-            {/* Foto */}
-            <div className="grid gap-2">
-              <Label>Foto del problema *</Label>
-              {fotoAntes ? (
-                <div className="space-y-3">
-                  <div className="relative rounded-lg overflow-hidden border bg-slate-100">
-                    <img
-                      src={fotoAntesMarcada || fotoAntes}
-                      alt="Foto del problema"
-                      className="w-full h-auto max-h-[300px] object-contain"
-                    />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2 h-8 w-8"
-                      onClick={() => {
-                        setFotoAntes(null);
-                        setFotoAntesMarcada(null);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowMarker(true)}
-                    >
-                      <Pencil className="h-4 w-4 mr-2" />
-                      {fotoAntesMarcada ? "Editar marcado" : "Marcar problema"}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => cameraInputRef.current?.click()}
-                    >
-                      <Camera className="h-4 w-4 mr-2" />
-                      Cambiar foto
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    variant="outline"
-                    className="h-24 flex-col gap-2"
-                    onClick={() => cameraInputRef.current?.click()}
-                  >
-                    <Camera className="h-6 w-6" />
-                    <span className="text-sm">Tomar Foto</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-24 flex-col gap-2"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="h-6 w-6" />
-                    <span className="text-sm">Subir Imagen</span>
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Botón de crear */}
-            <div className="flex justify-end pt-4 border-t">
-              <Button 
-                onClick={handleSubmit} 
-                disabled={isSubmitting || !fotoAntes || !formData.titulo || !formData.empresaId || !formData.unidadId}
-                className="bg-emerald-600 hover:bg-emerald-700"
-              >
-                {isSubmitting ? (
-                  "Creando..."
-                ) : (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Crear Ítem
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          ) : (
+            <>
+              <Check className="h-5 w-5 mr-2" />
+              Crear Ítem
+            </>
+          )}
+        </Button>
       </div>
     </DashboardLayout>
   );

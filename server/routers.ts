@@ -1583,6 +1583,37 @@ export const appRouter = router({
       return await db.getDefectosPorUsuario();
     }),
   }),
+
+  // ==================== FLUJO RÁPIDO ====================
+  flujoRapido: router({
+    // Obtener datos de prellenado para el usuario actual
+    datosPrellena: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        return await db.getDatosPrellenaUsuario(ctx.user.id, input?.proyectoId);
+      }),
+    
+    // Obtener ítems críticos priorizados (de peor a mejor)
+    itemsCriticos: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional(), limit: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getItemsCriticosPriorizados(input?.proyectoId, input?.limit);
+      }),
+    
+    // Dashboard del residente con tareas pendientes
+    dashboardResidente: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        return await db.getDashboardResidente(ctx.user.id, input?.proyectoId);
+      }),
+    
+    // Top 5 peores (empresas, residentes, especialidades)
+    top5Peores: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getTop5Peores(input?.proyectoId);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

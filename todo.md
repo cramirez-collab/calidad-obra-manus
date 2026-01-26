@@ -727,3 +727,42 @@
 - [x] Espacios seleccionables desde base de datos (filtrados por unidad)
 - [x] Defectos seleccionables desde base de datos (filtrados por especialidad)
 - [x] Poblados 48 defectos típicos por especialidad (estructura, hidráulica, eléctrica, gas, hvac, supervisión)
+
+
+## Optimización Ultra-Rápida del Flujo de Trabajo (Enero 26)
+
+### Prellenado Automático desde Configuración
+- [x] Usuario → Empresa automática (si tiene una sola asignada)
+- [x] Empresa → Especialidades automáticas (las de esa empresa)
+- [x] Unidad → Espacios automáticos (los de esa unidad)
+- [x] Especialidad → Defectos automáticos (los de esa especialidad)
+- [x] Residente → Su empresa, especialidades y unidades asignadas
+
+### Dashboard Pivote de Residentes
+- [x] Vista principal enfocada en tareas del residente (/mis-tareas)
+- [x] Pendientes ordenados por antigüedad (más viejo primero)
+- [x] Indicadores de urgencia por días sin resolver (crítico >7d, alto >3d)
+- [x] Acceso directo a crear ítem con prellenado
+
+### Priorización de Correcciones (Peor a Mejor)
+- [x] Lista de ítems ordenada por severidad + antigüedad (/prioridades)
+- [x] Indicadores visuales de criticidad (rojo/naranja/amarillo)
+- [x] Top 5 empresas con más defectos graves
+- [x] Top 5 residentes con más pendientes
+- [x] Top 5 especialidades más problemáticas
+
+### UI/UX Mínima Suficiente
+- [x] Eliminar campos innecesarios del formulario
+- [x] Botones de acción rápida (1-2 toques máximo)
+- [x] Cards compactas con información esencial
+- [x] Sin scroll excesivo para funciones principales
+- [x] Navegación por iconos sin texto redundante
+
+### Formulario Nuevo Ítem Ultra-Rápido
+- [x] Prellenar empresa del usuario logueado
+- [x] Prellenar especialidad de la empresa
+- [x] Prellenar unidad si hay una sola asignada
+- [x] Selector de espacio con búsqueda rápida
+- [x] Selector de defecto con sugerencias frecuentes (defectos frecuentes del usuario)
+- [x] Captura de foto en un solo paso
+- [x] Modo rápido activable/desactivable

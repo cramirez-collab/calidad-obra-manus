@@ -26,6 +26,8 @@ const KPIs = lazy(() => import("./pages/KPIs"));
 const GenerarQR = lazy(() => import("./pages/GenerarQR"));
 const Configuracion = lazy(() => import("./pages/Configuracion"));
 const Metas = lazy(() => import("./pages/Metas"));
+const DashboardResidente = lazy(() => import("./pages/DashboardResidente"));
+const Prioridades = lazy(() => import("./pages/Prioridades"));
 
 
 // Proyectos
@@ -104,6 +106,10 @@ function Router() {
         {/* Estadísticas */}
         <Route path="/estadisticas" component={Estadisticas} />
         <Route path="/kpis" component={KPIs} />
+        
+        {/* Flujo Rápido */}
+        <Route path="/mis-tareas" component={DashboardResidente} />
+        <Route path="/prioridades" component={Prioridades} />
         
         {/* Seguimiento público (QR) */}
         <Route path="/seguimiento/:codigo" component={Seguimiento} />

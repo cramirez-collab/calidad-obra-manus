@@ -1,4 +1,4 @@
-import { eq, and, gte, lte, like, desc, sql, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, like, desc, asc, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import bcrypt from 'bcryptjs';
 import { 
@@ -2595,4 +2595,320 @@ export async function deleteItem(itemId: number) {
   
   // Luego eliminar el ítem
   await db.delete(items).where(eq(items.id, itemId));
+}
+
+
+// ==================== PRELLENADO ULTRA-RÁPIDO ====================
+
+// Obtener todos los datos necesarios para prellenar formularios del usuario
+export async function getDatosPrellenaUsuario(userId: number, proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Obtener usuario con su empresa
+  const usuario = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!usuario[0]) return null;
+  
+  // Obtener empresa del usuario
+  let empresa = null;
+  let especialidadesEmpresa: any[] = [];
+  if (usuario[0].empresaId) {
+    const empresaResult = await db.select().from(empresas).where(eq(empresas.id, usuario[0].empresaId)).limit(1);
+    empresa = empresaResult[0] || null;
+    
+    // Obtener especialidades de la empresa
+    if (empresa) {
+      especialidadesEmpresa = await db
+        .select({
+          id: especialidades.id,
+          nombre: especialidades.nombre,
+          codigo: especialidades.codigo,
+          color: especialidades.color,
+        })
+        .from(empresaEspecialidades)
+        .innerJoin(especialidades, eq(empresaEspecialidades.especialidadId, especialidades.id))
+        .where(eq(empresaEspecialidades.empresaId, empresa.id));
+    }
+  }
+  
+  // Obtener unidades del proyecto (si hay proyecto seleccionado)
+  let unidadesProyecto: any[] = [];
+  if (proyectoId) {
+    unidadesProyecto = await db.select().from(unidades)
+      .where(and(eq(unidades.proyectoId, proyectoId), eq(unidades.activo, true)))
+      .orderBy(unidades.nombre);
+  }
+  
+  // Obtener defectos más frecuentes del usuario (top 5)
+  const itemsUsuario = await db.select().from(items)
+    .where(eq(items.residenteId, userId))
+    .orderBy(desc(items.fechaCreacion))
+    .limit(100);
+  
+  const defectosFrecuentes = itemsUsuario
+    .filter(i => i.defectoId)
+    .reduce((acc, item) => {
+      acc[item.defectoId!] = (acc[item.defectoId!] || 0) + 1;
+      return acc;
+    }, {} as Record<number, number>);
+  
+  const topDefectoIds = Object.entries(defectosFrecuentes)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([id]) => parseInt(id));
+  
+  let defectosTop: any[] = [];
+  if (topDefectoIds.length > 0) {
+    defectosTop = await db.select().from(defectos).where(inArray(defectos.id, topDefectoIds));
+  }
+  
+  return {
+    usuario: {
+      id: usuario[0].id,
+      name: usuario[0].name,
+      role: usuario[0].role,
+      empresaId: usuario[0].empresaId,
+    },
+    empresa,
+    especialidadesEmpresa,
+    unidadesProyecto,
+    defectosFrecuentes: defectosTop,
+  };
+}
+
+// Obtener ítems críticos priorizados (de peor a mejor)
+export async function getItemsCriticosPriorizados(proyectoId?: number, limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const conditions = [
+    inArray(items.status, ['pendiente_foto_despues', 'pendiente_aprobacion'])
+  ];
+  if (proyectoId) {
+    conditions.push(eq(items.proyectoId, proyectoId));
+  }
+  
+  // Obtener ítems pendientes
+  const itemsPendientes = await db.select().from(items)
+    .where(and(...conditions))
+    .orderBy(asc(items.fechaCreacion)); // Más antiguos primero
+  
+  // Obtener defectos para conocer severidad
+  const todosDefectos = await db.select().from(defectos);
+  const defectosMap = new Map(todosDefectos.map(d => [d.id, d]));
+  
+  // Obtener datos relacionados
+  const todasEmpresas = await db.select().from(empresas);
+  const todasUnidades = await db.select().from(unidades);
+  const todosUsuarios = await db.select().from(users);
+  const todasEspecialidades = await db.select().from(especialidades);
+  
+  const empresasMap = new Map(todasEmpresas.map(e => [e.id, e]));
+  const unidadesMap = new Map(todasUnidades.map(u => [u.id, u]));
+  const usuariosMap = new Map(todosUsuarios.map(u => [u.id, u]));
+  const especialidadesMap = new Map(todasEspecialidades.map(e => [e.id, e]));
+  
+  // Calcular prioridad: severidad + antigüedad
+  const severidadPeso: Record<string, number> = {
+    'critico': 100,
+    'grave': 75,
+    'moderado': 50,
+    'leve': 25
+  };
+  
+  const ahora = new Date();
+  const itemsConPrioridad = itemsPendientes.map(item => {
+    const defecto = item.defectoId ? defectosMap.get(item.defectoId) : null;
+    const severidad = defecto?.severidad || 'moderado';
+    const diasPendiente = Math.floor((ahora.getTime() - new Date(item.fechaCreacion).getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Prioridad = peso severidad + días pendiente (máx 30 días = 30 puntos extra)
+    const prioridad = severidadPeso[severidad] + Math.min(diasPendiente, 30);
+    
+    return {
+      ...item,
+      defecto,
+      empresa: empresasMap.get(item.empresaId),
+      unidad: unidadesMap.get(item.unidadId),
+      especialidad: item.especialidadId ? especialidadesMap.get(item.especialidadId) : null,
+      residente: usuariosMap.get(item.residenteId),
+      diasPendiente,
+      severidad,
+      prioridad,
+    };
+  });
+  
+  // Ordenar por prioridad descendente (más críticos primero)
+  return itemsConPrioridad
+    .sort((a, b) => b.prioridad - a.prioridad)
+    .slice(0, limit);
+}
+
+// Obtener dashboard del residente con tareas pendientes
+export async function getDashboardResidente(userId: number, proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const conditions = [eq(items.residenteId, userId)];
+  if (proyectoId) {
+    conditions.push(eq(items.proyectoId, proyectoId));
+  }
+  
+  // Obtener todos los ítems del residente
+  const itemsResidente = await db.select().from(items)
+    .where(and(...conditions))
+    .orderBy(asc(items.fechaCreacion));
+  
+  // Obtener datos relacionados
+  const todasEmpresas = await db.select().from(empresas);
+  const todasUnidades = await db.select().from(unidades);
+  const todosDefectos = await db.select().from(defectos);
+  
+  const empresasMap = new Map(todasEmpresas.map(e => [e.id, e]));
+  const unidadesMap = new Map(todasUnidades.map(u => [u.id, u]));
+  const defectosMap = new Map(todosDefectos.map(d => [d.id, d]));
+  
+  const ahora = new Date();
+  
+  // Clasificar ítems
+  const pendientesFoto = itemsResidente
+    .filter(i => i.status === 'pendiente_foto_despues')
+    .map(item => {
+      const diasPendiente = Math.floor((ahora.getTime() - new Date(item.fechaCreacion).getTime()) / (1000 * 60 * 60 * 24));
+      return {
+        ...item,
+        empresa: empresasMap.get(item.empresaId),
+        unidad: unidadesMap.get(item.unidadId),
+        defecto: item.defectoId ? defectosMap.get(item.defectoId) : null,
+        diasPendiente,
+        urgencia: diasPendiente > 7 ? 'critico' : diasPendiente > 3 ? 'alto' : 'normal',
+      };
+    });
+  
+  const pendientesAprobacion = itemsResidente
+    .filter(i => i.status === 'pendiente_aprobacion')
+    .map(item => ({
+      ...item,
+      empresa: empresasMap.get(item.empresaId),
+      unidad: unidadesMap.get(item.unidadId),
+      defecto: item.defectoId ? defectosMap.get(item.defectoId) : null,
+    }));
+  
+  const aprobados = itemsResidente.filter(i => i.status === 'aprobado').length;
+  const rechazados = itemsResidente.filter(i => i.status === 'rechazado').length;
+  
+  return {
+    pendientesFoto,
+    pendientesAprobacion,
+    estadisticas: {
+      total: itemsResidente.length,
+      pendientesFoto: pendientesFoto.length,
+      pendientesAprobacion: pendientesAprobacion.length,
+      aprobados,
+      rechazados,
+      tasaAprobacion: itemsResidente.length > 0 ? Math.round((aprobados / itemsResidente.length) * 100) : 0,
+    },
+    urgentes: pendientesFoto.filter(i => i.urgencia === 'critico').length,
+  };
+}
+
+// Top 5 peores (empresas, residentes, especialidades con más problemas)
+export async function getTop5Peores(proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const conditions = [];
+  if (proyectoId) {
+    conditions.push(eq(items.proyectoId, proyectoId));
+  }
+  
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const todosItems = await db.select().from(items).where(whereClause);
+  
+  // Obtener datos relacionados
+  const todasEmpresas = await db.select().from(empresas);
+  const todosUsuarios = await db.select().from(users);
+  const todasEspecialidades = await db.select().from(especialidades);
+  const todosDefectos = await db.select().from(defectos);
+  
+  const empresasMap = new Map(todasEmpresas.map(e => [e.id, e]));
+  const usuariosMap = new Map(todosUsuarios.map(u => [u.id, u]));
+  const especialidadesMap = new Map(todasEspecialidades.map(e => [e.id, e]));
+  const defectosMap = new Map(todosDefectos.map(d => [d.id, d]));
+  
+  // Severidad de defectos
+  const severidadPeso: Record<string, number> = {
+    'critico': 4,
+    'grave': 3,
+    'moderado': 2,
+    'leve': 1
+  };
+  
+  // Top 5 empresas con más problemas (ponderado por severidad)
+  const empresasProblemas = todasEmpresas.map(empresa => {
+    const itemsEmpresa = todosItems.filter(i => i.empresaId === empresa.id);
+    const pendientes = itemsEmpresa.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion');
+    const rechazados = itemsEmpresa.filter(i => i.status === 'rechazado');
+    
+    // Calcular score de problemas
+    let scoreProblemas = pendientes.length + (rechazados.length * 2);
+    pendientes.forEach(item => {
+      if (item.defectoId) {
+        const defecto = defectosMap.get(item.defectoId);
+        if (defecto) {
+          scoreProblemas += severidadPeso[defecto.severidad] || 2;
+        }
+      }
+    });
+    
+    return {
+      id: empresa.id,
+      nombre: empresa.nombre,
+      pendientes: pendientes.length,
+      rechazados: rechazados.length,
+      total: itemsEmpresa.length,
+      scoreProblemas,
+    };
+  }).filter(e => e.scoreProblemas > 0).sort((a, b) => b.scoreProblemas - a.scoreProblemas).slice(0, 5);
+  
+  // Top 5 residentes con más pendientes
+  const residentes = todosUsuarios.filter(u => u.role === 'residente' || u.role === 'jefe_residente');
+  const residentesProblemas = residentes.map(residente => {
+    const itemsResidente = todosItems.filter(i => i.residenteId === residente.id);
+    const pendientes = itemsResidente.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion');
+    const rechazados = itemsResidente.filter(i => i.status === 'rechazado');
+    
+    return {
+      id: residente.id,
+      nombre: residente.name,
+      empresa: residente.empresaId ? empresasMap.get(residente.empresaId)?.nombre : null,
+      pendientes: pendientes.length,
+      rechazados: rechazados.length,
+      total: itemsResidente.length,
+      scoreProblemas: pendientes.length + (rechazados.length * 2),
+    };
+  }).filter(r => r.scoreProblemas > 0).sort((a, b) => b.scoreProblemas - a.scoreProblemas).slice(0, 5);
+  
+  // Top 5 especialidades más problemáticas
+  const especialidadesProblemas = todasEspecialidades.map(esp => {
+    const itemsEsp = todosItems.filter(i => i.especialidadId === esp.id);
+    const pendientes = itemsEsp.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion');
+    const rechazados = itemsEsp.filter(i => i.status === 'rechazado');
+    
+    return {
+      id: esp.id,
+      nombre: esp.nombre,
+      color: esp.color,
+      pendientes: pendientes.length,
+      rechazados: rechazados.length,
+      total: itemsEsp.length,
+      scoreProblemas: pendientes.length + (rechazados.length * 2),
+    };
+  }).filter(e => e.scoreProblemas > 0).sort((a, b) => b.scoreProblemas - a.scoreProblemas).slice(0, 5);
+  
+  return {
+    empresas: empresasProblemas,
+    residentes: residentesProblemas,
+    especialidades: especialidadesProblemas,
+  };
 }

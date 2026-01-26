@@ -88,6 +88,7 @@ const getMenuItems = (role: string): MenuItem[] => {
     { icon: LayoutDashboard, label: "Inicio", path: "/bienvenida", shortLabel: "" },
     { icon: Camera, label: "Nuevo", path: "/nuevo-item", shortLabel: "" },
     { icon: ClipboardCheck, label: "Ítems", path: "/items", shortLabel: "" },
+    { icon: Clock, label: "Mis Tareas", path: "/mis-tareas", shortLabel: "" },
   ];
 
   const jefeResidenteItems: MenuItem[] = [
@@ -100,6 +101,7 @@ const getMenuItems = (role: string): MenuItem[] => {
 
   // Items de análisis y reportes (visibles para admin y superadmin)
   const analysisItems: MenuItem[] = [
+    { icon: Target, label: "Prioridades", path: "/prioridades", shortLabel: "" },
     { icon: Layers, label: "Stacking", path: "/panoramica", shortLabel: "" },
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas", shortLabel: "" },
     { icon: TrendingUp, label: "KPIs", path: "/kpis", shortLabel: "" },
