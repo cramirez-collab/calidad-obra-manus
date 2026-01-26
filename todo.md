@@ -615,3 +615,5 @@
 - [x] Crear ícono PWA optimizado con logo de Objetiva
 - [x] Configurar splash screen con ícono OQC durante la carga
 - [x] Actualizar PWA para mostrar ícono correcto en instalación
+- [x] BUG: Especialidades no se muestran después de crear
+- [x] BUG: Especialidades no se vinculan a proyecto

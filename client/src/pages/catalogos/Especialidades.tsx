@@ -125,11 +125,16 @@ export default function Especialidades() {
       codigo: formData.codigo || undefined,
       descripcion: formData.descripcion || undefined,
       color: formData.color || undefined,
+      proyectoId: selectedProjectId || undefined,
     };
 
     if (editingEspecialidad) {
       updateMutation.mutate({ id: editingEspecialidad.id, ...data });
     } else {
+      if (!selectedProjectId) {
+        toast.error("Debes seleccionar un proyecto primero");
+        return;
+      }
       createMutation.mutate(data);
     }
   };
