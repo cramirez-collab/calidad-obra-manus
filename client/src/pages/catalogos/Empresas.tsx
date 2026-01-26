@@ -40,6 +40,7 @@ type Empresa = {
   telefono?: string | null;
   email?: string | null;
   proyectoId?: number | null;
+  especialidadId?: number | null;
 };
 
 export default function Empresas() {
@@ -53,6 +54,7 @@ export default function Empresas() {
     telefono: "",
     email: "",
     proyectoId: "",
+    especialidadId: "",
   });
 
   const utils = trpc.useUtils();
@@ -62,6 +64,10 @@ export default function Empresas() {
     { enabled: !!selectedProjectId }
   );
   const { data: proyectos } = trpc.proyectos.list.useQuery();
+  const { data: especialidades } = trpc.especialidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
 
   const createMutation = trpc.empresas.create.useMutation({
     onSuccess: () => {
@@ -105,6 +111,7 @@ export default function Empresas() {
         telefono: empresa.telefono || "",
         email: empresa.email || "",
         proyectoId: empresa.proyectoId?.toString() || "",
+        especialidadId: empresa.especialidadId?.toString() || "",
       });
     } else {
       setEditingEmpresa(null);
@@ -115,6 +122,7 @@ export default function Empresas() {
         telefono: "", 
         email: "",
         proyectoId: selectedProjectId?.toString() || "",
+        especialidadId: "",
       });
     }
     setIsOpen(true);
@@ -123,7 +131,7 @@ export default function Empresas() {
   const handleClose = () => {
     setIsOpen(false);
     setEditingEmpresa(null);
-    setFormData({ nombre: "", rfc: "", contacto: "", telefono: "", email: "", proyectoId: "" });
+    setFormData({ nombre: "", rfc: "", contacto: "", telefono: "", email: "", proyectoId: "", especialidadId: "" });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -148,6 +156,7 @@ export default function Empresas() {
       telefono: formData.telefono || undefined,
       email: formData.email || undefined,
       proyectoId: proyectoIdFinal || undefined,
+      especialidadId: formData.especialidadId ? parseInt(formData.especialidadId) : undefined,
     };
 
     if (editingEmpresa) {
@@ -167,6 +176,12 @@ export default function Empresas() {
     if (!proyectoId) return "-";
     const proyecto = proyectos?.find(p => p.id === proyectoId);
     return proyecto?.nombre || "-";
+  };
+
+  const getEspecialidadNombre = (especialidadId: number | null | undefined) => {
+    if (!especialidadId) return "-";
+    const especialidad = especialidades?.find(e => e.id === especialidadId);
+    return especialidad?.nombre || "-";
   };
 
   return (
@@ -208,8 +223,9 @@ export default function Empresas() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nombre</TableHead>
-                      <TableHead className="hidden sm:table-cell">Proyecto</TableHead>
-                      <TableHead className="hidden md:table-cell">RFC</TableHead>
+                      <TableHead className="hidden sm:table-cell">Especialidad</TableHead>
+                      <TableHead className="hidden md:table-cell">Proyecto</TableHead>
+                      <TableHead className="hidden lg:table-cell">RFC</TableHead>
                       <TableHead className="hidden lg:table-cell">Contacto</TableHead>
                       <TableHead className="hidden lg:table-cell">Teléfono</TableHead>
                       <TableHead className="w-[100px]">Acciones</TableHead>
@@ -220,9 +236,12 @@ export default function Empresas() {
                       <TableRow key={empresa.id}>
                         <TableCell className="font-medium">{empresa.nombre}</TableCell>
                         <TableCell className="hidden sm:table-cell">
+                          {getEspecialidadNombre(empresa.especialidadId)}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
                           {getProyectoNombre(empresa.proyectoId)}
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">{empresa.rfc || "-"}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{empresa.rfc || "-"}</TableCell>
                         <TableCell className="hidden lg:table-cell">{empresa.contacto || "-"}</TableCell>
                         <TableCell className="hidden lg:table-cell">{empresa.telefono || "-"}</TableCell>
                         <TableCell>
@@ -279,6 +298,25 @@ export default function Empresas() {
                       {proyectos?.map((proyecto) => (
                         <SelectItem key={proyecto.id} value={proyecto.id.toString()}>
                           {proyecto.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="especialidadId">Especialidad</Label>
+                  <Select
+                    value={formData.especialidadId}
+                    onValueChange={(value) => setFormData({ ...formData, especialidadId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar especialidad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Sin especialidad</SelectItem>
+                      {especialidades?.map((especialidad) => (
+                        <SelectItem key={especialidad.id} value={especialidad.id.toString()}>
+                          {especialidad.nombre}
                         </SelectItem>
                       ))}
                     </SelectContent>

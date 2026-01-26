@@ -666,3 +666,9 @@
 - [x] Optimizar cache de queries (staleTime 2-5 min, gcTime 10 min)
 - [x] Limpiar RAM y cache de Vite
 - [x] Verificar que la aplicación sigue funcionando (133 tests pasando)
+
+## Agregar campo especialidad a empresas
+- [x] Agregar campo especialidadId a tabla empresas en schema
+- [x] Ejecutar migración de base de datos
+- [x] Actualizar routers para incluir especialidad
+- [x] Actualizar UI de empresas para seleccionar especialidad

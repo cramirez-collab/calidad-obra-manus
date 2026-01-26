@@ -72,6 +72,7 @@ export type InsertProyectoUsuario = typeof proyectoUsuarios.$inferInsert;
 export const empresas = mysqlTable("empresas", {
   id: int("id").autoincrement().primaryKey(),
   proyectoId: int("proyectoId"), // Relación con proyecto
+  especialidadId: int("especialidadId"), // Relación con especialidad
   nombre: varchar("nombre", { length: 255 }).notNull(),
   rfc: varchar("rfc", { length: 20 }),
   contacto: varchar("contacto", { length: 255 }),

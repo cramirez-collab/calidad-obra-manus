@@ -204,6 +204,7 @@ export const appRouter = router({
     create: adminProcedure
       .input(z.object({
         proyectoId: z.number().optional(),
+        especialidadId: z.number().optional(),
         nombre: z.string().min(1),
         rfc: z.string().optional(),
         contacto: z.string().optional(),
@@ -219,6 +220,7 @@ export const appRouter = router({
       .input(z.object({
         id: z.number(),
         proyectoId: z.number().optional(),
+        especialidadId: z.number().nullable().optional(),
         nombre: z.string().min(1).optional(),
         rfc: z.string().optional(),
         contacto: z.string().optional(),
