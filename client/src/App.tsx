@@ -59,7 +59,7 @@ function Router() {
         <Route path="/seleccionar-proyecto" component={SeleccionProyecto} />
         
         {/* Dashboard y Bienvenida */}
-        <Route path="/" component={Bienvenida} />
+        <Route path="/" component={SeleccionProyecto} />
         <Route path="/dashboard" component={Home} />
         <Route path="/bienvenida" component={Bienvenida} />
         

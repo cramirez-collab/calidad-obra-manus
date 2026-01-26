@@ -23,7 +23,7 @@ export default function SeleccionProyecto() {
   
   const handleSelectProject = (proyecto: { id: number; nombre: string }) => {
     setSelectedProjectId(proyecto.id);
-    navigate('/');
+    navigate('/bienvenida');
   };
   
   const handleCreateProject = () => {

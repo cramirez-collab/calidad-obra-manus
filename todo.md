@@ -598,3 +598,10 @@
 - [x] Pantalla de selección de proyectos funciona correctamente
 - [x] Menú lateral despliega correctamente al seleccionar proyecto
 - [x] Nombre del proyecto se actualiza en el sidebar al cambiar de proyecto
+
+
+## Corrección de Redirección Inicial (Vigésima Primera Iteración)
+
+- [x] Pantalla de selección de proyecto es la primera después de autenticarse
+- [x] Ruta raíz (/) ahora muestra selección de proyecto
+- [x] Al seleccionar proyecto navega a /bienvenida (dashboard)

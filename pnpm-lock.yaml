@@ -264,7 +264,7 @@ importers:
         specifier: ^3.58.1
         version: 3.58.1
       '@types/node':
-        specifier: ^24.7.0
+        specifier: ^24.10.9
         version: 24.10.9
       '@types/react':
         specifier: ^19.2.1
@@ -312,7 +312,7 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
       vite:
-        specifier: ^7.1.7
+        specifier: ^7.3.1
         version: 7.3.1(@types/node@24.10.9)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)
       vite-plugin-manus-runtime:
         specifier: ^0.0.57
