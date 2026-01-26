@@ -72,26 +72,46 @@ import {
 } from "@/components/ui/sheet";
 
 // Definición de menú según rol - Solo iconos, tooltips para explicar
-const getMenuItems = (role: string) => {
-  const baseItems = [
-    { icon: LayoutDashboard, label: "Inicio", path: "/", shortLabel: "" },
+// Tipo para items de menú con submenú opcional
+type MenuItem = {
+  icon: any;
+  label: string;
+  path: string;
+  shortLabel: string;
+  external?: boolean;
+  isSubmenu?: boolean;
+  children?: MenuItem[];
+};
+
+const getMenuItems = (role: string): MenuItem[] => {
+  const baseItems: MenuItem[] = [
+    { icon: LayoutDashboard, label: "Inicio", path: "/bienvenida", shortLabel: "" },
     { icon: Camera, label: "Nuevo", path: "/nuevo-item", shortLabel: "" },
     { icon: ClipboardCheck, label: "Ítems", path: "/items", shortLabel: "" },
   ];
 
-  const jefeResidenteItems = [
+  const jefeResidenteItems: MenuItem[] = [
     { icon: FileCheck, label: "Revisión", path: "/items/revision", shortLabel: "" },
   ];
 
-  const supervisorItems = [
+  const supervisorItems: MenuItem[] = [
     { icon: CheckCircle2, label: "Aprobación", path: "/items/aprobacion", shortLabel: "" },
   ];
 
-  const adminItems = [
-    { icon: FolderKanban, label: "Proyectos", path: "/proyectos", shortLabel: "" },
+  // Items de análisis y reportes (visibles para admin y superadmin)
+  const analysisItems: MenuItem[] = [
     { icon: Layers, label: "Panorámica", path: "/panoramica", shortLabel: "" },
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas", shortLabel: "" },
     { icon: TrendingUp, label: "KPIs", path: "/kpis", shortLabel: "" },
+    { icon: FileImage, label: "Reportes", path: "/reportes", shortLabel: "" },
+    { icon: ListOrdered, label: "Secuencias", path: "https://www.appsheet.com/start/bad5370e-61b3-4a42-8347-643e96d15f32?platform=desktop#appName=Secuencias-226234876&vss=H4sIAAAAAAAAA6WQwU7EIBCG32XOYADb7ZaretgYPejGg-KBFpoQW2iAqpuGdxd0jR68qMf5Z74vf2aFZ6NfbqPsn4A_rF_TpT4Ah1XA_jBrAVzAmbPRu1EAEnAtp2O46BCNs9IbJyBBekSfjqgD8PX3Cv7_FgiM0jaawWhffIXOniOb14UswTcOEoJpibIb9Xv5wh2Bn64R3DgXczo4P-XpXEaZuWnOESOsxpRhQveM8YpyUp1UrKkZq-9Lt7CzF8rEK6eyNvpFI4he2iD7ot-prOi3XUNOhy1WVLa4aliLO8IoZq3qN5SQtt_UkFLuPLh-CVrd5Zf98VWlzussrfooNMgx6PQGxeoKAhkCAAA=&view=Cuestionario", shortLabel: "", external: true },
+    { icon: FileSpreadsheet, label: "Visor", path: "https://docs.google.com/spreadsheets/d/1QhfpVCXE2SwpTazhH96wrc2Q0HIFMS3SpO6GXvS2DJA/edit?gid=464225867#gid=464225867", shortLabel: "", external: true },
+    { icon: FolderOpen, label: "Planos", path: "https://drive.google.com/drive/folders/1BsaAtPcfOmmGkJMgtLw_zJujxFQmfiro", shortLabel: "", external: true },
+  ];
+
+  // Submenú de Configuración (solo admin y superadmin)
+  const configSubItems: MenuItem[] = [
+    { icon: FolderKanban, label: "Proyectos", path: "/proyectos", shortLabel: "" },
     { icon: QrCode, label: "QR", path: "/generar-qr", shortLabel: "" },
     { icon: Building2, label: "Empresas", path: "/empresas", shortLabel: "" },
     { icon: MapPin, label: "Unidades", path: "/unidades", shortLabel: "" },
@@ -99,19 +119,10 @@ const getMenuItems = (role: string) => {
     { icon: Tags, label: "Atributos", path: "/atributos", shortLabel: "" },
     { icon: AlertTriangle, label: "Defectos", path: "/defectos", shortLabel: "" },
     { icon: Users, label: "Usuarios", path: "/usuarios", shortLabel: "" },
-    { icon: FileImage, label: "Reportes", path: "/reportes", shortLabel: "" },
     { icon: History, label: "Bitácora", path: "/bitacora", shortLabel: "" },
-    { icon: ListOrdered, label: "Secuencias", path: "https://www.appsheet.com/start/bad5370e-61b3-4a42-8347-643e96d15f32?platform=desktop#appName=Secuencias-226234876&vss=H4sIAAAAAAAAA6WQwU7EIBCG32XOYADb7ZaretgYPejGg-KBFpoQW2iAqpuGdxd0jR68qMf5Z74vf2aFZ6NfbqPsn4A_rF_TpT4Ah1XA_jBrAVzAmbPRu1EAEnAtp2O46BCNs9IbJyBBekSfjqgD8PX3Cv7_FgiM0jaawWhffIXOniOb14UswTcOEoJpibIb9Xv5wh2Bn64R3DgXczo4P-XpXEaZuWnOESOsxpRhQveM8YpyUp1UrKkZq-9Lt7CzF8rEK6eyNvpFI4he2iD7ot-prOi3XUNOhy1WVLa4aliLO8IoZq3qN5SQtt_UkFLuPLh-CVrd5Zf98VWlzussrfooNMgx6PQGxeoKAhkCAAA=&view=Cuestionario", shortLabel: "", external: true },
-    { icon: FileSpreadsheet, label: "Visor", path: "https://docs.google.com/spreadsheets/d/1QhfpVCXE2SwpTazhH96wrc2Q0HIFMS3SpO6GXvS2DJA/edit?gid=464225867#gid=464225867", shortLabel: "", external: true },
-    { icon: FolderOpen, label: "Planos", path: "https://drive.google.com/drive/folders/1BsaAtPcfOmmGkJMgtLw_zJujxFQmfiro", shortLabel: "", external: true },
   ];
 
-  const configItems = [
-    { icon: Settings, label: "Configuración", path: "/configuracion", shortLabel: "" },
-    { icon: Target, label: "Metas", path: "/metas", shortLabel: "" },
-  ];
-
-  let items = [...baseItems];
+  let items: MenuItem[] = [...baseItems];
 
   if (role === 'jefe_residente' || role === 'supervisor' || role === 'admin' || role === 'superadmin') {
     items = [...items, ...jefeResidenteItems];
@@ -122,12 +133,16 @@ const getMenuItems = (role: string) => {
   }
 
   if (role === 'admin' || role === 'superadmin') {
-    items = [...items, ...adminItems];
-  }
-
-  // Configuración solo para superadmin y supervisor
-  if (role === 'superadmin' || role === 'supervisor') {
-    items = [...items, ...configItems];
+    items = [...items, ...analysisItems];
+    // Agregar submenú de Configuración
+    items.push({
+      icon: Settings,
+      label: "Configuración",
+      path: "",
+      shortLabel: "",
+      isSubmenu: true,
+      children: configSubItems,
+    });
   }
 
   return items;
@@ -237,6 +252,7 @@ function DashboardLayoutContent({
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const menuItems = getMenuItems(user?.role || 'residente');
   const activeMenuItem = menuItems.find(item => location.startsWith(item.path) && item.path !== '/') || menuItems.find(item => item.path === location);
@@ -305,7 +321,53 @@ function DashboardLayoutContent({
           {/* Items del menú */}
           <div className="flex-1 overflow-y-auto py-2">
             {menuItems.map(item => {
-              const isActive = item.path === '/' ? location === '/' : location.startsWith(item.path);
+              const isActive = item.path === '/bienvenida' ? (location === '/bienvenida' || location === '/') : (item.path ? location.startsWith(item.path) : false);
+              
+              // Si es un submenú
+              if (item.isSubmenu && item.children) {
+                const isSubmenuActive = item.children.some(child => location.startsWith(child.path));
+                return (
+                  <div key={item.label}>
+                    <button
+                      onClick={() => setConfigOpen(!configOpen)}
+                      className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-colors ${
+                        isSubmenuActive 
+                          ? "bg-primary/10 text-primary" 
+                          : "hover:bg-accent"
+                      }`}
+                    >
+                      <item.icon className={`h-5 w-5 ${isSubmenuActive ? "text-primary" : "text-muted-foreground"}`} />
+                      <span className={`text-sm flex-1 ${isSubmenuActive ? "font-medium" : ""}`}>{item.label}</span>
+                      <ChevronRight className={`h-4 w-4 transition-transform ${configOpen ? 'rotate-90' : ''}`} />
+                    </button>
+                    {configOpen && (
+                      <div className="ml-6 border-l">
+                        {item.children.map(subItem => {
+                          const isSubActive = location.startsWith(subItem.path);
+                          return (
+                            <button
+                              key={subItem.path}
+                              onClick={() => {
+                                setLocation(subItem.path);
+                                setMobileMenuOpen(false);
+                              }}
+                              className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                                isSubActive 
+                                  ? "bg-primary/10 text-primary" 
+                                  : "hover:bg-accent"
+                              }`}
+                            >
+                              <subItem.icon className={`h-4 w-4 ${isSubActive ? "text-primary" : "text-muted-foreground"}`} />
+                              <span className={`text-sm ${isSubActive ? "font-medium" : ""}`}>{subItem.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              
               return (
                 <button
                   key={item.path}
@@ -389,7 +451,60 @@ function DashboardLayoutContent({
           <SidebarContent className="gap-0 py-2">
             <SidebarMenu className="px-2 py-1">
               {menuItems.map(item => {
-                const isActive = item.path === '/' ? location === '/' : location.startsWith(item.path);
+                const isActive = item.path === '/bienvenida' ? (location === '/bienvenida' || location === '/') : (item.path ? location.startsWith(item.path) : false);
+                
+                // Si es un submenú
+                if (item.isSubmenu && item.children) {
+                  const isSubmenuActive = item.children.some(child => location.startsWith(child.path));
+                  return (
+                    <SidebarMenuItem key={item.label}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton
+                            isActive={isSubmenuActive}
+                            onClick={() => setConfigOpen(!configOpen)}
+                            tooltip={item.label}
+                            className={`h-10 transition-all font-normal`}
+                          >
+                            <item.icon
+                              className={`h-4 w-4 ${isSubmenuActive ? "text-primary" : ""}`}
+                            />
+                            <span className="truncate flex-1">{item.label}</span>
+                            {!isCollapsed && (
+                              <ChevronRight className={`h-4 w-4 transition-transform ${configOpen ? 'rotate-90' : ''}`} />
+                            )}
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
+                        {isCollapsed && (
+                          <TooltipContent side="right">
+                            {item.label}
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                      {/* Sub-items */}
+                      {configOpen && !isCollapsed && (
+                        <div className="ml-4 mt-1 space-y-1 border-l pl-2">
+                          {item.children.map(subItem => {
+                            const isSubActive = location.startsWith(subItem.path);
+                            return (
+                              <SidebarMenuButton
+                                key={subItem.path}
+                                isActive={isSubActive}
+                                onClick={() => setLocation(subItem.path)}
+                                className="h-9 text-sm"
+                              >
+                                <subItem.icon className={`h-3.5 w-3.5 ${isSubActive ? "text-primary" : ""}`} />
+                                <span className="truncate">{subItem.label}</span>
+                              </SidebarMenuButton>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                }
+                
+                // Item normal
                 return (
                   <SidebarMenuItem key={item.path}>
                     <Tooltip>

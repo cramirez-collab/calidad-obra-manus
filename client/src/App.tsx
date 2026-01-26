@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, Router as WouterRouter } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProjectProvider } from "./contexts/ProjectContext";
@@ -120,24 +120,26 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
-        <ProjectProvider>
-          <TooltipProvider>
-            <Toaster />
-            {/* Temporalmente desactivado mientras se resuelve el conflicto de React hooks
-            <Suspense fallback={null}>
-              <OfflineIndicator />
-            </Suspense>
-            */}
-            {/* Temporalmente desactivado mientras se resuelve el conflicto de React hooks
-            <Suspense fallback={null}>
-              <CameraPermissionRequest />
-            </Suspense>
-            */}
-            <Router />
-          </TooltipProvider>
-        </ProjectProvider>
-      </ThemeProvider>
+      <WouterRouter>
+        <ThemeProvider defaultTheme="light">
+          <ProjectProvider>
+            <TooltipProvider>
+              <Toaster />
+              {/* Temporalmente desactivado mientras se resuelve el conflicto de React hooks
+              <Suspense fallback={null}>
+                <OfflineIndicator />
+              </Suspense>
+              */}
+              {/* Temporalmente desactivado mientras se resuelve el conflicto de React hooks
+              <Suspense fallback={null}>
+                <CameraPermissionRequest />
+              </Suspense>
+              */}
+              <Router />
+            </TooltipProvider>
+          </ProjectProvider>
+        </ThemeProvider>
+      </WouterRouter>
     </ErrorBoundary>
   );
 }
