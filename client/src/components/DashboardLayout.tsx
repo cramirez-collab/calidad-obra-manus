@@ -100,7 +100,7 @@ const getMenuItems = (role: string): MenuItem[] => {
 
   // Items de análisis y reportes (visibles para admin y superadmin)
   const analysisItems: MenuItem[] = [
-    { icon: Layers, label: "Panorámica", path: "/panoramica", shortLabel: "" },
+    { icon: Layers, label: "Stacking", path: "/panoramica", shortLabel: "" },
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas", shortLabel: "" },
     { icon: TrendingUp, label: "KPIs", path: "/kpis", shortLabel: "" },
     { icon: FileImage, label: "Reportes", path: "/reportes", shortLabel: "" },
