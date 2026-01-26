@@ -553,3 +553,23 @@
 - [x] Navegación directa al ítem desde la notificación
 - [x] Configuración de push en panel de notificaciones
 - [x] Botón de prueba de notificación push
+
+
+## Pantalla de Selección de Proyectos (Decimoctava Iteración)
+
+### Estructura de Navegación
+- [x] Pantalla inicial con lista de proyectos (cards grandes)
+- [x] Click en proyecto lleva al dashboard de ESE proyecto
+- [x] Todos los módulos dentro del proyecto son exclusivos de ese proyecto
+- [x] Botón "Cambiar proyecto" regresa a la pantalla inicial
+- [x] Reemplazar selector dropdown por botón de cambio de proyecto
+
+### Permisos de Creación
+- [x] Solo superadmin y admin pueden crear proyectos
+- [x] Solo superadmin y admin configuran usuarios/roles por proyecto
+- [x] Usuarios normales solo ven proyectos donde están asignados
+
+### Contexto de Proyecto
+- [x] Guardar proyecto activo en contexto global
+- [x] Todas las consultas filtran por proyecto activo
+- [x] Redirección automática si no hay proyecto seleccionado

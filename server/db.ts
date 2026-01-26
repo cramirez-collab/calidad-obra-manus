@@ -1810,10 +1810,42 @@ export async function getProyectosByUsuario(usuarioId: number) {
   const todosProyectos = await db.select().from(proyectos)
     .where(and(inArray(proyectos.id, proyectoIds), eq(proyectos.activo, true)));
   
-  return relaciones.map(rel => ({
-    ...rel,
-    proyecto: todosProyectos.find(p => p.id === rel.proyectoId)
+  // Obtener estadísticas de cada proyecto
+  const result = await Promise.all(relaciones.map(async (rel) => {
+    const proyecto = todosProyectos.find(p => p.id === rel.proyectoId);
+    
+    // Contar unidades del proyecto
+    const unidadesCount = await db.select({ count: sql<number>`count(*)` })
+      .from(unidades)
+      .where(eq(unidades.proyectoId, rel.proyectoId));
+    
+    // Contar items del proyecto
+    const itemsCount = await db.select({ count: sql<number>`count(*)` })
+      .from(items)
+      .where(eq(items.proyectoId, rel.proyectoId));
+    
+    // Contar items pendientes
+    const pendientesCount = await db.select({ count: sql<number>`count(*)` })
+      .from(items)
+      .where(and(
+        eq(items.proyectoId, rel.proyectoId),
+        inArray(items.status, ['pendiente_foto_despues', 'rechazado', 'pendiente_aprobacion'])
+      ));
+    
+    // Obtener nombre de empresa (cliente del proyecto)
+    const empresaNombre = proyecto?.cliente || null;
+    
+    return {
+      ...rel,
+      proyecto,
+      empresaNombre,
+      totalUnidades: Number(unidadesCount[0]?.count || 0),
+      totalItems: Number(itemsCount[0]?.count || 0),
+      itemsPendientes: Number(pendientesCount[0]?.count || 0),
+    };
   }));
+  
+  return result;
 }
 
 export async function asignarUsuarioAProyecto(data: InsertProyectoUsuario) {

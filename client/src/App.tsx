@@ -30,6 +30,7 @@ const OfflineIndicator = lazy(() => import("./components/OfflineIndicator"));
 const CameraPermissionRequest = lazy(() => import("./components/CameraPermissionRequest").then(m => ({ default: m.CameraPermissionRequest })));
 
 // Proyectos
+const SeleccionProyecto = lazy(() => import("./pages/SeleccionProyecto"));
 const Proyectos = lazy(() => import("./pages/Proyectos"));
 const VistaPanoramica = lazy(() => import("./pages/VistaPanoramica"));
 const ImportarUnidades = lazy(() => import("./pages/ImportarUnidades"));
@@ -54,6 +55,9 @@ function Router() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Switch>
+        {/* Selección de Proyecto (punto de entrada) */}
+        <Route path="/seleccionar-proyecto" component={SeleccionProyecto} />
+        
         {/* Dashboard y Bienvenida */}
         <Route path="/" component={Bienvenida} />
         <Route path="/dashboard" component={Home} />
