@@ -1,8 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-
-const PROJECT_KEY = "selected-project-id";
 
 interface ProjectContextType {
   selectedProjectId: number | null;
@@ -10,15 +8,34 @@ interface ProjectContextType {
   userProjects: any[];
   isLoadingProjects: boolean;
   canAccessProject: (projectId: number) => boolean;
+  isChangingProject: boolean;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [selectedProjectId, setSelectedProjectIdState] = useState<number | null>(() => {
-    const saved = localStorage.getItem(PROJECT_KEY);
-    return saved ? parseInt(saved, 10) : null;
+  const [selectedProjectId, setSelectedProjectIdState] = useState<number | null>(null);
+  const [isChangingProject, setIsChangingProject] = useState(false);
+  const utils = trpc.useUtils();
+
+  // Obtener proyecto activo desde la base de datos
+  const { data: proyectoActivoData, isLoading: isLoadingProyectoActivo } = trpc.users.getProyectoActivo.useQuery(
+    undefined,
+    { enabled: !!user }
+  );
+
+  // Mutation para cambiar proyecto activo
+  const setProyectoActivoMutation = trpc.users.setProyectoActivo.useMutation({
+    onSuccess: (data) => {
+      setSelectedProjectIdState(data.proyectoId);
+      setIsChangingProject(false);
+      // Invalidar todas las queries para refrescar datos del nuevo proyecto
+      utils.invalidate();
+    },
+    onError: () => {
+      setIsChangingProject(false);
+    }
   });
 
   // Obtener proyectos según el rol del usuario
@@ -45,47 +62,51 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
-  // Auto-seleccionar el primer proyecto si no hay ninguno seleccionado
+  // Sincronizar proyecto activo desde la base de datos
   useEffect(() => {
-    if (!selectedProjectId && userProjects.length > 0) {
-      const firstProject = userProjects[0];
-      const projectId = getProjectId(firstProject);
-      if (projectId) {
-        setSelectedProjectIdState(projectId);
-        localStorage.setItem(PROJECT_KEY, projectId.toString());
-      }
+    if (proyectoActivoData?.proyectoId && !isChangingProject) {
+      setSelectedProjectIdState(proyectoActivoData.proyectoId);
     }
-  }, [userProjects, selectedProjectId]);
+  }, [proyectoActivoData, isChangingProject]);
 
   // Verificar que el proyecto seleccionado esté en la lista de proyectos del usuario
   useEffect(() => {
-    if (selectedProjectId && userProjects.length > 0) {
+    if (selectedProjectId && userProjects.length > 0 && !isLoadingProjects) {
       const hasAccess = userProjects.some(p => getProjectId(p) === selectedProjectId);
       if (!hasAccess && !isSuperadmin) {
-        // Si no tiene acceso, seleccionar el primero disponible
-        const firstProject = userProjects[0];
-        const projectId = getProjectId(firstProject);
-        if (projectId) {
-          setSelectedProjectIdState(projectId);
-          localStorage.setItem(PROJECT_KEY, projectId.toString());
-        }
+        // Si no tiene acceso, limpiar selección para forzar pantalla de selección
+        setSelectedProjectIdState(null);
+        setProyectoActivoMutation.mutate({ proyectoId: null });
       }
     }
-  }, [selectedProjectId, userProjects, isSuperadmin]);
+  }, [selectedProjectId, userProjects, isSuperadmin, isLoadingProjects]);
 
-  const setSelectedProjectId = (id: number | null) => {
-    setSelectedProjectIdState(id);
-    if (id) {
-      localStorage.setItem(PROJECT_KEY, id.toString());
-    } else {
-      localStorage.removeItem(PROJECT_KEY);
-    }
-  };
+  // Función para cambiar proyecto (guarda en base de datos)
+  const setSelectedProjectId = useCallback((id: number | null) => {
+    setIsChangingProject(true);
+    setSelectedProjectIdState(id); // Actualización optimista
+    setProyectoActivoMutation.mutate({ proyectoId: id });
+  }, [setProyectoActivoMutation]);
 
   const canAccessProject = (projectId: number): boolean => {
     if (isSuperadmin) return true;
     return userProjects.some(p => getProjectId(p) === projectId);
   };
+
+  // Escuchar cambios de proyecto via WebSocket
+  useEffect(() => {
+    const handleProyectoChanged = (event: CustomEvent<{ proyectoId: number | null }>) => {
+      if (event.detail.proyectoId !== selectedProjectId) {
+        setSelectedProjectIdState(event.detail.proyectoId);
+        utils.invalidate();
+      }
+    };
+
+    window.addEventListener('proyecto-activo-changed' as any, handleProyectoChanged);
+    return () => {
+      window.removeEventListener('proyecto-activo-changed' as any, handleProyectoChanged);
+    };
+  }, [selectedProjectId, utils]);
 
   return (
     <ProjectContext.Provider
@@ -93,8 +114,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         selectedProjectId,
         setSelectedProjectId,
         userProjects,
-        isLoadingProjects,
+        isLoadingProjects: isLoadingProjects || isLoadingProyectoActivo,
         canAccessProject,
+        isChangingProject,
       }}
     >
       {children}

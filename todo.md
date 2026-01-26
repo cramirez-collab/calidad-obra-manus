@@ -573,3 +573,20 @@
 - [x] Guardar proyecto activo en contexto global
 - [x] Todas las consultas filtran por proyecto activo
 - [x] Redirección automática si no hay proyecto seleccionado
+
+
+## Proyecto Activo en la Nube (Decimonovena Iteración)
+
+### Base de Datos
+- [x] Agregar campo proyectoActivoId a tabla usuarios
+- [x] Migración de base de datos
+
+### Backend
+- [x] Endpoint para obtener proyecto activo del usuario
+- [x] Endpoint para cambiar proyecto activo del usuario
+- [x] Sincronización en tiempo real via WebSocket
+
+### Frontend
+- [x] Eliminar localStorage para proyecto seleccionado
+- [x] Usar base de datos para proyecto activo
+- [x] Actualizar en tiempo real cuando cambia el proyecto

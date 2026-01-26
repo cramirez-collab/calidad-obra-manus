@@ -18,6 +18,7 @@ export const users = mysqlTable("users", {
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["superadmin", "admin", "supervisor", "jefe_residente", "residente"]).default("residente").notNull(),
   empresaId: int("empresaId"),
+  proyectoActivoId: int("proyectoActivoId"), // Proyecto actualmente seleccionado por el usuario
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

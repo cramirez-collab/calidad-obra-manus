@@ -142,6 +142,25 @@ export const appRouter = router({
         await db.updateUserEmpresa(input.userId, input.empresaId);
         return { success: true };
       }),
+    
+    // Obtener proyecto activo del usuario actual
+    getProyectoActivo: protectedProcedure.query(async ({ ctx }) => {
+      const proyectoId = await db.getProyectoActivoUsuario(ctx.user.id);
+      return { proyectoId };
+    }),
+    
+    // Cambiar proyecto activo del usuario actual
+    setProyectoActivo: protectedProcedure
+      .input(z.object({ proyectoId: z.number().nullable() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.setProyectoActivoUsuario(ctx.user.id, input.proyectoId);
+        // Emitir evento de cambio de proyecto via WebSocket
+        socketEvents.emitToUser(ctx.user.id, 'proyecto-activo-changed', { 
+          proyectoId: input.proyectoId,
+          userId: ctx.user.id 
+        });
+        return { success: true, proyectoId: input.proyectoId };
+      }),
   }),
 
   // ==================== EMPRESAS ====================

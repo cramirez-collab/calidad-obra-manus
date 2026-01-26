@@ -13,15 +13,32 @@ import {
   MapPin,
   BarChart3,
   TrendingUp,
-  ClipboardCheck
+  ClipboardCheck,
+  Loader2
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, Redirect } from "wouter";
 import { formatDate } from "@/lib/dateFormat";
+import { useProject } from "@/contexts/ProjectContext";
 
 export default function Bienvenida() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const { selectedProjectId, isLoadingProjects } = useProject();
   const { data: pendientes, isLoading } = trpc.pendientes.misPendientes.useQuery();
+
+  // Redirigir a selección de proyecto si no hay proyecto seleccionado
+  if (!isLoadingProjects && !selectedProjectId) {
+    return <Redirect to="/seleccionar-proyecto" />;
+  }
+
+  // Mostrar loading mientras carga proyectos
+  if (isLoadingProjects) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-[#02B381]" />
+      </div>
+    );
+  }
 
   const getStatusConfig = (status: string) => {
     switch (status) {

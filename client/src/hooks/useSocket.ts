@@ -93,6 +93,12 @@ export function useSocket(): UseSocketReturn {
       // Conexión activa
     });
 
+    // Escuchar cambios de proyecto activo
+    socket.on('proyecto-activo-changed', (data: { proyectoId: number | null; userId: number }) => {
+      // Emitir evento personalizado para que ProjectContext lo escuche
+      window.dispatchEvent(new CustomEvent('proyecto-activo-changed', { detail: data }));
+    });
+
     return () => {
       if (pingIntervalRef.current) {
         clearInterval(pingIntervalRef.current);

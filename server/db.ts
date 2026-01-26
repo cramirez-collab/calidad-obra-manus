@@ -2352,3 +2352,31 @@ export async function getAllActivePushSubscriptions() {
     .from(pushSubscriptions)
     .where(eq(pushSubscriptions.activo, true));
 }
+
+
+// ==================== PROYECTO ACTIVO DEL USUARIO ====================
+
+export async function getProyectoActivoUsuario(userId: number): Promise<number | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db
+    .select({ proyectoActivoId: users.proyectoActivoId })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  
+  return result[0]?.proyectoActivoId || null;
+}
+
+export async function setProyectoActivoUsuario(userId: number, proyectoId: number | null): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  
+  await db
+    .update(users)
+    .set({ proyectoActivoId: proyectoId })
+    .where(eq(users.id, userId));
+  
+  return true;
+}

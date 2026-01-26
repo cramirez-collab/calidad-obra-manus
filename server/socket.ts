@@ -131,8 +131,24 @@ export function emitToRole(role: string, event: string, data: any) {
   }
 }
 
+// Emitir evento a un usuario específico por ID
+export function emitToUser(userId: number, event: string, data: any) {
+  if (io) {
+    connectedUsers.forEach((user) => {
+      if (user.oderId === userId) {
+        io!.to(user.socketId).emit(event, data);
+      }
+    });
+  }
+}
+
 // Eventos específicos de la aplicación
 export const socketEvents = {
+  // Emitir a usuario específico
+  emitToUser: (userId: number, event: string, data: any) => {
+    emitToUser(userId, event, data);
+  },
+  
   // Cuando se crea un nuevo ítem
   itemCreated: (item: any) => {
     emitToAll('item:created', item);
