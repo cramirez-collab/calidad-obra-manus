@@ -1,0 +1,28 @@
+{
+  "query": "SELECT p.id as proyecto_id, p.nombre as proyecto_nombre, e.id as empresa_id, e.nombre as empresa_nombre FROM proyectos p LEFT JOIN empresas e ON e.proyectoId = p.id ORDER BY p.id, e.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT p.id as proyecto_id, p.nombre as proyecto_nombre, e.id as empresa_id, e.nombre as empresa_nombre FROM proyectos p LEFT JOIN empresas e ON e.proyectoId = p.id ORDER BY p.id, e.id;",
+  "rows": [
+    {
+      "proyecto_id": "1",
+      "proyecto_nombre": "Hidalma ",
+      "empresa_id": "150005",
+      "empresa_nombre": "Objetiva "
+    },
+    {
+      "proyecto_id": "1",
+      "proyecto_nombre": "Hidalma ",
+      "empresa_id": "150007",
+      "empresa_nombre": "Ennco"
+    },
+    {
+      "proyecto_id": "30001",
+      "proyecto_nombre": "Torre Mayas",
+      "empresa_id": "NULL",
+      "empresa_nombre": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "proyecto_id\tproyecto_nombre\tempresa_id\tempresa_nombre\n1\tHidalma \t150005\tObjetiva \n1\tHidalma \t150007\tEnnco\n30001\tTorre Mayas\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 69
+}

@@ -20,7 +20,8 @@ import {
   mensajes, InsertMensaje,
   userBadges, InsertUserBadge,
   auditoria, InsertAuditoria,
-  pushSubscriptions, InsertPushSubscription
+  pushSubscriptions, InsertPushSubscription,
+  empresaEspecialidades, InsertEmpresaEspecialidad
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -242,9 +243,14 @@ export async function getAllResidentesConEstadisticas() {
 
 // ==================== EMPRESAS ====================
 
-export async function getAllEmpresas() {
+export async function getAllEmpresas(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
+  if (proyectoId) {
+    return await db.select().from(empresas)
+      .where(and(eq(empresas.activo, true), eq(empresas.proyectoId, proyectoId)))
+      .orderBy(empresas.nombre);
+  }
   return await db.select().from(empresas).where(eq(empresas.activo, true)).orderBy(empresas.nombre);
 }
 
@@ -299,12 +305,16 @@ export async function getEmpresaConDatosCompletos(id: number) {
 }
 
 // Obtener todas las empresas con estadísticas
-export async function getAllEmpresasConEstadisticas() {
+export async function getAllEmpresasConEstadisticas(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
   
-  const todasEmpresas = await db.select().from(empresas).where(eq(empresas.activo, true)).orderBy(empresas.nombre);
-  const todosItems = await db.select().from(items);
+  const todasEmpresas = proyectoId
+    ? await db.select().from(empresas).where(and(eq(empresas.activo, true), eq(empresas.proyectoId, proyectoId))).orderBy(empresas.nombre)
+    : await db.select().from(empresas).where(eq(empresas.activo, true)).orderBy(empresas.nombre);
+  const todosItems = proyectoId
+    ? await db.select().from(items).where(eq(items.proyectoId, proyectoId))
+    : await db.select().from(items);
   const todosUsuarios = await db.select().from(users);
   
   return todasEmpresas.map(empresa => {
@@ -348,9 +358,14 @@ export async function deleteEmpresa(id: number) {
 
 // ==================== UNIDADES ====================
 
-export async function getAllUnidades() {
+export async function getAllUnidades(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
+  if (proyectoId) {
+    return await db.select().from(unidades)
+      .where(and(eq(unidades.activo, true), eq(unidades.proyectoId, proyectoId)))
+      .orderBy(unidades.nombre);
+  }
   return await db.select().from(unidades).where(eq(unidades.activo, true)).orderBy(unidades.nombre);
 }
 
@@ -405,12 +420,16 @@ export async function getUnidadConDatosCompletos(id: number) {
 }
 
 // Obtener todas las unidades con estadísticas
-export async function getAllUnidadesConEstadisticas() {
+export async function getAllUnidadesConEstadisticas(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
   
-  const todasUnidades = await db.select().from(unidades).where(eq(unidades.activo, true)).orderBy(unidades.nombre);
-  const todosItems = await db.select().from(items);
+  const todasUnidades = proyectoId
+    ? await db.select().from(unidades).where(and(eq(unidades.activo, true), eq(unidades.proyectoId, proyectoId))).orderBy(unidades.nombre)
+    : await db.select().from(unidades).where(eq(unidades.activo, true)).orderBy(unidades.nombre);
+  const todosItems = proyectoId
+    ? await db.select().from(items).where(eq(items.proyectoId, proyectoId))
+    : await db.select().from(items);
   
   return todasUnidades.map(unidad => {
     const itemsUnidad = todosItems.filter(i => i.unidadId === unidad.id);
@@ -546,9 +565,14 @@ export async function updateUnidadesOrden(updates: Array<{ id: number; orden: nu
 
 // ==================== ESPECIALIDADES ====================
 
-export async function getAllEspecialidades() {
+export async function getAllEspecialidades(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
+  if (proyectoId) {
+    return await db.select().from(especialidades)
+      .where(and(eq(especialidades.activo, true), eq(especialidades.proyectoId, proyectoId)))
+      .orderBy(especialidades.nombre);
+  }
   return await db.select().from(especialidades).where(eq(especialidades.activo, true)).orderBy(especialidades.nombre);
 }
 
@@ -578,13 +602,17 @@ export async function getEspecialidadConAtributos(id: number) {
 }
 
 // Obtener todas las especialidades con sus atributos
-export async function getAllEspecialidadesConAtributos() {
+export async function getAllEspecialidadesConAtributos(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
   
-  const todasEspecialidades = await db.select().from(especialidades)
-    .where(eq(especialidades.activo, true))
-    .orderBy(especialidades.nombre);
+  const todasEspecialidades = proyectoId
+    ? await db.select().from(especialidades)
+        .where(and(eq(especialidades.activo, true), eq(especialidades.proyectoId, proyectoId)))
+        .orderBy(especialidades.nombre)
+    : await db.select().from(especialidades)
+        .where(eq(especialidades.activo, true))
+        .orderBy(especialidades.nombre);
   
   const todosAtributos = await db.select().from(atributos)
     .where(eq(atributos.activo, true));
@@ -2411,4 +2439,42 @@ export async function setProyectoActivoUsuario(userId: number, proyectoId: numbe
     .where(eq(users.id, userId));
   
   return true;
+}
+
+
+// ==================== EMPRESA-ESPECIALIDADES ====================
+
+export async function getEspecialidadesPorEmpresa(empresaId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      id: especialidades.id,
+      nombre: especialidades.nombre,
+      codigo: especialidades.codigo,
+      color: especialidades.color,
+    })
+    .from(empresaEspecialidades)
+    .innerJoin(especialidades, eq(empresaEspecialidades.especialidadId, especialidades.id))
+    .where(eq(empresaEspecialidades.empresaId, empresaId));
+  
+  return result;
+}
+
+export async function asignarEspecialidadesAEmpresa(empresaId: number, especialidadIds: number[]) {
+  const db = await getDb();
+  if (!db) return;
+  
+  // Eliminar asignaciones anteriores
+  await db.delete(empresaEspecialidades).where(eq(empresaEspecialidades.empresaId, empresaId));
+  
+  // Insertar nuevas asignaciones
+  if (especialidadIds.length > 0) {
+    const inserts = especialidadIds.map(especialidadId => ({
+      empresaId,
+      especialidadId,
+    }));
+    await db.insert(empresaEspecialidades).values(inserts);
+  }
 }

@@ -64,16 +64,15 @@ export default function Usuarios() {
   const utils = trpc.useUtils();
   const { user } = useAuth();
   const { data: allUsuarios, isLoading } = trpc.users.listConEmpresa.useQuery();
-  const { data: allEmpresas } = trpc.empresas.list.useQuery();
+  // Obtener empresas filtradas por proyecto desde el backend
+  const { data: empresas } = trpc.empresas.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
   const { data: proyectoUsuarios } = trpc.proyectos.usuarios.useQuery(
     { proyectoId: selectedProjectId! },
     { enabled: !!selectedProjectId }
   );
-  
-  // Filtrar empresas por proyecto seleccionado
-  const empresas = selectedProjectId
-    ? allEmpresas?.filter(e => e.proyectoId === selectedProjectId)
-    : allEmpresas;
   
   // Filtrar usuarios por proyecto seleccionado (solo mostrar usuarios asignados al proyecto)
   const usuariosDelProyecto = selectedProjectId && proyectoUsuarios

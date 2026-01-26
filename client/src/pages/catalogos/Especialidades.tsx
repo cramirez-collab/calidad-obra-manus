@@ -52,12 +52,11 @@ export default function Especialidades() {
   });
 
   const utils = trpc.useUtils();
-  const { data: allEspecialidades, isLoading } = trpc.especialidades.list.useQuery();
-  
-  // Filtrar especialidades por proyecto seleccionado (aislamiento por proyecto)
-  const especialidades = selectedProjectId
-    ? allEspecialidades?.filter(e => e.proyectoId === selectedProjectId)
-    : allEspecialidades;
+  // Obtener especialidades filtradas por proyecto desde el backend
+  const { data: especialidades, isLoading } = trpc.especialidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
 
   const createMutation = trpc.especialidades.create.useMutation({
     onSuccess: () => {

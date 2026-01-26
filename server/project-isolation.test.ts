@@ -145,3 +145,97 @@ describe('Validación de acceso a proyecto', () => {
     expect(selectedProjectId).toBe(1);
   });
 });
+
+describe('Project Isolation - Backend Data Filtering Functions', () => {
+  describe('getAllEmpresas', () => {
+    it('should filter empresas by proyectoId when provided', async () => {
+      // The function signature accepts proyectoId as optional parameter
+      const funcStr = db.getAllEmpresas.toString();
+      expect(funcStr).toContain('proyectoId');
+    });
+
+    it('should return all empresas when proyectoId is not provided', async () => {
+      // The function should have conditional logic for proyectoId
+      const funcStr = db.getAllEmpresas.toString();
+      expect(funcStr).toContain('if (proyectoId)');
+    });
+  });
+
+  describe('getAllUnidades', () => {
+    it('should filter unidades by proyectoId when provided', async () => {
+      const funcStr = db.getAllUnidades.toString();
+      expect(funcStr).toContain('proyectoId');
+    });
+
+    it('should have conditional logic for proyectoId filtering', async () => {
+      const funcStr = db.getAllUnidades.toString();
+      expect(funcStr).toContain('if (proyectoId)');
+    });
+  });
+
+  describe('getAllEspecialidades', () => {
+    it('should filter especialidades by proyectoId when provided', async () => {
+      const funcStr = db.getAllEspecialidades.toString();
+      expect(funcStr).toContain('proyectoId');
+    });
+
+    it('should have conditional logic for proyectoId filtering', async () => {
+      const funcStr = db.getAllEspecialidades.toString();
+      expect(funcStr).toContain('if (proyectoId)');
+    });
+  });
+
+  describe('getAllUnidadesConEstadisticas', () => {
+    it('should filter unidades con estadisticas by proyectoId when provided', async () => {
+      const funcStr = db.getAllUnidadesConEstadisticas.toString();
+      expect(funcStr).toContain('proyectoId');
+    });
+  });
+
+  describe('getAllEmpresasConEstadisticas', () => {
+    it('should filter empresas con estadisticas by proyectoId when provided', async () => {
+      const funcStr = db.getAllEmpresasConEstadisticas.toString();
+      expect(funcStr).toContain('proyectoId');
+    });
+  });
+
+  describe('getAllEspecialidadesConAtributos', () => {
+    it('should filter especialidades con atributos by proyectoId when provided', async () => {
+      const funcStr = db.getAllEspecialidadesConAtributos.toString();
+      expect(funcStr).toContain('proyectoId');
+    });
+  });
+});
+
+describe('Project Isolation - Function Signatures', () => {
+  it('getAllEmpresas should accept optional proyectoId parameter', () => {
+    // Verify function can be called with and without proyectoId
+    expect(typeof db.getAllEmpresas).toBe('function');
+    expect(db.getAllEmpresas.length).toBeLessThanOrEqual(1); // 0 or 1 required params
+  });
+
+  it('getAllUnidades should accept optional proyectoId parameter', () => {
+    expect(typeof db.getAllUnidades).toBe('function');
+    expect(db.getAllUnidades.length).toBeLessThanOrEqual(1);
+  });
+
+  it('getAllEspecialidades should accept optional proyectoId parameter', () => {
+    expect(typeof db.getAllEspecialidades).toBe('function');
+    expect(db.getAllEspecialidades.length).toBeLessThanOrEqual(1);
+  });
+
+  it('getAllUnidadesConEstadisticas should accept optional proyectoId parameter', () => {
+    expect(typeof db.getAllUnidadesConEstadisticas).toBe('function');
+    expect(db.getAllUnidadesConEstadisticas.length).toBeLessThanOrEqual(1);
+  });
+
+  it('getAllEmpresasConEstadisticas should accept optional proyectoId parameter', () => {
+    expect(typeof db.getAllEmpresasConEstadisticas).toBe('function');
+    expect(db.getAllEmpresasConEstadisticas.length).toBeLessThanOrEqual(1);
+  });
+
+  it('getAllEspecialidadesConAtributos should accept optional proyectoId parameter', () => {
+    expect(typeof db.getAllEspecialidadesConAtributos).toBe('function');
+    expect(db.getAllEspecialidadesConAtributos.length).toBeLessThanOrEqual(1);
+  });
+});

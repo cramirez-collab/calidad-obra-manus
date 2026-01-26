@@ -401,3 +401,17 @@ export const auditoria = mysqlTable("auditoria", {
 
 export type Auditoria = typeof auditoria.$inferSelect;
 export type InsertAuditoria = typeof auditoria.$inferInsert;
+
+
+/**
+ * Tabla de relación empresa-especialidades (muchos a muchos)
+ */
+export const empresaEspecialidades = mysqlTable("empresa_especialidades", {
+  id: int("id").autoincrement().primaryKey(),
+  empresaId: int("empresaId").notNull(),
+  especialidadId: int("especialidadId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EmpresaEspecialidad = typeof empresaEspecialidades.$inferSelect;
+export type InsertEmpresaEspecialidad = typeof empresaEspecialidades.$inferInsert;

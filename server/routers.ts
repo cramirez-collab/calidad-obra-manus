@@ -175,14 +175,18 @@ export const appRouter = router({
 
   // ==================== EMPRESAS ====================
   empresas: router({
-    list: protectedProcedure.query(async () => {
-      return await db.getAllEmpresas();
-    }),
+    list: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllEmpresas(input?.proyectoId);
+      }),
     
     // Lista con estadísticas de ítems
-    listConEstadisticas: protectedProcedure.query(async () => {
-      return await db.getAllEmpresasConEstadisticas();
-    }),
+    listConEstadisticas: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllEmpresasConEstadisticas(input?.proyectoId);
+      }),
     
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
@@ -233,18 +237,40 @@ export const appRouter = router({
         await db.deleteEmpresa(input.id);
         return { success: true };
       }),
+    
+    // Obtener especialidades asignadas a una empresa
+    getEspecialidades: protectedProcedure
+      .input(z.object({ empresaId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getEspecialidadesPorEmpresa(input.empresaId);
+      }),
+    
+    // Asignar especialidades a una empresa
+    asignarEspecialidades: adminProcedure
+      .input(z.object({
+        empresaId: z.number(),
+        especialidadIds: z.array(z.number()),
+      }))
+      .mutation(async ({ input }) => {
+        await db.asignarEspecialidadesAEmpresa(input.empresaId, input.especialidadIds);
+        return { success: true };
+      }),
   }),
 
   // ==================== UNIDADES ====================
   unidades: router({
-    list: protectedProcedure.query(async () => {
-      return await db.getAllUnidades();
-    }),
+    list: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllUnidades(input?.proyectoId);
+      }),
     
     // Lista con estadísticas de ítems
-    listConEstadisticas: protectedProcedure.query(async () => {
-      return await db.getAllUnidadesConEstadisticas();
-    }),
+    listConEstadisticas: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllUnidadesConEstadisticas(input?.proyectoId);
+      }),
     
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
@@ -336,14 +362,18 @@ export const appRouter = router({
 
   // ==================== ESPECIALIDADES ====================
   especialidades: router({
-    list: protectedProcedure.query(async () => {
-      return await db.getAllEspecialidades();
-    }),
+    list: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllEspecialidades(input?.proyectoId);
+      }),
     
     // Lista con atributos relacionados en cadena
-    listConAtributos: protectedProcedure.query(async () => {
-      return await db.getAllEspecialidadesConAtributos();
-    }),
+    listConAtributos: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllEspecialidadesConAtributos(input?.proyectoId);
+      }),
     
     get: protectedProcedure
       .input(z.object({ id: z.number() }))

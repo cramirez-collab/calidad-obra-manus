@@ -637,3 +637,17 @@
 - [ ] Modificar esquema de QR para numeración consecutiva por proyecto
 - [ ] Actualizar lógica de generación de QR para usar numeración por proyecto
 - [ ] Cada proyecto tiene su propia secuencia (Proyecto A: QR-001, QR-002... Proyecto B: QR-001, QR-002...)
+
+
+## Ligar Especialidades a Empresas
+- [ ] Crear relación empresa-especialidades en base de datos
+- [ ] Actualizar frontend de empresas para asignar especialidades
+
+
+## BUG CRÍTICO: Mezcla de Datos entre Proyectos
+- [x] Diagnosticar por qué Torre Mayas muestra datos de Hidalma y viceversa
+- [x] Corregir unidades.list para filtrar por proyectoId en backend
+- [x] Corregir empresas.list para filtrar por proyectoId en backend
+- [x] Corregir especialidades.list para filtrar por proyectoId en backend
+- [x] Actualizar todas las páginas frontend para pasar proyectoId a las queries
+- [x] Verificar aislamiento correcto de datos por proyecto

@@ -56,13 +56,12 @@ export default function Empresas() {
   });
 
   const utils = trpc.useUtils();
-  const { data: empresas, isLoading } = trpc.empresas.list.useQuery();
+  // Obtener empresas filtradas por proyecto desde el backend
+  const { data: empresas, isLoading } = trpc.empresas.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
   const { data: proyectos } = trpc.proyectos.list.useQuery();
-
-  // Filtrar empresas por proyecto seleccionado (aislamiento por proyecto)
-  const empresasFiltradas = selectedProjectId
-    ? empresas?.filter(e => e.proyectoId === selectedProjectId)
-    : empresas;
 
   const createMutation = trpc.empresas.create.useMutation({
     onSuccess: () => {
@@ -191,7 +190,7 @@ export default function Empresas() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Lista de Empresas ({empresasFiltradas?.length || 0})
+              Lista de Empresas ({empresas?.length || 0})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -199,7 +198,7 @@ export default function Empresas() {
               <div className="text-center py-8 text-muted-foreground">
                 Cargando...
               </div>
-            ) : empresasFiltradas?.length === 0 ? (
+            ) : empresas?.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No hay empresas registradas
               </div>
@@ -217,7 +216,7 @@ export default function Empresas() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {empresasFiltradas?.map((empresa) => (
+                    {empresas?.map((empresa) => (
                       <TableRow key={empresa.id}>
                         <TableCell className="font-medium">{empresa.nombre}</TableCell>
                         <TableCell className="hidden sm:table-cell">

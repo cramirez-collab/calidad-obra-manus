@@ -62,12 +62,13 @@ export default function Defectos() {
   const { selectedProjectId } = useProject();
   const utils = trpc.useUtils();
   const { data: allDefectos, isLoading } = trpc.defectos.listConEstadisticas.useQuery();
-  const { data: allEspecialidades } = trpc.especialidades.list.useQuery();
+  // Obtener especialidades filtradas por proyecto desde el backend
+  const { data: especialidades } = trpc.especialidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
   
-  // Filtrar por proyecto seleccionado (aislamiento por proyecto)
-  const especialidades = selectedProjectId
-    ? allEspecialidades?.filter(e => e.proyectoId === selectedProjectId)
-    : allEspecialidades;
+  // Filtrar defectos por proyecto seleccionado
   const defectos = selectedProjectId
     ? allDefectos?.filter(d => d.proyectoId === selectedProjectId)
     : allDefectos;

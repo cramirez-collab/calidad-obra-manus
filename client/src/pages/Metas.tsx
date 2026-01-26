@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useProject } from "@/contexts/ProjectContext";
 
 const tipoMetas = [
   { value: 'aprobacion', label: 'Tasa de Aprobación', icon: CheckCircle2, unidad: '%' },
@@ -32,13 +33,20 @@ const tipoMetas = [
 
 export default function Metas() {
   const { user } = useAuth();
+  const { selectedProjectId } = useProject();
   const isSuperadmin = user?.role === 'superadmin';
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMeta, setEditingMeta] = useState<any>(null);
 
   const { data: metas, isLoading, refetch } = trpc.metas.listConProgreso.useQuery();
-  const { data: empresas } = trpc.empresas.list.useQuery();
-  const { data: unidades } = trpc.unidades.list.useQuery();
+  const { data: empresas } = trpc.empresas.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const { data: unidades } = trpc.unidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
 
   const createMutation = trpc.metas.create.useMutation({
     onSuccess: () => {

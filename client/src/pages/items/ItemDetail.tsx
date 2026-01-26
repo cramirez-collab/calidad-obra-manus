@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { useLocation, useParams } from "wouter";
+import { useProject } from "@/contexts/ProjectContext";
 import { toast } from "sonner";
 import QRCode from "qrcode";
 import { useEffect } from "react";
@@ -54,6 +55,7 @@ export default function ItemDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { selectedProjectId } = useProject();
   const itemId = parseInt(id || "0");
 
   const [showFotoDespuesDialog, setShowFotoDespuesDialog] = useState(false);
@@ -70,9 +72,15 @@ export default function ItemDetail() {
   const { data: item, isLoading } = trpc.items.get.useQuery({ id: itemId });
   const { data: historial } = trpc.items.historial.useQuery({ itemId });
   const { data: comentarios, refetch: refetchComentarios } = trpc.comentarios.byItem.useQuery({ itemId });
-  const { data: empresas } = trpc.empresas.list.useQuery();
-  const { data: unidades } = trpc.unidades.list.useQuery();
-  const { data: especialidades } = trpc.especialidades.list.useQuery();
+  const { data: empresas } = trpc.empresas.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
+  const { data: unidades } = trpc.unidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
+  const { data: especialidades } = trpc.especialidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
   const { data: users } = trpc.users.list.useQuery();
 
   const [nuevoComentario, setNuevoComentario] = useState("");

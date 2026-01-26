@@ -53,21 +53,20 @@ export default function NuevoItem() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const { data: proyectos } = trpc.proyectos.list.useQuery();
-  const { data: allEmpresas } = trpc.empresas.list.useQuery();
-  const { data: allUnidades } = trpc.unidades.list.useQuery();
-  const { data: allEspecialidades } = trpc.especialidades.list.useQuery();
+  // Obtener datos filtrados por proyecto desde el backend
+  const { data: empresas } = trpc.empresas.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const { data: unidades } = trpc.unidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const { data: especialidades } = trpc.especialidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
   const { data: atributos } = trpc.atributos.list.useQuery();
-  
-  // Filtrar por proyecto seleccionado del contexto global
-  const empresas = selectedProjectId 
-    ? allEmpresas?.filter(e => e.proyectoId === selectedProjectId)
-    : allEmpresas;
-  const unidades = selectedProjectId
-    ? allUnidades?.filter(u => u.proyectoId === selectedProjectId)
-    : allUnidades;
-  const especialidades = selectedProjectId
-    ? allEspecialidades?.filter(e => e.proyectoId === selectedProjectId)
-    : allEspecialidades;
   
   // Sincronizar proyectoId del formulario con el proyecto seleccionado
   useEffect(() => {

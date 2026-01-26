@@ -1,0 +1,130 @@
+{
+  "query": "SELECT u.id, u.nombre, u.proyectoId, p.nombre as proyecto_nombre FROM unidades u LEFT JOIN proyectos p ON u.proyectoId = p.id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT u.id, u.nombre, u.proyectoId, p.nombre as proyecto_nombre FROM unidades u LEFT JOIN proyectos p ON u.proyectoId = p.id LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "nombre": "101",
+      "proyectoId": "NULL",
+      "proyecto_nombre": "NULL"
+    },
+    {
+      "id": "30001",
+      "nombre": "101",
+      "proyectoId": "NULL",
+      "proyecto_nombre": "NULL"
+    },
+    {
+      "id": "30002",
+      "nombre": "101",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30003",
+      "nombre": "102",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30004",
+      "nombre": "101",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30005",
+      "nombre": "102",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30006",
+      "nombre": "103",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30007",
+      "nombre": "105",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30008",
+      "nombre": "106",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30009",
+      "nombre": "201",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30010",
+      "nombre": "202",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30011",
+      "nombre": "203",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30012",
+      "nombre": "205",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30013",
+      "nombre": "206",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30014",
+      "nombre": "207",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30015",
+      "nombre": "208",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30016",
+      "nombre": "301",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30017",
+      "nombre": "302",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30018",
+      "nombre": "303",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    },
+    {
+      "id": "30019",
+      "nombre": "304",
+      "proyectoId": "30001",
+      "proyecto_nombre": "Torre Mayas"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tproyectoId\tproyecto_nombre\n1\t101\tNULL\tNULL\n30001\t101\tNULL\tNULL\n30002\t101\t30001\tTorre Mayas\n30003\t102\t30001\tTorre Mayas\n30004\t101\t30001\tTorre Mayas\n30005\t102\t30001\tTorre Mayas\n30006\t103\t30001\tTorre Mayas\n30007\t105\t30001\tTorre Mayas\n30008\t106\t30001\tTorre Mayas\n30009\t201\t30001\tTorre Mayas\n30010\t202\t30001\tTorre Mayas\n30011\t203\t30001\tTorre Mayas\n30012\t205\t30001\tTorre Mayas\n30013\t206\t30001\tTorre Mayas\n30014\t207\t30001\tTorre Mayas\n30015\t208\t30001\tTorre Mayas\n30016\t301\t30001\tTorre Mayas\n30017\t302\t30001\tTorre Mayas\n30018\t303\t30001\tTorre Mayas\n30019\t304\t30001\tTorre Mayas\n",
+  "stderr": "",
+  "execution_time_ms": 81
+}

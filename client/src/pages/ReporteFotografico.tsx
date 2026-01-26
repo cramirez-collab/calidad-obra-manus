@@ -28,6 +28,7 @@ import {
   Loader2
 } from "lucide-react";
 import { toast } from "sonner";
+import { useProject } from "@/contexts/ProjectContext";
 
 const statusLabels: Record<string, string> = {
   pendiente_foto_despues: "Pendiente Foto",
@@ -44,11 +45,9 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ReporteFotografico() {
+  const { selectedProjectId } = useProject();
   const { data: proyectos } = trpc.proyectos.list.useQuery();
-  const { data: allEmpresas } = trpc.empresas.list.useQuery();
-  const { data: allUnidades } = trpc.unidades.list.useQuery();
-  const { data: allEspecialidades } = trpc.especialidades.list.useQuery();
-
+  
   const [filters, setFilters] = useState({
     proyectoId: "",
     empresaId: "",
@@ -59,16 +58,21 @@ export default function ReporteFotografico() {
     fechaHasta: "",
   });
 
-  // Filtrar por proyecto seleccionado
-  const empresas = filters.proyectoId && filters.proyectoId !== "all"
-    ? allEmpresas?.filter(e => e.proyectoId === parseInt(filters.proyectoId))
-    : allEmpresas;
-  const unidades = filters.proyectoId && filters.proyectoId !== "all"
-    ? allUnidades?.filter(u => u.proyectoId === parseInt(filters.proyectoId))
-    : allUnidades;
-  const especialidades = filters.proyectoId && filters.proyectoId !== "all"
-    ? allEspecialidades?.filter(e => e.proyectoId === parseInt(filters.proyectoId))
-    : allEspecialidades;
+  // Obtener el proyecto activo para filtrar
+  const proyectoIdFiltro = filters.proyectoId && filters.proyectoId !== "all" 
+    ? parseInt(filters.proyectoId) 
+    : selectedProjectId;
+  
+  // Obtener datos filtrados por proyecto desde el backend
+  const { data: empresas } = trpc.empresas.list.useQuery(
+    proyectoIdFiltro ? { proyectoId: proyectoIdFiltro } : undefined
+  );
+  const { data: unidades } = trpc.unidades.list.useQuery(
+    proyectoIdFiltro ? { proyectoId: proyectoIdFiltro } : undefined
+  );
+  const { data: especialidades } = trpc.especialidades.list.useQuery(
+    proyectoIdFiltro ? { proyectoId: proyectoIdFiltro } : undefined
+  );
   
   // Obtener nombre del proyecto para el reporte
   const proyectoSeleccionado = proyectos?.find(p => p.id.toString() === filters.proyectoId);

@@ -20,6 +20,7 @@ import {
   Loader2,
   RefreshCw
 } from "lucide-react";
+import { useProject } from "@/contexts/ProjectContext";
 import {
   LineChart,
   Line,
@@ -39,6 +40,7 @@ import {
 const COLORS = ['#10B981', '#EF4444', '#F59E0B', '#3B82F6'];
 
 export default function KPIs() {
+  const { selectedProjectId } = useProject();
   const [filtros, setFiltros] = useState<{
     empresaId?: number;
     unidadId?: number;
@@ -46,9 +48,18 @@ export default function KPIs() {
   }>({});
 
   const { data: kpis, isLoading, refetch } = trpc.estadisticas.kpis.useQuery(filtros);
-  const { data: empresas } = trpc.empresas.list.useQuery();
-  const { data: unidades } = trpc.unidades.list.useQuery();
-  const { data: especialidades } = trpc.especialidades.list.useQuery();
+  const { data: empresas } = trpc.empresas.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const { data: unidades } = trpc.unidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const { data: especialidades } = trpc.especialidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
   const { data: users } = trpc.users.list.useQuery();
 
   const getSupervisorName = (id: number | null) => {

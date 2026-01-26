@@ -24,24 +24,23 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const { selectedProjectId } = useProject();
   
-  // Estadísticas filtradas por proyecto
+  // Estadísticas y datos filtrados por proyecto desde el backend
   const { data: stats } = trpc.estadisticas.general.useQuery(
-    selectedProjectId ? { proyectoId: selectedProjectId } : {}
+    selectedProjectId ? { proyectoId: selectedProjectId } : {},
+    { enabled: !!selectedProjectId }
   );
-  const { data: allEmpresas } = trpc.empresas.list.useQuery();
-  const { data: allUnidades } = trpc.unidades.list.useQuery();
-  const { data: allEspecialidades } = trpc.especialidades.list.useQuery();
-  
-  // Filtrar por proyecto seleccionado
-  const empresas = selectedProjectId
-    ? allEmpresas?.filter(e => e.proyectoId === selectedProjectId)
-    : allEmpresas;
-  const unidades = selectedProjectId
-    ? allUnidades?.filter(u => u.proyectoId === selectedProjectId)
-    : allUnidades;
-  const especialidades = selectedProjectId
-    ? allEspecialidades?.filter(e => e.proyectoId === selectedProjectId)
-    : allEspecialidades;
+  const { data: empresas } = trpc.empresas.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const { data: unidades } = trpc.unidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const { data: especialidades } = trpc.especialidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
 
   const statusCounts = stats?.porStatus?.reduce((acc, item) => {
     acc[item.status] = Number(item.count);

@@ -1,0 +1,22 @@
+{
+  "query": "SELECT p.id, p.nombre, p.codigo, COUNT(u.id) as total_unidades FROM proyectos p LEFT JOIN unidades u ON u.proyectoId = p.id GROUP BY p.id, p.nombre, p.codigo;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT p.id, p.nombre, p.codigo, COUNT(u.id) as total_unidades FROM proyectos p LEFT JOIN unidades u ON u.proyectoId = p.id GROUP BY p.id, p.nombre, p.codigo;",
+  "rows": [
+    {
+      "id": "30001",
+      "nombre": "Torre Mayas",
+      "codigo": "2026-Mayas",
+      "total_unidades": "145"
+    },
+    {
+      "id": "1",
+      "nombre": "Hidalma ",
+      "codigo": "TRN‐Hidalma",
+      "total_unidades": "143"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tcodigo\ttotal_unidades\n30001\tTorre Mayas\t2026-Mayas\t145\n1\tHidalma \tTRN‐Hidalma\t143\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

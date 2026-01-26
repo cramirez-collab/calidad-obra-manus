@@ -33,6 +33,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useProject } from "@/contexts/ProjectContext";
 import {
   BarChart,
   Bar,
@@ -62,6 +63,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function Estadisticas() {
+  const { selectedProjectId } = useProject();
   const [filters, setFilters] = useState({
     empresaId: "",
     unidadId: "",
@@ -73,9 +75,18 @@ export default function Estadisticas() {
   });
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: empresas } = trpc.empresas.list.useQuery();
-  const { data: unidades } = trpc.unidades.list.useQuery();
-  const { data: especialidades } = trpc.especialidades.list.useQuery();
+  const { data: empresas } = trpc.empresas.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const { data: unidades } = trpc.unidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const { data: especialidades } = trpc.especialidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
   const { data: usuarios } = trpc.users.list.useQuery();
 
   const queryFilters = useMemo(() => ({

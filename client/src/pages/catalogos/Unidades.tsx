@@ -47,12 +47,11 @@ export default function Unidades() {
   });
 
   const utils = trpc.useUtils();
-  const { data: allUnidades, isLoading } = trpc.unidades.list.useQuery();
-  
-  // Filtrar unidades por proyecto seleccionado (aislamiento por proyecto)
-  const unidades = selectedProjectId
-    ? allUnidades?.filter(u => u.proyectoId === selectedProjectId)
-    : allUnidades;
+  // Obtener unidades filtradas por proyecto desde el backend
+  const { data: unidades, isLoading } = trpc.unidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
 
   const createMutation = trpc.unidades.create.useMutation({
     onSuccess: () => {
