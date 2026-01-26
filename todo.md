@@ -624,3 +624,4 @@
 - [x] Verificar vinculación de Defectos a proyecto
 - [ ] Verificar estructura completa de Items con filtros
 - [ ] Asegurar reportes muestren datos reales del proyecto
+- [x] Agregar menú lateral (DashboardLayout) a página de Proyectos
