@@ -879,6 +879,21 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await db.getItemHistorial(input.itemId);
       }),
+    
+    delete: supervisorProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const item = await db.getItemById(input.id);
+        if (!item) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ítem no encontrado' });
+        
+        // Solo admin, superadmin y supervisor pueden eliminar
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'superadmin' && ctx.user.role !== 'supervisor') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permisos para eliminar ítems' });
+        }
+        
+        await db.deleteItem(input.id);
+        return { success: true };
+      }),
   }),
 
   // ==================== ESTADÍSTICAS ====================

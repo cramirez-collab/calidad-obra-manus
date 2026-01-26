@@ -720,3 +720,10 @@
 - [x] Eliminar descripción y comentario
 - [x] Formulario en una sola pantalla con fotos
 - [x] QR de ítem: agregar opción de foto "después" y validar
+
+## Permisos de eliminación y selección desde BD
+- [x] Botón eliminar solo visible para admin/superadmin/supervisor
+- [x] Residentes no ven el icono de eliminar
+- [x] Espacios seleccionables desde base de datos (filtrados por unidad)
+- [x] Defectos seleccionables desde base de datos (filtrados por especialidad)
+- [x] Poblados 48 defectos típicos por especialidad (estructura, hidráulica, eléctrica, gas, hvac, supervisión)

@@ -2584,3 +2584,15 @@ export async function asignarEspecialidadesAEmpresa(empresaId: number, especiali
     await db.insert(empresaEspecialidades).values(inserts);
   }
 }
+
+// Eliminar un ítem y su historial
+export async function deleteItem(itemId: number) {
+  const db = await getDb();
+  if (!db) return;
+  
+  // Primero eliminar el historial relacionado
+  await db.delete(itemHistorial).where(eq(itemHistorial.itemId, itemId));
+  
+  // Luego eliminar el ítem
+  await db.delete(items).where(eq(items.id, itemId));
+}

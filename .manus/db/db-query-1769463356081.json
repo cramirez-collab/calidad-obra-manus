@@ -1,0 +1,118 @@
+{
+  "query": "SELECT * FROM especialidades;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT * FROM especialidades;",
+  "rows": [
+    {
+      "id": "1",
+      "nombre": "Estructura ",
+      "codigo": "Est-01",
+      "descripcion": "Detallado Estructura ",
+      "color": "#3B82F6",
+      "activo": "1",
+      "createdAt": "2026-01-25 05:35:03",
+      "updatedAt": "2026-01-25 05:35:03",
+      "proyectoId": "NULL",
+      "residenteId": "NULL"
+    },
+    {
+      "id": "30001",
+      "nombre": "Supervision",
+      "codigo": "SUP",
+      "descripcion": "Supervision de Obra",
+      "color": "#3B82F6",
+      "activo": "1",
+      "createdAt": "2026-01-26 04:57:21",
+      "updatedAt": "2026-01-26 04:57:21",
+      "proyectoId": "NULL",
+      "residenteId": "NULL"
+    },
+    {
+      "id": "30002",
+      "nombre": "Supervision",
+      "codigo": "SUP",
+      "descripcion": "Supervisar la Calidad ",
+      "color": "#3B82F6",
+      "activo": "1",
+      "createdAt": "2026-01-26 04:58:14",
+      "updatedAt": "2026-01-26 04:58:14",
+      "proyectoId": "NULL",
+      "residenteId": "NULL"
+    },
+    {
+      "id": "30003",
+      "nombre": "Supervision",
+      "codigo": "SUP",
+      "descripcion": "Supervision de calidad ",
+      "color": "#243966",
+      "activo": "1",
+      "createdAt": "2026-01-26 05:05:00",
+      "updatedAt": "2026-01-26 05:05:00",
+      "proyectoId": "1",
+      "residenteId": "NULL"
+    },
+    {
+      "id": "30004",
+      "nombre": "Estructura ",
+      "codigo": "EST",
+      "descripcion": "Estructura de Concreto",
+      "color": "#828282",
+      "activo": "1",
+      "createdAt": "2026-01-26 05:05:39",
+      "updatedAt": "2026-01-26 06:06:06",
+      "proyectoId": "1",
+      "residenteId": "NULL"
+    },
+    {
+      "id": "30005",
+      "nombre": "Electrica",
+      "codigo": "ELEC",
+      "descripcion": "Baja tensión ",
+      "color": "#F97316",
+      "activo": "1",
+      "createdAt": "2026-01-26 06:06:53",
+      "updatedAt": "2026-01-26 06:08:36",
+      "proyectoId": "1",
+      "residenteId": "NULL"
+    },
+    {
+      "id": "30006",
+      "nombre": "Gas",
+      "codigo": "GAS",
+      "descripcion": "Gas",
+      "color": "#ffff00",
+      "activo": "1",
+      "createdAt": "2026-01-26 06:07:46",
+      "updatedAt": "2026-01-26 06:08:17",
+      "proyectoId": "1",
+      "residenteId": "NULL"
+    },
+    {
+      "id": "30007",
+      "nombre": "Hidráulica ",
+      "codigo": "HID",
+      "descripcion": "Agua Fría Caliente",
+      "color": "#06B6D4",
+      "activo": "1",
+      "createdAt": "2026-01-26 06:08:56",
+      "updatedAt": "2026-01-26 06:09:12",
+      "proyectoId": "1",
+      "residenteId": "NULL"
+    },
+    {
+      "id": "30008",
+      "nombre": "Hvac",
+      "codigo": "HVAC",
+      "descripcion": "Drenes Tuberías Extracción ",
+      "color": "#8B5CF6",
+      "activo": "1",
+      "createdAt": "2026-01-26 06:10:08",
+      "updatedAt": "2026-01-26 06:10:08",
+      "proyectoId": "1",
+      "residenteId": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tcodigo\tdescripcion\tcolor\tactivo\tcreatedAt\tupdatedAt\tproyectoId\tresidenteId\n1\tEstructura \tEst-01\tDetallado Estructura \t#3B82F6\t1\t2026-01-25 05:35:03\t2026-01-25 05:35:03\tNULL\tNULL\n30001\tSupervision\tSUP\tSupervision de Obra\t#3B82F6\t1\t2026-01-26 04:57:21\t2026-01-26 04:57:21\tNULL\tNULL\n30002\tSupervision\tSUP\tSupervisar la Calidad \t#3B82F6\t1\t2026-01-26 04:58:14\t2026-01-26 04:58:14\tNULL\tNULL\n30003\tSupervision\tSUP\tSupervision de calidad \t#243966\t1\t2026-01-26 05:05:00\t2026-01-26 05:05:00\t1\tNULL\n30004\tEstructura \tEST\tEstructura de Concreto\t#828282\t1\t2026-01-26 05:05:39\t2026-01-26 06:06:06\t1\tNULL\n30005\tElectrica\tELEC\tBaja tensión \t#F97316\t1\t2026-01-26 06:06:53\t2026-01-26 06:08:36\t1\tNULL\n30006\tGas\tGAS\tGas\t#ffff00\t1\t2026-01-26 06:07:46\t2026-01-26 06:08:17\t1\tNULL\n30007\tHidráulica \tHID\tAgua Fría Caliente\t#06B6D4\t1\t2026-01-26 06:08:56\t2026-01-26 06:09:12\t1\tNULL\n30008\tHvac\tHVAC\tDrenes Tuberías Extracción \t#8B5CF6\t1\t2026-01-26 06:10:08\t2026-01-26 06:10:08\t1\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

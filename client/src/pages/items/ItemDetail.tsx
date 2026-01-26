@@ -28,8 +28,19 @@ import {
   User,
   Calendar,
   MessageSquare,
-  Upload
+  Upload,
+  Trash2
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useState, useRef } from "react";
 import { useLocation, useParams } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
@@ -60,6 +71,7 @@ export default function ItemDetail() {
 
   const [showFotoDespuesDialog, setShowFotoDespuesDialog] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [approvalAction, setApprovalAction] = useState<"aprobar" | "rechazar">("aprobar");
   const [comentario, setComentario] = useState("");
   const [fotoDespues, setFotoDespues] = useState<string | null>(null);
@@ -237,6 +249,23 @@ export default function ItemDetail() {
   
   const canApprove = item?.status === "pendiente_aprobacion" && 
     ["admin", "supervisor"].includes(user?.role || "");
+  
+  // Solo admin, superadmin y supervisor pueden eliminar
+  const canDelete = ["admin", "superadmin", "supervisor"].includes(user?.role || "");
+  
+  const deleteMutation = trpc.items.delete.useMutation({
+    onSuccess: () => {
+      toast.success('Ítem eliminado correctamente');
+      setLocation('/items');
+    },
+    onError: (error) => {
+      toast.error('Error al eliminar: ' + error.message);
+    }
+  });
+  
+  const handleDelete = () => {
+    deleteMutation.mutate({ id: itemId });
+  };
 
   if (isLoading) {
     return (
@@ -314,6 +343,17 @@ export default function ItemDetail() {
                   Aprobar
                 </Button>
               </>
+            )}
+            {canDelete && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="text-red-600 border-red-200 hover:bg-red-50"
+                onClick={() => setShowDeleteDialog(true)}
+                title="Eliminar ítem"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             )}
           </div>
         </div>
@@ -701,6 +741,28 @@ export default function ItemDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog: Confirmar Eliminación */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Ítem</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas eliminar el ítem "{item?.titulo}"?
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

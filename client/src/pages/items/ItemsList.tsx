@@ -16,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FileSpreadsheet, FileText } from "lucide-react";
+import { FileSpreadsheet, FileText, Trash2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { 
   ClipboardCheck, 
@@ -32,6 +32,18 @@ import {
   Download
 } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useLocation } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -59,6 +71,28 @@ const statusIcons: Record<string, typeof Clock> = {
 export default function ItemsList() {
   const [, setLocation] = useLocation();
   const { selectedProjectId } = useProject();
+  const { user } = useAuth();
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const utils = trpc.useUtils();
+  
+  // Solo admin, superadmin y supervisor pueden eliminar
+  const canDelete = user?.role === 'admin' || user?.role === 'superadmin' || user?.role === 'supervisor';
+  
+  const deleteMutation = trpc.items.delete.useMutation({
+    onSuccess: () => {
+      toast.success('Ítem eliminado correctamente');
+      utils.items.list.invalidate();
+      setItemToDelete(null);
+    },
+    onError: (error) => {
+      toast.error('Error al eliminar: ' + error.message);
+    }
+  });
+  
+  const handleDelete = (itemId: number) => {
+    deleteMutation.mutate({ id: itemId });
+  };
+  
   const [filters, setFilters] = useState({
     empresaId: "",
     unidadId: "",
