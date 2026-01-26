@@ -52,10 +52,26 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-createRoot(document.getElementById("root")!).render(
+// Ocultar splash screen cuando la app esté lista
+const hideSplashScreen = () => {
+  const splash = document.getElementById('splash-screen');
+  if (splash) {
+    splash.style.opacity = '0';
+    setTimeout(() => {
+      splash.style.display = 'none';
+    }, 300);
+  }
+};
+
+// Renderizar la app y ocultar splash
+const root = createRoot(document.getElementById("root")!);
+root.render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
       <App />
     </QueryClientProvider>
   </trpc.Provider>
 );
+
+// Ocultar splash después de un breve delay para asegurar que la UI esté lista
+setTimeout(hideSplashScreen, 500);

@@ -613,3 +613,5 @@
 - [x] Mostrar foto de portada en tarjetas de selección de proyecto
 
 - [x] Crear ícono PWA optimizado con logo de Objetiva
+- [x] Configurar splash screen con ícono OQC durante la carga
+- [x] Actualizar PWA para mostrar ícono correcto en instalación
