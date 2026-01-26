@@ -611,3 +611,5 @@
 - [x] Agregar campo imagenPortada en tabla proyectos
 - [x] Permitir subir foto de portada para cada proyecto
 - [x] Mostrar foto de portada en tarjetas de selección de proyecto
+
+- [x] Crear ícono PWA optimizado con logo de Objetiva
