@@ -2912,3 +2912,447 @@ export async function getTop5Peores(proyectoId?: number) {
     especialidades: especialidadesProblemas,
   };
 }
+
+
+// ==================== ESTADÍSTICAS COMPLETAS ====================
+
+// Estadísticas completas por usuario
+export async function getEstadisticasUsuario(usuarioId: number, proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const usuario = await db.select().from(users).where(eq(users.id, usuarioId)).limit(1);
+  if (usuario.length === 0) return null;
+  
+  const conditions = [eq(items.residenteId, usuarioId)];
+  if (proyectoId) {
+    conditions.push(eq(items.proyectoId, proyectoId));
+  }
+  
+  const itemsUsuario = await db.select().from(items).where(and(...conditions));
+  
+  // Estadísticas básicas
+  const total = itemsUsuario.length;
+  const pendientesFoto = itemsUsuario.filter(i => i.status === 'pendiente_foto_despues').length;
+  const pendientesAprobacion = itemsUsuario.filter(i => i.status === 'pendiente_aprobacion').length;
+  const aprobados = itemsUsuario.filter(i => i.status === 'aprobado').length;
+  const rechazados = itemsUsuario.filter(i => i.status === 'rechazado').length;
+  
+  // Tiempo promedio de resolución
+  const itemsResueltos = itemsUsuario.filter(i => i.status === 'aprobado' && i.fechaAprobacion);
+  let tiempoPromedioResolucion = 0;
+  if (itemsResueltos.length > 0) {
+    const tiempos = itemsResueltos.map(i => {
+      const inicio = new Date(i.fechaCreacion).getTime();
+      const fin = new Date(i.fechaAprobacion!).getTime();
+      return (fin - inicio) / (1000 * 60 * 60 * 24); // días
+    });
+    tiempoPromedioResolucion = tiempos.reduce((a, b) => a + b, 0) / tiempos.length;
+  }
+  
+  // Tasa de aprobación
+  const totalFinalizados = aprobados + rechazados;
+  const tasaAprobacion = totalFinalizados > 0 ? (aprobados / totalFinalizados) * 100 : 0;
+  
+  // Defectos más frecuentes del usuario
+  const defectosCount: Record<number, number> = {};
+  itemsUsuario.forEach(item => {
+    if (item.defectoId) {
+      defectosCount[item.defectoId] = (defectosCount[item.defectoId] || 0) + 1;
+    }
+  });
+  
+  const todosDefectos = await db.select().from(defectos);
+  const defectosMap = new Map(todosDefectos.map(d => [d.id, d]));
+  
+  const defectosFrecuentes = Object.entries(defectosCount)
+    .map(([id, count]) => ({
+      defecto: defectosMap.get(parseInt(id)),
+      count,
+    }))
+    .filter(d => d.defecto)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+  
+  // Mensajes enviados
+  const mensajesUsuario = await db.select().from(mensajes).where(eq(mensajes.usuarioId, usuarioId));
+  const totalMensajes = mensajesUsuario.length;
+  
+  // Menciones recibidas
+  const todosMensajes = await db.select().from(mensajes);
+  const mencionesRecibidas = todosMensajes.filter(m => {
+    if (!m.menciones) return false;
+    try {
+      const menciones = JSON.parse(m.menciones);
+      return menciones.includes(usuarioId);
+    } catch {
+      return false;
+    }
+  }).length;
+  
+  return {
+    usuario: usuario[0],
+    estadisticas: {
+      total,
+      pendientesFoto,
+      pendientesAprobacion,
+      aprobados,
+      rechazados,
+      tasaAprobacion: Math.round(tasaAprobacion * 10) / 10,
+      tiempoPromedioResolucion: Math.round(tiempoPromedioResolucion * 10) / 10,
+    },
+    defectosFrecuentes,
+    mensajeria: {
+      mensajesEnviados: totalMensajes,
+      mencionesRecibidas,
+    },
+  };
+}
+
+// Estadísticas completas por defecto
+export async function getEstadisticasDefecto(defectoId: number, proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const defecto = await db.select().from(defectos).where(eq(defectos.id, defectoId)).limit(1);
+  if (defecto.length === 0) return null;
+  
+  const conditions = [eq(items.defectoId, defectoId)];
+  if (proyectoId) {
+    conditions.push(eq(items.proyectoId, proyectoId));
+  }
+  
+  const itemsDefecto = await db.select().from(items).where(and(...conditions));
+  
+  // Estadísticas básicas
+  const total = itemsDefecto.length;
+  const pendientes = itemsDefecto.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+  const aprobados = itemsDefecto.filter(i => i.status === 'aprobado').length;
+  const rechazados = itemsDefecto.filter(i => i.status === 'rechazado').length;
+  
+  // Tiempo promedio de corrección
+  const itemsResueltos = itemsDefecto.filter(i => i.status === 'aprobado' && i.fechaAprobacion);
+  let tiempoPromedioCorreccion = 0;
+  if (itemsResueltos.length > 0) {
+    const tiempos = itemsResueltos.map(i => {
+      const inicio = new Date(i.fechaCreacion).getTime();
+      const fin = new Date(i.fechaAprobacion!).getTime();
+      return (fin - inicio) / (1000 * 60 * 60 * 24); // días
+    });
+    tiempoPromedioCorreccion = tiempos.reduce((a, b) => a + b, 0) / tiempos.length;
+  }
+  
+  // Empresas más afectadas
+  const empresasCount: Record<number, number> = {};
+  itemsDefecto.forEach(item => {
+    if (item.empresaId) {
+      empresasCount[item.empresaId] = (empresasCount[item.empresaId] || 0) + 1;
+    }
+  });
+  
+  const todasEmpresas = await db.select().from(empresas);
+  const empresasMap = new Map(todasEmpresas.map(e => [e.id, e]));
+  
+  const empresasAfectadas = Object.entries(empresasCount)
+    .map(([id, count]) => ({
+      empresa: empresasMap.get(parseInt(id)),
+      count,
+    }))
+    .filter(e => e.empresa)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+  
+  // Unidades más afectadas
+  const unidadesCount: Record<number, number> = {};
+  itemsDefecto.forEach(item => {
+    if (item.unidadId) {
+      unidadesCount[item.unidadId] = (unidadesCount[item.unidadId] || 0) + 1;
+    }
+  });
+  
+  const todasUnidades = await db.select().from(unidades);
+  const unidadesMap = new Map(todasUnidades.map(u => [u.id, u]));
+  
+  const unidadesAfectadas = Object.entries(unidadesCount)
+    .map(([id, count]) => ({
+      unidad: unidadesMap.get(parseInt(id)),
+      count,
+    }))
+    .filter(u => u.unidad)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+  
+  return {
+    defecto: defecto[0],
+    estadisticas: {
+      total,
+      pendientes,
+      aprobados,
+      rechazados,
+      tasaAprobacion: total > 0 ? Math.round((aprobados / total) * 1000) / 10 : 0,
+      tiempoPromedioCorreccion: Math.round(tiempoPromedioCorreccion * 10) / 10,
+    },
+    empresasAfectadas,
+    unidadesAfectadas,
+  };
+}
+
+// Estadísticas de mensajería global
+export async function getEstadisticasMensajeria(proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Obtener todos los mensajes
+  let todosMensajes = await db.select().from(mensajes);
+  
+  // Filtrar por proyecto si se especifica
+  if (proyectoId) {
+    const itemsProyecto = await db.select().from(items).where(eq(items.proyectoId, proyectoId));
+    const itemIds = new Set(itemsProyecto.map(i => i.id));
+    todosMensajes = todosMensajes.filter(m => itemIds.has(m.itemId));
+  }
+  
+  // Usuarios más activos en mensajería
+  const mensajesPorUsuario: Record<number, number> = {};
+  todosMensajes.forEach(m => {
+    mensajesPorUsuario[m.usuarioId] = (mensajesPorUsuario[m.usuarioId] || 0) + 1;
+  });
+  
+  const todosUsuarios = await db.select().from(users);
+  const usuariosMap = new Map(todosUsuarios.map(u => [u.id, u]));
+  
+  const usuariosActivos = Object.entries(mensajesPorUsuario)
+    .map(([id, count]) => ({
+      usuario: usuariosMap.get(parseInt(id)),
+      mensajes: count,
+    }))
+    .filter(u => u.usuario)
+    .sort((a, b) => b.mensajes - a.mensajes)
+    .slice(0, 10);
+  
+  // Menciones por usuario
+  const mencionesPorUsuario: Record<number, number> = {};
+  todosMensajes.forEach(m => {
+    if (m.menciones) {
+      try {
+        const menciones = JSON.parse(m.menciones);
+        menciones.forEach((userId: number) => {
+          mencionesPorUsuario[userId] = (mencionesPorUsuario[userId] || 0) + 1;
+        });
+      } catch {}
+    }
+  });
+  
+  const usuariosMasMencionados = Object.entries(mencionesPorUsuario)
+    .map(([id, count]) => ({
+      usuario: usuariosMap.get(parseInt(id)),
+      menciones: count,
+    }))
+    .filter(u => u.usuario)
+    .sort((a, b) => b.menciones - a.menciones)
+    .slice(0, 10);
+  
+  // Ítems con más mensajes
+  const mensajesPorItem: Record<number, number> = {};
+  todosMensajes.forEach(m => {
+    mensajesPorItem[m.itemId] = (mensajesPorItem[m.itemId] || 0) + 1;
+  });
+  
+  const todosItems = await db.select().from(items);
+  const itemsMap = new Map(todosItems.map(i => [i.id, i]));
+  
+  const itemsConMasMensajes = Object.entries(mensajesPorItem)
+    .map(([id, count]) => ({
+      item: itemsMap.get(parseInt(id)),
+      mensajes: count,
+    }))
+    .filter(i => i.item)
+    .sort((a, b) => b.mensajes - a.mensajes)
+    .slice(0, 10);
+  
+  return {
+    totalMensajes: todosMensajes.length,
+    usuariosActivos,
+    usuariosMasMencionados,
+    itemsConMasMensajes,
+  };
+}
+
+// Estadísticas de seguimiento (bitácora y auditoría)
+export async function getEstadisticasSeguimiento(proyectoId?: number, dias: number = 30) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const fechaLimite = new Date();
+  fechaLimite.setDate(fechaLimite.getDate() - dias);
+  
+  // Obtener bitácora reciente
+  const bitacoraReciente = await db.select().from(bitacora)
+    .where(gte(bitacora.createdAt, fechaLimite))
+    .orderBy(desc(bitacora.createdAt));
+  
+  // Acciones por tipo
+  const accionesPorTipo: Record<string, number> = {};
+  bitacoraReciente.forEach(b => {
+    accionesPorTipo[b.accion] = (accionesPorTipo[b.accion] || 0) + 1;
+  });
+  
+  // Usuarios más activos
+  const accionesPorUsuario: Record<number, number> = {};
+  bitacoraReciente.forEach(b => {
+    accionesPorUsuario[b.usuarioId] = (accionesPorUsuario[b.usuarioId] || 0) + 1;
+  });
+  
+  const todosUsuarios = await db.select().from(users);
+  const usuariosMap = new Map(todosUsuarios.map(u => [u.id, u]));
+  
+  const usuariosMasActivos = Object.entries(accionesPorUsuario)
+    .map(([id, count]) => ({
+      usuario: usuariosMap.get(parseInt(id)),
+      acciones: count,
+    }))
+    .filter(u => u.usuario)
+    .sort((a, b) => b.acciones - a.acciones)
+    .slice(0, 10);
+  
+  // Actividad por día
+  const actividadPorDia: Record<string, number> = {};
+  bitacoraReciente.forEach(b => {
+    const fecha = new Date(b.createdAt).toISOString().split('T')[0];
+    actividadPorDia[fecha] = (actividadPorDia[fecha] || 0) + 1;
+  });
+  
+  // Auditoría reciente
+  const auditoriaReciente = await db.select().from(auditoria)
+    .where(gte(auditoria.createdAt, fechaLimite))
+    .orderBy(desc(auditoria.createdAt))
+    .limit(50);
+  
+  return {
+    totalAcciones: bitacoraReciente.length,
+    accionesPorTipo,
+    usuariosMasActivos,
+    actividadPorDia: Object.entries(actividadPorDia).map(([fecha, count]) => ({ fecha, count })),
+    auditoriaReciente: auditoriaReciente.map(a => ({
+      ...a,
+      usuario: usuariosMap.get(a.usuarioId),
+    })),
+  };
+}
+
+// Ranking completo de rendimiento por usuario
+export async function getRankingRendimientoUsuarios(proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const todosUsuarios = await db.select().from(users);
+  const todasEmpresas = await db.select().from(empresas);
+  const empresasMap = new Map(todasEmpresas.map(e => [e.id, e]));
+  
+  const conditions = [];
+  if (proyectoId) {
+    conditions.push(eq(items.proyectoId, proyectoId));
+  }
+  
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const todosItems = await db.select().from(items).where(whereClause);
+  
+  // Calcular rendimiento por usuario
+  const ranking = todosUsuarios.map(usuario => {
+    // Ítems creados por el usuario
+    const itemsCreados = todosItems.filter(i => i.residenteId === usuario.id);
+    const total = itemsCreados.length;
+    const aprobados = itemsCreados.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsCreados.filter(i => i.status === 'rechazado').length;
+    const pendientes = itemsCreados.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+    
+    // Ítems aprobados como jefe de residente
+    const itemsAprobadosComoJefe = todosItems.filter(i => i.jefeResidenteId === usuario.id && i.status === 'aprobado').length;
+    
+    // Ítems OK como supervisor
+    const itemsOkComoSupervisor = todosItems.filter(i => i.supervisorId === usuario.id && i.status === 'aprobado').length;
+    
+    // Tiempo promedio de resolución
+    const itemsResueltos = itemsCreados.filter(i => i.status === 'aprobado' && i.fechaAprobacion);
+    let tiempoPromedio = 0;
+    if (itemsResueltos.length > 0) {
+      const tiempos = itemsResueltos.map(i => {
+        const inicio = new Date(i.fechaCreacion).getTime();
+        const fin = new Date(i.fechaAprobacion!).getTime();
+        return (fin - inicio) / (1000 * 60 * 60 * 24);
+      });
+      tiempoPromedio = tiempos.reduce((a, b) => a + b, 0) / tiempos.length;
+    }
+    
+    // Score de rendimiento (mayor es mejor)
+    // Fórmula: aprobados * 10 - rechazados * 5 - pendientes * 2 + (itemsAprobadosComoJefe + itemsOkComoSupervisor) * 3
+    const scoreRendimiento = aprobados * 10 - rechazados * 5 - pendientes * 2 + (itemsAprobadosComoJefe + itemsOkComoSupervisor) * 3;
+    
+    return {
+      id: usuario.id,
+      nombre: usuario.name,
+      role: usuario.role,
+      empresa: usuario.empresaId ? empresasMap.get(usuario.empresaId)?.nombre : null,
+      estadisticas: {
+        total,
+        aprobados,
+        rechazados,
+        pendientes,
+        tasaAprobacion: total > 0 ? Math.round((aprobados / total) * 1000) / 10 : 0,
+        tiempoPromedio: Math.round(tiempoPromedio * 10) / 10,
+      },
+      contribuciones: {
+        itemsAprobadosComoJefe,
+        itemsOkComoSupervisor,
+      },
+      scoreRendimiento,
+    };
+  }).filter(u => u.estadisticas.total > 0 || u.contribuciones.itemsAprobadosComoJefe > 0 || u.contribuciones.itemsOkComoSupervisor > 0)
+    .sort((a, b) => b.scoreRendimiento - a.scoreRendimiento);
+  
+  return ranking;
+}
+
+// Estadísticas de QR y trazabilidad
+export async function getEstadisticasQR(proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const conditions = [];
+  if (proyectoId) {
+    conditions.push(eq(items.proyectoId, proyectoId));
+  }
+  
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const todosItems = await db.select().from(items).where(whereClause);
+  
+  // Ítems con código QR
+  const itemsConCodigo = todosItems.filter(i => i.codigo);
+  
+  // Distribución por unidad
+  const itemsPorUnidad: Record<number, number> = {};
+  todosItems.forEach(item => {
+    if (item.unidadId) {
+      itemsPorUnidad[item.unidadId] = (itemsPorUnidad[item.unidadId] || 0) + 1;
+    }
+  });
+  
+  const todasUnidades = await db.select().from(unidades);
+  const unidadesMap = new Map(todasUnidades.map(u => [u.id, u]));
+  
+  const distribucionUnidades = Object.entries(itemsPorUnidad)
+    .map(([id, count]) => ({
+      unidad: unidadesMap.get(parseInt(id)),
+      items: count,
+      pendientes: todosItems.filter(i => i.unidadId === parseInt(id) && (i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion')).length,
+      aprobados: todosItems.filter(i => i.unidadId === parseInt(id) && i.status === 'aprobado').length,
+    }))
+    .filter(u => u.unidad)
+    .sort((a, b) => b.items - a.items);
+  
+  return {
+    totalItems: todosItems.length,
+    itemsConCodigo: itemsConCodigo.length,
+    distribucionUnidades,
+  };
+}

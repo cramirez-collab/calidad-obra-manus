@@ -19,8 +19,14 @@ interface QRItem {
 
 export default function GenerarQR() {
   const { selectedProjectId } = useProject();
+  
+  // Obtener unidadId de la URL si existe
+  const urlParams = new URLSearchParams(window.location.search);
+  const unidadIdParam = urlParams.get('unidadId');
+  
   const [rangoInicio, setRangoInicio] = useState(1);
   const [rangoFin, setRangoFin] = useState(10);
+  const [selectedUnidadId, setSelectedUnidadId] = useState<string>(unidadIdParam || '');
   const [tamano, setTamano] = useState<"small" | "medium" | "large">("medium");
   const [qrItems, setQrItems] = useState<QRItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -30,12 +36,23 @@ export default function GenerarQR() {
   const { data: proyectos } = trpc.proyectos.list.useQuery();
   const proyectoActual = proyectos?.find(p => p.id === selectedProjectId);
   
+  // Obtener unidades del proyecto
+  const { data: unidades } = trpc.unidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const unidadSeleccionada = unidades?.find(u => u.id === parseInt(selectedUnidadId));
+  
   // Usar el código del proyecto o "OQC" por defecto
   const codigoProyecto = proyectoActual?.codigo || "OQC";
 
   const baseUrl = window.location.origin;
 
   const formatCodigo = (num: number) => {
+    const unidadCodigo = unidadSeleccionada?.codigo || unidadSeleccionada?.nombre || '';
+    if (unidadCodigo) {
+      return `${codigoProyecto}-${unidadCodigo}-${String(num).padStart(3, '0')}`;
+    }
     return `${codigoProyecto}-${String(num).padStart(5, '0')}`;
   };
 
@@ -221,6 +238,31 @@ export default function GenerarQR() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Selector de Unidad (opcional) */}
+            {unidades && unidades.length > 0 && (
+              <div className="mb-4">
+                <Label>Unidad (opcional - para QR específico de unidad)</Label>
+                <Select value={selectedUnidadId} onValueChange={setSelectedUnidadId}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Seleccionar unidad (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Sin unidad específica</SelectItem>
+                    {unidades.map((u) => (
+                      <SelectItem key={u.id} value={u.id.toString()}>
+                        {u.codigo || u.nombre} - {u.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {unidadSeleccionada && (
+                  <p className="text-xs text-primary mt-1">
+                    QR para: {unidadSeleccionada.nombre}
+                  </p>
+                )}
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="inicio">Desde (número)</Label>

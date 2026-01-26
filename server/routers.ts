@@ -924,6 +924,63 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await db.getKPIs(input || {});
       }),
+    
+    // Estadísticas completas por usuario
+    porUsuario: protectedProcedure
+      .input(z.object({
+        usuarioId: z.number(),
+        proyectoId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getEstadisticasUsuario(input.usuarioId, input.proyectoId);
+      }),
+    
+    // Estadísticas por defecto
+    porDefecto: protectedProcedure
+      .input(z.object({
+        defectoId: z.number(),
+        proyectoId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getEstadisticasDefecto(input.defectoId, input.proyectoId);
+      }),
+    
+    // Estadísticas de mensajería
+    mensajeria: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await db.getEstadisticasMensajeria(input?.proyectoId);
+      }),
+    
+    // Estadísticas de seguimiento (bitácora)
+    seguimiento: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number().optional(),
+        dias: z.number().optional().default(30),
+      }).optional())
+      .query(async ({ input }) => {
+        return await db.getEstadisticasSeguimiento(input?.proyectoId, input?.dias);
+      }),
+    
+    // Ranking de rendimiento por usuario
+    rankingUsuarios: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await db.getRankingRendimientoUsuarios(input?.proyectoId);
+      }),
+    
+    // Estadísticas de QR y trazabilidad
+    qrTrazabilidad: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await db.getEstadisticasQR(input?.proyectoId);
+      }),
   }),
 
   // ==================== NOTIFICACIONES ====================

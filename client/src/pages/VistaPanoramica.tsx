@@ -29,7 +29,8 @@ import {
   Layers,
   GripVertical,
   Plus,
-  X
+  X,
+  QrCode
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -309,9 +310,19 @@ function ModalEstadisticas({
             </div>
           )}
 
-          <Button onClick={onVerItems} className="w-full">
-            Ver Ítems de esta Unidad
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={onVerItems} className="flex-1">
+              Ver Ítems
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => window.open(`/generar-qr?unidadId=${unidad.id}`, '_blank')}
+              className="flex-1"
+            >
+              <QrCode className="h-4 w-4 mr-1" />
+              QR
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

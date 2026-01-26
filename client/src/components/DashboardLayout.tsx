@@ -104,6 +104,7 @@ const getMenuItems = (role: string): MenuItem[] => {
     { icon: Target, label: "Prioridades", path: "/prioridades", shortLabel: "" },
     { icon: Layers, label: "Stacking", path: "/panoramica", shortLabel: "" },
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas", shortLabel: "" },
+    { icon: Users, label: "Estad. Avanzadas", path: "/estadisticas-avanzadas", shortLabel: "" },
     { icon: TrendingUp, label: "KPIs", path: "/kpis", shortLabel: "" },
     { icon: FileImage, label: "Reportes", path: "/reportes", shortLabel: "" },
     { icon: ListOrdered, label: "Secuencias", path: "https://www.appsheet.com/start/bad5370e-61b3-4a42-8347-643e96d15f32?platform=desktop#appName=Secuencias-226234876&vss=H4sIAAAAAAAAA6WQwU7EIBCG32XOYADb7ZaretgYPejGg-KBFpoQW2iAqpuGdxd0jR68qMf5Z74vf2aFZ6NfbqPsn4A_rF_TpT4Ah1XA_jBrAVzAmbPRu1EAEnAtp2O46BCNs9IbJyBBekSfjqgD8PX3Cv7_FgiM0jaawWhffIXOniOb14UswTcOEoJpibIb9Xv5wh2Bn64R3DgXczo4P-XpXEaZuWnOESOsxpRhQveM8YpyUp1UrKkZq-9Lt7CzF8rEK6eyNvpFI4he2iD7ot-prOi3XUNOhy1WVLa4aliLO8IoZq3qN5SQtt_UkFLuPLh-CVrd5Zf98VWlzussrfooNMgx6PQGxeoKAhkCAAA=&view=Cuestionario", shortLabel: "", external: true },

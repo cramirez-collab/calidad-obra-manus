@@ -766,3 +766,38 @@
 - [x] Selector de defecto con sugerencias frecuentes (defectos frecuentes del usuario)
 - [x] Captura de foto en un solo paso
 - [x] Modo rápido activable/desactivable
+
+
+## Vinculaciones de Usuarios y Estadísticas Completas (Enero 26)
+
+### Vinculaciones de Usuarios en Ítems
+- [x] Verificar campo creadoPor (residenteId - usuario que creó el ítem)
+- [x] Verificar campo asignadoA (empresaId - empresa responsable)
+- [x] Verificar campo aprobadoPor (jefeResidenteId - jefe residente que aprobó)
+- [x] Verificar campo supervisorOk (supervisorId - supervisor que dio OK final)
+- [x] Mostrar usuarios vinculados en detalle del ítem
+
+### Estadísticas por Usuario
+- [x] Ítems creados por usuario (getEstadisticasUsuario)
+- [x] Ítems aprobados por usuario
+- [x] Ítems rechazados por usuario
+- [x] Tiempo promedio de resolución por usuario
+- [x] Ranking de rendimiento por usuario (getRankingRendimientoUsuarios)
+
+### Estadísticas por Defecto
+- [x] Top defectos más frecuentes (getEstadisticasDefecto)
+- [x] Defectos por severidad
+- [x] Defectos por especialidad
+- [x] Tiempo promedio de corrección por tipo de defecto
+
+### Estadísticas de Mensajería y Seguimiento
+- [x] Mensajes por ítem (getEstadisticasMensajeria)
+- [x] @mentions por usuario (usuariosMasMencionados)
+- [x] Actividad de seguimiento por usuario (getEstadisticasSeguimiento)
+- [x] Bitácora de acciones por día
+
+### Integración QR con Stacking
+- [x] QR vinculado a unidad en stacking (botón QR en modal de unidad)
+- [x] Generar QR por unidad específica (selector en GenerarQR)
+- [x] Trazabilidad completa desde QR hasta estadísticas (getEstadisticasQR)
+- [x] Distribución de ítems por unidad en estadísticas

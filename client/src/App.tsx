@@ -28,6 +28,7 @@ const Configuracion = lazy(() => import("./pages/Configuracion"));
 const Metas = lazy(() => import("./pages/Metas"));
 const DashboardResidente = lazy(() => import("./pages/DashboardResidente"));
 const Prioridades = lazy(() => import("./pages/Prioridades"));
+const EstadisticasAvanzadas = lazy(() => import("./pages/EstadisticasAvanzadas"));
 
 
 // Proyectos
@@ -110,6 +111,7 @@ function Router() {
         {/* Flujo Rápido */}
         <Route path="/mis-tareas" component={DashboardResidente} />
         <Route path="/prioridades" component={Prioridades} />
+        <Route path="/estadisticas-avanzadas" component={EstadisticasAvanzadas} />
         
         {/* Seguimiento público (QR) */}
         <Route path="/seguimiento/:codigo" component={Seguimiento} />
