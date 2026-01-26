@@ -26,8 +26,7 @@ const KPIs = lazy(() => import("./pages/KPIs"));
 const GenerarQR = lazy(() => import("./pages/GenerarQR"));
 const Configuracion = lazy(() => import("./pages/Configuracion"));
 const Metas = lazy(() => import("./pages/Metas"));
-const OfflineIndicator = lazy(() => import("./components/OfflineIndicator"));
-const CameraPermissionRequest = lazy(() => import("./components/CameraPermissionRequest").then(m => ({ default: m.CameraPermissionRequest })));
+
 
 // Proyectos
 const SeleccionProyecto = lazy(() => import("./pages/SeleccionProyecto"));
@@ -127,16 +126,7 @@ function App() {
           <ProjectProvider>
             <TooltipProvider>
               <Toaster />
-              {/* Temporalmente desactivado mientras se resuelve el conflicto de React hooks
-              <Suspense fallback={null}>
-                <OfflineIndicator />
-              </Suspense>
-              */}
-              {/* Temporalmente desactivado mientras se resuelve el conflicto de React hooks
-              <Suspense fallback={null}>
-                <CameraPermissionRequest />
-              </Suspense>
-              */}
+
               <Router />
             </TooltipProvider>
           </ProjectProvider>

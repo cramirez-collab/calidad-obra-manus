@@ -656,3 +656,13 @@
 - [x] Verificar si la ruta está registrada en App.tsx
 - [x] Crear página NuevoProyecto.tsx
 - [x] Registrar la ruta correctamente
+
+
+## Limpieza de código no utilizado
+- [x] Identificar imports no utilizados en archivos
+- [x] Identificar archivos/páginas no utilizadas
+- [x] Eliminar código comentado innecesario (bloques temporalmente desactivados)
+- [x] Eliminar componentes no utilizados (ComponentShowcase, OfflineIndicator, CameraPermissionRequest, Map, AIChatBox, ManusDialog, useOfflineSync)
+- [x] Optimizar cache de queries (staleTime 2-5 min, gcTime 10 min)
+- [x] Limpiar RAM y cache de Vite
+- [x] Verificar que la aplicación sigue funcionando (133 tests pasando)

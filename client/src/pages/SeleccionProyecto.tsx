@@ -17,7 +17,9 @@ export default function SeleccionProyecto() {
   const { setSelectedProjectId } = useProject();
   const [, navigate] = useLocation();
   
-  const { data: proyectos, isLoading } = trpc.proyectos.misProyectos.useQuery();
+  const { data: proyectos, isLoading } = trpc.proyectos.misProyectos.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000, // Cache 5 minutos
+  });
   
   const canCreateProject = user?.role === 'superadmin' || user?.role === 'admin';
   

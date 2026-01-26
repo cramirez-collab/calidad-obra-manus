@@ -22,7 +22,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   // Obtener proyecto activo desde la base de datos
   const { data: proyectoActivoData, isLoading: isLoadingProyectoActivo } = trpc.users.getProyectoActivo.useQuery(
     undefined,
-    { enabled: !!user }
+    { enabled: !!user, staleTime: 5 * 60 * 1000 } // Cache por 5 minutos
   );
 
   // Mutation para cambiar proyecto activo
@@ -44,12 +44,12 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   // Superadmin ve todos los proyectos, otros usuarios solo los asignados
   const { data: allProjects, isLoading: isLoadingAll } = trpc.proyectos.list.useQuery(
     undefined,
-    { enabled: isSuperadmin }
+    { enabled: isSuperadmin, staleTime: 5 * 60 * 1000 } // Cache por 5 minutos
   );
   
   const { data: userProjectsData, isLoading: isLoadingUser } = trpc.proyectos.misProyectos.useQuery(
     undefined,
-    { enabled: !isSuperadmin && !!user }
+    { enabled: !isSuperadmin && !!user, staleTime: 5 * 60 * 1000 } // Cache por 5 minutos
   );
 
   const userProjects = isSuperadmin ? (allProjects || []) : (userProjectsData || []);
