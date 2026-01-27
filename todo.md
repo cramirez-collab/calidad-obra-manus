@@ -851,3 +851,20 @@
 - [x] Ajustar diseño para 6 QR por hoja carta (2x3)
 - [x] Encuadrar correctamente los QR para impresión
 - [x] Mantener modo "Por Rango" como alternativa
+
+
+## Mejoras Empresas y Plantilla PDF Enero 27
+
+### Formulario Empresas
+- [x] Eliminar campo RFC del formulario
+- [x] Eliminar columna Proyecto de la tabla
+- [x] Agregar botón para descargar PDF
+
+### Plantilla Estándar PDF
+- [x] Logo Objetiva en encabezado izquierdo
+- [x] Nombre del proyecto en encabezado derecho
+- [x] Fecha de impresión
+- [x] Numeración de páginas "1 de X"
+- [x] Utilidad reutilizable en /lib/pdfTemplate.ts
+- [x] Actualizado StackingPDF con encabezado estándar
+- [x] Actualizado Empresas con plantilla PDF

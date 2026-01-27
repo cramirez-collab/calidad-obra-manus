@@ -27,7 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { Building2, Edit, Plus, Trash2, FolderKanban } from "lucide-react";
+import { Building2, Edit, Plus, Trash2, FileDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
@@ -184,6 +184,43 @@ export default function Empresas() {
     return especialidad?.nombre || "-";
   };
 
+  const handleExportPDF = () => {
+    if (!empresas || empresas.length === 0) {
+      toast.error("No hay empresas para exportar");
+      return;
+    }
+
+    const proyectoNombre = proyectos?.find(p => p.id === selectedProjectId)?.nombre || "Proyecto";
+    
+    import('@/lib/pdfTemplate').then(({ openPrintWindow, generateTable }) => {
+      const headers = ['Nombre', 'Especialidad', 'Contacto', 'Teléfono', 'Email'];
+      const rows = empresas.map(empresa => [
+        empresa.nombre,
+        getEspecialidadNombre(empresa.especialidadId),
+        empresa.contacto || '-',
+        empresa.telefono || '-',
+        empresa.email || '-'
+      ]);
+
+      const content = `
+        <h1>Lista de Empresas</h1>
+        ${generateTable(headers, rows)}
+      `;
+
+      const result = openPrintWindow({
+        title: 'Empresas',
+        proyectoNombre,
+        content,
+        totalPages: 1,
+        currentPage: 1
+      });
+
+      if (!result) {
+        toast.error("No se pudo abrir ventana de impresión");
+      }
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -194,10 +231,16 @@ export default function Empresas() {
               Gestiona las empresas contratistas del proyecto
             </p>
           </div>
-          <Button onClick={() => handleOpen()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Empresa
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportPDF}>
+              <FileDown className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
+            <Button onClick={() => handleOpen()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nueva Empresa
+            </Button>
+          </div>
         </div>
 
 
@@ -224,10 +267,9 @@ export default function Empresas() {
                     <TableRow>
                       <TableHead>Nombre</TableHead>
                       <TableHead className="hidden sm:table-cell">Especialidad</TableHead>
-                      <TableHead className="hidden md:table-cell">Proyecto</TableHead>
-                      <TableHead className="hidden lg:table-cell">RFC</TableHead>
-                      <TableHead className="hidden lg:table-cell">Contacto</TableHead>
+                      <TableHead className="hidden md:table-cell">Contacto</TableHead>
                       <TableHead className="hidden lg:table-cell">Teléfono</TableHead>
+                      <TableHead className="hidden lg:table-cell">Email</TableHead>
                       <TableHead className="w-[100px]">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -238,12 +280,9 @@ export default function Empresas() {
                         <TableCell className="hidden sm:table-cell">
                           {getEspecialidadNombre(empresa.especialidadId)}
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {getProyectoNombre(empresa.proyectoId)}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">{empresa.rfc || "-"}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{empresa.contacto || "-"}</TableCell>
+                        <TableCell className="hidden md:table-cell">{empresa.contacto || "-"}</TableCell>
                         <TableCell className="hidden lg:table-cell">{empresa.telefono || "-"}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{empresa.email || "-"}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Button
@@ -285,24 +324,7 @@ export default function Empresas() {
             </DialogHeader>
             <form onSubmit={handleSubmit}>
               <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="proyectoId">Proyecto</Label>
-                  <Select
-                    value={formData.proyectoId}
-                    onValueChange={(value) => setFormData({ ...formData, proyectoId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar proyecto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {proyectos?.map((proyecto) => (
-                        <SelectItem key={proyecto.id} value={proyecto.id.toString()}>
-                          {proyecto.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="especialidadId">Especialidad</Label>
                   <Select
@@ -333,17 +355,7 @@ export default function Empresas() {
                     placeholder="Nombre de la empresa"
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="rfc">RFC</Label>
-                  <Input
-                    id="rfc"
-                    value={formData.rfc}
-                    onChange={(e) =>
-                      setFormData({ ...formData, rfc: e.target.value })
-                    }
-                    placeholder="RFC de la empresa"
-                  />
-                </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="contacto">Contacto</Label>
                   <Input

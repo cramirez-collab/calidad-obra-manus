@@ -148,22 +148,28 @@ export default function StackingPDF() {
 
         {/* Contenido imprimible */}
         <div ref={printRef} className="print:p-4">
-          {/* Encabezado del reporte */}
-          <div className="text-center mb-6 print:mb-4">
-            <h1 className="text-2xl font-bold text-[#002C63] print:text-xl">
-              Reporte de Stacking
-            </h1>
-            <p className="text-gray-600">{proyecto?.nombre || 'Proyecto'}</p>
-            <p className="text-sm text-gray-500">
-              Generado: {new Date().toLocaleDateString('es-MX', { 
-                day: '2-digit', 
-                month: 'long', 
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </p>
+          {/* Encabezado del reporte - Estilo Objetiva */}
+          <div className="flex justify-between items-center border-b-2 border-[#002C63] pb-3 mb-6 print:mb-4">
+            <div className="text-xl font-bold text-[#002C63]">
+              OBJETIV<span className="text-[#02B381]">A</span>
+            </div>
+            <div className="text-right">
+              <div className="font-bold text-[#002C63]">{proyecto?.nombre || 'Proyecto'}</div>
+              <div className="text-sm text-gray-500">
+                {new Date().toLocaleDateString('es-MX', { 
+                  day: '2-digit', 
+                  month: 'long', 
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </div>
+            </div>
           </div>
+          
+          <h1 className="text-xl font-bold text-[#002C63] mb-4 print:text-lg">
+            Reporte de Stacking
+          </h1>
 
           {/* Resumen estadístico */}
           <div className="grid grid-cols-5 gap-2 mb-6 print:mb-4 print:gap-1">
@@ -298,10 +304,9 @@ export default function StackingPDF() {
             </table>
           </div>
 
-          {/* Pie de página */}
-          <div className="mt-6 pt-4 border-t text-center text-xs text-gray-500 print:mt-4 print:pt-2">
-            <p>ObjetivaOQC - Control de Calidad de Obra</p>
-            <p>© {new Date().getFullYear()} Objetiva</p>
+          {/* Pie de página - se muestra en impresión */}
+          <div className="hidden print:block fixed bottom-0 left-0 right-0 text-center text-xs text-gray-500 py-2 border-t bg-white">
+            Página 1 de 1 | Generado por ObjetivaOQC
           </div>
         </div>
       </div>
