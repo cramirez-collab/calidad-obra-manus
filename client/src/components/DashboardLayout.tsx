@@ -283,9 +283,9 @@ function DashboardLayoutContent({
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header con navegación de iconos */}
         <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-          <div className="flex items-center h-14 px-2 sm:px-4">
+          <div className="flex items-center h-14 px-2 sm:px-4 gap-1">
             {/* Logo */}
-            <div className="flex items-center gap-2 mr-2 sm:mr-4 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               <img 
                 src="/logo-objetiva.jpg" 
                 alt="ObjetivaQC" 
@@ -294,22 +294,22 @@ function DashboardLayoutContent({
             </div>
 
             {/* Selector de proyecto */}
-            <div className="shrink-0 mr-2">
+            <div className="shrink-0">
               <ProjectSelector collapsed={isMobile} />
             </div>
 
             {/* Separador */}
-            <div className="h-6 w-px bg-border mx-1 sm:mx-2 hidden sm:block" />
+            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
 
             {/* Navegación de iconos - scrollable en móvil */}
-            <nav className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto flex-1 scrollbar-hide py-1">
+            <nav className="flex items-center gap-1 overflow-x-auto scrollbar-hide py-1 min-w-0">
               {menuItems.map(item => {
                 const isActive = item.path === '/bienvenida' 
                   ? (location === '/bienvenida' || location === '/') 
                   : (item.path ? location.startsWith(item.path) : false);
                 
-                // En móvil, mostrar solo los primeros 6 items + config
-                if (isMobile && menuItems.indexOf(item) > 5 && !item.children) {
+                // En móvil, mostrar solo los primeros 4 items + config
+                if (isMobile && menuItems.indexOf(item) > 3 && !item.children) {
                   return null;
                 }
                 
@@ -319,11 +319,11 @@ function DashboardLayoutContent({
               })}
             </nav>
 
-            {/* Separador */}
-            <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
+            {/* Espaciador flexible para empujar acciones a la derecha */}
+            <div className="flex-1" />
 
-            {/* Acciones del lado derecho */}
-            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+            {/* Acciones del lado derecho - siempre visibles */}
+            <div className="flex items-center gap-1 shrink-0">
               <BadgeNotifications />
               <OnlineUsers />
               <NotificationBell />

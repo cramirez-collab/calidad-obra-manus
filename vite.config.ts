@@ -165,8 +165,13 @@ export default defineConfig({
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "wouter", "@trpc/react-query", "@tanstack/react-query"],
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "wouter"],
-    force: true,
+    include: ["react", "react-dom", "react-dom/client", "react/jsx-runtime", "react/jsx-dev-runtime", "wouter", "@tanstack/react-query", "@trpc/react-query"],
+    exclude: [],
+    esbuildOptions: {
+      define: {
+        global: 'globalThis'
+      }
+    }
   },
   envDir: path.resolve(import.meta.dirname),
   root: path.resolve(import.meta.dirname, "client"),
