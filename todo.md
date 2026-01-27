@@ -1096,3 +1096,11 @@
 - [x] Mantener cascada de relaciones funcionando
 - [x] Agregar selector de Nivel antes de Unidad
 - [x] Filtrar unidades por nivel seleccionado
+
+
+## Mejoras de Formulario Nuevo Ítem (27 de Enero 2026 - Noche)
+
+### Simplificación del Formulario
+- [x] Remover botón "Rápido" con icono de rayo del formulario
+- [x] Hacer obligatorio el campo de Residente (con asterisco *)
+- [x] Agregar validación de residente obligatorio en handleSubmit

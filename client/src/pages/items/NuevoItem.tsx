@@ -186,6 +186,12 @@ export default function NuevoItem() {
   };
 
   const handleSubmit = async () => {
+    // Validación - residente es obligatorio
+    if (!formData.residenteId || formData.residenteId === "all") {
+      toast.error("Por favor selecciona un residente");
+      return;
+    }
+    
     // Validación mínima - título es opcional
     if (!formData.empresaId || !formData.unidadId) {
       toast.error("Por favor completa: Empresa y Unidad");
@@ -262,15 +268,7 @@ export default function NuevoItem() {
             </Button>
             <h1 className="text-lg font-bold text-[#002C63]">Nuevo Ítem</h1>
           </div>
-          <Button 
-            variant={modoRapido ? "default" : "outline"}
-            size="sm"
-            onClick={() => setModoRapido(!modoRapido)}
-            className={modoRapido ? "bg-[#02B381] hover:bg-[#02B381]/90" : ""}
-          >
-            <Zap className="h-3 w-3 mr-1" />
-            Rápido
-          </Button>
+
         </div>
 
         {/* Inputs ocultos para cámara/archivo */}
@@ -406,7 +404,7 @@ export default function NuevoItem() {
             >
               <SelectTrigger className="h-9 text-xs">
                 <User className="h-3 w-3 mr-1 text-gray-400" />
-                <SelectValue placeholder="Usuario (opcional)" />
+                <SelectValue placeholder="Seleccionar Residente *" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los usuarios</SelectItem>
