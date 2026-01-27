@@ -1,8 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="none">
   <!-- Fondo circular verde Objetiva -->
   <circle cx="96" cy="96" r="96" fill="#02B381"/>
-  <!-- Letras OQC centradas en Arial Black -->
-  <text x="96" y="112" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="52" font-weight="900" letter-spacing="1">
-    <tspan fill="white">O</tspan><tspan fill="#002C63">Q</tspan><tspan fill="white">C</tspan>
-  </text>
+  <!-- Texto OQC en blanco -->
+  <text x="96" y="108" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="52" font-weight="700" fill="white">OQC</text>
 </svg>
