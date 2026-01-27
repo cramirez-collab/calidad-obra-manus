@@ -1182,3 +1182,11 @@
 - [x] Agregar selector de fecha Compromiso en formulario NuevoItem (después del defecto)
 - [x] Mostrar fecha de término de unidad (del stacking) en vista de ítem
 - [x] Mostrar fecha de compromiso en vista de ítem
+
+
+## Correcciones UX Móvil (27 Enero 2026)
+
+- [x] Reducir campanas de notificación a una sola (NotificationCenter unificado en móvil)
+- [x] Arreglar header móvil para que no se tapen iconos
+- [x] Mejorar layout de tarjetas de empresa en móvil (layout vertical responsive)
+- [x] Optimizar espacio en móvil para mejor distribución

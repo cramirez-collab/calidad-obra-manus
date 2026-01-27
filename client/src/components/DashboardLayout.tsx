@@ -400,10 +400,17 @@ function DashboardLayoutContent({
 
             {/* Acciones del lado derecho */}
             <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-              <BadgeNotifications />
-              <OnlineUsers />
-              <NotificationBell />
-              <NotificationCenter />
+              {/* En móvil: solo una campana unificada. En desktop: todas las notificaciones */}
+              {isMobile ? (
+                <NotificationCenter />
+              ) : (
+                <>
+                  <BadgeNotifications />
+                  <OnlineUsers />
+                  <NotificationBell />
+                  <NotificationCenter />
+                </>
+              )}
 
               {/* Menú de usuario */}
               <DropdownMenu>

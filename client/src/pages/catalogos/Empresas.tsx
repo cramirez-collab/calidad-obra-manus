@@ -446,61 +446,72 @@ export default function Empresas() {
                     <Collapsible key={empresa.id} open={isExpanded} onOpenChange={() => toggleExpanded(empresa.id)}>
                       <div className="border rounded-lg overflow-hidden">
                         {/* Fila principal de la empresa */}
-                        <div className="flex items-center justify-between p-4 bg-white hover:bg-slate-50">
-                          <div className="flex items-center gap-3 flex-1">
-                            <CollapsibleTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                {isExpanded ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </CollapsibleTrigger>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{empresa.nombre}</span>
-                                {especialidad && (
-                                  <Badge 
-                                    variant="outline" 
-                                    className="text-xs"
-                                    style={{ 
-                                      borderColor: especialidad.color || '#3B82F6',
-                                      color: especialidad.color || '#3B82F6'
-                                    }}
-                                  >
-                                    <Wrench className="h-3 w-3 mr-1" />
-                                    {especialidad.nombre}
-                                  </Badge>
-                                )}
-                                {defectos.length > 0 && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    <AlertTriangle className="h-3 w-3 mr-1" />
-                                    {defectos.length} defectos
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {empresa.contacto && <span>{empresa.contacto}</span>}
-                                {empresa.telefono && <span className="ml-2">• {empresa.telefono}</span>}
+                        <div className="p-3 sm:p-4 bg-white hover:bg-slate-50">
+                          {/* Layout móvil: vertical, Desktop: horizontal */}
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                            {/* Fila superior: botón expandir + nombre + acciones */}
+                            <div className="flex items-center gap-2 w-full">
+                              <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </CollapsibleTrigger>
+                              <span className="font-medium text-sm sm:text-base truncate flex-1">{empresa.nombre}</span>
+                              {/* Acciones - siempre visibles a la derecha */}
+                              <div className="flex items-center gap-0.5 shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 sm:h-8 sm:w-8"
+                                  onClick={(e) => { e.stopPropagation(); handleOpen(empresa); }}
+                                >
+                                  <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 sm:h-8 sm:w-8"
+                                  onClick={(e) => { e.stopPropagation(); handleDelete(empresa.id); }}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
+                                </Button>
                               </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => { e.stopPropagation(); handleOpen(empresa); }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => { e.stopPropagation(); handleDelete(empresa.id); }}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            
+                            {/* Fila de badges - debajo en móvil, inline en desktop */}
+                            <div className="flex flex-wrap items-center gap-1.5 pl-10 sm:pl-0">
+                              {especialidad && (
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-[10px] sm:text-xs px-1.5 py-0.5"
+                                  style={{ 
+                                    borderColor: especialidad.color || '#3B82F6',
+                                    color: especialidad.color || '#3B82F6'
+                                  }}
+                                >
+                                  <Wrench className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
+                                  {especialidad.nombre}
+                                </Badge>
+                              )}
+                              {defectos.length > 0 && (
+                                <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0.5">
+                                  <AlertTriangle className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
+                                  {defectos.length}
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            {/* Info de contacto - tercera fila en móvil */}
+                            {(empresa.contacto || empresa.telefono) && (
+                              <div className="text-xs sm:text-sm text-muted-foreground pl-10 sm:pl-0 truncate">
+                                {empresa.contacto}
+                                {empresa.telefono && <span className="ml-1 sm:ml-2">• {empresa.telefono}</span>}
+                              </div>
+                            )}
                           </div>
                         </div>
                         
