@@ -33,7 +33,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { trpc } from "@/lib/trpc";
-import { Building2, Edit, Plus, Trash2, FileDown, ChevronDown, ChevronRight, AlertTriangle, Wrench } from "lucide-react";
+import { Building2, Edit, Plus, Trash2, FileDown, ChevronDown, ChevronRight, AlertTriangle, Wrench, ArrowUpDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
@@ -63,6 +63,7 @@ export default function Empresas() {
   const [isOpen, setIsOpen] = useState(false);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
   const [expandedEmpresas, setExpandedEmpresas] = useState<Set<number>>(new Set());
+  const [sortBy, setSortBy] = useState<'nombre' | 'especialidad' | 'contacto' | 'residente'>('nombre');
   const [formData, setFormData] = useState({
     nombre: "",
     rfc: "",
@@ -334,10 +335,26 @@ export default function Empresas() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Lista de Empresas ({empresas?.length || 0})
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Lista de Empresas ({empresas?.length || 0})
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Ordenar por" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nombre">Empresa</SelectItem>
+                    <SelectItem value="especialidad">Especialidad</SelectItem>
+                    <SelectItem value="contacto">Contacto</SelectItem>
+                    <SelectItem value="residente">Residente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -350,7 +367,24 @@ export default function Empresas() {
               </div>
             ) : (
               <div className="space-y-2">
-                {empresas?.map((empresa) => {
+                {[...(empresas || [])].sort((a, b) => {
+                  switch (sortBy) {
+                    case 'nombre':
+                      return (a.nombre || '').localeCompare(b.nombre || '');
+                    case 'especialidad':
+                      const espA = especialidades?.find(e => e.id === a.especialidadId)?.nombre || '';
+                      const espB = especialidades?.find(e => e.id === b.especialidadId)?.nombre || '';
+                      return espA.localeCompare(espB);
+                    case 'contacto':
+                      return (a.contacto || '').localeCompare(b.contacto || '');
+                    case 'residente':
+                      const resA = usuarios?.find(u => u.id === a.residenteId)?.name || '';
+                      const resB = usuarios?.find(u => u.id === b.residenteId)?.name || '';
+                      return resA.localeCompare(resB);
+                    default:
+                      return 0;
+                  }
+                }).map((empresa) => {
                   const defectos = getDefectosByEspecialidad(empresa.especialidadId);
                   const isExpanded = expandedEmpresas.has(empresa.id);
                   const especialidad = especialidades?.find(e => e.id === empresa.especialidadId);

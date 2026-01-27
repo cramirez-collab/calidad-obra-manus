@@ -71,17 +71,17 @@ export default function Bitacora() {
   }), [filtroUsuario, filtroCategoria, fechaDesde, fechaHasta, pagina]);
 
   const { data: auditoria, isLoading } = isAdmin 
-    ? trpc.auditoria.list.useQuery(filtros)
-    : trpc.bitacora.miActividad.useQuery({});
-
-  const { data: totalCount } = isAdmin
-    ? trpc.auditoria.count.useQuery({
+    ? trpc.bitacora.list.useQuery({
         usuarioId: filtros.usuarioId,
-        categoria: filtros.categoria,
+        accion: filtros.categoria,
         fechaDesde: filtros.fechaDesde,
         fechaHasta: filtros.fechaHasta,
+        limit: filtros.limit,
       })
-    : { data: 0 };
+    : trpc.bitacora.miActividad.useQuery({});
+
+  // Contar total para paginación (aproximado basado en datos cargados)
+  const totalCount = auditoria?.length || 0;
 
   const totalPages = Math.ceil((totalCount || 0) / ITEMS_PER_PAGE);
 

@@ -228,10 +228,16 @@ function SortableUnidadCard({
                 {estadoIcon}
                 <span className="text-xs">{unidad.porcentaje}%</span>
               </div>
-              {unidad.items.total > 0 && (
-                <span className="text-xs opacity-80 mt-0.5">
-                  {unidad.items.total} ítems
-                </span>
+              {/* Fechas visibles */}
+              {(unidad.fechaInicio || unidad.fechaFin) && (
+                <div className="text-[10px] opacity-80 mt-0.5 flex gap-1">
+                  {unidad.fechaInicio && (
+                    <span>i:{format(new Date(unidad.fechaInicio), 'dd-MM-yy')}</span>
+                  )}
+                  {unidad.fechaFin && (
+                    <span>f:{format(new Date(unidad.fechaFin), 'dd-MM-yy')}</span>
+                  )}
+                </div>
               )}
             </button>
           </TooltipTrigger>
@@ -603,6 +609,8 @@ export default function VistaPanoramica() {
   const [showEditFechasModal, setShowEditFechasModal] = useState(false);
   const [nivelParaNueva, setNivelParaNueva] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [pendingChanges, setPendingChanges] = useState<{id: number, orden: number, nivel?: number}[]>([]);
   
   // Detectar si es móvil
   React.useEffect(() => {
@@ -620,12 +628,23 @@ export default function VistaPanoramica() {
   const updateOrdenMutation = trpc.unidades.updateOrden.useMutation({
     onSuccess: () => {
       refetch();
-      toast.success("Posición actualizada");
+      setHasUnsavedChanges(false);
+      setPendingChanges([]);
+      toast.success("Orden guardado correctamente");
     },
     onError: (error) => {
-      toast.error("Error al mover: " + error.message);
+      toast.error("Error al guardar: " + error.message);
     }
   });
+
+  // Función para guardar todos los cambios pendientes
+  const handleGuardarOrden = () => {
+    if (pendingChanges.length === 0) {
+      toast.info("No hay cambios pendientes");
+      return;
+    }
+    updateOrdenMutation.mutate({ unidades: pendingChanges });
+  };
 
   // Sensores para drag and drop
   const sensors = useSensors(
@@ -727,30 +746,42 @@ export default function VistaPanoramica() {
       if (oldIndex !== -1 && newIndex !== -1) {
         const newOrder = arrayMove(sourceCeldas, oldIndex, newIndex);
         
-        // Actualizar orden en el backend
+        // Acumular cambios pendientes (no guardar inmediatamente)
         const updates = newOrder.map((celda, index) => ({
           id: celda.unidad!.id,
           orden: index,
         }));
         
-        updateOrdenMutation.mutate({ unidades: updates });
+        setPendingChanges(prev => {
+          // Reemplazar cambios existentes para las mismas unidades
+          const existingIds = new Set(updates.map(u => u.id));
+          const filtered = prev.filter(p => !existingIds.has(p.id));
+          return [...filtered, ...updates];
+        });
+        setHasUnsavedChanges(true);
+        toast.info("Cambios pendientes - Presiona Guardar Orden para confirmar");
       }
     } else {
       // Mover unidad a otro nivel
       const sourceCelda = sourceCeldas.find(c => c.id === active.id);
       if (sourceCelda?.unidad) {
-        // Actualizar nivel y orden de la unidad
+        // Acumular cambio pendiente
         const targetIndex = targetCeldas.findIndex(c => c.id === over.id);
-        updateOrdenMutation.mutate({ 
-          unidades: [{
-            id: sourceCelda.unidad.id,
-            orden: targetIndex >= 0 ? targetIndex : targetCeldas.length,
-            nivel: targetNivel,
-          }]
+        const update = {
+          id: sourceCelda.unidad.id,
+          orden: targetIndex >= 0 ? targetIndex : targetCeldas.length,
+          nivel: targetNivel,
+        };
+        
+        setPendingChanges(prev => {
+          const filtered = prev.filter(p => p.id !== update.id);
+          return [...filtered, update];
         });
+        setHasUnsavedChanges(true);
+        toast.info("Cambios pendientes - Presiona Guardar Orden para confirmar");
       }
     }
-  }, [celdasPorNivel, updateOrdenMutation]);
+  }, [celdasPorNivel]);
 
   const handleTap = (unidad: UnidadPanoramica) => {
     setSelectedUnidad(unidad);
@@ -818,6 +849,16 @@ export default function VistaPanoramica() {
             </p>
           </div>
           <div className="flex gap-2">
+            {hasUnsavedChanges && (
+              <Button 
+                onClick={handleGuardarOrden}
+                disabled={updateOrdenMutation.isPending}
+                className="bg-primary hover:bg-primary/90"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {updateOrdenMutation.isPending ? "Guardando..." : "Guardar Orden"}
+              </Button>
+            )}
             <Button variant="outline" onClick={() => setLocation("/stacking/pdf")}>
               <FileDown className="h-4 w-4 mr-2" />
               PDF

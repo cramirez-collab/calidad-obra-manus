@@ -298,18 +298,52 @@ export default function ItemDetail() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Button variant="ghost" size="sm" onClick={() => setLocation("/items")} className="mb-2">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Button>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight">{item.titulo}</h1>
-              <Badge className={statusColors[item.status]}>
+            
+            {/* Clave OQC prominente */}
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-2 bg-slate-900 text-white px-3 py-1.5 rounded-lg">
+                <QrCode className="h-4 w-4" />
+                <span className="font-mono font-bold text-lg">{item.codigo}</span>
+              </div>
+              <Badge className={statusColors[item.status] + " text-sm py-1 px-3"}>
                 {statusLabels[item.status]}
               </Badge>
             </div>
-            <p className="text-muted-foreground font-mono">{item.codigo}</p>
+            
+            {/* Título y badges de información */}
+            <h1 className="text-xl font-bold tracking-tight">{item.titulo || 'Sin descripción'}</h1>
+            
+            {/* Badges informativos */}
+            <div className="flex flex-wrap gap-2">
+              {item.empresaId && (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  <Building2 className="h-3 w-3 mr-1" />
+                  {getEmpresaNombre(item.empresaId)}
+                </Badge>
+              )}
+              {item.unidadId && (
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  <MapPin className="h-3 w-3 mr-1" />
+                  {getUnidadNombre(item.unidadId)}
+                </Badge>
+              )}
+              {especialidad && (
+                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                  <Wrench className="h-3 w-3 mr-1" />
+                  {especialidad.nombre}
+                </Badge>
+              )}
+              {item.defectoId && (
+                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                  Defecto #{item.defectoId}
+                </Badge>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-2">

@@ -1017,3 +1017,43 @@
 - [x] Desarrollador puede ver y crear ítems
 - [x] Desarrollador NO puede acceder a Configuración
 - [x] Restringir menú de Configuración según rol
+
+
+## Mejoras Empresas y Stacking (Enero 27)
+
+### Ordenamiento en Empresas
+- [ ] Agregar selector de ordenamiento
+- [ ] Ordenar por Empresa (nombre)
+- [ ] Ordenar por Especialidad
+- [ ] Ordenar por Contacto
+- [ ] Ordenar por Residente
+
+### Stacking - Botón Guardar
+- [ ] Agregar botón "Guardar" para confirmar orden de unidades
+- [ ] No desacomodar unidades hasta que se presione Guardar
+- [ ] Indicador visual de cambios pendientes
+
+### Fechas Visibles en Unidades
+- [ ] Mostrar fechas en cada tarjeta de unidad
+- [ ] Formato: i:dd-mm-aa, f:dd-mm-aa
+
+
+## Mejoras Formulario Nuevo Ítem y Bitácora (Enero 27)
+
+### Formulario Nuevo Ítem en Cascada
+- [ ] Selector de Residente
+- [ ] Selector de Empresa (filtrado por residente)
+- [ ] Mostrar Especialidad de la empresa
+- [ ] Selector de Unidad
+- [ ] Selector de Espacio
+- [ ] Selector de Defecto (filtrado por especialidad)
+- [ ] Fotos del ítem
+- [ ] Mostrar clave del ítem con badges
+
+### Bitácora
+- [ ] Revisar y corregir módulo de Bitácora
+- [ ] Mostrar historial de cambios del ítem
+
+### Stacking Pendiente
+- [ ] Botón Guardar para confirmar orden de unidades
+- [ ] No desacomodar unidades hasta que se guarde

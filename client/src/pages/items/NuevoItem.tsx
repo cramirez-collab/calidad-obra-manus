@@ -24,7 +24,8 @@ import {
   MapPin,
   Wrench,
   AlertTriangle,
-  Layers
+  Layers,
+  User
 } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
@@ -35,6 +36,7 @@ export default function NuevoItem() {
   const [, setLocation] = useLocation();
   const { selectedProjectId } = useProject();
   const [formData, setFormData] = useState({
+    residenteId: "",
     empresaId: "",
     unidadId: "",
     especialidadId: "",
@@ -57,11 +59,31 @@ export default function NuevoItem() {
     { enabled: !!selectedProjectId }
   );
 
+  // Obtener usuarios (residentes) - usar el router correcto
+  const { data: usuarios } = trpc.users.list.useQuery();
+  
+  // Filtrar solo residentes y jefes de residente
+  const residentes = useMemo(() => {
+    if (!usuarios) return [];
+    return usuarios.filter((u: { role: string }) => u.role === 'user' || u.role === 'supervisor');
+  }, [usuarios]);
+
   // Obtener datos filtrados por proyecto desde el backend
-  const { data: empresas } = trpc.empresas.list.useQuery(
+  const { data: todasEmpresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
+  
+  // Filtrar empresas por residente seleccionado
+  const empresas = useMemo(() => {
+    if (!todasEmpresas) return [];
+    if (!formData.residenteId) return todasEmpresas;
+    return todasEmpresas.filter(e => 
+      e.residenteId?.toString() === formData.residenteId || 
+      e.jefeResidenteId?.toString() === formData.residenteId
+    );
+  }, [todasEmpresas, formData.residenteId]);
+  
   const { data: unidades } = trpc.unidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
@@ -354,13 +376,32 @@ export default function NuevoItem() {
           </CardContent>
         </Card>
 
-        {/* PASO 3: Ubicación (empresa, unidad, espacio) */}
+        {/* PASO 3: Ubicación (residente, empresa, unidad, espacio) */}
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
               <MapPin className="h-3 w-3" />
               Ubicación
             </div>
+            
+            {/* Residente (opcional, filtra empresas) */}
+            <Select
+              value={formData.residenteId}
+              onValueChange={(value) => setFormData({ ...formData, residenteId: value, empresaId: "", especialidadId: "", defectoId: "" })}
+            >
+              <SelectTrigger className="h-9 text-xs">
+                <User className="h-3 w-3 mr-1 text-gray-400" />
+                <SelectValue placeholder="Residente (opcional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos los residentes</SelectItem>
+                {residentes?.map((user: { id: number; name: string | null }) => (
+                  <SelectItem key={user.id} value={user.id.toString()}>
+                    {user.name || 'Sin nombre'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             
             <div className="grid grid-cols-2 gap-3">
               {/* Empresa */}
