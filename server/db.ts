@@ -555,12 +555,16 @@ export async function deleteUnidad(id: number) {
 }
 
 // Actualizar orden de múltiples unidades (para drag & drop en stacking)
-export async function updateUnidadesOrden(updates: Array<{ id: number; orden: number }>) {
+export async function updateUnidadesOrden(updates: Array<{ id: number; orden: number; nivel?: number }>) {
   const db = await getDb();
   if (!db) return;
   
   for (const update of updates) {
-    await db.update(unidades).set({ orden: update.orden }).where(eq(unidades.id, update.id));
+    const updateData: { orden: number; nivel?: number } = { orden: update.orden };
+    if (update.nivel !== undefined) {
+      updateData.nivel = update.nivel;
+    }
+    await db.update(unidades).set(updateData).where(eq(unidades.id, update.id));
   }
 }
 

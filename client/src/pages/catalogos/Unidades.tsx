@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { MapPin, Edit, Plus, Trash2 } from "lucide-react";
+import { MapPin, Edit, Plus, Trash2, FileDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
@@ -157,10 +157,15 @@ export default function Unidades() {
               Gestiona las unidades o áreas del proyecto
             </p>
           </div>
-          <Button onClick={() => handleOpen()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Unidad
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" onClick={() => window.print()} title="Exportar PDF">
+              <FileDown className="h-4 w-4" />
+            </Button>
+            <Button onClick={() => handleOpen()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nueva Unidad
+            </Button>
+          </div>
         </div>
 
         <Card>

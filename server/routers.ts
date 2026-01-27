@@ -341,6 +341,7 @@ export const appRouter = router({
         unidades: z.array(z.object({
           id: z.number(),
           orden: z.number(),
+          nivel: z.number().optional(),
         })),
       }))
       .mutation(async ({ input }) => {

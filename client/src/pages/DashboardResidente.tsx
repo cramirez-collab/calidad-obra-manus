@@ -13,8 +13,10 @@ import {
   ChevronRight,
   Plus,
   Image,
-  Eye
+  Eye,
+  FileDown
 } from "lucide-react";
+import { generatePDFHeader, generatePDFFooter } from "@/lib/pdfTemplate";
 import { useLocation } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -71,13 +73,24 @@ export default function DashboardResidente() {
               {dashboard?.urgentes || 0} urgentes • {dashboard?.estadisticas?.pendientesFoto || 0} fotos pendientes
             </p>
           </div>
-          <Button 
-            onClick={() => setLocation('/nuevo-item')}
-            className="bg-[#02B381] hover:bg-[#02B381]/90 h-10 px-4"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Nuevo
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline"
+              size="icon"
+              className="h-10 w-10"
+              onClick={() => window.print()}
+              title="Exportar PDF"
+            >
+              <FileDown className="h-4 w-4" />
+            </Button>
+            <Button 
+              onClick={() => setLocation('/nuevo-item')}
+              className="bg-[#02B381] hover:bg-[#02B381]/90 h-10 px-4"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Nuevo
+            </Button>
+          </div>
         </div>
 
         {/* Stats compactas */}
@@ -231,14 +244,7 @@ export default function DashboardResidente() {
             <CardContent className="p-6 text-center">
               <CheckCircle2 className="h-12 w-12 mx-auto text-[#02B381] mb-2" />
               <p className="text-sm font-medium text-[#002C63]">¡Todo al día!</p>
-              <p className="text-xs text-gray-500">No tienes tareas pendientes</p>
-              <Button 
-                className="mt-4 bg-[#02B381] hover:bg-[#02B381]/90"
-                onClick={() => setLocation('/nuevo-item')}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Crear nuevo ítem
-              </Button>
+              <p className="text-xs text-gray-500">Sin pendientes</p>
             </CardContent>
           </Card>
         )}

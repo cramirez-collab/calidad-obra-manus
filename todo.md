@@ -868,3 +868,34 @@
 - [x] Utilidad reutilizable en /lib/pdfTemplate.ts
 - [x] Actualizado StackingPDF con encabezado estándar
 - [x] Actualizado Empresas con plantilla PDF
+
+
+## Botones PDF y Rediseño Home Enero 27
+
+### Rediseño Home
+- [ ] Cambiar botones grandes abajo por iconos compactos arriba
+- [ ] Eliminar botón circular redundante "Crear nuevo ítem"
+- [ ] Iconos del mismo tamaño y estilo uniforme
+
+### Botones PDF en todas las pantallas
+- [ ] PDF en Mis Tareas
+- [ ] PDF en lista de Ítems (con filtros)
+- [ ] PDF en Estadísticas
+- [ ] PDF en KPIs
+- [ ] PDF en catálogos (Unidades, Especialidades, Usuarios)
+
+
+## Mejoras Stacking y PDF Enero 27
+
+### Botones PDF en catálogos
+- [x] Agregar botón PDF en Unidades
+- [x] Agregar botón PDF en Mis Tareas
+- [x] Agregar botón PDF en Items (menú Exportar)
+- [x] Agregar botón PDF en Estadísticas
+- [x] Agregar botón PDF en KPIs
+
+### Drag & Drop en Stacking
+- [x] Permitir arrastrar unidades entre niveles
+- [x] Solo admin/superadmin pueden editar posiciones
+- [x] Ocultar handle de arrastre para otros roles
+- [x] Guardar nueva posición y nivel al soltar

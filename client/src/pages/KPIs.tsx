@@ -18,7 +18,8 @@ import {
   Users,
   Building2,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  FileDown
 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import {
@@ -114,10 +115,15 @@ export default function KPIs() {
             <h1 className="text-2xl font-bold">Dashboard de KPIs</h1>
             <p className="text-muted-foreground">Métricas de rendimiento y tendencias</p>
           </div>
-          <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Actualizar
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" onClick={() => window.print()} title="Exportar PDF">
+              <FileDown className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Actualizar
+            </Button>
+          </div>
         </div>
 
         {/* Filtros */}

@@ -19,6 +19,7 @@ import {
 import { trpc } from "@/lib/trpc";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLocation } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { 
   Building2, 
   CheckCircle2, 
@@ -116,13 +117,15 @@ function SortableUnidadCard({
   onTap, 
   onDoubleTap,
   selectedId,
-  isMobile
+  isMobile,
+  canEdit
 }: { 
   celda: CeldaStacking; 
   onTap: (unidad: UnidadPanoramica) => void;
   onDoubleTap: (unidadId: number) => void;
   selectedId: number | null;
   isMobile: boolean;
+  canEdit: boolean;
 }) {
   const {
     attributes,
@@ -177,14 +180,16 @@ function SortableUnidadCard({
 
   return (
     <div ref={setNodeRef} style={style} className="relative group">
-      {/* Handle para arrastrar */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute -left-1 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-white/90 rounded p-0.5 shadow"
-      >
-        <GripVertical className="h-4 w-4 text-gray-500" />
-      </div>
+      {/* Handle para arrastrar - solo visible para admin/superadmin */}
+      {canEdit && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute -left-1 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-white/90 rounded p-0.5 shadow"
+        >
+          <GripVertical className="h-4 w-4 text-gray-500" />
+        </div>
+      )}
 
       <TooltipProvider>
         <Tooltip>
@@ -355,11 +360,15 @@ function LeyendaEstados() {
 
 export default function VistaPanoramica() {
   const { selectedProjectId } = useProject();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedUnidad, setSelectedUnidad] = useState<UnidadPanoramica | null>(null);
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Solo admin y superadmin pueden editar el stacking
+  const canEdit = user?.role === 'admin' || user?.role === 'superadmin';
 
   // Detectar si es móvil
   React.useEffect(() => {
@@ -462,7 +471,7 @@ export default function VistaPanoramica() {
 
     if (sourceNivel === null || targetNivel === null) return;
 
-    // Solo permitir reordenar dentro del mismo nivel por ahora
+    // Permitir reordenar dentro del mismo nivel
     if (sourceNivel === targetNivel) {
       const oldIndex = sourceCeldas.findIndex(c => c.id === active.id);
       const newIndex = sourceCeldas.findIndex(c => c.id === over.id);
@@ -477,6 +486,20 @@ export default function VistaPanoramica() {
         }));
         
         updateOrdenMutation.mutate({ unidades: updates });
+      }
+    } else {
+      // Mover unidad a otro nivel
+      const sourceCelda = sourceCeldas.find(c => c.id === active.id);
+      if (sourceCelda?.unidad) {
+        // Actualizar nivel y orden de la unidad
+        const targetIndex = targetCeldas.findIndex(c => c.id === over.id);
+        updateOrdenMutation.mutate({ 
+          unidades: [{
+            id: sourceCelda.unidad.id,
+            orden: targetIndex >= 0 ? targetIndex : targetCeldas.length,
+            nivel: targetNivel,
+          }]
+        });
       }
     }
   }, [celdasPorNivel, updateOrdenMutation]);
@@ -664,6 +687,7 @@ export default function VistaPanoramica() {
                               onDoubleTap={handleDoubleTap}
                               selectedId={selectedUnidad?.id || null}
                               isMobile={isMobile}
+                              canEdit={canEdit}
                             />
                           ))}
                           {/* Celda vacía al final para insertar */}

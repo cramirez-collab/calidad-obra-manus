@@ -25,6 +25,7 @@ import {
   Download,
   FileSpreadsheet,
   FileText,
+  FileDown,
   RefreshCw,
   CheckCircle2,
   XCircle,
@@ -220,6 +221,10 @@ export default function Estadisticas() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => window.print()}>
+                  <FileDown className="h-4 w-4 mr-2 text-red-600" />
+                  PDF (Imprimir)
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={exportToExcel}>
                   <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
                   Excel (.xlsx)
