@@ -293,7 +293,10 @@ export default function ReporteFotografico() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `reporte-fotografico-${formatDate(new Date())}.csv`;
+    const now = new Date();
+    const dateStr = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getFullYear()).slice(-2)}`;
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+    a.download = `ReporteFotografico-${dateStr}-${timeStr}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("CSV exportado correctamente");

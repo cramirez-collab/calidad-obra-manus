@@ -83,9 +83,18 @@ export default function StackingPDF() {
       grouped.get(nivel)!.push(unidad);
     });
     
-    // Ordenar por posición dentro de cada nivel
+    // Ordenar por nombre/código numéricamente dentro de cada nivel
     grouped.forEach((celdas, nivel) => {
-      celdas.sort((a, b) => (a.orden || 0) - (b.orden || 0));
+      celdas.sort((a, b) => {
+        const codigoA = a.codigo || a.nombre;
+        const codigoB = b.codigo || b.nombre;
+        // Extraer números del código para ordenar numéricamente
+        const numA = parseInt(codigoA.replace(/\D/g, '')) || 0;
+        const numB = parseInt(codigoB.replace(/\D/g, '')) || 0;
+        if (numA !== numB) return numA - numB;
+        // Si son iguales, ordenar alfabéticamente
+        return codigoA.localeCompare(codigoB);
+      });
       grouped.set(nivel, celdas);
     });
     
@@ -361,13 +370,14 @@ export default function StackingPDF() {
         @media print {
           @page {
             size: letter landscape;
-            margin: 0.5cm;
+            margin: 1cm 0.8cm;
           }
           
           html, body {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
+            font-size: 10px !important;
           }
           
           /* Ocultar ABSOLUTAMENTE todo lo que no sea el contenido */
@@ -392,8 +402,11 @@ export default function StackingPDF() {
           /* Cada página PDF */
           .pdf-page {
             page-break-after: always;
-            min-height: 100vh;
+            min-height: auto !important;
+            height: auto !important;
             box-sizing: border-box;
+            padding: 0.5cm !important;
+            overflow: visible !important;
           }
           
           .pdf-page:last-child {
@@ -402,6 +415,28 @@ export default function StackingPDF() {
           
           .print\\:page-break-before {
             page-break-before: always;
+          }
+          
+          /* Evitar que el encabezado se encime */
+          .pdf-page > div:first-child {
+            margin-bottom: 0.5cm !important;
+          }
+          
+          /* Tabla con mejor espaciado */
+          table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 9px !important;
+          }
+          
+          th, td {
+            padding: 4px 6px !important;
+            border: 1px solid #ccc !important;
+          }
+          
+          /* Evitar filas cortadas */
+          tr {
+            page-break-inside: avoid !important;
           }
         }
         

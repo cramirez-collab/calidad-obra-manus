@@ -1263,3 +1263,18 @@
 
 ### Navegación
 - [x] Eliminar página de Catálogo de Defectos separada (defectos se gestionan en empresas)
+
+
+## Correcciones Reportes PDF (27 Enero 2026)
+
+### Problemas de Formato PDF
+- [x] Corregir encabezados encimados en páginas de continuación (ajustados márgenes y estilos print)
+- [x] Ajustar márgenes para evitar superposición de contenido
+
+### Ordenamiento de Unidades
+- [x] Ordenar unidades numéricamente dentro de cada nivel (extracción de números del código)
+- [x] Incluir todas las unidades faltantes en el reporte
+
+### Nombres de Archivos Descriptivos
+- [x] Cambiar nombre de archivo a formato: [Modulo]-dd-mm-aa-HHmm.pdf
+- [x] Aplicar formato de nombre en Bitácora, ReporteFotográfico y pdfTemplate
