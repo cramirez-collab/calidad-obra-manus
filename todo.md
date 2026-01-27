@@ -834,3 +834,12 @@
 - [x] Botón para ver/descargar PDF del stacking
 - [x] PDF ordenado de mayor a menor (para impresión)
 - [x] Página /stacking/pdf con vista previa e impresión
+
+
+## Limpieza de Módulos Redundantes Enero 27
+
+- [x] Eliminar módulo Prioridades
+- [x] Eliminar módulo Revisión
+- [x] Eliminar módulo Estadísticas Avanzadas
+- [x] Eliminar módulo Reportes
+- [x] Limpiar menú de navegación

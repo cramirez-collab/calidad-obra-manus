@@ -27,8 +27,7 @@ const GenerarQR = lazy(() => import("./pages/GenerarQR"));
 const Configuracion = lazy(() => import("./pages/Configuracion"));
 const Metas = lazy(() => import("./pages/Metas"));
 const DashboardResidente = lazy(() => import("./pages/DashboardResidente"));
-const Prioridades = lazy(() => import("./pages/Prioridades"));
-const EstadisticasAvanzadas = lazy(() => import("./pages/EstadisticasAvanzadas"));
+
 
 
 // Proyectos
@@ -48,8 +47,7 @@ const Especialidades = lazy(() => import("./pages/catalogos/Especialidades"));
 const Atributos = lazy(() => import("./pages/catalogos/Atributos"));
 const Defectos = lazy(() => import("./pages/Defectos"));
 
-// Reportes
-const ReporteFotografico = lazy(() => import("./pages/ReporteFotografico"));
+
 
 // Items
 const ItemsList = lazy(() => import("./pages/items/ItemsList"));
@@ -79,7 +77,7 @@ function Router() {
         <Route path="/items" component={ItemsList} />
         <Route path="/nuevo-item" component={NuevoItem} />
         <Route path="/items/nuevo" component={NuevoItem} />
-        <Route path="/items/revision" component={ItemsList} />
+
         <Route path="/items/aprobacion" component={ItemsList} />
         <Route path="/items/:id" component={ItemDetail} />
         
@@ -98,9 +96,7 @@ function Router() {
         <Route path="/defectos" component={Defectos} />
         <Route path="/catalogos/defectos" component={Defectos} />
         
-        {/* Reportes */}
-        <Route path="/reportes" component={ReporteFotografico} />
-        <Route path="/reporte-fotografico" component={ReporteFotografico} />
+
         
         {/* Usuarios y Bitácora */}
         <Route path="/usuarios" component={Usuarios} />
@@ -112,8 +108,6 @@ function Router() {
         
         {/* Flujo Rápido */}
         <Route path="/mis-tareas" component={DashboardResidente} />
-        <Route path="/prioridades" component={Prioridades} />
-        <Route path="/estadisticas-avanzadas" component={EstadisticasAvanzadas} />
         
         {/* Seguimiento público (QR) */}
         <Route path="/seguimiento/:codigo" component={Seguimiento} />
