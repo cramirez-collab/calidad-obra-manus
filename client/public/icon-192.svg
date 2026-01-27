@@ -2,9 +2,9 @@
   <!-- Fondo circular verde Objetiva -->
   <circle cx="96" cy="96" r="96" fill="#02B381"/>
   <!-- Letra O en blanco -->
-  <text x="40" y="115" font-family="Gotham, 'Arial Black', sans-serif" font-size="58" font-weight="900" fill="white">O</text>
+  <text x="24" y="112" font-family="Gotham, 'Arial Black', Arial, sans-serif" font-size="48" font-weight="900" fill="white">O</text>
   <!-- Letra Q en azul Objetiva -->
-  <text x="80" y="115" font-family="Gotham, 'Arial Black', sans-serif" font-size="58" font-weight="900" fill="#002C63">Q</text>
+  <text x="72" y="112" font-family="Gotham, 'Arial Black', Arial, sans-serif" font-size="48" font-weight="900" fill="#002C63">Q</text>
   <!-- Letra C en blanco -->
-  <text x="125" y="115" font-family="Gotham, 'Arial Black', sans-serif" font-size="58" font-weight="900" fill="white">C</text>
+  <text x="124" y="112" font-family="Gotham, 'Arial Black', Arial, sans-serif" font-size="48" font-weight="900" fill="white">C</text>
 </svg>
