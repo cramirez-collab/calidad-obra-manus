@@ -1327,3 +1327,18 @@
 
 ### Limpieza de Datos
 - [x] Eliminar empresa 30004 de prueba de la base de datos
+
+
+## Limpieza de Proyectos Inactivos (27 Enero 2026)
+
+### Proyectos Eliminados
+- [x] Torre Mayas (ID 30001) y datos relacionados
+- [x] Horma Alto (ID 60001) y datos relacionados
+- [x] Torre Mayas (ID 60002) y datos relacionados
+- [x] erb (ID 60003) y datos relacionados
+- [x] Mayas (ID 90001) y datos relacionados
+- [x] Torre Mayas (ID 90002) y datos relacionados
+
+### Verificación
+- [x] Confirmado: solo queda Hidalma (ID 1) activo
+- [x] Integridad de datos de Hidalma verificada

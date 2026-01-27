@@ -1,0 +1,20 @@
+{
+  "query": "SELECT proyectoId, COUNT(*) as total, p.nombre as proyecto \nFROM unidades u \nJOIN proyectos p ON u.proyectoId = p.id \nGROUP BY proyectoId, p.nombre;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT proyectoId, COUNT(*) as total, p.nombre as proyecto \nFROM unidades u \nJOIN proyectos p ON u.proyectoId = p.id \nGROUP BY proyectoId, p.nombre;",
+  "rows": [
+    {
+      "proyectoId": "30001",
+      "total": "145",
+      "proyecto": "Torre Mayas"
+    },
+    {
+      "proyectoId": "1",
+      "total": "151",
+      "proyecto": "Hidalma "
+    }
+  ],
+  "messages": [],
+  "stdout": "proyectoId\ttotal\tproyecto\n30001\t145\tTorre Mayas\n1\t151\tHidalma \n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

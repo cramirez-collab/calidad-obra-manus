@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, nombre, activo FROM proyectos;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, activo FROM proyectos;",
+  "rows": [
+    {
+      "id": "1",
+      "nombre": "Hidalma ",
+      "activo": "1"
+    },
+    {
+      "id": "30001",
+      "nombre": "Torre Mayas",
+      "activo": "0"
+    },
+    {
+      "id": "60001",
+      "nombre": "Horma Alto",
+      "activo": "0"
+    },
+    {
+      "id": "60002",
+      "nombre": "Torre Mayas",
+      "activo": "0"
+    },
+    {
+      "id": "60003",
+      "nombre": "erb",
+      "activo": "0"
+    },
+    {
+      "id": "90001",
+      "nombre": "Mayas",
+      "activo": "1"
+    },
+    {
+      "id": "90002",
+      "nombre": "Torre Mayas",
+      "activo": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tactivo\n1\tHidalma \t1\n30001\tTorre Mayas\t0\n60001\tHorma Alto\t0\n60002\tTorre Mayas\t0\n60003\terb\t0\n90001\tMayas\t1\n90002\tTorre Mayas\t1\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

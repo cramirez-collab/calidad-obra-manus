@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name FROM users WHERE name LIKE '%Carlos%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, name FROM users WHERE name LIKE '%Carlos%';",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Carlos Ramirez"
+    },
+    {
+      "id": "421490",
+      "name": "CARLOS RAMIREZ"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n1\tCarlos Ramirez\n421490\tCARLOS RAMIREZ\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

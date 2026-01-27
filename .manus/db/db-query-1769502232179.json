@@ -1,0 +1,390 @@
+{
+  "query": "SELECT id, nombre, proyectoId FROM empresas ORDER BY proyectoId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, proyectoId FROM empresas ORDER BY proyectoId;",
+  "rows": [
+    {
+      "id": "330002",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300016",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "30001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "30002",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "30003",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "30005",
+      "nombre": "Objetiva ",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "30006",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "30007",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "30008",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "30009",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "60001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "90001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "270001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "120002",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "150001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "150002",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "150003",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "150004",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330020",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "150006",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330019",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "180001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "180002",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "210001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330018",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330017",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330016",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "240004",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "240005",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "240006",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "240007",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "240008",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "240009",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "240010",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "240011",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "240012",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "120001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300008",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300013",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "270004",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300002",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300003",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300004",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300005",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300006",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300007",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "270002",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300009",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300010",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300011",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300012",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "270003",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330015",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "300015",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "2",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "1",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330014",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330004",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330005",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330006",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330007",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330008",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330009",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330010",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330011",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330012",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330013",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "330003",
+      "nombre": "GBPO",
+      "proyectoId": "1"
+    },
+    {
+      "id": "300014",
+      "nombre": "iimsa",
+      "proyectoId": "1"
+    },
+    {
+      "id": "240003",
+      "nombre": "Riepsa",
+      "proyectoId": "1"
+    },
+    {
+      "id": "240002",
+      "nombre": "Ennco",
+      "proyectoId": "1"
+    },
+    {
+      "id": "240001",
+      "nombre": "Objetiva",
+      "proyectoId": "1"
+    },
+    {
+      "id": "150007",
+      "nombre": "Ennco",
+      "proyectoId": "1"
+    },
+    {
+      "id": "150005",
+      "nombre": "Objetiva ",
+      "proyectoId": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tproyectoId\n330002\tEmpresa Test UX\tNULL\n300016\tEmpresa Test UX\tNULL\n30001\tEmpresa Test UX\tNULL\n30002\tEmpresa Test UX\tNULL\n30003\tEmpresa Test UX\tNULL\n30005\tObjetiva \tNULL\n30006\tEmpresa Test UX\tNULL\n30007\tEmpresa Test UX\tNULL\n30008\tEmpresa Test UX\tNULL\n30009\tEmpresa Test UX\tNULL\n60001\tEmpresa Test UX\tNULL\n90001\tEmpresa Test UX\tNULL\n270001\tEmpresa Test UX\tNULL\n120002\tEmpresa Test UX\tNULL\n150001\tEmpresa Test UX\tNULL\n150002\tEmpresa Test UX\tNULL\n150003\tEmpresa Test UX\tNULL\n150004\tEmpresa Test UX\tNULL\n330020\tEmpresa Test UX\tNULL\n150006\tEmpresa Test UX\tNULL\n330019\tEmpresa Test UX\tNULL\n180001\tEmpresa Test UX\tNULL\n180002\tEmpresa Test UX\tNULL\n210001\tEmpresa Test UX\tNULL\n330018\tEmpresa Test UX\tNULL\n330017\tEmpresa Test UX\tNULL\n330016\tEmpresa Test UX\tNULL\n240004\tEmpresa Test UX\tNULL\n240005\tEmpresa Test UX\tNULL\n240006\tEmpresa Test UX\tNULL\n240007\tEmpresa Test UX\tNULL\n240008\tEmpresa Test UX\tNULL\n240009\tEmpresa Test UX\tNULL\n240010\tEmpresa Test UX\tNULL\n240011\tEmpresa Test UX\tNULL\n240012\tEmpresa Test UX\tNULL\n120001\tEmpresa Test UX\tNULL\n300008\tEmpresa Test UX\tNULL\n300013\tEmpresa Test UX\tNULL\n270004\tEmpresa Test UX\tNULL\n300001\tEmpresa Test UX\tNULL\n300002\tEmpresa Test UX\tNULL\n300003\tEmpresa Test UX\tNULL\n300004\tEmpresa Test UX\tNULL\n300005\tEmpresa Test UX\tNULL\n300006\tEmpresa Test UX\tNULL\n300007\tEmpresa Test UX\tNULL\n270002\tEmpresa Test UX\tNULL\n300009\tEmpresa Test UX\tNULL\n300010\tEmpresa Test UX\tNULL\n300011\tEmpresa Test UX\tNULL\n300012\tEmpresa Test UX\tNULL\n270003\tEmpresa Test UX\tNULL\n330015\tEmpresa Test UX\tNULL\n300015\tEmpresa Test UX\tNULL\n2\tEmpresa Test UX\tNULL\n330001\tEmpresa Test UX\tNULL\n1\tEmpresa Test UX\tNULL\n330014\tEmpresa Test UX\tNULL\n330004\tEmpresa Test UX\tNULL\n330005\tEmpresa Test UX\tNULL\n330006\tEmpresa Test UX\tNULL\n330007\tEmpresa Test UX\tNULL\n330008\tEmpresa Test UX\tNULL\n330009\tEmpresa Test UX\tNULL\n330010\tEmpresa Test UX\tNULL\n330011\tEmpresa Test UX\tNULL\n330012\tEmpresa Test UX\tNULL\n330013\tEmpresa Test UX\tNULL\n330003\tGBPO\t1\n300014\tiimsa\t1\n240003\tRiepsa\t1\n240002\tEnnco\t1\n240001\tObjetiva\t1\n150007\tEnnco\t1\n150005\tObjetiva \t1\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

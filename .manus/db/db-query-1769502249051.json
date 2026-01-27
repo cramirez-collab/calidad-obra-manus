@@ -1,0 +1,90 @@
+{
+  "query": "SELECT u.nombre as unidad, p.nombre as proyecto \nFROM unidades u \nJOIN proyectos p ON u.proyectoId = p.id \nWHERE u.proyectoId IN (1, 30001) \nORDER BY p.nombre, u.nombre \nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT u.nombre as unidad, p.nombre as proyecto \nFROM unidades u \nJOIN proyectos p ON u.proyectoId = p.id \nWHERE u.proyectoId IN (1, 30001) \nORDER BY p.nombre, u.nombre \nLIMIT 20;",
+  "rows": [
+    {
+      "unidad": "1001",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1001",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1002",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1003",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1004",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1005",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1006",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1007",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1008",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "101",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "102",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "103",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "105",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "106",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1101",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1102",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1103",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1104",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1105",
+      "proyecto": "Hidalma "
+    },
+    {
+      "unidad": "1106",
+      "proyecto": "Hidalma "
+    }
+  ],
+  "messages": [],
+  "stdout": "unidad\tproyecto\n1001\tHidalma \n1001\tHidalma \n1002\tHidalma \n1003\tHidalma \n1004\tHidalma \n1005\tHidalma \n1006\tHidalma \n1007\tHidalma \n1008\tHidalma \n101\tHidalma \n102\tHidalma \n103\tHidalma \n105\tHidalma \n106\tHidalma \n1101\tHidalma \n1102\tHidalma \n1103\tHidalma \n1104\tHidalma \n1105\tHidalma \n1106\tHidalma \n",
+  "stderr": "",
+  "execution_time_ms": 60
+}
