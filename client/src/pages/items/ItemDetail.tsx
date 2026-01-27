@@ -608,6 +608,16 @@ export default function ItemDetail() {
                   </div>
                 </div>
 
+                {item.unidadId && getUnidadFechaFin(item.unidadId) && (
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-4 w-4 text-emerald-500" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Fecha terminación unidad</p>
+                      <p className="font-medium text-emerald-600">{formatDate(getUnidadFechaFin(item.unidadId))}</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <div>
@@ -615,16 +625,6 @@ export default function ItemDetail() {
                     <p className="font-medium">{formatDate(item.fechaCreacion)}</p>
                   </div>
                 </div>
-
-                {item.unidadId && getUnidadFechaFin(item.unidadId) && (
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-4 w-4 text-amber-500" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Fecha terminación unidad</p>
-                      <p className="font-medium text-amber-600">{formatDate(getUnidadFechaFin(item.unidadId))}</p>
-                    </div>
-                  </div>
-                )}
 
                 {item.descripcion && (
                   <div className="pt-2 border-t">

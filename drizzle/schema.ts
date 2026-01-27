@@ -439,3 +439,20 @@ export const empresaEspecialidades = mysqlTable("empresa_especialidades", {
 
 export type EmpresaEspecialidad = typeof empresaEspecialidades.$inferSelect;
 export type InsertEmpresaEspecialidad = typeof empresaEspecialidades.$inferInsert;
+
+
+/**
+ * Tabla de relación empresa-residentes (muchos a muchos)
+ * Permite asignar múltiples residentes y jefes de residente a una empresa
+ */
+export const empresaResidentes = mysqlTable("empresa_residentes", {
+  id: int("id").autoincrement().primaryKey(),
+  empresaId: int("empresaId").notNull(),
+  usuarioId: int("usuarioId").notNull(),
+  tipoResidente: mysqlEnum("tipoResidente", ["residente", "jefe_residente"]).default("residente").notNull(),
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EmpresaResidente = typeof empresaResidentes.$inferSelect;
+export type InsertEmpresaResidente = typeof empresaResidentes.$inferInsert;

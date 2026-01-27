@@ -1230,3 +1230,38 @@
 - [x] Detectar unidades con código "-" (guión) como espacios vacíos
 - [x] Mostrar caja vacía/separador en el Stacking para unidades con guión
 - [x] Mantener el mismo tamaño que las unidades normales
+
+
+## Fecha de Terminación en Detalle de Ítem (27 Enero 2026)
+- [ ] Mostrar fecha de terminación de unidad ARRIBA de fecha de creación
+- [ ] Usar color verde Objetiva para la fecha de terminación
+
+
+## Múltiples Residentes por Empresa (Nueva Funcionalidad)
+
+### Base de Datos
+- [ ] Crear tabla de relación empresa_residentes (muchos a muchos)
+- [ ] Migrar datos existentes de residenteId y jefeResidenteId
+
+### Backend
+- [ ] Actualizar router de empresas para manejar múltiples residentes
+- [ ] Crear endpoints para agregar/eliminar residentes de empresa
+- [ ] Actualizar queries de listado de residentes por empresa
+
+### Frontend - Gestión de Empresas
+- [ ] Modificar formulario de empresa para agregar múltiples residentes
+- [ ] Lista de residentes asignados con opción de eliminar
+- [ ] Selector de usuarios disponibles para agregar como residente
+
+### Frontend - Nuevo Ítem
+- [ ] Actualizar selector de residente para usar nueva estructura
+- [ ] Mostrar todos los residentes de todas las empresas
+
+
+## Múltiples Residentes por Empresa (Enero 2026)
+- [x] Crear tabla empresa_residentes en la base de datos
+- [x] Agregar funciones de base de datos para gestionar residentes por empresa
+- [x] Agregar endpoints en el router para CRUD de residentes por empresa
+- [x] Actualizar UI de Empresas para agregar/eliminar múltiples residentes
+- [x] Actualizar NuevoItem para usar la nueva estructura de residentes
+- [ ] Migrar datos existentes de residenteId/jefeResidenteId a la nueva tabla

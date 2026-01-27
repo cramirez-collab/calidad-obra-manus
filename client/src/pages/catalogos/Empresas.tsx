@@ -32,7 +32,7 @@ import { trpc } from "@/lib/trpc";
 import { 
   Building2, Edit, Plus, Trash2, FileDown, ChevronDown, ChevronRight, 
   AlertTriangle, Wrench, ArrowUpDown, User, UserPlus, Mail, Phone, 
-  Lock, Users, Eye, EyeOff
+  Lock, Users, Eye, EyeOff, X
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -57,6 +57,12 @@ type NuevoUsuario = {
   telefono: string;
   password: string;
   role: 'residente' | 'jefe_residente' | 'supervisor';
+};
+
+type ResidenteAsignado = {
+  usuarioId: number;
+  tipoResidente: 'residente' | 'jefe_residente';
+  nombre?: string;
 };
 
 const severidadColors: Record<string, string> = {
@@ -90,9 +96,12 @@ export default function Empresas() {
     email: "",
     proyectoId: "",
     especialidadId: "",
-    residenteId: "",
-    jefeResidenteId: "",
   });
+
+  // Estado para residentes asignados (nueva funcionalidad)
+  const [residentesAsignados, setResidentesAsignados] = useState<ResidenteAsignado[]>([]);
+  const [nuevoResidenteId, setNuevoResidenteId] = useState("");
+  const [nuevoResidenteTipo, setNuevoResidenteTipo] = useState<'residente' | 'jefe_residente'>('residente');
 
   // Estado para crear nuevo usuario
   const [crearNuevoUsuario, setCrearNuevoUsuario] = useState(false);
@@ -136,6 +145,24 @@ export default function Empresas() {
   const { data: usuarios } = trpc.users.list.useQuery();
   const { data: allDefectos } = trpc.defectos.listConEstadisticas.useQuery();
 
+  // Query para obtener residentes de la empresa actual (cuando se está editando)
+  const { data: residentesEmpresa, refetch: refetchResidentes } = trpc.empresas.getResidentes.useQuery(
+    { empresaId: editingEmpresa?.id || 0 },
+    { enabled: !!editingEmpresa?.id }
+  );
+
+  // Cargar residentes cuando se abre el modal de edición
+  useEffect(() => {
+    if (editingEmpresa && residentesEmpresa) {
+      const asignados = residentesEmpresa.map((r: any) => ({
+        usuarioId: r.usuarioId,
+        tipoResidente: r.tipoResidente as 'residente' | 'jefe_residente',
+        nombre: r.usuario?.name || 'Sin nombre'
+      }));
+      setResidentesAsignados(asignados);
+    }
+  }, [editingEmpresa, residentesEmpresa]);
+
   // Defectos filtrados por especialidad seleccionada
   const defectosPorEspecialidad = allDefectos?.filter(
     d => d.especialidadId === parseInt(formData.especialidadId || "0")
@@ -143,7 +170,15 @@ export default function Empresas() {
 
   // Mutations
   const createMutation = trpc.empresas.create.useMutation({
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      // Agregar residentes a la empresa recién creada
+      for (const residente of residentesAsignados) {
+        await addResidenteMutation.mutateAsync({
+          empresaId: data.id,
+          usuarioId: residente.usuarioId,
+          tipoResidente: residente.tipoResidente,
+        });
+      }
       utils.empresas.list.invalidate();
       toast.success("Empresa creada correctamente");
       handleClose();
@@ -168,6 +203,25 @@ export default function Empresas() {
     onSuccess: () => {
       utils.empresas.list.invalidate();
       toast.success("Empresa eliminada correctamente");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // Mutations para residentes
+  const addResidenteMutation = trpc.empresas.addResidente.useMutation({
+    onSuccess: () => {
+      refetchResidentes();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const removeResidenteMutation = trpc.empresas.removeResidente.useMutation({
+    onSuccess: () => {
+      refetchResidentes();
     },
     onError: (error) => {
       toast.error(error.message);
@@ -214,8 +268,13 @@ export default function Empresas() {
     onSuccess: (data) => {
       utils.users.list.invalidate();
       toast.success("Usuario creado correctamente");
-      // Asignar el nuevo usuario como residente
-      setFormData(prev => ({ ...prev, residenteId: data.id.toString() }));
+      // Agregar el nuevo usuario a la lista de residentes asignados
+      const nuevoResidente: ResidenteAsignado = {
+        usuarioId: data.id,
+        tipoResidente: nuevoUsuario.role === 'jefe_residente' ? 'jefe_residente' : 'residente',
+        nombre: nuevoUsuario.nombre
+      };
+      setResidentesAsignados(prev => [...prev, nuevoResidente]);
       setCrearNuevoUsuario(false);
       setNuevoUsuario({ nombre: "", email: "", telefono: "", password: "", role: "residente" });
     },
@@ -235,9 +294,8 @@ export default function Empresas() {
         email: empresa.email || "",
         proyectoId: empresa.proyectoId?.toString() || "",
         especialidadId: empresa.especialidadId?.toString() || "",
-        residenteId: empresa.residenteId?.toString() || "",
-        jefeResidenteId: empresa.jefeResidenteId?.toString() || "",
       });
+      // Los residentes se cargarán por el useEffect cuando residentesEmpresa esté disponible
     } else {
       setEditingEmpresa(null);
       setFormData({ 
@@ -248,24 +306,76 @@ export default function Empresas() {
         email: "",
         proyectoId: selectedProjectId?.toString() || "",
         especialidadId: "",
-        residenteId: "",
-        jefeResidenteId: "",
       });
+      setResidentesAsignados([]);
     }
     setActiveTab("datos");
     setCrearNuevoUsuario(false);
     setDefectosSeleccionados(new Set());
+    setNuevoResidenteId("");
+    setNuevoResidenteTipo('residente');
     setIsOpen(true);
   };
 
   const handleClose = () => {
     setIsOpen(false);
     setEditingEmpresa(null);
-    setFormData({ nombre: "", rfc: "", contacto: "", telefono: "", email: "", proyectoId: "", especialidadId: "", residenteId: "", jefeResidenteId: "" });
+    setFormData({ nombre: "", rfc: "", contacto: "", telefono: "", email: "", proyectoId: "", especialidadId: "" });
+    setResidentesAsignados([]);
     setActiveTab("datos");
     setCrearNuevoUsuario(false);
     setNuevoUsuario({ nombre: "", email: "", telefono: "", password: "", role: "residente" });
     setDefectosSeleccionados(new Set());
+    setNuevoResidenteId("");
+    setNuevoResidenteTipo('residente');
+  };
+
+  const handleAddResidente = async () => {
+    if (!nuevoResidenteId || nuevoResidenteId === 'none') {
+      toast.error("Selecciona un usuario");
+      return;
+    }
+
+    const usuarioId = parseInt(nuevoResidenteId);
+    
+    // Verificar si ya está asignado
+    if (residentesAsignados.some(r => r.usuarioId === usuarioId)) {
+      toast.error("Este usuario ya está asignado a la empresa");
+      return;
+    }
+
+    const usuario = usuarios?.find(u => u.id === usuarioId);
+    const nuevoResidente: ResidenteAsignado = {
+      usuarioId,
+      tipoResidente: nuevoResidenteTipo,
+      nombre: usuario?.name || 'Sin nombre'
+    };
+
+    // Si estamos editando, guardar en la base de datos
+    if (editingEmpresa) {
+      await addResidenteMutation.mutateAsync({
+        empresaId: editingEmpresa.id,
+        usuarioId,
+        tipoResidente: nuevoResidenteTipo,
+      });
+      toast.success("Residente agregado");
+    }
+    
+    setResidentesAsignados(prev => [...prev, nuevoResidente]);
+    setNuevoResidenteId("");
+  };
+
+  const handleRemoveResidente = async (usuarioId: number) => {
+    // Si estamos editando, eliminar de la base de datos
+    if (editingEmpresa) {
+      await removeResidenteMutation.mutateAsync({
+        empresaId: editingEmpresa.id,
+        usuarioId,
+      });
+      toast.success("Residente eliminado");
+    }
+    
+    setResidentesAsignados(prev => prev.filter(r => r.usuarioId !== usuarioId));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -290,8 +400,6 @@ export default function Empresas() {
       email: formData.email || undefined,
       proyectoId: proyectoIdFinal || undefined,
       especialidadId: formData.especialidadId && formData.especialidadId !== 'none' ? parseInt(formData.especialidadId) : undefined,
-      residenteId: formData.residenteId && formData.residenteId !== 'none' ? parseInt(formData.residenteId) : null,
-      jefeResidenteId: formData.jefeResidenteId && formData.jefeResidenteId !== 'none' ? parseInt(formData.jefeResidenteId) : null,
     };
 
     if (editingEmpresa) {
@@ -303,7 +411,7 @@ export default function Empresas() {
 
   const handleCreateUser = () => {
     if (!nuevoUsuario.nombre.trim()) {
-      toast.error("El nombre del usuario es requerido");
+      toast.error("El nombre es requerido");
       return;
     }
     if (!nuevoUsuario.password || nuevoUsuario.password.length < 6) {
@@ -316,6 +424,7 @@ export default function Empresas() {
       email: nuevoUsuario.email || undefined,
       password: nuevoUsuario.password,
       role: nuevoUsuario.role,
+      empresaId: editingEmpresa?.id || null,
       proyectoId: selectedProjectId || undefined,
     });
   };
@@ -326,30 +435,26 @@ export default function Empresas() {
     }
   };
 
-  const toggleExpanded = (empresaId: number) => {
-    const newExpanded = new Set(expandedEmpresas);
-    if (newExpanded.has(empresaId)) {
-      newExpanded.delete(empresaId);
-    } else {
-      newExpanded.add(empresaId);
-    }
-    setExpandedEmpresas(newExpanded);
-  };
-
-  const getEspecialidadNombre = (especialidadId: number | null | undefined) => {
-    if (!especialidadId) return "-";
-    const especialidad = especialidades?.find(e => e.id === especialidadId);
-    return especialidad?.nombre || "-";
+  const toggleExpanded = (id: number) => {
+    setExpandedEmpresas(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
   };
 
   const getDefectosByEspecialidad = (especialidadId: number | null | undefined) => {
-    if (!especialidadId || !allDefectos) return [];
-    return allDefectos.filter(d => d.especialidadId === especialidadId);
+    if (!especialidadId) return [];
+    return allDefectos?.filter(d => d.especialidadId === especialidadId) || [];
   };
 
   const handleAddDefecto = (empresaId: number, especialidadId: number | null | undefined) => {
     if (!especialidadId) {
-      toast.error("La empresa debe tener una especialidad asignada para agregar defectos");
+      toast.error("La empresa debe tener una especialidad asignada");
       return;
     }
     setAddDefectoEmpresaId(empresaId);
@@ -362,82 +467,71 @@ export default function Empresas() {
       toast.error("El nombre del defecto es requerido");
       return;
     }
-    if (!addDefectoEspecialidadId || !selectedProjectId) {
-      toast.error("Error: especialidad o proyecto no definido");
+    if (!addDefectoEspecialidadId) {
+      toast.error("Error: especialidad no definida");
       return;
     }
+
     createDefectoMutation.mutate({
       nombre: nuevoDefecto.nombre,
       especialidadId: addDefectoEspecialidadId,
       severidad: nuevoDefecto.severidad as any,
-      proyectoId: selectedProjectId,
+      proyectoId: selectedProjectId || undefined,
     });
   };
 
-  const toggleDefectoSeleccionado = (defectoId: number) => {
-    const newSet = new Set(defectosSeleccionados);
-    if (newSet.has(defectoId)) {
-      newSet.delete(defectoId);
-    } else {
-      newSet.add(defectoId);
-    }
-    setDefectosSeleccionados(newSet);
-  };
-
-  const handleExportPDF = () => {
-    if (!empresas || empresas.length === 0) {
-      toast.error("No hay empresas para exportar");
+  const handleUpdateDefecto = () => {
+    if (!editingDefecto) return;
+    if (!editingDefecto.nombre.trim()) {
+      toast.error("El nombre del defecto es requerido");
       return;
     }
 
-    const proyectoNombre = proyectos?.find(p => p.id === selectedProjectId)?.nombre || "Proyecto";
-    
-    import('@/lib/pdfTemplate').then(({ openPrintWindow, generateTable }) => {
-      const headers = ['Nombre', 'Especialidad', 'Contacto', 'Teléfono', 'Email'];
-      const rows = empresas.map(empresa => [
-        empresa.nombre,
-        getEspecialidadNombre(empresa.especialidadId),
-        empresa.contacto || '-',
-        empresa.telefono || '-',
-        empresa.email || '-'
-      ]);
-
-      const content = `
-        <h1>Lista de Empresas</h1>
-        ${generateTable(headers, rows)}
-      `;
-
-      const result = openPrintWindow({
-        title: 'Empresas',
-        proyectoNombre,
-        content,
-        totalPages: 1,
-        currentPage: 1
-      });
-
-      if (!result) {
-        toast.error("No se pudo abrir ventana de impresión");
-      }
+    updateDefectoMutation.mutate({
+      id: editingDefecto.id,
+      nombre: editingDefecto.nombre,
+      severidad: editingDefecto.severidad as any,
     });
   };
 
-  // Obtener la especialidad seleccionada para mostrar su color
-  const especialidadSeleccionada = especialidades?.find(
-    e => e.id === parseInt(formData.especialidadId || "0")
-  );
+  const handleDeleteDefecto = () => {
+    if (!defectoToDelete) return;
+    deleteDefectoMutation.mutate({ id: defectoToDelete.id });
+  };
+
+  // Obtener usuarios disponibles para agregar (que no estén ya asignados)
+  const usuariosDisponibles = usuarios?.filter(u => 
+    (u.role === 'residente' || u.role === 'jefe_residente') &&
+    !residentesAsignados.some(r => r.usuarioId === u.id)
+  ) || [];
+
+  // Obtener residentes de una empresa para mostrar en la lista
+  const getResidentesDisplay = (empresa: Empresa) => {
+    // Por ahora mostrar el residente antiguo si existe
+    const residente = usuarios?.find(u => u.id === empresa.residenteId);
+    const jefeResidente = usuarios?.find(u => u.id === empresa.jefeResidenteId);
+    const nombres: string[] = [];
+    if (residente) nombres.push(residente.name || 'Residente');
+    if (jefeResidente) nombres.push(jefeResidente.name || 'Jefe');
+    return nombres.join(', ') || null;
+  };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Empresas</h1>
+            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              <Building2 className="h-6 w-6 text-primary" />
+              Empresas
+            </h1>
             <p className="text-muted-foreground">
               Gestiona las empresas contratistas y sus defectos típicos
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportPDF}>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
               <FileDown className="h-4 w-4 mr-2" />
               PDF
             </Button>
@@ -448,44 +542,43 @@ export default function Empresas() {
           </div>
         </div>
 
+        {/* Lista de Empresas */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Lista de Empresas ({empresas?.length || 0})
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Ordenar por" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nombre">Empresa</SelectItem>
-                    <SelectItem value="especialidad">Especialidad</SelectItem>
-                    <SelectItem value="contacto">Contacto</SelectItem>
-                    <SelectItem value="residente">Residente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <CardTitle className="text-lg">Lista de Empresas ({empresas?.length || 0})</CardTitle>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+                <SelectTrigger className="w-[140px]">
+                  <ArrowUpDown className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Ordenar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nombre">Empresa</SelectItem>
+                  <SelectItem value="especialidad">Especialidad</SelectItem>
+                  <SelectItem value="contacto">Contacto</SelectItem>
+                  <SelectItem value="residente">Residente</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Cargando...
+              <div className="flex justify-center py-8">
+                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
               </div>
-            ) : empresas?.length === 0 ? (
+            ) : !empresas || empresas.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No hay empresas registradas
+                <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No hay empresas registradas</p>
+                <Button variant="outline" className="mt-4" onClick={() => handleOpen()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Crear primera empresa
+                </Button>
               </div>
             ) : (
-              <div className="space-y-2">
-                {[...(empresas || [])].sort((a, b) => {
+              <div className="space-y-3">
+                {[...empresas].sort((a, b) => {
                   switch (sortBy) {
-                    case 'nombre':
-                      return (a.nombre || '').localeCompare(b.nombre || '');
                     case 'especialidad':
                       const espA = especialidades?.find(e => e.id === a.especialidadId)?.nombre || '';
                       const espB = especialidades?.find(e => e.id === b.especialidadId)?.nombre || '';
@@ -497,13 +590,13 @@ export default function Empresas() {
                       const resB = usuarios?.find(u => u.id === b.residenteId)?.name || '';
                       return resA.localeCompare(resB);
                     default:
-                      return 0;
+                      return a.nombre.localeCompare(b.nombre);
                   }
                 }).map((empresa) => {
                   const defectos = getDefectosByEspecialidad(empresa.especialidadId);
                   const isExpanded = expandedEmpresas.has(empresa.id);
                   const especialidad = especialidades?.find(e => e.id === empresa.especialidadId);
-                  const residente = usuarios?.find(u => u.id === empresa.residenteId);
+                  const residentesDisplay = getResidentesDisplay(empresa);
                   
                   return (
                     <Collapsible key={empresa.id} open={isExpanded} onOpenChange={() => toggleExpanded(empresa.id)}>
@@ -543,10 +636,10 @@ export default function Empresas() {
                                 )}
                               </div>
                               <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
-                                {residente && (
+                                {residentesDisplay && (
                                   <span className="flex items-center gap-1">
                                     <User className="h-3 w-3" />
-                                    {residente.name}
+                                    {residentesDisplay}
                                   </span>
                                 )}
                                 {empresa.telefono && <span>• {empresa.telefono}</span>}
@@ -654,7 +747,7 @@ export default function Empresas() {
           </CardContent>
         </Card>
 
-        {/* Dialog para crear/editar empresa - MEJORADO */}
+        {/* Dialog para crear/editar empresa */}
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh]">
             <DialogHeader>
@@ -704,29 +797,22 @@ export default function Empresas() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">Sin especialidad</SelectItem>
-                          {especialidades?.map((especialidad) => (
-                            <SelectItem key={especialidad.id} value={especialidad.id.toString()}>
+                          {especialidades?.map((esp) => (
+                            <SelectItem key={esp.id} value={esp.id.toString()}>
                               <div className="flex items-center gap-2">
                                 <div 
                                   className="w-3 h-3 rounded-full" 
-                                  style={{ backgroundColor: especialidad.color || '#3B82F6' }}
+                                  style={{ backgroundColor: esp.color || '#3B82F6' }}
                                 />
-                                {especialidad.nombre}
+                                {esp.nombre}
                               </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      {especialidadSeleccionada && (
-                        <p className="text-xs text-muted-foreground">
-                          Se mostrarán los defectos típicos de {especialidadSeleccionada.nombre} en la pestaña "Defectos"
-                        </p>
-                      )}
                     </div>
 
-                    <Separator />
-
-                    {/* Nombre de empresa */}
+                    {/* Nombre */}
                     <div className="grid gap-2">
                       <Label htmlFor="nombre">Nombre de la Empresa *</Label>
                       <Input
@@ -737,15 +823,26 @@ export default function Empresas() {
                       />
                     </div>
 
-                    {/* Contacto */}
-                    <div className="grid gap-2">
-                      <Label htmlFor="contacto">Persona de Contacto</Label>
-                      <Input
-                        id="contacto"
-                        value={formData.contacto}
-                        onChange={(e) => setFormData({ ...formData, contacto: e.target.value })}
-                        placeholder="Nombre del contacto principal"
-                      />
+                    {/* RFC y Contacto */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="rfc">RFC</Label>
+                        <Input
+                          id="rfc"
+                          value={formData.rfc}
+                          onChange={(e) => setFormData({ ...formData, rfc: e.target.value })}
+                          placeholder="RFC de la empresa"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="contacto">Contacto</Label>
+                        <Input
+                          id="contacto"
+                          value={formData.contacto}
+                          onChange={(e) => setFormData({ ...formData, contacto: e.target.value })}
+                          placeholder="Nombre del contacto"
+                        />
+                      </div>
                     </div>
 
                     {/* Teléfono y Email */}
@@ -779,56 +876,114 @@ export default function Empresas() {
                   </div>
                 </TabsContent>
 
-                {/* TAB: Equipo */}
+                {/* TAB: Equipo - NUEVA FUNCIONALIDAD DE MÚLTIPLES RESIDENTES */}
                 <TabsContent value="equipo" className="space-y-4 mt-0">
                   <div className="grid gap-4">
-                    {/* Asignar usuarios existentes */}
+                    {/* Lista de residentes asignados */}
                     <div className="space-y-4">
                       <h4 className="font-medium text-sm flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        Asignar Usuarios Existentes
+                        <Users className="h-4 w-4" />
+                        Residentes Asignados ({residentesAsignados.length})
                       </h4>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                          <Label htmlFor="residenteId">Residente</Label>
+                      {residentesAsignados.length === 0 ? (
+                        <p className="text-sm text-muted-foreground italic py-4 text-center">
+                          No hay residentes asignados a esta empresa
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {residentesAsignados.map((residente) => {
+                            const usuario = usuarios?.find(u => u.id === residente.usuarioId);
+                            return (
+                              <div 
+                                key={residente.usuarioId} 
+                                className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <User className="h-4 w-4 text-primary" />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-sm">{residente.nombre || usuario?.name || 'Sin nombre'}</p>
+                                    <p className="text-xs text-muted-foreground">{usuario?.email || ''}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant={residente.tipoResidente === 'jefe_residente' ? 'default' : 'secondary'}>
+                                    {residente.tipoResidente === 'jefe_residente' ? 'Jefe de Residente' : 'Residente'}
+                                  </Badge>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:text-destructive"
+                                    onClick={() => handleRemoveResidente(residente.usuarioId)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <Separator />
+
+                    {/* Agregar nuevo residente */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-sm flex items-center gap-2">
+                        <UserPlus className="h-4 w-4" />
+                        Agregar Residente
+                      </h4>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="sm:col-span-2">
+                          <Label className="sr-only">Usuario</Label>
                           <Select
-                            value={formData.residenteId}
-                            onValueChange={(value) => setFormData({ ...formData, residenteId: value })}
+                            value={nuevoResidenteId}
+                            onValueChange={setNuevoResidenteId}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar residente" />
+                              <SelectValue placeholder="Seleccionar usuario" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">Sin asignar</SelectItem>
-                              {usuarios?.filter(u => u.role === 'residente' || u.role === 'jefe_residente').map((usuario) => (
+                              <SelectItem value="none">Seleccionar usuario</SelectItem>
+                              {usuariosDisponibles.map((usuario) => (
                                 <SelectItem key={usuario.id} value={usuario.id.toString()}>
-                                  {usuario.name || usuario.email}
+                                  {usuario.name || usuario.email} ({roleLabels[usuario.role] || usuario.role})
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="jefeResidenteId">Jefe de Residente</Label>
+                        <div>
+                          <Label className="sr-only">Tipo</Label>
                           <Select
-                            value={formData.jefeResidenteId}
-                            onValueChange={(value) => setFormData({ ...formData, jefeResidenteId: value })}
+                            value={nuevoResidenteTipo}
+                            onValueChange={(v) => setNuevoResidenteTipo(v as any)}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar jefe" />
+                              <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">Sin asignar</SelectItem>
-                              {usuarios?.filter(u => u.role === 'jefe_residente' || u.role === 'supervisor').map((usuario) => (
-                                <SelectItem key={usuario.id} value={usuario.id.toString()}>
-                                  {usuario.name || usuario.email}
-                                </SelectItem>
-                              ))}
+                              <SelectItem value="residente">Residente</SelectItem>
+                              <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
+                      
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleAddResidente}
+                        disabled={!nuevoResidenteId || nuevoResidenteId === 'none'}
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Agregar a la Empresa
+                      </Button>
                     </div>
 
                     <Separator />
@@ -846,7 +1001,7 @@ export default function Empresas() {
                           size="sm"
                           onClick={() => setCrearNuevoUsuario(!crearNuevoUsuario)}
                         >
-                          {crearNuevoUsuario ? "Cancelar" : "Agregar Usuario"}
+                          {crearNuevoUsuario ? "Cancelar" : "Crear Usuario"}
                         </Button>
                       </div>
 
@@ -948,124 +1103,80 @@ export default function Empresas() {
                   {!formData.especialidadId || formData.especialidadId === 'none' ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Selecciona una especialidad en la pestaña "Datos" para ver los defectos típicos</p>
+                      <p>Selecciona una especialidad primero</p>
+                      <p className="text-sm">Los defectos están asociados a especialidades</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-sm flex items-center gap-2">
-                          <AlertTriangle className="h-4 w-4 text-amber-500" />
-                          Defectos de {especialidadSeleccionada?.nombre}
+                        <h4 className="font-medium">
+                          Defectos de {especialidades?.find(e => e.id === parseInt(formData.especialidadId))?.nombre}
                         </h4>
-                        <Badge variant="secondary">
-                          {defectosPorEspecialidad.length} defectos
-                        </Badge>
+                        <Badge variant="outline">{defectosPorEspecialidad.length} defectos</Badge>
                       </div>
-
+                      
                       {defectosPorEspecialidad.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground border rounded-lg">
-                          <p>No hay defectos definidos para esta especialidad</p>
-                          <p className="text-sm mt-2">Puedes agregar defectos después de crear la empresa</p>
-                        </div>
+                        <p className="text-sm text-muted-foreground italic text-center py-4">
+                          No hay defectos definidos para esta especialidad
+                        </p>
                       ) : (
                         <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground">
-                            Estos son los defectos típicos asociados a la especialidad seleccionada:
-                          </p>
-                          <div className="grid grid-cols-1 gap-2 max-h-[250px] overflow-y-auto">
-                            {defectosPorEspecialidad.map((defecto: any) => (
-                              <div 
-                                key={defecto.id} 
-                                className="flex items-center justify-between p-3 bg-white rounded border"
+                          {defectosPorEspecialidad.map((defecto: any) => (
+                            <div 
+                              key={defecto.id} 
+                              className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                            >
+                              <span>{defecto.nombre}</span>
+                              <Badge 
+                                variant="secondary" 
+                                className={severidadColors[defecto.severidad] || ''}
                               >
-                                <div className="flex items-center gap-3">
-                                  <Checkbox
-                                    id={`defecto-${defecto.id}`}
-                                    checked={defectosSeleccionados.has(defecto.id)}
-                                    onCheckedChange={() => toggleDefectoSeleccionado(defecto.id)}
-                                  />
-                                  <label 
-                                    htmlFor={`defecto-${defecto.id}`}
-                                    className="text-sm cursor-pointer"
-                                  >
-                                    {defecto.nombre}
-                                  </label>
-                                </div>
-                                <Badge 
-                                  variant="secondary" 
-                                  className={`text-xs ${severidadColors[defecto.severidad] || ''}`}
-                                >
-                                  {defecto.severidad}
-                                </Badge>
-                              </div>
-                            ))}
-                          </div>
+                                {defecto.severidad}
+                              </Badge>
+                            </div>
+                          ))}
                         </div>
                       )}
-
-                      <Separator />
-
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">
-                          ¿Necesitas agregar un defecto personalizado?
-                        </p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setAddDefectoEspecialidadId(parseInt(formData.especialidadId));
-                            setIsAddDefectoOpen(true);
-                          }}
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Agregar Defecto
-                        </Button>
-                      </div>
                     </div>
                   )}
                 </TabsContent>
               </ScrollArea>
             </Tabs>
 
-            <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" onClick={handleClose}>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleClose}>
                 Cancelar
               </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={createMutation.isPending || updateMutation.isPending}
-              >
-                {editingEmpresa ? "Guardar Cambios" : "Crear Empresa"}
+              <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
+                {createMutation.isPending || updateMutation.isPending ? "Guardando..." : "Guardar"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {/* Dialog para agregar defecto personalizado */}
+        {/* Dialog para agregar defecto */}
         <Dialog open={isAddDefectoOpen} onOpenChange={setIsAddDefectoOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle>Agregar Defecto Personalizado</DialogTitle>
+              <DialogTitle>Agregar Defecto</DialogTitle>
               <DialogDescription>
-                Este defecto se agregará a la especialidad y estará disponible para todas las empresas con esta especialidad
+                Agrega un nuevo defecto a la especialidad
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="defectoNombre">Nombre del Defecto *</Label>
+                <Label>Nombre del Defecto *</Label>
                 <Input
-                  id="defectoNombre"
                   value={nuevoDefecto.nombre}
                   onChange={(e) => setNuevoDefecto({ ...nuevoDefecto, nombre: e.target.value })}
-                  placeholder="Ej: Grieta en muro"
+                  placeholder="Ej: Fuga de agua"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="defectoSeveridad">Severidad</Label>
+                <Label>Severidad</Label>
                 <Select
                   value={nuevoDefecto.severidad}
-                  onValueChange={(value) => setNuevoDefecto({ ...nuevoDefecto, severidad: value })}
+                  onValueChange={(v) => setNuevoDefecto({ ...nuevoDefecto, severidad: v })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -1083,11 +1194,8 @@ export default function Empresas() {
               <Button variant="outline" onClick={() => setIsAddDefectoOpen(false)}>
                 Cancelar
               </Button>
-              <Button 
-                onClick={handleCreateDefecto}
-                disabled={createDefectoMutation.isPending}
-              >
-                Agregar Defecto
+              <Button onClick={handleCreateDefecto} disabled={createDefectoMutation.isPending}>
+                {createDefectoMutation.isPending ? "Agregando..." : "Agregar"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1095,31 +1203,24 @@ export default function Empresas() {
 
         {/* Dialog para editar defecto */}
         <Dialog open={isEditDefectoOpen} onOpenChange={setIsEditDefectoOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5" />
-                Editar Defecto
-              </DialogTitle>
-              <DialogDescription>
-                Modifica el nombre y severidad del defecto
-              </DialogDescription>
+              <DialogTitle>Editar Defecto</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="editDefectoNombre">Nombre del Defecto *</Label>
+                <Label>Nombre del Defecto *</Label>
                 <Input
-                  id="editDefectoNombre"
-                  value={editingDefecto?.nombre || ""}
+                  value={editingDefecto?.nombre || ''}
                   onChange={(e) => setEditingDefecto(prev => prev ? { ...prev, nombre: e.target.value } : null)}
-                  placeholder="Ej: Grieta en muro"
+                  placeholder="Nombre del defecto"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="editDefectoSeveridad">Severidad</Label>
+                <Label>Severidad</Label>
                 <Select
-                  value={editingDefecto?.severidad || "moderado"}
-                  onValueChange={(value) => setEditingDefecto(prev => prev ? { ...prev, severidad: value } : null)}
+                  value={editingDefecto?.severidad || 'moderado'}
+                  onValueChange={(v) => setEditingDefecto(prev => prev ? { ...prev, severidad: v } : null)}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -1134,25 +1235,11 @@ export default function Empresas() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => {
-                setIsEditDefectoOpen(false);
-                setEditingDefecto(null);
-              }}>
+              <Button variant="outline" onClick={() => setIsEditDefectoOpen(false)}>
                 Cancelar
               </Button>
-              <Button 
-                onClick={() => {
-                  if (editingDefecto) {
-                    updateDefectoMutation.mutate({
-                      id: editingDefecto.id,
-                      nombre: editingDefecto.nombre,
-                      severidad: editingDefecto.severidad as any,
-                    });
-                  }
-                }}
-                disabled={updateDefectoMutation.isPending || !editingDefecto?.nombre}
-              >
-                Guardar Cambios
+              <Button onClick={handleUpdateDefecto} disabled={updateDefectoMutation.isPending}>
+                {updateDefectoMutation.isPending ? "Guardando..." : "Guardar"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1160,34 +1247,19 @@ export default function Empresas() {
 
         {/* Dialog para confirmar eliminación de defecto */}
         <Dialog open={isDeleteDefectoOpen} onOpenChange={setIsDeleteDefectoOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-destructive">
-                <AlertTriangle className="h-5 w-5" />
-                Confirmar Eliminación
-              </DialogTitle>
+              <DialogTitle>Eliminar Defecto</DialogTitle>
               <DialogDescription>
-                ¿Estás seguro de que deseas eliminar el defecto <strong>"{defectoToDelete?.nombre}"</strong>?
-                Esta acción no se puede deshacer.
+                ¿Estás seguro de eliminar el defecto "{defectoToDelete?.nombre}"?
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="outline" onClick={() => {
-                setIsDeleteDefectoOpen(false);
-                setDefectoToDelete(null);
-              }}>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDefectoOpen(false)}>
                 Cancelar
               </Button>
-              <Button 
-                variant="destructive"
-                onClick={() => {
-                  if (defectoToDelete) {
-                    deleteDefectoMutation.mutate({ id: defectoToDelete.id });
-                  }
-                }}
-                disabled={deleteDefectoMutation.isPending}
-              >
-                {deleteDefectoMutation.isPending ? "Eliminando..." : "Eliminar Defecto"}
+              <Button variant="destructive" onClick={handleDeleteDefecto} disabled={deleteDefectoMutation.isPending}>
+                {deleteDefectoMutation.isPending ? "Eliminando..." : "Eliminar"}
               </Button>
             </DialogFooter>
           </DialogContent>

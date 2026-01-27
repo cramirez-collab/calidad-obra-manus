@@ -261,6 +261,51 @@ export const appRouter = router({
         await db.asignarEspecialidadesAEmpresa(input.empresaId, input.especialidadIds);
         return { success: true };
       }),
+    
+    // ==================== RESIDENTES POR EMPRESA ====================
+    
+    // Obtener residentes de una empresa
+    getResidentes: protectedProcedure
+      .input(z.object({ empresaId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getResidentesByEmpresa(input.empresaId);
+      }),
+    
+    // Agregar residente a empresa
+    addResidente: adminProcedure
+      .input(z.object({
+        empresaId: z.number(),
+        usuarioId: z.number(),
+        tipoResidente: z.enum(['residente', 'jefe_residente']).default('residente'),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.addResidenteToEmpresa(input.empresaId, input.usuarioId, input.tipoResidente);
+        return { id, success: true };
+      }),
+    
+    // Eliminar residente de empresa
+    removeResidente: adminProcedure
+      .input(z.object({
+        empresaId: z.number(),
+        usuarioId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.removeResidenteFromEmpresa(input.empresaId, input.usuarioId);
+        return { success: true };
+      }),
+    
+    // Obtener todos los residentes con sus empresas (para selector de nuevo ítem)
+    getAllResidentesConEmpresas: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllResidentesConEmpresas(input?.proyectoId);
+      }),
+    
+    // Migrar datos existentes de residenteId y jefeResidenteId
+    migrarResidentes: superadminProcedure
+      .mutation(async () => {
+        return await db.migrarResidentesExistentes();
+      }),
   }),
 
   // ==================== UNIDADES ====================

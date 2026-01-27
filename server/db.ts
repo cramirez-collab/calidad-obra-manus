@@ -22,7 +22,8 @@ import {
   userBadges, InsertUserBadge,
   auditoria, InsertAuditoria,
   pushSubscriptions, InsertPushSubscription,
-  empresaEspecialidades, InsertEmpresaEspecialidad
+  empresaEspecialidades, InsertEmpresaEspecialidad,
+  empresaResidentes, InsertEmpresaResidente
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -3720,4 +3721,202 @@ export async function getKPIsMejoresPeores(proyectoId?: number) {
     defectos: { masFrecuentes: defectosMasFrecuentes, menosFrecuentes: defectosMenosFrecuentes },
     niveles: { mejores: nivelesMejores, peores: nivelesPeores },
   };
+}
+
+
+// ==================== EMPRESA RESIDENTES ====================
+
+// Obtener todos los residentes de una empresa
+export async function getResidentesByEmpresa(empresaId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const relaciones = await db.select()
+    .from(empresaResidentes)
+    .where(and(
+      eq(empresaResidentes.empresaId, empresaId),
+      eq(empresaResidentes.activo, true)
+    ));
+  
+  if (relaciones.length === 0) return [];
+  
+  const usuarioIds = relaciones.map(r => r.usuarioId);
+  const usuariosResult = await db.select()
+    .from(users)
+    .where(inArray(users.id, usuarioIds));
+  
+  return relaciones.map(rel => {
+    const usuario = usuariosResult.find(u => u.id === rel.usuarioId);
+    return {
+      ...rel,
+      usuario
+    };
+  });
+}
+
+// Agregar un residente a una empresa
+export async function addResidenteToEmpresa(empresaId: number, usuarioId: number, tipoResidente: 'residente' | 'jefe_residente' = 'residente') {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Verificar si ya existe la relación
+  const existente = await db.select()
+    .from(empresaResidentes)
+    .where(and(
+      eq(empresaResidentes.empresaId, empresaId),
+      eq(empresaResidentes.usuarioId, usuarioId)
+    ))
+    .limit(1);
+  
+  if (existente.length > 0) {
+    // Si existe pero está inactivo, reactivarlo
+    if (!existente[0].activo) {
+      await db.update(empresaResidentes)
+        .set({ activo: true, tipoResidente })
+        .where(eq(empresaResidentes.id, existente[0].id));
+      return existente[0].id;
+    }
+    // Si ya existe y está activo, actualizar el tipo
+    await db.update(empresaResidentes)
+      .set({ tipoResidente })
+      .where(eq(empresaResidentes.id, existente[0].id));
+    return existente[0].id;
+  }
+  
+  // Crear nueva relación
+  const result = await db.insert(empresaResidentes).values({
+    empresaId,
+    usuarioId,
+    tipoResidente,
+    activo: true
+  });
+  
+  return result[0].insertId;
+}
+
+// Eliminar un residente de una empresa (soft delete)
+export async function removeResidenteFromEmpresa(empresaId: number, usuarioId: number) {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.update(empresaResidentes)
+    .set({ activo: false })
+    .where(and(
+      eq(empresaResidentes.empresaId, empresaId),
+      eq(empresaResidentes.usuarioId, usuarioId)
+    ));
+}
+
+// Obtener todas las empresas de un residente
+export async function getEmpresasByResidente(usuarioId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const relaciones = await db.select()
+    .from(empresaResidentes)
+    .where(and(
+      eq(empresaResidentes.usuarioId, usuarioId),
+      eq(empresaResidentes.activo, true)
+    ));
+  
+  if (relaciones.length === 0) return [];
+  
+  const empresaIds = relaciones.map(r => r.empresaId);
+  const empresasResult = await db.select()
+    .from(empresas)
+    .where(inArray(empresas.id, empresaIds));
+  
+  return relaciones.map(rel => {
+    const empresa = empresasResult.find(e => e.id === rel.empresaId);
+    return {
+      ...rel,
+      empresa
+    };
+  });
+}
+
+// Obtener todos los residentes con sus empresas (para selector de nuevo ítem)
+export async function getAllResidentesConEmpresas(proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Obtener todas las relaciones activas
+  const todasRelaciones = await db.select()
+    .from(empresaResidentes)
+    .where(eq(empresaResidentes.activo, true));
+  
+  // Obtener todas las empresas del proyecto
+  const todasEmpresas = proyectoId
+    ? await db.select().from(empresas).where(and(eq(empresas.activo, true), eq(empresas.proyectoId, proyectoId)))
+    : await db.select().from(empresas).where(eq(empresas.activo, true));
+  
+  // Filtrar relaciones solo de empresas del proyecto
+  const empresaIds = todasEmpresas.map(e => e.id);
+  const relacionesFiltradas = todasRelaciones.filter(r => empresaIds.includes(r.empresaId));
+  
+  // Obtener usuarios únicos
+  const usuarioIds = Array.from(new Set(relacionesFiltradas.map(r => r.usuarioId)));
+  if (usuarioIds.length === 0) return [];
+  
+  const usuariosResult = await db.select()
+    .from(users)
+    .where(and(
+      inArray(users.id, usuarioIds),
+      eq(users.activo, true)
+    ));
+  
+  // Construir resultado con residentes y sus empresas
+  return usuariosResult.map(usuario => {
+    const relacionesUsuario = relacionesFiltradas.filter(r => r.usuarioId === usuario.id);
+    const empresasUsuario = relacionesUsuario.map(rel => {
+      const empresa = todasEmpresas.find(e => e.id === rel.empresaId);
+      return {
+        empresaId: rel.empresaId,
+        empresaNombre: empresa?.nombre || '',
+        especialidadId: empresa?.especialidadId || null,
+        tipoResidente: rel.tipoResidente
+      };
+    });
+    
+    return {
+      id: usuario.id,
+      name: usuario.name || 'Sin nombre',
+      email: usuario.email,
+      role: usuario.role,
+      empresas: empresasUsuario
+    };
+  });
+}
+
+// Migrar datos existentes de residenteId y jefeResidenteId a la nueva tabla
+export async function migrarResidentesExistentes() {
+  const db = await getDb();
+  if (!db) return { migrados: 0 };
+  
+  const todasEmpresas = await db.select().from(empresas);
+  let migrados = 0;
+  
+  for (const empresa of todasEmpresas) {
+    // Migrar residenteId
+    if (empresa.residenteId) {
+      try {
+        await addResidenteToEmpresa(empresa.id, empresa.residenteId, 'residente');
+        migrados++;
+      } catch (e) {
+        console.log(`Ya existe relación para empresa ${empresa.id} y residente ${empresa.residenteId}`);
+      }
+    }
+    
+    // Migrar jefeResidenteId
+    if (empresa.jefeResidenteId) {
+      try {
+        await addResidenteToEmpresa(empresa.id, empresa.jefeResidenteId, 'jefe_residente');
+        migrados++;
+      } catch (e) {
+        console.log(`Ya existe relación para empresa ${empresa.id} y jefe ${empresa.jefeResidenteId}`);
+      }
+    }
+  }
+  
+  return { migrados };
 }
