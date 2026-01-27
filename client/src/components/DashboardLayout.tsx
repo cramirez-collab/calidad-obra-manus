@@ -31,9 +31,9 @@ import {
   ListOrdered,
   FolderKanban,
   Clock,
+  CheckCircle2,
   ChevronDown,
-  ExternalLink,
-  Menu
+  ExternalLink
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -46,13 +46,6 @@ import { BadgeNotifications } from "./BadgeNotifications";
 import { QRScannerButton } from "./QRScanner";
 import { ProjectSelector } from "./ProjectSelector";
 import { useRealTimeItems } from "@/hooks/useRealTimeData";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 
 // Tipo para items de menú
 type MenuItem = {
@@ -195,26 +188,19 @@ function DashboardLayoutContent({
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
   const [configOpen, setConfigOpen] = useState(false);
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   
   // Activar sincronización en tiempo real
   useRealTimeItems();
   
   const menuItems = getMenuItems(user?.role || 'residente');
-  
-  // Items principales para el footer (primeros 4)
-  const footerMainItems = menuItems.slice(0, 4);
-  // Items adicionales para el menú "más"
-  const footerMoreItems = menuItems.slice(4);
 
   // Cerrar dropdown de config al navegar
   useEffect(() => {
     setConfigOpen(false);
-    setMoreMenuOpen(false);
   }, [location]);
 
-  // Componente de icono de navegación para el header (desktop)
+  // Componente de icono de navegación
   const NavIcon = ({ item, isActive }: { item: MenuItem; isActive: boolean }) => {
     // Si tiene hijos (submenú como Configuración)
     if (item.children) {
@@ -292,80 +278,14 @@ function DashboardLayoutContent({
     );
   };
 
-  // Componente de icono de navegación para el footer (móvil)
-  const FooterNavIcon = ({ item, isActive }: { item: MenuItem; isActive: boolean }) => {
-    // Si tiene hijos (submenú como Configuración)
-    if (item.children) {
-      return (
-        <DropdownMenu open={configOpen} onOpenChange={setConfigOpen}>
-          <DropdownMenuTrigger asChild>
-            <button
-              className={`
-                flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-lg transition-all flex-1
-                ${isActive 
-                  ? "text-primary" 
-                  : "text-muted-foreground"
-                }
-              `}
-            >
-              <item.icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{item.label}</span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" side="top" className="w-48 mb-2">
-            {item.children.map(subItem => {
-              const isSubActive = location.startsWith(subItem.path);
-              return (
-                <DropdownMenuItem
-                  key={subItem.path}
-                  onClick={() => setLocation(subItem.path)}
-                  className={`cursor-pointer ${isSubActive ? "bg-primary/10 text-primary" : ""}`}
-                >
-                  <subItem.icon className="mr-2 h-4 w-4" />
-                  {subItem.label}
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    }
-
-    // Item normal
-    return (
-      <button
-        onClick={() => {
-          if (item.external) {
-            window.open(item.path, '_blank');
-          } else {
-            setLocation(item.path);
-          }
-        }}
-        className={`
-          flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-lg transition-all flex-1 relative
-          ${isActive 
-            ? "text-primary" 
-            : "text-muted-foreground"
-          }
-        `}
-      >
-        <item.icon className="h-5 w-5" />
-        <span className="text-[10px] font-medium">{item.label}</span>
-        {item.external && (
-          <ExternalLink className="h-2 w-2 absolute top-1 right-2 opacity-50" />
-        )}
-      </button>
-    );
-  };
-
   return (
     <TooltipProvider delayDuration={100}>
       <div className="min-h-screen bg-background flex flex-col">
-        {/* Header simplificado */}
+        {/* Header con navegación de iconos */}
         <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-          <div className="flex items-center h-14 px-3 sm:px-4 gap-2">
+          <div className="flex items-center h-14 px-2 sm:px-4">
             {/* Logo */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 mr-2 sm:mr-4 shrink-0">
               <img 
                 src="/logo-objetiva.jpg" 
                 alt="ObjetivaQC" 
@@ -374,33 +294,36 @@ function DashboardLayoutContent({
             </div>
 
             {/* Selector de proyecto */}
-            <div className="shrink-0">
+            <div className="shrink-0 mr-2">
               <ProjectSelector collapsed={isMobile} />
             </div>
 
-            {/* Navegación de iconos - SOLO en desktop */}
-            {!isMobile && (
-              <>
-                <div className="h-6 w-px bg-border mx-2" />
-                <nav className="flex items-center gap-1 py-1">
-                  {menuItems.map(item => {
-                    const isActive = item.path === '/bienvenida' 
-                      ? (location === '/bienvenida' || location === '/') 
-                      : (item.path ? location.startsWith(item.path) : false);
-                    
-                    return (
-                      <NavIcon key={item.path || item.label} item={item} isActive={isActive} />
-                    );
-                  })}
-                </nav>
-              </>
-            )}
+            {/* Separador */}
+            <div className="h-6 w-px bg-border mx-1 sm:mx-2 hidden sm:block" />
 
-            {/* Espaciador */}
-            <div className="flex-1" />
+            {/* Navegación de iconos - scrollable en móvil */}
+            <nav className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto flex-1 scrollbar-hide py-1">
+              {menuItems.map(item => {
+                const isActive = item.path === '/bienvenida' 
+                  ? (location === '/bienvenida' || location === '/') 
+                  : (item.path ? location.startsWith(item.path) : false);
+                
+                // En móvil, mostrar solo los primeros 6 items + config
+                if (isMobile && menuItems.indexOf(item) > 5 && !item.children) {
+                  return null;
+                }
+                
+                return (
+                  <NavIcon key={item.path || item.label} item={item} isActive={isActive} />
+                );
+              })}
+            </nav>
+
+            {/* Separador */}
+            <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
 
             {/* Acciones del lado derecho */}
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
               <BadgeNotifications />
               <OnlineUsers />
               <NotificationBell />
@@ -440,115 +363,13 @@ function DashboardLayoutContent({
           </div>
         </header>
         
-        {/* Contenido principal - con padding bottom para el footer en móvil */}
-        <main className={`flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden ${isMobile ? 'pb-20' : ''}`}>
+        {/* Contenido principal */}
+        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden">
           {children}
         </main>
         
-        {/* Footer de navegación - SOLO en móvil */}
-        {isMobile && (
-          <footer className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-t safe-area-inset-bottom">
-            <nav className="flex items-center justify-around h-16 px-2">
-              {/* Items principales */}
-              {footerMainItems.map(item => {
-                const isActive = item.path === '/bienvenida' 
-                  ? (location === '/bienvenida' || location === '/') 
-                  : (item.path ? location.startsWith(item.path) : false);
-                
-                return (
-                  <FooterNavIcon key={item.path || item.label} item={item} isActive={isActive} />
-                );
-              })}
-              
-              {/* Botón "Más" si hay items adicionales */}
-              {footerMoreItems.length > 0 && (
-                <Sheet open={moreMenuOpen} onOpenChange={setMoreMenuOpen}>
-                  <SheetTrigger asChild>
-                    <button
-                      className={`
-                        flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-lg transition-all flex-1
-                        ${footerMoreItems.some(item => item.path && location.startsWith(item.path))
-                          ? "text-primary" 
-                          : "text-muted-foreground"
-                        }
-                      `}
-                    >
-                      <Menu className="h-5 w-5" />
-                      <span className="text-[10px] font-medium">Más</span>
-                    </button>
-                  </SheetTrigger>
-                  <SheetContent side="bottom" className="h-auto max-h-[70vh] rounded-t-2xl">
-                    <SheetHeader className="pb-4">
-                      <SheetTitle>Menú</SheetTitle>
-                    </SheetHeader>
-                    <div className="grid grid-cols-4 gap-3 pb-6">
-                      {footerMoreItems.map(item => {
-                        if (item.children) {
-                          // Mostrar los hijos directamente
-                          return item.children.map(subItem => {
-                            const isSubActive = location.startsWith(subItem.path);
-                            return (
-                              <button
-                                key={subItem.path}
-                                onClick={() => {
-                                  setLocation(subItem.path);
-                                  setMoreMenuOpen(false);
-                                }}
-                                className={`
-                                  flex flex-col items-center justify-center gap-1 p-3 rounded-xl transition-all
-                                  ${isSubActive 
-                                    ? "bg-primary/10 text-primary" 
-                                    : "text-muted-foreground hover:bg-accent"
-                                  }
-                                `}
-                              >
-                                <subItem.icon className="h-6 w-6" />
-                                <span className="text-xs font-medium text-center">{subItem.label}</span>
-                              </button>
-                            );
-                          });
-                        }
-                        
-                        const isActive = item.path ? location.startsWith(item.path) : false;
-                        return (
-                          <button
-                            key={item.path}
-                            onClick={() => {
-                              if (item.external) {
-                                window.open(item.path, '_blank');
-                              } else {
-                                setLocation(item.path);
-                              }
-                              setMoreMenuOpen(false);
-                            }}
-                            className={`
-                              flex flex-col items-center justify-center gap-1 p-3 rounded-xl transition-all relative
-                              ${isActive 
-                                ? "bg-primary/10 text-primary" 
-                                : "text-muted-foreground hover:bg-accent"
-                              }
-                            `}
-                          >
-                            <item.icon className="h-6 w-6" />
-                            <span className="text-xs font-medium text-center">{item.label}</span>
-                            {item.external && (
-                              <ExternalLink className="h-3 w-3 absolute top-2 right-2 opacity-50" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              )}
-            </nav>
-          </footer>
-        )}
-        
-        {/* Botón flotante de escáner QR - ajustado para no tapar el footer */}
-        <div className={isMobile ? 'mb-16' : ''}>
-          <QRScannerButton />
-        </div>
+        {/* Botón flotante de escáner QR */}
+        <QRScannerButton />
       </div>
     </TooltipProvider>
   );
