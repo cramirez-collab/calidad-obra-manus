@@ -77,7 +77,7 @@ export default function NuevoItem() {
   // Filtrar empresas por residente seleccionado
   const empresas = useMemo(() => {
     if (!todasEmpresas) return [];
-    if (!formData.residenteId) return todasEmpresas;
+    if (!formData.residenteId || formData.residenteId === "all") return todasEmpresas;
     return todasEmpresas.filter(e => 
       e.residenteId?.toString() === formData.residenteId || 
       e.jefeResidenteId?.toString() === formData.residenteId
@@ -394,7 +394,7 @@ export default function NuevoItem() {
                 <SelectValue placeholder="Residente (opcional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los residentes</SelectItem>
+                <SelectItem value="all">Todos los residentes</SelectItem>
                 {residentes?.map((user: { id: number; name: string | null }) => (
                   <SelectItem key={user.id} value={user.id.toString()}>
                     {user.name || 'Sin nombre'}
