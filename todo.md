@@ -1114,3 +1114,10 @@
 - [x] Permitir editar defecto existente (inline editing)
 - [x] Permitir añadir nuevo defecto personalizado
 - [x] Marcar defectos como "sugeridos" con badge Sparkles
+
+
+## Mejoras Formulario Nuevo Ítem (Iteración 27 Enero 2026 - Parte 3)
+
+- [x] Eliminar campo de comentario/descripción del formulario
+- [x] Hacer obligatorio el campo Usuario (selector de residentes)
+- [x] Usuario debe mostrar solo residentes (usuarios asignados a empresas)

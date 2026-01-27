@@ -186,7 +186,11 @@ export default function NuevoItem() {
   };
 
   const handleSubmit = async () => {
-    // Validación mínima - título es opcional
+    // Validación - Usuario, Empresa y Unidad son obligatorios
+    if (!formData.residenteId) {
+      toast.error("Por favor selecciona un Usuario");
+      return;
+    }
     if (!formData.empresaId || !formData.unidadId) {
       toast.error("Por favor completa: Empresa y Unidad");
       return;
@@ -356,40 +360,30 @@ export default function NuevoItem() {
           </CardContent>
         </Card>
 
-        {/* PASO 2: Título y Defecto rápido */}
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-4 space-y-3">
-            <Input
-              value={formData.titulo}
-              onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-              placeholder="Descripción breve (opcional)"
-              className="text-base border-0 border-b rounded-none px-0 focus-visible:ring-0"
-            />
-            
-            {/* Defectos frecuentes (acceso rápido) */}
-            {modoRapido && defectosFrecuentes.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wide">Defectos frecuentes</p>
-                <div className="flex flex-wrap gap-1">
-                  {defectosFrecuentes.map((defecto: any) => (
-                    <Badge
-                      key={defecto.id}
-                      variant={formData.defectoId === defecto.id.toString() ? "default" : "outline"}
-                      className={`cursor-pointer text-[10px] ${
-                        formData.defectoId === defecto.id.toString() 
-                          ? "bg-[#02B381] hover:bg-[#02B381]/90" 
-                          : "hover:bg-gray-100"
-                      }`}
-                      onClick={() => handleDefectoRapido(defecto)}
-                    >
-                      {defecto.nombre}
-                    </Badge>
-                  ))}
-                </div>
+        {/* Defectos frecuentes (acceso rápido) - sin campo de comentario */}
+        {modoRapido && defectosFrecuentes.length > 0 && (
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4 space-y-2">
+              <p className="text-[10px] text-gray-500 uppercase tracking-wide">Defectos frecuentes</p>
+              <div className="flex flex-wrap gap-1">
+                {defectosFrecuentes.map((defecto: any) => (
+                  <Badge
+                    key={defecto.id}
+                    variant={formData.defectoId === defecto.id.toString() ? "default" : "outline"}
+                    className={`cursor-pointer text-[10px] ${
+                      formData.defectoId === defecto.id.toString() 
+                        ? "bg-[#02B381] hover:bg-[#02B381]/90" 
+                        : "hover:bg-gray-100"
+                    }`}
+                    onClick={() => handleDefectoRapido(defecto)}
+                  >
+                    {defecto.nombre}
+                  </Badge>
+                ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* PASO 3: Usuario y Empresa */}
         <Card className="border-0 shadow-sm">
@@ -399,17 +393,16 @@ export default function NuevoItem() {
               Asignación
             </div>
             
-            {/* Usuario/Residente (opcional, filtra empresas) */}
+            {/* Usuario/Residente (obligatorio, filtra empresas) */}
             <Select
               value={formData.residenteId}
               onValueChange={(value) => setFormData({ ...formData, residenteId: value, empresaId: "", especialidadId: "", defectoId: "" })}
             >
-              <SelectTrigger className="h-9 text-xs">
+              <SelectTrigger className={`h-9 text-xs ${!formData.residenteId ? 'border-red-300' : ''}`}>
                 <User className="h-3 w-3 mr-1 text-gray-400" />
-                <SelectValue placeholder="Usuario (opcional)" />
+                <SelectValue placeholder="Usuario *" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos los usuarios</SelectItem>
                 {residentes?.map((user: { id: number; name: string | null }) => (
                   <SelectItem key={user.id} value={user.id.toString()}>
                     {user.name || 'Sin nombre'}
