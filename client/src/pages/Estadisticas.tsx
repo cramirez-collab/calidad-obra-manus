@@ -8,20 +8,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { trpc } from "@/lib/trpc";
 import { 
   BarChart3, 
   PieChart, 
   TrendingUp, 
-  Filter,
   Download,
   FileSpreadsheet,
   FileText,
@@ -30,8 +33,14 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Camera,
-  AlertTriangle
+  AlertTriangle,
+  Building2,
+  User,
+  Layers,
+  MapPin,
+  Home,
+  Wrench,
+  X
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useProject } from "@/contexts/ProjectContext";
@@ -63,18 +72,25 @@ const statusLabels: Record<string, string> = {
   rechazado: "Rechazado",
 };
 
+// Opciones de estatus para filtro
+const statusOptions = [
+  { value: "rechazado", label: "Rechazado", color: "bg-red-500" },
+  { value: "aprobado", label: "Aprobado", color: "bg-emerald-500" },
+  { value: "pendiente_foto_despues", label: "Alta (Foto)", color: "bg-amber-500" },
+  { value: "pendiente_aprobacion", label: "Tiempo Respuesta", color: "bg-blue-500" },
+];
+
 export default function Estadisticas() {
   const { selectedProjectId } = useProject();
   const [filters, setFilters] = useState({
     empresaId: "",
+    usuarioId: "",
+    nivel: "",
     unidadId: "",
-    especialidadId: "",
-    residenteId: "",
-    supervisorId: "",
-    fechaInicio: "",
-    fechaFin: "",
+    espacioId: "",
+    defectoId: "",
+    status: "",
   });
-  const [showFilters, setShowFilters] = useState(false);
 
   const { data: empresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
@@ -84,44 +100,60 @@ export default function Estadisticas() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
+  const { data: espacios } = trpc.espacios.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
   const { data: especialidades } = trpc.especialidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
+  const { data: defectos } = trpc.defectos.list.useQuery();
   const { data: usuarios } = trpc.users.list.useQuery();
+
+  // Obtener niveles únicos de las unidades
+  const niveles = useMemo(() => {
+    if (!unidades) return [];
+    const uniqueNiveles = Array.from(new Set(unidades.map(u => u.nivel).filter(Boolean)));
+    return uniqueNiveles.sort((a, b) => (a || 0) - (b || 0));
+  }, [unidades]);
 
   const queryFilters = useMemo(() => ({
     empresaId: filters.empresaId ? parseInt(filters.empresaId) : undefined,
     unidadId: filters.unidadId ? parseInt(filters.unidadId) : undefined,
-    especialidadId: filters.especialidadId ? parseInt(filters.especialidadId) : undefined,
-    residenteId: filters.residenteId ? parseInt(filters.residenteId) : undefined,
-    supervisorId: filters.supervisorId ? parseInt(filters.supervisorId) : undefined,
-    fechaInicio: filters.fechaInicio ? new Date(filters.fechaInicio) : undefined,
-    fechaFin: filters.fechaFin ? new Date(filters.fechaFin) : undefined,
+    espacioId: filters.espacioId ? parseInt(filters.espacioId) : undefined,
+    residenteId: filters.usuarioId ? parseInt(filters.usuarioId) : undefined,
+    status: filters.status || undefined,
+    nivel: filters.nivel ? parseInt(filters.nivel) : undefined,
+    defectoId: filters.defectoId ? parseInt(filters.defectoId) : undefined,
   }), [filters]);
 
   const { data: stats, isLoading, refetch } = trpc.estadisticas.general.useQuery(queryFilters);
   const { data: defectosStats } = trpc.defectos.estadisticas.useQuery();
 
-  const clearFilters = () => {
+  const clearFilter = (key: keyof typeof filters) => {
+    setFilters(prev => ({ ...prev, [key]: "" }));
+  };
+
+  const clearAllFilters = () => {
     setFilters({
       empresaId: "",
+      usuarioId: "",
+      nivel: "",
       unidadId: "",
-      especialidadId: "",
-      residenteId: "",
-      supervisorId: "",
-      fechaInicio: "",
-      fechaFin: "",
+      espacioId: "",
+      defectoId: "",
+      status: "",
     });
   };
 
-  const hasActiveFilters = Object.values(filters).some(v => v !== "");
+  const activeFiltersCount = Object.values(filters).filter(v => v !== "").length;
 
   const getExportParams = () => {
     const params = new URLSearchParams();
     if (filters.empresaId) params.append("empresaId", filters.empresaId);
     if (filters.unidadId) params.append("unidadId", filters.unidadId);
-    if (filters.especialidadId) params.append("especialidadId", filters.especialidadId);
+    if (filters.status) params.append("status", filters.status);
     return params.toString();
   };
 
@@ -198,17 +230,36 @@ export default function Estadisticas() {
     }));
   }, [defectosStats]);
 
-  const residentes = usuarios?.filter(u => u.role === 'residente' || u.role === 'jefe_residente') || [];
-  const supervisores = usuarios?.filter(u => u.role === 'supervisor' || u.role === 'admin') || [];
+  // Obtener nombre del filtro activo
+  const getFilterLabel = (key: string, value: string) => {
+    switch (key) {
+      case 'empresaId':
+        return empresas?.find(e => e.id.toString() === value)?.nombre || value;
+      case 'usuarioId':
+        return usuarios?.find(u => u.id.toString() === value)?.name || value;
+      case 'unidadId':
+        return unidades?.find(u => u.id.toString() === value)?.nombre || value;
+      case 'espacioId':
+        return espacios?.find(e => e.id.toString() === value)?.nombre || value;
+      case 'defectoId':
+        return defectos?.find(d => d.id.toString() === value)?.nombre || value;
+      case 'nivel':
+        return `Nivel ${value}`;
+      case 'status':
+        return statusOptions.find(s => s.value === value)?.label || value;
+      default:
+        return value;
+    }
+  };
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Estadísticas</h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Análisis y métricas del control de calidad
             </p>
           </div>
@@ -236,158 +287,280 @@ export default function Estadisticas() {
               </DropdownMenuContent>
             </DropdownMenu>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Actualizar
-            </Button>
-            <Button
-              variant={showFilters ? "secondary" : "outline"}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filtros
+              <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        {/* Filtros */}
-        {showFilters && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Filtros</CardTitle>
-              <CardDescription>
-                Filtra las estadísticas por diferentes criterios
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div className="space-y-2">
-                  <Label>Empresa</Label>
-                  <Select
-                    value={filters.empresaId}
-                    onValueChange={(value) => setFilters({ ...filters, empresaId: value })}
+        {/* Barra de Multifiltros */}
+        <div className="flex flex-wrap gap-2 items-center p-3 bg-slate-50 rounded-lg border">
+          {/* Filtro Empresa */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={filters.empresaId ? "default" : "outline"} 
+                size="sm"
+                className={filters.empresaId ? "bg-[#002C63]" : ""}
+              >
+                <Building2 className="h-4 w-4 mr-1" />
+                Empresa
+                {filters.empresaId && <span className="ml-1 text-xs">✓</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2">
+              <Select
+                value={filters.empresaId}
+                onValueChange={(value) => setFilters({ ...filters, empresaId: value === "all" ? "" : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las empresas</SelectItem>
+                  {empresas?.map((empresa) => (
+                    <SelectItem key={empresa.id} value={empresa.id.toString()}>
+                      {empresa.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </PopoverContent>
+          </Popover>
+
+          {/* Filtro Usuario */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={filters.usuarioId ? "default" : "outline"} 
+                size="sm"
+                className={filters.usuarioId ? "bg-[#002C63]" : ""}
+              >
+                <User className="h-4 w-4 mr-1" />
+                Usuario
+                {filters.usuarioId && <span className="ml-1 text-xs">✓</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2">
+              <Select
+                value={filters.usuarioId}
+                onValueChange={(value) => setFilters({ ...filters, usuarioId: value === "all" ? "" : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar usuario" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los usuarios</SelectItem>
+                  {usuarios?.map((user) => (
+                    <SelectItem key={user.id} value={user.id.toString()}>
+                      {user.name || user.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </PopoverContent>
+          </Popover>
+
+          {/* Filtro Nivel */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={filters.nivel ? "default" : "outline"} 
+                size="sm"
+                className={filters.nivel ? "bg-[#002C63]" : ""}
+              >
+                <Layers className="h-4 w-4 mr-1" />
+                Nivel
+                {filters.nivel && <span className="ml-1 text-xs">✓</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-2">
+              <Select
+                value={filters.nivel}
+                onValueChange={(value) => setFilters({ ...filters, nivel: value === "all" ? "" : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar nivel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los niveles</SelectItem>
+                  {niveles.map((nivel) => (
+                    <SelectItem key={nivel} value={nivel?.toString() || ""}>
+                      Nivel {nivel}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </PopoverContent>
+          </Popover>
+
+          {/* Filtro Unidad */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={filters.unidadId ? "default" : "outline"} 
+                size="sm"
+                className={filters.unidadId ? "bg-[#002C63]" : ""}
+              >
+                <MapPin className="h-4 w-4 mr-1" />
+                Unidad
+                {filters.unidadId && <span className="ml-1 text-xs">✓</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2">
+              <Select
+                value={filters.unidadId}
+                onValueChange={(value) => setFilters({ ...filters, unidadId: value === "all" ? "" : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar unidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las unidades</SelectItem>
+                  {unidades?.map((unidad) => (
+                    <SelectItem key={unidad.id} value={unidad.id.toString()}>
+                      {unidad.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </PopoverContent>
+          </Popover>
+
+          {/* Filtro Espacio */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={filters.espacioId ? "default" : "outline"} 
+                size="sm"
+                className={filters.espacioId ? "bg-[#002C63]" : ""}
+              >
+                <Home className="h-4 w-4 mr-1" />
+                Espacio
+                {filters.espacioId && <span className="ml-1 text-xs">✓</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2">
+              <Select
+                value={filters.espacioId}
+                onValueChange={(value) => setFilters({ ...filters, espacioId: value === "all" ? "" : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar espacio" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los espacios</SelectItem>
+                  {espacios?.map((espacio) => (
+                    <SelectItem key={espacio.id} value={espacio.id.toString()}>
+                      {espacio.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </PopoverContent>
+          </Popover>
+
+          {/* Filtro Defecto */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={filters.defectoId ? "default" : "outline"} 
+                size="sm"
+                className={filters.defectoId ? "bg-[#002C63]" : ""}
+              >
+                <Wrench className="h-4 w-4 mr-1" />
+                Defecto
+                {filters.defectoId && <span className="ml-1 text-xs">✓</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2">
+              <Select
+                value={filters.defectoId}
+                onValueChange={(value) => setFilters({ ...filters, defectoId: value === "all" ? "" : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar defecto" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los defectos</SelectItem>
+                  {defectos?.map((defecto) => (
+                    <SelectItem key={defecto.id} value={defecto.id.toString()}>
+                      {defecto.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </PopoverContent>
+          </Popover>
+
+          {/* Filtro Estatus */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={filters.status ? "default" : "outline"} 
+                size="sm"
+                className={filters.status ? "bg-[#002C63]" : ""}
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+                Estatus
+                {filters.status && <span className="ml-1 text-xs">✓</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2">
+              <div className="space-y-1">
+                {statusOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    variant={filters.status === option.value ? "default" : "ghost"}
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => setFilters({ ...filters, status: filters.status === option.value ? "" : option.value })}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todas" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las empresas</SelectItem>
-                      {empresas?.map((empresa) => (
-                        <SelectItem key={empresa.id} value={empresa.id.toString()}>
-                          {empresa.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Unidad</Label>
-                  <Select
-                    value={filters.unidadId}
-                    onValueChange={(value) => setFilters({ ...filters, unidadId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todas" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las unidades</SelectItem>
-                      {unidades?.map((unidad) => (
-                        <SelectItem key={unidad.id} value={unidad.id.toString()}>
-                          {unidad.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Especialidad</Label>
-                  <Select
-                    value={filters.especialidadId}
-                    onValueChange={(value) => setFilters({ ...filters, especialidadId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todas" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las especialidades</SelectItem>
-                      {especialidades?.map((esp) => (
-                        <SelectItem key={esp.id} value={esp.id.toString()}>
-                          {esp.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Residente</Label>
-                  <Select
-                    value={filters.residenteId}
-                    onValueChange={(value) => setFilters({ ...filters, residenteId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos los residentes</SelectItem>
-                      {residentes.map((user) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.name || user.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Supervisor</Label>
-                  <Select
-                    value={filters.supervisorId}
-                    onValueChange={(value) => setFilters({ ...filters, supervisorId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos los supervisores</SelectItem>
-                      {supervisores.map((user) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.name || user.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Fecha Inicio</Label>
-                  <Input
-                    type="date"
-                    value={filters.fechaInicio}
-                    onChange={(e) => setFilters({ ...filters, fechaInicio: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Fecha Fin</Label>
-                  <Input
-                    type="date"
-                    value={filters.fechaFin}
-                    onChange={(e) => setFilters({ ...filters, fechaFin: e.target.value })}
-                  />
-                </div>
-
-                {hasActiveFilters && (
-                  <div className="flex items-end">
-                    <Button variant="ghost" onClick={clearFilters}>
-                      Limpiar filtros
-                    </Button>
-                  </div>
-                )}
+                    <div className={`h-3 w-3 rounded-full ${option.color} mr-2`} />
+                    {option.label}
+                  </Button>
+                ))}
               </div>
-            </CardContent>
-          </Card>
+            </PopoverContent>
+          </Popover>
+
+          {/* Limpiar filtros */}
+          {activeFiltersCount > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearAllFilters}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Limpiar ({activeFiltersCount})
+            </Button>
+          )}
+        </div>
+
+        {/* Filtros activos como badges */}
+        {activeFiltersCount > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(filters).map(([key, value]) => {
+              if (!value) return null;
+              return (
+                <Badge 
+                  key={key} 
+                  variant="secondary" 
+                  className="pl-2 pr-1 py-1 flex items-center gap-1"
+                >
+                  {getFilterLabel(key, value)}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-4 w-4 p-0 hover:bg-transparent"
+                    onClick={() => clearFilter(key as keyof typeof filters)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              );
+            })}
+          </div>
         )}
 
         {/* KPIs */}

@@ -989,3 +989,16 @@
 ## Corrección Móvil (Enero 27)
 
 - [x] Eliminar icono de Aprobación duplicado en barra inferior móvil
+
+
+## Multifiltros en Estadísticas (Enero 27)
+
+- [x] Agregar barra de multifiltros con botones
+- [x] Filtro por Empresa
+- [x] Filtro por Usuario
+- [x] Filtro por Nivel
+- [x] Filtro por Unidad
+- [x] Filtro por Espacio
+- [x] Filtro por Defecto
+- [x] Filtro por Estatus (Rechazado, Aprobado, Alta, Tiempo de respuesta)
+- [x] Eliminar botón general de Filtros
