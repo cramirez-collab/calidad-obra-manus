@@ -86,6 +86,7 @@ const getMenuItems = (role: string): MenuItem[] => {
     { icon: MapPin, label: "Unidades", path: "/unidades" },
     { icon: Layers, label: "Espacios", path: "/espacios" },
     { icon: Wrench, label: "Especialidades", path: "/especialidades" },
+    { icon: AlertTriangle, label: "Defectos", path: "/defectos" },
     { icon: Users, label: "Usuarios", path: "/usuarios" },
     { icon: History, label: "Bitácora", path: "/bitacora" },
   ];
