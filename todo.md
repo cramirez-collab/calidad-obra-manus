@@ -1198,3 +1198,39 @@
 - [x] Mostrar trazabilidad de ítems por unidad (filtro por unidad)
 - [x] Mostrar acciones de cada residente/usuario (usuarios agrupados por rol)
 - [x] Agregar filtros por unidad, usuario y fecha
+
+
+## Mejoras PDFs y Bitácora (27 Enero 2026)
+
+### PDFs Descargables
+- [ ] Verificar que PDF de Estadísticas se descargue como PDF (no HTML)
+- [ ] Verificar PDF de Empresas
+- [ ] Agregar línea de firmas en todos los PDFs (Residente, Supervisión, Desarrollador, Fechas)
+
+### Bitácora Completa
+- [ ] Agregar ordenamiento por cualquier columna en Bitácora
+- [ ] Mejorar multifiltros en Bitácora
+- [ ] Agregar descarga PDF de Bitácora con firmas
+- [ ] Mejorar estética de la Bitácora
+
+### Tiempo Real y Multiusuario
+- [ ] Verificar sincronización en tiempo real
+- [ ] Verificar funcionamiento multiusuario simultáneo
+
+
+## Mejoras PDFs y Bitácora Completadas (27 Enero 2026)
+
+### PDFs Descargables
+- [x] Estadísticas descarga PDF real con jsPDF (no HTML)
+- [x] Línea de firmas en PDF de Estadísticas (Residente, Supervisión, Desarrollador, Fechas)
+- [x] Línea de firmas en PDF de Bitácora
+
+### Bitácora Completa
+- [x] Ordenamiento por cualquier columna (click en encabezados con indicador ↑↓)
+- [x] Multifiltros funcionales (usuario, unidad, categoría, acción, fechas, búsqueda)
+- [x] Diseño estético mejorado
+- [x] Descarga PDF con línea de firmas
+
+### Tiempo Real y Multiusuario
+- [x] Socket.IO configurado para sincronización
+- [x] 173 tests pasando correctamente

@@ -57,6 +57,26 @@ export default function Bitacora() {
   const [fechaHasta, setFechaHasta] = useState<string>("");
   const [busqueda, setBusqueda] = useState<string>("");
   const [pagina, setPagina] = useState(1);
+  
+  // Estado de ordenamiento
+  const [sortColumn, setSortColumn] = useState<string>('createdAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('desc');
+    }
+  };
+  
+  const SortIcon = ({ column }: { column: string }) => {
+    if (sortColumn !== column) return <span className="text-gray-300 ml-1">↕</span>;
+    return sortDirection === 'asc' 
+      ? <span className="text-[#02B381] ml-1">↑</span> 
+      : <span className="text-[#02B381] ml-1">↓</span>;
+  };
 
   // Queries
   const { data: usuarios } = trpc.users.list.useQuery();
@@ -99,23 +119,66 @@ export default function Bitacora() {
   // Filtrar por búsqueda local
   const actividadesFiltradas = useMemo(() => {
     if (!auditoria) return [];
-    if (!busqueda && !filtroAccion) return auditoria;
     
-    return auditoria.filter((a: any) => {
-      const matchBusqueda = !busqueda || 
-        a.detalles?.toLowerCase().includes(busqueda.toLowerCase()) ||
-        a.usuarioNombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
-        a.accion?.toLowerCase().includes(busqueda.toLowerCase());
+    let filtered = auditoria;
+    
+    // Aplicar filtros
+    if (busqueda || filtroAccion || filtroUnidad) {
+      filtered = auditoria.filter((a: any) => {
+        const matchBusqueda = !busqueda || 
+          a.detalles?.toLowerCase().includes(busqueda.toLowerCase()) ||
+          a.usuarioNombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+          a.accion?.toLowerCase().includes(busqueda.toLowerCase());
+        
+        const matchAccion = !filtroAccion || a.accion === filtroAccion;
+        
+        // Filtro por unidad - buscar en detalles si contiene la unidad
+        const matchUnidad = !filtroUnidad || 
+          a.detalles?.toLowerCase().includes(filtroUnidad.toLowerCase());
+        
+        return matchBusqueda && matchAccion && matchUnidad;
+      });
+    }
+    
+    // Aplicar ordenamiento
+    return [...filtered].sort((a: any, b: any) => {
+      let valueA: any, valueB: any;
       
-      const matchAccion = !filtroAccion || a.accion === filtroAccion;
+      switch (sortColumn) {
+        case 'createdAt':
+          valueA = new Date(a.createdAt).getTime();
+          valueB = new Date(b.createdAt).getTime();
+          break;
+        case 'usuarioNombre':
+          valueA = (a.usuarioNombre || '').toLowerCase();
+          valueB = (b.usuarioNombre || '').toLowerCase();
+          break;
+        case 'usuarioRol':
+          valueA = (a.usuarioRol || '').toLowerCase();
+          valueB = (b.usuarioRol || '').toLowerCase();
+          break;
+        case 'accion':
+          valueA = (a.accion || '').toLowerCase();
+          valueB = (b.accion || '').toLowerCase();
+          break;
+        case 'categoria':
+          valueA = (a.categoria || '').toLowerCase();
+          valueB = (b.categoria || '').toLowerCase();
+          break;
+        case 'detalles':
+          valueA = (a.detalles || '').toLowerCase();
+          valueB = (b.detalles || '').toLowerCase();
+          break;
+        default:
+          valueA = a[sortColumn];
+          valueB = b[sortColumn];
+      }
       
-      // Filtro por unidad - buscar en detalles si contiene la unidad
-      const matchUnidad = !filtroUnidad || 
-        a.detalles?.toLowerCase().includes(filtroUnidad.toLowerCase());
-      
-      return matchBusqueda && matchAccion && matchUnidad;
+      if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+      if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
     });
-  }, [auditoria, busqueda, filtroAccion, filtroUnidad]);
+  }, [auditoria, busqueda, filtroAccion, filtroUnidad, sortColumn, sortDirection]);
 
   const getAccionIcon = (accion: string) => {
     switch (accion) {
@@ -281,6 +344,46 @@ export default function Bitacora() {
       headStyles: { fillColor: [0, 44, 99], textColor: 255 },
       alternateRowStyles: { fillColor: [245, 245, 245] },
     });
+
+    // Línea de firmas al final
+    const pageHeight = doc.internal.pageSize.height;
+    const finalY = (doc as any).lastAutoTable?.finalY || 150;
+    const firmasY = Math.min(finalY + 30, pageHeight - 50);
+    
+    // Si no hay espacio, agregar nueva página
+    if (firmasY > pageHeight - 60) {
+      doc.addPage();
+    }
+    
+    const firmasYFinal = firmasY > pageHeight - 60 ? 40 : firmasY;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    
+    // Líneas de firma
+    const lineWidth = 60;
+    const startX1 = 30;
+    const startX2 = 120;
+    const startX3 = 210;
+    
+    doc.line(startX1, firmasYFinal + 20, startX1 + lineWidth, firmasYFinal + 20);
+    doc.line(startX2, firmasYFinal + 20, startX2 + lineWidth, firmasYFinal + 20);
+    doc.line(startX3, firmasYFinal + 20, startX3 + lineWidth, firmasYFinal + 20);
+    
+    doc.setFontSize(9);
+    doc.text("Residente", startX1 + lineWidth/2, firmasYFinal + 26, { align: 'center' });
+    doc.text("Supervisión", startX2 + lineWidth/2, firmasYFinal + 26, { align: 'center' });
+    doc.text("Desarrollador", startX3 + lineWidth/2, firmasYFinal + 26, { align: 'center' });
+    
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    doc.text("Nombre y Firma", startX1 + lineWidth/2, firmasYFinal + 31, { align: 'center' });
+    doc.text("Nombre y Firma", startX2 + lineWidth/2, firmasYFinal + 31, { align: 'center' });
+    doc.text("Nombre y Firma", startX3 + lineWidth/2, firmasYFinal + 31, { align: 'center' });
+    
+    doc.text("Fecha: ____________", startX1 + lineWidth/2, firmasYFinal + 37, { align: 'center' });
+    doc.text("Fecha: ____________", startX2 + lineWidth/2, firmasYFinal + 37, { align: 'center' });
+    doc.text("Fecha: ____________", startX3 + lineWidth/2, firmasYFinal + 37, { align: 'center' });
 
     doc.save(`bitacora_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
     toast.success("Archivo PDF exportado correctamente");
@@ -529,12 +632,42 @@ export default function Bitacora() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th className="text-left p-2 font-medium">Fecha/Hora</th>
-                        <th className="text-left p-2 font-medium">Usuario</th>
-                        <th className="text-left p-2 font-medium">Rol</th>
-                        <th className="text-left p-2 font-medium">Acción</th>
-                        <th className="text-left p-2 font-medium">Categoría</th>
-                        <th className="text-left p-2 font-medium">Detalles</th>
+                        <th 
+                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
+                          onClick={() => handleSort('createdAt')}
+                        >
+                          Fecha/Hora<SortIcon column="createdAt" />
+                        </th>
+                        <th 
+                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
+                          onClick={() => handleSort('usuarioNombre')}
+                        >
+                          Usuario<SortIcon column="usuarioNombre" />
+                        </th>
+                        <th 
+                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
+                          onClick={() => handleSort('usuarioRol')}
+                        >
+                          Rol<SortIcon column="usuarioRol" />
+                        </th>
+                        <th 
+                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
+                          onClick={() => handleSort('accion')}
+                        >
+                          Acción<SortIcon column="accion" />
+                        </th>
+                        <th 
+                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
+                          onClick={() => handleSort('categoria')}
+                        >
+                          Categoría<SortIcon column="categoria" />
+                        </th>
+                        <th 
+                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
+                          onClick={() => handleSort('detalles')}
+                        >
+                          Detalles<SortIcon column="detalles" />
+                        </th>
                       </tr>
                     </thead>
                     <tbody>

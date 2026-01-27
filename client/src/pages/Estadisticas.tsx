@@ -269,32 +269,50 @@ export default function Estadisticas() {
               variant="outline" 
               size="sm" 
               onClick={() => {
-                // Crear contenido HTML para el PDF
+                // Crear contenido HTML para imprimir como PDF
+                const fechaActual = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
                 const htmlContent = `
+                  <!DOCTYPE html>
                   <html>
                     <head>
                       <title>Estadísticas - ObjetivaOQC</title>
+                      <meta charset="UTF-8">
                       <style>
                         @page { size: letter; margin: 15mm; }
-                        body { font-family: Arial, sans-serif; padding: 20px; }
-                        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #002C63; padding-bottom: 10px; margin-bottom: 20px; }
-                        .logo { font-size: 24px; font-weight: bold; color: #002C63; }
-                        .date { font-size: 12px; color: #666; }
-                        .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px; }
-                        .stat-card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center; background: #f9fafb; }
-                        .stat-value { font-size: 32px; font-weight: bold; margin-bottom: 5px; }
-                        .stat-label { color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-                        .section { margin-top: 30px; }
-                        .section-title { font-size: 18px; font-weight: bold; color: #002C63; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 15px; }
+                        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+                        * { box-sizing: border-box; }
+                        body { font-family: Arial, sans-serif; padding: 20px; margin: 0; color: #333; }
+                        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #002C63; padding-bottom: 15px; margin-bottom: 25px; }
+                        .logo { font-size: 28px; font-weight: bold; color: #002C63; letter-spacing: 2px; }
+                        .logo-sub { font-size: 10px; color: #666; letter-spacing: 1px; }
+                        .date { font-size: 12px; color: #666; text-align: right; }
+                        .report-title { font-size: 16px; font-weight: bold; color: #002C63; }
+                        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+                        .stat-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; background: #f9fafb; }
+                        .stat-value { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
+                        .stat-label { color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+                        .section { margin-top: 25px; }
+                        .section-title { font-size: 14px; font-weight: bold; color: #002C63; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 12px; }
                         .empresa-list { margin: 0; padding: 0; list-style: none; }
-                        .empresa-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-                        .footer { text-align: center; color: #999; font-size: 11px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; }
+                        .empresa-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 12px; }
+                        .firmas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 60px; padding-top: 20px; }
+                        .firma-box { text-align: center; }
+                        .firma-linea { border-top: 1px solid #333; margin-bottom: 8px; padding-top: 8px; }
+                        .firma-titulo { font-size: 11px; font-weight: bold; color: #333; }
+                        .firma-fecha { font-size: 10px; color: #666; margin-top: 4px; }
+                        .footer { text-align: center; color: #999; font-size: 10px; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; }
                       </style>
                     </head>
                     <body>
                       <div class="header">
-                        <div class="logo">OBJETIVA</div>
-                        <div class="date">Reporte de Estadísticas<br/>${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                        <div>
+                          <div class="logo">OBJETIVA</div>
+                          <div class="logo-sub">CONTROL DE CALIDAD DE OBRA</div>
+                        </div>
+                        <div class="date">
+                          <div class="report-title">Reporte de Estadísticas</div>
+                          ${fechaActual}
+                        </div>
                       </div>
                       
                       <div class="stats">
@@ -333,34 +351,41 @@ export default function Estadisticas() {
                         </div>
                       ` : ''}
                       
+                      <div class="firmas">
+                        <div class="firma-box">
+                          <div class="firma-linea">Residente</div>
+                          <div class="firma-titulo">Nombre y Firma</div>
+                          <div class="firma-fecha">Fecha: _______________</div>
+                        </div>
+                        <div class="firma-box">
+                          <div class="firma-linea">Supervisión</div>
+                          <div class="firma-titulo">Nombre y Firma</div>
+                          <div class="firma-fecha">Fecha: _______________</div>
+                        </div>
+                        <div class="firma-box">
+                          <div class="firma-linea">Desarrollador</div>
+                          <div class="firma-titulo">Nombre y Firma</div>
+                          <div class="firma-fecha">Fecha: _______________</div>
+                        </div>
+                      </div>
+                      
                       <div class="footer">
                         Generado por ObjetivaOQC - Control de Calidad de Obra<br/>
-                        Página 1 de 1
+                        ${fechaActual} | Página 1 de 1
                       </div>
                     </body>
                   </html>
                 `;
                 
-                // Crear blob y descargar
-                const blob = new Blob([htmlContent], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `estadisticas_${new Date().toISOString().split('T')[0]}.html`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                
-                // También abrir para imprimir como PDF
+                // Abrir ventana para imprimir/guardar como PDF
                 const printWindow = window.open('', '_blank');
                 if (printWindow) {
                   printWindow.document.write(htmlContent);
                   printWindow.document.close();
-                  // Dar tiempo para cargar y luego imprimir
+                  // Dar tiempo para cargar estilos y luego abrir diálogo de impresión
                   setTimeout(() => {
                     printWindow.print();
-                  }, 250);
+                  }, 300);
                 }
               }}
               className="text-red-600 border-red-200 hover:bg-red-50"
