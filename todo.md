@@ -1197,17 +1197,23 @@
 ## Mejora del Módulo de Bitácora (27 Enero 2026)
 
 ### Trazabilidad Completa
-- [ ] Registrar todos los movimientos del sistema (crear, editar, eliminar, aprobar, rechazar)
-- [ ] Capturar usuario, fecha/hora, acción, entidad afectada, valores antes/después
-- [ ] Registrar cambios en ítems, empresas, usuarios, unidades, niveles, espacios, defectos
+- [x] Registrar todos los movimientos del sistema (crear, editar, eliminar, aprobar, rechazar)
+- [x] Capturar usuario, fecha/hora, acción, entidad afectada, valores antes/después
+- [x] Registrar cambios en ítems, empresas, usuarios, unidades, niveles, espacios, defectos
 
 ### Ordenamiento Flexible
-- [ ] Permitir ordenar por fecha (ascendente/descendente)
-- [ ] Permitir ordenar por usuario
-- [ ] Permitir ordenar por tipo de acción
-- [ ] Permitir ordenar por entidad afectada
-- [ ] Indicador visual de columna ordenada actualmente
+- [x] Permitir ordenar por fecha (ascendente/descendente)
+- [x] Permitir ordenar por usuario
+- [x] Permitir ordenar por tipo de acción
+- [x] Permitir ordenar por entidad afectada
+- [x] Indicador visual de columna ordenada actualmente
 
 
 ## Fecha de Terminación de Unidad en Detalle de Ítem (27 Enero 2026)
 - [x] Mostrar fecha de terminación de la unidad (fechaFin del Stacking) en la sección de información del ítem
+
+
+## Gestión de Defectos Individuales (27 Enero 2026)
+- [x] Botón de editar para cada defecto individual (cambiar nombre, severidad)
+- [x] Botón de eliminar para cada defecto individual
+- [x] Diálogo de confirmación antes de eliminar defecto

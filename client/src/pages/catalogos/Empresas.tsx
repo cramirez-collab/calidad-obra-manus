@@ -113,6 +113,14 @@ export default function Empresas() {
   const [addDefectoEspecialidadId, setAddDefectoEspecialidadId] = useState<number | null>(null);
   const [nuevoDefecto, setNuevoDefecto] = useState({ nombre: "", severidad: "moderado" });
 
+  // Estado para editar defecto
+  const [isEditDefectoOpen, setIsEditDefectoOpen] = useState(false);
+  const [editingDefecto, setEditingDefecto] = useState<{ id: number; nombre: string; severidad: string } | null>(null);
+
+  // Estado para confirmar eliminación de defecto
+  const [isDeleteDefectoOpen, setIsDeleteDefectoOpen] = useState(false);
+  const [defectoToDelete, setDefectoToDelete] = useState<{ id: number; nombre: string } | null>(null);
+
   const utils = trpc.useUtils();
   
   // Queries
@@ -172,6 +180,30 @@ export default function Empresas() {
       toast.success("Defecto agregado correctamente");
       setIsAddDefectoOpen(false);
       setNuevoDefecto({ nombre: "", severidad: "moderado" });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const updateDefectoMutation = trpc.defectos.update.useMutation({
+    onSuccess: () => {
+      utils.defectos.listConEstadisticas.invalidate();
+      toast.success("Defecto actualizado correctamente");
+      setIsEditDefectoOpen(false);
+      setEditingDefecto(null);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const deleteDefectoMutation = trpc.defectos.delete.useMutation({
+    onSuccess: () => {
+      utils.defectos.listConEstadisticas.invalidate();
+      toast.success("Defecto eliminado correctamente");
+      setIsDeleteDefectoOpen(false);
+      setDefectoToDelete(null);
     },
     onError: (error) => {
       toast.error(error.message);
@@ -570,15 +602,43 @@ export default function Empresas() {
                                 {defectos.map((defecto: any) => (
                                   <div 
                                     key={defecto.id} 
-                                    className="flex items-center justify-between p-2 bg-white rounded border text-sm"
+                                    className="flex items-center justify-between p-2 bg-white rounded border text-sm group hover:border-primary/50 transition-colors"
                                   >
                                     <span className="truncate flex-1">{defecto.nombre}</span>
-                                    <Badge 
-                                      variant="secondary" 
-                                      className={`ml-2 text-xs ${severidadColors[defecto.severidad] || ''}`}
-                                    >
-                                      {defecto.severidad}
-                                    </Badge>
+                                    <div className="flex items-center gap-1">
+                                      <Badge 
+                                        variant="secondary" 
+                                        className={`text-xs ${severidadColors[defecto.severidad] || ''}`}
+                                      >
+                                        {defecto.severidad}
+                                      </Badge>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-6 w-6 opacity-50 hover:opacity-100 transition-opacity"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setEditingDefecto({ id: defecto.id, nombre: defecto.nombre, severidad: defecto.severidad });
+                                          setIsEditDefectoOpen(true);
+                                        }}
+                                        title="Editar defecto"
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-6 w-6 opacity-50 hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setDefectoToDelete({ id: defecto.id, nombre: defecto.nombre });
+                                          setIsDeleteDefectoOpen(true);
+                                        }}
+                                        title="Eliminar defecto"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -1028,6 +1088,106 @@ export default function Empresas() {
                 disabled={createDefectoMutation.isPending}
               >
                 Agregar Defecto
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog para editar defecto */}
+        <Dialog open={isEditDefectoOpen} onOpenChange={setIsEditDefectoOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5" />
+                Editar Defecto
+              </DialogTitle>
+              <DialogDescription>
+                Modifica el nombre y severidad del defecto
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="editDefectoNombre">Nombre del Defecto *</Label>
+                <Input
+                  id="editDefectoNombre"
+                  value={editingDefecto?.nombre || ""}
+                  onChange={(e) => setEditingDefecto(prev => prev ? { ...prev, nombre: e.target.value } : null)}
+                  placeholder="Ej: Grieta en muro"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="editDefectoSeveridad">Severidad</Label>
+                <Select
+                  value={editingDefecto?.severidad || "moderado"}
+                  onValueChange={(value) => setEditingDefecto(prev => prev ? { ...prev, severidad: value } : null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="leve">Leve</SelectItem>
+                    <SelectItem value="moderado">Moderado</SelectItem>
+                    <SelectItem value="grave">Grave</SelectItem>
+                    <SelectItem value="critico">Crítico</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setIsEditDefectoOpen(false);
+                setEditingDefecto(null);
+              }}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (editingDefecto) {
+                    updateDefectoMutation.mutate({
+                      id: editingDefecto.id,
+                      nombre: editingDefecto.nombre,
+                      severidad: editingDefecto.severidad as any,
+                    });
+                  }
+                }}
+                disabled={updateDefectoMutation.isPending || !editingDefecto?.nombre}
+              >
+                Guardar Cambios
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog para confirmar eliminación de defecto */}
+        <Dialog open={isDeleteDefectoOpen} onOpenChange={setIsDeleteDefectoOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Confirmar Eliminación
+              </DialogTitle>
+              <DialogDescription>
+                ¿Estás seguro de que deseas eliminar el defecto <strong>"{defectoToDelete?.nombre}"</strong>?
+                Esta acción no se puede deshacer.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => {
+                setIsDeleteDefectoOpen(false);
+                setDefectoToDelete(null);
+              }}>
+                Cancelar
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={() => {
+                  if (defectoToDelete) {
+                    deleteDefectoMutation.mutate({ id: defectoToDelete.id });
+                  }
+                }}
+                disabled={deleteDefectoMutation.isPending}
+              >
+                {deleteDefectoMutation.isPending ? "Eliminando..." : "Eliminar Defecto"}
               </Button>
             </DialogFooter>
           </DialogContent>
