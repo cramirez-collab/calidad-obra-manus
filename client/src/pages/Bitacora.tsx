@@ -60,6 +60,8 @@ export default function Bitacora() {
 
   // Queries
   const { data: usuarios } = trpc.users.list.useQuery();
+  const { data: unidades } = trpc.unidades.list.useQuery();
+  const [filtroUnidad, setFiltroUnidad] = useState<string>("");
   
   const filtros = useMemo(() => ({
     usuarioId: filtroUsuario ? parseInt(filtroUsuario) : undefined,
@@ -69,6 +71,15 @@ export default function Bitacora() {
     limit: ITEMS_PER_PAGE,
     offset: (pagina - 1) * ITEMS_PER_PAGE,
   }), [filtroUsuario, filtroCategoria, fechaDesde, fechaHasta, pagina]);
+
+  // Agrupar usuarios por rol para mejor visualización
+  const usuariosAgrupados = useMemo(() => {
+    if (!usuarios) return { supervisores: [], residentes: [], otros: [] };
+    const supervisores = usuarios.filter((u: any) => u.role === 'supervisor' || u.role === 'superadmin' || u.role === 'admin');
+    const residentes = usuarios.filter((u: any) => u.role === 'residente' || u.role === 'jefe_residente');
+    const otros = usuarios.filter((u: any) => !['supervisor', 'superadmin', 'admin', 'residente', 'jefe_residente'].includes(u.role));
+    return { supervisores, residentes, otros };
+  }, [usuarios]);
 
   const { data: auditoria, isLoading } = isAdmin 
     ? trpc.bitacora.list.useQuery({
@@ -98,9 +109,13 @@ export default function Bitacora() {
       
       const matchAccion = !filtroAccion || a.accion === filtroAccion;
       
-      return matchBusqueda && matchAccion;
+      // Filtro por unidad - buscar en detalles si contiene la unidad
+      const matchUnidad = !filtroUnidad || 
+        a.detalles?.toLowerCase().includes(filtroUnidad.toLowerCase());
+      
+      return matchBusqueda && matchAccion && matchUnidad;
     });
-  }, [auditoria, busqueda, filtroAccion]);
+  }, [auditoria, busqueda, filtroAccion, filtroUnidad]);
 
   const getAccionIcon = (accion: string) => {
     switch (accion) {
@@ -276,6 +291,7 @@ export default function Bitacora() {
     setFiltroUsuario("");
     setFiltroCategoria("");
     setFiltroAccion("");
+    setFiltroUnidad("");
     setFechaDesde("");
     setFechaHasta("");
     setBusqueda("");
@@ -337,7 +353,7 @@ export default function Bitacora() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
               {/* Búsqueda */}
               <div className="sm:col-span-2 lg:col-span-1">
                 <Label className="text-xs">Buscar</Label>
@@ -361,9 +377,52 @@ export default function Bitacora() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Todos</SelectItem>
-                    {usuarios?.map((u: any) => (
-                      <SelectItem key={u.id} value={u.id.toString()}>
-                        {u.name}
+                    {usuariosAgrupados.supervisores.length > 0 && (
+                      <>
+                        <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted">Supervisores</div>
+                        {usuariosAgrupados.supervisores.map((u: any) => (
+                          <SelectItem key={u.id} value={u.id.toString()}>
+                            {u.name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+                    {usuariosAgrupados.residentes.length > 0 && (
+                      <>
+                        <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted">Residentes</div>
+                        {usuariosAgrupados.residentes.map((u: any) => (
+                          <SelectItem key={u.id} value={u.id.toString()}>
+                            {u.name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+                    {usuariosAgrupados.otros.length > 0 && (
+                      <>
+                        <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted">Otros</div>
+                        {usuariosAgrupados.otros.map((u: any) => (
+                          <SelectItem key={u.id} value={u.id.toString()}>
+                            {u.name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Unidad */}
+              <div>
+                <Label className="text-xs">Unidad</Label>
+                <Select value={filtroUnidad} onValueChange={setFiltroUnidad}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todas</SelectItem>
+                    {unidades?.map((u: any) => (
+                      <SelectItem key={u.id} value={u.nombre}>
+                        {u.nombre}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -1190,3 +1190,11 @@
 - [x] Arreglar header móvil para que no se tapen iconos
 - [x] Mejorar layout de tarjetas de empresa en móvil (layout vertical responsive)
 - [x] Optimizar espacio en móvil para mejor distribución
+
+
+## Corrección Módulo Bitácora (27 Enero 2026)
+
+- [x] Revisar y corregir funcionalidad de Bitácora
+- [x] Mostrar trazabilidad de ítems por unidad (filtro por unidad)
+- [x] Mostrar acciones de cada residente/usuario (usuarios agrupados por rol)
+- [x] Agregar filtros por unidad, usuario y fecha
