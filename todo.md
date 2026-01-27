@@ -1188,3 +1188,7 @@
 - [x] Espacios: Top 5 mejores y Top 5 peores (barras horizontales)
 - [x] Defectos: Top 5 más frecuentes y Top 5 menos frecuentes (barras horizontales)
 - [x] Niveles: Top 5 mejores y Top 5 peores (barras horizontales)
+
+
+## Corrección de Visualización de Defecto (27 Enero 2026)
+- [x] Mostrar nombre del defecto en lugar de "Defecto #XX" en vista de detalle del ítem

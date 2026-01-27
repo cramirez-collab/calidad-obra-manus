@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, codigo, defectoId FROM items LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, defectoId FROM items LIMIT 5;",
+  "rows": [
+    {
+      "id": "150001",
+      "codigo": "TRN‐Hidalma-00001",
+      "defectoId": "46"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\tdefectoId\n150001\tTRN‐Hidalma-00001\t46\n",
+  "stderr": "",
+  "execution_time_ms": 104
+}
