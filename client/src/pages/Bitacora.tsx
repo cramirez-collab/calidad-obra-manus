@@ -34,7 +34,13 @@ import {
   ChevronRight,
   MessageCircle,
   Shield,
-  Building2
+  Building2,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  MapPin,
+  Layers,
+  AlertTriangle
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -45,25 +51,33 @@ import autoTable from "jspdf-autotable";
 
 const ITEMS_PER_PAGE = 50;
 
+// Tipos de ordenamiento
+type SortField = 'fecha' | 'usuario' | 'rol' | 'accion' | 'categoria' | 'entidad' | 'detalles';
+type SortDirection = 'asc' | 'desc';
+
 export default function Bitacora() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'superadmin' || user?.role === 'admin';
   
   // Filtros
-  const [filtroUsuario, setFiltroUsuario] = useState<string>("");
-  const [filtroCategoria, setFiltroCategoria] = useState<string>("");
-  const [filtroAccion, setFiltroAccion] = useState<string>("");
+  const [filtroUsuario, setFiltroUsuario] = useState<string>("all");
+  const [filtroCategoria, setFiltroCategoria] = useState<string>("all");
+  const [filtroAccion, setFiltroAccion] = useState<string>("all");
   const [fechaDesde, setFechaDesde] = useState<string>("");
   const [fechaHasta, setFechaHasta] = useState<string>("");
   const [busqueda, setBusqueda] = useState<string>("");
   const [pagina, setPagina] = useState(1);
+  
+  // Estado de ordenamiento
+  const [sortField, setSortField] = useState<SortField>('fecha');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   // Queries
   const { data: usuarios } = trpc.users.list.useQuery();
   
   const filtros = useMemo(() => ({
-    usuarioId: filtroUsuario ? parseInt(filtroUsuario) : undefined,
-    categoria: filtroCategoria || undefined,
+    usuarioId: filtroUsuario && filtroUsuario !== 'all' ? parseInt(filtroUsuario) : undefined,
+    categoria: filtroCategoria && filtroCategoria !== 'all' ? filtroCategoria : undefined,
     fechaDesde: fechaDesde ? new Date(fechaDesde) : undefined,
     fechaHasta: fechaHasta ? new Date(fechaHasta + "T23:59:59") : undefined,
     limit: ITEMS_PER_PAGE,
@@ -76,7 +90,7 @@ export default function Bitacora() {
         accion: filtros.categoria,
         fechaDesde: filtros.fechaDesde,
         fechaHasta: filtros.fechaHasta,
-        limit: filtros.limit,
+        limit: 500, // Cargar más para ordenar localmente
       })
     : trpc.bitacora.miActividad.useQuery({});
 
@@ -85,22 +99,86 @@ export default function Bitacora() {
 
   const totalPages = Math.ceil((totalCount || 0) / ITEMS_PER_PAGE);
 
-  // Filtrar por búsqueda local
+  // Función para manejar el ordenamiento
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Si ya está ordenado por este campo, cambiar dirección
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Si es un nuevo campo, ordenar descendente por defecto
+      setSortField(field);
+      setSortDirection('desc');
+    }
+    setPagina(1); // Resetear a primera página al cambiar orden
+  };
+
+  // Icono de ordenamiento para cada columna
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />;
+    }
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="h-3 w-3 text-[#02B381]" />
+      : <ArrowDown className="h-3 w-3 text-[#02B381]" />;
+  };
+
+  // Filtrar y ordenar actividades
   const actividadesFiltradas = useMemo(() => {
     if (!auditoria) return [];
-    if (!busqueda && !filtroAccion) return auditoria;
     
-    return auditoria.filter((a: any) => {
-      const matchBusqueda = !busqueda || 
-        a.detalles?.toLowerCase().includes(busqueda.toLowerCase()) ||
-        a.usuarioNombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
-        a.accion?.toLowerCase().includes(busqueda.toLowerCase());
+    // Primero filtrar
+    let filtered = auditoria;
+    if (busqueda || filtroAccion) {
+      filtered = auditoria.filter((a: any) => {
+        const matchBusqueda = !busqueda || 
+          a.detalles?.toLowerCase().includes(busqueda.toLowerCase()) ||
+          a.usuario?.name?.toLowerCase().includes(busqueda.toLowerCase()) ||
+          a.accion?.toLowerCase().includes(busqueda.toLowerCase());
+        
+        const matchAccion = !filtroAccion || filtroAccion === 'all' || a.accion === filtroAccion;
+        
+        return matchBusqueda && matchAccion;
+      });
+    }
+    
+    // Luego ordenar
+    const sorted = [...filtered].sort((a: any, b: any) => {
+      let comparison = 0;
       
-      const matchAccion = !filtroAccion || a.accion === filtroAccion;
+      switch (sortField) {
+        case 'fecha':
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        case 'usuario':
+          comparison = (a.usuario?.name || '').localeCompare(b.usuario?.name || '');
+          break;
+        case 'rol':
+          comparison = (a.usuario?.role || '').localeCompare(b.usuario?.role || '');
+          break;
+        case 'accion':
+          comparison = (a.accion || '').localeCompare(b.accion || '');
+          break;
+        case 'categoria':
+          comparison = (a.entidad || '').localeCompare(b.entidad || '');
+          break;
+        case 'entidad':
+          comparison = (a.entidadId || 0) - (b.entidadId || 0);
+          break;
+        case 'detalles':
+          comparison = (a.detalles || '').localeCompare(b.detalles || '');
+          break;
+        default:
+          comparison = 0;
+      }
       
-      return matchBusqueda && matchAccion;
+      return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [auditoria, busqueda, filtroAccion]);
+    
+    // Paginar
+    const start = (pagina - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    return sorted.slice(start, end);
+  }, [auditoria, busqueda, filtroAccion, sortField, sortDirection, pagina]);
 
   const getAccionIcon = (accion: string) => {
     switch (accion) {
@@ -126,6 +204,14 @@ export default function Bitacora() {
         return <MessageCircle className="h-4 w-4 text-blue-500" />;
       case 'aprobar_supervisor':
         return <Shield className="h-4 w-4 text-blue-600" />;
+      case 'crear_empresa':
+        return <Building2 className="h-4 w-4 text-indigo-500" />;
+      case 'crear_unidad':
+        return <MapPin className="h-4 w-4 text-teal-500" />;
+      case 'crear_nivel':
+        return <Layers className="h-4 w-4 text-orange-500" />;
+      case 'crear_defecto':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
       default:
         return <FileText className="h-4 w-4 text-gray-500" />;
     }
@@ -143,14 +229,36 @@ export default function Bitacora() {
       actualizar: 'Actualizó registro',
       eliminar: 'Eliminó registro',
       crear_empresa: 'Creó empresa',
+      editar_empresa: 'Editó empresa',
+      eliminar_empresa: 'Eliminó empresa',
       crear_unidad: 'Creó unidad',
+      editar_unidad: 'Editó unidad',
+      eliminar_unidad: 'Eliminó unidad',
+      crear_nivel: 'Creó nivel',
+      editar_nivel: 'Editó nivel',
+      eliminar_nivel: 'Eliminó nivel',
+      crear_espacio: 'Creó espacio',
+      editar_espacio: 'Editó espacio',
+      eliminar_espacio: 'Eliminó espacio',
+      crear_defecto: 'Creó defecto',
+      editar_defecto: 'Editó defecto',
+      eliminar_defecto: 'Eliminó defecto',
       crear_especialidad: 'Creó especialidad',
+      editar_especialidad: 'Editó especialidad',
+      eliminar_especialidad: 'Eliminó especialidad',
       crear_atributo: 'Creó atributo',
       cambiar_rol: 'Cambió rol de usuario',
       crear_mensaje: 'Envió mensaje',
       eliminar_mensaje: 'Eliminó mensaje',
       aprobar_supervisor: 'Aprobación de supervisor',
       revocar_aprobacion: 'Revocó aprobación',
+      crear_usuario: 'Creó usuario',
+      editar_usuario: 'Editó usuario',
+      desactivar_usuario: 'Desactivó usuario',
+      activar_usuario: 'Activó usuario',
+      ordenar_unidades: 'Reordenó unidades',
+      importar_excel: 'Importó desde Excel',
+      exportar_pdf: 'Exportó a PDF',
     };
     return labels[accion] || accion;
   };
@@ -161,12 +269,17 @@ export default function Bitacora() {
       item: 'Ítem',
       empresa: 'Empresa',
       unidad: 'Unidad',
+      nivel: 'Nivel',
+      espacio: 'Espacio',
+      defecto: 'Defecto',
       especialidad: 'Especialidad',
       atributo: 'Atributo',
       usuario: 'Usuario',
       mensaje: 'Mensaje',
       proyecto: 'Proyecto',
       auth: 'Autenticación',
+      stacking: 'Stacking',
+      reporte: 'Reporte',
     };
     return labels[categoria] || categoria;
   };
@@ -183,19 +296,19 @@ export default function Bitacora() {
 
   // Exportar a CSV
   const exportarCSV = () => {
-    if (!actividadesFiltradas || actividadesFiltradas.length === 0) {
+    if (!auditoria || auditoria.length === 0) {
       toast.error("No hay datos para exportar");
       return;
     }
 
     const headers = ["Fecha", "Hora", "Usuario", "Rol", "Acción", "Categoría", "Entidad ID", "Detalles"];
-    const rows = actividadesFiltradas.map((a: any) => [
+    const rows = auditoria.map((a: any) => [
       format(new Date(a.createdAt), "dd/MM/yyyy"),
       format(new Date(a.createdAt), "HH:mm:ss"),
-      a.usuarioNombre || "-",
-      a.usuarioRol || "-",
+      a.usuario?.name || "-",
+      a.usuario?.role || "-",
       getAccionLabel(a.accion),
-      getCategoriaLabel(a.categoria),
+      getCategoriaLabel(a.entidad),
       a.entidadId || "-",
       a.detalles || "-",
     ]);
@@ -218,7 +331,7 @@ export default function Bitacora() {
 
   // Exportar a PDF
   const exportarPDF = () => {
-    if (!actividadesFiltradas || actividadesFiltradas.length === 0) {
+    if (!auditoria || auditoria.length === 0) {
       toast.error("No hay datos para exportar");
       return;
     }
@@ -233,7 +346,7 @@ export default function Bitacora() {
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Generado: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, 28);
-    doc.text(`Total de registros: ${actividadesFiltradas.length}`, 14, 34);
+    doc.text(`Total de registros: ${auditoria.length}`, 14, 34);
 
     // Filtros aplicados
     let filtrosTexto = "Filtros: ";
@@ -249,12 +362,12 @@ export default function Bitacora() {
     }
 
     // Tabla
-    const tableData = actividadesFiltradas.map((a: any) => [
+    const tableData = auditoria.map((a: any) => [
       format(new Date(a.createdAt), "dd/MM/yyyy HH:mm"),
-      a.usuarioNombre || "-",
-      a.usuarioRol || "-",
+      a.usuario?.name || "-",
+      a.usuario?.role || "-",
       getAccionLabel(a.accion),
-      getCategoriaLabel(a.categoria),
+      getCategoriaLabel(a.entidad),
       a.detalles?.substring(0, 50) || "-",
     ]);
 
@@ -273,14 +386,23 @@ export default function Bitacora() {
 
   // Limpiar filtros
   const limpiarFiltros = () => {
-    setFiltroUsuario("");
-    setFiltroCategoria("");
-    setFiltroAccion("");
+    setFiltroUsuario("all");
+    setFiltroCategoria("all");
+    setFiltroAccion("all");
     setFechaDesde("");
     setFechaHasta("");
     setBusqueda("");
     setPagina(1);
+    setSortField('fecha');
+    setSortDirection('desc');
   };
+
+  // Acciones únicas para el filtro
+  const accionesUnicas = useMemo(() => {
+    if (!auditoria) return [];
+    const acciones = new Set(auditoria.map((a: any) => a.accion));
+    return Array.from(acciones).sort();
+  }, [auditoria]);
 
   if (!isAdmin) {
     return (
@@ -337,7 +459,7 @@ export default function Bitacora() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
               {/* Búsqueda */}
               <div className="sm:col-span-2 lg:col-span-1">
                 <Label className="text-xs">Buscar</Label>
@@ -360,7 +482,7 @@ export default function Bitacora() {
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     {usuarios?.map((u: any) => (
                       <SelectItem key={u.id} value={u.id.toString()}>
                         {u.name}
@@ -378,12 +500,38 @@ export default function Bitacora() {
                     <SelectValue placeholder="Todas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
                     <SelectItem value="item">Ítems</SelectItem>
+                    <SelectItem value="empresa">Empresas</SelectItem>
+                    <SelectItem value="unidad">Unidades</SelectItem>
+                    <SelectItem value="nivel">Niveles</SelectItem>
+                    <SelectItem value="espacio">Espacios</SelectItem>
+                    <SelectItem value="defecto">Defectos</SelectItem>
+                    <SelectItem value="especialidad">Especialidades</SelectItem>
                     <SelectItem value="usuario">Usuarios</SelectItem>
                     <SelectItem value="mensaje">Mensajes</SelectItem>
                     <SelectItem value="proyecto">Proyectos</SelectItem>
                     <SelectItem value="auth">Autenticación</SelectItem>
+                    <SelectItem value="stacking">Stacking</SelectItem>
+                    <SelectItem value="reporte">Reportes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Acción */}
+              <div>
+                <Label className="text-xs">Acción</Label>
+                <Select value={filtroAccion} onValueChange={setFiltroAccion}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {accionesUnicas.map((accion: string) => (
+                      <SelectItem key={accion} value={accion}>
+                        {getAccionLabel(accion)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -421,28 +569,34 @@ export default function Bitacora() {
         </Card>
 
         {/* Estadísticas rápidas */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <Card className="p-3">
             <div className="text-2xl font-bold text-[#002C63]">{totalCount || 0}</div>
             <div className="text-xs text-muted-foreground">Total registros</div>
           </Card>
           <Card className="p-3">
             <div className="text-2xl font-bold text-emerald-600">
-              {actividadesFiltradas?.filter((a: any) => a.accion === 'aprobar_item').length || 0}
+              {auditoria?.filter((a: any) => a.accion === 'aprobar_item').length || 0}
             </div>
             <div className="text-xs text-muted-foreground">Aprobaciones</div>
           </Card>
           <Card className="p-3">
             <div className="text-2xl font-bold text-red-600">
-              {actividadesFiltradas?.filter((a: any) => a.accion === 'rechazar_item').length || 0}
+              {auditoria?.filter((a: any) => a.accion === 'rechazar_item').length || 0}
             </div>
             <div className="text-xs text-muted-foreground">Rechazos</div>
           </Card>
           <Card className="p-3">
             <div className="text-2xl font-bold text-blue-600">
-              {actividadesFiltradas?.filter((a: any) => a.accion === 'crear_mensaje').length || 0}
+              {auditoria?.filter((a: any) => a.accion?.startsWith('crear_')).length || 0}
             </div>
-            <div className="text-xs text-muted-foreground">Mensajes</div>
+            <div className="text-xs text-muted-foreground">Creaciones</div>
+          </Card>
+          <Card className="p-3">
+            <div className="text-2xl font-bold text-amber-600">
+              {auditoria?.filter((a: any) => a.accion?.startsWith('editar_') || a.accion === 'actualizar').length || 0}
+            </div>
+            <div className="text-xs text-muted-foreground">Ediciones</div>
           </Card>
         </div>
 
@@ -453,9 +607,15 @@ export default function Bitacora() {
               <CardTitle className="text-base">
                 Registros de Auditoría
               </CardTitle>
-              <span className="text-sm text-muted-foreground">
-                Mostrando {actividadesFiltradas?.length || 0} de {totalCount || 0}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Mostrando {actividadesFiltradas?.length || 0} de {totalCount || 0}
+                </span>
+                <Badge variant="outline" className="text-xs">
+                  Ordenado por: {sortField === 'fecha' ? 'Fecha' : sortField === 'usuario' ? 'Usuario' : sortField === 'rol' ? 'Rol' : sortField === 'accion' ? 'Acción' : sortField === 'categoria' ? 'Categoría' : sortField === 'entidad' ? 'Entidad' : 'Detalles'}
+                  {sortDirection === 'asc' ? ' ↑' : ' ↓'}
+                </Badge>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -470,12 +630,60 @@ export default function Bitacora() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th className="text-left p-2 font-medium">Fecha/Hora</th>
-                        <th className="text-left p-2 font-medium">Usuario</th>
-                        <th className="text-left p-2 font-medium">Rol</th>
-                        <th className="text-left p-2 font-medium">Acción</th>
-                        <th className="text-left p-2 font-medium">Categoría</th>
-                        <th className="text-left p-2 font-medium">Detalles</th>
+                        <th 
+                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 transition-colors"
+                          onClick={() => handleSort('fecha')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Fecha/Hora
+                            {getSortIcon('fecha')}
+                          </div>
+                        </th>
+                        <th 
+                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 transition-colors"
+                          onClick={() => handleSort('usuario')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Usuario
+                            {getSortIcon('usuario')}
+                          </div>
+                        </th>
+                        <th 
+                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 transition-colors"
+                          onClick={() => handleSort('rol')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Rol
+                            {getSortIcon('rol')}
+                          </div>
+                        </th>
+                        <th 
+                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 transition-colors"
+                          onClick={() => handleSort('accion')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Acción
+                            {getSortIcon('accion')}
+                          </div>
+                        </th>
+                        <th 
+                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 transition-colors"
+                          onClick={() => handleSort('categoria')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Categoría
+                            {getSortIcon('categoria')}
+                          </div>
+                        </th>
+                        <th 
+                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 transition-colors"
+                          onClick={() => handleSort('detalles')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Detalles
+                            {getSortIcon('detalles')}
+                          </div>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -491,13 +699,13 @@ export default function Bitacora() {
                             <div className="flex items-center gap-2">
                               <User className="h-3 w-3 text-muted-foreground" />
                               <span className="truncate max-w-[120px]">
-                                {actividad.usuarioNombre || "-"}
+                                {actividad.usuario?.name || "-"}
                               </span>
                             </div>
                           </td>
                           <td className="p-2">
-                            <Badge className={`text-xs ${getRolColor(actividad.usuarioRol)}`}>
-                              {actividad.usuarioRol || "-"}
+                            <Badge className={`text-xs ${getRolColor(actividad.usuario?.role)}`}>
+                              {actividad.usuario?.role || "-"}
                             </Badge>
                           </td>
                           <td className="p-2">
@@ -508,12 +716,12 @@ export default function Bitacora() {
                           </td>
                           <td className="p-2">
                             <Badge variant="outline" className="text-xs">
-                              {getCategoriaLabel(actividad.categoria)}
+                              {getCategoriaLabel(actividad.entidad)}
                               {actividad.entidadId && ` #${actividad.entidadId}`}
                             </Badge>
                           </td>
                           <td className="p-2">
-                            <span className="text-muted-foreground truncate block max-w-[200px]">
+                            <span className="text-muted-foreground truncate block max-w-[200px]" title={actividad.detalles || ""}>
                               {actividad.detalles || "-"}
                             </span>
                           </td>
@@ -540,12 +748,12 @@ export default function Bitacora() {
                               {getAccionLabel(actividad.accion)}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {actividad.usuarioNombre || "-"}
+                              {actividad.usuario?.name || "-"}
                             </p>
                           </div>
                         </div>
-                        <Badge className={`text-xs ${getRolColor(actividad.usuarioRol)}`}>
-                          {actividad.usuarioRol}
+                        <Badge className={`text-xs ${getRolColor(actividad.usuario?.role)}`}>
+                          {actividad.usuario?.role}
                         </Badge>
                       </div>
                       {actividad.detalles && (
@@ -555,7 +763,7 @@ export default function Bitacora() {
                       )}
                       <div className="flex items-center justify-between mt-2 pt-2 border-t">
                         <Badge variant="outline" className="text-xs">
-                          {getCategoriaLabel(actividad.categoria)}
+                          {getCategoriaLabel(actividad.entidad)}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
                           {format(new Date(actividad.createdAt), "dd/MM/yy HH:mm")}

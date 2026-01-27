@@ -1192,3 +1192,18 @@
 
 ## Corrección de Visualización de Defecto (27 Enero 2026)
 - [x] Mostrar nombre del defecto en lugar de "Defecto #XX" en vista de detalle del ítem
+
+
+## Mejora del Módulo de Bitácora (27 Enero 2026)
+
+### Trazabilidad Completa
+- [ ] Registrar todos los movimientos del sistema (crear, editar, eliminar, aprobar, rechazar)
+- [ ] Capturar usuario, fecha/hora, acción, entidad afectada, valores antes/después
+- [ ] Registrar cambios en ítems, empresas, usuarios, unidades, niveles, espacios, defectos
+
+### Ordenamiento Flexible
+- [ ] Permitir ordenar por fecha (ascendente/descendente)
+- [ ] Permitir ordenar por usuario
+- [ ] Permitir ordenar por tipo de acción
+- [ ] Permitir ordenar por entidad afectada
+- [ ] Indicador visual de columna ordenada actualmente
