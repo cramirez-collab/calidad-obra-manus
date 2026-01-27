@@ -84,6 +84,7 @@ export default function Estadisticas() {
   const { selectedProjectId } = useProject();
   const [filters, setFilters] = useState({
     empresaId: "",
+    especialidadId: "",
     usuarioId: "",
     nivel: "",
     unidadId: "",
@@ -120,6 +121,7 @@ export default function Estadisticas() {
 
   const queryFilters = useMemo(() => ({
     empresaId: filters.empresaId ? parseInt(filters.empresaId) : undefined,
+    especialidadId: filters.especialidadId ? parseInt(filters.especialidadId) : undefined,
     unidadId: filters.unidadId ? parseInt(filters.unidadId) : undefined,
     espacioId: filters.espacioId ? parseInt(filters.espacioId) : undefined,
     residenteId: filters.usuarioId ? parseInt(filters.usuarioId) : undefined,
@@ -138,6 +140,7 @@ export default function Estadisticas() {
   const clearAllFilters = () => {
     setFilters({
       empresaId: "",
+      especialidadId: "",
       usuarioId: "",
       nivel: "",
       unidadId: "",
@@ -235,6 +238,8 @@ export default function Estadisticas() {
     switch (key) {
       case 'empresaId':
         return empresas?.find(e => e.id.toString() === value)?.nombre || value;
+      case 'especialidadId':
+        return especialidades?.find(e => e.id.toString() === value)?.nombre || value;
       case 'usuarioId':
         return usuarios?.find(u => u.id.toString() === value)?.name || value;
       case 'unidadId':
@@ -421,6 +426,45 @@ export default function Estadisticas() {
                   {empresas?.map((empresa) => (
                     <SelectItem key={empresa.id} value={empresa.id.toString()}>
                       {empresa.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </PopoverContent>
+          </Popover>
+
+          {/* Filtro Especialidad */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant={filters.especialidadId ? "default" : "outline"} 
+                size="sm"
+                className={filters.especialidadId ? "bg-[#002C63]" : ""}
+              >
+                <Wrench className="h-4 w-4 mr-1" />
+                Especialidad
+                {filters.especialidadId && <span className="ml-1 text-xs">✓</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2">
+              <Select
+                value={filters.especialidadId}
+                onValueChange={(value) => setFilters({ ...filters, especialidadId: value === "all" ? "" : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar especialidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las especialidades</SelectItem>
+                  {especialidades?.map((esp) => (
+                    <SelectItem key={esp.id} value={esp.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: esp.color || '#6B7280' }}
+                        />
+                        {esp.nombre}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>

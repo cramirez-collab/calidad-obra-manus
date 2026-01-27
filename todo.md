@@ -1156,3 +1156,7 @@
 - [x] Defectos elegibles con checkbox
 - [x] Permitir agregar defectos personalizados
 - [x] Admin/Supervisor/Superadmin pueden agregar defectos
+
+
+## Filtro Especialidad en Estadísticas (27 Enero 2026)
+- [x] Agregar filtro de Especialidad después del filtro de Empresa en la página de Estadísticas
