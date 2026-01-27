@@ -1294,3 +1294,15 @@
 ### Publicación en Tiendas
 - [ ] Preparar guía de publicación en App Store (iOS)
 - [ ] Preparar guía de publicación en Play Store (Android)
+
+
+## Mejoras Bienvenida y Rechazo (27 Enero 2026)
+
+### Página de Bienvenida
+- [x] Mostrar fecha actual en formato legible (día de la semana, día, mes, año)
+- [x] Mostrar días faltantes para terminar obra (17 enero 2027)
+- [x] Agregar frase motivadora después del nombre del usuario (15 frases de construcción/calidad)
+
+### Flujo de Aprobación
+- [x] Verificar que supervisor puede rechazar ítems (supervisorProcedure en router)
+- [x] Botón de rechazo visible para supervisor en ItemDetail y Seguimiento (canApprove)
