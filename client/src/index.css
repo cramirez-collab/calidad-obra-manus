@@ -266,18 +266,3 @@
     width: 64px;
   }
 }
-
-
-/* Safe area para dispositivos con notch/home indicator */
-.safe-area-pb {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* Ocultar scrollbar en navegación */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}

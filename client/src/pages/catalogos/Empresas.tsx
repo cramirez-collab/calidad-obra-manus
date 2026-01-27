@@ -1,5 +1,4 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import EmpresaFormIntegrado from "@/components/EmpresaFormIntegrado";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -441,106 +440,66 @@ export default function Empresas() {
                   const defectos = getDefectosByEspecialidad(empresa.especialidadId);
                   const isExpanded = expandedEmpresas.has(empresa.id);
                   const especialidad = especialidades?.find(e => e.id === empresa.especialidadId);
-                  const residente = usuarios?.find(u => u.id === empresa.residenteId);
-                  const jefeResidente = usuarios?.find(u => u.id === empresa.jefeResidenteId);
                   
                   return (
                     <Collapsible key={empresa.id} open={isExpanded} onOpenChange={() => toggleExpanded(empresa.id)}>
                       <div className="border rounded-lg overflow-hidden">
                         {/* Fila principal de la empresa */}
-                        <div className="p-3 sm:p-4 bg-white hover:bg-slate-50">
-                          {/* Layout móvil: vertical, Desktop: horizontal */}
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                            {/* Fila superior: botón expandir + nombre + acciones */}
-                            <div className="flex items-center gap-2 w-full">
-                              <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                                  {isExpanded ? (
-                                    <ChevronDown className="h-4 w-4" />
-                                  ) : (
-                                    <ChevronRight className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </CollapsibleTrigger>
-                              <span className="font-medium text-sm sm:text-base truncate flex-1">{empresa.nombre}</span>
-                              {/* Acciones - siempre visibles a la derecha */}
-                              <div className="flex items-center gap-0.5 shrink-0">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 sm:h-8 sm:w-8"
-                                  onClick={(e) => { e.stopPropagation(); handleOpen(empresa); }}
-                                >
-                                  <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 sm:h-8 sm:w-8"
-                                  onClick={(e) => { e.stopPropagation(); handleDelete(empresa.id); }}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
-                                </Button>
+                        <div className="flex items-center justify-between p-4 bg-white hover:bg-slate-50">
+                          <div className="flex items-center gap-3 flex-1">
+                            <CollapsibleTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                {isExpanded ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </CollapsibleTrigger>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{empresa.nombre}</span>
+                                {especialidad && (
+                                  <Badge 
+                                    variant="outline" 
+                                    className="text-xs"
+                                    style={{ 
+                                      borderColor: especialidad.color || '#3B82F6',
+                                      color: especialidad.color || '#3B82F6'
+                                    }}
+                                  >
+                                    <Wrench className="h-3 w-3 mr-1" />
+                                    {especialidad.nombre}
+                                  </Badge>
+                                )}
+                                {defectos.length > 0 && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    <AlertTriangle className="h-3 w-3 mr-1" />
+                                    {defectos.length} defectos
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {empresa.contacto && <span>{empresa.contacto}</span>}
+                                {empresa.telefono && <span className="ml-2">• {empresa.telefono}</span>}
                               </div>
                             </div>
-                            
-                            {/* Fila de badges - debajo en móvil, inline en desktop */}
-                            <div className="flex flex-wrap items-center gap-1.5 pl-10 sm:pl-0">
-                              {especialidad && (
-                                <Badge 
-                                  variant="outline" 
-                                  className="text-[10px] sm:text-xs px-1.5 py-0.5"
-                                  style={{ 
-                                    borderColor: especialidad.color || '#3B82F6',
-                                    color: especialidad.color || '#3B82F6'
-                                  }}
-                                >
-                                  <Wrench className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
-                                  {especialidad.nombre}
-                                </Badge>
-                              )}
-                              {defectos.length > 0 && (
-                                <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0.5">
-                                  <AlertTriangle className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
-                                  {defectos.length}
-                                </Badge>
-                              )}
-                            </div>
-                            
                           </div>
-                          
-                          {/* Sección de Equipo - Usuarios asignados */}
-                          <div className="mt-2 pt-2 border-t border-gray-100">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-10 sm:pl-0">
-                              {/* Residente */}
-                              <div className="flex items-center gap-2 text-xs sm:text-sm">
-                                <span className="text-muted-foreground font-medium w-20">Residente:</span>
-                                {residente ? (
-                                  <span className="text-[#002C63] font-medium">{residente.name}</span>
-                                ) : (
-                                  <span className="text-gray-400 italic">Sin asignar</span>
-                                )}
-                              </div>
-                              {/* Jefe de Residente */}
-                              <div className="flex items-center gap-2 text-xs sm:text-sm">
-                                <span className="text-muted-foreground font-medium w-20">Jefe:</span>
-                                {jefeResidente ? (
-                                  <span className="text-[#002C63] font-medium">{jefeResidente.name}</span>
-                                ) : (
-                                  <span className="text-gray-400 italic">Sin asignar</span>
-                                )}
-                              </div>
-                              {/* Contacto */}
-                              {(empresa.contacto || empresa.telefono) && (
-                                <div className="flex items-center gap-2 text-xs sm:text-sm sm:col-span-2">
-                                  <span className="text-muted-foreground font-medium w-20">Contacto:</span>
-                                  <span className="text-gray-600">
-                                    {empresa.contacto}
-                                    {empresa.telefono && ` • ${empresa.telefono}`}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => { e.stopPropagation(); handleOpen(empresa); }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => { e.stopPropagation(); handleDelete(empresa.id); }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
                           </div>
                         </div>
                         
@@ -669,13 +628,149 @@ export default function Empresas() {
           </CardContent>
         </Card>
 
-        {/* Formulario integrado de empresa */}
-        <EmpresaFormIntegrado
-          isOpen={isOpen}
-          onClose={handleClose}
-          empresa={editingEmpresa}
-          proyectoId={selectedProjectId || 0}
-        />
+        {/* Dialog para crear/editar empresa */}
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
+                {editingEmpresa ? "Editar Empresa" : "Nueva Empresa"}
+              </DialogTitle>
+              <DialogDescription>
+                {editingEmpresa
+                  ? "Modifica los datos de la empresa"
+                  : "Ingresa los datos de la nueva empresa"}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-4 py-4">
+
+                <div className="grid gap-2">
+                  <Label htmlFor="especialidadId">Especialidad</Label>
+                  <Select
+                    value={formData.especialidadId}
+                    onValueChange={(value) => setFormData({ ...formData, especialidadId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar especialidad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sin especialidad</SelectItem>
+                      {especialidades?.map((especialidad) => (
+                        <SelectItem key={especialidad.id} value={especialidad.id.toString()}>
+                          {especialidad.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Al asignar una especialidad, se mostrarán los defectos típicos asociados
+                  </p>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="nombre">Nombre *</Label>
+                  <Input
+                    id="nombre"
+                    value={formData.nombre}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nombre: e.target.value })
+                    }
+                    placeholder="Nombre de la empresa"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="contacto">Contacto</Label>
+                  <Input
+                    id="contacto"
+                    value={formData.contacto}
+                    onChange={(e) =>
+                      setFormData({ ...formData, contacto: e.target.value })
+                    }
+                    placeholder="Nombre del contacto"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="telefono">Teléfono</Label>
+                    <Input
+                      id="telefono"
+                      value={formData.telefono}
+                      onChange={(e) =>
+                        setFormData({ ...formData, telefono: e.target.value })
+                      }
+                      placeholder="Teléfono"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      placeholder="correo@empresa.com"
+                    />
+                  </div>
+                </div>
+
+                {/* Asignación de Residente y Jefe de Residente */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="residenteId">Residente</Label>
+                    <Select
+                      value={formData.residenteId}
+                      onValueChange={(value) => setFormData({ ...formData, residenteId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar residente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin asignar</SelectItem>
+                        {usuarios?.filter(u => u.role === 'residente' || u.role === 'jefe_residente').map((usuario) => (
+                          <SelectItem key={usuario.id} value={usuario.id.toString()}>
+                            {usuario.name || usuario.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="jefeResidenteId">Jefe de Residente</Label>
+                    <Select
+                      value={formData.jefeResidenteId}
+                      onValueChange={(value) => setFormData({ ...formData, jefeResidenteId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar jefe de residente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin asignar</SelectItem>
+                        {usuarios?.filter(u => u.role === 'jefe_residente' || u.role === 'supervisor').map((usuario) => (
+                          <SelectItem key={usuario.id} value={usuario.id.toString()}>
+                            {usuario.name || usuario.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={handleClose}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {editingEmpresa ? "Guardar Cambios" : "Crear Empresa"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* Dialog para agregar defecto personalizado */}
         <Dialog open={isAddDefectoOpen} onOpenChange={setIsAddDefectoOpen}>

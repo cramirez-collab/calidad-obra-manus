@@ -57,31 +57,9 @@ export default function Bitacora() {
   const [fechaHasta, setFechaHasta] = useState<string>("");
   const [busqueda, setBusqueda] = useState<string>("");
   const [pagina, setPagina] = useState(1);
-  
-  // Estado de ordenamiento
-  const [sortColumn, setSortColumn] = useState<string>('createdAt');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('desc');
-    }
-  };
-  
-  const SortIcon = ({ column }: { column: string }) => {
-    if (sortColumn !== column) return <span className="text-gray-300 ml-1">↕</span>;
-    return sortDirection === 'asc' 
-      ? <span className="text-[#02B381] ml-1">↑</span> 
-      : <span className="text-[#02B381] ml-1">↓</span>;
-  };
 
   // Queries
   const { data: usuarios } = trpc.users.list.useQuery();
-  const { data: unidades } = trpc.unidades.list.useQuery();
-  const [filtroUnidad, setFiltroUnidad] = useState<string>("");
   
   const filtros = useMemo(() => ({
     usuarioId: filtroUsuario ? parseInt(filtroUsuario) : undefined,
@@ -91,15 +69,6 @@ export default function Bitacora() {
     limit: ITEMS_PER_PAGE,
     offset: (pagina - 1) * ITEMS_PER_PAGE,
   }), [filtroUsuario, filtroCategoria, fechaDesde, fechaHasta, pagina]);
-
-  // Agrupar usuarios por rol para mejor visualización
-  const usuariosAgrupados = useMemo(() => {
-    if (!usuarios) return { supervisores: [], residentes: [], otros: [] };
-    const supervisores = usuarios.filter((u: any) => u.role === 'supervisor' || u.role === 'superadmin' || u.role === 'admin');
-    const residentes = usuarios.filter((u: any) => u.role === 'residente' || u.role === 'jefe_residente');
-    const otros = usuarios.filter((u: any) => !['supervisor', 'superadmin', 'admin', 'residente', 'jefe_residente'].includes(u.role));
-    return { supervisores, residentes, otros };
-  }, [usuarios]);
 
   const { data: auditoria, isLoading } = isAdmin 
     ? trpc.bitacora.list.useQuery({
@@ -119,66 +88,19 @@ export default function Bitacora() {
   // Filtrar por búsqueda local
   const actividadesFiltradas = useMemo(() => {
     if (!auditoria) return [];
+    if (!busqueda && !filtroAccion) return auditoria;
     
-    let filtered = auditoria;
-    
-    // Aplicar filtros
-    if (busqueda || filtroAccion || filtroUnidad) {
-      filtered = auditoria.filter((a: any) => {
-        const matchBusqueda = !busqueda || 
-          a.detalles?.toLowerCase().includes(busqueda.toLowerCase()) ||
-          a.usuarioNombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
-          a.accion?.toLowerCase().includes(busqueda.toLowerCase());
-        
-        const matchAccion = !filtroAccion || a.accion === filtroAccion;
-        
-        // Filtro por unidad - buscar en detalles si contiene la unidad
-        const matchUnidad = !filtroUnidad || 
-          a.detalles?.toLowerCase().includes(filtroUnidad.toLowerCase());
-        
-        return matchBusqueda && matchAccion && matchUnidad;
-      });
-    }
-    
-    // Aplicar ordenamiento
-    return [...filtered].sort((a: any, b: any) => {
-      let valueA: any, valueB: any;
+    return auditoria.filter((a: any) => {
+      const matchBusqueda = !busqueda || 
+        a.detalles?.toLowerCase().includes(busqueda.toLowerCase()) ||
+        a.usuarioNombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+        a.accion?.toLowerCase().includes(busqueda.toLowerCase());
       
-      switch (sortColumn) {
-        case 'createdAt':
-          valueA = new Date(a.createdAt).getTime();
-          valueB = new Date(b.createdAt).getTime();
-          break;
-        case 'usuarioNombre':
-          valueA = (a.usuarioNombre || '').toLowerCase();
-          valueB = (b.usuarioNombre || '').toLowerCase();
-          break;
-        case 'usuarioRol':
-          valueA = (a.usuarioRol || '').toLowerCase();
-          valueB = (b.usuarioRol || '').toLowerCase();
-          break;
-        case 'accion':
-          valueA = (a.accion || '').toLowerCase();
-          valueB = (b.accion || '').toLowerCase();
-          break;
-        case 'categoria':
-          valueA = (a.categoria || '').toLowerCase();
-          valueB = (b.categoria || '').toLowerCase();
-          break;
-        case 'detalles':
-          valueA = (a.detalles || '').toLowerCase();
-          valueB = (b.detalles || '').toLowerCase();
-          break;
-        default:
-          valueA = a[sortColumn];
-          valueB = b[sortColumn];
-      }
+      const matchAccion = !filtroAccion || a.accion === filtroAccion;
       
-      if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
-      if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
+      return matchBusqueda && matchAccion;
     });
-  }, [auditoria, busqueda, filtroAccion, filtroUnidad, sortColumn, sortDirection]);
+  }, [auditoria, busqueda, filtroAccion]);
 
   const getAccionIcon = (accion: string) => {
     switch (accion) {
@@ -287,7 +209,7 @@ export default function Bitacora() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Bitacora-${format(new Date(), "dd-MM-yy")}-${format(new Date(), "HHmm")}.csv`;
+    link.download = `bitacora_${format(new Date(), "yyyy-MM-dd_HHmm")}.csv`;
     link.click();
     URL.revokeObjectURL(url);
     
@@ -345,47 +267,7 @@ export default function Bitacora() {
       alternateRowStyles: { fillColor: [245, 245, 245] },
     });
 
-    // Línea de firmas al final
-    const pageHeight = doc.internal.pageSize.height;
-    const finalY = (doc as any).lastAutoTable?.finalY || 150;
-    const firmasY = Math.min(finalY + 30, pageHeight - 50);
-    
-    // Si no hay espacio, agregar nueva página
-    if (firmasY > pageHeight - 60) {
-      doc.addPage();
-    }
-    
-    const firmasYFinal = firmasY > pageHeight - 60 ? 40 : firmasY;
-    
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    
-    // Líneas de firma
-    const lineWidth = 60;
-    const startX1 = 30;
-    const startX2 = 120;
-    const startX3 = 210;
-    
-    doc.line(startX1, firmasYFinal + 20, startX1 + lineWidth, firmasYFinal + 20);
-    doc.line(startX2, firmasYFinal + 20, startX2 + lineWidth, firmasYFinal + 20);
-    doc.line(startX3, firmasYFinal + 20, startX3 + lineWidth, firmasYFinal + 20);
-    
-    doc.setFontSize(9);
-    doc.text("Residente", startX1 + lineWidth/2, firmasYFinal + 26, { align: 'center' });
-    doc.text("Supervisión", startX2 + lineWidth/2, firmasYFinal + 26, { align: 'center' });
-    doc.text("Desarrollador", startX3 + lineWidth/2, firmasYFinal + 26, { align: 'center' });
-    
-    doc.setFontSize(8);
-    doc.setTextColor(100);
-    doc.text("Nombre y Firma", startX1 + lineWidth/2, firmasYFinal + 31, { align: 'center' });
-    doc.text("Nombre y Firma", startX2 + lineWidth/2, firmasYFinal + 31, { align: 'center' });
-    doc.text("Nombre y Firma", startX3 + lineWidth/2, firmasYFinal + 31, { align: 'center' });
-    
-    doc.text("Fecha: ____________", startX1 + lineWidth/2, firmasYFinal + 37, { align: 'center' });
-    doc.text("Fecha: ____________", startX2 + lineWidth/2, firmasYFinal + 37, { align: 'center' });
-    doc.text("Fecha: ____________", startX3 + lineWidth/2, firmasYFinal + 37, { align: 'center' });
-
-    doc.save(`Bitacora-${format(new Date(), "dd-MM-yy")}-${format(new Date(), "HHmm")}.pdf`);
+    doc.save(`bitacora_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
     toast.success("Archivo PDF exportado correctamente");
   };
 
@@ -394,7 +276,6 @@ export default function Bitacora() {
     setFiltroUsuario("");
     setFiltroCategoria("");
     setFiltroAccion("");
-    setFiltroUnidad("");
     setFechaDesde("");
     setFechaHasta("");
     setBusqueda("");
@@ -456,7 +337,7 @@ export default function Bitacora() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
               {/* Búsqueda */}
               <div className="sm:col-span-2 lg:col-span-1">
                 <Label className="text-xs">Buscar</Label>
@@ -474,58 +355,15 @@ export default function Bitacora() {
               {/* Usuario */}
               <div>
                 <Label className="text-xs">Usuario</Label>
-                <Select value={filtroUsuario || "_all"} onValueChange={(v) => setFiltroUsuario(v === "_all" ? "" : v)}>
+                <Select value={filtroUsuario} onValueChange={setFiltroUsuario}>
                   <SelectTrigger className="h-9">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_all">Todos</SelectItem>
-                    {usuariosAgrupados.supervisores.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted">Supervisores</div>
-                        {usuariosAgrupados.supervisores.map((u: any) => (
-                          <SelectItem key={u.id} value={u.id.toString()}>
-                            {u.name}
-                          </SelectItem>
-                        ))}
-                      </>
-                    )}
-                    {usuariosAgrupados.residentes.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted">Residentes</div>
-                        {usuariosAgrupados.residentes.map((u: any) => (
-                          <SelectItem key={u.id} value={u.id.toString()}>
-                            {u.name}
-                          </SelectItem>
-                        ))}
-                      </>
-                    )}
-                    {usuariosAgrupados.otros.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted">Otros</div>
-                        {usuariosAgrupados.otros.map((u: any) => (
-                          <SelectItem key={u.id} value={u.id.toString()}>
-                            {u.name}
-                          </SelectItem>
-                        ))}
-                      </>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Unidad */}
-              <div>
-                <Label className="text-xs">Unidad</Label>
-                <Select value={filtroUnidad || "_all"} onValueChange={(v) => setFiltroUnidad(v === "_all" ? "" : v)}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Todas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_all">Todas</SelectItem>
-                    {unidades?.filter((u: any) => u.nombre && u.nombre.trim() !== '').map((u: any) => (
+                    <SelectItem value="">Todos</SelectItem>
+                    {usuarios?.map((u: any) => (
                       <SelectItem key={u.id} value={u.id.toString()}>
-                        {u.nombre}
+                        {u.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -535,12 +373,12 @@ export default function Bitacora() {
               {/* Categoría */}
               <div>
                 <Label className="text-xs">Categoría</Label>
-                <Select value={filtroCategoria || "_all"} onValueChange={(v) => setFiltroCategoria(v === "_all" ? "" : v)}>
+                <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
                   <SelectTrigger className="h-9">
                     <SelectValue placeholder="Todas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_all">Todas</SelectItem>
+                    <SelectItem value="">Todas</SelectItem>
                     <SelectItem value="item">Ítems</SelectItem>
                     <SelectItem value="usuario">Usuarios</SelectItem>
                     <SelectItem value="mensaje">Mensajes</SelectItem>
@@ -632,42 +470,12 @@ export default function Bitacora() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th 
-                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                          onClick={() => handleSort('createdAt')}
-                        >
-                          Fecha/Hora<SortIcon column="createdAt" />
-                        </th>
-                        <th 
-                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                          onClick={() => handleSort('usuarioNombre')}
-                        >
-                          Usuario<SortIcon column="usuarioNombre" />
-                        </th>
-                        <th 
-                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                          onClick={() => handleSort('usuarioRol')}
-                        >
-                          Rol<SortIcon column="usuarioRol" />
-                        </th>
-                        <th 
-                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                          onClick={() => handleSort('accion')}
-                        >
-                          Acción<SortIcon column="accion" />
-                        </th>
-                        <th 
-                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                          onClick={() => handleSort('categoria')}
-                        >
-                          Categoría<SortIcon column="categoria" />
-                        </th>
-                        <th 
-                          className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                          onClick={() => handleSort('detalles')}
-                        >
-                          Detalles<SortIcon column="detalles" />
-                        </th>
+                        <th className="text-left p-2 font-medium">Fecha/Hora</th>
+                        <th className="text-left p-2 font-medium">Usuario</th>
+                        <th className="text-left p-2 font-medium">Rol</th>
+                        <th className="text-left p-2 font-medium">Acción</th>
+                        <th className="text-left p-2 font-medium">Categoría</th>
+                        <th className="text-left p-2 font-medium">Detalles</th>
                       </tr>
                     </thead>
                     <tbody>

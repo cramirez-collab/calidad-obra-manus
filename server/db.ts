@@ -1349,25 +1349,12 @@ export async function registrarActividad(data: InsertBitacora) {
 export async function getBitacoraByUsuario(usuarioId: number, limit = 100) {
   const db = await getDb();
   if (!db) return [];
-  
-  const result = await db
-    .select({
-      bitacora: bitacora,
-      usuario: users,
-    })
+  return await db
+    .select()
     .from(bitacora)
-    .leftJoin(users, eq(bitacora.usuarioId, users.id))
     .where(eq(bitacora.usuarioId, usuarioId))
     .orderBy(desc(bitacora.createdAt))
     .limit(limit);
-  
-  return result.map(r => ({
-    ...r.bitacora,
-    usuario: r.usuario,
-    usuarioNombre: r.usuario?.name || 'Usuario desconocido',
-    usuarioRol: r.usuario?.role || 'sin_rol',
-    categoria: r.bitacora.entidad,
-  }));
 }
 
 export async function getBitacoraGeneral(filtros: {
@@ -1403,9 +1390,6 @@ export async function getBitacoraGeneral(filtros: {
   return result.map(r => ({
     ...r.bitacora,
     usuario: r.usuario,
-    usuarioNombre: r.usuario?.name || 'Usuario desconocido',
-    usuarioRol: r.usuario?.role || 'sin_rol',
-    categoria: r.bitacora.entidad, // Mapear entidad como categoría
   }));
 }
 
@@ -1482,36 +1466,11 @@ export async function getPendientesByUsuario(userId: number, role: string) {
   }
   
   // Ordenar del más antiguo al más nuevo (ASC)
-  const result = await db
-    .select({
-      id: items.id,
-      codigo: items.codigo,
-      titulo: items.titulo,
-      status: items.status,
-      fotoAntesUrl: items.fotoAntesUrl,
-      fotoDespuesUrl: items.fotoDespuesUrl,
-      fechaCreacion: items.fechaCreacion,
-      fechaAprobacion: items.fechaAprobacion,
-      unidadId: items.unidadId,
-      residenteId: items.residenteId,
-    })
+  return await db
+    .select()
     .from(items)
-    .leftJoin(unidades, eq(items.unidadId, unidades.id))
     .where(whereCondition)
     .orderBy(items.fechaCreacion); // ASC = más antiguo primero
-  
-  // Mapear para incluir ubicación y fotos
-  return result.map(r => ({
-    id: r.id,
-    codigo: r.codigo,
-    titulo: r.titulo,
-    status: r.status,
-    fotoAntes: r.fotoAntesUrl,
-    fotoDespues: r.fotoDespuesUrl,
-    fechaCreacion: r.fechaCreacion,
-    fechaAprobacion: r.fechaAprobacion,
-    ubicacion: null, // Se puede agregar si se necesita
-  }));
 }
 
 // ==================== CONFIGURACIÓN ====================
@@ -1968,9 +1927,7 @@ export async function getItemsParaReporte(filters: ItemFilters = {}) {
     defecto: item.defectoId ? defectosMap.get(item.defectoId) : null,
     residente: usuariosMap.get(item.residenteId),
     jefeResidente: item.jefeResidenteId ? usuariosMap.get(item.jefeResidenteId) : null,
-    supervisor: item.supervisorId ? usuariosMap.get(item.supervisorId) : null,
-    // El supervisor es quien aprueba los ítems
-    aprobadoPor: item.supervisorId ? usuariosMap.get(item.supervisorId) : null
+    supervisor: item.supervisorId ? usuariosMap.get(item.supervisorId) : null
   }));
 }
 

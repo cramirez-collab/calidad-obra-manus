@@ -155,13 +155,6 @@
       "when": 1769487932476,
       "tag": "0021_cloudy_ben_urich",
       "breakpoints": true
-    },
-    {
-      "idx": 22,
-      "version": "5",
-      "when": 1769495763048,
-      "tag": "0022_sleepy_typhoid_mary",
-      "breakpoints": true
     }
   ]
 }

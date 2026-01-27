@@ -269,50 +269,32 @@ export default function Estadisticas() {
               variant="outline" 
               size="sm" 
               onClick={() => {
-                // Crear contenido HTML para imprimir como PDF
-                const fechaActual = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+                // Crear contenido HTML para el PDF
                 const htmlContent = `
-                  <!DOCTYPE html>
                   <html>
                     <head>
                       <title>Estadísticas - ObjetivaOQC</title>
-                      <meta charset="UTF-8">
                       <style>
                         @page { size: letter; margin: 15mm; }
-                        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-                        * { box-sizing: border-box; }
-                        body { font-family: Arial, sans-serif; padding: 20px; margin: 0; color: #333; }
-                        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #002C63; padding-bottom: 15px; margin-bottom: 25px; }
-                        .logo { font-size: 28px; font-weight: bold; color: #002C63; letter-spacing: 2px; }
-                        .logo-sub { font-size: 10px; color: #666; letter-spacing: 1px; }
-                        .date { font-size: 12px; color: #666; text-align: right; }
-                        .report-title { font-size: 16px; font-weight: bold; color: #002C63; }
-                        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
-                        .stat-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; background: #f9fafb; }
-                        .stat-value { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
-                        .stat-label { color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-                        .section { margin-top: 25px; }
-                        .section-title { font-size: 14px; font-weight: bold; color: #002C63; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 12px; }
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #002C63; padding-bottom: 10px; margin-bottom: 20px; }
+                        .logo { font-size: 24px; font-weight: bold; color: #002C63; }
+                        .date { font-size: 12px; color: #666; }
+                        .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px; }
+                        .stat-card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center; background: #f9fafb; }
+                        .stat-value { font-size: 32px; font-weight: bold; margin-bottom: 5px; }
+                        .stat-label { color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+                        .section { margin-top: 30px; }
+                        .section-title { font-size: 18px; font-weight: bold; color: #002C63; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 15px; }
                         .empresa-list { margin: 0; padding: 0; list-style: none; }
-                        .empresa-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 12px; }
-                        .firmas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 60px; padding-top: 20px; }
-                        .firma-box { text-align: center; }
-                        .firma-linea { border-top: 1px solid #333; margin-bottom: 8px; padding-top: 8px; }
-                        .firma-titulo { font-size: 11px; font-weight: bold; color: #333; }
-                        .firma-fecha { font-size: 10px; color: #666; margin-top: 4px; }
-                        .footer { text-align: center; color: #999; font-size: 10px; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; }
+                        .empresa-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+                        .footer { text-align: center; color: #999; font-size: 11px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; }
                       </style>
                     </head>
                     <body>
                       <div class="header">
-                        <div>
-                          <div class="logo">OBJETIVA</div>
-                          <div class="logo-sub">CONTROL DE CALIDAD DE OBRA</div>
-                        </div>
-                        <div class="date">
-                          <div class="report-title">Reporte de Estadísticas</div>
-                          ${fechaActual}
-                        </div>
+                        <div class="logo">OBJETIVA</div>
+                        <div class="date">Reporte de Estadísticas<br/>${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
                       </div>
                       
                       <div class="stats">
@@ -351,41 +333,34 @@ export default function Estadisticas() {
                         </div>
                       ` : ''}
                       
-                      <div class="firmas">
-                        <div class="firma-box">
-                          <div class="firma-linea">Residente</div>
-                          <div class="firma-titulo">Nombre y Firma</div>
-                          <div class="firma-fecha">Fecha: _______________</div>
-                        </div>
-                        <div class="firma-box">
-                          <div class="firma-linea">Supervisión</div>
-                          <div class="firma-titulo">Nombre y Firma</div>
-                          <div class="firma-fecha">Fecha: _______________</div>
-                        </div>
-                        <div class="firma-box">
-                          <div class="firma-linea">Desarrollador</div>
-                          <div class="firma-titulo">Nombre y Firma</div>
-                          <div class="firma-fecha">Fecha: _______________</div>
-                        </div>
-                      </div>
-                      
                       <div class="footer">
                         Generado por ObjetivaOQC - Control de Calidad de Obra<br/>
-                        ${fechaActual} | Página 1 de 1
+                        Página 1 de 1
                       </div>
                     </body>
                   </html>
                 `;
                 
-                // Abrir ventana para imprimir/guardar como PDF
+                // Crear blob y descargar
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `estadisticas_${new Date().toISOString().split('T')[0]}.html`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                // También abrir para imprimir como PDF
                 const printWindow = window.open('', '_blank');
                 if (printWindow) {
                   printWindow.document.write(htmlContent);
                   printWindow.document.close();
-                  // Dar tiempo para cargar estilos y luego abrir diálogo de impresión
+                  // Dar tiempo para cargar y luego imprimir
                   setTimeout(() => {
                     printWindow.print();
-                  }, 300);
+                  }, 250);
                 }
               }}
               className="text-red-600 border-red-200 hover:bg-red-50"
@@ -1001,45 +976,6 @@ export default function Estadisticas() {
 function RendimientoUsuarios() {
   const { data: rendimiento, isLoading } = trpc.estadisticasAvanzadas.rendimientoUsuarios.useQuery();
   const { data: defectosPorUsuario } = trpc.estadisticasAvanzadas.defectosPorUsuario.useQuery();
-  
-  // Estado para ordenamiento de tabla
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'usuarioNombre', direction: 'asc' });
-  
-  // Función para ordenar
-  const handleSort = (key: string) => {
-    setSortConfig(prev => ({
-      key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
-  };
-  
-  // Datos ordenados
-  const sortedRendimiento = useMemo(() => {
-    if (!rendimiento) return [];
-    return [...rendimiento].sort((a: any, b: any) => {
-      let aVal = a[sortConfig.key];
-      let bVal = b[sortConfig.key];
-      
-      // Calcular eficiencia si es la columna de ordenamiento
-      if (sortConfig.key === 'eficiencia') {
-        aVal = a.itemsCompletados > 0 ? (a.aprobados / a.itemsCompletados) * 100 : 0;
-        bVal = b.itemsCompletados > 0 ? (b.aprobados / b.itemsCompletados) * 100 : 0;
-      }
-      
-      // Manejar valores nulos
-      if (aVal == null) aVal = '';
-      if (bVal == null) bVal = '';
-      
-      // Comparar strings
-      if (typeof aVal === 'string') {
-        const comparison = aVal.localeCompare(bVal);
-        return sortConfig.direction === 'asc' ? comparison : -comparison;
-      }
-      
-      // Comparar números
-      return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
-    });
-  }, [rendimiento, sortConfig]);
 
   if (isLoading) {
     return (
@@ -1194,107 +1130,6 @@ function RendimientoUsuarios() {
         </Card>
       </div>
 
-      {/* Gráfica de Mejores y Peores Residentes */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Mejores Residentes */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-600" />
-              Mejores Residentes
-            </CardTitle>
-            <CardDescription>
-              Top 5 residentes con mayor eficiencia (aprobados/total)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {(() => {
-              const mejores = rendimiento
-                ?.filter((u: any) => u.itemsCompletados > 0)
-                .map((u: any) => ({
-                  name: u.usuarioNombre || 'Usuario',
-                  eficiencia: (u.aprobados / u.itemsCompletados) * 100,
-                  aprobados: u.aprobados,
-                  total: u.itemsCompletados,
-                }))
-                .sort((a: any, b: any) => b.eficiencia - a.eficiencia)
-                .slice(0, 5) || [];
-              
-              return mejores.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={mejores} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" domain={[0, 100]} unit="%" />
-                    <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
-                    <Tooltip 
-                      formatter={(value: number, name: string) => [
-                        `${value.toFixed(1)}%`,
-                        'Eficiencia'
-                      ]}
-                      labelFormatter={(label) => label}
-                    />
-                    <Bar dataKey="eficiencia" fill="#10B981" name="Eficiencia" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-                  No hay datos suficientes
-                </div>
-              );
-            })()}
-          </CardContent>
-        </Card>
-
-        {/* Peores Residentes (necesitan atención) */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
-              Residentes que Necesitan Atención
-            </CardTitle>
-            <CardDescription>
-              Top 5 residentes con menor eficiencia o más rechazos
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {(() => {
-              const peores = rendimiento
-                ?.filter((u: any) => u.itemsCompletados > 0)
-                .map((u: any) => ({
-                  name: u.usuarioNombre || 'Usuario',
-                  eficiencia: (u.aprobados / u.itemsCompletados) * 100,
-                  rechazados: u.rechazados,
-                  total: u.itemsCompletados,
-                }))
-                .sort((a: any, b: any) => a.eficiencia - b.eficiencia)
-                .slice(0, 5) || [];
-              
-              return peores.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={peores} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" domain={[0, 100]} unit="%" />
-                    <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
-                    <Tooltip 
-                      formatter={(value: number, name: string) => [
-                        `${value.toFixed(1)}%`,
-                        'Eficiencia'
-                      ]}
-                      labelFormatter={(label) => label}
-                    />
-                    <Bar dataKey="eficiencia" fill="#EF4444" name="Eficiencia" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-                  No hay datos suficientes
-                </div>
-              );
-            })()}
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Tabla de Rendimiento Detallado */}
       <Card>
         <CardHeader>
@@ -1308,98 +1143,18 @@ function RendimientoUsuarios() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th 
-                    className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                    onClick={() => handleSort('usuarioNombre')}
-                  >
-                    <div className="flex items-center gap-1">
-                      Usuario
-                      {sortConfig.key === 'usuarioNombre' && (
-                        <span className="text-primary">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </div>
-                  </th>
-                  <th 
-                    className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                    onClick={() => handleSort('usuarioRol')}
-                  >
-                    <div className="flex items-center gap-1">
-                      Rol
-                      {sortConfig.key === 'usuarioRol' && (
-                        <span className="text-primary">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </div>
-                  </th>
-                  <th 
-                    className="text-center p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                    onClick={() => handleSort('itemsCompletados')}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      Total Ítems
-                      {sortConfig.key === 'itemsCompletados' && (
-                        <span className="text-primary">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </div>
-                  </th>
-                  <th 
-                    className="text-center p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                    onClick={() => handleSort('aprobados')}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      Aprobados
-                      {sortConfig.key === 'aprobados' && (
-                        <span className="text-primary">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </div>
-                  </th>
-                  <th 
-                    className="text-center p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                    onClick={() => handleSort('rechazados')}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      Rechazados
-                      {sortConfig.key === 'rechazados' && (
-                        <span className="text-primary">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </div>
-                  </th>
-                  <th 
-                    className="text-center p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                    onClick={() => handleSort('okSupervisor')}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      OK Supervisor
-                      {sortConfig.key === 'okSupervisor' && (
-                        <span className="text-primary">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </div>
-                  </th>
-                  <th 
-                    className="text-center p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                    onClick={() => handleSort('tiempoPromedioHoras')}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      Tiempo Prom.
-                      {sortConfig.key === 'tiempoPromedioHoras' && (
-                        <span className="text-primary">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </div>
-                  </th>
-                  <th 
-                    className="text-center p-2 font-medium cursor-pointer hover:bg-muted/80 select-none"
-                    onClick={() => handleSort('eficiencia')}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      Eficiencia
-                      {sortConfig.key === 'eficiencia' && (
-                        <span className="text-primary">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                      )}
-                    </div>
-                  </th>
+                  <th className="text-left p-2 font-medium">Usuario</th>
+                  <th className="text-left p-2 font-medium">Rol</th>
+                  <th className="text-center p-2 font-medium">Total Ítems</th>
+                  <th className="text-center p-2 font-medium">Aprobados</th>
+                  <th className="text-center p-2 font-medium">Rechazados</th>
+                  <th className="text-center p-2 font-medium">OK Supervisor</th>
+                  <th className="text-center p-2 font-medium">Tiempo Prom.</th>
+                  <th className="text-center p-2 font-medium">Eficiencia</th>
                 </tr>
               </thead>
               <tbody>
-                {sortedRendimiento?.map((usuario: any, index: number) => {
+                {rendimiento?.map((usuario: any, index: number) => {
                   const eficiencia = usuario.itemsCompletados > 0 
                     ? ((usuario.aprobados / usuario.itemsCompletados) * 100).toFixed(0)
                     : 0;
