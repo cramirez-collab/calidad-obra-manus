@@ -30,7 +30,8 @@ import {
   GripVertical,
   Plus,
   X,
-  QrCode
+  QrCode,
+  FileDown
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -412,8 +413,8 @@ export default function VistaPanoramica() {
       grouped.set(nivel, celdas);
     });
     
-    // Ordenar niveles descendente (niveles más altos arriba)
-    return new Map(Array.from(grouped.entries()).sort((a, b) => b[0] - a[0]));
+    // Ordenar niveles ascendente (piso menor primero, para revisar de abajo hacia arriba)
+    return new Map(Array.from(grouped.entries()).sort((a, b) => a[0] - b[0]));
   }, [unidades]);
 
   // Estadísticas generales
@@ -540,10 +541,16 @@ export default function VistaPanoramica() {
               Arrastra y suelta las unidades para reorganizar • {isMobile ? "Toca para ver stats, toca de nuevo para ver ítems" : "Clic para ver ítems"}
             </p>
           </div>
-          <Button variant="outline" onClick={() => setLocation("/unidades/importar")}>
-            <Upload className="h-4 w-4 mr-2" />
-            Importar Excel
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setLocation("/stacking/pdf")}>
+              <FileDown className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
+            <Button variant="outline" onClick={() => setLocation("/unidades/importar")}>
+              <Upload className="h-4 w-4 mr-2" />
+              Importar Excel
+            </Button>
+          </div>
         </div>
 
         {/* Estadísticas rápidas */}

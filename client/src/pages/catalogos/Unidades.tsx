@@ -33,6 +33,8 @@ type Unidad = {
   descripcion?: string | null;
   ubicacion?: string | null;
   proyectoId?: number | null;
+  nivel?: number | null;
+  orden?: number | null;
 };
 
 export default function Unidades() {
@@ -44,6 +46,8 @@ export default function Unidades() {
     codigo: "",
     descripcion: "",
     ubicacion: "",
+    nivel: "",
+    orden: "",
   });
 
   const utils = trpc.useUtils();
@@ -93,10 +97,12 @@ export default function Unidades() {
         codigo: unidad.codigo || "",
         descripcion: unidad.descripcion || "",
         ubicacion: unidad.ubicacion || "",
+        nivel: unidad.nivel?.toString() || "",
+        orden: unidad.orden?.toString() || "",
       });
     } else {
       setEditingUnidad(null);
-      setFormData({ nombre: "", codigo: "", descripcion: "", ubicacion: "" });
+      setFormData({ nombre: "", codigo: "", descripcion: "", ubicacion: "", nivel: "", orden: "" });
     }
     setIsOpen(true);
   };
@@ -104,7 +110,7 @@ export default function Unidades() {
   const handleClose = () => {
     setIsOpen(false);
     setEditingUnidad(null);
-    setFormData({ nombre: "", codigo: "", descripcion: "", ubicacion: "" });
+    setFormData({ nombre: "", codigo: "", descripcion: "", ubicacion: "", nivel: "", orden: "" });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -120,6 +126,8 @@ export default function Unidades() {
       descripcion: formData.descripcion || undefined,
       ubicacion: formData.ubicacion || undefined,
       proyectoId: selectedProjectId || undefined,
+      nivel: formData.nivel ? parseInt(formData.nivel) : undefined,
+      orden: formData.orden ? parseInt(formData.orden) : undefined,
     };
 
     if (editingUnidad) {
@@ -254,6 +262,32 @@ export default function Unidades() {
                         setFormData({ ...formData, codigo: e.target.value })
                       }
                       placeholder="Ej: D-101"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="nivel">Nivel/Piso *</Label>
+                    <Input
+                      id="nivel"
+                      type="number"
+                      value={formData.nivel}
+                      onChange={(e) =>
+                        setFormData({ ...formData, nivel: e.target.value })
+                      }
+                      placeholder="Ej: 1, 2, 3..."
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="orden">Orden en nivel</Label>
+                    <Input
+                      id="orden"
+                      type="number"
+                      value={formData.orden}
+                      onChange={(e) =>
+                        setFormData({ ...formData, orden: e.target.value })
+                      }
+                      placeholder="Ej: 1, 2, 3..."
                     />
                   </div>
                 </div>

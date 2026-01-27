@@ -36,6 +36,7 @@ const SeleccionProyecto = lazy(() => import("./pages/SeleccionProyecto"));
 const Proyectos = lazy(() => import("./pages/Proyectos"));
 const NuevoProyecto = lazy(() => import("./pages/NuevoProyecto"));
 const VistaPanoramica = lazy(() => import("./pages/VistaPanoramica"));
+const StackingPDF = lazy(() => import("./pages/StackingPDF"));
 const ImportarUnidades = lazy(() => import("./pages/ImportarUnidades"));
 
 // Catálogos
@@ -71,6 +72,7 @@ function Router() {
         <Route path="/proyectos/nuevo" component={NuevoProyecto} />
         <Route path="/proyectos" component={Proyectos} />
         <Route path="/panoramica" component={VistaPanoramica} />
+        <Route path="/stacking/pdf" component={StackingPDF} />
         <Route path="/unidades/importar" component={ImportarUnidades} />
         
         {/* Items */}

@@ -822,3 +822,15 @@
 - [x] Selector de Espacio (del catálogo por unidad)
 - [x] Selector de Defecto (del catálogo por especialidad)
 - [x] Selector de Empresa (responsable)
+
+
+## Mejoras Stacking Enero 27
+
+### Problemas a corregir
+- [x] Corregir alta de unidades en stacking (agregados campos nivel y orden al formulario)
+- [x] Ordenar stacking de piso menor a mayor (revisión de abajo hacia arriba)
+
+### Nuevas funcionalidades
+- [x] Botón para ver/descargar PDF del stacking
+- [x] PDF ordenado de mayor a menor (para impresión)
+- [x] Página /stacking/pdf con vista previa e impresión

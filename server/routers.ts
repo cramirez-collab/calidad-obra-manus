@@ -295,6 +295,8 @@ export const appRouter = router({
         codigo: z.string().optional(),
         descripcion: z.string().optional(),
         ubicacion: z.string().optional(),
+        nivel: z.number().optional(),
+        orden: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const id = await db.createUnidad(input);
@@ -310,6 +312,8 @@ export const appRouter = router({
         codigo: z.string().optional(),
         descripcion: z.string().optional(),
         ubicacion: z.string().optional(),
+        nivel: z.number().optional(),
+        orden: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
