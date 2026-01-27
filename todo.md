@@ -984,3 +984,8 @@
 - [x] Solo iconos visibles, sin texto
 - [x] Tooltip al pasar mouse con nombre del módulo
 - [x] Iconos intuitivos y amigables
+
+
+## Corrección Móvil (Enero 27)
+
+- [x] Eliminar icono de Aprobación duplicado en barra inferior móvil

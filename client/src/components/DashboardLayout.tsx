@@ -58,6 +58,7 @@ type MenuItem = {
 
 // Menú principal según rol
 const getMenuItems = (role: string): MenuItem[] => {
+  // Items base para todos los usuarios
   const baseItems: MenuItem[] = [
     { icon: LayoutDashboard, label: "Inicio", path: "/bienvenida" },
     { icon: Camera, label: "Nuevo", path: "/nuevo-item" },
@@ -65,9 +66,8 @@ const getMenuItems = (role: string): MenuItem[] => {
     { icon: Clock, label: "Mis Tareas", path: "/mis-tareas" },
   ];
 
-  const supervisorItems: MenuItem[] = [
-    { icon: CheckCircle2, label: "Aprobación", path: "/items/aprobacion" },
-  ];
+  // Aprobación solo para supervisores y admins (no duplicar con Ítems)
+  const supervisorItems: MenuItem[] = [];
 
   const analysisItems: MenuItem[] = [
     { icon: Layers, label: "Stacking", path: "/panoramica" },
