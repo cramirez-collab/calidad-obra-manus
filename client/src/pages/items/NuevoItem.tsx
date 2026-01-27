@@ -421,33 +421,35 @@ export default function NuevoItem() {
               Ubicación
             </div>
             
-            {/* Nivel */}
-            <Select
-              value={formData.nivelId}
-              onValueChange={(value) => setFormData({ ...formData, nivelId: value, unidadId: "", espacioId: "" })}
-            >
-              <SelectTrigger className="h-9 text-xs">
-                <Layers className="h-3 w-3 mr-1 text-gray-400" />
-                <SelectValue placeholder="Nivel" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los niveles</SelectItem>
-                {niveles.map((nivel) => (
-                  <SelectItem key={nivel} value={nivel!.toString()}>
-                    Nivel {nivel}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            {/* Unidad (filtrada por nivel) */}
-            <Select
-              value={formData.unidadId}
-              onValueChange={(value) => setFormData({ ...formData, unidadId: value, espacioId: "" })}
-            >
-              <SelectTrigger className="h-9 text-xs">
-                <MapPin className="h-3 w-3 mr-1 text-gray-400" />
-                <SelectValue placeholder="Unidad *" />
+            {/* Nivel y Unidad en la misma fila */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* Nivel */}
+              <Select
+                value={formData.nivelId}
+                onValueChange={(value) => setFormData({ ...formData, nivelId: value, unidadId: "", espacioId: "" })}
+              >
+                <SelectTrigger className="h-9 text-xs">
+                  <Layers className="h-3 w-3 mr-1 text-gray-400" />
+                  <SelectValue placeholder="Nivel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {niveles.map((nivel) => (
+                    <SelectItem key={nivel} value={nivel!.toString()}>
+                      N{nivel}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Unidad (filtrada por nivel) */}
+              <Select
+                value={formData.unidadId}
+                onValueChange={(value) => setFormData({ ...formData, unidadId: value, espacioId: "" })}
+              >
+                <SelectTrigger className="h-9 text-xs">
+                  <MapPin className="h-3 w-3 mr-1 text-gray-400" />
+                  <SelectValue placeholder="Unidad *" />
               </SelectTrigger>
               <SelectContent>
                 {unidades?.map((unidad) => (
@@ -455,8 +457,9 @@ export default function NuevoItem() {
                     {unidad.nombre}
                   </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Espacio (solo si hay unidad) */}
             {formData.unidadId && espacios && espacios.length > 0 && (

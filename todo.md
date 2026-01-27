@@ -1114,3 +1114,7 @@
 - [x] Al seleccionar residente, auto-completar Empresa y Especialidad (no dropdown)
 - [x] Ubicación: Nivel como selector + Unidad del módulo Stacking/Unidades
 - [x] Quitar botón "Rápido" con icono de rayo (ya hecho)
+
+
+## UI Formulario Nuevo Ítem (27 Enero 2026)
+- [x] Poner Nivel y Unidad en la misma fila (lado a lado)
