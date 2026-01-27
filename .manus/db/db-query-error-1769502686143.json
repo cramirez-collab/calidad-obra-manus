@@ -1,0 +1,8 @@
+{
+  "query": "DELETE FROM niveles WHERE proyectoId IN (30001, 60001, 60002, 60003, 90001, 90002);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute DELETE FROM niveles WHERE proyectoId IN (30001, 60001, 60002, 60003, 90001, 90002);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table 'ljhhpq7m8hsawsj2bf6kdt.niveles' doesn't exist"
+  ]
+}

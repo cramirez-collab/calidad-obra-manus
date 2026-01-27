@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="none">
-  <rect width="192" height="192" rx="24" fill="#3B82F6"/>
-  <path d="M96 40L136 70V122L96 152L56 122V70L96 40Z" fill="white" fill-opacity="0.9"/>
-  <path d="M96 60L116 75V105L96 120L76 105V75L96 60Z" fill="#3B82F6"/>
-  <circle cx="96" cy="90" r="12" fill="white"/>
-  <path d="M88 86L94 92L104 82" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Fondo circular verde Objetiva -->
+  <circle cx="96" cy="96" r="96" fill="#02B381"/>
+  <!-- Letras OQC centradas en Arial Black -->
+  <text x="96" y="112" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="52" font-weight="900" letter-spacing="1">
+    <tspan fill="white">O</tspan><tspan fill="#002C63">Q</tspan><tspan fill="white">C</tspan>
+  </text>
 </svg>

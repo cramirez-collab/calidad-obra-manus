@@ -19,6 +19,51 @@ import {
 import { useLocation, Redirect } from "wouter";
 import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
+import { CalendarDays } from "lucide-react";
+
+// Frases motivadoras relacionadas con construcción y calidad
+const frasesMotivadoras = [
+  "La calidad no es un acto, es un hábito. - Aristóteles",
+  "Construir con calidad es construir con orgullo.",
+  "Cada detalle cuenta en la excelencia.",
+  "La precisión de hoy es la seguridad del mañana.",
+  "Un trabajo bien hecho habla por sí mismo.",
+  "La calidad nunca es un accidente, es el resultado de un esfuerzo inteligente.",
+  "Mide dos veces, corta una vez.",
+  "La excelencia es hacer lo ordinario de manera extraordinaria.",
+  "Cada ladrillo bien puesto es un paso hacia el éxito.",
+  "La calidad es la mejor estrategia de negocio.",
+  "Construimos sueños con cimientos de calidad.",
+  "El profesionalismo se demuestra en los detalles.",
+  "La perfección no es alcanzable, pero si la perseguimos, podemos alcanzar la excelencia.",
+  "Un buen trabajo de hoy evita problemas mañana.",
+  "La calidad es responsabilidad de todos."
+];
+
+// Fecha de término de la obra
+const FECHA_TERMINO = new Date('2027-01-17');
+
+function getDiasFaltantes(): number {
+  const hoy = new Date();
+  const diffTime = FECHA_TERMINO.getTime() - hoy.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
+}
+
+function getFraseDelDia(): string {
+  const hoy = new Date();
+  const diaDelAnio = Math.floor((hoy.getTime() - new Date(hoy.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+  return frasesMotivadoras[diaDelAnio % frasesMotivadoras.length];
+}
+
+function getFechaFormateada(): string {
+  return new Date().toLocaleDateString('es-MX', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
 
 export default function Bienvenida() {
   const { user } = useAuth();
@@ -68,13 +113,23 @@ export default function Bienvenida() {
       <div className="space-y-4 sm:space-y-6">
         {/* Header con iconos de acceso rápido a la derecha */}
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <h1 className="text-lg sm:text-xl font-semibold text-[#002C63]">
               Hola, {user?.name?.split(' ')[0] || 'Usuario'}
             </h1>
-            <p className="text-xs text-[#6E6E6E]">
-              {pendientes?.length || 0} pendientes
+            <p className="text-xs text-[#02B381] italic mt-0.5">
+              "{getFraseDelDia()}"
             </p>
+            <div className="flex items-center gap-3 mt-2 text-xs text-[#6E6E6E]">
+              <span className="flex items-center gap-1">
+                <CalendarDays className="h-3 w-3" />
+                {getFechaFormateada()}
+              </span>
+              <span className="font-semibold text-[#002C63]">
+                {getDiasFaltantes()} días para entrega
+              </span>
+              <span>| {pendientes?.length || 0} pendientes</span>
+            </div>
           </div>
           {/* Iconos de acceso rápido - siempre visibles arriba */}
           <div className="flex gap-2">

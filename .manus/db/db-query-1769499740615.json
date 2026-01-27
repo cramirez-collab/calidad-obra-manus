@@ -1,0 +1,25 @@
+{
+  "query": "SELECT * FROM empresas WHERE id = 30004;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT * FROM empresas WHERE id = 30004;",
+  "rows": [
+    {
+      "id": "30004",
+      "nombre": "Objetiva ",
+      "rfc": "NULL",
+      "contacto": "Carlos Ramirez ",
+      "telefono": "3331283677",
+      "email": "cramirez@objetiva.mx",
+      "activo": "1",
+      "createdAt": "2026-01-25 05:31:10",
+      "updatedAt": "2026-01-25 05:31:10",
+      "proyectoId": "NULL",
+      "especialidadId": "NULL",
+      "residenteId": "NULL",
+      "jefeResidenteId": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\trfc\tcontacto\ttelefono\temail\tactivo\tcreatedAt\tupdatedAt\tproyectoId\tespecialidadId\tresidenteId\tjefeResidenteId\n30004\tObjetiva \tNULL\tCarlos Ramirez \t3331283677\tcramirez@objetiva.mx\t1\t2026-01-25 05:31:10\t2026-01-25 05:31:10\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}
