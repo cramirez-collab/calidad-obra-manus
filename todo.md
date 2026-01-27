@@ -922,3 +922,26 @@
 - [x] Eliminar botón cámara (repetido)
 - [x] Eliminar botón KPIs
 - [x] Dejar solo Nuevo y Stats
+
+
+## Reestructuración Defectos y Eliminación Atributos (Enero 27)
+
+### Eliminar Atributos
+- [x] Eliminar tabla de atributos del schema
+- [x] Eliminar rutas de atributos del router
+- [x] Eliminar página de Atributos
+- [x] Eliminar del menú de navegación
+
+### Defectos en Cascada por Especialidad
+- [x] Al crear especialidad, proponer 5 defectos típicos automáticamente
+- [x] Defectos vinculados a especialidad (especialidadId)
+- [x] Mostrar defectos dentro de la vista de especialidad
+
+### Defectos dentro de Empresas
+- [x] Empresa tiene especialidad asignada
+- [x] Mostrar defectos de la especialidad de la empresa
+- [x] Permitir agregar defectos personalizados (admin/supervisor/usuario)
+
+### Estadísticas por Defecto
+- [x] Contabilizar ítems por tipo de defecto
+- [x] Gráficos de defectos más frecuentes

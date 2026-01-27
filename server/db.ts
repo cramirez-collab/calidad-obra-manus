@@ -628,11 +628,85 @@ export async function getAllEspecialidadesConAtributos(proyectoId?: number) {
   }));
 }
 
+// Defectos típicos por tipo de especialidad
+const DEFECTOS_TIPICOS: Record<string, string[]> = {
+  // Electricidad
+  'electricidad': ['Cable suelto o mal conectado', 'Apagador defectuoso', 'Contacto sin corriente', 'Centro de carga dañado', 'Falta de tierra física'],
+  'electrica': ['Cable suelto o mal conectado', 'Apagador defectuoso', 'Contacto sin corriente', 'Centro de carga dañado', 'Falta de tierra física'],
+  'elec': ['Cable suelto o mal conectado', 'Apagador defectuoso', 'Contacto sin corriente', 'Centro de carga dañado', 'Falta de tierra física'],
+  
+  // Plomería
+  'plomeria': ['Fuga de agua', 'Drenaje tapado', 'Llave con goteo', 'Presión de agua baja', 'WC no sella correctamente'],
+  'plomero': ['Fuga de agua', 'Drenaje tapado', 'Llave con goteo', 'Presión de agua baja', 'WC no sella correctamente'],
+  'hidraulica': ['Fuga de agua', 'Drenaje tapado', 'Llave con goteo', 'Presión de agua baja', 'Tubería dañada'],
+  'sanitaria': ['Drenaje tapado', 'Mal olor en desagüe', 'WC no sella', 'Fuga en sifón', 'Coladera obstruida'],
+  
+  // Acabados
+  'acabados': ['Pintura descascarada', 'Grieta en muro', 'Azulejo despegado', 'Piso rayado', 'Moldura dañada'],
+  'pintura': ['Pintura descascarada', 'Manchas en pared', 'Color disparejo', 'Burbujas en pintura', 'Pintura corrida'],
+  'pisos': ['Piso rayado', 'Loseta despegada', 'Desnivel en piso', 'Junta faltante', 'Piso manchado'],
+  'muros': ['Grieta en muro', 'Humedad en pared', 'Acabado irregular', 'Fisura visible', 'Desplome de muro'],
+  
+  // Carpintería
+  'carpinteria': ['Puerta no cierra', 'Bisagra floja', 'Madera astillada', 'Chapa defectuosa', 'Puerta pandeada'],
+  'madera': ['Madera astillada', 'Acabado dañado', 'Unión floja', 'Madera hinchada', 'Barniz desprendido'],
+  'puertas': ['Puerta no cierra', 'Bisagra floja', 'Chapa defectuosa', 'Puerta pandeada', 'Marco desalineado'],
+  
+  // Aluminio y Vidrio
+  'aluminio': ['Ventana no cierra', 'Vidrio roto', 'Cancel desalineado', 'Felpa dañada', 'Oxidación en perfil'],
+  'vidrio': ['Vidrio roto', 'Vidrio rayado', 'Sello deficiente', 'Vidrio empanado', 'Falta de vidrio'],
+  'herreria': ['Oxidación', 'Soldadura deficiente', 'Barandal flojo', 'Pintura descascarada', 'Elemento desalineado'],
+  
+  // Impermeabilización
+  'impermeabilizacion': ['Filtración de agua', 'Membrana despegada', 'Burbuja en impermeabilizante', 'Grieta en azotea', 'Charco estancado'],
+  'impermeabilizante': ['Filtración de agua', 'Membrana despegada', 'Burbuja en impermeabilizante', 'Grieta en azotea', 'Charco estancado'],
+  
+  // Aire Acondicionado
+  'aire': ['Fuga de refrigerante', 'No enfría', 'Ruido excesivo', 'Goteo de agua', 'Control no funciona'],
+  'clima': ['Fuga de refrigerante', 'No enfría', 'Ruido excesivo', 'Goteo de agua', 'Control no funciona'],
+  'hvac': ['Fuga de refrigerante', 'No enfría', 'Ruido excesivo', 'Goteo de agua', 'Ducto dañado'],
+  
+  // Estructura
+  'estructura': ['Grieta estructural', 'Acero expuesto', 'Concreto poroso', 'Desplome', 'Fisura en columna'],
+  'concreto': ['Grieta en concreto', 'Cangrejera', 'Acero expuesto', 'Segregación', 'Junta fría'],
+  
+  // Gas
+  'gas': ['Fuga de gas', 'Conexión floja', 'Válvula defectuosa', 'Tubería dañada', 'Falta de ventilación'],
+  
+  // Default
+  'default': ['Defecto de instalación', 'Material dañado', 'Acabado deficiente', 'Falta de elemento', 'Funcionamiento incorrecto']
+};
+
+function getDefectosTipicos(nombreEspecialidad: string): string[] {
+  const nombreLower = nombreEspecialidad.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  
+  for (const [key, defectos] of Object.entries(DEFECTOS_TIPICOS)) {
+    if (nombreLower.includes(key) || key.includes(nombreLower)) {
+      return defectos;
+    }
+  }
+  
+  return DEFECTOS_TIPICOS['default'];
+}
+
 export async function createEspecialidad(data: InsertEspecialidad) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const result = await db.insert(especialidades).values(data);
-  return result[0].insertId;
+  const especialidadId = result[0].insertId;
+  
+  // Crear defectos típicos automáticamente
+  const defectosTipicos = getDefectosTipicos(data.nombre);
+  for (const nombreDefecto of defectosTipicos) {
+    await db.insert(defectos).values({
+      nombre: nombreDefecto,
+      especialidadId: especialidadId,
+      proyectoId: data.proyectoId,
+      severidad: 'moderado'
+    });
+  }
+  
+  return especialidadId;
 }
 
 export async function updateEspecialidad(id: number, data: Partial<InsertEspecialidad>) {

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -26,8 +27,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { trpc } from "@/lib/trpc";
-import { Building2, Edit, Plus, Trash2, FileDown } from "lucide-react";
+import { Building2, Edit, Plus, Trash2, FileDown, ChevronDown, ChevronRight, AlertTriangle, Wrench } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
@@ -43,10 +49,18 @@ type Empresa = {
   especialidadId?: number | null;
 };
 
+const severidadColors: Record<string, string> = {
+  leve: "bg-green-100 text-green-800",
+  moderado: "bg-yellow-100 text-yellow-800",
+  grave: "bg-orange-100 text-orange-800",
+  critico: "bg-red-100 text-red-800",
+};
+
 export default function Empresas() {
   const { selectedProjectId } = useProject();
   const [isOpen, setIsOpen] = useState(false);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
+  const [expandedEmpresas, setExpandedEmpresas] = useState<Set<number>>(new Set());
   const [formData, setFormData] = useState({
     nombre: "",
     rfc: "",
@@ -56,6 +70,12 @@ export default function Empresas() {
     proyectoId: "",
     especialidadId: "",
   });
+
+  // Estado para agregar defecto personalizado
+  const [isAddDefectoOpen, setIsAddDefectoOpen] = useState(false);
+  const [addDefectoEmpresaId, setAddDefectoEmpresaId] = useState<number | null>(null);
+  const [addDefectoEspecialidadId, setAddDefectoEspecialidadId] = useState<number | null>(null);
+  const [nuevoDefecto, setNuevoDefecto] = useState({ nombre: "", severidad: "moderado" });
 
   const utils = trpc.useUtils();
   // Obtener empresas filtradas por proyecto desde el backend
@@ -68,6 +88,8 @@ export default function Empresas() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
+  // Obtener todos los defectos para mostrar por especialidad
+  const { data: allDefectos } = trpc.defectos.listConEstadisticas.useQuery();
 
   const createMutation = trpc.empresas.create.useMutation({
     onSuccess: () => {
@@ -95,6 +117,18 @@ export default function Empresas() {
     onSuccess: () => {
       utils.empresas.list.invalidate();
       toast.success("Empresa eliminada correctamente");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const createDefectoMutation = trpc.defectos.create.useMutation({
+    onSuccess: () => {
+      utils.defectos.listConEstadisticas.invalidate();
+      toast.success("Defecto agregado correctamente");
+      setIsAddDefectoOpen(false);
+      setNuevoDefecto({ nombre: "", severidad: "moderado" });
     },
     onError: (error) => {
       toast.error(error.message);
@@ -172,6 +206,16 @@ export default function Empresas() {
     }
   };
 
+  const toggleExpanded = (empresaId: number) => {
+    const newExpanded = new Set(expandedEmpresas);
+    if (newExpanded.has(empresaId)) {
+      newExpanded.delete(empresaId);
+    } else {
+      newExpanded.add(empresaId);
+    }
+    setExpandedEmpresas(newExpanded);
+  };
+
   const getProyectoNombre = (proyectoId: number | null | undefined) => {
     if (!proyectoId) return "-";
     const proyecto = proyectos?.find(p => p.id === proyectoId);
@@ -182,6 +226,38 @@ export default function Empresas() {
     if (!especialidadId) return "-";
     const especialidad = especialidades?.find(e => e.id === especialidadId);
     return especialidad?.nombre || "-";
+  };
+
+  const getDefectosByEspecialidad = (especialidadId: number | null | undefined) => {
+    if (!especialidadId || !allDefectos) return [];
+    return allDefectos.filter(d => d.especialidadId === especialidadId);
+  };
+
+  const handleAddDefecto = (empresaId: number, especialidadId: number | null | undefined) => {
+    if (!especialidadId) {
+      toast.error("La empresa debe tener una especialidad asignada para agregar defectos");
+      return;
+    }
+    setAddDefectoEmpresaId(empresaId);
+    setAddDefectoEspecialidadId(especialidadId);
+    setIsAddDefectoOpen(true);
+  };
+
+  const handleCreateDefecto = () => {
+    if (!nuevoDefecto.nombre.trim()) {
+      toast.error("El nombre del defecto es requerido");
+      return;
+    }
+    if (!addDefectoEspecialidadId || !selectedProjectId) {
+      toast.error("Error: especialidad o proyecto no definido");
+      return;
+    }
+    createDefectoMutation.mutate({
+      nombre: nuevoDefecto.nombre,
+      especialidadId: addDefectoEspecialidadId,
+      severidad: nuevoDefecto.severidad as any,
+      proyectoId: selectedProjectId,
+    });
   };
 
   const handleExportPDF = () => {
@@ -228,7 +304,7 @@ export default function Empresas() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Empresas</h1>
             <p className="text-muted-foreground">
-              Gestiona las empresas contratistas del proyecto
+              Gestiona las empresas contratistas y sus defectos típicos
             </p>
           </div>
           <div className="flex gap-2">
@@ -261,55 +337,131 @@ export default function Empresas() {
                 No hay empresas registradas
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nombre</TableHead>
-                      <TableHead className="hidden sm:table-cell">Especialidad</TableHead>
-                      <TableHead className="hidden md:table-cell">Contacto</TableHead>
-                      <TableHead className="hidden lg:table-cell">Teléfono</TableHead>
-                      <TableHead className="hidden lg:table-cell">Email</TableHead>
-                      <TableHead className="w-[100px]">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {empresas?.map((empresa) => (
-                      <TableRow key={empresa.id}>
-                        <TableCell className="font-medium">{empresa.nombre}</TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          {getEspecialidadNombre(empresa.especialidadId)}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">{empresa.contacto || "-"}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{empresa.telefono || "-"}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{empresa.email || "-"}</TableCell>
-                        <TableCell>
+              <div className="space-y-2">
+                {empresas?.map((empresa) => {
+                  const defectos = getDefectosByEspecialidad(empresa.especialidadId);
+                  const isExpanded = expandedEmpresas.has(empresa.id);
+                  const especialidad = especialidades?.find(e => e.id === empresa.especialidadId);
+                  
+                  return (
+                    <Collapsible key={empresa.id} open={isExpanded} onOpenChange={() => toggleExpanded(empresa.id)}>
+                      <div className="border rounded-lg overflow-hidden">
+                        {/* Fila principal de la empresa */}
+                        <div className="flex items-center justify-between p-4 bg-white hover:bg-slate-50">
+                          <div className="flex items-center gap-3 flex-1">
+                            <CollapsibleTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                {isExpanded ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </CollapsibleTrigger>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{empresa.nombre}</span>
+                                {especialidad && (
+                                  <Badge 
+                                    variant="outline" 
+                                    className="text-xs"
+                                    style={{ 
+                                      borderColor: especialidad.color || '#3B82F6',
+                                      color: especialidad.color || '#3B82F6'
+                                    }}
+                                  >
+                                    <Wrench className="h-3 w-3 mr-1" />
+                                    {especialidad.nombre}
+                                  </Badge>
+                                )}
+                                {defectos.length > 0 && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    <AlertTriangle className="h-3 w-3 mr-1" />
+                                    {defectos.length} defectos
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {empresa.contacto && <span>{empresa.contacto}</span>}
+                                {empresa.telefono && <span className="ml-2">• {empresa.telefono}</span>}
+                              </div>
+                            </div>
+                          </div>
                           <div className="flex items-center gap-1">
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleOpen(empresa)}
+                              onClick={(e) => { e.stopPropagation(); handleOpen(empresa); }}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleDelete(empresa.id)}
+                              onClick={(e) => { e.stopPropagation(); handleDelete(empresa.id); }}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        </div>
+                        
+                        {/* Panel expandible con defectos */}
+                        <CollapsibleContent>
+                          <div className="border-t bg-slate-50 p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="font-medium text-sm flex items-center gap-2">
+                                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                                Defectos de {especialidad?.nombre || 'la especialidad'}
+                              </h4>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleAddDefecto(empresa.id, empresa.especialidadId)}
+                                disabled={!empresa.especialidadId}
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Agregar Defecto
+                              </Button>
+                            </div>
+                            
+                            {!empresa.especialidadId ? (
+                              <p className="text-sm text-muted-foreground italic">
+                                Asigna una especialidad a esta empresa para ver y agregar defectos
+                              </p>
+                            ) : defectos.length === 0 ? (
+                              <p className="text-sm text-muted-foreground italic">
+                                No hay defectos definidos para esta especialidad
+                              </p>
+                            ) : (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                {defectos.map((defecto: any) => (
+                                  <div 
+                                    key={defecto.id} 
+                                    className="flex items-center justify-between p-2 bg-white rounded border text-sm"
+                                  >
+                                    <span className="truncate flex-1">{defecto.nombre}</span>
+                                    <Badge 
+                                      variant="secondary" 
+                                      className={`ml-2 text-xs ${severidadColors[defecto.severidad] || ''}`}
+                                    >
+                                      {defecto.severidad}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </CollapsibleContent>
+                      </div>
+                    </Collapsible>
+                  );
+                })}
               </div>
             )}
           </CardContent>
         </Card>
 
+        {/* Dialog para crear/editar empresa */}
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
@@ -343,6 +495,9 @@ export default function Empresas() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Al asignar una especialidad, se mostrarán los defectos típicos asociados
+                  </p>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="nombre">Nombre *</Label>
@@ -405,6 +560,57 @@ export default function Empresas() {
                 </Button>
               </DialogFooter>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog para agregar defecto personalizado */}
+        <Dialog open={isAddDefectoOpen} onOpenChange={setIsAddDefectoOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Agregar Defecto Personalizado</DialogTitle>
+              <DialogDescription>
+                Este defecto se agregará a la especialidad y estará disponible para todas las empresas con esta especialidad
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="defectoNombre">Nombre del Defecto *</Label>
+                <Input
+                  id="defectoNombre"
+                  value={nuevoDefecto.nombre}
+                  onChange={(e) => setNuevoDefecto({ ...nuevoDefecto, nombre: e.target.value })}
+                  placeholder="Ej: Grieta en muro"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="defectoSeveridad">Severidad</Label>
+                <Select
+                  value={nuevoDefecto.severidad}
+                  onValueChange={(value) => setNuevoDefecto({ ...nuevoDefecto, severidad: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="leve">Leve</SelectItem>
+                    <SelectItem value="moderado">Moderado</SelectItem>
+                    <SelectItem value="grave">Grave</SelectItem>
+                    <SelectItem value="critico">Crítico</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddDefectoOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleCreateDefecto}
+                disabled={createDefectoMutation.isPending}
+              >
+                Agregar Defecto
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
