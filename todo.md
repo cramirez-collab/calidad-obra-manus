@@ -1278,3 +1278,19 @@
 ### Nombres de Archivos Descriptivos
 - [x] Cambiar nombre de archivo a formato: [Modulo]-dd-mm-aa-HHmm.pdf
 - [x] Aplicar formato de nombre en Bitácora, ReporteFotográfico y pdfTemplate
+
+
+## Mejoras Finales Pre-Publicación (27 Enero 2026)
+
+### Miniaturas de Fotos A/B
+- [x] Mostrar miniaturas reales de fotos A/B en tarjetas de ítems pendientes (fotoAntes y fotoDespues incluidos en query)
+
+### Fechas y Nombres en Reportes
+- [x] Agregar fecha de alta en reportes de unidad (Fecha Alta)
+- [x] Agregar fecha de aprobación en reportes de unidad (Fecha Aprobación)
+- [x] Agregar nombres de responsables en reportes (Aprobado por)
+- [x] Verificar que Bitácora incluya fechas y nombres completos (Usuario, Rol, Fecha/Hora)
+
+### Publicación en Tiendas
+- [ ] Preparar guía de publicación en App Store (iOS)
+- [ ] Preparar guía de publicación en Play Store (Android)

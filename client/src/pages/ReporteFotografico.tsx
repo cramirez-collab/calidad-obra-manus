@@ -207,11 +207,13 @@ export default function ReporteFotografico() {
       </div>
       <div class="item-info">
         <div><span class="info-label">Título:</span> ${item.titulo}</div>
-        <div><span class="info-label">Fecha:</span> ${formatDate(item.fechaCreacion)}</div>
+        <div><span class="info-label">Fecha Alta:</span> ${formatDate(item.fechaCreacion)}</div>
+        <div><span class="info-label">Fecha Aprobación:</span> ${formatDate(item.fechaAprobacion)}</div>
         <div><span class="info-label">Empresa:</span> ${item.empresa?.nombre || '-'}</div>
         <div><span class="info-label">Unidad:</span> ${item.unidad?.nombre || '-'}</div>
         <div><span class="info-label">Especialidad:</span> ${item.especialidad?.nombre || '-'}</div>
         <div><span class="info-label">Residente:</span> ${item.residente?.name || '-'}</div>
+        <div><span class="info-label">Aprobado por:</span> ${item.aprobadoPor?.name || '-'}</div>
       </div>
       <div class="photos">
         <div class="photo-container">
