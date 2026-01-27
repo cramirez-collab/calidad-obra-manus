@@ -2,7 +2,6 @@ import DashboardLayout from "@/components/DashboardLayout";
 import ImageMarker from "@/components/ImageMarker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -19,7 +18,6 @@ import {
   Check,
   Pencil,
   X,
-  Zap,
   Building2,
   MapPin,
   Wrench,
@@ -43,48 +41,80 @@ export default function NuevoItem() {
     especialidadId: "",
     defectoId: "",
     espacioId: "",
-    titulo: "",
   });
   const [fotoAntes, setFotoAntes] = useState<string | null>(null);
   const [fotoAntesMarcada, setFotoAntesMarcada] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMarker, setShowMarker] = useState(false);
-  const [modoRapido, setModoRapido] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Datos de prellenado del usuario
-  const { data: datosPrellena } = trpc.flujoRapido.datosPrellena.useQuery(
-    selectedProjectId ? { proyectoId: selectedProjectId } : {},
-    { enabled: !!selectedProjectId }
-  );
-
-  // Obtener usuarios (residentes) - usar el router correcto
-  const { data: usuarios } = trpc.users.list.useQuery();
-  
-  // Filtrar solo residentes y jefes de residente
-  const residentes = useMemo(() => {
-    if (!usuarios) return [];
-    return usuarios.filter((u: { role: string }) => u.role === 'user' || u.role === 'supervisor');
-  }, [usuarios]);
-
-  // Obtener datos filtrados por proyecto desde el backend
+  // Obtener empresas con sus residentes
   const { data: todasEmpresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
   
-  // Filtrar empresas por residente seleccionado
-  const empresas = useMemo(() => {
-    if (!todasEmpresas) return [];
-    if (!formData.residenteId || formData.residenteId === "all") return todasEmpresas;
-    return todasEmpresas.filter(e => 
-      e.residenteId?.toString() === formData.residenteId || 
-      e.jefeResidenteId?.toString() === formData.residenteId
-    );
-  }, [todasEmpresas, formData.residenteId]);
+  // Obtener usuarios para mapear nombres
+  const { data: usuarios } = trpc.users.list.useQuery();
   
+  // Crear lista de residentes únicos que tienen empresa asignada
+  const residentesConEmpresa = useMemo(() => {
+    if (!todasEmpresas || !usuarios) return [];
+    
+    const residentesMap = new Map<number, { id: number; name: string; empresaId: number; empresaNombre: string; especialidadId: number | null }>();
+    
+    todasEmpresas.forEach(empresa => {
+      // Agregar residente si existe
+      if (empresa.residenteId) {
+        const usuario = usuarios.find((u: { id: number }) => u.id === empresa.residenteId);
+        if (usuario && !residentesMap.has(empresa.residenteId)) {
+          residentesMap.set(empresa.residenteId, {
+            id: empresa.residenteId,
+            name: usuario.name || 'Sin nombre',
+            empresaId: empresa.id,
+            empresaNombre: empresa.nombre,
+            especialidadId: empresa.especialidadId || null
+          });
+        }
+      }
+      // Agregar jefe de residente si existe
+      if (empresa.jefeResidenteId) {
+        const usuario = usuarios.find((u: { id: number }) => u.id === empresa.jefeResidenteId);
+        if (usuario && !residentesMap.has(empresa.jefeResidenteId)) {
+          residentesMap.set(empresa.jefeResidenteId, {
+            id: empresa.jefeResidenteId,
+            name: usuario.name || 'Sin nombre',
+            empresaId: empresa.id,
+            empresaNombre: empresa.nombre,
+            especialidadId: empresa.especialidadId || null
+          });
+        }
+      }
+    });
+    
+    return Array.from(residentesMap.values());
+  }, [todasEmpresas, usuarios]);
+  
+  // Obtener datos del residente seleccionado
+  const residenteSeleccionado = useMemo(() => {
+    if (!formData.residenteId) return null;
+    return residentesConEmpresa.find(r => r.id.toString() === formData.residenteId);
+  }, [formData.residenteId, residentesConEmpresa]);
+  
+  // Obtener especialidad del residente
+  const { data: especialidades } = trpc.especialidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  
+  const especialidadDelResidente = useMemo(() => {
+    if (!residenteSeleccionado?.especialidadId || !especialidades) return null;
+    return especialidades.find(e => e.id === residenteSeleccionado.especialidadId);
+  }, [residenteSeleccionado, especialidades]);
+  
+  // Obtener unidades del proyecto
   const { data: todasUnidades } = trpc.unidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
@@ -103,10 +133,6 @@ export default function NuevoItem() {
     if (!formData.nivelId) return todasUnidades;
     return todasUnidades.filter(u => u.nivel?.toString() === formData.nivelId);
   }, [todasUnidades, formData.nivelId]);
-  const { data: especialidades } = trpc.especialidades.list.useQuery(
-    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
-  );
   
   // Espacios filtrados por unidad seleccionada
   const { data: espacios } = trpc.espacios.byUnidad.useQuery(
@@ -114,44 +140,27 @@ export default function NuevoItem() {
     { enabled: !!formData.unidadId }
   );
   
-  // Defectos filtrados por especialidad seleccionada
+  // Defectos filtrados por especialidad
+  const especialidadIdParaDefectos = residenteSeleccionado?.especialidadId || (formData.especialidadId ? parseInt(formData.especialidadId) : 0);
   const { data: defectos } = trpc.defectos.byEspecialidad.useQuery(
-    { especialidadId: parseInt(formData.especialidadId) },
-    { enabled: !!formData.especialidadId }
+    { especialidadId: especialidadIdParaDefectos },
+    { enabled: !!especialidadIdParaDefectos }
   );
 
   const createItemMutation = trpc.items.create.useMutation();
   const uploadFotoMutation = trpc.items.uploadFotoAntes.useMutation();
 
-  // Prellenar empresa del usuario si tiene una asignada
+  // Auto-completar empresa y especialidad cuando se selecciona residente
   useEffect(() => {
-    if (datosPrellena?.empresa && !formData.empresaId) {
-      setFormData(prev => ({ 
-        ...prev, 
-        empresaId: datosPrellena.empresa!.id.toString() 
+    if (residenteSeleccionado) {
+      setFormData(prev => ({
+        ...prev,
+        empresaId: residenteSeleccionado.empresaId.toString(),
+        especialidadId: residenteSeleccionado.especialidadId?.toString() || "",
+        defectoId: "" // Reset defecto al cambiar residente
       }));
     }
-  }, [datosPrellena]);
-
-  // Auto-seleccionar especialidad cuando se selecciona empresa
-  useEffect(() => {
-    if (formData.empresaId && empresas) {
-      const empresa = empresas.find(e => e.id.toString() === formData.empresaId);
-      if (empresa?.especialidadId) {
-        setFormData(prev => ({ 
-          ...prev, 
-          especialidadId: empresa.especialidadId!.toString(),
-          defectoId: "" // Reset defecto al cambiar especialidad
-        }));
-      }
-    }
-  }, [formData.empresaId, empresas]);
-
-  // Defectos frecuentes para acceso rápido
-  const defectosFrecuentes = useMemo(() => {
-    if (!datosPrellena?.defectosFrecuentes) return [];
-    return datosPrellena.defectosFrecuentes;
-  }, [datosPrellena]);
+  }, [residenteSeleccionado]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -175,26 +184,16 @@ export default function NuevoItem() {
     setShowMarker(false);
   };
 
-  const handleDefectoRapido = (defecto: any) => {
-    // Auto-completar título con el nombre del defecto
-    setFormData(prev => ({
-      ...prev,
-      defectoId: defecto.id.toString(),
-      titulo: prev.titulo || defecto.nombre,
-      especialidadId: defecto.especialidadId?.toString() || prev.especialidadId
-    }));
-  };
-
   const handleSubmit = async () => {
     // Validación - residente es obligatorio
-    if (!formData.residenteId || formData.residenteId === "all") {
+    if (!formData.residenteId) {
       toast.error("Por favor selecciona un residente");
       return;
     }
     
-    // Validación mínima - título es opcional
-    if (!formData.empresaId || !formData.unidadId) {
-      toast.error("Por favor completa: Empresa y Unidad");
+    // Validación - unidad es obligatoria
+    if (!formData.unidadId) {
+      toast.error("Por favor selecciona una unidad");
       return;
     }
 
@@ -203,18 +202,24 @@ export default function NuevoItem() {
       return;
     }
 
+    // Empresa viene automáticamente del residente
+    if (!residenteSeleccionado?.empresaId) {
+      toast.error("Error: El residente no tiene empresa asignada");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // Usar nombre del defecto como título si no hay título
+      // Usar nombre del defecto como título si hay defecto seleccionado
       const defectoSeleccionado = defectos?.find(d => d.id.toString() === formData.defectoId);
-      const tituloFinal = formData.titulo || defectoSeleccionado?.nombre || 'Sin título';
+      const tituloFinal = defectoSeleccionado?.nombre || 'Sin título';
       
       // Crear el ítem
       const result = await createItemMutation.mutateAsync({
         proyectoId: selectedProjectId || 0,
-        empresaId: parseInt(formData.empresaId),
+        empresaId: residenteSeleccionado.empresaId,
         unidadId: parseInt(formData.unidadId),
-        especialidadId: formData.especialidadId ? parseInt(formData.especialidadId) : undefined,
+        especialidadId: residenteSeleccionado.especialidadId || undefined,
         defectoId: formData.defectoId ? parseInt(formData.defectoId) : undefined,
         espacioId: formData.espacioId ? parseInt(formData.espacioId) : undefined,
         titulo: tituloFinal,
@@ -268,7 +273,6 @@ export default function NuevoItem() {
             </Button>
             <h1 className="text-lg font-bold text-[#002C63]">Nuevo Ítem</h1>
           </div>
-
         </div>
 
         {/* Inputs ocultos para cámara/archivo */}
@@ -354,113 +358,62 @@ export default function NuevoItem() {
           </CardContent>
         </Card>
 
-        {/* PASO 2: Título y Defecto rápido */}
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-4 space-y-3">
-            <Input
-              value={formData.titulo}
-              onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-              placeholder="Descripción breve (opcional)"
-              className="text-base border-0 border-b rounded-none px-0 focus-visible:ring-0"
-            />
-            
-            {/* Defectos frecuentes (acceso rápido) */}
-            {modoRapido && defectosFrecuentes.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wide">Defectos frecuentes</p>
-                <div className="flex flex-wrap gap-1">
-                  {defectosFrecuentes.map((defecto: any) => (
-                    <Badge
-                      key={defecto.id}
-                      variant={formData.defectoId === defecto.id.toString() ? "default" : "outline"}
-                      className={`cursor-pointer text-[10px] ${
-                        formData.defectoId === defecto.id.toString() 
-                          ? "bg-[#02B381] hover:bg-[#02B381]/90" 
-                          : "hover:bg-gray-100"
-                      }`}
-                      onClick={() => handleDefectoRapido(defecto)}
-                    >
-                      {defecto.nombre}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* PASO 3: Usuario y Empresa */}
+        {/* PASO 2: Asignación (Residente obligatorio) */}
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
               <User className="h-3 w-3" />
-              Asignación
+              Asignación *
             </div>
             
-            {/* Usuario/Residente (opcional, filtra empresas) */}
+            {/* Selector de Residente (obligatorio) */}
             <Select
               value={formData.residenteId}
-              onValueChange={(value) => setFormData({ ...formData, residenteId: value, empresaId: "", especialidadId: "", defectoId: "" })}
+              onValueChange={(value) => setFormData({ ...formData, residenteId: value, defectoId: "" })}
             >
               <SelectTrigger className="h-9 text-xs">
                 <User className="h-3 w-3 mr-1 text-gray-400" />
                 <SelectValue placeholder="Seleccionar Residente *" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos los usuarios</SelectItem>
-                {residentes?.map((user: { id: number; name: string | null }) => (
-                  <SelectItem key={user.id} value={user.id.toString()}>
-                    {user.name || 'Sin nombre'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            {/* Empresa */}
-            <Select
-              value={formData.empresaId}
-              onValueChange={(value) => setFormData({ ...formData, empresaId: value })}
-            >
-              <SelectTrigger className="h-9 text-xs">
-                <Building2 className="h-3 w-3 mr-1 text-gray-400" />
-                <SelectValue placeholder="Empresa" />
-              </SelectTrigger>
-              <SelectContent>
-                {empresas?.map((empresa) => (
-                  <SelectItem key={empresa.id} value={empresa.id.toString()}>
-                    {empresa.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            {/* Especialidad (de la empresa seleccionada) */}
-            <Select
-              value={formData.especialidadId}
-              onValueChange={(value) => setFormData({ ...formData, especialidadId: value, defectoId: "" })}
-            >
-              <SelectTrigger className="h-9 text-xs">
-                <Wrench className="h-3 w-3 mr-1 text-gray-400" />
-                <SelectValue placeholder="Especialidad" />
-              </SelectTrigger>
-              <SelectContent>
-                {especialidades?.map((esp) => (
-                  <SelectItem key={esp.id} value={esp.id.toString()}>
+                {residentesConEmpresa.map((residente) => (
+                  <SelectItem key={residente.id} value={residente.id.toString()}>
                     <div className="flex items-center gap-2">
-                      <div
-                        className="h-2 w-2 rounded-full"
-                        style={{ backgroundColor: esp.color || "#3B82F6" }}
-                      />
-                      {esp.nombre}
+                      <span>{residente.name}</span>
+                      <span className="text-gray-400 text-[10px]">({residente.empresaNombre})</span>
                     </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            
+            {/* Mostrar Empresa (solo lectura, auto-completado) */}
+            {residenteSeleccionado && (
+              <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+                <Building2 className="h-3 w-3 text-gray-400" />
+                <span className="text-xs text-gray-600">Empresa:</span>
+                <span className="text-xs font-medium">{residenteSeleccionado.empresaNombre}</span>
+              </div>
+            )}
+            
+            {/* Mostrar Especialidad (solo lectura, auto-completado) */}
+            {especialidadDelResidente && (
+              <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+                <Wrench className="h-3 w-3 text-gray-400" />
+                <span className="text-xs text-gray-600">Especialidad:</span>
+                <div className="flex items-center gap-1">
+                  <div
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: especialidadDelResidente.color || "#3B82F6" }}
+                  />
+                  <span className="text-xs font-medium">{especialidadDelResidente.nombre}</span>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* PASO 4: Ubicación (nivel, unidad, espacio) */}
+        {/* PASO 3: Ubicación (nivel, unidad, espacio) */}
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
@@ -494,7 +447,7 @@ export default function NuevoItem() {
             >
               <SelectTrigger className="h-9 text-xs">
                 <MapPin className="h-3 w-3 mr-1 text-gray-400" />
-                <SelectValue placeholder="Unidad" />
+                <SelectValue placeholder="Unidad *" />
               </SelectTrigger>
               <SelectContent>
                 {unidades?.map((unidad) => (
@@ -527,8 +480,8 @@ export default function NuevoItem() {
           </CardContent>
         </Card>
 
-        {/* PASO 5: Defecto (de la especialidad seleccionada) */}
-        {!modoRapido && formData.especialidadId && (
+        {/* PASO 4: Defecto (de la especialidad del residente) */}
+        {residenteSeleccionado?.especialidadId && defectos && defectos.length > 0 && (
           <Card className="border-0 shadow-sm">
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
@@ -545,7 +498,7 @@ export default function NuevoItem() {
                   <SelectValue placeholder="Seleccionar defecto" />
                 </SelectTrigger>
                 <SelectContent>
-                  {defectos?.map((def) => (
+                  {defectos.map((def) => (
                     <SelectItem key={def.id} value={def.id.toString()}>
                       <div className="flex items-center gap-2">
                         <span className={`h-2 w-2 rounded-full ${
@@ -566,7 +519,7 @@ export default function NuevoItem() {
         {/* Botón de crear - Siempre visible */}
         <Button 
           onClick={handleSubmit} 
-          disabled={isSubmitting || !fotoAntes || !formData.empresaId || !formData.unidadId}
+          disabled={isSubmitting || !fotoAntes || !formData.residenteId || !formData.unidadId}
           className="w-full h-12 bg-[#02B381] hover:bg-[#02B381]/90 text-white font-semibold"
         >
           {isSubmitting ? (

@@ -1104,3 +1104,13 @@
 - [x] Remover botón "Rápido" con icono de rayo del formulario
 - [x] Hacer obligatorio el campo de Residente (con asterisco *)
 - [x] Agregar validación de residente obligatorio en handleSubmit
+
+
+## Reestructuración Formulario Nuevo Ítem (27 de Enero 2026 - Noche v2)
+
+### Cambios Solicitados
+- [x] Quitar campo de "Descripción breve (opcional)"
+- [x] Asignación obligatoria: mostrar solo residentes registrados por empresa
+- [x] Al seleccionar residente, auto-completar Empresa y Especialidad (no dropdown)
+- [x] Ubicación: Nivel como selector + Unidad del módulo Stacking/Unidades
+- [x] Quitar botón "Rápido" con icono de rayo (ya hecho)
