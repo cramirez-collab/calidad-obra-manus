@@ -899,3 +899,9 @@
 - [x] Solo admin/superadmin pueden editar posiciones
 - [x] Ocultar handle de arrastre para otros roles
 - [x] Guardar nueva posición y nivel al soltar
+
+
+## Corrección PDF Stacking Enero 27
+
+- [x] Ocultar sidebar y header en impresión (solo contenido)
+- [x] Cambiar orden de niveles a ascendente (menor a mayor) en el PDF
