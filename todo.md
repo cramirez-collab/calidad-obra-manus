@@ -975,3 +975,12 @@
 
 - [x] Implementar ordenamiento numérico natural en lista de unidades (1, 2, 3... 101, 102... 201, 202...)
 - [x] Aplicar en todas las consultas: lista, stacking, selectores
+
+
+## Navegación con Iconos en Header (Enero 27)
+
+- [x] Eliminar sidebar con menú hamburguesa
+- [x] Poner todos los módulos como iconos en el header
+- [x] Solo iconos visibles, sin texto
+- [x] Tooltip al pasar mouse con nombre del módulo
+- [x] Iconos intuitivos y amigables
