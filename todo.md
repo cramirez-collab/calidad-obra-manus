@@ -1292,8 +1292,9 @@
 - [x] Verificar que Bitácora incluya fechas y nombres completos (Usuario, Rol, Fecha/Hora)
 
 ### Publicación en Tiendas
-- [ ] Preparar guía de publicación en App Store (iOS)
-- [ ] Preparar guía de publicación en Play Store (Android)
+- [x] Preparar guía de publicación en App Store (iOS)
+- [x] Preparar guía de publicación en Play Store (Android)
+- [x] Documento GUIA_PUBLICACION_TIENDAS.md creado con pasos detallados
 
 
 ## Mejoras Bienvenida y Rechazo (27 Enero 2026)
