@@ -51,12 +51,14 @@ import {
   useSensors,
   DragStartEvent,
   DragEndEvent,
+  DragOverEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
+  horizontalListSortingStrategy,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -117,14 +119,15 @@ function CeldaVacia({
   );
 }
 
-// Componente sortable para unidad
+// Componente sortable para unidad con mejor feedback visual
 function SortableUnidadCard({ 
   celda, 
   onTap, 
   onDoubleTap,
   onEditFechas,
   selectedId,
-  isMobile
+  isMobile,
+  isOverlay = false
 }: { 
   celda: CeldaStacking; 
   onTap: (unidad: UnidadPanoramica) => void;
@@ -132,6 +135,7 @@ function SortableUnidadCard({
   onEditFechas: (unidad: UnidadPanoramica) => void;
   selectedId: number | null;
   isMobile: boolean;
+  isOverlay?: boolean;
 }) {
   const {
     attributes,
@@ -140,12 +144,20 @@ function SortableUnidadCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: celda.id });
+    isOver,
+  } = useSortable({ 
+    id: celda.id,
+    transition: {
+      duration: 250, // Animación más suave
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    },
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: transition || 'transform 250ms cubic-bezier(0.25, 1, 0.5, 1)',
+    opacity: isDragging ? 0.3 : 1,
+    zIndex: isDragging ? 1000 : 1,
   };
 
   if (!celda.unidad) return null;
@@ -185,14 +197,35 @@ function SortableUnidadCard({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative group">
-      {/* Handle para arrastrar - visible para todos */}
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={`
+        relative group
+        ${isOver && !isDragging ? 'ml-16' : ''}
+        transition-all duration-250 ease-out
+      `}
+    >
+      {/* Indicador visual de drop zone - aparece cuando se arrastra sobre este elemento */}
+      {isOver && !isDragging && (
+        <div className="absolute -left-14 top-0 w-12 h-20 rounded-lg border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center animate-pulse">
+          <div className="w-1 h-12 bg-primary rounded-full" />
+        </div>
+      )}
+
+      {/* Handle para arrastrar - más visible y accesible */}
       <div
         {...attributes}
         {...listeners}
-        className="absolute -left-1 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-white/90 rounded p-0.5 shadow"
+        className={`
+          absolute -left-1 top-1/2 -translate-y-1/2 z-10 
+          transition-all duration-200 
+          cursor-grab active:cursor-grabbing 
+          bg-white/90 rounded p-1 shadow-md
+          ${isDragging ? 'opacity-0' : 'opacity-60 group-hover:opacity-100 hover:bg-white hover:shadow-lg'}
+        `}
       >
-        <GripVertical className="h-4 w-4 text-gray-500" />
+        <GripVertical className="h-4 w-4 text-gray-600" />
       </div>
 
       {/* Botón de editar fechas */}
@@ -215,9 +248,10 @@ function SortableUnidadCard({
                 ${bgColor} ${textColor}
                 w-full h-20 rounded-lg p-2
                 flex flex-col items-center justify-center
-                transition-all duration-200
+                transition-all duration-250
                 shadow-md hover:shadow-lg
                 cursor-pointer
+                ${isDragging ? 'scale-105 shadow-xl ring-2 ring-primary ring-offset-2' : ''}
                 ${isSelected ? 'ring-4 ring-primary ring-offset-2' : 'border-2 border-transparent hover:border-white/30'}
               `}
             >
@@ -646,11 +680,13 @@ export default function VistaPanoramica() {
     updateOrdenMutation.mutate({ unidades: pendingChanges });
   };
 
-  // Sensores para drag and drop
+  // Sensores para drag and drop - configurados para activación fácil
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5, // Reducido para activación más fácil
+        delay: 100, // Pequeño delay para evitar activaciones accidentales
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -986,9 +1022,9 @@ export default function VistaPanoramica() {
                       </div>
                       <SortableContext
                         items={celdas.map(c => c.id)}
-                        strategy={rectSortingStrategy}
+                        strategy={horizontalListSortingStrategy}
                       >
-                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
                           {celdas.map((celda) => (
                             <SortableUnidadCard
                               key={celda.id}
@@ -1012,24 +1048,30 @@ export default function VistaPanoramica() {
                   ))}
                 </div>
 
-                {/* Overlay durante el drag */}
-                <DragOverlay>
+                {/* Overlay durante el drag - elemento flotante que sigue al cursor */}
+                <DragOverlay dropAnimation={{
+                  duration: 200,
+                  easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+                }}>
                   {activeUnidad && (
                     <div className={`
                       ${activeUnidad.estado === 'completado' ? 'bg-emerald-500' : 
                         activeUnidad.estado === 'rechazado' ? 'bg-red-500' : 
                         activeUnidad.estado === 'pendiente' ? 'bg-amber-500' : 'bg-gray-300'}
                       ${activeUnidad.estado === 'sin_items' ? 'text-gray-700' : 'text-white'}
-                      w-24 h-20 rounded-lg p-2
+                      w-24 h-20 rounded-xl p-2
                       flex flex-col items-center justify-center
-                      shadow-xl
+                      shadow-2xl
                       cursor-grabbing
-                      opacity-90
+                      transform scale-110 rotate-2
+                      ring-4 ring-primary/50 ring-offset-2
+                      animate-pulse
                     `}>
+                      <GripVertical className="absolute -left-1 top-1/2 -translate-y-1/2 h-4 w-4 text-white/70" />
                       <span className="font-bold text-sm truncate w-full text-center">
                         {activeUnidad.codigo || activeUnidad.nombre}
                       </span>
-                      <span className="text-xs mt-1">{activeUnidad.porcentaje}%</span>
+                      <span className="text-xs mt-1 font-medium">{activeUnidad.porcentaje}%</span>
                     </div>
                   )}
                 </DragOverlay>

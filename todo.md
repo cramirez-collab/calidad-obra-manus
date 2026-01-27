@@ -1118,3 +1118,10 @@
 
 ## UI Formulario Nuevo Ítem (27 Enero 2026)
 - [x] Poner Nivel y Unidad en la misma fila (lado a lado)
+
+
+## Mejora Drag & Drop Stacking (27 Enero 2026)
+- [x] Mejorar drag & drop para que sea más intuitivo
+- [x] Agregar indicador visual de espacio donde se soltará la unidad
+- [x] Animación suave cuando las unidades se mueven para abrir espacio
+- [x] Feedback visual claro del área de destino
