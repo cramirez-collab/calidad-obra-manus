@@ -1207,3 +1207,7 @@
 - [ ] Permitir ordenar por tipo de acción
 - [ ] Permitir ordenar por entidad afectada
 - [ ] Indicador visual de columna ordenada actualmente
+
+
+## Fecha de Terminación de Unidad en Detalle de Ítem (27 Enero 2026)
+- [x] Mostrar fecha de terminación de la unidad (fechaFin del Stacking) en la sección de información del ítem

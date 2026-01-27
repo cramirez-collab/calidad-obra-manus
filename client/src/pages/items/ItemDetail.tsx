@@ -239,6 +239,10 @@ export default function ItemDetail() {
 
   const getEmpresaNombre = (id: number) => empresas?.find(e => e.id === id)?.nombre || "-";
   const getUnidadNombre = (id: number) => unidades?.find(u => u.id === id)?.nombre || "-";
+  const getUnidadFechaFin = (id: number) => {
+    const unidad = unidades?.find(u => u.id === id);
+    return unidad?.fechaFin || null;
+  };
   const getEspecialidadInfo = (id: number) => especialidades?.find(e => e.id === id);
   const getUserName = (id: number | null) => {
     if (!id) return "-";
@@ -611,6 +615,16 @@ export default function ItemDetail() {
                     <p className="font-medium">{formatDate(item.fechaCreacion)}</p>
                   </div>
                 </div>
+
+                {item.unidadId && getUnidadFechaFin(item.unidadId) && (
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-4 w-4 text-amber-500" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Fecha terminación unidad</p>
+                      <p className="font-medium text-amber-600">{formatDate(getUnidadFechaFin(item.unidadId))}</p>
+                    </div>
+                  </div>
+                )}
 
                 {item.descripcion && (
                   <div className="pt-2 border-t">
