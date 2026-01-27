@@ -1057,3 +1057,42 @@
 ### Stacking Pendiente
 - [ ] Botón Guardar para confirmar orden de unidades
 - [ ] No desacomodar unidades hasta que se guarde
+
+
+## Mejoras Estadísticas y Formulario (Enero 27 - Tarde)
+
+### Estadísticas
+- [ ] Agregar botón PDF separado (descargar, no imprimir)
+
+### Formulario Nuevo Ítem - Cascada correcta
+- [ ] Foto primero
+- [ ] Usuario
+- [ ] Empresa (relaciona especialidad)
+- [ ] Especialidad (de la empresa)
+- [ ] Nivel
+- [ ] Unidad (filtrada por nivel)
+- [ ] Espacio (filtrado por unidad)
+- [ ] Defecto (de la especialidad)
+
+
+## Mejoras de Formulario y PDF (Iteración 27 de Enero 2026)
+
+### Botón PDF en Estadísticas
+- [x] Agregar botón separado de descarga PDF en Estadísticas
+- [x] PDF con formato profesional Objetiva (logo, fecha, paginación)
+- [x] Incluir estadísticas de ítems por empresa en el PDF
+- [x] Descarga directa del archivo PDF
+
+### Reorganización del Formulario Nuevo Ítem
+- [x] Reorganizar campos en orden específico:
+  - [x] Foto (primer paso)
+  - [x] Usuario (selector de residentes)
+  - [x] Empresa (filtra por usuario seleccionado)
+  - [x] Especialidad (de la empresa)
+  - [x] Nivel (selector de niveles disponibles)
+  - [x] Unidad (filtrada por nivel)
+  - [x] Espacio (filtrado por unidad)
+  - [x] Defecto (de la especialidad)
+- [x] Mantener cascada de relaciones funcionando
+- [x] Agregar selector de Nivel antes de Unidad
+- [x] Filtrar unidades por nivel seleccionado

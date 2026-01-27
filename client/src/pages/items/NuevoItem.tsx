@@ -38,6 +38,7 @@ export default function NuevoItem() {
   const [formData, setFormData] = useState({
     residenteId: "",
     empresaId: "",
+    nivelId: "",
     unidadId: "",
     especialidadId: "",
     defectoId: "",
@@ -84,10 +85,24 @@ export default function NuevoItem() {
     );
   }, [todasEmpresas, formData.residenteId]);
   
-  const { data: unidades } = trpc.unidades.list.useQuery(
+  const { data: todasUnidades } = trpc.unidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
+  
+  // Obtener niveles únicos de las unidades
+  const niveles = useMemo(() => {
+    if (!todasUnidades) return [];
+    const nivelesSet = new Set(todasUnidades.map(u => u.nivel).filter(Boolean));
+    return Array.from(nivelesSet).sort((a, b) => (a || 0) - (b || 0));
+  }, [todasUnidades]);
+  
+  // Filtrar unidades por nivel seleccionado
+  const unidades = useMemo(() => {
+    if (!todasUnidades) return [];
+    if (!formData.nivelId) return todasUnidades;
+    return todasUnidades.filter(u => u.nivel?.toString() === formData.nivelId);
+  }, [todasUnidades, formData.nivelId]);
   const { data: especialidades } = trpc.especialidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
@@ -376,25 +391,25 @@ export default function NuevoItem() {
           </CardContent>
         </Card>
 
-        {/* PASO 3: Ubicación (residente, empresa, unidad, espacio) */}
+        {/* PASO 3: Usuario y Empresa */}
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-              <MapPin className="h-3 w-3" />
-              Ubicación
+              <User className="h-3 w-3" />
+              Asignación
             </div>
             
-            {/* Residente (opcional, filtra empresas) */}
+            {/* Usuario/Residente (opcional, filtra empresas) */}
             <Select
               value={formData.residenteId}
               onValueChange={(value) => setFormData({ ...formData, residenteId: value, empresaId: "", especialidadId: "", defectoId: "" })}
             >
               <SelectTrigger className="h-9 text-xs">
                 <User className="h-3 w-3 mr-1 text-gray-400" />
-                <SelectValue placeholder="Residente (opcional)" />
+                <SelectValue placeholder="Usuario (opcional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos los residentes</SelectItem>
+                <SelectItem value="all">Todos los usuarios</SelectItem>
                 {residentes?.map((user: { id: number; name: string | null }) => (
                   <SelectItem key={user.id} value={user.id.toString()}>
                     {user.name || 'Sin nombre'}
@@ -403,47 +418,94 @@ export default function NuevoItem() {
               </SelectContent>
             </Select>
             
-            <div className="grid grid-cols-2 gap-3">
-              {/* Empresa */}
-              <div>
-                <Select
-                  value={formData.empresaId}
-                  onValueChange={(value) => setFormData({ ...formData, empresaId: value })}
-                >
-                  <SelectTrigger className="h-9 text-xs">
-                    <Building2 className="h-3 w-3 mr-1 text-gray-400" />
-                    <SelectValue placeholder="Empresa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {empresas?.map((empresa) => (
-                      <SelectItem key={empresa.id} value={empresa.id.toString()}>
-                        {empresa.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Empresa */}
+            <Select
+              value={formData.empresaId}
+              onValueChange={(value) => setFormData({ ...formData, empresaId: value })}
+            >
+              <SelectTrigger className="h-9 text-xs">
+                <Building2 className="h-3 w-3 mr-1 text-gray-400" />
+                <SelectValue placeholder="Empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                {empresas?.map((empresa) => (
+                  <SelectItem key={empresa.id} value={empresa.id.toString()}>
+                    {empresa.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {/* Especialidad (de la empresa seleccionada) */}
+            <Select
+              value={formData.especialidadId}
+              onValueChange={(value) => setFormData({ ...formData, especialidadId: value, defectoId: "" })}
+            >
+              <SelectTrigger className="h-9 text-xs">
+                <Wrench className="h-3 w-3 mr-1 text-gray-400" />
+                <SelectValue placeholder="Especialidad" />
+              </SelectTrigger>
+              <SelectContent>
+                {especialidades?.map((esp) => (
+                  <SelectItem key={esp.id} value={esp.id.toString()}>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: esp.color || "#3B82F6" }}
+                      />
+                      {esp.nombre}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
 
-              {/* Unidad */}
-              <div>
-                <Select
-                  value={formData.unidadId}
-                  onValueChange={(value) => setFormData({ ...formData, unidadId: value, espacioId: "" })}
-                >
-                  <SelectTrigger className="h-9 text-xs">
-                    <MapPin className="h-3 w-3 mr-1 text-gray-400" />
-                    <SelectValue placeholder="Unidad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {unidades?.map((unidad) => (
-                      <SelectItem key={unidad.id} value={unidad.id.toString()}>
-                        {unidad.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        {/* PASO 4: Ubicación (nivel, unidad, espacio) */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+              <MapPin className="h-3 w-3" />
+              Ubicación
             </div>
+            
+            {/* Nivel */}
+            <Select
+              value={formData.nivelId}
+              onValueChange={(value) => setFormData({ ...formData, nivelId: value, unidadId: "", espacioId: "" })}
+            >
+              <SelectTrigger className="h-9 text-xs">
+                <Layers className="h-3 w-3 mr-1 text-gray-400" />
+                <SelectValue placeholder="Nivel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los niveles</SelectItem>
+                {niveles.map((nivel) => (
+                  <SelectItem key={nivel} value={nivel!.toString()}>
+                    Nivel {nivel}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {/* Unidad (filtrada por nivel) */}
+            <Select
+              value={formData.unidadId}
+              onValueChange={(value) => setFormData({ ...formData, unidadId: value, espacioId: "" })}
+            >
+              <SelectTrigger className="h-9 text-xs">
+                <MapPin className="h-3 w-3 mr-1 text-gray-400" />
+                <SelectValue placeholder="Unidad" />
+              </SelectTrigger>
+              <SelectContent>
+                {unidades?.map((unidad) => (
+                  <SelectItem key={unidad.id} value={unidad.id.toString()}>
+                    {unidad.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {/* Espacio (solo si hay unidad) */}
             {formData.unidadId && espacios && espacios.length > 0 && (
@@ -467,65 +529,38 @@ export default function NuevoItem() {
           </CardContent>
         </Card>
 
-        {/* PASO 4: Clasificación (solo si no está en modo rápido o quiere más detalle) */}
-        {!modoRapido && (
+        {/* PASO 5: Defecto (de la especialidad seleccionada) */}
+        {!modoRapido && formData.especialidadId && (
           <Card className="border-0 shadow-sm">
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                <Wrench className="h-3 w-3" />
-                Clasificación
+                <AlertTriangle className="h-3 w-3" />
+                Defecto
               </div>
               
-              <div className="grid grid-cols-2 gap-3">
-                {/* Especialidad */}
-                <Select
-                  value={formData.especialidadId}
-                  onValueChange={(value) => setFormData({ ...formData, especialidadId: value, defectoId: "" })}
-                >
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Especialidad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {especialidades?.map((esp) => (
-                      <SelectItem key={esp.id} value={esp.id.toString()}>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="h-2 w-2 rounded-full"
-                            style={{ backgroundColor: esp.color || "#3B82F6" }}
-                          />
-                          {esp.nombre}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Defecto */}
-                <Select
-                  value={formData.defectoId}
-                  onValueChange={(value) => setFormData({ ...formData, defectoId: value })}
-                  disabled={!formData.especialidadId}
-                >
-                  <SelectTrigger className="h-9 text-xs">
-                    <AlertTriangle className="h-3 w-3 mr-1 text-gray-400" />
-                    <SelectValue placeholder="Defecto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {defectos?.map((def) => (
-                      <SelectItem key={def.id} value={def.id.toString()}>
-                        <div className="flex items-center gap-2">
-                          <span className={`h-2 w-2 rounded-full ${
-                            def.severidad === 'leve' ? 'bg-green-500' :
-                            def.severidad === 'moderado' ? 'bg-yellow-500' :
-                            def.severidad === 'grave' ? 'bg-orange-500' : 'bg-red-500'
-                          }`} />
-                          {def.nombre}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select
+                value={formData.defectoId}
+                onValueChange={(value) => setFormData({ ...formData, defectoId: value })}
+              >
+                <SelectTrigger className="h-9 text-xs">
+                  <AlertTriangle className="h-3 w-3 mr-1 text-gray-400" />
+                  <SelectValue placeholder="Seleccionar defecto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {defectos?.map((def) => (
+                    <SelectItem key={def.id} value={def.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <span className={`h-2 w-2 rounded-full ${
+                          def.severidad === 'leve' ? 'bg-green-500' :
+                          def.severidad === 'moderado' ? 'bg-yellow-500' :
+                          def.severidad === 'grave' ? 'bg-orange-500' : 'bg-red-500'
+                        }`} />
+                        {def.nombre}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </CardContent>
           </Card>
         )}

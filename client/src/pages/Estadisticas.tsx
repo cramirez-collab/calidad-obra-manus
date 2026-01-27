@@ -264,6 +264,111 @@ export default function Estadisticas() {
             </p>
           </div>
           <div className="flex gap-2">
+            {/* Botón Descargar PDF */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                // Crear contenido HTML para el PDF
+                const htmlContent = `
+                  <html>
+                    <head>
+                      <title>Estadísticas - ObjetivaOQC</title>
+                      <style>
+                        @page { size: letter; margin: 15mm; }
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #002C63; padding-bottom: 10px; margin-bottom: 20px; }
+                        .logo { font-size: 24px; font-weight: bold; color: #002C63; }
+                        .date { font-size: 12px; color: #666; }
+                        .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px; }
+                        .stat-card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center; background: #f9fafb; }
+                        .stat-value { font-size: 32px; font-weight: bold; margin-bottom: 5px; }
+                        .stat-label { color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+                        .section { margin-top: 30px; }
+                        .section-title { font-size: 18px; font-weight: bold; color: #002C63; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 15px; }
+                        .empresa-list { margin: 0; padding: 0; list-style: none; }
+                        .empresa-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+                        .footer { text-align: center; color: #999; font-size: 11px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="header">
+                        <div class="logo">OBJETIVA</div>
+                        <div class="date">Reporte de Estadísticas<br/>${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                      </div>
+                      
+                      <div class="stats">
+                        <div class="stat-card">
+                          <div class="stat-value">${stats?.total || 0}</div>
+                          <div class="stat-label">Total Ítems</div>
+                        </div>
+                        <div class="stat-card">
+                          <div class="stat-value" style="color: #F59E0B;">${stats?.porStatus?.filter(s => s.status.includes('pendiente')).reduce((a, b) => a + b.count, 0) || 0}</div>
+                          <div class="stat-label">Pendientes</div>
+                        </div>
+                        <div class="stat-card">
+                          <div class="stat-value" style="color: #10B981;">${stats?.porStatus?.find(s => s.status === 'aprobado')?.count || 0}</div>
+                          <div class="stat-label">Aprobados</div>
+                        </div>
+                        <div class="stat-card">
+                          <div class="stat-value" style="color: #EF4444;">${stats?.porStatus?.find(s => s.status === 'rechazado')?.count || 0}</div>
+                          <div class="stat-label">Rechazados</div>
+                        </div>
+                      </div>
+                      
+                      ${stats?.porEmpresa && stats.porEmpresa.length > 0 ? `
+                        <div class="section">
+                          <div class="section-title">Ítems por Empresa</div>
+                          <ul class="empresa-list">
+                            ${stats.porEmpresa.slice(0, 10).map(e => {
+                              const empresaNombre = empresas?.find(emp => emp.id === e.empresaId)?.nombre || 'Empresa ' + e.empresaId;
+                              return `
+                              <li class="empresa-item">
+                                <span>${empresaNombre}</span>
+                                <strong>${e.count}</strong>
+                              </li>
+                            `;
+                            }).join('')}
+                          </ul>
+                        </div>
+                      ` : ''}
+                      
+                      <div class="footer">
+                        Generado por ObjetivaOQC - Control de Calidad de Obra<br/>
+                        Página 1 de 1
+                      </div>
+                    </body>
+                  </html>
+                `;
+                
+                // Crear blob y descargar
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `estadisticas_${new Date().toISOString().split('T')[0]}.html`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                // También abrir para imprimir como PDF
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                  printWindow.document.write(htmlContent);
+                  printWindow.document.close();
+                  // Dar tiempo para cargar y luego imprimir
+                  setTimeout(() => {
+                    printWindow.print();
+                  }, 250);
+                }
+              }}
+              className="text-red-600 border-red-200 hover:bg-red-50"
+            >
+              <FileDown className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Descargar PDF</span>
+            </Button>
+            {/* Menú de exportación Excel/CSV */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
@@ -272,10 +377,6 @@ export default function Estadisticas() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => window.print()}>
-                  <FileDown className="h-4 w-4 mr-2 text-red-600" />
-                  PDF (Imprimir)
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={exportToExcel}>
                   <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
                   Excel (.xlsx)
