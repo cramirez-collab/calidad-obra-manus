@@ -25,8 +25,6 @@ import { MapPin, Edit, Plus, Trash2, FileDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
-import { useSortable } from "@/hooks/useSortable";
-import { SortableHeader } from "@/components/SortableHeader";
 
 type Unidad = {
   id: number;
@@ -58,9 +56,6 @@ export default function Unidades() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
-  
-  // Ordenamiento de unidades
-  const { sortedItems: sortedUnidades, sortConfig, requestSort } = useSortable<Unidad>(unidades, "nombre");
 
   const createMutation = trpc.unidades.create.useMutation({
     onSuccess: () => {
@@ -185,7 +180,7 @@ export default function Unidades() {
               <div className="text-center py-8 text-muted-foreground">
                 Cargando...
               </div>
-            ) : sortedUnidades?.length === 0 ? (
+            ) : unidades?.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No hay unidades registradas
               </div>
@@ -193,47 +188,15 @@ export default function Unidades() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>
-                      <SortableHeader<Unidad>
-                        label="Código"
-                        sortKey="codigo"
-                        currentSortKey={sortConfig.key}
-                        sortDirection={sortConfig.direction}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader<Unidad>
-                        label="Nombre"
-                        sortKey="nombre"
-                        currentSortKey={sortConfig.key}
-                        sortDirection={sortConfig.direction}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader<Unidad>
-                        label="Ubicación"
-                        sortKey="ubicacion"
-                        currentSortKey={sortConfig.key}
-                        sortDirection={sortConfig.direction}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader<Unidad>
-                        label="Descripción"
-                        sortKey="descripcion"
-                        currentSortKey={sortConfig.key}
-                        sortDirection={sortConfig.direction}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
+                    <TableHead>Código</TableHead>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Ubicación</TableHead>
+                    <TableHead>Descripción</TableHead>
                     <TableHead className="w-[100px]">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedUnidades?.map((unidad) => (
+                  {unidades?.map((unidad) => (
                     <TableRow key={unidad.id}>
                       <TableCell className="font-mono text-sm">
                         {unidad.codigo || "-"}

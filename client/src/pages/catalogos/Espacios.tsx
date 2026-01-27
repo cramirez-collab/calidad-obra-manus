@@ -9,8 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Pencil, Trash2, Copy, Home, Building2 } from "lucide-react";
 import { toast } from "sonner";
-import { useSortable } from "@/hooks/useSortable";
-import { SortableHeader } from "@/components/SortableHeader";
 
 // Espacios predefinidos sugeridos
 const ESPACIOS_SUGERIDOS = [
@@ -64,9 +62,6 @@ export default function Espacios() {
     { proyectoId: proyectoId! },
     { enabled: !!proyectoId }
   );
-  
-  // Ordenamiento de espacios
-  const { sortedItems: sortedEspacios, sortConfig, requestSort } = useSortable<Espacio>(espaciosPlantilla, "orden");
   
   const { data: unidades } = trpc.unidades.list.useQuery(
     { proyectoId: proyectoId || undefined },
@@ -219,51 +214,19 @@ export default function Espacios() {
             </p>
           </CardHeader>
           <CardContent>
-            {sortedEspacios && sortedEspacios.length > 0 ? (
+            {espaciosPlantilla && espaciosPlantilla.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>
-                      <SortableHeader<Espacio>
-                        label="Orden"
-                        sortKey="orden"
-                        currentSortKey={sortConfig.key}
-                        sortDirection={sortConfig.direction}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader<Espacio>
-                        label="Nombre"
-                        sortKey="nombre"
-                        currentSortKey={sortConfig.key}
-                        sortDirection={sortConfig.direction}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader<Espacio>
-                        label="Código"
-                        sortKey="codigo"
-                        currentSortKey={sortConfig.key}
-                        sortDirection={sortConfig.direction}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader<Espacio>
-                        label="Descripción"
-                        sortKey="descripcion"
-                        currentSortKey={sortConfig.key}
-                        sortDirection={sortConfig.direction}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
+                    <TableHead>Orden</TableHead>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Código</TableHead>
+                    <TableHead>Descripción</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedEspacios.map((espacio) => (
+                  {espaciosPlantilla.map((espacio) => (
                     <TableRow key={espacio.id}>
                       <TableCell>{espacio.orden}</TableCell>
                       <TableCell className="font-medium">{espacio.nombre}</TableCell>

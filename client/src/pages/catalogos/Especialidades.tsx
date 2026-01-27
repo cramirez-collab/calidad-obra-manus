@@ -32,8 +32,6 @@ import { Wrench, Edit, Plus, Trash2, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
-import { useSortable } from "@/hooks/useSortable";
-import { SortableHeader } from "@/components/SortableHeader";
 
 type Especialidad = {
   id: number;
@@ -71,9 +69,6 @@ export default function Especialidades() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
-  
-  // Ordenamiento de especialidades
-  const { sortedItems: sortedEspecialidades, sortConfig, requestSort } = useSortable<Especialidad>(especialidades, "nombre");
 
   const createMutation = trpc.especialidades.create.useMutation({
     onSuccess: () => {
@@ -191,7 +186,7 @@ export default function Especialidades() {
               <div className="text-center py-8 text-muted-foreground">
                 Cargando...
               </div>
-            ) : sortedEspecialidades?.length === 0 ? (
+            ) : especialidades?.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No hay especialidades registradas
               </div>
@@ -200,47 +195,15 @@ export default function Especialidades() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[60px]">Color</TableHead>
-                    <TableHead>
-                      <SortableHeader<Especialidad>
-                        label="Código"
-                        sortKey="codigo"
-                        currentSortKey={sortConfig.key}
-                        sortDirection={sortConfig.direction}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader<Especialidad>
-                        label="Nombre"
-                        sortKey="nombre"
-                        currentSortKey={sortConfig.key}
-                        sortDirection={sortConfig.direction}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader<Especialidad>
-                        label="Descripción"
-                        sortKey="descripcion"
-                        currentSortKey={sortConfig.key}
-                        sortDirection={sortConfig.direction}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader<Especialidad>
-                        label="Residente"
-                        sortKey="residenteId"
-                        currentSortKey={sortConfig.key}
-                        sortDirection={sortConfig.direction}
-                        onSort={requestSort}
-                      />
-                    </TableHead>
+                    <TableHead>Código</TableHead>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead>Residente</TableHead>
                     <TableHead className="w-[100px]">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedEspecialidades?.map((especialidad) => (
+                  {especialidades?.map((especialidad) => (
                     <TableRow key={especialidad.id}>
                       <TableCell>
                         <div

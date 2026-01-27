@@ -33,7 +33,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { trpc } from "@/lib/trpc";
-import { Building2, Edit, Plus, Trash2, FileDown, ChevronDown, ChevronRight, AlertTriangle, Wrench, ArrowUpDown, X, Pencil, Check, Sparkles } from "lucide-react";
+import { Building2, Edit, Plus, Trash2, FileDown, ChevronDown, ChevronRight, AlertTriangle, Wrench, ArrowUpDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
@@ -76,13 +76,11 @@ export default function Empresas() {
     jefeResidenteId: "",
   });
 
-  // Estado para agregar/editar defecto personalizado
+  // Estado para agregar defecto personalizado
   const [isAddDefectoOpen, setIsAddDefectoOpen] = useState(false);
   const [addDefectoEmpresaId, setAddDefectoEmpresaId] = useState<number | null>(null);
   const [addDefectoEspecialidadId, setAddDefectoEspecialidadId] = useState<number | null>(null);
   const [nuevoDefecto, setNuevoDefecto] = useState({ nombre: "", severidad: "moderado" });
-  const [editingDefectoId, setEditingDefectoId] = useState<number | null>(null);
-  const [editingDefectoData, setEditingDefectoData] = useState({ nombre: "", severidad: "moderado" });
 
   const utils = trpc.useUtils();
   // Obtener empresas filtradas por proyecto desde el backend
@@ -138,28 +136,6 @@ export default function Empresas() {
       toast.success("Defecto agregado correctamente");
       setIsAddDefectoOpen(false);
       setNuevoDefecto({ nombre: "", severidad: "moderado" });
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const updateDefectoMutation = trpc.defectos.update.useMutation({
-    onSuccess: () => {
-      utils.defectos.listConEstadisticas.invalidate();
-      toast.success("Defecto actualizado correctamente");
-      setEditingDefectoId(null);
-      setEditingDefectoData({ nombre: "", severidad: "moderado" });
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const deleteDefectoMutation = trpc.defectos.delete.useMutation({
-    onSuccess: () => {
-      utils.defectos.listConEstadisticas.invalidate();
-      toast.success("Defecto eliminado correctamente");
     },
     onError: (error) => {
       toast.error(error.message);
@@ -295,34 +271,6 @@ export default function Empresas() {
       severidad: nuevoDefecto.severidad as any,
       proyectoId: selectedProjectId,
     });
-  };
-
-  const handleEditDefecto = (defecto: any) => {
-    setEditingDefectoId(defecto.id);
-    setEditingDefectoData({ nombre: defecto.nombre, severidad: defecto.severidad });
-  };
-
-  const handleSaveDefecto = (defectoId: number) => {
-    if (!editingDefectoData.nombre.trim()) {
-      toast.error("El nombre del defecto es requerido");
-      return;
-    }
-    updateDefectoMutation.mutate({
-      id: defectoId,
-      nombre: editingDefectoData.nombre,
-      severidad: editingDefectoData.severidad as any,
-    });
-  };
-
-  const handleDeleteDefecto = (defectoId: number, defectoNombre: string) => {
-    if (confirm(`¿Eliminar el defecto "${defectoNombre}"?`)) {
-      deleteDefectoMutation.mutate({ id: defectoId });
-    }
-  };
-
-  const handleCancelEditDefecto = () => {
-    setEditingDefectoId(null);
-    setEditingDefectoData({ nombre: "", severidad: "moderado" });
   };
 
   const handleExportPDF = () => {
@@ -510,10 +458,6 @@ export default function Empresas() {
                               <h4 className="font-medium text-sm flex items-center gap-2">
                                 <AlertTriangle className="h-4 w-4 text-amber-500" />
                                 Defectos de {especialidad?.nombre || 'la especialidad'}
-                                <Badge variant="outline" className="text-xs font-normal">
-                                  <Sparkles className="h-3 w-3 mr-1" />
-                                  Sugeridos
-                                </Badge>
                               </h4>
                               <Button 
                                 size="sm" 
@@ -539,80 +483,15 @@ export default function Empresas() {
                                 {defectos.map((defecto: any) => (
                                   <div 
                                     key={defecto.id} 
-                                    className="group flex items-center gap-2 p-2 bg-white rounded border text-sm hover:border-gray-300 transition-colors"
+                                    className="flex items-center justify-between p-2 bg-white rounded border text-sm"
                                   >
-                                    {editingDefectoId === defecto.id ? (
-                                      /* Modo edición */
-                                      <>
-                                        <Input
-                                          value={editingDefectoData.nombre}
-                                          onChange={(e) => setEditingDefectoData({ ...editingDefectoData, nombre: e.target.value })}
-                                          className="h-7 text-xs flex-1"
-                                          autoFocus
-                                        />
-                                        <Select
-                                          value={editingDefectoData.severidad}
-                                          onValueChange={(value) => setEditingDefectoData({ ...editingDefectoData, severidad: value })}
-                                        >
-                                          <SelectTrigger className="h-7 w-24 text-xs">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="leve">Leve</SelectItem>
-                                            <SelectItem value="moderado">Moderado</SelectItem>
-                                            <SelectItem value="grave">Grave</SelectItem>
-                                            <SelectItem value="critico">Crítico</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                        <Button
-                                          size="icon"
-                                          variant="ghost"
-                                          className="h-6 w-6"
-                                          onClick={() => handleSaveDefecto(defecto.id)}
-                                        >
-                                          <Check className="h-3 w-3 text-green-600" />
-                                        </Button>
-                                        <Button
-                                          size="icon"
-                                          variant="ghost"
-                                          className="h-6 w-6"
-                                          onClick={handleCancelEditDefecto}
-                                        >
-                                          <X className="h-3 w-3 text-gray-500" />
-                                        </Button>
-                                      </>
-                                    ) : (
-                                      /* Modo visualización */
-                                      <>
-                                        <span className="truncate flex-1">{defecto.nombre}</span>
-                                        <Badge 
-                                          variant="secondary" 
-                                          className={`text-xs ${severidadColors[defecto.severidad] || ''}`}
-                                        >
-                                          {defecto.severidad}
-                                        </Badge>
-                                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            className="h-6 w-6"
-                                            onClick={() => handleEditDefecto(defecto)}
-                                            title="Editar defecto"
-                                          >
-                                            <Pencil className="h-3 w-3 text-gray-500" />
-                                          </Button>
-                                          <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            className="h-6 w-6"
-                                            onClick={() => handleDeleteDefecto(defecto.id, defecto.nombre)}
-                                            title="Eliminar defecto"
-                                          >
-                                            <X className="h-3 w-3 text-red-500" />
-                                          </Button>
-                                        </div>
-                                      </>
-                                    )}
+                                    <span className="truncate flex-1">{defecto.nombre}</span>
+                                    <Badge 
+                                      variant="secondary" 
+                                      className={`ml-2 text-xs ${severidadColors[defecto.severidad] || ''}`}
+                                    >
+                                      {defecto.severidad}
+                                    </Badge>
                                   </div>
                                 ))}
                               </div>
