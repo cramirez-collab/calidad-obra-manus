@@ -1249,3 +1249,17 @@
 - [x] Trazabilidad completa de acciones por usuario (nombre y rol incluidos)
 - [x] Fechas concretas de cada acción (formato dd/MM/yy HH:mm)
 - [x] Multifiltros funcionales sin errores (usuario, unidad, categoría, fechas)
+
+
+## Mejoras de UI Empresas (27 Enero 2026)
+
+### Formulario Nuevo Ítem
+- [x] Eliminar botón "Rápido" del formulario
+
+### Vista de Empresas
+- [x] Mostrar nombres completos de usuarios (Residente, Jefe Residente) con roles claros
+- [x] Reducir espacio vacío en tarjetas de empresa
+- [x] Organizar mejor la información de usuarios en cada empresa
+
+### Navegación
+- [x] Eliminar página de Catálogo de Defectos separada (defectos se gestionan en empresas)

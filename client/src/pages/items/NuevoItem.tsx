@@ -262,22 +262,11 @@ export default function NuevoItem() {
     <DashboardLayout>
       <div className="max-w-lg mx-auto space-y-4">
         {/* Header compacto */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setLocation("/items")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="text-lg font-bold text-[#002C63]">Nuevo Ítem</h1>
-          </div>
-          <Button 
-            variant={modoRapido ? "default" : "outline"}
-            size="sm"
-            onClick={() => setModoRapido(!modoRapido)}
-            className={modoRapido ? "bg-[#02B381] hover:bg-[#02B381]/90" : ""}
-          >
-            <Zap className="h-3 w-3 mr-1" />
-            Rápido
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => setLocation("/items")}>
+            <ArrowLeft className="h-4 w-4" />
           </Button>
+          <h1 className="text-lg font-bold text-[#002C63]">Nuevo Ítem</h1>
         </div>
 
         {/* Inputs ocultos para cámara/archivo */}
