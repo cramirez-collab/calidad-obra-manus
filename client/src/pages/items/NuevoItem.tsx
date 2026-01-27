@@ -25,7 +25,8 @@ import {
   Wrench,
   AlertTriangle,
   Layers,
-  User
+  User,
+  Calendar
 } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
@@ -44,6 +45,7 @@ export default function NuevoItem() {
     defectoId: "",
     espacioId: "",
     titulo: "",
+    fechaCompromiso: "", // Fecha compromiso de arreglo
   });
   const [fotoAntes, setFotoAntes] = useState<string | null>(null);
   const [fotoAntesMarcada, setFotoAntesMarcada] = useState<string | null>(null);
@@ -216,6 +218,7 @@ export default function NuevoItem() {
         defectoId: formData.defectoId ? parseInt(formData.defectoId) : undefined,
         espacioId: formData.espacioId ? parseInt(formData.espacioId) : undefined,
         titulo: tituloFinal,
+        fechaCompromiso: formData.fechaCompromiso ? new Date(formData.fechaCompromiso) : undefined,
       });
 
       // Subir las fotos
@@ -557,6 +560,25 @@ export default function NuevoItem() {
             </CardContent>
           </Card>
         )}
+
+        {/* PASO 6: Fecha Compromiso */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+              <Calendar className="h-3 w-3" />
+              Compromiso
+            </div>
+            
+            <Input
+              type="date"
+              value={formData.fechaCompromiso}
+              onChange={(e) => setFormData({ ...formData, fechaCompromiso: e.target.value })}
+              className="h-9 text-xs"
+              min={new Date().toISOString().split('T')[0]}
+            />
+            <p className="text-[10px] text-gray-400">Fecha compromiso de arreglo</p>
+          </CardContent>
+        </Card>
 
         {/* Botón de crear - Siempre visible */}
         <Button 

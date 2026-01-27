@@ -641,6 +641,7 @@ export const appRouter = router({
         descripcion: z.string().optional(),
         ubicacionDetalle: z.string().optional(),
         comentarioResidente: z.string().optional(),
+        fechaCompromiso: z.date().optional(), // Fecha compromiso de arreglo
       }))
       .mutation(async ({ input, ctx }) => {
         const result = await db.createItem({

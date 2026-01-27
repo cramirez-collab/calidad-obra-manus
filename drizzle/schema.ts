@@ -207,6 +207,7 @@ export const items = mysqlTable("items", {
   
   // Fechas del flujo
   fechaCreacion: timestamp("fechaCreacion").defaultNow().notNull(),
+  fechaCompromiso: timestamp("fechaCompromiso"), // Fecha compromiso de arreglo
   fechaFotoDespues: timestamp("fechaFotoDespues"),
   fechaAprobacion: timestamp("fechaAprobacion"),
   

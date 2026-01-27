@@ -1174,3 +1174,11 @@
 - [x] Mostrar nombre del defecto en lugar de "Defecto #X" en vista de ítem
 - [x] Agregar ordenamiento a tabla de estadísticas por cualquier columna (click en encabezados)
 - [x] Crear gráfica de mejores y peores residentes por nombre (Top 5 cada uno)
+
+
+## Campo Compromiso y Fecha Término Unidad (27 Enero 2026)
+
+- [x] Agregar campo fechaCompromiso al schema de items
+- [x] Agregar selector de fecha Compromiso en formulario NuevoItem (después del defecto)
+- [x] Mostrar fecha de término de unidad (del stacking) en vista de ítem
+- [x] Mostrar fecha de compromiso en vista de ítem

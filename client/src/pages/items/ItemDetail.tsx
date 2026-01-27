@@ -612,6 +612,32 @@ export default function ItemDetail() {
                   </div>
                 </div>
 
+                {item.fechaCompromiso && (
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-4 w-4 text-orange-500" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Compromiso</p>
+                      <p className="font-medium text-orange-600">{formatDate(item.fechaCompromiso)}</p>
+                    </div>
+                  </div>
+                )}
+
+                {(() => {
+                  const unidad = unidades?.find(u => u.id === item.unidadId);
+                  if (unidad?.fechaFin) {
+                    return (
+                      <div className="flex items-center gap-3 bg-blue-50 p-2 rounded-lg">
+                        <Calendar className="h-4 w-4 text-blue-600" />
+                        <div>
+                          <p className="text-xs text-blue-600 font-medium">Entrega Unidad</p>
+                          <p className="font-bold text-blue-700">{formatDate(unidad.fechaFin)}</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
                 {item.descripcion && (
                   <div className="pt-2 border-t">
                     <p className="text-xs text-muted-foreground mb-1">Descripción</p>
