@@ -1134,3 +1134,9 @@
 - [x] Sección Defectos Típicos con edición inline y agregar personalizado
 - [x] Acordeones para organizar secciones (4 secciones expandibles)
 - [x] Guardar todo en una sola acción
+
+
+## Corrección Navegación Móvil (27 Enero 2026)
+
+- [x] Mostrar todos los iconos de navegación en móvil (sin límite de 6)
+- [x] Navegación scrollable horizontal para acceder a todos los menús

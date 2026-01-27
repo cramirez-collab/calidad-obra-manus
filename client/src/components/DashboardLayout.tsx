@@ -308,11 +308,6 @@ function DashboardLayoutContent({
                   ? (location === '/bienvenida' || location === '/') 
                   : (item.path ? location.startsWith(item.path) : false);
                 
-                // En móvil, mostrar solo los primeros 6 items + config
-                if (isMobile && menuItems.indexOf(item) > 5 && !item.children) {
-                  return null;
-                }
-                
                 return (
                   <NavIcon key={item.path || item.label} item={item} isActive={isActive} />
                 );
