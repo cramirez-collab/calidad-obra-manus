@@ -1349,12 +1349,25 @@ export async function registrarActividad(data: InsertBitacora) {
 export async function getBitacoraByUsuario(usuarioId: number, limit = 100) {
   const db = await getDb();
   if (!db) return [];
-  return await db
-    .select()
+  
+  const result = await db
+    .select({
+      bitacora: bitacora,
+      usuario: users,
+    })
     .from(bitacora)
+    .leftJoin(users, eq(bitacora.usuarioId, users.id))
     .where(eq(bitacora.usuarioId, usuarioId))
     .orderBy(desc(bitacora.createdAt))
     .limit(limit);
+  
+  return result.map(r => ({
+    ...r.bitacora,
+    usuario: r.usuario,
+    usuarioNombre: r.usuario?.name || 'Usuario desconocido',
+    usuarioRol: r.usuario?.role || 'sin_rol',
+    categoria: r.bitacora.entidad,
+  }));
 }
 
 export async function getBitacoraGeneral(filtros: {
@@ -1390,6 +1403,9 @@ export async function getBitacoraGeneral(filtros: {
   return result.map(r => ({
     ...r.bitacora,
     usuario: r.usuario,
+    usuarioNombre: r.usuario?.name || 'Usuario desconocido',
+    usuarioRol: r.usuario?.role || 'sin_rol',
+    categoria: r.bitacora.entidad, // Mapear entidad como categoría
   }));
 }
 

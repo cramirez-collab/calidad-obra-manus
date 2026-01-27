@@ -1234,3 +1234,18 @@
 ### Tiempo Real y Multiusuario
 - [x] Socket.IO configurado para sincronización
 - [x] 173 tests pasando correctamente
+
+
+## Correcciones Urgentes (27 Enero 2026)
+
+### Error Bitácora
+- [x] Corregir error de Select.Item con valor vacío que causa crash (filtro de unidades vacías)
+
+### Fotos A/B en Tarjetas
+- [x] Agregar miniatura de foto Antes (A) en tarjeta de ítem con badge amarillo
+- [x] Agregar miniatura de foto Después (B) en tarjeta de ítem con badge verde
+
+### Bitácora Completa
+- [x] Trazabilidad completa de acciones por usuario (nombre y rol incluidos)
+- [x] Fechas concretas de cada acción (formato dd/MM/yy HH:mm)
+- [x] Multifiltros funcionales sin errores (usuario, unidad, categoría, fechas)

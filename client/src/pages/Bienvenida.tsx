@@ -113,9 +113,43 @@ export default function Bienvenida() {
                 >
                   <CardContent className="p-3 sm:p-4">
                     <div className="flex items-center gap-3">
+                      {/* Miniaturas de fotos A/B */}
+                      <div className="flex gap-1 shrink-0">
+                        {/* Foto A - Antes */}
+                        <div className="relative">
+                          {item.fotoAntes ? (
+                            <img 
+                              src={item.fotoAntes} 
+                              alt="Antes" 
+                              className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg object-cover border-2 border-amber-400"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
+                              <Camera className="h-4 w-4 text-gray-400" />
+                            </div>
+                          )}
+                          <span className="absolute -top-1 -left-1 bg-amber-400 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">A</span>
+                        </div>
+                        {/* Foto B - Después */}
+                        <div className="relative">
+                          {item.fotoDespues ? (
+                            <img 
+                              src={item.fotoDespues} 
+                              alt="Después" 
+                              className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg object-cover border-2 border-[#02B381]"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
+                              <Clock className="h-4 w-4 text-gray-400" />
+                            </div>
+                          )}
+                          <span className="absolute -top-1 -left-1 bg-[#02B381] text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">B</span>
+                        </div>
+                      </div>
+
                       {/* Icono de estado */}
-                      <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-xl ${config.bg} flex items-center justify-center shrink-0`}>
-                        <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${config.color}`} />
+                      <div className={`h-8 w-8 rounded-lg ${config.bg} flex items-center justify-center shrink-0`}>
+                        <Icon className={`h-4 w-4 ${config.color}`} />
                       </div>
 
                       {/* Contenido */}

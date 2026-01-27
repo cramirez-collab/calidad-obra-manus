@@ -474,12 +474,12 @@ export default function Bitacora() {
               {/* Usuario */}
               <div>
                 <Label className="text-xs">Usuario</Label>
-                <Select value={filtroUsuario} onValueChange={setFiltroUsuario}>
+                <Select value={filtroUsuario || "_all"} onValueChange={(v) => setFiltroUsuario(v === "_all" ? "" : v)}>
                   <SelectTrigger className="h-9">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="_all">Todos</SelectItem>
                     {usuariosAgrupados.supervisores.length > 0 && (
                       <>
                         <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted">Supervisores</div>
@@ -517,14 +517,14 @@ export default function Bitacora() {
               {/* Unidad */}
               <div>
                 <Label className="text-xs">Unidad</Label>
-                <Select value={filtroUnidad} onValueChange={setFiltroUnidad}>
+                <Select value={filtroUnidad || "_all"} onValueChange={(v) => setFiltroUnidad(v === "_all" ? "" : v)}>
                   <SelectTrigger className="h-9">
                     <SelectValue placeholder="Todas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
-                    {unidades?.map((u: any) => (
-                      <SelectItem key={u.id} value={u.nombre}>
+                    <SelectItem value="_all">Todas</SelectItem>
+                    {unidades?.filter((u: any) => u.nombre && u.nombre.trim() !== '').map((u: any) => (
+                      <SelectItem key={u.id} value={u.id.toString()}>
                         {u.nombre}
                       </SelectItem>
                     ))}
@@ -535,12 +535,12 @@ export default function Bitacora() {
               {/* Categoría */}
               <div>
                 <Label className="text-xs">Categoría</Label>
-                <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
+                <Select value={filtroCategoria || "_all"} onValueChange={(v) => setFiltroCategoria(v === "_all" ? "" : v)}>
                   <SelectTrigger className="h-9">
                     <SelectValue placeholder="Todas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="_all">Todas</SelectItem>
                     <SelectItem value="item">Ítems</SelectItem>
                     <SelectItem value="usuario">Usuarios</SelectItem>
                     <SelectItem value="mensaje">Mensajes</SelectItem>
