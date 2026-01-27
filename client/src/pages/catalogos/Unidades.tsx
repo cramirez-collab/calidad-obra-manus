@@ -21,8 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { MapPin, Edit, Plus, Trash2, FileDown } from "lucide-react";
-import { useState } from "react";
+import { MapPin, Edit, Plus, Trash2, FileDown, GripVertical, Save, X } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -49,6 +49,12 @@ export default function Unidades() {
     nivel: "",
     orden: "",
   });
+  
+  // Estado para modo organización (drag & drop)
+  const [isOrganizing, setIsOrganizing] = useState(false);
+  const [localUnidades, setLocalUnidades] = useState<Unidad[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
   // Obtener unidades filtradas por proyecto desde el backend
@@ -56,6 +62,13 @@ export default function Unidades() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
+  
+  // Sincronizar unidades locales cuando cambian las del servidor
+  useEffect(() => {
+    if (unidades) {
+      setLocalUnidades([...unidades]);
+    }
+  }, [unidades]);
 
   const createMutation = trpc.unidades.create.useMutation({
     onSuccess: () => {
@@ -146,6 +159,82 @@ export default function Unidades() {
       deleteMutation.mutate({ id });
     }
   };
+  
+  // Funciones de drag & drop
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+  
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+  
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+  
+  const handleDrop = (targetIndex: number) => {
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+    
+    const newUnidades = [...localUnidades];
+    const [draggedItem] = newUnidades.splice(draggedIndex, 1);
+    newUnidades.splice(targetIndex, 0, draggedItem);
+    
+    // Actualizar el orden de todas las unidades
+    const updatedUnidades = newUnidades.map((u, idx) => ({
+      ...u,
+      orden: idx + 1
+    }));
+    
+    setLocalUnidades(updatedUnidades);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+  
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+  
+  // Guardar el nuevo orden
+  const handleSaveOrder = async () => {
+    try {
+      // Actualizar cada unidad con su nuevo orden
+      for (let i = 0; i < localUnidades.length; i++) {
+        const unidad = localUnidades[i];
+        await updateMutation.mutateAsync({
+          id: unidad.id,
+          nombre: unidad.nombre,
+          codigo: unidad.codigo || undefined,
+          descripcion: unidad.descripcion || undefined,
+          ubicacion: unidad.ubicacion || undefined,
+          proyectoId: unidad.proyectoId || undefined,
+          nivel: unidad.nivel || undefined,
+          orden: i + 1,
+        });
+      }
+      toast.success("Orden guardado correctamente");
+      setIsOrganizing(false);
+      utils.unidades.list.invalidate();
+    } catch (error) {
+      toast.error("Error al guardar el orden");
+    }
+  };
+  
+  const handleCancelOrganize = () => {
+    setLocalUnidades(unidades ? [...unidades] : []);
+    setIsOrganizing(false);
+  };
+  
+  // Determinar si una unidad es un espacio vacío (código = "-")
+  const isEmptySpace = (unidad: Unidad) => {
+    return unidad.codigo === "-" || unidad.nombre === "-";
+  };
 
   return (
     <DashboardLayout>
@@ -158,21 +247,51 @@ export default function Unidades() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="icon" onClick={() => window.print()} title="Exportar PDF">
-              <FileDown className="h-4 w-4" />
-            </Button>
-            <Button onClick={() => handleOpen()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Unidad
-            </Button>
+            {isOrganizing ? (
+              <>
+                <Button variant="outline" onClick={handleCancelOrganize}>
+                  <X className="h-4 w-4 mr-2" />
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveOrder} className="bg-green-600 hover:bg-green-700">
+                  <Save className="h-4 w-4 mr-2" />
+                  Guardar Orden
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => setIsOrganizing(true)}>
+                  <GripVertical className="h-4 w-4 mr-2" />
+                  Organizar
+                </Button>
+                <Button variant="outline" size="icon" onClick={() => window.print()} title="Exportar PDF">
+                  <FileDown className="h-4 w-4" />
+                </Button>
+                <Button onClick={() => handleOpen()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nueva Unidad
+                </Button>
+              </>
+            )}
           </div>
         </div>
+        
+        {isOrganizing && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm">
+            <strong>Modo Organización:</strong> Arrastra las filas para reordenar las unidades. El nuevo orden se reflejará en el Stacking.
+          </div>
+        )}
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />
               Lista de Unidades
+              {isOrganizing && (
+                <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded ml-2">
+                  Arrastra para reordenar
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -180,7 +299,7 @@ export default function Unidades() {
               <div className="text-center py-8 text-muted-foreground">
                 Cargando...
               </div>
-            ) : unidades?.length === 0 ? (
+            ) : localUnidades?.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No hay unidades registradas
               </div>
@@ -188,6 +307,7 @@ export default function Unidades() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    {isOrganizing && <TableHead className="w-[50px]"></TableHead>}
                     <TableHead>Código</TableHead>
                     <TableHead>Nombre</TableHead>
                     <TableHead>Ubicación</TableHead>
@@ -196,12 +316,41 @@ export default function Unidades() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {unidades?.map((unidad) => (
-                    <TableRow key={unidad.id}>
+                  {localUnidades?.map((unidad, index) => (
+                    <TableRow 
+                      key={unidad.id}
+                      draggable={isOrganizing}
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={() => handleDrop(index)}
+                      onDragEnd={handleDragEnd}
+                      className={`
+                        ${isOrganizing ? 'cursor-grab active:cursor-grabbing' : ''}
+                        ${draggedIndex === index ? 'opacity-50 bg-primary/10' : ''}
+                        ${dragOverIndex === index ? 'border-t-2 border-primary' : ''}
+                        ${isEmptySpace(unidad) ? 'bg-gray-100 text-gray-400' : ''}
+                      `}
+                    >
+                      {isOrganizing && (
+                        <TableCell className="w-[50px]">
+                          <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
+                        </TableCell>
+                      )}
                       <TableCell className="font-mono text-sm">
-                        {unidad.codigo || "-"}
+                        {isEmptySpace(unidad) ? (
+                          <span className="text-gray-400 italic">Espacio vacío</span>
+                        ) : (
+                          unidad.codigo || "-"
+                        )}
                       </TableCell>
-                      <TableCell className="font-medium">{unidad.nombre}</TableCell>
+                      <TableCell className="font-medium">
+                        {isEmptySpace(unidad) ? (
+                          <span className="text-gray-400 italic">---</span>
+                        ) : (
+                          unidad.nombre
+                        )}
+                      </TableCell>
                       <TableCell>{unidad.ubicacion || "-"}</TableCell>
                       <TableCell className="max-w-[200px] truncate">
                         {unidad.descripcion || "-"}
@@ -212,6 +361,7 @@ export default function Unidades() {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleOpen(unidad)}
+                            disabled={isOrganizing}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -219,6 +369,7 @@ export default function Unidades() {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(unidad.id)}
+                            disabled={isOrganizing}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -241,7 +392,7 @@ export default function Unidades() {
               <DialogDescription>
                 {editingUnidad
                   ? "Modifica los datos de la unidad"
-                  : "Ingresa los datos de la nueva unidad"}
+                  : "Ingresa los datos de la nueva unidad. Usa código '-' para crear un espacio vacío."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit}>
@@ -255,7 +406,7 @@ export default function Unidades() {
                       onChange={(e) =>
                         setFormData({ ...formData, nombre: e.target.value })
                       }
-                      placeholder="Ej: Departamento 101"
+                      placeholder="Ej: Departamento 101 o '-' para espacio vacío"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -266,7 +417,7 @@ export default function Unidades() {
                       onChange={(e) =>
                         setFormData({ ...formData, codigo: e.target.value })
                       }
-                      placeholder="Ej: D-101"
+                      placeholder="Ej: D-101 o '-' para espacio vacío"
                     />
                   </div>
                 </div>

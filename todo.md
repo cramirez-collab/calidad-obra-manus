@@ -1217,3 +1217,16 @@
 - [x] Botón de editar para cada defecto individual (cambiar nombre, severidad)
 - [x] Botón de eliminar para cada defecto individual
 - [x] Diálogo de confirmación antes de eliminar defecto
+
+
+## Drag & Drop y Unidades Vacías en Stacking (27 Enero 2026)
+
+### Reordenamiento de Unidades
+- [x] Agregar drag & drop para reordenar filas en la lista de Unidades
+- [x] Guardar el nuevo orden en el Stacking
+- [x] Indicador visual de arrastre (handle/grip)
+
+### Unidades Vacías (Separadores)
+- [x] Detectar unidades con código "-" (guión) como espacios vacíos
+- [x] Mostrar caja vacía/separador en el Stacking para unidades con guión
+- [x] Mantener el mismo tamaño que las unidades normales

@@ -173,6 +173,52 @@ function SortableUnidadCard({
 
   const unidad = celda.unidad;
   const isSelected = selectedId === unidad.id;
+  
+  // Detectar si es un espacio vacío (código o nombre = "-")
+  const isEmptySpace = unidad.codigo === "-" || unidad.nombre === "-";
+  
+  // Si es espacio vacío, mostrar caja vacía
+  if (isEmptySpace) {
+    return (
+      <div 
+        ref={setNodeRef} 
+        style={style} 
+        className={`
+          relative group
+          transition-all duration-200 ease-out
+          ${isOver && !isDragging ? 'ring-2 ring-primary ring-offset-2 scale-105' : ''}
+        `}
+      >
+        {/* Handle para arrastrar - solo visible en modo organización */}
+        {modoOrganizacion && (
+          <div
+            {...attributes}
+            {...listeners}
+            className={`
+              absolute -left-1 top-1/2 -translate-y-1/2 z-10 
+              transition-all duration-200 
+              cursor-grab active:cursor-grabbing 
+              bg-gray-400/90 rounded p-1 shadow-md
+              ${isDragging ? 'opacity-0' : 'opacity-80 group-hover:opacity-100 hover:bg-gray-500 hover:shadow-lg'}
+            `}
+          >
+            <GripVertical className="h-4 w-4 text-white" />
+          </div>
+        )}
+        <div
+          className={`
+            bg-gray-100 border-2 border-dashed border-gray-300
+            w-full h-20 rounded-lg p-2
+            flex flex-col items-center justify-center
+            transition-all duration-250
+            ${isDragging ? 'scale-105 shadow-xl ring-2 ring-gray-400 ring-offset-2' : ''}
+          `}
+        >
+          <span className="text-gray-400 text-xs italic">Espacio</span>
+        </div>
+      </div>
+    );
+  }
 
   const bgColor = {
     completado: "bg-emerald-500 hover:bg-emerald-600",
