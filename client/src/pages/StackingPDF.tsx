@@ -1,20 +1,14 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLocation } from "wouter";
 import { 
   ArrowLeft,
-  FileDown,
   Printer,
-  Building2,
-  CheckCircle2,
-  AlertCircle,
-  Clock
+  Building2
 } from "lucide-react";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 
 type UnidadPanoramica = {
   id: number;
@@ -36,6 +30,7 @@ export default function StackingPDF() {
   const [, setLocation] = useLocation();
   const { selectedProjectId } = useProject();
   const printRef = useRef<HTMLDivElement>(null);
+  const [totalPages, setTotalPages] = useState(1);
   
   const { data: unidades, isLoading } = trpc.unidades.panoramica.useQuery(
     { proyectoId: selectedProjectId || 0 },
@@ -82,6 +77,16 @@ export default function StackingPDF() {
     };
   }, [unidades]);
 
+  // Calcular número de páginas basado en contenido
+  useEffect(() => {
+    const niveles = celdasPorNivel.size;
+    const totalUnidades = unidades?.length || 0;
+    // Estimación: ~10 niveles por página en cuadrícula + 1 página para tabla
+    const paginasCuadricula = Math.ceil(niveles / 10);
+    const paginasTabla = Math.ceil(totalUnidades / 30);
+    setTotalPages(Math.max(1, paginasCuadricula + paginasTabla));
+  }, [celdasPorNivel, unidades]);
+
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case 'completado': return 'bg-emerald-500';
@@ -99,6 +104,14 @@ export default function StackingPDF() {
       default: return 'Sin ítems';
     }
   };
+
+  const fechaActual = new Date().toLocaleDateString('es-MX', { 
+    day: '2-digit', 
+    month: 'long', 
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
   const handlePrint = () => {
     window.print();
@@ -129,7 +142,7 @@ export default function StackingPDF() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white print:bg-white">
       {/* Header con botones - NO se imprime */}
       <div className="bg-gray-50 border-b p-4 print:hidden">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -146,179 +159,204 @@ export default function StackingPDF() {
         </div>
       </div>
 
-      {/* Contenido imprimible - SIN DashboardLayout */}
-      <div ref={printRef} className="max-w-7xl mx-auto p-6 print:p-4 print:max-w-none">
-        {/* Encabezado del reporte - Estilo Objetiva */}
-        <div className="flex justify-between items-center border-b-2 border-[#002C63] pb-3 mb-6 print:mb-4">
-          <div className="text-xl font-bold text-[#002C63]">
-            OBJETIV<span className="text-[#02B381]">A</span>
-          </div>
-          <div className="text-right">
-            <div className="font-bold text-[#002C63]">{proyecto?.nombre || 'Proyecto'}</div>
-            <div className="text-sm text-gray-500">
-              Generado: {new Date().toLocaleDateString('es-MX', { 
-                day: '2-digit', 
-                month: 'long', 
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
+      {/* Contenido imprimible */}
+      <div ref={printRef} className="max-w-7xl mx-auto p-6 print:p-0 print:max-w-none">
+        
+        {/* ========== PÁGINA 1: CUADRÍCULA ========== */}
+        <div className="print:page-break-after-always">
+          {/* Encabezado profesional Objetiva */}
+          <div className="flex justify-between items-start border-b-2 border-[#002C63] pb-3 mb-4 print:mx-4 print:mt-4">
+            <div>
+              <div className="text-2xl font-bold text-[#002C63] tracking-tight">
+                OBJETIV<span className="text-[#02B381]">A</span>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">Control de Calidad</div>
+            </div>
+            <div className="text-right">
+              <div className="font-bold text-[#002C63] text-lg">{proyecto?.nombre || 'Proyecto'}</div>
+              <div className="text-xs text-gray-500">{fechaActual}</div>
             </div>
           </div>
-        </div>
-        
-        <h1 className="text-xl font-bold text-[#002C63] mb-4 print:text-lg text-center">
-          Reporte de Stacking
-        </h1>
-
-        {/* Resumen estadístico */}
-        <div className="grid grid-cols-5 gap-2 mb-6 print:mb-4 print:gap-1">
-          <div className="text-center p-2 bg-gray-50 rounded print:p-1 border">
-            <p className="text-xl font-bold text-[#002C63] print:text-lg">{estadisticas.total}</p>
-            <p className="text-xs text-gray-500">Total</p>
-          </div>
-          <div className="text-center p-2 bg-emerald-50 rounded print:p-1 border border-emerald-200">
-            <p className="text-xl font-bold text-emerald-600 print:text-lg">{estadisticas.completadas}</p>
-            <p className="text-xs text-gray-500">Completadas</p>
-          </div>
-          <div className="text-center p-2 bg-amber-50 rounded print:p-1 border border-amber-200">
-            <p className="text-xl font-bold text-amber-600 print:text-lg">{estadisticas.pendientes}</p>
-            <p className="text-xs text-gray-500">Pendientes</p>
-          </div>
-          <div className="text-center p-2 bg-red-50 rounded print:p-1 border border-red-200">
-            <p className="text-xl font-bold text-red-600 print:text-lg">{estadisticas.rechazadas}</p>
-            <p className="text-xs text-gray-500">Rechazadas</p>
-          </div>
-          <div className="text-center p-2 bg-gray-50 rounded print:p-1 border">
-            <p className="text-xl font-bold text-gray-600 print:text-lg">{estadisticas.sinItems}</p>
-            <p className="text-xs text-gray-500">Sin ítems</p>
-          </div>
-        </div>
-
-        {/* Leyenda */}
-        <div className="flex justify-center gap-4 mb-4 text-xs print:mb-2">
-          <div className="flex items-center gap-1">
-            <div className="h-3 w-3 rounded bg-emerald-500"></div>
-            <span>Completado</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="h-3 w-3 rounded bg-amber-500"></div>
-            <span>Pendiente</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="h-3 w-3 rounded bg-red-500"></div>
-            <span>Rechazado</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="h-3 w-3 rounded bg-gray-300"></div>
-            <span>Sin ítems</span>
-          </div>
-        </div>
-
-        {/* Cuadrícula del stacking - ordenado de menor a mayor (ascendente) */}
-        <div className="border rounded-lg p-4 print:p-2 print:border-gray-300">
-          <h2 className="font-semibold text-[#002C63] mb-3 print:text-sm print:mb-2">
-            Cuadrícula de Unidades por Nivel (Menor a Mayor)
-          </h2>
           
-          <div className="space-y-4 print:space-y-2">
-            {Array.from(celdasPorNivel.entries()).map(([nivel, unidadesNivel]) => (
-              <div key={nivel} className="print:break-inside-avoid">
-                <div className="flex items-center gap-2 mb-2 print:mb-1">
-                  <span className="font-semibold text-sm bg-gray-100 px-2 py-1 rounded print:text-xs">
-                    Nivel {nivel}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    ({unidadesNivel.length} unidades)
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 print:grid-cols-10 print:gap-1">
-                  {unidadesNivel.map((unidad) => (
-                    <div
-                      key={unidad.id}
-                      className={`
-                        p-2 rounded text-center text-xs
-                        ${getEstadoColor(unidad.estado)} text-white
-                        print:p-1 print:text-[8px]
-                      `}
-                    >
-                      <div className="font-semibold truncate">
-                        {unidad.codigo || unidad.nombre}
+          <h1 className="text-xl font-bold text-[#002C63] mb-4 text-center print:text-lg">
+            Reporte de Stacking
+          </h1>
+
+          {/* Resumen estadístico */}
+          <div className="grid grid-cols-5 gap-2 mb-4 print:gap-1 print:mx-4">
+            <div className="text-center p-2 bg-gray-50 rounded border print:p-1">
+              <p className="text-xl font-bold text-[#002C63] print:text-lg">{estadisticas.total}</p>
+              <p className="text-xs text-gray-500">Total</p>
+            </div>
+            <div className="text-center p-2 bg-emerald-50 rounded border border-emerald-200 print:p-1">
+              <p className="text-xl font-bold text-emerald-600 print:text-lg">{estadisticas.completadas}</p>
+              <p className="text-xs text-gray-500">Completadas</p>
+            </div>
+            <div className="text-center p-2 bg-amber-50 rounded border border-amber-200 print:p-1">
+              <p className="text-xl font-bold text-amber-600 print:text-lg">{estadisticas.pendientes}</p>
+              <p className="text-xs text-gray-500">Pendientes</p>
+            </div>
+            <div className="text-center p-2 bg-red-50 rounded border border-red-200 print:p-1">
+              <p className="text-xl font-bold text-red-600 print:text-lg">{estadisticas.rechazadas}</p>
+              <p className="text-xs text-gray-500">Rechazadas</p>
+            </div>
+            <div className="text-center p-2 bg-gray-50 rounded border print:p-1">
+              <p className="text-xl font-bold text-gray-600 print:text-lg">{estadisticas.sinItems}</p>
+              <p className="text-xs text-gray-500">Sin ítems</p>
+            </div>
+          </div>
+
+          {/* Leyenda */}
+          <div className="flex justify-center gap-4 mb-4 text-xs print:mb-2">
+            <div className="flex items-center gap-1">
+              <div className="h-3 w-3 rounded bg-emerald-500"></div>
+              <span>Completado</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-3 w-3 rounded bg-amber-500"></div>
+              <span>Pendiente</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-3 w-3 rounded bg-red-500"></div>
+              <span>Rechazado</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-3 w-3 rounded bg-gray-300"></div>
+              <span>Sin ítems</span>
+            </div>
+          </div>
+
+          {/* Cuadrícula del stacking */}
+          <div className="border rounded-lg p-4 print:p-2 print:mx-4 print:border-gray-300">
+            <h2 className="font-semibold text-[#002C63] mb-3 print:text-sm print:mb-2">
+              Cuadrícula de Unidades por Nivel (Menor a Mayor)
+            </h2>
+            
+            <div className="space-y-3 print:space-y-2">
+              {Array.from(celdasPorNivel.entries()).map(([nivel, unidadesNivel]) => (
+                <div key={nivel} className="print:break-inside-avoid">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-sm bg-gray-100 px-2 py-0.5 rounded print:text-xs">
+                      Nivel {nivel}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      ({unidadesNivel.length} unidades)
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-1 print:grid-cols-12 print:gap-0.5">
+                    {unidadesNivel.map((unidad) => (
+                      <div
+                        key={unidad.id}
+                        className={`
+                          p-1 rounded text-center text-xs
+                          ${getEstadoColor(unidad.estado)} text-white
+                          print:p-0.5 print:text-[7px]
+                        `}
+                      >
+                        <div className="font-semibold truncate">
+                          {unidad.codigo || unidad.nombre}
+                        </div>
                       </div>
-                      <div className="text-[10px] opacity-90 print:text-[6px]">
-                        {unidad.porcentaje}%
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Pie de página - Página 1 */}
+          <div className="hidden print:flex print:justify-between print:items-center print:mt-4 print:mx-4 print:pt-2 print:border-t print:text-xs print:text-gray-500">
+            <span>ObjetivaOQC - {proyecto?.nombre}</span>
+            <span>Página 1 de {totalPages}</span>
+          </div>
+        </div>
+
+        {/* ========== PÁGINA 2+: TABLA DETALLADA ========== */}
+        <div className="print:page-break-before-always">
+          {/* Encabezado repetido para página 2 */}
+          <div className="hidden print:flex print:justify-between print:items-start print:border-b-2 print:border-[#002C63] print:pb-3 print:mb-4 print:mx-4 print:mt-4">
+            <div>
+              <div className="text-xl font-bold text-[#002C63] tracking-tight">
+                OBJETIV<span className="text-[#02B381]">A</span>
               </div>
-            ))}
+              <div className="text-xs text-gray-500 mt-1">Control de Calidad</div>
+            </div>
+            <div className="text-right">
+              <div className="font-bold text-[#002C63]">{proyecto?.nombre || 'Proyecto'}</div>
+              <div className="text-xs text-gray-500">{fechaActual}</div>
+            </div>
           </div>
-        </div>
 
-        {/* Tabla detallada */}
-        <div className="mt-6 print:mt-4 print:break-before-page">
-          <h2 className="font-semibold text-[#002C63] mb-3 print:text-sm print:mb-2">
-            Detalle por Unidad
-          </h2>
-          
-          <table className="w-full text-xs border-collapse print:text-[8px]">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border p-2 text-left print:p-1">Nivel</th>
-                <th className="border p-2 text-left print:p-1">Unidad</th>
-                <th className="border p-2 text-center print:p-1">Estado</th>
-                <th className="border p-2 text-center print:p-1">Total</th>
-                <th className="border p-2 text-center print:p-1">Aprobados</th>
-                <th className="border p-2 text-center print:p-1">Pendientes</th>
-                <th className="border p-2 text-center print:p-1">Rechazados</th>
-                <th className="border p-2 text-center print:p-1">%</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from(celdasPorNivel.entries()).flatMap(([nivel, unidadesNivel]) =>
-                unidadesNivel.map((unidad) => (
-                  <tr key={unidad.id} className="hover:bg-gray-50">
-                    <td className="border p-2 print:p-1">{nivel}</td>
-                    <td className="border p-2 print:p-1 font-medium">
-                      {unidad.codigo || unidad.nombre}
-                    </td>
-                    <td className="border p-2 text-center print:p-1">
-                      <span className={`
-                        inline-block px-2 py-0.5 rounded text-white text-[10px]
-                        ${getEstadoColor(unidad.estado)}
-                      `}>
-                        {getEstadoLabel(unidad.estado)}
-                      </span>
-                    </td>
-                    <td className="border p-2 text-center print:p-1">{unidad.items.total}</td>
-                    <td className="border p-2 text-center print:p-1 text-emerald-600">{unidad.items.aprobados}</td>
-                    <td className="border p-2 text-center print:p-1 text-amber-600">{unidad.items.pendientes}</td>
-                    <td className="border p-2 text-center print:p-1 text-red-600">{unidad.items.rechazados}</td>
-                    <td className="border p-2 text-center print:p-1 font-semibold">{unidad.porcentaje}%</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+          <div className="mt-6 print:mt-0 print:mx-4">
+            <h2 className="font-semibold text-[#002C63] mb-3 print:text-sm print:mb-2">
+              Detalle por Unidad
+            </h2>
+            
+            <table className="w-full text-xs border-collapse print:text-[8px]">
+              <thead>
+                <tr className="bg-[#002C63] text-white">
+                  <th className="border border-[#002C63] p-2 text-left print:p-1">Nivel</th>
+                  <th className="border border-[#002C63] p-2 text-left print:p-1">Unidad</th>
+                  <th className="border border-[#002C63] p-2 text-center print:p-1">Estado</th>
+                  <th className="border border-[#002C63] p-2 text-center print:p-1">Total</th>
+                  <th className="border border-[#002C63] p-2 text-center print:p-1">Aprobados</th>
+                  <th className="border border-[#002C63] p-2 text-center print:p-1">Pendientes</th>
+                  <th className="border border-[#002C63] p-2 text-center print:p-1">Rechazados</th>
+                  <th className="border border-[#002C63] p-2 text-center print:p-1">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from(celdasPorNivel.entries()).flatMap(([nivel, unidadesNivel]) =>
+                  unidadesNivel.map((unidad, idx) => (
+                    <tr key={unidad.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="border p-2 print:p-1">{nivel}</td>
+                      <td className="border p-2 print:p-1 font-medium">
+                        {unidad.codigo || unidad.nombre}
+                      </td>
+                      <td className="border p-2 text-center print:p-1">
+                        <span className={`
+                          inline-block px-2 py-0.5 rounded text-white text-[10px]
+                          ${getEstadoColor(unidad.estado)}
+                        `}>
+                          {getEstadoLabel(unidad.estado)}
+                        </span>
+                      </td>
+                      <td className="border p-2 text-center print:p-1">{unidad.items.total}</td>
+                      <td className="border p-2 text-center print:p-1 text-emerald-600 font-medium">{unidad.items.aprobados}</td>
+                      <td className="border p-2 text-center print:p-1 text-amber-600 font-medium">{unidad.items.pendientes}</td>
+                      <td className="border p-2 text-center print:p-1 text-red-600 font-medium">{unidad.items.rechazados}</td>
+                      <td className="border p-2 text-center print:p-1 font-bold">{unidad.porcentaje}%</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-        {/* Pie de página para impresión */}
-        <div className="hidden print:block mt-8 text-center text-xs text-gray-500 border-t pt-2">
-          Generado por ObjetivaOQC | {new Date().toLocaleDateString('es-MX')}
+          {/* Pie de página - Página 2 */}
+          <div className="hidden print:flex print:justify-between print:items-center print:mt-4 print:mx-4 print:pt-2 print:border-t print:text-xs print:text-gray-500">
+            <span>ObjetivaOQC - {proyecto?.nombre}</span>
+            <span>Página 2 de {totalPages}</span>
+          </div>
         </div>
       </div>
 
-      {/* Estilos de impresión - ocultar TODO excepto el contenido */}
+      {/* Estilos de impresión profesionales */}
       <style>{`
         @media print {
           @page {
-            size: A4 landscape;
-            margin: 1cm;
+            size: letter landscape;
+            margin: 0.5cm;
           }
           
-          /* Ocultar absolutamente todo el layout de la app */
+          html, body {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          
+          /* Ocultar ABSOLUTAMENTE todo lo que no sea el contenido */
           body > div > div > aside,
           body > div > div > header,
           body > div > div > nav,
@@ -329,18 +367,20 @@ export default function StackingPDF() {
             display: none !important;
           }
           
-          /* Asegurar que el contenido ocupe todo el ancho */
-          body {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          
-          /* Remover márgenes del contenedor principal */
+          /* Asegurar que el contenido ocupe todo */
           main, [role="main"] {
             margin: 0 !important;
             padding: 0 !important;
             width: 100% !important;
             max-width: 100% !important;
+          }
+          
+          .print\\:page-break-after-always {
+            page-break-after: always;
+          }
+          
+          .print\\:page-break-before-always {
+            page-break-before: always;
           }
         }
       `}</style>

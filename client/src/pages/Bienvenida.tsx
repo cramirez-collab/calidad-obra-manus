@@ -13,8 +13,7 @@ import {
   ArrowRight,
   MapPin,
   BarChart3,
-  TrendingUp,
-  ClipboardCheck,
+  Plus,
   Loader2
 } from "lucide-react";
 import { useLocation, Redirect } from "wouter";
@@ -54,11 +53,10 @@ export default function Bienvenida() {
     }
   };
 
+  // Solo dos acciones: Nuevo y Stats
   const quickActions = [
-    { icon: Camera, label: "Nuevo", path: "/nuevo-item", color: "bg-[#02B381]", roles: ['superadmin', 'admin', 'residente'] },
-    { icon: ClipboardCheck, label: "Ítems", path: "/items", color: "bg-[#002C63]", roles: ['all'] },
-    { icon: BarChart3, label: "Stats", path: "/estadisticas", color: "bg-[#002C63]/80", roles: ['superadmin', 'admin', 'supervisor'] },
-    { icon: TrendingUp, label: "KPIs", path: "/kpis", color: "bg-[#02B381]/80", roles: ['superadmin', 'admin', 'supervisor'] },
+    { icon: Plus, label: "Nuevo", path: "/nuevo-item", color: "bg-[#02B381]", roles: ['superadmin', 'admin', 'residente', 'jefe_residente'] },
+    { icon: BarChart3, label: "Stats", path: "/estadisticas", color: "bg-[#002C63]", roles: ['superadmin', 'admin', 'supervisor'] },
   ];
 
   const visibleActions = quickActions.filter(a => 
@@ -68,7 +66,7 @@ export default function Bienvenida() {
   return (
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6">
-        {/* Header compacto */}
+        {/* Header con iconos de acceso rápido a la derecha */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg sm:text-xl font-semibold text-[#002C63]">
@@ -78,8 +76,9 @@ export default function Bienvenida() {
               {pendientes?.length || 0} pendientes
             </p>
           </div>
+          {/* Iconos de acceso rápido - siempre visibles arriba */}
           <div className="flex gap-2">
-            {visibleActions.slice(0, 2).map(action => (
+            {visibleActions.map(action => (
               <Tooltip key={action.path}>
                 <TooltipTrigger asChild>
                   <Button
@@ -160,24 +159,6 @@ export default function Bienvenida() {
             </CardContent>
           </Card>
         )}
-
-        {/* Acciones rápidas - Grid compacto */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-3">
-          {visibleActions.map(action => (
-            <Tooltip key={action.path}>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setLocation(action.path)}
-                  className={`flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl ${action.color} text-white hover:opacity-90 transition-all active:scale-95 shadow-md`}
-                >
-                  <action.icon className="h-6 w-6 sm:h-7 sm:w-7" />
-                  <span className="text-[10px] sm:text-xs mt-1 font-medium">{action.label}</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>{action.label}</TooltipContent>
-            </Tooltip>
-          ))}
-        </div>
       </div>
     </DashboardLayout>
   );

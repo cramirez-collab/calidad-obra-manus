@@ -905,3 +905,20 @@
 
 - [x] Ocultar sidebar y header en impresión (solo contenido)
 - [x] Cambiar orden de niveles a ascendente (menor a mayor) en el PDF
+
+
+## Mejoras PDF y Home Enero 27
+
+### PDF Formato Profesional
+- [x] Asegurar formato estándar Objetiva en TODOS los PDFs
+- [x] Logo Objetiva a la izquierda
+- [x] Nombre del proyecto a la derecha
+- [x] Fecha de impresión
+- [x] Paginación "1 de X"
+
+### Reorganización Home
+- [x] Mover iconos de acceso rápido arriba (al lado de cámara)
+- [x] Eliminar botón Ítems (repetido)
+- [x] Eliminar botón cámara (repetido)
+- [x] Eliminar botón KPIs
+- [x] Dejar solo Nuevo y Stats
