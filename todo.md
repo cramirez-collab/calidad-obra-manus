@@ -1166,3 +1166,12 @@
 - [x] Corregir: al soltar la unidad en destino, se regresa a posición original
 - [x] Verificar que onDragEnd actualice el estado correctamente
 - [x] Verificar que la mutación de guardar orden funcione
+
+
+## Modo Organización Stacking (27 Enero 2026)
+- [x] Agregar botón "Organizar" visible solo para Admin y Superadmin
+- [x] Implementar modo de organización que permite arrastrar y soltar
+- [x] Permitir insertar espacios libres del mismo tamaño que las unidades
+- [x] Botón "Guardar Orden" cuando hay cambios pendientes
+- [x] Botón "Cancelar" para salir sin guardar
+- [x] El modo se puede activar/desactivar repetidamente

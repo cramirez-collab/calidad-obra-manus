@@ -37,7 +37,9 @@ import {
   FileDown,
   Calendar,
   Pencil,
-  Save
+  Save,
+  Settings2,
+  X
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -90,31 +92,36 @@ type CeldaStacking = {
   nivel: number;
 };
 
-// Componente para celda vacía (placeholder)
+// Componente para celda vacía (placeholder) - solo visible en modo organización
 function CeldaVacia({ 
   posicion, 
   nivel, 
-  onInsertarUnidad 
+  onInsertarUnidad,
+  modoOrganizacion = false
 }: { 
   posicion: number; 
   nivel: number; 
   onInsertarUnidad: (posicion: number, nivel: number) => void;
+  modoOrganizacion?: boolean;
 }) {
+  if (!modoOrganizacion) return null;
+  
   return (
     <button
       onClick={() => onInsertarUnidad(posicion, nivel)}
       className="
         w-full h-20 rounded-lg
-        border-2 border-dashed border-gray-300
+        border-2 border-dashed border-primary/50
         flex flex-col items-center justify-center
         transition-all duration-200
-        hover:border-primary hover:bg-primary/5
+        hover:border-primary hover:bg-primary/10
         cursor-pointer
         group
+        bg-primary/5
       "
     >
-      <Plus className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors" />
-      <span className="text-xs text-gray-400 group-hover:text-primary mt-1">Insertar</span>
+      <Plus className="h-5 w-5 text-primary/60 group-hover:text-primary transition-colors" />
+      <span className="text-xs text-primary/60 group-hover:text-primary mt-1">Espacio</span>
     </button>
   );
 }
@@ -127,7 +134,8 @@ function SortableUnidadCard({
   onEditFechas,
   selectedId,
   isMobile,
-  isOverlay = false
+  isOverlay = false,
+  modoOrganizacion = false
 }: { 
   celda: CeldaStacking; 
   onTap: (unidad: UnidadPanoramica) => void;
@@ -136,6 +144,7 @@ function SortableUnidadCard({
   selectedId: number | null;
   isMobile: boolean;
   isOverlay?: boolean;
+  modoOrganizacion?: boolean;
 }) {
   const {
     attributes,
@@ -206,20 +215,22 @@ function SortableUnidadCard({
         ${isOver && !isDragging ? 'ring-2 ring-primary ring-offset-2 scale-105' : ''}
       `}
     >
-      {/* Handle para arrastrar - visible al hacer hover */}
-      <div
-        {...attributes}
-        {...listeners}
-        className={`
-          absolute -left-1 top-1/2 -translate-y-1/2 z-10 
-          transition-all duration-200 
-          cursor-grab active:cursor-grabbing 
-          bg-white/90 rounded p-1 shadow-md
-          ${isDragging ? 'opacity-0' : 'opacity-60 group-hover:opacity-100 hover:bg-white hover:shadow-lg'}
-        `}
-      >
-        <GripVertical className="h-4 w-4 text-gray-600" />
-      </div>
+      {/* Handle para arrastrar - solo visible en modo organización */}
+      {modoOrganizacion && (
+        <div
+          {...attributes}
+          {...listeners}
+          className={`
+            absolute -left-1 top-1/2 -translate-y-1/2 z-10 
+            transition-all duration-200 
+            cursor-grab active:cursor-grabbing 
+            bg-primary/90 rounded p-1 shadow-md
+            ${isDragging ? 'opacity-0' : 'opacity-80 group-hover:opacity-100 hover:bg-primary hover:shadow-lg'}
+          `}
+        >
+          <GripVertical className="h-4 w-4 text-white" />
+        </div>
+      )}
 
       {/* Botón de editar fechas */}
       <button
@@ -639,6 +650,7 @@ export default function VistaPanoramica() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<{id: number, orden: number, nivel?: number}[]>([]);
   const [localUnidades, setLocalUnidades] = useState<UnidadPanoramica[] | null>(null);
+  const [modoOrganizacion, setModoOrganizacion] = useState(false);
   
   // Detectar si es móvil
   React.useEffect(() => {
@@ -905,16 +917,43 @@ export default function VistaPanoramica() {
               Arrastra unidades entre niveles • {isMobile ? "Toca para ver stats" : "Clic para ver ítems"}
             </p>
           </div>
-          <div className="flex gap-2">
-            {hasUnsavedChanges && (
+          <div className="flex gap-2 flex-wrap">
+            {/* Botón Organizar - Solo para Admin y Superadmin */}
+            {(user?.role === 'admin' || user?.role === 'superadmin') && !modoOrganizacion && (
               <Button 
-                onClick={handleGuardarOrden}
-                disabled={updateOrdenMutation.isPending}
-                className="bg-primary hover:bg-primary/90"
+                onClick={() => setModoOrganizacion(true)}
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary/10"
               >
-                <Save className="h-4 w-4 mr-2" />
-                {updateOrdenMutation.isPending ? "Guardando..." : "Guardar Orden"}
+                <Settings2 className="h-4 w-4 mr-2" />
+                Organizar
               </Button>
+            )}
+            {/* Botones de modo organización */}
+            {modoOrganizacion && (
+              <>
+                <Button 
+                  onClick={handleGuardarOrden}
+                  disabled={updateOrdenMutation.isPending || !hasUnsavedChanges}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {updateOrdenMutation.isPending ? "Guardando..." : "Guardar Orden"}
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setModoOrganizacion(false);
+                    setHasUnsavedChanges(false);
+                    setPendingChanges([]);
+                    setLocalUnidades(null);
+                    refetch();
+                  }}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancelar
+                </Button>
+              </>
             )}
             <Button variant="outline" onClick={() => setLocation("/stacking/pdf")}>
               <FileDown className="h-4 w-4 mr-2" />
@@ -1055,13 +1094,15 @@ export default function VistaPanoramica() {
                               onEditFechas={handleEditFechas}
                               selectedId={selectedUnidad?.id || null}
                               isMobile={isMobile}
+                              modoOrganizacion={modoOrganizacion}
                             />
                           ))}
-                          {/* Celda vacía al final para insertar */}
+                          {/* Celda vacía al final para insertar - solo en modo organización */}
                           <CeldaVacia 
                             posicion={celdas.length} 
                             nivel={nivel}
                             onInsertarUnidad={() => handleAgregarUnidad(nivel)}
+                            modoOrganizacion={modoOrganizacion}
                           />
                         </div>
                       </SortableContext>
