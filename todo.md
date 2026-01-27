@@ -843,3 +843,11 @@
 - [x] Eliminar módulo Estadísticas Avanzadas
 - [x] Eliminar módulo Reportes
 - [x] Limpiar menú de navegación
+
+
+## Corrección Generador QR Enero 27
+
+- [x] Cambiar generación de QR de unidad a ítem (modo "Por Ítems")
+- [x] Ajustar diseño para 6 QR por hoja carta (2x3)
+- [x] Encuadrar correctamente los QR para impresión
+- [x] Mantener modo "Por Rango" como alternativa
