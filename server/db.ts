@@ -3476,3 +3476,248 @@ export async function getEstadisticasQR(proyectoId?: number) {
     distribucionUnidades,
   };
 }
+
+
+// ==================== KPIs MEJORES Y PEORES ====================
+
+export async function getKPIsMejoresPeores(proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const conditions = [];
+  if (proyectoId) {
+    conditions.push(eq(items.proyectoId, proyectoId));
+  }
+  
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const todosItems = await db.select().from(items).where(whereClause);
+  
+  // Obtener datos relacionados
+  const todasEmpresas = await db.select().from(empresas);
+  const todosUsuarios = await db.select().from(users);
+  const todasEspecialidades = await db.select().from(especialidades);
+  const todosDefectos = await db.select().from(defectos);
+  const todasUnidades = await db.select().from(unidades);
+  const todosEspacios = await db.select().from(espacios);
+  
+  const empresasMap = new Map(todasEmpresas.map(e => [e.id, e]));
+  const usuariosMap = new Map(todosUsuarios.map(u => [u.id, u]));
+  const especialidadesMap = new Map(todasEspecialidades.map(e => [e.id, e]));
+  const defectosMap = new Map(todosDefectos.map(d => [d.id, d]));
+  const unidadesMap = new Map(todasUnidades.map(u => [u.id, u]));
+  const espaciosMap = new Map(todosEspacios.map(e => [e.id, e]));
+  
+  // Función para calcular score de rendimiento
+  const calcularScore = (total: number, aprobados: number, rechazados: number, pendientes: number) => {
+    if (total === 0) return 0;
+    // Score: % aprobación - penalización por rechazos
+    const tasaAprobacion = (aprobados / total) * 100;
+    const penalizacion = (rechazados / total) * 50;
+    return Math.round(tasaAprobacion - penalizacion);
+  };
+  
+  // ==================== EMPRESAS ====================
+  const empresasStats = todasEmpresas.map(empresa => {
+    const itemsEmpresa = todosItems.filter(i => i.empresaId === empresa.id);
+    const aprobados = itemsEmpresa.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsEmpresa.filter(i => i.status === 'rechazado').length;
+    const pendientes = itemsEmpresa.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+    const total = itemsEmpresa.length;
+    
+    return {
+      id: empresa.id,
+      nombre: empresa.nombre,
+      total,
+      aprobados,
+      rechazados,
+      pendientes,
+      score: calcularScore(total, aprobados, rechazados, pendientes),
+      tasaAprobacion: total > 0 ? Math.round((aprobados / total) * 100) : 0,
+    };
+  }).filter(e => e.total > 0);
+  
+  const empresasMejores = [...empresasStats].sort((a, b) => b.score - a.score).slice(0, 5);
+  const empresasPeores = [...empresasStats].sort((a, b) => a.score - b.score).slice(0, 5);
+  
+  // ==================== ESPECIALIDADES ====================
+  const especialidadesStats = todasEspecialidades.map(esp => {
+    const itemsEsp = todosItems.filter(i => i.especialidadId === esp.id);
+    const aprobados = itemsEsp.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsEsp.filter(i => i.status === 'rechazado').length;
+    const pendientes = itemsEsp.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+    const total = itemsEsp.length;
+    
+    return {
+      id: esp.id,
+      nombre: esp.nombre,
+      color: esp.color,
+      total,
+      aprobados,
+      rechazados,
+      pendientes,
+      score: calcularScore(total, aprobados, rechazados, pendientes),
+      tasaAprobacion: total > 0 ? Math.round((aprobados / total) * 100) : 0,
+    };
+  }).filter(e => e.total > 0);
+  
+  const especialidadesMejores = [...especialidadesStats].sort((a, b) => b.score - a.score).slice(0, 5);
+  const especialidadesPeores = [...especialidadesStats].sort((a, b) => a.score - b.score).slice(0, 5);
+  
+  // ==================== RESIDENTES ====================
+  const residentes = todosUsuarios.filter(u => u.role === 'residente');
+  const residentesStats = residentes.map(residente => {
+    const itemsResidente = todosItems.filter(i => i.residenteId === residente.id);
+    const aprobados = itemsResidente.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsResidente.filter(i => i.status === 'rechazado').length;
+    const pendientes = itemsResidente.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+    const total = itemsResidente.length;
+    const empresa = residente.empresaId ? empresasMap.get(residente.empresaId)?.nombre : null;
+    
+    return {
+      id: residente.id,
+      nombre: residente.name,
+      empresa,
+      total,
+      aprobados,
+      rechazados,
+      pendientes,
+      score: calcularScore(total, aprobados, rechazados, pendientes),
+      tasaAprobacion: total > 0 ? Math.round((aprobados / total) * 100) : 0,
+    };
+  }).filter(r => r.total > 0);
+  
+  const residentesMejores = [...residentesStats].sort((a, b) => b.score - a.score).slice(0, 5);
+  const residentesPeores = [...residentesStats].sort((a, b) => a.score - b.score).slice(0, 5);
+  
+  // ==================== JEFES DE RESIDENTES ====================
+  const jefesResidentes = todosUsuarios.filter(u => u.role === 'jefe_residente');
+  const jefesStats = jefesResidentes.map(jefe => {
+    const itemsJefe = todosItems.filter(i => i.jefeResidenteId === jefe.id);
+    const aprobados = itemsJefe.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsJefe.filter(i => i.status === 'rechazado').length;
+    const pendientes = itemsJefe.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+    const total = itemsJefe.length;
+    const empresa = jefe.empresaId ? empresasMap.get(jefe.empresaId)?.nombre : null;
+    
+    return {
+      id: jefe.id,
+      nombre: jefe.name,
+      empresa,
+      total,
+      aprobados,
+      rechazados,
+      pendientes,
+      score: calcularScore(total, aprobados, rechazados, pendientes),
+      tasaAprobacion: total > 0 ? Math.round((aprobados / total) * 100) : 0,
+    };
+  }).filter(j => j.total > 0);
+  
+  const jefesMejores = [...jefesStats].sort((a, b) => b.score - a.score).slice(0, 5);
+  const jefesPeores = [...jefesStats].sort((a, b) => a.score - b.score).slice(0, 5);
+  
+  // ==================== UNIDADES ====================
+  const unidadesStats = todasUnidades.map(unidad => {
+    const itemsUnidad = todosItems.filter(i => i.unidadId === unidad.id);
+    const aprobados = itemsUnidad.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsUnidad.filter(i => i.status === 'rechazado').length;
+    const pendientes = itemsUnidad.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+    const total = itemsUnidad.length;
+    
+    return {
+      id: unidad.id,
+      nombre: unidad.nombre,
+      nivel: unidad.nivel,
+      total,
+      aprobados,
+      rechazados,
+      pendientes,
+      score: calcularScore(total, aprobados, rechazados, pendientes),
+      tasaAprobacion: total > 0 ? Math.round((aprobados / total) * 100) : 0,
+    };
+  }).filter(u => u.total > 0);
+  
+  const unidadesMejores = [...unidadesStats].sort((a, b) => b.score - a.score).slice(0, 5);
+  const unidadesPeores = [...unidadesStats].sort((a, b) => a.score - b.score).slice(0, 5);
+  
+  // ==================== ESPACIOS ====================
+  const espaciosStats = todosEspacios.map(espacio => {
+    const itemsEspacio = todosItems.filter(i => i.espacioId === espacio.id);
+    const aprobados = itemsEspacio.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsEspacio.filter(i => i.status === 'rechazado').length;
+    const pendientes = itemsEspacio.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+    const total = itemsEspacio.length;
+    
+    return {
+      id: espacio.id,
+      nombre: espacio.nombre,
+      total,
+      aprobados,
+      rechazados,
+      pendientes,
+      score: calcularScore(total, aprobados, rechazados, pendientes),
+      tasaAprobacion: total > 0 ? Math.round((aprobados / total) * 100) : 0,
+    };
+  }).filter(e => e.total > 0);
+  
+  const espaciosMejores = [...espaciosStats].sort((a, b) => b.score - a.score).slice(0, 5);
+  const espaciosPeores = [...espaciosStats].sort((a, b) => a.score - b.score).slice(0, 5);
+  
+  // ==================== DEFECTOS ====================
+  const defectosStats = todosDefectos.map(defecto => {
+    const itemsDefecto = todosItems.filter(i => i.defectoId === defecto.id);
+    const aprobados = itemsDefecto.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsDefecto.filter(i => i.status === 'rechazado').length;
+    const total = itemsDefecto.length;
+    
+    return {
+      id: defecto.id,
+      nombre: defecto.nombre,
+      severidad: defecto.severidad,
+      total,
+      aprobados,
+      rechazados,
+      tasaResolucion: total > 0 ? Math.round((aprobados / total) * 100) : 0,
+    };
+  }).filter(d => d.total > 0);
+  
+  const defectosMasFrecuentes = [...defectosStats].sort((a, b) => b.total - a.total).slice(0, 5);
+  const defectosMenosFrecuentes = [...defectosStats].sort((a, b) => a.total - b.total).slice(0, 5);
+  
+  // ==================== NIVELES ====================
+  const nivelesUnicos = Array.from(new Set(todasUnidades.map(u => u.nivel).filter(Boolean)));
+  const nivelesStats = nivelesUnicos.map(nivel => {
+    const unidadesNivel = todasUnidades.filter(u => u.nivel === nivel);
+    const unidadIds = new Set(unidadesNivel.map(u => u.id));
+    const itemsNivel = todosItems.filter(i => i.unidadId && unidadIds.has(i.unidadId));
+    const aprobados = itemsNivel.filter(i => i.status === 'aprobado').length;
+    const rechazados = itemsNivel.filter(i => i.status === 'rechazado').length;
+    const pendientes = itemsNivel.filter(i => i.status === 'pendiente_foto_despues' || i.status === 'pendiente_aprobacion').length;
+    const total = itemsNivel.length;
+    
+    return {
+      nivel,
+      nombre: `Nivel ${nivel}`,
+      totalUnidades: unidadesNivel.length,
+      total,
+      aprobados,
+      rechazados,
+      pendientes,
+      score: calcularScore(total, aprobados, rechazados, pendientes),
+      tasaAprobacion: total > 0 ? Math.round((aprobados / total) * 100) : 0,
+    };
+  }).filter(n => n.total > 0);
+  
+  const nivelesMejores = [...nivelesStats].sort((a, b) => b.score - a.score).slice(0, 5);
+  const nivelesPeores = [...nivelesStats].sort((a, b) => a.score - b.score).slice(0, 5);
+  
+  return {
+    empresas: { mejores: empresasMejores, peores: empresasPeores },
+    especialidades: { mejores: especialidadesMejores, peores: especialidadesPeores },
+    residentes: { mejores: residentesMejores, peores: residentesPeores },
+    jefesResidentes: { mejores: jefesMejores, peores: jefesPeores },
+    unidades: { mejores: unidadesMejores, peores: unidadesPeores },
+    espacios: { mejores: espaciosMejores, peores: espaciosPeores },
+    defectos: { masFrecuentes: defectosMasFrecuentes, menosFrecuentes: defectosMenosFrecuentes },
+    niveles: { mejores: nivelesMejores, peores: nivelesPeores },
+  };
+}

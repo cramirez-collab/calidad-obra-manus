@@ -1653,6 +1653,13 @@ export const appRouter = router({
     defectosPorUsuario: adminProcedure.query(async () => {
       return await db.getDefectosPorUsuario();
     }),
+    
+    // KPIs Mejores y Peores (todas las categorías)
+    kpisMejoresPeores: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getKPIsMejoresPeores(input?.proyectoId);
+      }),
   }),
 
   // ==================== FLUJO RÁPIDO ====================

@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useProject } from "@/contexts/ProjectContext";
+import KPIsMejoresPeores from "@/components/KPIsMejoresPeores";
 import {
   BarChart,
   Bar,
@@ -1000,6 +1001,19 @@ export default function Estadisticas() {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* KPIs Mejores y Peores */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-[#002C63]" />
+            Ranking de Rendimiento
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Comparativa de mejores y peores por categoría (barras horizontales)
+          </p>
+          
+          <KPIsMejoresPeores />
         </div>
 
         {/* Estadísticas de Rendimiento por Usuario */}

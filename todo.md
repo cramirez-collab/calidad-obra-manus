@@ -1175,3 +1175,16 @@
 - [x] Botón "Guardar Orden" cuando hay cambios pendientes
 - [x] Botón "Cancelar" para salir sin guardar
 - [x] El modo se puede activar/desactivar repetidamente
+
+
+## KPIs Mejores y Peores - Barras Horizontales (27 Enero 2026)
+
+### Gráficas de Rendimiento por Categoría
+- [x] Empresas: Top 5 mejores y Top 5 peores (barras horizontales)
+- [x] Especialidades: Top 5 mejores y Top 5 peores (barras horizontales)
+- [x] Residentes: Top 5 mejores y Top 5 peores (barras horizontales)
+- [x] Jefes de Residentes: Top 5 mejores y Top 5 peores (barras horizontales)
+- [x] Unidades: Top 5 mejores y Top 5 peores (barras horizontales)
+- [x] Espacios: Top 5 mejores y Top 5 peores (barras horizontales)
+- [x] Defectos: Top 5 más frecuentes y Top 5 menos frecuentes (barras horizontales)
+- [x] Niveles: Top 5 mejores y Top 5 peores (barras horizontales)
