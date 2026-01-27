@@ -638,6 +638,7 @@ export default function VistaPanoramica() {
   const [isMobile, setIsMobile] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<{id: number, orden: number, nivel?: number}[]>([]);
+  const [localUnidades, setLocalUnidades] = useState<UnidadPanoramica[] | null>(null);
   
   // Detectar si es móvil
   React.useEffect(() => {
@@ -647,16 +648,27 @@ export default function VistaPanoramica() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const { data: unidades, isLoading, refetch } = trpc.unidades.panoramica.useQuery(
+  const { data: serverUnidades, isLoading, refetch } = trpc.unidades.panoramica.useQuery(
     { proyectoId: selectedProjectId! },
     { enabled: !!selectedProjectId }
   );
 
+  // Sincronizar unidades del servidor con el estado local
+  React.useEffect(() => {
+    if (serverUnidades && !hasUnsavedChanges) {
+      setLocalUnidades(serverUnidades as UnidadPanoramica[]);
+    }
+  }, [serverUnidades, hasUnsavedChanges]);
+
+  // Usar unidades locales si existen, sino las del servidor
+  const unidades = localUnidades || serverUnidades;
+
   const updateOrdenMutation = trpc.unidades.updateOrden.useMutation({
     onSuccess: () => {
-      refetch();
       setHasUnsavedChanges(false);
       setPendingChanges([]);
+      setLocalUnidades(null); // Resetear para que use datos del servidor
+      refetch();
       toast.success("Orden guardado correctamente");
     },
     onError: (error) => {
@@ -742,45 +754,50 @@ export default function VistaPanoramica() {
     setActiveId(null);
 
     if (!over || active.id === over.id) return;
+    if (!localUnidades) return;
 
-    // Encontrar las celdas involucradas
-    let sourceNivel: number | null = null;
-    let targetNivel: number | null = null;
-    let sourceCeldas: CeldaStacking[] = [];
-    let targetCeldas: CeldaStacking[] = [];
+    // Extraer IDs de las unidades
+    const activeIdNum = parseInt((active.id as string).replace('unidad-', ''));
+    const overIdNum = parseInt((over.id as string).replace('unidad-', ''));
 
-    celdasPorNivel.forEach((celdas, nivel) => {
-      const sourceIndex = celdas.findIndex(c => c.id === active.id);
-      const targetIndex = celdas.findIndex(c => c.id === over.id);
-      
-      if (sourceIndex !== -1) {
-        sourceNivel = nivel;
-        sourceCeldas = celdas;
-      }
-      if (targetIndex !== -1) {
-        targetNivel = nivel;
-        targetCeldas = celdas;
-      }
-    });
+    // Encontrar las unidades involucradas
+    const activeUnidadIndex = localUnidades.findIndex(u => u.id === activeIdNum);
+    const overUnidadIndex = localUnidades.findIndex(u => u.id === overIdNum);
 
-    if (sourceNivel === null || targetNivel === null) return;
+    if (activeUnidadIndex === -1 || overUnidadIndex === -1) return;
 
-    // Permitir reordenar dentro del mismo nivel
-    if (sourceNivel === targetNivel) {
-      const oldIndex = sourceCeldas.findIndex(c => c.id === active.id);
-      const newIndex = sourceCeldas.findIndex(c => c.id === over.id);
-      
+    const activeUnidad = localUnidades[activeUnidadIndex];
+    const overUnidad = localUnidades[overUnidadIndex];
+
+    // Crear copia de las unidades para modificar
+    const newUnidades = [...localUnidades];
+
+    // Reordenar dentro del mismo nivel
+    if (activeUnidad.nivel === overUnidad.nivel) {
+      // Obtener unidades del mismo nivel
+      const nivelUnidades = newUnidades.filter(u => u.nivel === activeUnidad.nivel);
+      const oldIndex = nivelUnidades.findIndex(u => u.id === activeIdNum);
+      const newIndex = nivelUnidades.findIndex(u => u.id === overIdNum);
+
       if (oldIndex !== -1 && newIndex !== -1) {
-        const newOrder = arrayMove(sourceCeldas, oldIndex, newIndex);
+        // Reordenar usando arrayMove
+        const reordered = arrayMove(nivelUnidades, oldIndex, newIndex);
         
-        // Acumular cambios pendientes (no guardar inmediatamente)
-        const updates = newOrder.map((celda, index) => ({
-          id: celda.unidad!.id,
-          orden: index,
-        }));
+        // Actualizar el orden de cada unidad
+        const updates: {id: number, orden: number}[] = [];
+        reordered.forEach((unidad, index) => {
+          const globalIndex = newUnidades.findIndex(u => u.id === unidad.id);
+          if (globalIndex !== -1) {
+            newUnidades[globalIndex] = { ...newUnidades[globalIndex], orden: index };
+            updates.push({ id: unidad.id, orden: index });
+          }
+        });
+
+        // Actualizar estado local inmediatamente
+        setLocalUnidades(newUnidades);
         
+        // Acumular cambios pendientes
         setPendingChanges(prev => {
-          // Reemplazar cambios existentes para las mismas unidades
           const existingIds = new Set(updates.map(u => u.id));
           const filtered = prev.filter(p => !existingIds.has(p.id));
           return [...filtered, ...updates];
@@ -790,13 +807,26 @@ export default function VistaPanoramica() {
       }
     } else {
       // Mover unidad a otro nivel
-      const sourceCelda = sourceCeldas.find(c => c.id === active.id);
-      if (sourceCelda?.unidad) {
+      const targetNivel = overUnidad.nivel;
+      const targetNivelUnidades = newUnidades.filter(u => u.nivel === targetNivel);
+      const targetIndex = targetNivelUnidades.findIndex(u => u.id === overIdNum);
+      
+      // Actualizar la unidad movida
+      const globalIndex = newUnidades.findIndex(u => u.id === activeIdNum);
+      if (globalIndex !== -1) {
+        newUnidades[globalIndex] = {
+          ...newUnidades[globalIndex],
+          nivel: targetNivel,
+          orden: targetIndex >= 0 ? targetIndex : targetNivelUnidades.length,
+        };
+
+        // Actualizar estado local inmediatamente
+        setLocalUnidades(newUnidades);
+        
         // Acumular cambio pendiente
-        const targetIndex = targetCeldas.findIndex(c => c.id === over.id);
         const update = {
-          id: sourceCelda.unidad.id,
-          orden: targetIndex >= 0 ? targetIndex : targetCeldas.length,
+          id: activeIdNum,
+          orden: targetIndex >= 0 ? targetIndex : targetNivelUnidades.length,
           nivel: targetNivel,
         };
         
@@ -808,7 +838,7 @@ export default function VistaPanoramica() {
         toast.info("Cambios pendientes - Presiona Guardar Orden para confirmar");
       }
     }
-  }, [celdasPorNivel]);
+  }, [localUnidades]);
 
   const handleTap = (unidad: UnidadPanoramica) => {
     setSelectedUnidad(unidad);

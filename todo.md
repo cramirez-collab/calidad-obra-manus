@@ -1160,3 +1160,9 @@
 
 ## Filtro Especialidad en Estadísticas (27 Enero 2026)
 - [x] Agregar filtro de Especialidad después del filtro de Empresa en la página de Estadísticas
+
+
+## Bug Drag & Drop Stacking - No Persiste (27 Enero 2026)
+- [x] Corregir: al soltar la unidad en destino, se regresa a posición original
+- [x] Verificar que onDragEnd actualice el estado correctamente
+- [x] Verificar que la mutación de guardar orden funcione
