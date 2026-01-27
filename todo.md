@@ -1096,3 +1096,21 @@
 - [x] Mantener cascada de relaciones funcionando
 - [x] Agregar selector de Nivel antes de Unidad
 - [x] Filtrar unidades por nivel seleccionado
+
+
+## Ordenamiento de Tablas y Defectos Sugeridos (Iteración 27 Enero 2026 - Parte 2)
+
+### Ordenamiento en Todas las Tablas
+- [x] Crear componente/hook de ordenamiento reutilizable
+- [x] Aplicar ordenamiento a tabla de Espacios (por orden, nombre, código, descripción)
+- [x] Aplicar ordenamiento a tabla de Especialidades (por color, código, nombre, descripción, residente)
+- [x] Aplicar ordenamiento a tabla de Empresas (ya tenía ordenamiento por dropdown)
+- [x] Aplicar ordenamiento a tabla de Unidades
+- [x] Indicador visual de columna ordenada (flecha arriba/abajo)
+
+### Defectos Sugeridos Editables
+- [x] Mostrar defectos como badges con hover actions
+- [x] Permitir eliminar defecto individual con X
+- [x] Permitir editar defecto existente (inline editing)
+- [x] Permitir añadir nuevo defecto personalizado
+- [x] Marcar defectos como "sugeridos" con badge Sparkles
