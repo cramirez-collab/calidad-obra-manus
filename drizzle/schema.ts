@@ -1,7 +1,7 @@
 import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
 
 // Enum para roles de usuario (superadmin tiene acceso total, admin/supervisor limitado en config)
-export const userRoleEnum = mysqlEnum("role", ["superadmin", "admin", "supervisor", "jefe_residente", "residente"]);
+export const userRoleEnum = mysqlEnum("role", ["superadmin", "admin", "supervisor", "jefe_residente", "residente", "desarrollador"]);
 
 // Enum para estados de ítems
 export const itemStatusEnum = mysqlEnum("status", ["pendiente_foto_despues", "pendiente_aprobacion", "aprobado", "rechazado"]);
@@ -16,7 +16,7 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   passwordHash: varchar("passwordHash", { length: 255 }), // Para usuarios creados manualmente
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["superadmin", "admin", "supervisor", "jefe_residente", "residente"]).default("residente").notNull(),
+  role: mysqlEnum("role", ["superadmin", "admin", "supervisor", "jefe_residente", "residente", "desarrollador"]).default("residente").notNull(),
   empresaId: int("empresaId"),
   proyectoActivoId: int("proyectoActivoId"), // Proyecto actualmente seleccionado por el usuario
   activo: boolean("activo").default(true).notNull(),
@@ -58,7 +58,7 @@ export const proyectoUsuarios = mysqlTable("proyecto_usuarios", {
   id: int("id").autoincrement().primaryKey(),
   proyectoId: int("proyectoId").notNull(),
   usuarioId: int("usuarioId").notNull(),
-  rolEnProyecto: mysqlEnum("rolEnProyecto", ["admin", "supervisor", "jefe_residente", "residente"]).default("residente").notNull(),
+  rolEnProyecto: mysqlEnum("rolEnProyecto", ["admin", "supervisor", "jefe_residente", "residente", "desarrollador"]).default("residente").notNull(),
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -73,6 +73,8 @@ export const empresas = mysqlTable("empresas", {
   id: int("id").autoincrement().primaryKey(),
   proyectoId: int("proyectoId"), // Relación con proyecto
   especialidadId: int("especialidadId"), // Relación con especialidad
+  residenteId: int("residenteId"), // Usuario residente asignado
+  jefeResidenteId: int("jefeResidenteId"), // Usuario jefe de residente asignado
   nombre: varchar("nombre", { length: 255 }).notNull(),
   rfc: varchar("rfc", { length: 20 }),
   contacto: varchar("contacto", { length: 255 }),

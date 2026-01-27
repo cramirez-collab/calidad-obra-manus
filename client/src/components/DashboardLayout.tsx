@@ -97,6 +97,13 @@ const getMenuItems = (role: string): MenuItem[] => {
     items = [...items, ...supervisorItems];
   }
 
+  // Desarrollador: puede ver y crear ítems, pero NO accede a Configuración
+  if (role === 'desarrollador') {
+    // Solo tiene acceso a los baseItems (Inicio, Nuevo, Ítems, Mis Tareas)
+    // No se agregan analysisItems ni configSubItems
+    return items;
+  }
+
   if (role === 'admin' || role === 'superadmin') {
     items = [...items, ...analysisItems];
     items.push({
@@ -116,6 +123,7 @@ const roleLabels: Record<string, string> = {
   supervisor: "Supervisor",
   jefe_residente: "Jefe Residente",
   residente: "Residente",
+  desarrollador: "Desarrollador",
 };
 
 const roleColors: Record<string, string> = {
@@ -124,6 +132,7 @@ const roleColors: Record<string, string> = {
   supervisor: "bg-green-500",
   jefe_residente: "bg-orange-500",
   residente: "bg-gray-500",
+  desarrollador: "bg-cyan-500",
 };
 
 export default function DashboardLayout({

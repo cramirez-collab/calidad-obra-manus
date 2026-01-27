@@ -205,6 +205,8 @@ export const appRouter = router({
       .input(z.object({
         proyectoId: z.number().optional(),
         especialidadId: z.number().optional(),
+        residenteId: z.number().nullable().optional(),
+        jefeResidenteId: z.number().nullable().optional(),
         nombre: z.string().min(1),
         rfc: z.string().optional(),
         contacto: z.string().optional(),
@@ -221,6 +223,8 @@ export const appRouter = router({
         id: z.number(),
         proyectoId: z.number().optional(),
         especialidadId: z.number().nullable().optional(),
+        residenteId: z.number().nullable().optional(),
+        jefeResidenteId: z.number().nullable().optional(),
         nombre: z.string().min(1).optional(),
         rfc: z.string().optional(),
         contacto: z.string().optional(),

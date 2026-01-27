@@ -303,14 +303,15 @@ export default function Usuarios() {
                           Administrador
                         </div>
                       </SelectItem>
-                      <SelectItem value="supervisor">Supervisor</SelectItem>
-                      <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
-                      <SelectItem value="residente">Residente</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="empresa">Empresa</Label>
+<SelectItem value="supervisor">Supervisor</SelectItem>
+                       <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
+                       <SelectItem value="residente">Residente</SelectItem>
+                       <SelectItem value="desarrollador">Desarrollador</SelectItem>
+                     </SelectContent>
+                   </Select>
+                 </div>
+                 <div className="space-y-2">
+                   <Label htmlFor="empresa">Empresa</Label>
                   <Select
                     value={formData.empresaId?.toString() || "none"}
                     onValueChange={(value) => setFormData({ 
@@ -439,13 +440,14 @@ export default function Usuarios() {
                   <SelectContent>
                     <SelectItem value="all">Todos los roles</SelectItem>
                     <SelectItem value="superadmin">Superadmin</SelectItem>
-                    <SelectItem value="admin">Administrador</SelectItem>
-                    <SelectItem value="supervisor">Supervisor</SelectItem>
-                    <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
-                    <SelectItem value="residente">Residente</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={filterEmpresa} onValueChange={setFilterEmpresa}>
+<SelectItem value="admin">Administrador</SelectItem>
+                     <SelectItem value="supervisor">Supervisor</SelectItem>
+                     <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
+                     <SelectItem value="residente">Residente</SelectItem>
+                     <SelectItem value="desarrollador">Desarrollador</SelectItem>
+                   </SelectContent>
+                 </Select>
+                 <Select value={filterEmpresa} onValueChange={setFilterEmpresa}>
                   <SelectTrigger>
                     <SelectValue placeholder="Empresa" />
                   </SelectTrigger>
@@ -740,14 +742,15 @@ export default function Usuarios() {
                         Administrador
                       </div>
                     </SelectItem>
-                    <SelectItem value="supervisor">Supervisor</SelectItem>
-                    <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
-                    <SelectItem value="residente">Residente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-empresa">Empresa</Label>
+<SelectItem value="supervisor">Supervisor</SelectItem>
+                     <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
+                     <SelectItem value="residente">Residente</SelectItem>
+                     <SelectItem value="desarrollador">Desarrollador</SelectItem>
+                   </SelectContent>
+                 </Select>
+               </div>
+               <div className="space-y-2">
+                 <Label htmlFor="edit-empresa">Empresa</Label>
                 <Select
                   value={formData.empresaId?.toString() || "none"}
                   onValueChange={(value) => setFormData({ 

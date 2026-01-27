@@ -1002,3 +1002,18 @@
 - [x] Filtro por Defecto
 - [x] Filtro por Estatus (Rechazado, Aprobado, Alta, Tiempo de respuesta)
 - [x] Eliminar botón general de Filtros
+
+
+## Campos Empresa y Rol Desarrollador (Enero 27)
+
+### Campos en Empresas
+- [x] Agregar campo residenteId en tabla empresas
+- [x] Agregar campo jefeResidenteId en tabla empresas
+- [x] Selector de Residente en formulario de Empresas
+- [x] Selector de Jefe de Residente en formulario de Empresas
+
+### Rol Desarrollador
+- [x] Agregar rol "desarrollador" al enum de roles
+- [x] Desarrollador puede ver y crear ítems
+- [x] Desarrollador NO puede acceder a Configuración
+- [x] Restringir menú de Configuración según rol

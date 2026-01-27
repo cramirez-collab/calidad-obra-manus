@@ -47,6 +47,8 @@ type Empresa = {
   email?: string | null;
   proyectoId?: number | null;
   especialidadId?: number | null;
+  residenteId?: number | null;
+  jefeResidenteId?: number | null;
 };
 
 const severidadColors: Record<string, string> = {
@@ -69,6 +71,8 @@ export default function Empresas() {
     email: "",
     proyectoId: "",
     especialidadId: "",
+    residenteId: "",
+    jefeResidenteId: "",
   });
 
   // Estado para agregar defecto personalizado
@@ -88,6 +92,8 @@ export default function Empresas() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
+  // Obtener usuarios para asignar residente y jefe de residente
+  const { data: usuarios } = trpc.users.list.useQuery();
   // Obtener todos los defectos para mostrar por especialidad
   const { data: allDefectos } = trpc.defectos.listConEstadisticas.useQuery();
 
@@ -146,6 +152,8 @@ export default function Empresas() {
         email: empresa.email || "",
         proyectoId: empresa.proyectoId?.toString() || "",
         especialidadId: empresa.especialidadId?.toString() || "",
+        residenteId: empresa.residenteId?.toString() || "",
+        jefeResidenteId: empresa.jefeResidenteId?.toString() || "",
       });
     } else {
       setEditingEmpresa(null);
@@ -157,6 +165,8 @@ export default function Empresas() {
         email: "",
         proyectoId: selectedProjectId?.toString() || "",
         especialidadId: "",
+        residenteId: "",
+        jefeResidenteId: "",
       });
     }
     setIsOpen(true);
@@ -165,7 +175,7 @@ export default function Empresas() {
   const handleClose = () => {
     setIsOpen(false);
     setEditingEmpresa(null);
-    setFormData({ nombre: "", rfc: "", contacto: "", telefono: "", email: "", proyectoId: "", especialidadId: "" });
+    setFormData({ nombre: "", rfc: "", contacto: "", telefono: "", email: "", proyectoId: "", especialidadId: "", residenteId: "", jefeResidenteId: "" });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -191,6 +201,8 @@ export default function Empresas() {
       email: formData.email || undefined,
       proyectoId: proyectoIdFinal || undefined,
       especialidadId: formData.especialidadId && formData.especialidadId !== 'none' ? parseInt(formData.especialidadId) : undefined,
+      residenteId: formData.residenteId && formData.residenteId !== 'none' ? parseInt(formData.residenteId) : null,
+      jefeResidenteId: formData.jefeResidenteId && formData.jefeResidenteId !== 'none' ? parseInt(formData.jefeResidenteId) : null,
     };
 
     if (editingEmpresa) {
@@ -545,6 +557,48 @@ export default function Empresas() {
                       }
                       placeholder="correo@empresa.com"
                     />
+                  </div>
+                </div>
+
+                {/* Asignación de Residente y Jefe de Residente */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="residenteId">Residente</Label>
+                    <Select
+                      value={formData.residenteId}
+                      onValueChange={(value) => setFormData({ ...formData, residenteId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar residente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin asignar</SelectItem>
+                        {usuarios?.filter(u => u.role === 'residente' || u.role === 'jefe_residente').map((usuario) => (
+                          <SelectItem key={usuario.id} value={usuario.id.toString()}>
+                            {usuario.name || usuario.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="jefeResidenteId">Jefe de Residente</Label>
+                    <Select
+                      value={formData.jefeResidenteId}
+                      onValueChange={(value) => setFormData({ ...formData, jefeResidenteId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar jefe de residente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin asignar</SelectItem>
+                        {usuarios?.filter(u => u.role === 'jefe_residente' || u.role === 'supervisor').map((usuario) => (
+                          <SelectItem key={usuario.id} value={usuario.id.toString()}>
+                            {usuario.name || usuario.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
