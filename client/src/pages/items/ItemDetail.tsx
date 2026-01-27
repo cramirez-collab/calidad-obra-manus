@@ -94,6 +94,7 @@ export default function ItemDetail() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined
   );
   const { data: users } = trpc.users.list.useQuery();
+  const { data: defectos } = trpc.defectos.listConEstadisticas.useQuery();
 
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [enviandoComentario, setEnviandoComentario] = useState(false);
@@ -340,7 +341,7 @@ export default function ItemDetail() {
               )}
               {item.defectoId && (
                 <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                  Defecto #{item.defectoId}
+                  {defectos?.find(d => d.id === item.defectoId)?.nombre || `Defecto #${item.defectoId}`}
                 </Badge>
               )}
             </div>

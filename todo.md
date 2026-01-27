@@ -1167,3 +1167,10 @@
 ### Reorganización de Secciones
 - [x] Orden: Datos Generales → Especialidad → Equipo → Defectos
 - [x] Cascada lógica: especialidad determina defectos sugeridos
+
+
+## Mejoras Vista Ítem y Estadísticas (27 Enero 2026)
+
+- [x] Mostrar nombre del defecto en lugar de "Defecto #X" en vista de ítem
+- [x] Agregar ordenamiento a tabla de estadísticas por cualquier columna (click en encabezados)
+- [x] Crear gráfica de mejores y peores residentes por nombre (Top 5 cada uno)
