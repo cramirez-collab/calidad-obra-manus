@@ -31,9 +31,9 @@ import {
   ListOrdered,
   FolderKanban,
   Clock,
-  CheckCircle2,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  MoreHorizontal
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -188,6 +188,7 @@ function DashboardLayoutContent({
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
   const [configOpen, setConfigOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const isMobile = useIsMobile();
   
   // Activar sincronización en tiempo real
@@ -198,10 +199,14 @@ function DashboardLayoutContent({
   // Cerrar dropdown de config al navegar
   useEffect(() => {
     setConfigOpen(false);
+    setMoreOpen(false);
   }, [location]);
 
-  // Componente de icono de navegación
-  const NavIcon = ({ item, isActive }: { item: MenuItem; isActive: boolean }) => {
+  // Componente de icono de navegación para desktop
+  const NavIcon = ({ item, isActive, compact = false }: { item: MenuItem; isActive: boolean; compact?: boolean }) => {
+    const iconSize = compact ? "h-4 w-4" : "h-5 w-5";
+    const buttonSize = compact ? "h-8 w-8" : "h-10 w-10";
+    
     // Si tiene hijos (submenú como Configuración)
     if (item.children) {
       return (
@@ -211,14 +216,14 @@ function DashboardLayoutContent({
               <DropdownMenuTrigger asChild>
                 <button
                   className={`
-                    flex items-center justify-center h-10 w-10 rounded-lg transition-all
+                    flex items-center justify-center ${buttonSize} rounded-lg transition-all
                     ${isActive 
                       ? "bg-primary text-white shadow-md" 
                       : "text-muted-foreground hover:bg-accent hover:text-foreground"
                     }
                   `}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className={iconSize} />
                 </button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
@@ -258,16 +263,16 @@ function DashboardLayoutContent({
               }
             }}
             className={`
-              flex items-center justify-center h-10 w-10 rounded-lg transition-all relative
+              flex items-center justify-center ${buttonSize} rounded-lg transition-all relative
               ${isActive 
                 ? "bg-primary text-white shadow-md" 
                 : "text-muted-foreground hover:bg-accent hover:text-foreground"
               }
             `}
           >
-            <item.icon className="h-5 w-5" />
+            <item.icon className={iconSize} />
             {item.external && (
-              <ExternalLink className="h-2.5 w-2.5 absolute top-1 right-1 opacity-50" />
+              <ExternalLink className="h-2 w-2 absolute top-0.5 right-0.5 opacity-50" />
             )}
           </button>
         </TooltipTrigger>
@@ -278,10 +283,81 @@ function DashboardLayoutContent({
     );
   };
 
+  // Componente de icono para barra inferior móvil
+  const MobileNavIcon = ({ item, isActive }: { item: MenuItem; isActive: boolean }) => {
+    // Si tiene hijos (submenú como Configuración)
+    if (item.children) {
+      return (
+        <DropdownMenu open={configOpen} onOpenChange={setConfigOpen}>
+          <DropdownMenuTrigger asChild>
+            <button
+              className={`
+                flex flex-col items-center justify-center flex-1 py-1.5 min-w-0 transition-colors
+                ${isActive 
+                  ? "text-primary" 
+                  : "text-muted-foreground"
+                }
+              `}
+            >
+              <item.icon className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5 truncate max-w-full">{item.label}</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" side="top" className="w-48 mb-2">
+            {item.children.map(subItem => {
+              const isSubActive = location.startsWith(subItem.path);
+              return (
+                <DropdownMenuItem
+                  key={subItem.path}
+                  onClick={() => setLocation(subItem.path)}
+                  className={`cursor-pointer ${isSubActive ? "bg-primary/10 text-primary" : ""}`}
+                >
+                  <subItem.icon className="mr-2 h-4 w-4" />
+                  {subItem.label}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    }
+
+    // Item normal
+    return (
+      <button
+        onClick={() => {
+          if (item.external) {
+            window.open(item.path, '_blank');
+          } else {
+            setLocation(item.path);
+          }
+        }}
+        className={`
+          flex flex-col items-center justify-center flex-1 py-1.5 min-w-0 transition-colors relative
+          ${isActive 
+            ? "text-primary" 
+            : "text-muted-foreground"
+          }
+        `}
+      >
+        <item.icon className="h-5 w-5" />
+        <span className="text-[10px] mt-0.5 truncate max-w-full">{item.label}</span>
+        {item.external && (
+          <ExternalLink className="h-2 w-2 absolute top-1 right-1 opacity-50" />
+        )}
+      </button>
+    );
+  };
+
+  // En móvil: mostrar máximo 5 items + "Más" si hay más
+  const maxMobileItems = 5;
+  const mobileVisibleItems = menuItems.slice(0, maxMobileItems);
+  const mobileHiddenItems = menuItems.slice(maxMobileItems);
+
   return (
     <TooltipProvider delayDuration={100}>
       <div className="min-h-screen bg-background flex flex-col">
-        {/* Header con navegación de iconos */}
+        {/* Header */}
         <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
           <div className="flex items-center h-14 px-2 sm:px-4">
             {/* Logo */}
@@ -298,21 +374,26 @@ function DashboardLayoutContent({
               <ProjectSelector collapsed={isMobile} />
             </div>
 
-            {/* Separador */}
-            <div className="h-6 w-px bg-border mx-1 sm:mx-2 hidden sm:block" />
+            {/* Separador - solo desktop */}
+            <div className="h-6 w-px bg-border mx-1 sm:mx-2 hidden md:block" />
 
-            {/* Navegación de iconos - scrollable en móvil */}
-            <nav className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto flex-1 scrollbar-hide py-1">
-              {menuItems.map(item => {
-                const isActive = item.path === '/bienvenida' 
-                  ? (location === '/bienvenida' || location === '/') 
-                  : (item.path ? location.startsWith(item.path) : false);
-                
-                return (
-                  <NavIcon key={item.path || item.label} item={item} isActive={isActive} />
-                );
-              })}
-            </nav>
+            {/* Navegación de iconos - SOLO DESKTOP */}
+            {!isMobile && (
+              <nav className="flex items-center gap-0.5 sm:gap-1 flex-1 py-1">
+                {menuItems.map(item => {
+                  const isActive = item.path === '/bienvenida' 
+                    ? (location === '/bienvenida' || location === '/') 
+                    : (item.path ? location.startsWith(item.path) : false);
+                  
+                  return (
+                    <NavIcon key={item.path || item.label} item={item} isActive={isActive} />
+                  );
+                })}
+              </nav>
+            )}
+
+            {/* Spacer en móvil */}
+            {isMobile && <div className="flex-1" />}
 
             {/* Separador */}
             <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
@@ -358,13 +439,105 @@ function DashboardLayoutContent({
           </div>
         </header>
         
-        {/* Contenido principal */}
-        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden">
+        {/* Contenido principal - con padding inferior en móvil para la barra de navegación */}
+        <main className={`flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden ${isMobile ? 'pb-20' : ''}`}>
           {children}
         </main>
         
-        {/* Botón flotante de escáner QR */}
-        <QRScannerButton />
+        {/* Barra de navegación inferior FIJA - SOLO MÓVIL */}
+        {isMobile && (
+          <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg safe-area-pb">
+            <div className="flex items-stretch h-14">
+              {mobileVisibleItems.map(item => {
+                const isActive = item.path === '/bienvenida' 
+                  ? (location === '/bienvenida' || location === '/') 
+                  : (item.path ? location.startsWith(item.path) : false);
+                
+                return (
+                  <MobileNavIcon key={item.path || item.label} item={item} isActive={isActive} />
+                );
+              })}
+              
+              {/* Botón "Más" si hay items ocultos */}
+              {mobileHiddenItems.length > 0 && (
+                <DropdownMenu open={moreOpen} onOpenChange={setMoreOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={`
+                        flex flex-col items-center justify-center flex-1 py-1.5 min-w-0 transition-colors
+                        ${moreOpen ? "text-primary" : "text-muted-foreground"}
+                      `}
+                    >
+                      <MoreHorizontal className="h-5 w-5" />
+                      <span className="text-[10px] mt-0.5">Más</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" side="top" className="w-52 mb-2">
+                    {mobileHiddenItems.map(item => {
+                      // Si es un item con children (Configuración)
+                      if (item.children) {
+                        return (
+                          <DropdownMenu key={item.label}>
+                            <DropdownMenuTrigger asChild>
+                              <button className="flex items-center w-full px-2 py-1.5 text-sm hover:bg-accent rounded cursor-pointer">
+                                <item.icon className="mr-2 h-4 w-4" />
+                                {item.label}
+                                <ChevronDown className="ml-auto h-3 w-3" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent side="left" className="w-48">
+                              {item.children.map(subItem => {
+                                const isSubActive = location.startsWith(subItem.path);
+                                return (
+                                  <DropdownMenuItem
+                                    key={subItem.path}
+                                    onClick={() => {
+                                      setLocation(subItem.path);
+                                      setMoreOpen(false);
+                                    }}
+                                    className={`cursor-pointer ${isSubActive ? "bg-primary/10 text-primary" : ""}`}
+                                  >
+                                    <subItem.icon className="mr-2 h-4 w-4" />
+                                    {subItem.label}
+                                  </DropdownMenuItem>
+                                );
+                              })}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        );
+                      }
+                      
+                      const isActive = item.path ? location.startsWith(item.path) : false;
+                      return (
+                        <DropdownMenuItem
+                          key={item.path}
+                          onClick={() => {
+                            if (item.external) {
+                              window.open(item.path, '_blank');
+                            } else {
+                              setLocation(item.path);
+                            }
+                            setMoreOpen(false);
+                          }}
+                          className={`cursor-pointer ${isActive ? "bg-primary/10 text-primary" : ""}`}
+                        >
+                          <item.icon className="mr-2 h-4 w-4" />
+                          {item.label}
+                          {item.external && <ExternalLink className="ml-auto h-3 w-3 opacity-50" />}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </nav>
+        )}
+        
+        {/* Botón flotante de escáner QR - ajustar posición en móvil */}
+        <div className={isMobile ? 'pb-16' : ''}>
+          <QRScannerButton />
+        </div>
       </div>
     </TooltipProvider>
   );

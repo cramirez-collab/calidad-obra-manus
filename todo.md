@@ -1140,3 +1140,11 @@
 
 - [x] Mostrar todos los iconos de navegación en móvil (sin límite de 6)
 - [x] Navegación scrollable horizontal para acceder a todos los menús
+
+
+## Navegación Inferior Móvil (27 Enero 2026)
+
+- [x] Crear barra de navegación inferior fija para móvil
+- [x] Distribuir todos los iconos equitativamente sin scroll (5 visibles + "Más")
+- [x] Mantener header simplificado en móvil (solo logo, proyecto y usuario)
+- [x] Iconos con labels para mejor UX en barra inferior
