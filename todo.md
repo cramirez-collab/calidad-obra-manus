@@ -1125,3 +1125,34 @@
 - [x] Agregar indicador visual de espacio donde se soltará la unidad
 - [x] Animación suave cuando las unidades se mueven para abrir espacio
 - [x] Feedback visual claro del área de destino
+
+
+## Bug Drag & Drop Stacking (27 Enero 2026)
+- [ ] Corregir: permite arrastrar unidad pero no soltarla
+- [ ] Verificar handler onDragEnd
+- [ ] Verificar configuración de DndContext y SortableContext
+
+
+## Formulario Nueva Empresa Mejorado (27 Enero 2026)
+
+### Datos de Empresa
+- [x] Nombre de empresa
+- [x] Datos de contacto (teléfono, email)
+- [x] Dirección (opcional)
+
+### Usuarios en Cascada
+- [x] Sección para agregar Residentes (nombre, correo, móvil, contraseña, rol)
+- [x] Sección para agregar Jefes de Residentes
+- [x] Sección para agregar Supervisores
+- [x] Sección para Desarrollador
+- [x] Asignación automática de roles según tipo de usuario
+
+### Especialidad en Cascada
+- [x] Selector de especialidad al crear empresa
+- [ ] Opción de crear nueva especialidad si no existe
+
+### Defectos en Cascada
+- [x] Al seleccionar especialidad, mostrar defectos propuestos
+- [x] Defectos elegibles con checkbox
+- [x] Permitir agregar defectos personalizados
+- [x] Admin/Supervisor/Superadmin pueden agregar defectos

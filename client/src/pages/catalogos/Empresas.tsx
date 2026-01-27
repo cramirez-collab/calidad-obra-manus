@@ -20,20 +20,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { trpc } from "@/lib/trpc";
-import { Building2, Edit, Plus, Trash2, FileDown, ChevronDown, ChevronRight, AlertTriangle, Wrench, ArrowUpDown } from "lucide-react";
+import { 
+  Building2, Edit, Plus, Trash2, FileDown, ChevronDown, ChevronRight, 
+  AlertTriangle, Wrench, ArrowUpDown, User, UserPlus, Mail, Phone, 
+  Lock, Users, Eye, EyeOff
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
@@ -51,11 +51,25 @@ type Empresa = {
   jefeResidenteId?: number | null;
 };
 
+type NuevoUsuario = {
+  nombre: string;
+  email: string;
+  telefono: string;
+  password: string;
+  role: 'residente' | 'jefe_residente' | 'supervisor';
+};
+
 const severidadColors: Record<string, string> = {
   leve: "bg-green-100 text-green-800",
   moderado: "bg-yellow-100 text-yellow-800",
   grave: "bg-orange-100 text-orange-800",
   critico: "bg-red-100 text-red-800",
+};
+
+const roleLabels: Record<string, string> = {
+  residente: "Residente",
+  jefe_residente: "Jefe de Residente",
+  supervisor: "Supervisor",
 };
 
 export default function Empresas() {
@@ -64,6 +78,10 @@ export default function Empresas() {
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
   const [expandedEmpresas, setExpandedEmpresas] = useState<Set<number>>(new Set());
   const [sortBy, setSortBy] = useState<'nombre' | 'especialidad' | 'contacto' | 'residente'>('nombre');
+  const [activeTab, setActiveTab] = useState("datos");
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // Estado del formulario principal
   const [formData, setFormData] = useState({
     nombre: "",
     rfc: "",
@@ -76,6 +94,19 @@ export default function Empresas() {
     jefeResidenteId: "",
   });
 
+  // Estado para crear nuevo usuario
+  const [crearNuevoUsuario, setCrearNuevoUsuario] = useState(false);
+  const [nuevoUsuario, setNuevoUsuario] = useState<NuevoUsuario>({
+    nombre: "",
+    email: "",
+    telefono: "",
+    password: "",
+    role: "residente",
+  });
+
+  // Estado para defectos seleccionados
+  const [defectosSeleccionados, setDefectosSeleccionados] = useState<Set<number>>(new Set());
+
   // Estado para agregar defecto personalizado
   const [isAddDefectoOpen, setIsAddDefectoOpen] = useState(false);
   const [addDefectoEmpresaId, setAddDefectoEmpresaId] = useState<number | null>(null);
@@ -83,7 +114,8 @@ export default function Empresas() {
   const [nuevoDefecto, setNuevoDefecto] = useState({ nombre: "", severidad: "moderado" });
 
   const utils = trpc.useUtils();
-  // Obtener empresas filtradas por proyecto desde el backend
+  
+  // Queries
   const { data: empresas, isLoading } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
@@ -93,11 +125,15 @@ export default function Empresas() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
-  // Obtener usuarios para asignar residente y jefe de residente
   const { data: usuarios } = trpc.users.list.useQuery();
-  // Obtener todos los defectos para mostrar por especialidad
   const { data: allDefectos } = trpc.defectos.listConEstadisticas.useQuery();
 
+  // Defectos filtrados por especialidad seleccionada
+  const defectosPorEspecialidad = allDefectos?.filter(
+    d => d.especialidadId === parseInt(formData.especialidadId || "0")
+  ) || [];
+
+  // Mutations
   const createMutation = trpc.empresas.create.useMutation({
     onSuccess: () => {
       utils.empresas.list.invalidate();
@@ -142,6 +178,20 @@ export default function Empresas() {
     },
   });
 
+  const createUserMutation = trpc.users.create.useMutation({
+    onSuccess: (data) => {
+      utils.users.list.invalidate();
+      toast.success("Usuario creado correctamente");
+      // Asignar el nuevo usuario como residente
+      setFormData(prev => ({ ...prev, residenteId: data.id.toString() }));
+      setCrearNuevoUsuario(false);
+      setNuevoUsuario({ nombre: "", email: "", telefono: "", password: "", role: "residente" });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleOpen = (empresa?: Empresa) => {
     if (empresa) {
       setEditingEmpresa(empresa);
@@ -170,6 +220,9 @@ export default function Empresas() {
         jefeResidenteId: "",
       });
     }
+    setActiveTab("datos");
+    setCrearNuevoUsuario(false);
+    setDefectosSeleccionados(new Set());
     setIsOpen(true);
   };
 
@@ -177,6 +230,10 @@ export default function Empresas() {
     setIsOpen(false);
     setEditingEmpresa(null);
     setFormData({ nombre: "", rfc: "", contacto: "", telefono: "", email: "", proyectoId: "", especialidadId: "", residenteId: "", jefeResidenteId: "" });
+    setActiveTab("datos");
+    setCrearNuevoUsuario(false);
+    setNuevoUsuario({ nombre: "", email: "", telefono: "", password: "", role: "residente" });
+    setDefectosSeleccionados(new Set());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -186,7 +243,6 @@ export default function Empresas() {
       return;
     }
 
-    // Usar el proyecto seleccionado del contexto si no se especificó uno
     const proyectoIdFinal = formData.proyectoId ? parseInt(formData.proyectoId) : selectedProjectId;
     
     if (!proyectoIdFinal && !editingEmpresa) {
@@ -213,6 +269,25 @@ export default function Empresas() {
     }
   };
 
+  const handleCreateUser = () => {
+    if (!nuevoUsuario.nombre.trim()) {
+      toast.error("El nombre del usuario es requerido");
+      return;
+    }
+    if (!nuevoUsuario.password || nuevoUsuario.password.length < 6) {
+      toast.error("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
+    createUserMutation.mutate({
+      name: nuevoUsuario.nombre,
+      email: nuevoUsuario.email || undefined,
+      password: nuevoUsuario.password,
+      role: nuevoUsuario.role,
+      proyectoId: selectedProjectId || undefined,
+    });
+  };
+
   const handleDelete = (id: number) => {
     if (confirm("¿Estás seguro de eliminar esta empresa?")) {
       deleteMutation.mutate({ id });
@@ -227,12 +302,6 @@ export default function Empresas() {
       newExpanded.add(empresaId);
     }
     setExpandedEmpresas(newExpanded);
-  };
-
-  const getProyectoNombre = (proyectoId: number | null | undefined) => {
-    if (!proyectoId) return "-";
-    const proyecto = proyectos?.find(p => p.id === proyectoId);
-    return proyecto?.nombre || "-";
   };
 
   const getEspecialidadNombre = (especialidadId: number | null | undefined) => {
@@ -273,6 +342,16 @@ export default function Empresas() {
     });
   };
 
+  const toggleDefectoSeleccionado = (defectoId: number) => {
+    const newSet = new Set(defectosSeleccionados);
+    if (newSet.has(defectoId)) {
+      newSet.delete(defectoId);
+    } else {
+      newSet.add(defectoId);
+    }
+    setDefectosSeleccionados(newSet);
+  };
+
   const handleExportPDF = () => {
     if (!empresas || empresas.length === 0) {
       toast.error("No hay empresas para exportar");
@@ -310,6 +389,11 @@ export default function Empresas() {
     });
   };
 
+  // Obtener la especialidad seleccionada para mostrar su color
+  const especialidadSeleccionada = especialidades?.find(
+    e => e.id === parseInt(formData.especialidadId || "0")
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -331,7 +415,6 @@ export default function Empresas() {
             </Button>
           </div>
         </div>
-
 
         <Card>
           <CardHeader>
@@ -388,11 +471,11 @@ export default function Empresas() {
                   const defectos = getDefectosByEspecialidad(empresa.especialidadId);
                   const isExpanded = expandedEmpresas.has(empresa.id);
                   const especialidad = especialidades?.find(e => e.id === empresa.especialidadId);
+                  const residente = usuarios?.find(u => u.id === empresa.residenteId);
                   
                   return (
                     <Collapsible key={empresa.id} open={isExpanded} onOpenChange={() => toggleExpanded(empresa.id)}>
                       <div className="border rounded-lg overflow-hidden">
-                        {/* Fila principal de la empresa */}
                         <div className="flex items-center justify-between p-4 bg-white hover:bg-slate-50">
                           <div className="flex items-center gap-3 flex-1">
                             <CollapsibleTrigger asChild>
@@ -405,7 +488,7 @@ export default function Empresas() {
                               </Button>
                             </CollapsibleTrigger>
                             <div className="flex-1">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-medium">{empresa.nombre}</span>
                                 {especialidad && (
                                   <Badge 
@@ -427,9 +510,14 @@ export default function Empresas() {
                                   </Badge>
                                 )}
                               </div>
-                              <div className="text-sm text-muted-foreground">
-                                {empresa.contacto && <span>{empresa.contacto}</span>}
-                                {empresa.telefono && <span className="ml-2">• {empresa.telefono}</span>}
+                              <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+                                {residente && (
+                                  <span className="flex items-center gap-1">
+                                    <User className="h-3 w-3" />
+                                    {residente.name}
+                                  </span>
+                                )}
+                                {empresa.telefono && <span>• {empresa.telefono}</span>}
                               </div>
                             </div>
                           </div>
@@ -451,7 +539,6 @@ export default function Empresas() {
                           </div>
                         </div>
                         
-                        {/* Panel expandible con defectos */}
                         <CollapsibleContent>
                           <div className="border-t bg-slate-50 p-4">
                             <div className="flex items-center justify-between mb-3">
@@ -507,147 +594,391 @@ export default function Empresas() {
           </CardContent>
         </Card>
 
-        {/* Dialog para crear/editar empresa */}
+        {/* Dialog para crear/editar empresa - MEJORADO */}
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-2xl max-h-[90vh]">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
                 {editingEmpresa ? "Editar Empresa" : "Nueva Empresa"}
               </DialogTitle>
               <DialogDescription>
                 {editingEmpresa
-                  ? "Modifica los datos de la empresa"
-                  : "Ingresa los datos de la nueva empresa"}
+                  ? "Modifica los datos de la empresa y su equipo"
+                  : "Configura la empresa, su especialidad, equipo y defectos típicos"}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit}>
-              <div className="grid gap-4 py-4">
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="datos" className="flex items-center gap-1">
+                  <Building2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Datos</span>
+                </TabsTrigger>
+                <TabsTrigger value="equipo" className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Equipo</span>
+                </TabsTrigger>
+                <TabsTrigger value="defectos" className="flex items-center gap-1">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span className="hidden sm:inline">Defectos</span>
+                </TabsTrigger>
+              </TabsList>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="especialidadId">Especialidad</Label>
-                  <Select
-                    value={formData.especialidadId}
-                    onValueChange={(value) => setFormData({ ...formData, especialidadId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar especialidad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sin especialidad</SelectItem>
-                      {especialidades?.map((especialidad) => (
-                        <SelectItem key={especialidad.id} value={especialidad.id.toString()}>
-                          {especialidad.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Al asignar una especialidad, se mostrarán los defectos típicos asociados
-                  </p>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="nombre">Nombre *</Label>
-                  <Input
-                    id="nombre"
-                    value={formData.nombre}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nombre: e.target.value })
-                    }
-                    placeholder="Nombre de la empresa"
-                  />
-                </div>
+              <ScrollArea className="h-[400px] mt-4 pr-4">
+                {/* TAB: Datos de la Empresa */}
+                <TabsContent value="datos" className="space-y-4 mt-0">
+                  <div className="grid gap-4">
+                    {/* Especialidad primero */}
+                    <div className="grid gap-2">
+                      <Label htmlFor="especialidadId" className="flex items-center gap-2">
+                        <Wrench className="h-4 w-4" />
+                        Especialidad *
+                      </Label>
+                      <Select
+                        value={formData.especialidadId}
+                        onValueChange={(value) => setFormData({ ...formData, especialidadId: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar especialidad" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Sin especialidad</SelectItem>
+                          {especialidades?.map((especialidad) => (
+                            <SelectItem key={especialidad.id} value={especialidad.id.toString()}>
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-3 h-3 rounded-full" 
+                                  style={{ backgroundColor: especialidad.color || '#3B82F6' }}
+                                />
+                                {especialidad.nombre}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {especialidadSeleccionada && (
+                        <p className="text-xs text-muted-foreground">
+                          Se mostrarán los defectos típicos de {especialidadSeleccionada.nombre} en la pestaña "Defectos"
+                        </p>
+                      )}
+                    </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="contacto">Contacto</Label>
-                  <Input
-                    id="contacto"
-                    value={formData.contacto}
-                    onChange={(e) =>
-                      setFormData({ ...formData, contacto: e.target.value })
-                    }
-                    placeholder="Nombre del contacto"
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="telefono">Teléfono</Label>
-                    <Input
-                      id="telefono"
-                      value={formData.telefono}
-                      onChange={(e) =>
-                        setFormData({ ...formData, telefono: e.target.value })
-                      }
-                      placeholder="Teléfono"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      placeholder="correo@empresa.com"
-                    />
-                  </div>
-                </div>
+                    <Separator />
 
-                {/* Asignación de Residente y Jefe de Residente */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="residenteId">Residente</Label>
-                    <Select
-                      value={formData.residenteId}
-                      onValueChange={(value) => setFormData({ ...formData, residenteId: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar residente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Sin asignar</SelectItem>
-                        {usuarios?.filter(u => u.role === 'residente' || u.role === 'jefe_residente').map((usuario) => (
-                          <SelectItem key={usuario.id} value={usuario.id.toString()}>
-                            {usuario.name || usuario.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {/* Nombre de empresa */}
+                    <div className="grid gap-2">
+                      <Label htmlFor="nombre">Nombre de la Empresa *</Label>
+                      <Input
+                        id="nombre"
+                        value={formData.nombre}
+                        onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                        placeholder="Nombre de la empresa"
+                      />
+                    </div>
+
+                    {/* Contacto */}
+                    <div className="grid gap-2">
+                      <Label htmlFor="contacto">Persona de Contacto</Label>
+                      <Input
+                        id="contacto"
+                        value={formData.contacto}
+                        onChange={(e) => setFormData({ ...formData, contacto: e.target.value })}
+                        placeholder="Nombre del contacto principal"
+                      />
+                    </div>
+
+                    {/* Teléfono y Email */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="telefono" className="flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          Teléfono
+                        </Label>
+                        <Input
+                          id="telefono"
+                          value={formData.telefono}
+                          onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                          placeholder="Teléfono"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="email" className="flex items-center gap-1">
+                          <Mail className="h-3 w-3" />
+                          Email
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          placeholder="correo@empresa.com"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="jefeResidenteId">Jefe de Residente</Label>
-                    <Select
-                      value={formData.jefeResidenteId}
-                      onValueChange={(value) => setFormData({ ...formData, jefeResidenteId: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar jefe de residente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Sin asignar</SelectItem>
-                        {usuarios?.filter(u => u.role === 'jefe_residente' || u.role === 'supervisor').map((usuario) => (
-                          <SelectItem key={usuario.id} value={usuario.id.toString()}>
-                            {usuario.name || usuario.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                </TabsContent>
+
+                {/* TAB: Equipo */}
+                <TabsContent value="equipo" className="space-y-4 mt-0">
+                  <div className="grid gap-4">
+                    {/* Asignar usuarios existentes */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-sm flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Asignar Usuarios Existentes
+                      </h4>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="residenteId">Residente</Label>
+                          <Select
+                            value={formData.residenteId}
+                            onValueChange={(value) => setFormData({ ...formData, residenteId: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar residente" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Sin asignar</SelectItem>
+                              {usuarios?.filter(u => u.role === 'residente' || u.role === 'jefe_residente').map((usuario) => (
+                                <SelectItem key={usuario.id} value={usuario.id.toString()}>
+                                  {usuario.name || usuario.email}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="jefeResidenteId">Jefe de Residente</Label>
+                          <Select
+                            value={formData.jefeResidenteId}
+                            onValueChange={(value) => setFormData({ ...formData, jefeResidenteId: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar jefe" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Sin asignar</SelectItem>
+                              {usuarios?.filter(u => u.role === 'jefe_residente' || u.role === 'supervisor').map((usuario) => (
+                                <SelectItem key={usuario.id} value={usuario.id.toString()}>
+                                  {usuario.name || usuario.email}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Crear nuevo usuario */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-sm flex items-center gap-2">
+                          <UserPlus className="h-4 w-4" />
+                          Crear Nuevo Usuario
+                        </h4>
+                        <Button
+                          type="button"
+                          variant={crearNuevoUsuario ? "secondary" : "outline"}
+                          size="sm"
+                          onClick={() => setCrearNuevoUsuario(!crearNuevoUsuario)}
+                        >
+                          {crearNuevoUsuario ? "Cancelar" : "Agregar Usuario"}
+                        </Button>
+                      </div>
+
+                      {crearNuevoUsuario && (
+                        <div className="border rounded-lg p-4 space-y-4 bg-slate-50">
+                          <div className="grid gap-2">
+                            <Label>Rol del Usuario *</Label>
+                            <Select
+                              value={nuevoUsuario.role}
+                              onValueChange={(value) => setNuevoUsuario({ ...nuevoUsuario, role: value as any })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="residente">Residente</SelectItem>
+                                <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
+                                <SelectItem value="supervisor">Supervisor</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="grid gap-2">
+                            <Label>Nombre Completo *</Label>
+                            <Input
+                              value={nuevoUsuario.nombre}
+                              onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })}
+                              placeholder="Nombre del usuario"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                              <Label className="flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                Email
+                              </Label>
+                              <Input
+                                type="email"
+                                value={nuevoUsuario.email}
+                                onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })}
+                                placeholder="correo@ejemplo.com"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label className="flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
+                                Teléfono
+                              </Label>
+                              <Input
+                                value={nuevoUsuario.telefono}
+                                onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, telefono: e.target.value })}
+                                placeholder="Teléfono móvil"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid gap-2">
+                            <Label className="flex items-center gap-1">
+                              <Lock className="h-3 w-3" />
+                              Contraseña *
+                            </Label>
+                            <div className="relative">
+                              <Input
+                                type={showPassword ? "text" : "password"}
+                                value={nuevoUsuario.password}
+                                onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, password: e.target.value })}
+                                placeholder="Mínimo 6 caracteres"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-0 top-0 h-full"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </Button>
+                            </div>
+                          </div>
+
+                          <Button
+                            type="button"
+                            onClick={handleCreateUser}
+                            disabled={createUserMutation.isPending}
+                            className="w-full"
+                          >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            {createUserMutation.isPending ? "Creando..." : `Crear ${roleLabels[nuevoUsuario.role]}`}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleClose}>
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                >
-                  {editingEmpresa ? "Guardar Cambios" : "Crear Empresa"}
-                </Button>
-              </DialogFooter>
-            </form>
+                </TabsContent>
+
+                {/* TAB: Defectos */}
+                <TabsContent value="defectos" className="space-y-4 mt-0">
+                  {!formData.especialidadId || formData.especialidadId === 'none' ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Selecciona una especialidad en la pestaña "Datos" para ver los defectos típicos</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-sm flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-amber-500" />
+                          Defectos de {especialidadSeleccionada?.nombre}
+                        </h4>
+                        <Badge variant="secondary">
+                          {defectosPorEspecialidad.length} defectos
+                        </Badge>
+                      </div>
+
+                      {defectosPorEspecialidad.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                          <p>No hay defectos definidos para esta especialidad</p>
+                          <p className="text-sm mt-2">Puedes agregar defectos después de crear la empresa</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">
+                            Estos son los defectos típicos asociados a la especialidad seleccionada:
+                          </p>
+                          <div className="grid grid-cols-1 gap-2 max-h-[250px] overflow-y-auto">
+                            {defectosPorEspecialidad.map((defecto: any) => (
+                              <div 
+                                key={defecto.id} 
+                                className="flex items-center justify-between p-3 bg-white rounded border"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <Checkbox
+                                    id={`defecto-${defecto.id}`}
+                                    checked={defectosSeleccionados.has(defecto.id)}
+                                    onCheckedChange={() => toggleDefectoSeleccionado(defecto.id)}
+                                  />
+                                  <label 
+                                    htmlFor={`defecto-${defecto.id}`}
+                                    className="text-sm cursor-pointer"
+                                  >
+                                    {defecto.nombre}
+                                  </label>
+                                </div>
+                                <Badge 
+                                  variant="secondary" 
+                                  className={`text-xs ${severidadColors[defecto.severidad] || ''}`}
+                                >
+                                  {defecto.severidad}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <Separator />
+
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
+                          ¿Necesitas agregar un defecto personalizado?
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setAddDefectoEspecialidadId(parseInt(formData.especialidadId));
+                            setIsAddDefectoOpen(true);
+                          }}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Agregar Defecto
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+              </ScrollArea>
+            </Tabs>
+
+            <DialogFooter className="mt-4">
+              <Button type="button" variant="outline" onClick={handleClose}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {editingEmpresa ? "Guardar Cambios" : "Crear Empresa"}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 

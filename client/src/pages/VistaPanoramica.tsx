@@ -202,18 +202,11 @@ function SortableUnidadCard({
       style={style} 
       className={`
         relative group
-        ${isOver && !isDragging ? 'ml-16' : ''}
-        transition-all duration-250 ease-out
+        transition-all duration-200 ease-out
+        ${isOver && !isDragging ? 'ring-2 ring-primary ring-offset-2 scale-105' : ''}
       `}
     >
-      {/* Indicador visual de drop zone - aparece cuando se arrastra sobre este elemento */}
-      {isOver && !isDragging && (
-        <div className="absolute -left-14 top-0 w-12 h-20 rounded-lg border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center animate-pulse">
-          <div className="w-1 h-12 bg-primary rounded-full" />
-        </div>
-      )}
-
-      {/* Handle para arrastrar - más visible y accesible */}
+      {/* Handle para arrastrar - visible al hacer hover */}
       <div
         {...attributes}
         {...listeners}
@@ -680,13 +673,11 @@ export default function VistaPanoramica() {
     updateOrdenMutation.mutate({ unidades: pendingChanges });
   };
 
-  // Sensores para drag and drop - configurados para activación fácil
+  // Sensores para drag and drop - configuración simplificada para mejor funcionamiento
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5, // Reducido para activación más fácil
-        delay: 100, // Pequeño delay para evitar activaciones accidentales
-        tolerance: 5,
+        distance: 8, // Distancia mínima para iniciar drag
       },
     }),
     useSensor(KeyboardSensor, {
@@ -1022,7 +1013,7 @@ export default function VistaPanoramica() {
                       </div>
                       <SortableContext
                         items={celdas.map(c => c.id)}
-                        strategy={horizontalListSortingStrategy}
+                        strategy={rectSortingStrategy}
                       >
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
                           {celdas.map((celda) => (
