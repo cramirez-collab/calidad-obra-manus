@@ -31,9 +31,9 @@ import {
   ListOrdered,
   FolderKanban,
   Clock,
-  CheckCircle2,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  MoreHorizontal
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -188,6 +188,7 @@ function DashboardLayoutContent({
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
   const [configOpen, setConfigOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   
   // Activar sincronización en tiempo real
@@ -198,10 +199,11 @@ function DashboardLayoutContent({
   // Cerrar dropdown de config al navegar
   useEffect(() => {
     setConfigOpen(false);
+    setMoreMenuOpen(false);
   }, [location]);
 
-  // Componente de icono de navegación
-  const NavIcon = ({ item, isActive }: { item: MenuItem; isActive: boolean }) => {
+  // Componente de icono de navegación para desktop
+  const NavIconDesktop = ({ item, isActive }: { item: MenuItem; isActive: boolean }) => {
     // Si tiene hijos (submenú como Configuración)
     if (item.children) {
       return (
@@ -278,10 +280,81 @@ function DashboardLayoutContent({
     );
   };
 
+  // Componente de icono de navegación para móvil (footer)
+  const NavIconMobile = ({ item, isActive }: { item: MenuItem; isActive: boolean }) => {
+    // Si tiene hijos (submenú como Configuración)
+    if (item.children) {
+      return (
+        <DropdownMenu open={configOpen} onOpenChange={setConfigOpen}>
+          <DropdownMenuTrigger asChild>
+            <button
+              className={`
+                flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all
+                ${isActive 
+                  ? "text-primary" 
+                  : "text-muted-foreground"
+                }
+              `}
+            >
+              <item.icon className="h-6 w-6" />
+              <span className="text-[10px] mt-1 font-medium">{item.label}</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" side="top" className="w-48 mb-2">
+            {item.children.map(subItem => {
+              const isSubActive = location.startsWith(subItem.path);
+              return (
+                <DropdownMenuItem
+                  key={subItem.path}
+                  onClick={() => setLocation(subItem.path)}
+                  className={`cursor-pointer ${isSubActive ? "bg-primary/10 text-primary" : ""}`}
+                >
+                  <subItem.icon className="mr-2 h-4 w-4" />
+                  {subItem.label}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    }
+
+    // Item normal
+    return (
+      <button
+        onClick={() => {
+          if (item.external) {
+            window.open(item.path, '_blank');
+          } else {
+            setLocation(item.path);
+          }
+        }}
+        className={`
+          flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all relative
+          ${isActive 
+            ? "text-primary" 
+            : "text-muted-foreground"
+          }
+        `}
+      >
+        <item.icon className="h-6 w-6" />
+        <span className="text-[10px] mt-1 font-medium">{item.label}</span>
+        {item.external && (
+          <ExternalLink className="h-2 w-2 absolute top-1 right-1 opacity-50" />
+        )}
+      </button>
+    );
+  };
+
+  // Items principales para el footer móvil (primeros 4)
+  const mobileMainItems = menuItems.slice(0, 4);
+  // Items adicionales para el menú "Más" en móvil
+  const mobileMoreItems = menuItems.slice(4);
+
   return (
     <TooltipProvider delayDuration={100}>
       <div className="min-h-screen bg-background flex flex-col">
-        {/* Header con navegación de iconos */}
+        {/* Header */}
         <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
           <div className="flex items-center h-14 px-2 sm:px-4">
             {/* Logo */}
@@ -298,26 +371,26 @@ function DashboardLayoutContent({
               <ProjectSelector collapsed={isMobile} />
             </div>
 
-            {/* Separador */}
-            <div className="h-6 w-px bg-border mx-1 sm:mx-2 hidden sm:block" />
+            {/* Separador - solo desktop */}
+            {!isMobile && <div className="h-6 w-px bg-border mx-1 sm:mx-2" />}
 
-            {/* Navegación de iconos - scrollable en móvil */}
-            <nav className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto flex-1 scrollbar-hide py-1">
-              {menuItems.map(item => {
-                const isActive = item.path === '/bienvenida' 
-                  ? (location === '/bienvenida' || location === '/') 
-                  : (item.path ? location.startsWith(item.path) : false);
-                
-                // En móvil, mostrar solo los primeros 6 items + config
-                if (isMobile && menuItems.indexOf(item) > 5 && !item.children) {
-                  return null;
-                }
-                
-                return (
-                  <NavIcon key={item.path || item.label} item={item} isActive={isActive} />
-                );
-              })}
-            </nav>
+            {/* Navegación de iconos - SOLO DESKTOP */}
+            {!isMobile && (
+              <nav className="flex items-center gap-1 overflow-x-auto flex-1 scrollbar-hide py-1">
+                {menuItems.map(item => {
+                  const isActive = item.path === '/bienvenida' 
+                    ? (location === '/bienvenida' || location === '/') 
+                    : (item.path ? location.startsWith(item.path) : false);
+                  
+                  return (
+                    <NavIconDesktop key={item.path || item.label} item={item} isActive={isActive} />
+                  );
+                })}
+              </nav>
+            )}
+
+            {/* Espacio flexible en móvil */}
+            {isMobile && <div className="flex-1" />}
 
             {/* Separador */}
             <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
@@ -363,13 +436,109 @@ function DashboardLayoutContent({
           </div>
         </header>
         
-        {/* Contenido principal */}
-        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden">
+        {/* Contenido principal - con padding-bottom en móvil para el footer */}
+        <main className={`flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden ${isMobile ? 'pb-20' : ''}`}>
           {children}
         </main>
+
+        {/* Footer de navegación - SOLO MÓVIL */}
+        {isMobile && (
+          <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-t safe-area-pb">
+            <div className="flex items-center justify-around h-16 px-1">
+              {/* Items principales */}
+              {mobileMainItems.map(item => {
+                const isActive = item.path === '/bienvenida' 
+                  ? (location === '/bienvenida' || location === '/') 
+                  : (item.path ? location.startsWith(item.path) : false);
+                
+                return (
+                  <NavIconMobile key={item.path || item.label} item={item} isActive={isActive} />
+                );
+              })}
+
+              {/* Botón "Más" si hay items adicionales */}
+              {mobileMoreItems.length > 0 && (
+                <DropdownMenu open={moreMenuOpen} onOpenChange={setMoreMenuOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={`
+                        flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all
+                        ${moreMenuOpen ? "text-primary" : "text-muted-foreground"}
+                      `}
+                    >
+                      <MoreHorizontal className="h-6 w-6" />
+                      <span className="text-[10px] mt-1 font-medium">Más</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" side="top" className="w-48 mb-2">
+                    {mobileMoreItems.map(item => {
+                      // Si el item tiene hijos (como Configuración), mostrar submenú
+                      if (item.children) {
+                        return (
+                          <DropdownMenu key={item.label}>
+                            <DropdownMenuTrigger asChild>
+                              <div className="flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer hover:bg-accent rounded-sm">
+                                <div className="flex items-center">
+                                  <item.icon className="mr-2 h-4 w-4" />
+                                  {item.label}
+                                </div>
+                                <ChevronDown className="h-3 w-3" />
+                              </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent side="left" className="w-48">
+                              {item.children.map(subItem => {
+                                const isSubActive = location.startsWith(subItem.path);
+                                return (
+                                  <DropdownMenuItem
+                                    key={subItem.path}
+                                    onClick={() => {
+                                      setLocation(subItem.path);
+                                      setMoreMenuOpen(false);
+                                    }}
+                                    className={`cursor-pointer ${isSubActive ? "bg-primary/10 text-primary" : ""}`}
+                                  >
+                                    <subItem.icon className="mr-2 h-4 w-4" />
+                                    {subItem.label}
+                                  </DropdownMenuItem>
+                                );
+                              })}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        );
+                      }
+
+                      // Item normal
+                      const isActive = item.path ? location.startsWith(item.path) : false;
+                      return (
+                        <DropdownMenuItem
+                          key={item.path}
+                          onClick={() => {
+                            if (item.external) {
+                              window.open(item.path, '_blank');
+                            } else {
+                              setLocation(item.path);
+                            }
+                            setMoreMenuOpen(false);
+                          }}
+                          className={`cursor-pointer ${isActive ? "bg-primary/10 text-primary" : ""}`}
+                        >
+                          <item.icon className="mr-2 h-4 w-4" />
+                          {item.label}
+                          {item.external && <ExternalLink className="ml-auto h-3 w-3 opacity-50" />}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </nav>
+        )}
         
-        {/* Botón flotante de escáner QR */}
-        <QRScannerButton />
+        {/* Botón flotante de escáner QR - ajustado para no tapar el footer en móvil */}
+        <div className={isMobile ? 'mb-16' : ''}>
+          <QRScannerButton />
+        </div>
       </div>
     </TooltipProvider>
   );

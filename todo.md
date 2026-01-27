@@ -1279,3 +1279,12 @@
 - [x] Botón de asignar proyectos (icono carpeta) en cada usuario
 - [x] Diálogo con checkboxes para asignar/remover de proyectos
 - [x] Verificar que usuarios pueden acceder al proyecto asignado
+
+
+## Menú Móvil en Footer (Enero 2026)
+- [x] Mover iconos de navegación al footer en versión móvil
+- [x] Mantener iconos en header para versión desktop
+- [x] Footer fijo en la parte inferior de la pantalla
+- [x] Iconos bien espaciados y visibles
+- [x] Botón "Más" para acceder a opciones adicionales
+- [x] Submenú de Configuración accesible desde "Más"
