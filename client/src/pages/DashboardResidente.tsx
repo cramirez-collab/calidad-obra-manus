@@ -243,18 +243,23 @@ export default function DashboardResidente() {
           </Card>
         )}
 
-        {/* Tasa de aprobación */}
+        {/* Tasa de aprobación - Diseño minimalista */}
         {(dashboard?.estadisticas?.total || 0) > 0 && (
-          <Card className="border-0 shadow-sm bg-gradient-to-r from-[#002C63] to-[#002C63]/80">
-            <CardContent className="p-4 text-white">
+          <Card className="border shadow-sm">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs opacity-80">Tu tasa de aprobación</p>
-                  <p className="text-2xl font-bold">{dashboard?.estadisticas?.tasaAprobacion || 0}%</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-[#02B381]/10 flex items-center justify-center">
+                    <CheckCircle2 className="h-5 w-5 text-[#02B381]" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Tasa de aprobación</p>
+                    <p className="text-xl font-bold text-[#002C63]">{dashboard?.estadisticas?.tasaAprobacion || 0}%</p>
+                  </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs opacity-80">Total ítems</p>
-                  <p className="text-lg font-semibold">{dashboard?.estadisticas?.total || 0}</p>
+                  <p className="text-xs text-gray-500">Total</p>
+                  <p className="text-lg font-semibold text-[#002C63]">{dashboard?.estadisticas?.total || 0}</p>
                 </div>
               </div>
             </CardContent>

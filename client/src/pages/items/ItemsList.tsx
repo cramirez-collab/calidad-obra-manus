@@ -404,12 +404,27 @@ export default function ItemsList() {
                               {item.codigo}
                             </p>
                           </div>
-                          <Button variant="ghost" size="icon" onClick={(e) => {
-                            e.stopPropagation();
-                            setLocation(`/seguimiento/${item.codigo}`);
-                          }}>
-                            <QrCode className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={(e) => {
+                              e.stopPropagation();
+                              setLocation(`/seguimiento/${item.codigo}`);
+                            }}>
+                              <QrCode className="h-4 w-4" />
+                            </Button>
+                            {canDelete && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-muted-foreground hover:text-red-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setItemToDelete(item.id);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
 
                         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
@@ -442,6 +457,27 @@ export default function ItemsList() {
           )}
         </div>
       </div>
+      
+      {/* AlertDialog de confirmación para eliminar */}
+      <AlertDialog open={itemToDelete !== null} onOpenChange={(open) => !open && setItemToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Ítem</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas eliminar este ítem? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => itemToDelete && handleDelete(itemToDelete)}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

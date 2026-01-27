@@ -242,12 +242,12 @@ export default function GenerarQR() {
             {unidades && unidades.length > 0 && (
               <div className="mb-4">
                 <Label>Unidad (opcional - para QR específico de unidad)</Label>
-                <Select value={selectedUnidadId} onValueChange={setSelectedUnidadId}>
+                <Select value={selectedUnidadId || 'none'} onValueChange={(v) => setSelectedUnidadId(v === 'none' ? '' : v)}>
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Seleccionar unidad (opcional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sin unidad específica</SelectItem>
+                    <SelectItem value="none">Sin unidad específica</SelectItem>
                     {unidades.map((u) => (
                       <SelectItem key={u.id} value={u.id.toString()}>
                         {u.codigo || u.nombre} - {u.nombre}

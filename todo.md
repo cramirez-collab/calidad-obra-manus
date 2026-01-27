@@ -801,3 +801,24 @@
 - [x] Generar QR por unidad específica (selector en GenerarQR)
 - [x] Trazabilidad completa desde QR hasta estadísticas (getEstadisticasQR)
 - [x] Distribución de ítems por unidad en estadísticas
+
+
+## Mejoras UI Enero 27
+
+### Lista de Ítems
+- [x] Agregar botón eliminar en cada ítem de la lista
+- [x] Solo visible para admin/supervisor/superadmin
+- [x] Icono de bote de basura discreto
+
+### Mis Tareas
+- [x] Eliminar colores plasta grandes (fondo azul oscuro)
+- [x] Diseño más limpio y minimalista
+- [x] Mantener funcionalidad pero mejorar estética
+
+### Formulario Nuevo Ítem
+- [x] Cambiar "¿Qué problema encontraste?" por "Descripción breve (opcional)"
+- [x] Título ahora es opcional - usa nombre del defecto si no hay título
+- [x] Selector de Unidad ya existe
+- [x] Selector de Espacio (del catálogo por unidad)
+- [x] Selector de Defecto (del catálogo por especialidad)
+- [x] Selector de Empresa (responsable)

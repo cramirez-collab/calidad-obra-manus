@@ -149,9 +149,9 @@ export default function NuevoItem() {
   };
 
   const handleSubmit = async () => {
-    // Validación mínima
-    if (!formData.empresaId || !formData.unidadId || !formData.titulo) {
-      toast.error("Por favor completa: Empresa, Unidad y Título");
+    // Validación mínima - título es opcional
+    if (!formData.empresaId || !formData.unidadId) {
+      toast.error("Por favor completa: Empresa y Unidad");
       return;
     }
 
@@ -162,6 +162,10 @@ export default function NuevoItem() {
 
     setIsSubmitting(true);
     try {
+      // Usar nombre del defecto como título si no hay título
+      const defectoSeleccionado = defectos?.find(d => d.id.toString() === formData.defectoId);
+      const tituloFinal = formData.titulo || defectoSeleccionado?.nombre || 'Sin título';
+      
       // Crear el ítem
       const result = await createItemMutation.mutateAsync({
         proyectoId: selectedProjectId || 0,
@@ -170,7 +174,7 @@ export default function NuevoItem() {
         especialidadId: formData.especialidadId ? parseInt(formData.especialidadId) : undefined,
         defectoId: formData.defectoId ? parseInt(formData.defectoId) : undefined,
         espacioId: formData.espacioId ? parseInt(formData.espacioId) : undefined,
-        titulo: formData.titulo,
+        titulo: tituloFinal,
       });
 
       // Subir las fotos
@@ -321,7 +325,7 @@ export default function NuevoItem() {
             <Input
               value={formData.titulo}
               onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-              placeholder="¿Qué problema encontraste?"
+              placeholder="Descripción breve (opcional)"
               className="text-base border-0 border-b rounded-none px-0 focus-visible:ring-0"
             />
             
@@ -488,7 +492,7 @@ export default function NuevoItem() {
         {/* Botón de crear - Siempre visible */}
         <Button 
           onClick={handleSubmit} 
-          disabled={isSubmitting || !fotoAntes || !formData.titulo || !formData.empresaId || !formData.unidadId}
+          disabled={isSubmitting || !fotoAntes || !formData.empresaId || !formData.unidadId}
           className="w-full h-12 bg-[#02B381] hover:bg-[#02B381]/90 text-white font-semibold"
         >
           {isSubmitting ? (
