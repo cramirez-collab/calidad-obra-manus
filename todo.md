@@ -1148,3 +1148,22 @@
 - [x] Distribuir todos los iconos equitativamente sin scroll (5 visibles + "Más")
 - [x] Mantener header simplificado en móvil (solo logo, proyecto y usuario)
 - [x] Iconos con labels para mejor UX en barra inferior
+
+
+## Mejoras Formulario Empresa Integrado (27 Enero 2026)
+
+### Creación Inline de Usuarios
+- [x] Botón + junto a selector de Residente para crear nuevo
+- [x] Botón + junto a selector de Jefe de Residente para crear nuevo
+- [x] Formulario inline: nombre, teléfono, correo, contraseña, rol
+- [x] Asignar rol automáticamente según el campo (residente o jefe_residente)
+
+### Defectos Sugeridos por Especialidad
+- [x] Sugerir 5 defectos automáticamente al seleccionar especialidad
+- [x] Mostrar defectos como checkboxes seleccionables
+- [x] Permitir añadir defectos personalizados
+- [x] Catálogo de defectos por especialidad predefinido (10 especialidades)
+
+### Reorganización de Secciones
+- [x] Orden: Datos Generales → Especialidad → Equipo → Defectos
+- [x] Cascada lógica: especialidad determina defectos sugeridos

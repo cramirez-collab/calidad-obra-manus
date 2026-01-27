@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -36,7 +37,10 @@ import {
   Check,
   Sparkles,
   UserCircle,
-  UserCog
+  UserCog,
+  Phone,
+  Mail,
+  Lock
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -68,6 +72,136 @@ const severidadColors: Record<string, string> = {
   critico: "bg-red-100 text-red-800",
 };
 
+// Catálogo de defectos sugeridos por especialidad
+const defectosSugeridosPorEspecialidad: Record<string, { nombre: string; severidad: string }[]> = {
+  // Estructura
+  estructura: [
+    { nombre: "Grieta estructural", severidad: "grave" },
+    { nombre: "Fisura en muro", severidad: "moderado" },
+    { nombre: "Desplome de muro", severidad: "critico" },
+    { nombre: "Falta de nivel", severidad: "moderado" },
+    { nombre: "Acero expuesto", severidad: "grave" },
+  ],
+  // Tablaroca / Acabados secos
+  tablaroca: [
+    { nombre: "Junta visible", severidad: "leve" },
+    { nombre: "Abultamiento en superficie", severidad: "moderado" },
+    { nombre: "Tornillo expuesto", severidad: "leve" },
+    { nombre: "Fisura en esquina", severidad: "moderado" },
+    { nombre: "Falta de cinta", severidad: "moderado" },
+  ],
+  // Hidráulica
+  hidraulica: [
+    { nombre: "Fuga de agua", severidad: "grave" },
+    { nombre: "Baja presión", severidad: "moderado" },
+    { nombre: "Tubería mal sellada", severidad: "moderado" },
+    { nombre: "Goteo en llave", severidad: "leve" },
+    { nombre: "Drenaje lento", severidad: "moderado" },
+  ],
+  // Eléctrica
+  electrica: [
+    { nombre: "Corto circuito", severidad: "critico" },
+    { nombre: "Contacto suelto", severidad: "moderado" },
+    { nombre: "Falta de tierra física", severidad: "grave" },
+    { nombre: "Cableado expuesto", severidad: "grave" },
+    { nombre: "Apagador sin función", severidad: "leve" },
+  ],
+  // Gas
+  gas: [
+    { nombre: "Fuga de gas", severidad: "critico" },
+    { nombre: "Conexión floja", severidad: "grave" },
+    { nombre: "Falta de ventilación", severidad: "grave" },
+    { nombre: "Válvula defectuosa", severidad: "moderado" },
+    { nombre: "Tubería sin pintar", severidad: "leve" },
+  ],
+  // HVAC / Clima
+  hvac: [
+    { nombre: "Falta de enfriamiento", severidad: "moderado" },
+    { nombre: "Ruido excesivo", severidad: "leve" },
+    { nombre: "Fuga de refrigerante", severidad: "grave" },
+    { nombre: "Ducto desconectado", severidad: "moderado" },
+    { nombre: "Filtro sucio", severidad: "leve" },
+  ],
+  // Pintura / Acabados
+  pintura: [
+    { nombre: "Burbuja en pintura", severidad: "leve" },
+    { nombre: "Color desigual", severidad: "leve" },
+    { nombre: "Manchas visibles", severidad: "moderado" },
+    { nombre: "Falta de retoque", severidad: "leve" },
+    { nombre: "Descascarado", severidad: "moderado" },
+  ],
+  // Carpintería
+  carpinteria: [
+    { nombre: "Puerta desalineada", severidad: "moderado" },
+    { nombre: "Bisagra floja", severidad: "leve" },
+    { nombre: "Rayón en madera", severidad: "leve" },
+    { nombre: "Cierre defectuoso", severidad: "moderado" },
+    { nombre: "Falta de barniz", severidad: "leve" },
+  ],
+  // Aluminio / Cancelería
+  aluminio: [
+    { nombre: "Ventana no cierra", severidad: "moderado" },
+    { nombre: "Vidrio rayado", severidad: "leve" },
+    { nombre: "Falta de sellador", severidad: "moderado" },
+    { nombre: "Mosquitero roto", severidad: "leve" },
+    { nombre: "Herraje oxidado", severidad: "moderado" },
+  ],
+  // Supervisión / General
+  supervision: [
+    { nombre: "Limpieza deficiente", severidad: "leve" },
+    { nombre: "Material fuera de lugar", severidad: "leve" },
+    { nombre: "Falta de señalización", severidad: "moderado" },
+    { nombre: "Área sin proteger", severidad: "moderado" },
+    { nombre: "Documentación incompleta", severidad: "leve" },
+  ],
+  // Default
+  default: [
+    { nombre: "Defecto de acabado", severidad: "leve" },
+    { nombre: "Instalación incorrecta", severidad: "moderado" },
+    { nombre: "Material dañado", severidad: "moderado" },
+    { nombre: "Falta de elemento", severidad: "moderado" },
+    { nombre: "Funcionamiento incorrecto", severidad: "grave" },
+  ],
+};
+
+// Función para obtener defectos sugeridos según nombre de especialidad
+function getDefectosSugeridos(nombreEspecialidad: string): { nombre: string; severidad: string }[] {
+  const nombreLower = nombreEspecialidad.toLowerCase();
+  
+  if (nombreLower.includes('estructura') || nombreLower.includes('concreto')) {
+    return defectosSugeridosPorEspecialidad.estructura;
+  }
+  if (nombreLower.includes('tablaroca') || nombreLower.includes('yeso') || nombreLower.includes('drywall')) {
+    return defectosSugeridosPorEspecialidad.tablaroca;
+  }
+  if (nombreLower.includes('hidra') || nombreLower.includes('plomeria') || nombreLower.includes('agua')) {
+    return defectosSugeridosPorEspecialidad.hidraulica;
+  }
+  if (nombreLower.includes('electr') || nombreLower.includes('electric')) {
+    return defectosSugeridosPorEspecialidad.electrica;
+  }
+  if (nombreLower.includes('gas')) {
+    return defectosSugeridosPorEspecialidad.gas;
+  }
+  if (nombreLower.includes('hvac') || nombreLower.includes('clima') || nombreLower.includes('aire')) {
+    return defectosSugeridosPorEspecialidad.hvac;
+  }
+  if (nombreLower.includes('pintura') || nombreLower.includes('acabado')) {
+    return defectosSugeridosPorEspecialidad.pintura;
+  }
+  if (nombreLower.includes('carpint') || nombreLower.includes('madera') || nombreLower.includes('puerta')) {
+    return defectosSugeridosPorEspecialidad.carpinteria;
+  }
+  if (nombreLower.includes('aluminio') || nombreLower.includes('cancel') || nombreLower.includes('ventana')) {
+    return defectosSugeridosPorEspecialidad.aluminio;
+  }
+  if (nombreLower.includes('superv') || nombreLower.includes('general')) {
+    return defectosSugeridosPorEspecialidad.supervision;
+  }
+  
+  return defectosSugeridosPorEspecialidad.default;
+}
+
 export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyectoId }: Props) {
   const [formData, setFormData] = useState({
     nombre: "",
@@ -85,15 +219,23 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
   const [nuevaEspecialidad, setNuevaEspecialidad] = useState({ nombre: "", codigo: "", color: "#02B381" });
 
   // Estados para crear nuevo usuario inline
-  const [showNuevoUsuario, setShowNuevoUsuario] = useState(false);
-  const [nuevoUsuarioTipo, setNuevoUsuarioTipo] = useState<'residente' | 'jefe'>('residente');
-  const [nuevoUsuario, setNuevoUsuario] = useState({ nombre: "", email: "", telefono: "" });
+  const [showNuevoResidente, setShowNuevoResidente] = useState(false);
+  const [showNuevoJefe, setShowNuevoJefe] = useState(false);
+  const [nuevoUsuario, setNuevoUsuario] = useState({ 
+    nombre: "", 
+    email: "", 
+    telefono: "", 
+    password: "" 
+  });
 
   // Estados para defectos
   const [editingDefectoId, setEditingDefectoId] = useState<number | null>(null);
   const [editingDefectoData, setEditingDefectoData] = useState({ nombre: "", severidad: "moderado" });
   const [showNuevoDefecto, setShowNuevoDefecto] = useState(false);
   const [nuevoDefecto, setNuevoDefecto] = useState({ nombre: "", severidad: "moderado" });
+  
+  // Estados para defectos sugeridos seleccionados
+  const [defectosSugeridosSeleccionados, setDefectosSugeridosSeleccionados] = useState<Set<string>>(new Set());
 
   const utils = trpc.useUtils();
 
@@ -132,6 +274,26 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
       setFormData(prev => ({ ...prev, especialidadId: data.id.toString() }));
       setShowNuevaEspecialidad(false);
       setNuevaEspecialidad({ nombre: "", codigo: "", color: "#02B381" });
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  // Mutation para crear usuario
+  const createUserMutation = trpc.users.create.useMutation({
+    onSuccess: (data, variables) => {
+      utils.users.list.invalidate();
+      toast.success("Usuario creado correctamente");
+      
+      // Asignar el nuevo usuario al campo correspondiente
+      if (showNuevoResidente) {
+        setFormData(prev => ({ ...prev, residenteId: data.id.toString() }));
+        setShowNuevoResidente(false);
+      } else if (showNuevoJefe) {
+        setFormData(prev => ({ ...prev, jefeResidenteId: data.id.toString() }));
+        setShowNuevoJefe(false);
+      }
+      
+      setNuevoUsuario({ nombre: "", email: "", telefono: "", password: "" });
     },
     onError: (error) => toast.error(error.message),
   });
@@ -189,6 +351,7 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
         jefeResidenteId: "",
       });
     }
+    setDefectosSugeridosSeleccionados(new Set());
   }, [empresa, isOpen]);
 
   // Filtrar usuarios por rol
@@ -205,10 +368,42 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
     ? allDefectos?.filter(d => d.especialidadId === parseInt(formData.especialidadId)) || []
     : [];
 
-  const handleSubmit = () => {
+  // Obtener especialidad seleccionada para sugerencias
+  const especialidadSeleccionada = especialidades?.find(e => e.id.toString() === formData.especialidadId);
+  const defectosSugeridos = especialidadSeleccionada 
+    ? getDefectosSugeridos(especialidadSeleccionada.nombre)
+    : [];
+
+  // Filtrar sugeridos que ya existen
+  const defectosSugeridosDisponibles = defectosSugeridos.filter(
+    sugerido => !defectosEspecialidad.some(
+      existente => existente.nombre.toLowerCase() === sugerido.nombre.toLowerCase()
+    )
+  );
+
+  const handleSubmit = async () => {
     if (!formData.nombre.trim()) {
       toast.error("El nombre es requerido");
       return;
+    }
+
+    // Primero crear los defectos sugeridos seleccionados
+    if (formData.especialidadId && defectosSugeridosSeleccionados.size > 0) {
+      for (const nombreDefecto of Array.from(defectosSugeridosSeleccionados)) {
+        const defectoSugerido = defectosSugeridos.find(d => d.nombre === nombreDefecto);
+        if (defectoSugerido) {
+          try {
+            await createDefectoMutation.mutateAsync({
+              nombre: defectoSugerido.nombre,
+              especialidadId: parseInt(formData.especialidadId),
+              severidad: defectoSugerido.severidad as any,
+              proyectoId,
+            });
+          } catch (e) {
+            // Ignorar si ya existe
+          }
+        }
+      }
     }
 
     const data = {
@@ -246,6 +441,25 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
     });
   };
 
+  const handleCreateUsuario = (tipo: 'residente' | 'jefe') => {
+    if (!nuevoUsuario.nombre.trim()) {
+      toast.error("El nombre es requerido");
+      return;
+    }
+    if (!nuevoUsuario.password || nuevoUsuario.password.length < 6) {
+      toast.error("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
+    createUserMutation.mutate({
+      name: nuevoUsuario.nombre,
+      email: nuevoUsuario.email || undefined,
+      password: nuevoUsuario.password,
+      role: tipo === 'jefe' ? 'jefe_residente' : 'residente',
+      proyectoId,
+    });
+  };
+
   const handleCreateDefecto = () => {
     if (!nuevoDefecto.nombre.trim()) {
       toast.error("El nombre es requerido");
@@ -276,6 +490,102 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
       deleteDefectoMutation.mutate({ id });
     }
   };
+
+  const toggleDefectoSugerido = (nombre: string) => {
+    const newSet = new Set(defectosSugeridosSeleccionados);
+    if (newSet.has(nombre)) {
+      newSet.delete(nombre);
+    } else {
+      newSet.add(nombre);
+    }
+    setDefectosSugeridosSeleccionados(newSet);
+  };
+
+  // Componente para formulario de nuevo usuario
+  const NuevoUsuarioForm = ({ tipo, onCancel }: { tipo: 'residente' | 'jefe'; onCancel: () => void }) => (
+    <Card className="border-dashed border-blue-400 mt-2">
+      <CardContent className="pt-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-blue-600 font-medium">
+            {tipo === 'jefe' ? 'Nuevo Jefe de Residente' : 'Nuevo Residente'}
+          </Label>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={onCancel}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="grid gap-3">
+          <div className="flex items-center gap-2">
+            <UserCircle className="h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Nombre completo *"
+              value={nuevoUsuario.nombre}
+              onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })}
+              className="flex-1"
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-2">
+              <Phone className="h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Teléfono"
+                value={nuevoUsuario.telefono}
+                onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, telefono: e.target.value })}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Correo"
+                type="email"
+                value={nuevoUsuario.email}
+                onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })}
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Lock className="h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Contraseña (mín. 6 caracteres) *"
+              type="password"
+              value={nuevoUsuario.password}
+              onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, password: e.target.value })}
+              className="flex-1"
+            />
+          </div>
+        </div>
+        
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onCancel}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => handleCreateUsuario(tipo)}
+            disabled={createUserMutation.isPending}
+            className="bg-blue-500 hover:bg-blue-600"
+          >
+            <Check className="h-4 w-4 mr-1" />
+            Crear {tipo === 'jefe' ? 'Jefe' : 'Residente'}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -311,19 +621,18 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
                     value={formData.nombre}
                     onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                     placeholder="Ej: Constructora ABC"
-                    className={!formData.nombre ? 'border-red-300' : ''}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="contacto">Persona de Contacto</Label>
-                  <Input
-                    id="contacto"
-                    value={formData.contacto}
-                    onChange={(e) => setFormData({ ...formData, contacto: e.target.value })}
-                    placeholder="Nombre del contacto principal"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="contacto">Contacto</Label>
+                    <Input
+                      id="contacto"
+                      value={formData.contacto}
+                      onChange={(e) => setFormData({ ...formData, contacto: e.target.value })}
+                      placeholder="Nombre del contacto"
+                    />
+                  </div>
                   <div className="grid gap-2">
                     <Label htmlFor="telefono">Teléfono</Label>
                     <Input
@@ -333,16 +642,16 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
                       placeholder="33 1234 5678"
                     />
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="contacto@empresa.com"
-                    />
-                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="contacto@empresa.com"
+                  />
                 </div>
               </div>
             </AccordionContent>
@@ -368,7 +677,10 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
                   <div className="flex gap-2">
                     <Select
                       value={formData.especialidadId}
-                      onValueChange={(value) => setFormData({ ...formData, especialidadId: value })}
+                      onValueChange={(value) => {
+                        setFormData({ ...formData, especialidadId: value });
+                        setDefectosSugeridosSeleccionados(new Set());
+                      }}
                     >
                       <SelectTrigger className="flex-1">
                         <SelectValue placeholder="Seleccionar especialidad" />
@@ -467,7 +779,7 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
                 <span className="font-medium">Equipo</span>
                 {(formData.residenteId || formData.jefeResidenteId) && (
                   <Badge variant="outline" className="ml-2 text-xs">
-                    {[formData.residenteId, formData.jefeResidenteId].filter(Boolean).length} asignados
+                    {[formData.residenteId, formData.jefeResidenteId].filter(v => v && v !== 'none').length} asignados
                   </Badge>
                 )}
               </div>
@@ -480,22 +792,44 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
                     <UserCircle className="h-4 w-4 text-blue-500" />
                     Residente
                   </Label>
-                  <Select
-                    value={formData.residenteId}
-                    onValueChange={(value) => setFormData({ ...formData, residenteId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar residente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sin asignar</SelectItem>
-                      {residentes.map((usuario) => (
-                        <SelectItem key={usuario.id} value={usuario.id.toString()}>
-                          {usuario.name || usuario.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select
+                      value={formData.residenteId}
+                      onValueChange={(value) => setFormData({ ...formData, residenteId: value })}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Seleccionar residente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin asignar</SelectItem>
+                        {residentes.map((usuario) => (
+                          <SelectItem key={usuario.id} value={usuario.id.toString()}>
+                            {usuario.name || usuario.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        setShowNuevoResidente(true);
+                        setShowNuevoJefe(false);
+                        setNuevoUsuario({ nombre: "", email: "", telefono: "", password: "" });
+                      }}
+                      title="Crear nuevo residente"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {showNuevoResidente && (
+                    <NuevoUsuarioForm 
+                      tipo="residente" 
+                      onCancel={() => setShowNuevoResidente(false)} 
+                    />
+                  )}
                 </div>
 
                 {/* Jefe de Residente */}
@@ -504,27 +838,45 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
                     <UserCog className="h-4 w-4 text-purple-500" />
                     Jefe de Residente
                   </Label>
-                  <Select
-                    value={formData.jefeResidenteId}
-                    onValueChange={(value) => setFormData({ ...formData, jefeResidenteId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar jefe de residente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sin asignar</SelectItem>
-                      {jefesResidente.map((usuario) => (
-                        <SelectItem key={usuario.id} value={usuario.id.toString()}>
-                          {usuario.name || usuario.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select
+                      value={formData.jefeResidenteId}
+                      onValueChange={(value) => setFormData({ ...formData, jefeResidenteId: value })}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Seleccionar jefe de residente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin asignar</SelectItem>
+                        {jefesResidente.map((usuario) => (
+                          <SelectItem key={usuario.id} value={usuario.id.toString()}>
+                            {usuario.name || usuario.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        setShowNuevoJefe(true);
+                        setShowNuevoResidente(false);
+                        setNuevoUsuario({ nombre: "", email: "", telefono: "", password: "" });
+                      }}
+                      title="Crear nuevo jefe de residente"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {showNuevoJefe && (
+                    <NuevoUsuarioForm 
+                      tipo="jefe" 
+                      onCancel={() => setShowNuevoJefe(false)} 
+                    />
+                  )}
                 </div>
-
-                <p className="text-xs text-muted-foreground">
-                  Los usuarios deben estar registrados en el sistema. Puedes agregarlos desde Configuración → Usuarios.
-                </p>
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -550,11 +902,47 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
                   </p>
                 ) : (
                   <>
+                    {/* Defectos sugeridos */}
+                    {defectosSugeridosDisponibles.length > 0 && (
+                      <Card className="bg-amber-50 border-amber-200">
+                        <CardContent className="pt-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Sparkles className="h-4 w-4 text-amber-500" />
+                            <span className="text-sm font-medium text-amber-700">
+                              Defectos Sugeridos para {especialidadSeleccionada?.nombre}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {defectosSugeridosDisponibles.map((defecto) => (
+                              <label
+                                key={defecto.nombre}
+                                className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:border-amber-400 transition-colors"
+                              >
+                                <Checkbox
+                                  checked={defectosSugeridosSeleccionados.has(defecto.nombre)}
+                                  onCheckedChange={() => toggleDefectoSugerido(defecto.nombre)}
+                                />
+                                <span className="text-sm flex-1">{defecto.nombre}</span>
+                                <Badge 
+                                  variant="secondary" 
+                                  className={`text-xs ${severidadColors[defecto.severidad] || ''}`}
+                                >
+                                  {defecto.severidad}
+                                </Badge>
+                              </label>
+                            ))}
+                          </div>
+                          <p className="text-xs text-amber-600 mt-2">
+                            Selecciona los defectos que aplican a esta empresa
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-amber-500" />
                         <span className="text-sm text-muted-foreground">
-                          Defectos de {especialidades?.find(e => e.id.toString() === formData.especialidadId)?.nombre}
+                          Defectos existentes de {especialidadSeleccionada?.nombre}
                         </span>
                       </div>
                       <Button
@@ -619,10 +1007,10 @@ export default function EmpresaFormIntegrado({ isOpen, onClose, empresa, proyect
                       </Card>
                     )}
 
-                    {/* Lista de defectos */}
+                    {/* Lista de defectos existentes */}
                     {defectosEspecialidad.length === 0 ? (
                       <p className="text-sm text-muted-foreground italic text-center py-4">
-                        No hay defectos definidos. Agrega el primero.
+                        No hay defectos definidos. Selecciona de los sugeridos o agrega uno nuevo.
                       </p>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
