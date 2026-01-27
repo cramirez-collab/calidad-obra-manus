@@ -1455,7 +1455,7 @@ export const appRouter = router({
       .input(z.object({
         proyectoId: z.number(),
         usuarioId: z.number(),
-        rolEnProyecto: z.enum(['admin', 'supervisor', 'jefe_residente', 'residente']),
+        rolEnProyecto: z.enum(['admin', 'supervisor', 'jefe_residente', 'residente', 'desarrollador']),
       }))
       .mutation(async ({ input }) => {
         const id = await db.asignarUsuarioAProyecto(input);
@@ -1478,7 +1478,7 @@ export const appRouter = router({
       .input(z.object({
         proyectoId: z.number(),
         usuarioId: z.number(),
-        rolEnProyecto: z.enum(['admin', 'supervisor', 'jefe_residente', 'residente']),
+        rolEnProyecto: z.enum(['admin', 'supervisor', 'jefe_residente', 'residente', 'desarrollador']),
       }))
       .mutation(async ({ input }) => {
         await db.actualizarRolEnProyecto(input.proyectoId, input.usuarioId, input.rolEnProyecto);

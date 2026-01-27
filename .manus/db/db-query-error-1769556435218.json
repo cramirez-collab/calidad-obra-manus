@@ -1,0 +1,8 @@
+{
+  "query": "SELECT pu.*, u.name as usuario_nombre, u.role as usuario_role, p.nombre as proyecto_nombre \nFROM proyecto_usuarios pu \nLEFT JOIN users u ON pu.usuario_id = u.id \nLEFT JOIN proyectos p ON pu.proyecto_id = p.id \nORDER BY pu.proyecto_id, pu.usuario_id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT pu.*, u.name as usuario_nombre, u.role as usuario_role, p.nombre as proyecto_nombre \nFROM proyecto_usuarios pu \nLEFT JOIN users u ON pu.usuario_id = u.id \nLEFT JOIN proyectos p ON pu.proyecto_id = p.id \nORDER BY pu.proyecto_id, pu.usuario_id;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'pu.usuario_id' in 'on clause'"
+  ]
+}

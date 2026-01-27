@@ -1270,3 +1270,12 @@
 ## Permisos de Eliminación de Usuarios (Enero 2026)
 - [x] Restringir eliminación de usuarios solo a Admin/Superadmin en backend
 - [x] Ocultar botón de eliminar usuarios para roles sin permisos en frontend
+
+
+## Bug: Usuarios no pueden ver proyectos asignados (Enero 2026)
+- [x] Diagnosticar problema de acceso a proyectos
+- [x] Asignar todos los usuarios activos al proyecto Hidalma
+- [x] Agregar funcionalidad de asignación de proyectos en módulo Usuarios
+- [x] Botón de asignar proyectos (icono carpeta) en cada usuario
+- [x] Diálogo con checkboxes para asignar/remover de proyectos
+- [x] Verificar que usuarios pueden acceder al proyecto asignado

@@ -30,8 +30,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
-import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search } from "lucide-react";
+import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search, FolderKanban } from "lucide-react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -41,6 +42,7 @@ const roleLabels: Record<string, string> = {
   supervisor: "Supervisor",
   jefe_residente: "Jefe de Residente",
   residente: "Residente",
+  desarrollador: "Desarrollador",
 };
 
 const roleColors: Record<string, string> = {
@@ -49,6 +51,7 @@ const roleColors: Record<string, string> = {
   supervisor: "bg-blue-100 text-blue-800",
   jefe_residente: "bg-emerald-100 text-emerald-800",
   residente: "bg-slate-100 text-slate-800",
+  desarrollador: "bg-amber-100 text-amber-800",
 };
 
 interface UserFormData {
@@ -64,12 +67,13 @@ export default function Usuarios() {
   const utils = trpc.useUtils();
   const { user } = useAuth();
   const { data: allUsuarios, isLoading } = trpc.users.listConEmpresa.useQuery();
+  const { data: todosProyectos } = trpc.proyectos.list.useQuery();
   // Obtener empresas filtradas por proyecto desde el backend
   const { data: empresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
-  const { data: proyectoUsuarios } = trpc.proyectos.usuarios.useQuery(
+  const { data: proyectoUsuarios, refetch: refetchProyectoUsuarios } = trpc.proyectos.usuarios.useQuery(
     { proyectoId: selectedProjectId! },
     { enabled: !!selectedProjectId }
   );
@@ -87,6 +91,7 @@ export default function Usuarios() {
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isAssignProjectOpen, setIsAssignProjectOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<string>("all");
@@ -103,6 +108,7 @@ export default function Usuarios() {
   const createUserMutation = trpc.users.create.useMutation({
     onSuccess: () => {
       utils.users.listConEmpresa.invalidate();
+      refetchProyectoUsuarios();
       setIsCreateOpen(false);
       setFormData({ name: "", email: "", password: "", role: "residente", empresaId: null });
       toast.success("Usuario creado correctamente");
@@ -118,6 +124,28 @@ export default function Usuarios() {
       setIsEditOpen(false);
       setEditingUser(null);
       toast.success("Usuario actualizado correctamente");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const asignarProyectoMutation = trpc.proyectos.asignarUsuario.useMutation({
+    onSuccess: () => {
+      utils.users.listConEmpresa.invalidate();
+      refetchProyectoUsuarios();
+      toast.success("Usuario asignado al proyecto");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const removerProyectoMutation = trpc.proyectos.removerUsuario.useMutation({
+    onSuccess: () => {
+      utils.users.listConEmpresa.invalidate();
+      refetchProyectoUsuarios();
+      toast.success("Usuario removido del proyecto");
     },
     onError: (error) => {
       toast.error(error.message);
@@ -197,6 +225,45 @@ export default function Usuarios() {
     });
   };
 
+  const handleOpenAssignProject = (usuario: any) => {
+    setEditingUser(usuario);
+    setIsAssignProjectOpen(true);
+  };
+
+  const handleToggleProjectAssignment = (proyectoId: number, isAssigned: boolean, usuarioId: number) => {
+    if (!canManageUsers) {
+      toast.error("No tienes permisos para asignar proyectos");
+      return;
+    }
+    
+    if (isAssigned) {
+      // Remover del proyecto
+      removerProyectoMutation.mutate({
+        proyectoId,
+        usuarioId,
+      });
+    } else {
+      // Asignar al proyecto
+      const userRole = editingUser?.role || 'residente';
+      let rolEnProyecto: 'admin' | 'supervisor' | 'jefe_residente' | 'residente' | 'desarrollador' = 'residente';
+      if (userRole === 'superadmin' || userRole === 'admin') {
+        rolEnProyecto = 'admin';
+      } else if (userRole === 'supervisor') {
+        rolEnProyecto = 'supervisor';
+      } else if (userRole === 'jefe_residente') {
+        rolEnProyecto = 'jefe_residente';
+      } else if (userRole === 'desarrollador') {
+        rolEnProyecto = 'desarrollador';
+      }
+      
+      asignarProyectoMutation.mutate({
+        proyectoId,
+        usuarioId,
+        rolEnProyecto,
+      });
+    }
+  };
+
   const formatDate = (date: Date | string) => {
     const d = new Date(date);
     const day = String(d.getDate()).padStart(2, '0');
@@ -231,6 +298,11 @@ export default function Usuarios() {
     sinEmpresa: usuarios?.filter(u => !u.empresaId).length || 0,
   };
 
+  // Obtener proyectos asignados a un usuario específico
+  const { data: userProjects } = trpc.proyectos.misProyectos.useQuery(undefined, {
+    enabled: !!editingUser,
+  });
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -239,7 +311,7 @@ export default function Usuarios() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Gestión de Usuarios</h1>
             <p className="text-muted-foreground">
-              Alta, edición y asignación de roles y empresas
+              Alta, edición y asignación de roles, empresas y proyectos
             </p>
           </div>
           {canManageUsers && (
@@ -310,15 +382,15 @@ export default function Usuarios() {
                           Administrador
                         </div>
                       </SelectItem>
-<SelectItem value="supervisor">Supervisor</SelectItem>
-                       <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
-                       <SelectItem value="residente">Residente</SelectItem>
-                       <SelectItem value="desarrollador">Desarrollador</SelectItem>
-                     </SelectContent>
-                   </Select>
-                 </div>
-                 <div className="space-y-2">
-                   <Label htmlFor="empresa">Empresa</Label>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                      <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
+                      <SelectItem value="residente">Residente</SelectItem>
+                      <SelectItem value="desarrollador">Desarrollador</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="empresa">Empresa</Label>
                   <Select
                     value={formData.empresaId?.toString() || "none"}
                     onValueChange={(value) => setFormData({ 
@@ -447,14 +519,14 @@ export default function Usuarios() {
                   <SelectContent>
                     <SelectItem value="all">Todos los roles</SelectItem>
                     <SelectItem value="superadmin">Superadmin</SelectItem>
-<SelectItem value="admin">Administrador</SelectItem>
-                     <SelectItem value="supervisor">Supervisor</SelectItem>
-                     <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
-                     <SelectItem value="residente">Residente</SelectItem>
-                     <SelectItem value="desarrollador">Desarrollador</SelectItem>
-                   </SelectContent>
-                 </Select>
-                 <Select value={filterEmpresa} onValueChange={setFilterEmpresa}>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
+                    <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
+                    <SelectItem value="residente">Residente</SelectItem>
+                    <SelectItem value="desarrollador">Desarrollador</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterEmpresa} onValueChange={setFilterEmpresa}>
                   <SelectTrigger>
                     <SelectValue placeholder="Empresa" />
                   </SelectTrigger>
@@ -517,6 +589,17 @@ export default function Usuarios() {
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
+                          {canManageUsers && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleOpenAssignProject(usuario)}
+                            title="Asignar a proyectos"
+                          >
+                            <FolderKanban className="h-4 w-4 text-blue-500" />
+                          </Button>
+                          )}
                           {canDeleteUsers && (
                           <Button
                             variant="ghost"
@@ -626,6 +709,16 @@ export default function Usuarios() {
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
+                              {canManageUsers && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenAssignProject(usuario)}
+                                title="Asignar a proyectos"
+                              >
+                                <FolderKanban className="h-4 w-4 text-blue-500" />
+                              </Button>
+                              )}
                               {canDeleteUsers && (
                               <Button
                                 variant="ghost"
@@ -754,15 +847,15 @@ export default function Usuarios() {
                         Administrador
                       </div>
                     </SelectItem>
-<SelectItem value="supervisor">Supervisor</SelectItem>
-                     <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
-                     <SelectItem value="residente">Residente</SelectItem>
-                     <SelectItem value="desarrollador">Desarrollador</SelectItem>
-                   </SelectContent>
-                 </Select>
-               </div>
-               <div className="space-y-2">
-                 <Label htmlFor="edit-empresa">Empresa</Label>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
+                    <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
+                    <SelectItem value="residente">Residente</SelectItem>
+                    <SelectItem value="desarrollador">Desarrollador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-empresa">Empresa</Label>
                 <Select
                   value={formData.empresaId?.toString() || "none"}
                   onValueChange={(value) => setFormData({ 
@@ -794,6 +887,63 @@ export default function Usuarios() {
                 className="bg-[#02B381] hover:bg-[#029970]"
               >
                 {updateUserMutation.isPending ? "Guardando..." : "Guardar Cambios"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de asignación de proyectos */}
+        <Dialog open={isAssignProjectOpen} onOpenChange={setIsAssignProjectOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Asignar a Proyectos</DialogTitle>
+              <DialogDescription>
+                Selecciona los proyectos a los que deseas asignar a {editingUser?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4 max-h-[400px] overflow-y-auto">
+              {todosProyectos?.map((proyecto) => {
+                const isAssigned = proyectoUsuarios?.some(
+                  pu => pu.usuarioId === editingUser?.id && pu.proyectoId === proyecto.id
+                ) || false;
+                
+                return (
+                  <div key={proyecto.id} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50">
+                    <Checkbox
+                      id={`proyecto-${proyecto.id}`}
+                      checked={isAssigned}
+                      onCheckedChange={() => handleToggleProjectAssignment(proyecto.id, isAssigned, editingUser?.id)}
+                      disabled={asignarProyectoMutation.isPending || removerProyectoMutation.isPending}
+                    />
+                    <label
+                      htmlFor={`proyecto-${proyecto.id}`}
+                      className="flex-1 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FolderKanban className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{proyecto.nombre}</span>
+                      </div>
+                      {proyecto.codigo && (
+                        <p className="text-xs text-muted-foreground mt-1">{proyecto.codigo}</p>
+                      )}
+                    </label>
+                    {isAssigned && (
+                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                        Asignado
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })}
+              {(!todosProyectos || todosProyectos.length === 0) && (
+                <p className="text-center text-muted-foreground py-4">
+                  No hay proyectos disponibles
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAssignProjectOpen(false)}>
+                Cerrar
               </Button>
             </DialogFooter>
           </DialogContent>
