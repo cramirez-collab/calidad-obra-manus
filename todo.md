@@ -1265,3 +1265,8 @@
 - [x] Actualizar UI de Empresas para agregar/eliminar múltiples residentes
 - [x] Actualizar NuevoItem para usar la nueva estructura de residentes
 - [ ] Migrar datos existentes de residenteId/jefeResidenteId a la nueva tabla
+
+
+## Permisos de Eliminación de Usuarios (Enero 2026)
+- [x] Restringir eliminación de usuarios solo a Admin/Superadmin en backend
+- [x] Ocultar botón de eliminar usuarios para roles sin permisos en frontend

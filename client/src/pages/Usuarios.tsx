@@ -183,7 +183,14 @@ export default function Usuarios() {
     });
   };
 
+  // Solo admin y superadmin pueden desactivar/eliminar usuarios
+  const canDeleteUsers = user?.role === 'superadmin' || user?.role === 'admin';
+
   const handleToggleActivo = (usuario: any) => {
+    if (!canDeleteUsers) {
+      toast.error("Solo los administradores pueden desactivar usuarios");
+      return;
+    }
     updateUserMutation.mutate({
       id: usuario.id,
       activo: !usuario.activo,
@@ -510,11 +517,13 @@ export default function Usuarios() {
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
+                          {canDeleteUsers && (
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
                             onClick={() => handleToggleActivo(usuario)}
+                            title={usuario.activo ? "Desactivar" : "Activar"}
                           >
                             {usuario.activo ? (
                               <UserX className="h-4 w-4 text-red-500" />
@@ -522,6 +531,7 @@ export default function Usuarios() {
                               <UserCheck className="h-4 w-4 text-emerald-500" />
                             )}
                           </Button>
+                          )}
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -616,6 +626,7 @@ export default function Usuarios() {
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
+                              {canDeleteUsers && (
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -628,6 +639,7 @@ export default function Usuarios() {
                                   <UserCheck className="h-4 w-4 text-emerald-500" />
                                 )}
                               </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
