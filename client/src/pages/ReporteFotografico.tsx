@@ -207,11 +207,13 @@ export default function ReporteFotografico() {
       </div>
       <div class="item-info">
         <div><span class="info-label">Título:</span> ${item.titulo}</div>
-        <div><span class="info-label">Fecha:</span> ${formatDate(item.fechaCreacion)}</div>
+        <div><span class="info-label">Fecha Alta:</span> ${formatDate(item.fechaCreacion)}</div>
+        <div><span class="info-label">Fecha Aprobación:</span> ${formatDate(item.fechaAprobacion)}</div>
         <div><span class="info-label">Empresa:</span> ${item.empresa?.nombre || '-'}</div>
         <div><span class="info-label">Unidad:</span> ${item.unidad?.nombre || '-'}</div>
         <div><span class="info-label">Especialidad:</span> ${item.especialidad?.nombre || '-'}</div>
         <div><span class="info-label">Residente:</span> ${item.residente?.name || '-'}</div>
+        <div><span class="info-label">Aprobado por:</span> ${item.aprobadoPor?.name || '-'}</div>
       </div>
       <div class="photos">
         <div class="photo-container">
@@ -293,7 +295,10 @@ export default function ReporteFotografico() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `reporte-fotografico-${formatDate(new Date())}.csv`;
+    const now = new Date();
+    const dateStr = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getFullYear()).slice(-2)}`;
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+    a.download = `ReporteFotografico-${dateStr}-${timeStr}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("CSV exportado correctamente");

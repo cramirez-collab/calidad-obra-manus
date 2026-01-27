@@ -287,7 +287,7 @@ export default function Bitacora() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `bitacora_${format(new Date(), "yyyy-MM-dd_HHmm")}.csv`;
+    link.download = `Bitacora-${format(new Date(), "dd-MM-yy")}-${format(new Date(), "HHmm")}.csv`;
     link.click();
     URL.revokeObjectURL(url);
     
@@ -385,7 +385,7 @@ export default function Bitacora() {
     doc.text("Fecha: ____________", startX2 + lineWidth/2, firmasYFinal + 37, { align: 'center' });
     doc.text("Fecha: ____________", startX3 + lineWidth/2, firmasYFinal + 37, { align: 'center' });
 
-    doc.save(`bitacora_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
+    doc.save(`Bitacora-${format(new Date(), "dd-MM-yy")}-${format(new Date(), "HHmm")}.pdf`);
     toast.success("Archivo PDF exportado correctamente");
   };
 

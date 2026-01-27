@@ -441,6 +441,8 @@ export default function Empresas() {
                   const defectos = getDefectosByEspecialidad(empresa.especialidadId);
                   const isExpanded = expandedEmpresas.has(empresa.id);
                   const especialidad = especialidades?.find(e => e.id === empresa.especialidadId);
+                  const residente = usuarios?.find(u => u.id === empresa.residenteId);
+                  const jefeResidente = usuarios?.find(u => u.id === empresa.jefeResidenteId);
                   
                   return (
                     <Collapsible key={empresa.id} open={isExpanded} onOpenChange={() => toggleExpanded(empresa.id)}>
@@ -505,13 +507,40 @@ export default function Empresas() {
                               )}
                             </div>
                             
-                            {/* Info de contacto - tercera fila en móvil */}
-                            {(empresa.contacto || empresa.telefono) && (
-                              <div className="text-xs sm:text-sm text-muted-foreground pl-10 sm:pl-0 truncate">
-                                {empresa.contacto}
-                                {empresa.telefono && <span className="ml-1 sm:ml-2">• {empresa.telefono}</span>}
+                          </div>
+                          
+                          {/* Sección de Equipo - Usuarios asignados */}
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-10 sm:pl-0">
+                              {/* Residente */}
+                              <div className="flex items-center gap-2 text-xs sm:text-sm">
+                                <span className="text-muted-foreground font-medium w-20">Residente:</span>
+                                {residente ? (
+                                  <span className="text-[#002C63] font-medium">{residente.name}</span>
+                                ) : (
+                                  <span className="text-gray-400 italic">Sin asignar</span>
+                                )}
                               </div>
-                            )}
+                              {/* Jefe de Residente */}
+                              <div className="flex items-center gap-2 text-xs sm:text-sm">
+                                <span className="text-muted-foreground font-medium w-20">Jefe:</span>
+                                {jefeResidente ? (
+                                  <span className="text-[#002C63] font-medium">{jefeResidente.name}</span>
+                                ) : (
+                                  <span className="text-gray-400 italic">Sin asignar</span>
+                                )}
+                              </div>
+                              {/* Contacto */}
+                              {(empresa.contacto || empresa.telefono) && (
+                                <div className="flex items-center gap-2 text-xs sm:text-sm sm:col-span-2">
+                                  <span className="text-muted-foreground font-medium w-20">Contacto:</span>
+                                  <span className="text-gray-600">
+                                    {empresa.contacto}
+                                    {empresa.telefono && ` • ${empresa.telefono}`}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                         

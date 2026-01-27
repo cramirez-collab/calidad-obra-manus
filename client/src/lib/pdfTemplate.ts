@@ -155,6 +155,17 @@ export const getFechaImpresion = () => {
   });
 };
 
+// Genera nombre de archivo con formato: Modulo-dd-mm-aa-HHmm
+export const getFileNameWithDate = (modulo: string) => {
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = String(now.getFullYear()).slice(-2);
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  return `${modulo}-${day}-${month}-${year}-${hours}${minutes}`;
+};
+
 export const generatePDFHeader = (proyectoNombre: string) => `
   <div class="header">
     <div class="logo">OBJETIV<span>A</span></div>
@@ -176,12 +187,13 @@ export const openPrintWindow = (options: PDFTemplateOptions): Window | null => {
   if (!printWindow) return null;
 
   const { title, proyectoNombre, content, totalPages = 1, currentPage = 1 } = options;
+  const fileName = getFileNameWithDate(title);
 
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
       <head>
-        <title>${title} - ${proyectoNombre}</title>
+        <title>${fileName}</title>
         <style>${getPDFStyles()}</style>
       </head>
       <body>

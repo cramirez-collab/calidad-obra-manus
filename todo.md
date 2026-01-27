@@ -1249,3 +1249,48 @@
 - [x] Trazabilidad completa de acciones por usuario (nombre y rol incluidos)
 - [x] Fechas concretas de cada acción (formato dd/MM/yy HH:mm)
 - [x] Multifiltros funcionales sin errores (usuario, unidad, categoría, fechas)
+
+
+## Mejoras de UI Empresas (27 Enero 2026)
+
+### Formulario Nuevo Ítem
+- [x] Eliminar botón "Rápido" del formulario
+
+### Vista de Empresas
+- [x] Mostrar nombres completos de usuarios (Residente, Jefe Residente) con roles claros
+- [x] Reducir espacio vacío en tarjetas de empresa
+- [x] Organizar mejor la información de usuarios en cada empresa
+
+### Navegación
+- [x] Eliminar página de Catálogo de Defectos separada (defectos se gestionan en empresas)
+
+
+## Correcciones Reportes PDF (27 Enero 2026)
+
+### Problemas de Formato PDF
+- [x] Corregir encabezados encimados en páginas de continuación (ajustados márgenes y estilos print)
+- [x] Ajustar márgenes para evitar superposición de contenido
+
+### Ordenamiento de Unidades
+- [x] Ordenar unidades numéricamente dentro de cada nivel (extracción de números del código)
+- [x] Incluir todas las unidades faltantes en el reporte
+
+### Nombres de Archivos Descriptivos
+- [x] Cambiar nombre de archivo a formato: [Modulo]-dd-mm-aa-HHmm.pdf
+- [x] Aplicar formato de nombre en Bitácora, ReporteFotográfico y pdfTemplate
+
+
+## Mejoras Finales Pre-Publicación (27 Enero 2026)
+
+### Miniaturas de Fotos A/B
+- [x] Mostrar miniaturas reales de fotos A/B en tarjetas de ítems pendientes (fotoAntes y fotoDespues incluidos en query)
+
+### Fechas y Nombres en Reportes
+- [x] Agregar fecha de alta en reportes de unidad (Fecha Alta)
+- [x] Agregar fecha de aprobación en reportes de unidad (Fecha Aprobación)
+- [x] Agregar nombres de responsables en reportes (Aprobado por)
+- [x] Verificar que Bitácora incluya fechas y nombres completos (Usuario, Rol, Fecha/Hora)
+
+### Publicación en Tiendas
+- [ ] Preparar guía de publicación en App Store (iOS)
+- [ ] Preparar guía de publicación en Play Store (Android)
