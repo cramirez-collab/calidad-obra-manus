@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { useProject } from "@/contexts/ProjectContext";
@@ -16,6 +15,8 @@ type UnidadPanoramica = {
   codigo: string | null;
   nivel: number;
   orden: number;
+  fechaInicio: Date | null;
+  fechaFin: Date | null;
   estado: 'completado' | 'rechazado' | 'pendiente' | 'sin_items';
   items: {
     total: number;
@@ -26,11 +27,38 @@ type UnidadPanoramica = {
   porcentaje: number;
 };
 
+// Componente de encabezado reutilizable
+function EncabezadoPDF({ proyectoNombre, fecha }: { proyectoNombre: string; fecha: string }) {
+  return (
+    <div className="flex justify-between items-start border-b-2 border-[#002C63] pb-3 mb-4">
+      <div>
+        <div className="text-2xl font-bold text-[#002C63] tracking-tight">
+          OBJETIV<span className="text-[#02B381]">A</span>
+        </div>
+        <div className="text-xs text-gray-500 mt-1">Control de Calidad</div>
+      </div>
+      <div className="text-right">
+        <div className="font-bold text-[#002C63] text-lg">{proyectoNombre}</div>
+        <div className="text-xs text-gray-500">{fecha}</div>
+      </div>
+    </div>
+  );
+}
+
+// Componente de pie de página reutilizable
+function PiePaginaPDF({ proyectoNombre, pagina, totalPaginas }: { proyectoNombre: string; pagina: number; totalPaginas: number }) {
+  return (
+    <div className="flex justify-between items-center mt-auto pt-2 border-t text-xs text-gray-500">
+      <span>ObjetivaOQC - {proyectoNombre}</span>
+      <span>Página {pagina} de {totalPaginas}</span>
+    </div>
+  );
+}
+
 export default function StackingPDF() {
   const [, setLocation] = useLocation();
   const { selectedProjectId } = useProject();
   const printRef = useRef<HTMLDivElement>(null);
-  const [totalPages, setTotalPages] = useState(1);
   
   const { data: unidades, isLoading } = trpc.unidades.panoramica.useQuery(
     { proyectoId: selectedProjectId || 0 },
@@ -39,6 +67,7 @@ export default function StackingPDF() {
 
   const { data: proyectos } = trpc.proyectos.list.useQuery();
   const proyecto = proyectos?.find(p => p.id === selectedProjectId);
+  const proyectoNombre = proyecto?.nombre || 'Proyecto';
 
   // Agrupar unidades por nivel - ordenado de MENOR a MAYOR para el PDF (ascendente)
   const celdasPorNivel = useMemo(() => {
@@ -77,15 +106,25 @@ export default function StackingPDF() {
     };
   }, [unidades]);
 
-  // Calcular número de páginas basado en contenido
-  useEffect(() => {
-    const niveles = celdasPorNivel.size;
-    const totalUnidades = unidades?.length || 0;
-    // Estimación: ~10 niveles por página en cuadrícula + 1 página para tabla
-    const paginasCuadricula = Math.ceil(niveles / 10);
-    const paginasTabla = Math.ceil(totalUnidades / 30);
-    setTotalPages(Math.max(1, paginasCuadricula + paginasTabla));
-  }, [celdasPorNivel, unidades]);
+  // Dividir unidades en páginas para la tabla (30 por página)
+  const unidadesParaTabla = useMemo(() => {
+    const todas: UnidadPanoramica[] = [];
+    Array.from(celdasPorNivel.entries()).forEach(([_, unidadesNivel]) => {
+      todas.push(...unidadesNivel);
+    });
+    
+    const paginas: UnidadPanoramica[][] = [];
+    const ITEMS_POR_PAGINA = 30;
+    
+    for (let i = 0; i < todas.length; i += ITEMS_POR_PAGINA) {
+      paginas.push(todas.slice(i, i + ITEMS_POR_PAGINA));
+    }
+    
+    return paginas;
+  }, [celdasPorNivel]);
+
+  // Total de páginas: 1 (cuadrícula) + páginas de tabla
+  const totalPaginas = 1 + unidadesParaTabla.length;
 
   const getEstadoColor = (estado: string) => {
     switch (estado) {
@@ -160,30 +199,19 @@ export default function StackingPDF() {
       </div>
 
       {/* Contenido imprimible */}
-      <div ref={printRef} className="max-w-7xl mx-auto p-6 print:p-0 print:max-w-none">
+      <div ref={printRef} className="print:p-0 print:max-w-none">
         
         {/* ========== PÁGINA 1: CUADRÍCULA ========== */}
-        <div className="print:page-break-after-always">
-          {/* Encabezado profesional Objetiva */}
-          <div className="flex justify-between items-start border-b-2 border-[#002C63] pb-3 mb-4 print:mx-4 print:mt-4">
-            <div>
-              <div className="text-2xl font-bold text-[#002C63] tracking-tight">
-                OBJETIV<span className="text-[#02B381]">A</span>
-              </div>
-              <div className="text-xs text-gray-500 mt-1">Control de Calidad</div>
-            </div>
-            <div className="text-right">
-              <div className="font-bold text-[#002C63] text-lg">{proyecto?.nombre || 'Proyecto'}</div>
-              <div className="text-xs text-gray-500">{fechaActual}</div>
-            </div>
-          </div>
+        <div className="pdf-page max-w-7xl mx-auto p-6 print:p-4 print:max-w-none print:h-[100vh] print:flex print:flex-col">
+          {/* Encabezado */}
+          <EncabezadoPDF proyectoNombre={proyectoNombre} fecha={fechaActual} />
           
           <h1 className="text-xl font-bold text-[#002C63] mb-4 text-center print:text-lg">
-            Reporte de Stacking
+            Reporte de Stacking - Cuadrícula
           </h1>
 
           {/* Resumen estadístico */}
-          <div className="grid grid-cols-5 gap-2 mb-4 print:gap-1 print:mx-4">
+          <div className="grid grid-cols-5 gap-2 mb-4 print:gap-1">
             <div className="text-center p-2 bg-gray-50 rounded border print:p-1">
               <p className="text-xl font-bold text-[#002C63] print:text-lg">{estadisticas.total}</p>
               <p className="text-xs text-gray-500">Total</p>
@@ -227,7 +255,7 @@ export default function StackingPDF() {
           </div>
 
           {/* Cuadrícula del stacking */}
-          <div className="border rounded-lg p-4 print:p-2 print:mx-4 print:border-gray-300">
+          <div className="border rounded-lg p-4 print:p-2 print:border-gray-300 flex-1">
             <h2 className="font-semibold text-[#002C63] mb-3 print:text-sm print:mb-2">
               Cuadrícula de Unidades por Nivel (Menor a Mayor)
             </h2>
@@ -266,51 +294,40 @@ export default function StackingPDF() {
           </div>
 
           {/* Pie de página - Página 1 */}
-          <div className="hidden print:flex print:justify-between print:items-center print:mt-4 print:mx-4 print:pt-2 print:border-t print:text-xs print:text-gray-500">
-            <span>ObjetivaOQC - {proyecto?.nombre}</span>
-            <span>Página 1 de {totalPages}</span>
-          </div>
+          <PiePaginaPDF proyectoNombre={proyectoNombre} pagina={1} totalPaginas={totalPaginas} />
         </div>
 
-        {/* ========== PÁGINA 2+: TABLA DETALLADA ========== */}
-        <div className="print:page-break-before-always">
-          {/* Encabezado repetido para página 2 */}
-          <div className="hidden print:flex print:justify-between print:items-start print:border-b-2 print:border-[#002C63] print:pb-3 print:mb-4 print:mx-4 print:mt-4">
-            <div>
-              <div className="text-xl font-bold text-[#002C63] tracking-tight">
-                OBJETIV<span className="text-[#02B381]">A</span>
-              </div>
-              <div className="text-xs text-gray-500 mt-1">Control de Calidad</div>
-            </div>
-            <div className="text-right">
-              <div className="font-bold text-[#002C63]">{proyecto?.nombre || 'Proyecto'}</div>
-              <div className="text-xs text-gray-500">{fechaActual}</div>
-            </div>
-          </div>
+        {/* ========== PÁGINAS DE TABLA DETALLADA ========== */}
+        {unidadesParaTabla.map((paginaUnidades, indexPagina) => (
+          <div 
+            key={indexPagina} 
+            className="pdf-page max-w-7xl mx-auto p-6 print:p-4 print:max-w-none print:h-[100vh] print:flex print:flex-col print:page-break-before"
+          >
+            {/* Encabezado repetido */}
+            <EncabezadoPDF proyectoNombre={proyectoNombre} fecha={fechaActual} />
 
-          <div className="mt-6 print:mt-0 print:mx-4">
             <h2 className="font-semibold text-[#002C63] mb-3 print:text-sm print:mb-2">
-              Detalle por Unidad
+              Detalle por Unidad {indexPagina > 0 ? `(continuación ${indexPagina + 1})` : ''}
             </h2>
             
-            <table className="w-full text-xs border-collapse print:text-[8px]">
-              <thead>
-                <tr className="bg-[#002C63] text-white">
-                  <th className="border border-[#002C63] p-2 text-left print:p-1">Nivel</th>
-                  <th className="border border-[#002C63] p-2 text-left print:p-1">Unidad</th>
-                  <th className="border border-[#002C63] p-2 text-center print:p-1">Estado</th>
-                  <th className="border border-[#002C63] p-2 text-center print:p-1">Total</th>
-                  <th className="border border-[#002C63] p-2 text-center print:p-1">Aprobados</th>
-                  <th className="border border-[#002C63] p-2 text-center print:p-1">Pendientes</th>
-                  <th className="border border-[#002C63] p-2 text-center print:p-1">Rechazados</th>
-                  <th className="border border-[#002C63] p-2 text-center print:p-1">%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Array.from(celdasPorNivel.entries()).flatMap(([nivel, unidadesNivel]) =>
-                  unidadesNivel.map((unidad, idx) => (
+            <div className="flex-1">
+              <table className="w-full text-xs border-collapse print:text-[8px]">
+                <thead>
+                  <tr className="bg-[#002C63] text-white">
+                    <th className="border border-[#002C63] p-2 text-left print:p-1">Nivel</th>
+                    <th className="border border-[#002C63] p-2 text-left print:p-1">Unidad</th>
+                    <th className="border border-[#002C63] p-2 text-center print:p-1">Estado</th>
+                    <th className="border border-[#002C63] p-2 text-center print:p-1">Total</th>
+                    <th className="border border-[#002C63] p-2 text-center print:p-1">Aprobados</th>
+                    <th className="border border-[#002C63] p-2 text-center print:p-1">Pendientes</th>
+                    <th className="border border-[#002C63] p-2 text-center print:p-1">Rechazados</th>
+                    <th className="border border-[#002C63] p-2 text-center print:p-1">%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginaUnidades.map((unidad, idx) => (
                     <tr key={unidad.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="border p-2 print:p-1">{nivel}</td>
+                      <td className="border p-2 print:p-1">{unidad.nivel}</td>
                       <td className="border p-2 print:p-1 font-medium">
                         {unidad.codigo || unidad.nombre}
                       </td>
@@ -328,18 +345,15 @@ export default function StackingPDF() {
                       <td className="border p-2 text-center print:p-1 text-red-600 font-medium">{unidad.items.rechazados}</td>
                       <td className="border p-2 text-center print:p-1 font-bold">{unidad.porcentaje}%</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Pie de página - Página 2 */}
-          <div className="hidden print:flex print:justify-between print:items-center print:mt-4 print:mx-4 print:pt-2 print:border-t print:text-xs print:text-gray-500">
-            <span>ObjetivaOQC - {proyecto?.nombre}</span>
-            <span>Página 2 de {totalPages}</span>
+            {/* Pie de página */}
+            <PiePaginaPDF proyectoNombre={proyectoNombre} pagina={indexPagina + 2} totalPaginas={totalPaginas} />
           </div>
-        </div>
+        ))}
       </div>
 
       {/* Estilos de impresión profesionales */}
@@ -375,12 +389,29 @@ export default function StackingPDF() {
             max-width: 100% !important;
           }
           
-          .print\\:page-break-after-always {
+          /* Cada página PDF */
+          .pdf-page {
             page-break-after: always;
+            min-height: 100vh;
+            box-sizing: border-box;
           }
           
-          .print\\:page-break-before-always {
+          .pdf-page:last-child {
+            page-break-after: auto;
+          }
+          
+          .print\\:page-break-before {
             page-break-before: always;
+          }
+        }
+        
+        /* Vista previa en pantalla */
+        @media screen {
+          .pdf-page {
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
           }
         }
       `}</style>

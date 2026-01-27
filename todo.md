@@ -945,3 +945,27 @@
 ### Estadísticas por Defecto
 - [x] Contabilizar ítems por tipo de defecto
 - [x] Gráficos de defectos más frecuentes
+
+
+## Mejoras Stacking Avanzadas (Enero 27)
+
+### Alta de Unidades en Stacking
+- [x] Botón "+ Agregar" por nivel para crear unidades nuevas
+- [x] Formulario rápido de alta de unidad (nombre, nivel)
+- [x] Actualizar base de datos al crear
+
+### Drag & Drop Completo
+- [x] Arrastrar unidades entre niveles diferentes
+- [x] Arrastrar unidades dentro del mismo nivel (reordenar)
+- [x] Todos los roles pueden arrastrar
+- [x] Actualizar nivel y orden en base de datos al soltar
+
+### Edición de Fechas
+- [x] Editar fecha de inicio de cada unidad
+- [x] Editar fecha de fin de cada unidad
+- [x] Modal de edición rápida desde Stacking
+
+### PDF Mejorado
+- [x] Separar detalle de stacking y listado en hojas diferentes
+- [x] Encabezados (logo, proyecto, paginación) en TODAS las hojas
+- [x] Mantener formato profesional actual

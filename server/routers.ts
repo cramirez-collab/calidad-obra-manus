@@ -297,6 +297,8 @@ export const appRouter = router({
         ubicacion: z.string().optional(),
         nivel: z.number().optional(),
         orden: z.number().optional(),
+        fechaInicio: z.date().optional().nullable(),
+        fechaFin: z.date().optional().nullable(),
       }))
       .mutation(async ({ input }) => {
         const id = await db.createUnidad(input);
@@ -314,6 +316,8 @@ export const appRouter = router({
         ubicacion: z.string().optional(),
         nivel: z.number().optional(),
         orden: z.number().optional(),
+        fechaInicio: z.date().optional().nullable(),
+        fechaFin: z.date().optional().nullable(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
@@ -336,7 +340,8 @@ export const appRouter = router({
       }),
     
     // Actualizar orden de unidades (para drag & drop en stacking)
-    updateOrden: adminProcedure
+    // Todos los roles pueden arrastrar unidades
+    updateOrden: protectedProcedure
       .input(z.object({
         unidades: z.array(z.object({
           id: z.number(),

@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Tooltip,
   TooltipContent,
@@ -15,6 +17,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import { useProject } from "@/contexts/ProjectContext";
@@ -30,9 +33,11 @@ import {
   Layers,
   GripVertical,
   Plus,
-  X,
   QrCode,
-  FileDown
+  FileDown,
+  Calendar,
+  Pencil,
+  Save
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -55,6 +60,7 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { toast } from "sonner";
 
 type UnidadPanoramica = {
   id: number;
@@ -116,16 +122,16 @@ function SortableUnidadCard({
   celda, 
   onTap, 
   onDoubleTap,
+  onEditFechas,
   selectedId,
-  isMobile,
-  canEdit
+  isMobile
 }: { 
   celda: CeldaStacking; 
   onTap: (unidad: UnidadPanoramica) => void;
   onDoubleTap: (unidadId: number) => void;
+  onEditFechas: (unidad: UnidadPanoramica) => void;
   selectedId: number | null;
   isMobile: boolean;
-  canEdit: boolean;
 }) {
   const {
     attributes,
@@ -180,16 +186,25 @@ function SortableUnidadCard({
 
   return (
     <div ref={setNodeRef} style={style} className="relative group">
-      {/* Handle para arrastrar - solo visible para admin/superadmin */}
-      {canEdit && (
-        <div
-          {...attributes}
-          {...listeners}
-          className="absolute -left-1 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-white/90 rounded p-0.5 shadow"
-        >
-          <GripVertical className="h-4 w-4 text-gray-500" />
-        </div>
-      )}
+      {/* Handle para arrastrar - visible para todos */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute -left-1 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-white/90 rounded p-0.5 shadow"
+      >
+        <GripVertical className="h-4 w-4 text-gray-500" />
+      </div>
+
+      {/* Botón de editar fechas */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onEditFechas(unidad);
+        }}
+        className="absolute -right-1 top-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded p-0.5 shadow hover:bg-white"
+      >
+        <Calendar className="h-3 w-3 text-gray-500" />
+      </button>
 
       <TooltipProvider>
         <Tooltip>
@@ -231,6 +246,12 @@ function SortableUnidadCard({
                   <p className="text-red-600">✗ Rechazados: {unidad.items.rechazados}</p>
                   <p className="text-amber-600">◷ Pendientes: {unidad.items.pendientes}</p>
                 </div>
+                {(unidad.fechaInicio || unidad.fechaFin) && (
+                  <div className="text-xs border-t pt-1 mt-1">
+                    {unidad.fechaInicio && <p>📅 Inicio: {format(new Date(unidad.fechaInicio), "dd/MM/yy")}</p>}
+                    {unidad.fechaFin && <p>📅 Fin: {format(new Date(unidad.fechaFin), "dd/MM/yy")}</p>}
+                  </div>
+                )}
               </div>
             </TooltipContent>
           )}
@@ -245,12 +266,14 @@ function ModalEstadisticas({
   unidad, 
   open, 
   onClose, 
-  onVerItems 
+  onVerItems,
+  onEditFechas
 }: { 
   unidad: UnidadPanoramica | null; 
   open: boolean; 
   onClose: () => void;
   onVerItems: () => void;
+  onEditFechas: () => void;
 }) {
   if (!unidad) return null;
 
@@ -322,14 +345,225 @@ function ModalEstadisticas({
             </Button>
             <Button 
               variant="outline" 
-              onClick={() => window.open(`/generar-qr?unidadId=${unidad.id}`, '_blank')}
+              onClick={onEditFechas}
               className="flex-1"
             >
-              <QrCode className="h-4 w-4 mr-1" />
-              QR
+              <Calendar className="h-4 w-4 mr-1" />
+              Fechas
             </Button>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={() => window.open(`/generar-qr?unidadId=${unidad.id}`, '_blank')}
+            className="w-full"
+          >
+            <QrCode className="h-4 w-4 mr-1" />
+            Generar QR
+          </Button>
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Modal para crear nueva unidad
+function ModalNuevaUnidad({
+  open,
+  onClose,
+  nivel,
+  proyectoId,
+  onSuccess
+}: {
+  open: boolean;
+  onClose: () => void;
+  nivel: number;
+  proyectoId: number;
+  onSuccess: () => void;
+}) {
+  const [nombre, setNombre] = useState("");
+  const [codigo, setCodigo] = useState("");
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+
+  const createMutation = trpc.unidades.create.useMutation({
+    onSuccess: () => {
+      toast.success("Unidad creada exitosamente");
+      onSuccess();
+      onClose();
+      setNombre("");
+      setCodigo("");
+      setFechaInicio("");
+      setFechaFin("");
+    },
+    onError: (error) => {
+      toast.error("Error al crear unidad: " + error.message);
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nombre.trim()) {
+      toast.error("El nombre es requerido");
+      return;
+    }
+
+    createMutation.mutate({
+      proyectoId,
+      nombre: nombre.trim(),
+      codigo: codigo.trim() || undefined,
+      nivel,
+      fechaInicio: fechaInicio ? new Date(fechaInicio) : undefined,
+      fechaFin: fechaFin ? new Date(fechaFin) : undefined,
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Plus className="h-5 w-5 text-primary" />
+            Nueva Unidad - Nivel {nivel}
+          </DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="nombre">Nombre *</Label>
+            <Input
+              id="nombre"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              placeholder="Ej: Departamento 101"
+              autoFocus
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="codigo">Código</Label>
+            <Input
+              id="codigo"
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value)}
+              placeholder="Ej: 101"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fechaInicio">Fecha Inicio</Label>
+              <Input
+                id="fechaInicio"
+                type="date"
+                value={fechaInicio}
+                onChange={(e) => setFechaInicio(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fechaFin">Fecha Fin</Label>
+              <Input
+                id="fechaFin"
+                type="date"
+                value={fechaFin}
+                onChange={(e) => setFechaFin(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={createMutation.isPending}>
+              {createMutation.isPending ? "Creando..." : "Crear Unidad"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Modal para editar fechas
+function ModalEditarFechas({
+  unidad,
+  open,
+  onClose,
+  onSuccess
+}: {
+  unidad: UnidadPanoramica | null;
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+
+  React.useEffect(() => {
+    if (unidad) {
+      setFechaInicio(unidad.fechaInicio ? format(new Date(unidad.fechaInicio), "yyyy-MM-dd") : "");
+      setFechaFin(unidad.fechaFin ? format(new Date(unidad.fechaFin), "yyyy-MM-dd") : "");
+    }
+  }, [unidad]);
+
+  const updateMutation = trpc.unidades.update.useMutation({
+    onSuccess: () => {
+      toast.success("Fechas actualizadas");
+      onSuccess();
+      onClose();
+    },
+    onError: (error) => {
+      toast.error("Error al actualizar: " + error.message);
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!unidad) return;
+
+    updateMutation.mutate({
+      id: unidad.id,
+      fechaInicio: fechaInicio ? new Date(fechaInicio) : null,
+      fechaFin: fechaFin ? new Date(fechaFin) : null,
+    });
+  };
+
+  if (!unidad) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            Editar Fechas - {unidad.nombre}
+          </DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="fechaInicioEdit">Fecha de Inicio</Label>
+            <Input
+              id="fechaInicioEdit"
+              type="date"
+              value={fechaInicio}
+              onChange={(e) => setFechaInicio(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="fechaFinEdit">Fecha de Fin</Label>
+            <Input
+              id="fechaFinEdit"
+              type="date"
+              value={fechaFin}
+              onChange={(e) => setFechaFin(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={updateMutation.isPending}>
+              <Save className="h-4 w-4 mr-1" />
+              {updateMutation.isPending ? "Guardando..." : "Guardar"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -365,11 +599,11 @@ export default function VistaPanoramica() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedUnidad, setSelectedUnidad] = useState<UnidadPanoramica | null>(null);
   const [showStatsModal, setShowStatsModal] = useState(false);
+  const [showNuevaUnidadModal, setShowNuevaUnidadModal] = useState(false);
+  const [showEditFechasModal, setShowEditFechasModal] = useState(false);
+  const [nivelParaNueva, setNivelParaNueva] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   
-  // Solo admin y superadmin pueden editar el stacking
-  const canEdit = user?.role === 'admin' || user?.role === 'superadmin';
-
   // Detectar si es móvil
   React.useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -378,12 +612,20 @@ export default function VistaPanoramica() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const { data: unidades, isLoading } = trpc.unidades.panoramica.useQuery(
+  const { data: unidades, isLoading, refetch } = trpc.unidades.panoramica.useQuery(
     { proyectoId: selectedProjectId! },
     { enabled: !!selectedProjectId }
   );
 
-  const updateOrdenMutation = trpc.unidades.updateOrden.useMutation();
+  const updateOrdenMutation = trpc.unidades.updateOrden.useMutation({
+    onSuccess: () => {
+      refetch();
+      toast.success("Posición actualizada");
+    },
+    onError: (error) => {
+      toast.error("Error al mover: " + error.message);
+    }
+  });
 
   // Sensores para drag and drop
   const sensors = useSensors(
@@ -438,6 +680,12 @@ export default function VistaPanoramica() {
       sinItems: unidades.filter((u: UnidadPanoramica) => u.estado === 'sin_items').length,
     };
   }, [unidades]);
+
+  // Obtener el nivel máximo para agregar nuevo nivel
+  const nivelMaximo = useMemo(() => {
+    if (celdasPorNivel.size === 0) return 0;
+    return Math.max(...Array.from(celdasPorNivel.keys()));
+  }, [celdasPorNivel]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -513,9 +761,14 @@ export default function VistaPanoramica() {
     setLocation(`/items?unidadId=${unidadId}`);
   };
 
-  const handleInsertarUnidad = (posicion: number, nivel: number) => {
-    // Navegar a crear nueva unidad con posición y nivel predefinidos
-    setLocation(`/unidades?insertar=true&posicion=${posicion}&nivel=${nivel}`);
+  const handleAgregarUnidad = (nivel: number) => {
+    setNivelParaNueva(nivel);
+    setShowNuevaUnidadModal(true);
+  };
+
+  const handleEditFechas = (unidad: UnidadPanoramica) => {
+    setSelectedUnidad(unidad);
+    setShowEditFechasModal(true);
   };
 
   const handleVerItems = () => {
@@ -561,7 +814,7 @@ export default function VistaPanoramica() {
               Stacking
             </h1>
             <p className="text-muted-foreground">
-              Arrastra y suelta las unidades para reorganizar • {isMobile ? "Toca para ver stats, toca de nuevo para ver ítems" : "Clic para ver ítems"}
+              Arrastra unidades entre niveles • {isMobile ? "Toca para ver stats" : "Clic para ver ítems"}
             </p>
           </div>
           <div className="flex gap-2">
@@ -616,10 +869,20 @@ export default function VistaPanoramica() {
         {/* Cuadrícula por niveles con drag and drop */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Cuadrícula de Unidades por Nivel
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Cuadrícula de Unidades por Nivel
+              </CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleAgregarUnidad(nivelMaximo + 1)}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Nuevo Nivel
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -640,12 +903,18 @@ export default function VistaPanoramica() {
                 <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">No hay unidades</h3>
                 <p className="text-muted-foreground mb-4">
-                  Importa unidades desde un archivo Excel o créalas manualmente.
+                  Crea unidades directamente o importa desde Excel.
                 </p>
-                <Button onClick={() => setLocation("/unidades/importar")}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Importar Excel
-                </Button>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={() => handleAgregarUnidad(1)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Crear Unidad
+                  </Button>
+                  <Button variant="outline" onClick={() => setLocation("/unidades/importar")}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Importar Excel
+                  </Button>
+                </div>
               </div>
             ) : (
               <DndContext
@@ -667,7 +936,7 @@ export default function VistaPanoramica() {
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => handleInsertarUnidad(celdas.length, nivel)}
+                          onClick={() => handleAgregarUnidad(nivel)}
                           className="ml-auto"
                         >
                           <Plus className="h-4 w-4 mr-1" />
@@ -685,16 +954,16 @@ export default function VistaPanoramica() {
                               celda={celda}
                               onTap={handleTap}
                               onDoubleTap={handleDoubleTap}
+                              onEditFechas={handleEditFechas}
                               selectedId={selectedUnidad?.id || null}
                               isMobile={isMobile}
-                              canEdit={canEdit}
                             />
                           ))}
                           {/* Celda vacía al final para insertar */}
                           <CeldaVacia 
                             posicion={celdas.length} 
                             nivel={nivel}
-                            onInsertarUnidad={handleInsertarUnidad}
+                            onInsertarUnidad={() => handleAgregarUnidad(nivel)}
                           />
                         </div>
                       </SortableContext>
@@ -738,6 +1007,30 @@ export default function VistaPanoramica() {
           setSelectedUnidad(null);
         }}
         onVerItems={handleVerItems}
+        onEditFechas={() => {
+          setShowStatsModal(false);
+          setShowEditFechasModal(true);
+        }}
+      />
+
+      {/* Modal para crear nueva unidad */}
+      <ModalNuevaUnidad
+        open={showNuevaUnidadModal}
+        onClose={() => setShowNuevaUnidadModal(false)}
+        nivel={nivelParaNueva}
+        proyectoId={selectedProjectId}
+        onSuccess={() => refetch()}
+      />
+
+      {/* Modal para editar fechas */}
+      <ModalEditarFechas
+        unidad={selectedUnidad}
+        open={showEditFechasModal}
+        onClose={() => {
+          setShowEditFechasModal(false);
+          setSelectedUnidad(null);
+        }}
+        onSuccess={() => refetch()}
       />
     </DashboardLayout>
   );
