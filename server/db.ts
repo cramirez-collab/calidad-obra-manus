@@ -359,15 +359,39 @@ export async function deleteEmpresa(id: number) {
 
 // ==================== UNIDADES ====================
 
+// Función auxiliar para ordenamiento numérico natural
+// Ordena: 1, 2, 3... 101, 102... 201, 202... (no alfabético)
+function naturalSort<T>(arr: T[], getKey: (item: T) => string | null | undefined): T[] {
+  return [...arr].sort((a, b) => {
+    const keyA = getKey(a) || '';
+    const keyB = getKey(b) || '';
+    
+    // Extraer números del string
+    const numA = parseInt(keyA.replace(/\D/g, '')) || 0;
+    const numB = parseInt(keyB.replace(/\D/g, '')) || 0;
+    
+    // Si ambos tienen números, ordenar numéricamente
+    if (numA !== 0 || numB !== 0) {
+      return numA - numB;
+    }
+    
+    // Si no tienen números, ordenar alfabéticamente
+    return keyA.localeCompare(keyB, 'es', { numeric: true, sensitivity: 'base' });
+  });
+}
+
 export async function getAllUnidades(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
+  let result;
   if (proyectoId) {
-    return await db.select().from(unidades)
-      .where(and(eq(unidades.activo, true), eq(unidades.proyectoId, proyectoId)))
-      .orderBy(unidades.nombre);
+    result = await db.select().from(unidades)
+      .where(and(eq(unidades.activo, true), eq(unidades.proyectoId, proyectoId)));
+  } else {
+    result = await db.select().from(unidades).where(eq(unidades.activo, true));
   }
-  return await db.select().from(unidades).where(eq(unidades.activo, true)).orderBy(unidades.nombre);
+  // Ordenar numéricamente por nombre
+  return naturalSort(result, u => u.nombre);
 }
 
 export async function getUnidadById(id: number) {
@@ -425,9 +449,11 @@ export async function getAllUnidadesConEstadisticas(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
   
-  const todasUnidades = proyectoId
-    ? await db.select().from(unidades).where(and(eq(unidades.activo, true), eq(unidades.proyectoId, proyectoId))).orderBy(unidades.nombre)
-    : await db.select().from(unidades).where(eq(unidades.activo, true)).orderBy(unidades.nombre);
+  const unidadesRaw = proyectoId
+    ? await db.select().from(unidades).where(and(eq(unidades.activo, true), eq(unidades.proyectoId, proyectoId)))
+    : await db.select().from(unidades).where(eq(unidades.activo, true));
+  // Ordenar numéricamente por nombre
+  const todasUnidades = naturalSort(unidadesRaw, u => u.nombre);
   const todosItems = proyectoId
     ? await db.select().from(items).where(eq(items.proyectoId, proyectoId))
     : await db.select().from(items);
@@ -455,9 +481,24 @@ export async function getUnidadesParaPanoramica(proyectoId: number) {
   const db = await getDb();
   if (!db) return [];
   
-  const todasUnidades = await db.select().from(unidades)
-    .where(and(eq(unidades.activo, true), eq(unidades.proyectoId, proyectoId)))
-    .orderBy(unidades.nivel, unidades.nombre);
+  const unidadesRaw = await db.select().from(unidades)
+    .where(and(eq(unidades.activo, true), eq(unidades.proyectoId, proyectoId)));
+  
+  // Ordenar por nivel primero, luego numéricamente por nombre dentro de cada nivel
+  const todasUnidades = [...unidadesRaw].sort((a, b) => {
+    // Primero por nivel
+    const nivelA = a.nivel || 1;
+    const nivelB = b.nivel || 1;
+    if (nivelA !== nivelB) return nivelA - nivelB;
+    
+    // Luego por nombre numéricamente
+    const nombreA = a.nombre || '';
+    const nombreB = b.nombre || '';
+    const numA = parseInt(nombreA.replace(/\D/g, '')) || 0;
+    const numB = parseInt(nombreB.replace(/\D/g, '')) || 0;
+    if (numA !== 0 || numB !== 0) return numA - numB;
+    return nombreA.localeCompare(nombreB, 'es', { numeric: true });
+  });
   
   const todosItems = await db.select().from(items).where(eq(items.proyectoId, proyectoId));
   
@@ -2152,9 +2193,10 @@ export async function getEmpresasByProyecto(proyectoId: number) {
 export async function getUnidadesByProyecto(proyectoId: number) {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(unidades)
-    .where(and(eq(unidades.proyectoId, proyectoId), eq(unidades.activo, true)))
-    .orderBy(unidades.nombre);
+  const result = await db.select().from(unidades)
+    .where(and(eq(unidades.proyectoId, proyectoId), eq(unidades.activo, true)));
+  // Ordenar numéricamente por nombre
+  return naturalSort(result, u => u.nombre);
 }
 
 export async function getEspecialidadesByProyecto(proyectoId: number) {

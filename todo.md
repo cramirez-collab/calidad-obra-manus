@@ -969,3 +969,9 @@
 - [x] Separar detalle de stacking y listado en hojas diferentes
 - [x] Encabezados (logo, proyecto, paginación) en TODAS las hojas
 - [x] Mantener formato profesional actual
+
+
+## Ordenamiento Numérico Natural (Enero 27)
+
+- [x] Implementar ordenamiento numérico natural en lista de unidades (1, 2, 3... 101, 102... 201, 202...)
+- [x] Aplicar en todas las consultas: lista, stacking, selectores
