@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 
@@ -18,6 +18,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [selectedProjectId, setSelectedProjectIdState] = useState<number | null>(null);
   const [isChangingProject, setIsChangingProject] = useState(false);
   const utils = trpc.useUtils();
+  
+  // Ref para evitar que el useEffect de verificación de acceso se ejecute durante el cambio de proyecto
+  const isChangingRef = useRef(false);
 
   // Obtener proyecto activo desde la base de datos
   const { data: proyectoActivoData, isLoading: isLoadingProyectoActivo } = trpc.users.getProyectoActivo.useQuery(
@@ -30,16 +33,19 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     onSuccess: (data) => {
       setSelectedProjectIdState(data.proyectoId);
       setIsChangingProject(false);
+      isChangingRef.current = false;
       // Invalidar todas las queries para refrescar datos del nuevo proyecto
       utils.invalidate();
     },
     onError: () => {
       setIsChangingProject(false);
+      isChangingRef.current = false;
     }
   });
 
   // Obtener proyectos según el rol del usuario
   const isSuperadmin = user?.role === "superadmin";
+  const isAdmin = user?.role === "admin";
   
   // Superadmin ve todos los proyectos, otros usuarios solo los asignados
   const { data: allProjects, isLoading: isLoadingAll } = trpc.proyectos.list.useQuery(
@@ -62,41 +68,59 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
-  // Sincronizar proyecto activo desde la base de datos
+  // Sincronizar proyecto activo desde la base de datos (solo al cargar inicialmente)
   useEffect(() => {
-    if (proyectoActivoData?.proyectoId && !isChangingProject) {
+    if (proyectoActivoData?.proyectoId && !isChangingProject && !isChangingRef.current) {
       setSelectedProjectIdState(proyectoActivoData.proyectoId);
     }
   }, [proyectoActivoData, isChangingProject]);
 
   // Verificar que el proyecto seleccionado esté en la lista de proyectos del usuario
+  // SOLO si no estamos en proceso de cambio de proyecto
   useEffect(() => {
-    if (selectedProjectId && userProjects.length > 0 && !isLoadingProjects) {
+    // No ejecutar si estamos cambiando de proyecto
+    if (isChangingProject || isChangingRef.current) {
+      return;
+    }
+    
+    // No ejecutar si aún estamos cargando
+    if (isLoadingProjects) {
+      return;
+    }
+    
+    // No verificar para superadmin o admin (tienen acceso a todo)
+    if (isSuperadmin || isAdmin) {
+      return;
+    }
+    
+    // Solo verificar si hay un proyecto seleccionado y tenemos la lista de proyectos
+    if (selectedProjectId && userProjects.length > 0) {
       const hasAccess = userProjects.some(p => getProjectId(p) === selectedProjectId);
-      if (!hasAccess && !isSuperadmin) {
+      if (!hasAccess) {
         // Si no tiene acceso, limpiar selección para forzar pantalla de selección
         setSelectedProjectIdState(null);
         setProyectoActivoMutation.mutate({ proyectoId: null });
       }
     }
-  }, [selectedProjectId, userProjects, isSuperadmin, isLoadingProjects]);
+  }, [selectedProjectId, userProjects, isSuperadmin, isAdmin, isLoadingProjects, isChangingProject]);
 
   // Función para cambiar proyecto (guarda en base de datos)
   const setSelectedProjectId = useCallback((id: number | null) => {
+    isChangingRef.current = true;
     setIsChangingProject(true);
     setSelectedProjectIdState(id); // Actualización optimista
     setProyectoActivoMutation.mutate({ proyectoId: id });
   }, [setProyectoActivoMutation]);
 
   const canAccessProject = (projectId: number): boolean => {
-    if (isSuperadmin) return true;
+    if (isSuperadmin || isAdmin) return true;
     return userProjects.some(p => getProjectId(p) === projectId);
   };
 
   // Escuchar cambios de proyecto via WebSocket
   useEffect(() => {
     const handleProyectoChanged = (event: CustomEvent<{ proyectoId: number | null }>) => {
-      if (event.detail.proyectoId !== selectedProjectId) {
+      if (event.detail.proyectoId !== selectedProjectId && !isChangingRef.current) {
         setSelectedProjectIdState(event.detail.proyectoId);
         utils.invalidate();
       }
