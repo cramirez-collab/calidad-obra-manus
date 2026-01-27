@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
+import EmpresaFormIntegrado from "@/components/EmpresaFormIntegrado";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -628,149 +629,13 @@ export default function Empresas() {
           </CardContent>
         </Card>
 
-        {/* Dialog para crear/editar empresa */}
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {editingEmpresa ? "Editar Empresa" : "Nueva Empresa"}
-              </DialogTitle>
-              <DialogDescription>
-                {editingEmpresa
-                  ? "Modifica los datos de la empresa"
-                  : "Ingresa los datos de la nueva empresa"}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit}>
-              <div className="grid gap-4 py-4">
-
-                <div className="grid gap-2">
-                  <Label htmlFor="especialidadId">Especialidad</Label>
-                  <Select
-                    value={formData.especialidadId}
-                    onValueChange={(value) => setFormData({ ...formData, especialidadId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar especialidad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sin especialidad</SelectItem>
-                      {especialidades?.map((especialidad) => (
-                        <SelectItem key={especialidad.id} value={especialidad.id.toString()}>
-                          {especialidad.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Al asignar una especialidad, se mostrarán los defectos típicos asociados
-                  </p>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="nombre">Nombre *</Label>
-                  <Input
-                    id="nombre"
-                    value={formData.nombre}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nombre: e.target.value })
-                    }
-                    placeholder="Nombre de la empresa"
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="contacto">Contacto</Label>
-                  <Input
-                    id="contacto"
-                    value={formData.contacto}
-                    onChange={(e) =>
-                      setFormData({ ...formData, contacto: e.target.value })
-                    }
-                    placeholder="Nombre del contacto"
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="telefono">Teléfono</Label>
-                    <Input
-                      id="telefono"
-                      value={formData.telefono}
-                      onChange={(e) =>
-                        setFormData({ ...formData, telefono: e.target.value })
-                      }
-                      placeholder="Teléfono"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      placeholder="correo@empresa.com"
-                    />
-                  </div>
-                </div>
-
-                {/* Asignación de Residente y Jefe de Residente */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="residenteId">Residente</Label>
-                    <Select
-                      value={formData.residenteId}
-                      onValueChange={(value) => setFormData({ ...formData, residenteId: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar residente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Sin asignar</SelectItem>
-                        {usuarios?.filter(u => u.role === 'residente' || u.role === 'jefe_residente').map((usuario) => (
-                          <SelectItem key={usuario.id} value={usuario.id.toString()}>
-                            {usuario.name || usuario.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="jefeResidenteId">Jefe de Residente</Label>
-                    <Select
-                      value={formData.jefeResidenteId}
-                      onValueChange={(value) => setFormData({ ...formData, jefeResidenteId: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar jefe de residente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Sin asignar</SelectItem>
-                        {usuarios?.filter(u => u.role === 'jefe_residente' || u.role === 'supervisor').map((usuario) => (
-                          <SelectItem key={usuario.id} value={usuario.id.toString()}>
-                            {usuario.name || usuario.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleClose}>
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                >
-                  {editingEmpresa ? "Guardar Cambios" : "Crear Empresa"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        {/* Formulario integrado de empresa */}
+        <EmpresaFormIntegrado
+          isOpen={isOpen}
+          onClose={handleClose}
+          empresa={editingEmpresa}
+          proyectoId={selectedProjectId || 0}
+        />
 
         {/* Dialog para agregar defecto personalizado */}
         <Dialog open={isAddDefectoOpen} onOpenChange={setIsAddDefectoOpen}>

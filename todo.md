@@ -1121,3 +1121,16 @@
 - [x] Eliminar campo de comentario/descripción del formulario
 - [x] Hacer obligatorio el campo Usuario (selector de residentes)
 - [x] Usuario debe mostrar solo residentes (usuarios asignados a empresas)
+
+
+## Gestión Integrada de Empresas (Iteración 27 Enero 2026 - Parte 4)
+
+### Rediseño UX - Todo en un solo lugar
+- [x] Crear modal/drawer expandido para edición de empresa
+- [x] Sección Datos Generales (nombre, teléfono, contacto)
+- [x] Sección Especialidad con selector y opción de crear nueva inline
+- [x] Sección Equipo: Residente (selector)
+- [x] Sección Equipo: Jefe de Residente (selector)
+- [x] Sección Defectos Típicos con edición inline y agregar personalizado
+- [x] Acordeones para organizar secciones (4 secciones expandibles)
+- [x] Guardar todo en una sola acción
