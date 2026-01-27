@@ -1096,3 +1096,6 @@
 - [x] Mantener cascada de relaciones funcionando
 - [x] Agregar selector de Nivel antes de Unidad
 - [x] Filtrar unidades por nivel seleccionado
+
+## Mejoras de UI (Enero 27)
+- [x] Mover iconos de navegación al footer para mejor usabilidad en móviles
