@@ -161,7 +161,7 @@ export const appRouter = router({
         name: z.string().optional(),
         email: z.string().email().optional(),
         password: z.string().min(6).optional(),
-        role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente']).optional(),
+        role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente', 'desarrollador']).optional(),
         empresaId: z.number().nullable().optional(),
         activo: z.boolean().optional(),
       }))

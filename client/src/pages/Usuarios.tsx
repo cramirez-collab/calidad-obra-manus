@@ -32,7 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
-import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search, FolderKanban } from "lucide-react";
+import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search, FolderKanban, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -350,13 +350,14 @@ export default function Usuarios() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña *</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Mínimo 6 caracteres"
+<Label htmlFor="password">Contraseña *</Label>
+                   <Input
+                     id="password"
+                     type="text"
+                     value={formData.password}
+                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                     placeholder="Mínimo 6 caracteres"
+                     autoComplete="off"
                   />
                   <p className="text-xs text-muted-foreground">Esta contraseña será usada por el usuario para iniciar sesión</p>
                 </div>
@@ -430,68 +431,68 @@ export default function Usuarios() {
         </div>
 
         {/* Estadísticas */}
-        <div className="grid gap-2 sm:gap-4 grid-cols-3 sm:grid-cols-5">
+        <div className="grid gap-2 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
           <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-100">
-                  <Users className="h-5 w-5 text-blue-600" />
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-blue-100 flex-shrink-0">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-xs text-muted-foreground">Total</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Total</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-emerald-100">
-                  <UserCheck className="h-5 w-5 text-emerald-600" />
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-100 flex-shrink-0">
+                  <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.activos}</p>
-                  <p className="text-xs text-muted-foreground">Activos</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-100">
-                  <Shield className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.porRol.admin + stats.porRol.superadmin}</p>
-                  <p className="text-xs text-muted-foreground">Admins</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold">{stats.activos}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Activos</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-100">
-                  <Users className="h-5 w-5 text-blue-600" />
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-purple-100 flex-shrink-0">
+                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.porRol.supervisor}</p>
-                  <p className="text-xs text-muted-foreground">Supervisores</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold">{stats.porRol.admin + stats.porRol.superadmin}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Admin</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-100">
-                  <Building2 className="h-5 w-5 text-amber-600" />
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-blue-100 flex-shrink-0">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.sinEmpresa}</p>
-                  <p className="text-xs text-muted-foreground">Sin Empresa</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold">{stats.porRol.supervisor}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Superv.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="col-span-2 sm:col-span-1">
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-amber-100 flex-shrink-0">
+                  <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold">{stats.sinEmpresa}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Sin Emp.</p>
                 </div>
               </div>
             </CardContent>
@@ -875,6 +876,25 @@ export default function Usuarios() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              
+              {/* Campo de contraseña */}
+              <div className="space-y-2 pt-2 border-t">
+                <Label htmlFor="edit-password" className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Nueva Contraseña
+                </Label>
+<Input
+                   id="edit-password"
+                   type="text"
+                   value={formData.password}
+                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                   placeholder="Dejar vacío para no cambiar"
+                   autoComplete="off"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Mínimo 6 caracteres. Solo llenar si deseas cambiar la contraseña.
+                </p>
               </div>
             </div>
             <DialogFooter>
