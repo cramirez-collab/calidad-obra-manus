@@ -27,6 +27,7 @@ const GenerarQR = lazy(() => import("./pages/GenerarQR"));
 const Configuracion = lazy(() => import("./pages/Configuracion"));
 const Metas = lazy(() => import("./pages/Metas"));
 const DashboardResidente = lazy(() => import("./pages/DashboardResidente"));
+const Login = lazy(() => import("./pages/Login"));
 
 
 
@@ -57,6 +58,9 @@ function Router() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Switch>
+        {/* Login */}
+        <Route path="/login" component={Login} />
+        
         {/* Selección de Proyecto (punto de entrada) */}
         <Route path="/seleccionar-proyecto" component={SeleccionProyecto} />
         

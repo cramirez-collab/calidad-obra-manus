@@ -1279,3 +1279,10 @@
 - [x] Botón de asignar proyectos (icono carpeta) en cada usuario
 - [x] Diálogo con checkboxes para asignar/remover de proyectos
 - [x] Verificar que usuarios pueden acceder al proyecto asignado
+
+
+## Login con Usuario y Contraseña (Enero 2026)
+- [ ] Crear endpoint de login con email y contraseña
+- [ ] Crear página de login con formulario
+- [ ] Mantener opción de login con OAuth/Manus
+- [ ] Permitir a usuarios existentes usar contraseña

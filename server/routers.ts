@@ -53,6 +53,38 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    
+    // Login con email y contraseña
+    loginWithPassword: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const user = await db.getUserByEmailAndPassword(input.email, input.password);
+        if (!user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Email o contraseña incorrectos' });
+        }
+        if (!user.activo) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Usuario inactivo. Contacta al administrador.' });
+        }
+        
+        // Crear token de sesión
+        const { sdk } = await import('./_core/sdk');
+        const sessionToken = await sdk.createSessionToken(user.openId, {
+          name: user.name || '',
+          expiresInMs: 365 * 24 * 60 * 60 * 1000, // 1 año
+        });
+        
+        // Establecer cookie de sesión
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: 365 * 24 * 60 * 60 * 1000 });
+        
+        // Actualizar último acceso
+        await db.updateUserLastSignedIn(user.id);
+        
+        return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
+      }),
   }),
 
   // ==================== USUARIOS ====================

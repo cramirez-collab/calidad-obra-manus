@@ -13,9 +13,15 @@ import { useProject } from '@/contexts/ProjectContext';
 // Usamos el tipo inferido de la respuesta del servidor
 
 export default function SeleccionProyecto() {
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const { setSelectedProjectId } = useProject();
   const [, navigate] = useLocation();
+  
+  // Si no hay usuario autenticado, redirigir a login
+  if (!authLoading && !user) {
+    window.location.href = '/login';
+    return null;
+  }
   
   const { data: proyectos, isLoading } = trpc.proyectos.misProyectos.useQuery(undefined, {
     staleTime: 5 * 60 * 1000, // Cache 5 minutos

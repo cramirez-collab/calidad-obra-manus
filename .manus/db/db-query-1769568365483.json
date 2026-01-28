@@ -1,0 +1,18 @@
+{
+  "query": "SELECT u.id, u.name, u.email, u.role, u.activo, u.openId\nFROM users u\nWHERE u.name LIKE 'U%' OR u.id NOT IN (SELECT usuarioId FROM proyecto_usuarios)\nORDER BY u.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT u.id, u.name, u.email, u.role, u.activo, u.openId\nFROM users u\nWHERE u.name LIKE 'U%' OR u.id NOT IN (SELECT usuarioId FROM proyecto_usuarios)\nORDER BY u.id;",
+  "rows": [
+    {
+      "id": "840001",
+      "name": "Erick Calderon",
+      "email": "ecalderon@objetiva.mx",
+      "role": "residente",
+      "activo": "1",
+      "openId": "fC6xTGYM39K3yAMV6rUHcq"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\tactivo\topenId\n840001\tErick Calderon\tecalderon@objetiva.mx\tresidente\t1\tfC6xTGYM39K3yAMV6rUHcq\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

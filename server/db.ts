@@ -3920,3 +3920,34 @@ export async function migrarResidentesExistentes() {
   
   return { migrados };
 }
+
+
+// Obtener usuario por email y verificar contraseña
+export async function getUserByEmailAndPassword(email: string, password: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const user = result[0];
+  
+  if (!user || !user.passwordHash) {
+    return null;
+  }
+  
+  const isValid = await bcrypt.compare(password, user.passwordHash);
+  if (!isValid) {
+    return null;
+  }
+  
+  return user;
+}
+
+// Actualizar último acceso del usuario
+export async function updateUserLastSignedIn(userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.update(users)
+    .set({ lastSignedIn: new Date(), updatedAt: new Date() })
+    .where(eq(users.id, userId));
+}
