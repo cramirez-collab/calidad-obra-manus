@@ -1286,3 +1286,10 @@
 - [ ] Crear página de login con formulario
 - [ ] Mantener opción de login con OAuth/Manus
 - [ ] Permitir a usuarios existentes usar contraseña
+
+
+## Menú Hamburguesa (Enero 2026)
+- [x] Implementar menú hamburguesa para navegación móvil
+- [x] Botón hamburguesa en header para móvil
+- [x] Panel lateral deslizante con todos los módulos
+- [x] Animación suave de apertura/cierre

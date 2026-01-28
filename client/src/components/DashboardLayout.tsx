@@ -31,9 +31,10 @@ import {
   ListOrdered,
   FolderKanban,
   Clock,
-  CheckCircle2,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  Menu,
+  X
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -188,6 +189,7 @@ function DashboardLayoutContent({
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
   const [configOpen, setConfigOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   
   // Activar sincronización en tiempo real
@@ -198,9 +200,17 @@ function DashboardLayoutContent({
   // Cerrar dropdown de config al navegar
   useEffect(() => {
     setConfigOpen(false);
+    setMobileMenuOpen(false);
   }, [location]);
 
-  // Componente de icono de navegación
+  // Cerrar menú móvil al cambiar de tamaño de pantalla
+  useEffect(() => {
+    if (!isMobile) {
+      setMobileMenuOpen(false);
+    }
+  }, [isMobile]);
+
+  // Componente de icono de navegación para desktop
   const NavIcon = ({ item, isActive }: { item: MenuItem; isActive: boolean }) => {
     // Si tiene hijos (submenú como Configuración)
     if (item.children) {
@@ -278,10 +288,88 @@ function DashboardLayoutContent({
     );
   };
 
+  // Componente de item de menú móvil
+  const MobileMenuItem = ({ item, isActive, depth = 0 }: { item: MenuItem; isActive: boolean; depth?: number }) => {
+    const [subMenuOpen, setSubMenuOpen] = useState(false);
+    
+    if (item.children) {
+      return (
+        <div>
+          <button
+            onClick={() => setSubMenuOpen(!subMenuOpen)}
+            className={`
+              w-full flex items-center gap-3 px-4 py-3 text-left transition-colors
+              ${isActive 
+                ? "bg-primary/10 text-primary border-l-4 border-primary" 
+                : "hover:bg-accent"
+              }
+            `}
+          >
+            <item.icon className="h-5 w-5 shrink-0" />
+            <span className="flex-1 font-medium">{item.label}</span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${subMenuOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {subMenuOpen && (
+            <div className="bg-muted/50">
+              {item.children.map(subItem => {
+                const isSubActive = location.startsWith(subItem.path);
+                return (
+                  <button
+                    key={subItem.path}
+                    onClick={() => {
+                      setLocation(subItem.path);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`
+                      w-full flex items-center gap-3 px-4 py-3 pl-12 text-left transition-colors
+                      ${isSubActive 
+                        ? "bg-primary/10 text-primary" 
+                        : "hover:bg-accent"
+                      }
+                    `}
+                  >
+                    <subItem.icon className="h-4 w-4 shrink-0" />
+                    <span className="text-sm">{subItem.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <button
+        onClick={() => {
+          if (item.external) {
+            window.open(item.path, '_blank');
+          } else {
+            setLocation(item.path);
+          }
+          setMobileMenuOpen(false);
+        }}
+        className={`
+          w-full flex items-center gap-3 px-4 py-3 text-left transition-colors
+          ${isActive 
+            ? "bg-primary/10 text-primary border-l-4 border-primary" 
+            : "hover:bg-accent"
+          }
+        `}
+      >
+        <item.icon className="h-5 w-5 shrink-0" />
+        <span className="flex-1 font-medium">{item.label}</span>
+        {item.external && (
+          <ExternalLink className="h-4 w-4 opacity-50" />
+        )}
+      </button>
+    );
+  };
+
   return (
     <TooltipProvider delayDuration={100}>
       <div className="min-h-screen bg-background flex flex-col">
-        {/* Header con navegación de iconos */}
+        {/* Header */}
         <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
           <div className="flex items-center h-14 px-2 sm:px-4">
             {/* Logo */}
@@ -298,26 +386,26 @@ function DashboardLayoutContent({
               <ProjectSelector collapsed={isMobile} />
             </div>
 
-            {/* Separador */}
-            <div className="h-6 w-px bg-border mx-1 sm:mx-2 hidden sm:block" />
+            {/* Separador - solo desktop */}
+            <div className="h-6 w-px bg-border mx-1 sm:mx-2 hidden md:block" />
 
-            {/* Navegación de iconos - scrollable en móvil */}
-            <nav className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto flex-1 scrollbar-hide py-1">
-              {menuItems.map(item => {
-                const isActive = item.path === '/bienvenida' 
-                  ? (location === '/bienvenida' || location === '/') 
-                  : (item.path ? location.startsWith(item.path) : false);
-                
-                // En móvil, mostrar solo los primeros 6 items + config
-                if (isMobile && menuItems.indexOf(item) > 5 && !item.children) {
-                  return null;
-                }
-                
-                return (
-                  <NavIcon key={item.path || item.label} item={item} isActive={isActive} />
-                );
-              })}
-            </nav>
+            {/* Navegación de iconos - SOLO DESKTOP */}
+            {!isMobile && (
+              <nav className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto flex-1 scrollbar-hide py-1">
+                {menuItems.map(item => {
+                  const isActive = item.path === '/bienvenida' 
+                    ? (location === '/bienvenida' || location === '/') 
+                    : (item.path ? location.startsWith(item.path) : false);
+                  
+                  return (
+                    <NavIcon key={item.path || item.label} item={item} isActive={isActive} />
+                  );
+                })}
+              </nav>
+            )}
+
+            {/* Espaciador en móvil */}
+            {isMobile && <div className="flex-1" />}
 
             {/* Separador */}
             <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
@@ -329,39 +417,125 @@ function DashboardLayoutContent({
               <NotificationBell />
               <NotificationCenter />
 
-              {/* Menú de usuario */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-1 rounded-lg px-1 sm:px-2 py-1 hover:bg-accent transition-colors focus:outline-none">
-                    <Avatar className="h-8 w-8 border">
-                      <AvatarFallback className={`text-white text-xs font-medium ${roleColors[user?.role || 'residente']}`}>
-                        {user?.name?.charAt(0).toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-3 py-2">
-                    <p className="text-sm font-medium truncate">{user?.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {roleLabels[user?.role || 'residente']}
-                    </p>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={logout}
-                    className="cursor-pointer text-destructive focus:text-destructive"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Cerrar Sesión
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Menú de usuario - solo desktop */}
+              {!isMobile && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-1 rounded-lg px-1 sm:px-2 py-1 hover:bg-accent transition-colors focus:outline-none">
+                      <Avatar className="h-8 w-8 border">
+                        <AvatarFallback className={`text-white text-xs font-medium ${roleColors[user?.role || 'residente']}`}>
+                          {user?.name?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="px-3 py-2">
+                      <p className="text-sm font-medium truncate">{user?.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {roleLabels[user?.role || 'residente']}
+                      </p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={logout}
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Cerrar Sesión
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {/* Botón hamburguesa - solo móvil */}
+              {isMobile && (
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-accent transition-colors"
+                >
+                  {mobileMenuOpen ? (
+                    <X className="h-6 w-6" />
+                  ) : (
+                    <Menu className="h-6 w-6" />
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </header>
+
+        {/* Panel lateral móvil (menú hamburguesa) */}
+        {isMobile && (
+          <>
+            {/* Overlay */}
+            <div 
+              className={`
+                fixed inset-0 bg-black/50 z-40 transition-opacity duration-300
+                ${mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+              `}
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            
+            {/* Panel lateral */}
+            <div 
+              className={`
+                fixed top-14 right-0 bottom-0 w-72 bg-background z-50 
+                shadow-xl border-l overflow-y-auto
+                transition-transform duration-300 ease-in-out
+                ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}
+              `}
+            >
+              {/* Info del usuario */}
+              <div className="p-4 border-b bg-muted/30">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12 border-2">
+                    <AvatarFallback className={`text-white text-lg font-medium ${roleColors[user?.role || 'residente']}`}>
+                      {user?.name?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{user?.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                    <p className="text-xs text-primary font-medium mt-0.5">
+                      {roleLabels[user?.role || 'residente']}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Menú de navegación */}
+              <nav className="py-2">
+                {menuItems.map(item => {
+                  const isActive = item.path === '/bienvenida' 
+                    ? (location === '/bienvenida' || location === '/') 
+                    : (item.path ? location.startsWith(item.path) : false);
+                  
+                  return (
+                    <MobileMenuItem 
+                      key={item.path || item.label} 
+                      item={item} 
+                      isActive={isActive} 
+                    />
+                  );
+                })}
+              </nav>
+
+              {/* Cerrar sesión */}
+              <div className="border-t p-4 mt-auto">
+                <button
+                  onClick={logout}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="font-medium">Cerrar Sesión</span>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
         
         {/* Contenido principal */}
         <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden">
