@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { getLoginUrl } from "@/const";
+// getLoginUrl se usa en Login.tsx
 import { useIsMobile } from "@/hooks/useMobile";
 import { 
   LayoutDashboard, 
@@ -148,34 +148,9 @@ export default function DashboardLayout({
   }
 
   if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="flex flex-col items-center gap-6 p-6 sm:p-8 max-w-sm w-full mx-4 bg-white rounded-2xl shadow-xl">
-          <img 
-            src="/logo-objetiva.jpg" 
-            alt="ObjetivaQC" 
-            className="h-12 object-contain"
-          />
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-xl font-bold tracking-tight">
-              Control de Calidad
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Inicia sesión para continuar
-            </p>
-          </div>
-          <Button
-            onClick={() => {
-              window.location.href = getLoginUrl();
-            }}
-            size="lg"
-            className="w-full h-12 text-base font-medium"
-          >
-            Iniciar Sesión
-          </Button>
-        </div>
-      </div>
-    );
+    // Redirigir a la página de login
+    window.location.href = '/login';
+    return <DashboardLayoutSkeleton />;
   }
 
   return <DashboardLayoutContent>{children}</DashboardLayoutContent>;
