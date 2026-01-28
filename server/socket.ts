@@ -5,7 +5,7 @@ let io: Server | null = null;
 
 // Almacén de usuarios conectados
 const connectedUsers = new Map<string, { 
-  userId: number; 
+  oderId: number; 
   name: string; 
   role: string;
   socketId: string;
@@ -29,7 +29,7 @@ export function initializeSocket(httpServer: HttpServer) {
     // Autenticar usuario
     socket.on('auth', (userData: { userId: number; name: string; role: string }) => {
       connectedUsers.set(socket.id, {
-        userId: userData.userId,
+        oderId: userData.userId,
         name: userData.name,
         role: userData.role,
         socketId: socket.id,
@@ -135,7 +135,7 @@ export function emitToRole(role: string, event: string, data: any) {
 export function emitToUser(userId: number, event: string, data: any) {
   if (io) {
     connectedUsers.forEach((user) => {
-      if (user.userId === userId) {
+      if (user.oderId === userId) {
         io!.to(user.socketId).emit(event, data);
       }
     });
@@ -179,7 +179,7 @@ export const socketEvents = {
   // Notificación general
   notification: (userId: number, notification: any) => {
     connectedUsers.forEach((user) => {
-      if (user.userId === userId) {
+      if (user.oderId === userId) {
         io?.to(user.socketId).emit('notification', notification);
       }
     });

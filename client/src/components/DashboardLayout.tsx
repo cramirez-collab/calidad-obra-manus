@@ -46,7 +46,6 @@ import { BadgeNotifications } from "./BadgeNotifications";
 import { QRScannerButton } from "./QRScanner";
 import { ProjectSelector } from "./ProjectSelector";
 import { useRealTimeItems } from "@/hooks/useRealTimeData";
-import { OfflineIndicator } from "./OfflineIndicator";
 
 // Tipo para items de menú
 type MenuItem = {
@@ -398,7 +397,6 @@ function DashboardLayoutContent({
 
             {/* Acciones del lado derecho */}
             <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-              <OfflineIndicator />
               <BadgeNotifications />
               <OnlineUsers />
               <NotificationBell />

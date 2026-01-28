@@ -16,12 +16,9 @@ interface UseSocketReturn {
   off: (event: string, callback?: (data: any) => void) => void;
   joinRoom: (room: string) => void;
   leaveRoom: (room: string) => void;
-  reconnect: () => void;
 }
 
 let globalSocket: Socket | null = null;
-let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 20;
 
 export function useSocket(): UseSocketReturn {
   const { user, isAuthenticated } = useAuth();
@@ -30,107 +27,61 @@ export function useSocket(): UseSocketReturn {
   const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
   const socketRef = useRef<Socket | null>(null);
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const clearTimers = useCallback(() => {
-    if (pingIntervalRef.current) {
-      clearInterval(pingIntervalRef.current);
-      pingIntervalRef.current = null;
-    }
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-  }, []);
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
 
-  const createSocket = useCallback(() => {
-    if (!isAuthenticated || !user) return null;
-
-    // Limpiar socket anterior si existe
-    if (globalSocket) {
-      globalSocket.removeAllListeners();
-      globalSocket.disconnect();
-      globalSocket = null;
+    // Reusar conexión global si existe
+    if (globalSocket?.connected) {
+      socketRef.current = globalSocket;
+      setIsConnected(true);
+      return;
     }
 
-    console.log('[Socket] Creando nueva conexión...');
-    
+    // Crear nueva conexión
     const socket = io({
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: MAX_RECONNECT_ATTEMPTS,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      reconnectionDelayMax: 10000,
-      timeout: 30000,
-      forceNew: false,
-      autoConnect: true,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
 
-    return socket;
-  }, [isAuthenticated, user]);
-
-  const setupSocketListeners = useCallback((socket: Socket) => {
-    if (!user) return;
+    globalSocket = socket;
+    socketRef.current = socket;
 
     socket.on('connect', () => {
       setIsConnected(true);
-      reconnectAttempts = 0;
-      console.log('[Socket] Conectado - ID:', socket.id);
+      console.log('[Socket] Conectado');
       
       // Autenticar usuario
       socket.emit('auth', {
-        userId: user.id,
+        oderId: user.id,
         name: user.name || 'Usuario',
         role: user.role || 'user',
       });
 
-      // Iniciar ping para mantener conexión activa
-      clearTimers();
+      // Iniciar ping para mantener conexión
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+      }
       pingIntervalRef.current = setInterval(() => {
-        if (socket.connected) {
-          socket.emit('ping');
-        }
-      }, 20000);
+        socket.emit('ping');
+      }, 25000);
     });
 
     socket.on('disconnect', (reason) => {
       setIsConnected(false);
       console.log('[Socket] Desconectado:', reason);
-      clearTimers();
-
-      // Reconexión manual si fue desconexión del servidor
-      if (reason === 'io server disconnect' || reason === 'transport close') {
-        reconnectAttempts++;
-        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
-          console.log(`[Socket] Reintentando en ${delay}ms (intento ${reconnectAttempts})`);
-          reconnectTimeoutRef.current = setTimeout(() => {
-            socket.connect();
-          }, delay);
-        }
+      
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
       }
     });
 
     socket.on('connect_error', (error) => {
       console.log('[Socket] Error de conexión:', error.message);
-      setIsConnected(false);
-    });
-
-    socket.on('reconnect', (attemptNumber) => {
-      console.log('[Socket] Reconectado después de', attemptNumber, 'intentos');
-      reconnectAttempts = 0;
-    });
-
-    socket.on('reconnect_attempt', (attemptNumber) => {
-      console.log('[Socket] Intento de reconexión:', attemptNumber);
-    });
-
-    socket.on('reconnect_error', (error) => {
-      console.log('[Socket] Error en reconexión:', error.message);
-    });
-
-    socket.on('reconnect_failed', () => {
-      console.log('[Socket] Reconexión fallida después de todos los intentos');
     });
 
     socket.on('users-count', (data: { count: number; users: ConnectedUser[] }) => {
@@ -139,59 +90,25 @@ export function useSocket(): UseSocketReturn {
     });
 
     socket.on('pong', () => {
-      // Conexión activa confirmada
+      // Conexión activa
     });
 
     // Escuchar cambios de proyecto activo
     socket.on('proyecto-activo-changed', (data: { proyectoId: number | null; userId: number }) => {
+      // Emitir evento personalizado para que ProjectContext lo escuche
       window.dispatchEvent(new CustomEvent('proyecto-activo-changed', { detail: data }));
     });
-  }, [user, clearTimers]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !user) {
-      clearTimers();
-      return;
-    }
-
-    // Reusar conexión global si existe y está conectada
-    if (globalSocket?.connected) {
-      socketRef.current = globalSocket;
-      setIsConnected(true);
-      return;
-    }
-
-    // Crear nueva conexión
-    const socket = createSocket();
-    if (!socket) return;
-
-    globalSocket = socket;
-    socketRef.current = socket;
-    setupSocketListeners(socket);
 
     return () => {
-      clearTimers();
-    };
-  }, [isAuthenticated, user, createSocket, setupSocketListeners, clearTimers]);
-
-  // Reconexión manual cuando vuelve la conexión a internet
-  useEffect(() => {
-    const handleOnline = () => {
-      console.log('[Socket] Internet restaurado, reconectando...');
-      if (socketRef.current && !socketRef.current.connected) {
-        socketRef.current.connect();
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
       }
     };
-
-    window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
-  }, []);
+  }, [isAuthenticated, user]);
 
   const emit = useCallback((event: string, data?: any) => {
     if (socketRef.current?.connected) {
       socketRef.current.emit(event, data);
-    } else {
-      console.log('[Socket] No conectado, no se puede emitir:', event);
     }
   }, []);
 
@@ -215,15 +132,6 @@ export function useSocket(): UseSocketReturn {
     emit('leave-room', room);
   }, [emit]);
 
-  const reconnect = useCallback(() => {
-    console.log('[Socket] Reconexión manual solicitada');
-    reconnectAttempts = 0;
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-      socketRef.current.connect();
-    }
-  }, []);
-
   return {
     isConnected,
     usersCount,
@@ -233,7 +141,6 @@ export function useSocket(): UseSocketReturn {
     off,
     joinRoom,
     leaveRoom,
-    reconnect,
   };
 }
 
