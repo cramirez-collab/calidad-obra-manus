@@ -1,0 +1,20 @@
+{
+  "query": "SELECT e.id, e.nombre, e.residenteId, e.jefeResidenteId, e.proyectoId, e.activo,\n       r.name as residente_nombre, jr.name as jefe_nombre\nFROM empresas e\nLEFT JOIN users r ON e.residenteId = r.id\nLEFT JOIN users jr ON e.jefeResidenteId = jr.id\nWHERE e.activo = 1 AND (e.residenteId IS NOT NULL OR e.jefeResidenteId IS NOT NULL);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT e.id, e.nombre, e.residenteId, e.jefeResidenteId, e.proyectoId, e.activo,\n       r.name as residente_nombre, jr.name as jefe_nombre\nFROM empresas e\nLEFT JOIN users r ON e.residenteId = r.id\nLEFT JOIN users jr ON e.jefeResidenteId = jr.id\nWHERE e.activo = 1 AND (e.residenteId IS NOT NULL OR e.jefeResidenteId IS NOT NULL);",
+  "rows": [
+    {
+      "id": "360001",
+      "nombre": "Objetiva",
+      "residenteId": "781800",
+      "jefeResidenteId": "NULL",
+      "proyectoId": "1",
+      "activo": "1",
+      "residente_nombre": "NULL",
+      "jefe_nombre": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tresidenteId\tjefeResidenteId\tproyectoId\tactivo\tresidente_nombre\tjefe_nombre\n360001\tObjetiva\t781800\tNULL\t1\t1\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 68
+}

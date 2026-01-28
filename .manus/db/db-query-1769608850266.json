@@ -1,0 +1,26 @@
+{
+  "query": "SELECT * FROM empresa_residentes LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT * FROM empresa_residentes LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "empresaId": "360001",
+      "usuarioId": "781860",
+      "tipoResidente": "residente",
+      "activo": "0",
+      "createdAt": "2026-01-27 22:21:16"
+    },
+    {
+      "id": "30001",
+      "empresaId": "390001",
+      "usuarioId": "840001",
+      "tipoResidente": "residente",
+      "activo": "1",
+      "createdAt": "2026-01-28 04:09:44"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tempresaId\tusuarioId\ttipoResidente\tactivo\tcreatedAt\n1\t360001\t781860\tresidente\t0\t2026-01-27 22:21:16\n30001\t390001\t840001\tresidente\t1\t2026-01-28 04:09:44\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

@@ -67,6 +67,7 @@ export default function NuevoItem() {
   
   // Crear lista de residentes únicos que tienen empresa asignada
   // Combina la nueva estructura (empresa_residentes) con la antigua (residenteId/jefeResidenteId)
+  // También incluye usuarios con rol residente/jefe_residente que tengan empresaId asignado
   const residentesConEmpresa = useMemo(() => {
     if (!todasEmpresas || !usuarios) return [];
     
@@ -122,6 +123,27 @@ export default function NuevoItem() {
             especialidadId: empresa.especialidadId || null,
             tipoResidente: 'jefe_residente'
           });
+        }
+      }
+    });
+    
+    // Finalmente, agregar usuarios con rol residente/jefe_residente que tengan empresaId asignado
+    // Esto cubre el caso donde el usuario tiene una empresa asignada directamente
+    usuarios.forEach((usuario: any) => {
+      if ((usuario.role === 'residente' || usuario.role === 'jefe_residente') && usuario.empresaId) {
+        const empresa = todasEmpresas.find(e => e.id === usuario.empresaId);
+        if (empresa) {
+          const key = usuario.id * 10000 + empresa.id;
+          if (!residentesMap.has(key)) {
+            residentesMap.set(key, {
+              id: usuario.id,
+              name: usuario.name || 'Sin nombre',
+              empresaId: empresa.id,
+              empresaNombre: empresa.nombre,
+              especialidadId: empresa.especialidadId || null,
+              tipoResidente: usuario.role
+            });
+          }
         }
       }
     });

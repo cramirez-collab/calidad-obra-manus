@@ -1,0 +1,40 @@
+{
+  "query": "SELECT e.id, e.nombre, e.especialidadId, esp.nombre as especialidad_nombre\nFROM empresas e\nLEFT JOIN especialidades esp ON e.especialidadId = esp.id\nWHERE e.nombre LIKE '%Objetiva%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT e.id, e.nombre, e.especialidadId, esp.nombre as especialidad_nombre\nFROM empresas e\nLEFT JOIN especialidades esp ON e.especialidadId = esp.id\nWHERE e.nombre LIKE '%Objetiva%';",
+  "rows": [
+    {
+      "id": "30005",
+      "nombre": "Objetiva ",
+      "especialidadId": "NULL",
+      "especialidad_nombre": "NULL"
+    },
+    {
+      "id": "150005",
+      "nombre": "Objetiva ",
+      "especialidadId": "NULL",
+      "especialidad_nombre": "NULL"
+    },
+    {
+      "id": "240001",
+      "nombre": "Objetiva",
+      "especialidadId": "30003",
+      "especialidad_nombre": "Supervision"
+    },
+    {
+      "id": "360001",
+      "nombre": "Objetiva",
+      "especialidadId": "30003",
+      "especialidad_nombre": "Supervision"
+    },
+    {
+      "id": "390001",
+      "nombre": "Objetiva ",
+      "especialidadId": "30003",
+      "especialidad_nombre": "Supervision"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tespecialidadId\tespecialidad_nombre\n30005\tObjetiva \tNULL\tNULL\n150005\tObjetiva \tNULL\tNULL\n240001\tObjetiva\t30003\tSupervision\n360001\tObjetiva\t30003\tSupervision\n390001\tObjetiva \t30003\tSupervision\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

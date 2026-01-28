@@ -1338,3 +1338,10 @@
 - [x] Agregar botón de eliminar permanentemente en vista desktop
 - [x] Confirmación antes de eliminar usuario
 - [x] No permitir eliminarse a sí mismo
+
+
+## Corrección Formulario Crear Ítem (Enero 2026)
+- [x] Selector de Residente no despliega opciones - corregido para incluir usuarios con rol residente/jefe_residente
+- [x] Campo "Espacio" ya existe en el formulario (se muestra cuando la unidad tiene espacios asignados)
+- [x] Campo "Defecto" ya existe y funciona - muestra defectos de la especialidad del residente
+- [x] Verificar estadísticas estén ligadas correctamente entre tablas (confirmado: usuarios, empresas, especialidades, defectos, unidades, espacios, niveles)
