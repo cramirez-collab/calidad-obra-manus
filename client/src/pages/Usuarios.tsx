@@ -32,7 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
-import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search, FolderKanban } from "lucide-react";
+import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search, FolderKanban, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -875,6 +875,24 @@ export default function Usuarios() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              
+              {/* Campo de contraseña */}
+              <div className="space-y-2 pt-2 border-t">
+                <Label htmlFor="edit-password" className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Nueva Contraseña
+                </Label>
+                <Input
+                  id="edit-password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Dejar vacío para no cambiar"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Mínimo 6 caracteres. Solo llenar si deseas cambiar la contraseña.
+                </p>
               </div>
             </div>
             <DialogFooter>

@@ -1293,3 +1293,10 @@
 - [x] Botón hamburguesa en header para móvil
 - [x] Panel lateral deslizante con todos los módulos
 - [x] Animación suave de apertura/cierre
+
+
+## Corrección Login y Contraseñas (Enero 2026)
+- [x] Corregir login con Google/OAuth que no funciona (redirige a página /login)
+- [x] Agregar campo de contraseña en formulario de edición de usuarios
+- [x] Permitir a admin/superadmin asignar contraseñas a usuarios existentes
+- [x] Campo de contraseña en diálogo de edición de usuario
