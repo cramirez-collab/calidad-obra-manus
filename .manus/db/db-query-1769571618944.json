@@ -1,0 +1,94 @@
+{
+  "query": "SELECT id, openId, name, email FROM users ORDER BY id DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, openId, name, email FROM users ORDER BY id DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "840001",
+      "openId": "fC6xTGYM39K3yAMV6rUHcq",
+      "name": "Erick Calderon",
+      "email": "ecalderon@objetiva.mx"
+    },
+    {
+      "id": "810145",
+      "openId": "manual_3L6oqptXwOWSXIJo",
+      "name": "Erick ",
+      "email": "ecalderon@objetiva.mx"
+    },
+    {
+      "id": "781860",
+      "openId": "manual_P-tTdDWTZjYb0Sx8",
+      "name": "Omar Palencia",
+      "email": "opalencia@objetiva.mx"
+    },
+    {
+      "id": "781800",
+      "openId": "manual_DDsvvm9Ap7DwcXo-",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@bjetiva.mx"
+    },
+    {
+      "id": "781773",
+      "openId": "manual_ysyOYJrMnJ5yMh1K",
+      "name": "Karen",
+      "email": "NULL"
+    },
+    {
+      "id": "781651",
+      "openId": "manual_JHNt7O2MK5KlCcQF",
+      "name": "Karen Navith",
+      "email": "karen@ennco.mx"
+    },
+    {
+      "id": "780297",
+      "openId": "F4VGwZuv9dK55WypwVC4iS",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@objetiva.mx"
+    },
+    {
+      "id": "721666",
+      "openId": "manual_Yk7NR5kxwOuoO8KG",
+      "name": "Ing.Daniel Vazquez",
+      "email": "dvazquez@objetiva.mx"
+    },
+    {
+      "id": "721649",
+      "openId": "manual_NdPo0efE9QYcurtX",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@objetiva.mx"
+    },
+    {
+      "id": "540580",
+      "openId": "manual_udGzT94DDJPVkzIP",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@objetiva.mx"
+    },
+    {
+      "id": "540085",
+      "openId": "C2uKQGY6vUPeX6yVab7zSQ",
+      "name": "Julian Rodríguez Ramírez",
+      "email": "jrodriguez@objetiva.mx"
+    },
+    {
+      "id": "540077",
+      "openId": "manual_D57q4G9hR0tzWQ0B",
+      "name": "Julian Rodríguez Ramírez",
+      "email": "jrodriguez@objetiva.mx"
+    },
+    {
+      "id": "421490",
+      "openId": "jgd4zrTrmEurJL3adnZjER",
+      "name": "CARLOS RAMIREZ",
+      "email": "carlosramirezdeloza@gmail.com"
+    },
+    {
+      "id": "1",
+      "openId": "5WxHPm9UgE4buz7ckFnHZg",
+      "name": "Carlos Ramirez",
+      "email": "cramirez@objetiva.mx"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\n840001\tfC6xTGYM39K3yAMV6rUHcq\tErick Calderon\tecalderon@objetiva.mx\n810145\tmanual_3L6oqptXwOWSXIJo\tErick \tecalderon@objetiva.mx\n781860\tmanual_P-tTdDWTZjYb0Sx8\tOmar Palencia\topalencia@objetiva.mx\n781800\tmanual_DDsvvm9Ap7DwcXo-\tEstefany Sanchez\tesanchez@bjetiva.mx\n781773\tmanual_ysyOYJrMnJ5yMh1K\tKaren\tNULL\n781651\tmanual_JHNt7O2MK5KlCcQF\tKaren Navith\tkaren@ennco.mx\n780297\tF4VGwZuv9dK55WypwVC4iS\tEstefany Sanchez\tesanchez@objetiva.mx\n721666\tmanual_Yk7NR5kxwOuoO8KG\tIng.Daniel Vazquez\tdvazquez@objetiva.mx\n721649\tmanual_NdPo0efE9QYcurtX\tEstefany Sanchez\tesanchez@objetiva.mx\n540580\tmanual_udGzT94DDJPVkzIP\tEstefany Sanchez\tesanchez@objetiva.mx\n540085\tC2uKQGY6vUPeX6yVab7zSQ\tJulian Rodríguez Ramírez\tjrodriguez@objetiva.mx\n540077\tmanual_D57q4G9hR0tzWQ0B\tJulian Rodríguez Ramírez\tjrodriguez@objetiva.mx\n421490\tjgd4zrTrmEurJL3adnZjER\tCARLOS RAMIREZ\tcarlosramirezdeloza@gmail.com\n1\t5WxHPm9UgE4buz7ckFnHZg\tCarlos Ramirez\tcramirez@objetiva.mx\n",
+  "stderr": "",
+  "execution_time_ms": 68
+}

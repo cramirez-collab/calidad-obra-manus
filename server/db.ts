@@ -56,6 +56,10 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   try {
+    // Verificar si el usuario ya existe
+    const existingUser = await db.select().from(users).where(eq(users.openId, user.openId)).limit(1);
+    const isNewUser = existingUser.length === 0;
+
     const values: InsertUser = {
       openId: user.openId,
     };
@@ -97,6 +101,27 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     await db.insert(users).values(values).onDuplicateKeyUpdate({
       set: updateSet,
     });
+
+    // Si es un usuario nuevo, asignarlo automáticamente al proyecto Hidalma (ID 1)
+    if (isNewUser) {
+      try {
+        // Obtener el ID del usuario recién creado
+        const newUser = await db.select().from(users).where(eq(users.openId, user.openId)).limit(1);
+        if (newUser.length > 0) {
+          // Asignar al proyecto Hidalma (ID 1) si existe
+          const proyectoHidalma = await db.select().from(proyectos).where(eq(proyectos.id, 1)).limit(1);
+          if (proyectoHidalma.length > 0) {
+            await db.insert(proyectoUsuarios).values({
+              proyectoId: 1,
+              usuarioId: newUser[0].id,
+            }).onDuplicateKeyUpdate({ set: { activo: true } });
+            console.log(`[Database] Usuario ${user.openId} asignado automáticamente al proyecto Hidalma`);
+          }
+        }
+      } catch (assignError) {
+        console.warn("[Database] No se pudo asignar usuario al proyecto:", assignError);
+      }
+    }
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
     throw error;
