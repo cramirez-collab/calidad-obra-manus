@@ -1315,3 +1315,9 @@
 - [x] Hacer contraseñas siempre visibles en formulario de edición de usuarios
 - [x] Contraseñas funcionan correctamente (bcrypt hash)
 - [x] Restringir eliminación/desactivación de usuarios solo a Admin/Superadmin (ya implementado)
+
+
+## Ajuste UI Móvil Usuarios (Enero 2026)
+- [x] Ajustar textos cortados en tarjetas de estadísticas (Admin, Superv., Sin Emp.)
+- [x] Mejorar encuadre de tarjetas para vista móvil (grid 2 columnas en móvil)
+- [x] Reducir tamaño de fuente y padding en móvil
