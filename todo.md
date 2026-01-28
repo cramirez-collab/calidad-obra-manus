@@ -1307,3 +1307,11 @@
 - [x] Revisar endpoint de OAuth callback
 - [x] Mejorar manejo de errores en callback (redirige a /login con mensaje)
 - [x] Mostrar mensaje de error claro en página de login
+
+
+## Mejoras Login y Usuarios (Enero 2026)
+- [x] Quitar botón de Google/Manus del login
+- [x] Hacer contraseñas siempre visibles (tipo texto) en login
+- [x] Hacer contraseñas siempre visibles en formulario de edición de usuarios
+- [x] Contraseñas funcionan correctamente (bcrypt hash)
+- [x] Restringir eliminación/desactivación de usuarios solo a Admin/Superadmin (ya implementado)

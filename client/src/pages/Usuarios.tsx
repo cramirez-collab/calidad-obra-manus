@@ -350,13 +350,14 @@ export default function Usuarios() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña *</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Mínimo 6 caracteres"
+<Label htmlFor="password">Contraseña *</Label>
+                   <Input
+                     id="password"
+                     type="text"
+                     value={formData.password}
+                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                     placeholder="Mínimo 6 caracteres"
+                     autoComplete="off"
                   />
                   <p className="text-xs text-muted-foreground">Esta contraseña será usada por el usuario para iniciar sesión</p>
                 </div>
@@ -883,12 +884,13 @@ export default function Usuarios() {
                   <Lock className="h-4 w-4" />
                   Nueva Contraseña
                 </Label>
-                <Input
-                  id="edit-password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Dejar vacío para no cambiar"
+<Input
+                   id="edit-password"
+                   type="text"
+                   value={formData.password}
+                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                   placeholder="Dejar vacío para no cambiar"
+                   autoComplete="off"
                 />
                 <p className="text-xs text-muted-foreground">
                   Mínimo 6 caracteres. Solo llenar si deseas cambiar la contraseña.
