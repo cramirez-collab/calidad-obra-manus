@@ -467,16 +467,16 @@ export default function NuevoItem() {
           </CardContent>
         </Card>
 
-        {/* PASO 3: Ubicación (nivel, unidad, espacio) */}
+        {/* PASO 3: Ubicación y Defecto en un solo contenedor */}
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
               <MapPin className="h-3 w-3" />
-              Ubicación
+              Ubicación y Defecto
             </div>
             
-            {/* Nivel y Unidad en la misma fila */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Nivel, Unidad y Defecto en la misma fila */}
+            <div className="grid grid-cols-3 gap-2">
               {/* Nivel */}
               <Select
                 value={formData.nivelId}
@@ -504,18 +504,44 @@ export default function NuevoItem() {
                 <SelectTrigger className="h-9 text-xs">
                   <MapPin className="h-3 w-3 mr-1 text-gray-400" />
                   <SelectValue placeholder="Unidad *" />
-              </SelectTrigger>
-              <SelectContent>
-                {unidades?.map((unidad) => (
-                  <SelectItem key={unidad.id} value={unidad.id.toString()}>
-                    {unidad.nombre}
-                  </SelectItem>
-                ))}
+                </SelectTrigger>
+                <SelectContent>
+                  {unidades?.map((unidad) => (
+                    <SelectItem key={unidad.id} value={unidad.id.toString()}>
+                      {unidad.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Defecto (de la especialidad del residente) */}
+              <Select
+                value={formData.defectoId}
+                onValueChange={(value) => setFormData({ ...formData, defectoId: value })}
+                disabled={!residenteSeleccionado?.especialidadId || !defectos || defectos.length === 0}
+              >
+                <SelectTrigger className="h-9 text-xs">
+                  <AlertTriangle className="h-3 w-3 mr-1 text-gray-400" />
+                  <SelectValue placeholder="Defecto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {defectos?.map((def) => (
+                    <SelectItem key={def.id} value={def.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <span className={`h-2 w-2 rounded-full ${
+                          def.severidad === 'leve' ? 'bg-green-500' :
+                          def.severidad === 'moderado' ? 'bg-yellow-500' :
+                          def.severidad === 'grave' ? 'bg-orange-500' : 'bg-red-500'
+                        }`} />
+                        {def.nombre}
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Espacio (solo si hay unidad) */}
+            {/* Espacio (solo si hay unidad y espacios disponibles) */}
             {formData.unidadId && espacios && espacios.length > 0 && (
               <Select
                 value={formData.espacioId}
@@ -536,42 +562,6 @@ export default function NuevoItem() {
             )}
           </CardContent>
         </Card>
-
-        {/* PASO 4: Defecto (de la especialidad del residente) */}
-        {residenteSeleccionado?.especialidadId && defectos && defectos.length > 0 && (
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                <AlertTriangle className="h-3 w-3" />
-                Defecto
-              </div>
-              
-              <Select
-                value={formData.defectoId}
-                onValueChange={(value) => setFormData({ ...formData, defectoId: value })}
-              >
-                <SelectTrigger className="h-9 text-xs">
-                  <AlertTriangle className="h-3 w-3 mr-1 text-gray-400" />
-                  <SelectValue placeholder="Seleccionar defecto" />
-                </SelectTrigger>
-                <SelectContent>
-                  {defectos.map((def) => (
-                    <SelectItem key={def.id} value={def.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <span className={`h-2 w-2 rounded-full ${
-                          def.severidad === 'leve' ? 'bg-green-500' :
-                          def.severidad === 'moderado' ? 'bg-yellow-500' :
-                          def.severidad === 'grave' ? 'bg-orange-500' : 'bg-red-500'
-                        }`} />
-                        {def.nombre}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Botón de crear - Siempre visible */}
         <Button 

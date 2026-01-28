@@ -1345,3 +1345,8 @@
 - [x] Campo "Espacio" ya existe en el formulario (se muestra cuando la unidad tiene espacios asignados)
 - [x] Campo "Defecto" ya existe y funciona - muestra defectos de la especialidad del residente
 - [x] Verificar estadísticas estén ligadas correctamente entre tablas (confirmado: usuarios, empresas, especialidades, defectos, unidades, espacios, niveles)
+
+
+## Mejoras UI Detalle Ítem y Formulario Nuevo Ítem (Enero 2026)
+- [x] Caja de código del ítem: reducir tamaño, fondo blanco, texto azul Objetiva (#002C63)
+- [x] Formulario Nuevo Ítem: poner Nivel, Unidad y Defecto en la misma línea (grid 3 columnas)

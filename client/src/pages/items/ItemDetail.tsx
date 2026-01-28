@@ -311,9 +311,9 @@ export default function ItemDetail() {
             
             {/* Clave OQC prominente */}
             <div className="flex items-center gap-3 mb-2">
-              <div className="flex items-center gap-2 bg-slate-900 text-white px-3 py-1.5 rounded-lg">
-                <QrCode className="h-4 w-4" />
-                <span className="font-mono font-bold text-lg">{item.codigo}</span>
+              <div className="flex items-center gap-1.5 bg-white border border-[#002C63]/20 text-[#002C63] px-2 py-1 rounded-md shadow-sm">
+                <QrCode className="h-3 w-3" />
+                <span className="font-mono font-semibold text-sm">{item.codigo}</span>
               </div>
               <Badge className={statusColors[item.status] + " text-sm py-1 px-3"}>
                 {statusLabels[item.status]}
