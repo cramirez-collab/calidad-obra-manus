@@ -45,15 +45,9 @@ export function registerOAuthRoutes(app: Express) {
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
       res.redirect(302, "/");
-    } catch (error: any) {
+    } catch (error) {
       console.error("[OAuth] Callback failed", error);
-      // Proporcionar más información sobre el error
-      const errorMessage = error?.message || "OAuth callback failed";
-      const errorDetails = error?.response?.data || error?.toString() || "Unknown error";
-      console.error("[OAuth] Error details:", errorDetails);
-      
-      // Redirigir a login con mensaje de error en lugar de mostrar JSON
-      res.redirect(302, `/login?error=${encodeURIComponent(errorMessage)}`);
+      res.status(500).json({ error: "OAuth callback failed" });
     }
   });
 }
