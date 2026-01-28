@@ -3976,3 +3976,20 @@ export async function updateUserLastSignedIn(userId: number) {
     .set({ lastSignedIn: new Date(), updatedAt: new Date() })
     .where(eq(users.id, userId));
 }
+
+// Eliminar usuario permanentemente (solo superadmin)
+export async function deleteUser(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Primero eliminar las relaciones del usuario con proyectos
+  await db.delete(proyectoUsuarios).where(eq(proyectoUsuarios.usuarioId, userId));
+  
+  // Eliminar relaciones con empresas (residentes)
+  await db.delete(empresaResidentes).where(eq(empresaResidentes.usuarioId, userId));
+  
+  // Finalmente eliminar el usuario
+  await db.delete(users).where(eq(users.id, userId));
+  
+  return { success: true };
+}

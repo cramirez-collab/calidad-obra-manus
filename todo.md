@@ -1327,3 +1327,14 @@
 - [x] Agregar checkbox "Recordar mis datos" en formulario de login
 - [x] Guardar email y contraseña en localStorage cuando esté marcado
 - [x] Cargar datos guardados al abrir la página de login
+
+
+
+## Eliminación de Usuarios y Rol Superadmin (Enero 2026)
+- [x] Actualizar rol de Carlos Ramirez a superadmin
+- [x] Agregar endpoint de delete para usuarios (solo superadmin)
+- [x] Agregar función deleteUser en db.ts
+- [x] Agregar botón de eliminar permanentemente en vista móvil
+- [x] Agregar botón de eliminar permanentemente en vista desktop
+- [x] Confirmación antes de eliminar usuario
+- [x] No permitir eliminarse a sí mismo

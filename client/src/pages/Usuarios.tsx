@@ -32,7 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
-import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search, FolderKanban, Lock } from "lucide-react";
+import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search, FolderKanban, Lock, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -152,6 +152,18 @@ export default function Usuarios() {
     },
   });
 
+  // Mutation para eliminar usuario permanentemente (solo superadmin)
+  const deleteUserMutation = trpc.users.delete.useMutation({
+    onSuccess: () => {
+      utils.users.listConEmpresa.invalidate();
+      refetchProyectoUsuarios();
+      toast.success("Usuario eliminado permanentemente");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleCreate = () => {
     if (!canManageUsers) {
       toast.error("No tienes permisos para crear usuarios");
@@ -213,6 +225,23 @@ export default function Usuarios() {
 
   // Solo admin y superadmin pueden desactivar/eliminar usuarios
   const canDeleteUsers = user?.role === 'superadmin' || user?.role === 'admin';
+  
+  // Solo superadmin puede eliminar usuarios permanentemente
+  const canDeletePermanently = user?.role === 'superadmin';
+
+  const handleDeleteUser = (usuario: any) => {
+    if (!canDeletePermanently) {
+      toast.error("Solo el superadministrador puede eliminar usuarios permanentemente");
+      return;
+    }
+    if (usuario.id === user?.id) {
+      toast.error("No puedes eliminarte a ti mismo");
+      return;
+    }
+    if (confirm(`¿Estás seguro de eliminar permanentemente a ${usuario.name}? Esta acción no se puede deshacer.`)) {
+      deleteUserMutation.mutate({ id: usuario.id });
+    }
+  };
 
   const handleToggleActivo = (usuario: any) => {
     if (!canDeleteUsers) {
@@ -616,6 +645,17 @@ export default function Usuarios() {
                             )}
                           </Button>
                           )}
+                          {canDeletePermanently && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleDeleteUser(usuario)}
+                            title="Eliminar permanentemente"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                          )}
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -732,6 +772,16 @@ export default function Usuarios() {
                                 ) : (
                                   <UserCheck className="h-4 w-4 text-emerald-500" />
                                 )}
+                              </Button>
+                              )}
+                              {canDeletePermanently && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteUser(usuario)}
+                                title="Eliminar permanentemente"
+                              >
+                                <Trash2 className="h-4 w-4 text-red-600" />
                               </Button>
                               )}
                             </div>

@@ -191,6 +191,14 @@ export const appRouter = router({
       return { proyectoId };
     }),
     
+    // Eliminar usuario permanentemente (solo superadmin)
+    delete: superadminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteUser(input.id);
+        return { success: true };
+      }),
+    
     // Cambiar proyecto activo del usuario actual
     setProyectoActivo: protectedProcedure
       .input(z.object({ proyectoId: z.number().nullable() }))
