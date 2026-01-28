@@ -5,33 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, LogIn, Mail, Lock, AlertCircle } from "lucide-react";
-
-const STORAGE_KEY = "oqc_login_remember";
 
 export default function Login() {
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
-  
-  // Cargar datos guardados al iniciar
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const data = JSON.parse(saved);
-        if (data.email) setEmail(data.email);
-        if (data.password) setPassword(data.password);
-        setRememberMe(true);
-      }
-    } catch (e) {
-      // Ignorar errores de localStorage
-    }
-  }, []);
   
   // Verificar si hay error de OAuth en la URL
   useEffect(() => {
@@ -46,12 +27,6 @@ export default function Login() {
   
   const loginMutation = trpc.auth.loginWithPassword.useMutation({
     onSuccess: () => {
-      // Guardar o eliminar datos según la opción de recordar
-      if (rememberMe) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ email, password }));
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
-      }
       // Recargar la página para obtener la sesión
       window.location.href = "/";
     },
@@ -131,21 +106,6 @@ export default function Login() {
               <p className="text-xs text-muted-foreground">
                 La contraseña es visible para evitar errores al escribir
               </p>
-            </div>
-            
-            {/* Casilla de recordar datos */}
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="remember" 
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked === true)}
-              />
-              <Label 
-                htmlFor="remember" 
-                className="text-sm font-normal cursor-pointer select-none"
-              >
-                Recordar mis datos
-              </Label>
             </div>
             
             {error && (

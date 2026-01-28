@@ -1321,9 +1321,3 @@
 - [x] Ajustar textos cortados en tarjetas de estadísticas (Admin, Superv., Sin Emp.)
 - [x] Mejorar encuadre de tarjetas para vista móvil (grid 2 columnas en móvil)
 - [x] Reducir tamaño de fuente y padding en móvil
-
-
-## Recordar Datos Login (Enero 2026)
-- [x] Agregar checkbox "Recordar mis datos" en formulario de login
-- [x] Guardar email y contraseña en localStorage cuando esté marcado
-- [x] Cargar datos guardados al abrir la página de login
