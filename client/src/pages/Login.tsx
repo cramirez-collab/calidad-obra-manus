@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation, useSearch } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,21 @@ import { getLoginUrl } from "@/lib/trpc";
 
 export default function Login() {
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  
+  // Verificar si hay error de OAuth en la URL
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const oauthError = params.get("error");
+    if (oauthError) {
+      setError(`Error de autenticación: ${oauthError}. Por favor intenta con email y contraseña.`);
+      // Limpiar el parámetro de error de la URL
+      window.history.replaceState({}, "", "/login");
+    }
+  }, [searchString]);
   
   const loginMutation = trpc.auth.loginWithPassword.useMutation({
     onSuccess: () => {
@@ -98,8 +110,8 @@ export default function Login() {
             </div>
             
             {error && (
-              <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <div className="flex items-start gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+                <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}

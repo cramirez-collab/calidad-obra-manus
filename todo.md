@@ -1300,3 +1300,10 @@
 - [x] Agregar campo de contraseña en formulario de edición de usuarios
 - [x] Permitir a admin/superadmin asignar contraseñas a usuarios existentes
 - [x] Campo de contraseña en diálogo de edición de usuario
+
+
+## Corrección OAuth Google/Manus (Enero 2026)
+- [x] Diagnosticar error {"message":null} al hacer clic en Google/Manus
+- [x] Revisar endpoint de OAuth callback
+- [x] Mejorar manejo de errores en callback (redirige a /login con mensaje)
+- [x] Mostrar mensaje de error claro en página de login
