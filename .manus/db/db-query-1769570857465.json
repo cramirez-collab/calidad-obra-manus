@@ -1,0 +1,80 @@
+{
+  "query": "SELECT usuarioId, proyectoId, COUNT(*) as count FROM proyecto_usuarios GROUP BY usuarioId, proyectoId HAVING COUNT(*) > 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT usuarioId, proyectoId, COUNT(*) as count FROM proyecto_usuarios GROUP BY usuarioId, proyectoId HAVING COUNT(*) > 1;",
+  "rows": [
+    {
+      "usuarioId": "781773",
+      "proyectoId": "1",
+      "count": "3"
+    },
+    {
+      "usuarioId": "781860",
+      "proyectoId": "1",
+      "count": "3"
+    },
+    {
+      "usuarioId": "540085",
+      "proyectoId": "1",
+      "count": "3"
+    },
+    {
+      "usuarioId": "540077",
+      "proyectoId": "1",
+      "count": "3"
+    },
+    {
+      "usuarioId": "781800",
+      "proyectoId": "1",
+      "count": "3"
+    },
+    {
+      "usuarioId": "721666",
+      "proyectoId": "1",
+      "count": "3"
+    },
+    {
+      "usuarioId": "781651",
+      "proyectoId": "1",
+      "count": "3"
+    },
+    {
+      "usuarioId": "421490",
+      "proyectoId": "1",
+      "count": "3"
+    },
+    {
+      "usuarioId": "540580",
+      "proyectoId": "1",
+      "count": "3"
+    },
+    {
+      "usuarioId": "840001",
+      "proyectoId": "1",
+      "count": "2"
+    },
+    {
+      "usuarioId": "721649",
+      "proyectoId": "1",
+      "count": "3"
+    },
+    {
+      "usuarioId": "780297",
+      "proyectoId": "1",
+      "count": "3"
+    },
+    {
+      "usuarioId": "1",
+      "proyectoId": "1",
+      "count": "3"
+    },
+    {
+      "usuarioId": "810145",
+      "proyectoId": "1",
+      "count": "3"
+    }
+  ],
+  "messages": [],
+  "stdout": "usuarioId\tproyectoId\tcount\n781773\t1\t3\n781860\t1\t3\n540085\t1\t3\n540077\t1\t3\n781800\t1\t3\n721666\t1\t3\n781651\t1\t3\n421490\t1\t3\n540580\t1\t3\n840001\t1\t2\n721649\t1\t3\n780297\t1\t3\n1\t1\t3\n810145\t1\t3\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

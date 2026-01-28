@@ -1,0 +1,122 @@
+{
+  "query": "SELECT id, name, email, role, activo, CASE WHEN passwordHash IS NOT NULL AND passwordHash != '' THEN 'SI' ELSE 'NO' END as tiene_password FROM users ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, name, email, role, activo, CASE WHEN passwordHash IS NOT NULL AND passwordHash != '' THEN 'SI' ELSE 'NO' END as tiene_password FROM users ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Carlos Ramirez",
+      "email": "cramirez@objetiva.mx",
+      "role": "admin",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "421490",
+      "name": "CARLOS RAMIREZ",
+      "email": "carlosramirezdeloza@gmail.com",
+      "role": "residente",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "540077",
+      "name": "Julian Rodríguez Ramírez",
+      "email": "jrodriguez@objetiva.mx",
+      "role": "admin",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "540085",
+      "name": "Julian Rodríguez Ramírez",
+      "email": "jrodriguez@objetiva.mx",
+      "role": "admin",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "540580",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@objetiva.mx",
+      "role": "supervisor",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "721649",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@objetiva.mx",
+      "role": "admin",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "721666",
+      "name": "Ing.Daniel Vazquez",
+      "email": "dvazquez@objetiva.mx",
+      "role": "supervisor",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "780297",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@objetiva.mx",
+      "role": "residente",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "781651",
+      "name": "Karen Navith",
+      "email": "karen@ennco.mx",
+      "role": "residente",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "781773",
+      "name": "Karen",
+      "email": "NULL",
+      "role": "residente",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "781800",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@bjetiva.mx",
+      "role": "residente",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "781860",
+      "name": "Omar Palencia",
+      "email": "opalencia@objetiva.mx",
+      "role": "residente",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "810145",
+      "name": "Erick ",
+      "email": "ecalderon@objetiva.mx",
+      "role": "residente",
+      "activo": "1",
+      "tiene_password": "SI"
+    },
+    {
+      "id": "840001",
+      "name": "Erick Calderon",
+      "email": "ecalderon@objetiva.mx",
+      "role": "residente",
+      "activo": "1",
+      "tiene_password": "SI"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\tactivo\ttiene_password\n1\tCarlos Ramirez\tcramirez@objetiva.mx\tadmin\t1\tSI\n421490\tCARLOS RAMIREZ\tcarlosramirezdeloza@gmail.com\tresidente\t1\tSI\n540077\tJulian Rodríguez Ramírez\tjrodriguez@objetiva.mx\tadmin\t1\tSI\n540085\tJulian Rodríguez Ramírez\tjrodriguez@objetiva.mx\tadmin\t1\tSI\n540580\tEstefany Sanchez\tesanchez@objetiva.mx\tsupervisor\t1\tSI\n721649\tEstefany Sanchez\tesanchez@objetiva.mx\tadmin\t1\tSI\n721666\tIng.Daniel Vazquez\tdvazquez@objetiva.mx\tsupervisor\t1\tSI\n780297\tEstefany Sanchez\tesanchez@objetiva.mx\tresidente\t1\tSI\n781651\tKaren Navith\tkaren@ennco.mx\tresidente\t1\tSI\n781773\tKaren\tNULL\tresidente\t1\tSI\n781800\tEstefany Sanchez\tesanchez@bjetiva.mx\tresidente\t1\tSI\n781860\tOmar Palencia\topalencia@objetiva.mx\tresidente\t1\tSI\n810145\tErick \tecalderon@objetiva.mx\tresidente\t1\tSI\n840001\tErick Calderon\tecalderon@objetiva.mx\tresidente\t1\tSI\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

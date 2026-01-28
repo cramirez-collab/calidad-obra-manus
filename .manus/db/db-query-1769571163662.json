@@ -1,0 +1,122 @@
+{
+  "query": "SELECT * FROM proyecto_usuarios ORDER BY usuarioId, proyectoId, id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT * FROM proyecto_usuarios ORDER BY usuarioId, proyectoId, id;",
+  "rows": [
+    {
+      "id": "30001",
+      "proyectoId": "1",
+      "usuarioId": "1",
+      "rolEnProyecto": "admin",
+      "activo": "1",
+      "createdAt": "2026-01-26 00:43:22"
+    },
+    {
+      "id": "150001",
+      "proyectoId": "1",
+      "usuarioId": "421490",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "createdAt": "2026-01-27 23:30:55"
+    },
+    {
+      "id": "60001",
+      "proyectoId": "1",
+      "usuarioId": "540077",
+      "rolEnProyecto": "admin",
+      "activo": "0",
+      "createdAt": "2026-01-26 17:50:32"
+    },
+    {
+      "id": "60003",
+      "proyectoId": "1",
+      "usuarioId": "540085",
+      "rolEnProyecto": "admin",
+      "activo": "1",
+      "createdAt": "2026-01-26 18:15:51"
+    },
+    {
+      "id": "60006",
+      "proyectoId": "1",
+      "usuarioId": "540580",
+      "rolEnProyecto": "supervisor",
+      "activo": "1",
+      "createdAt": "2026-01-26 18:38:31"
+    },
+    {
+      "id": "90001",
+      "proyectoId": "1",
+      "usuarioId": "721649",
+      "rolEnProyecto": "admin",
+      "activo": "1",
+      "createdAt": "2026-01-27 07:12:49"
+    },
+    {
+      "id": "90002",
+      "proyectoId": "1",
+      "usuarioId": "721666",
+      "rolEnProyecto": "supervisor",
+      "activo": "1",
+      "createdAt": "2026-01-27 07:14:08"
+    },
+    {
+      "id": "150002",
+      "proyectoId": "1",
+      "usuarioId": "780297",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "createdAt": "2026-01-27 23:30:55"
+    },
+    {
+      "id": "120001",
+      "proyectoId": "1",
+      "usuarioId": "781651",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "createdAt": "2026-01-27 21:32:07"
+    },
+    {
+      "id": "120002",
+      "proyectoId": "1",
+      "usuarioId": "781773",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "createdAt": "2026-01-27 21:50:23"
+    },
+    {
+      "id": "120003",
+      "proyectoId": "1",
+      "usuarioId": "781800",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "createdAt": "2026-01-27 21:52:16"
+    },
+    {
+      "id": "120004",
+      "proyectoId": "1",
+      "usuarioId": "781860",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "createdAt": "2026-01-27 21:56:57"
+    },
+    {
+      "id": "150003",
+      "proyectoId": "1",
+      "usuarioId": "810145",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "createdAt": "2026-01-28 00:11:06"
+    },
+    {
+      "id": "180014",
+      "proyectoId": "1",
+      "usuarioId": "840001",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "createdAt": "2026-01-28 02:46:10"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tproyectoId\tusuarioId\trolEnProyecto\tactivo\tcreatedAt\n30001\t1\t1\tadmin\t1\t2026-01-26 00:43:22\n150001\t1\t421490\tresidente\t1\t2026-01-27 23:30:55\n60001\t1\t540077\tadmin\t0\t2026-01-26 17:50:32\n60003\t1\t540085\tadmin\t1\t2026-01-26 18:15:51\n60006\t1\t540580\tsupervisor\t1\t2026-01-26 18:38:31\n90001\t1\t721649\tadmin\t1\t2026-01-27 07:12:49\n90002\t1\t721666\tsupervisor\t1\t2026-01-27 07:14:08\n150002\t1\t780297\tresidente\t1\t2026-01-27 23:30:55\n120001\t1\t781651\tresidente\t1\t2026-01-27 21:32:07\n120002\t1\t781773\tresidente\t1\t2026-01-27 21:50:23\n120003\t1\t781800\tresidente\t1\t2026-01-27 21:52:16\n120004\t1\t781860\tresidente\t1\t2026-01-27 21:56:57\n150003\t1\t810145\tresidente\t1\t2026-01-28 00:11:06\n180014\t1\t840001\tresidente\t1\t2026-01-28 02:46:10\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}
