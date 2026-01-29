@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, nombre FROM especialidades WHERE activo = 1 ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre FROM especialidades WHERE activo = 1 ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "nombre": "Estructura "
+    },
+    {
+      "id": "30001",
+      "nombre": "Supervision"
+    },
+    {
+      "id": "30002",
+      "nombre": "Supervision"
+    },
+    {
+      "id": "30003",
+      "nombre": "Supervision"
+    },
+    {
+      "id": "30004",
+      "nombre": "Estructura "
+    },
+    {
+      "id": "30005",
+      "nombre": "Electrica"
+    },
+    {
+      "id": "30006",
+      "nombre": "Gas"
+    },
+    {
+      "id": "30007",
+      "nombre": "Hidráulica "
+    },
+    {
+      "id": "30008",
+      "nombre": "Hvac"
+    },
+    {
+      "id": "60001",
+      "nombre": "Desarrollador"
+    },
+    {
+      "id": "90001",
+      "nombre": "Albañileria "
+    },
+    {
+      "id": "90002",
+      "nombre": "Ceramicos"
+    },
+    {
+      "id": "90003",
+      "nombre": "Sanitaria y Pluvial"
+    },
+    {
+      "id": "90004",
+      "nombre": "Especiales "
+    },
+    {
+      "id": "90005",
+      "nombre": "Waller "
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\n1\tEstructura \n30001\tSupervision\n30002\tSupervision\n30003\tSupervision\n30004\tEstructura \n30005\tElectrica\n30006\tGas\n30007\tHidráulica \n30008\tHvac\n60001\tDesarrollador\n90001\tAlbañileria \n90002\tCeramicos\n90003\tSanitaria y Pluvial\n90004\tEspeciales \n90005\tWaller \n",
+  "stderr": "",
+  "execution_time_ms": 1539
+}

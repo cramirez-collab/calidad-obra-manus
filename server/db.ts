@@ -769,6 +769,20 @@ const DEFECTOS_TIPICOS: Record<string, string[]> = {
   'madera': ['Madera astillada', 'Acabado dañado', 'Unión floja', 'Madera hinchada', 'Barniz desprendido'],
   'puertas': ['Puerta no cierra', 'Bisagra floja', 'Chapa defectuosa', 'Puerta pandeada', 'Marco desalineado'],
   
+  // Albañilería
+  'albanileria': ['Muro desplomado', 'Junta irregular', 'Fisura en aplanado', 'Nivel incorrecto', 'Acabado rugoso'],
+  'alba': ['Muro desplomado', 'Junta irregular', 'Fisura en aplanado', 'Nivel incorrecto', 'Acabado rugoso'],
+  
+  // Cerámicos
+  'ceramico': ['Piso rayado', 'Loseta despegada', 'Desnivel en piso', 'Junta faltante', 'Piso manchado'],
+  'ceramica': ['Piso rayado', 'Loseta despegada', 'Desnivel en piso', 'Junta faltante', 'Piso manchado'],
+  'azulejo': ['Azulejo despegado', 'Corte irregular', 'Junta dispareja', 'Azulejo rayado', 'Falta de azulejo'],
+  
+  // Waller/Tablaroca
+  'waller': ['Junta visible', 'Abultamiento', 'Fisura en esquina', 'Tornillo expuesto', 'Acabado irregular'],
+  'tablaroca': ['Junta visible', 'Abultamiento', 'Fisura en esquina', 'Tornillo expuesto', 'Acabado irregular'],
+  'drywall': ['Junta visible', 'Abultamiento', 'Fisura en esquina', 'Tornillo expuesto', 'Acabado irregular'],
+  
   // Aluminio y Vidrio
   'aluminio': ['Ventana no cierra', 'Vidrio roto', 'Cancel desalineado', 'Felpa dañada', 'Oxidación en perfil'],
   'vidrio': ['Vidrio roto', 'Vidrio rayado', 'Sello deficiente', 'Vidrio empanado', 'Falta de vidrio'],

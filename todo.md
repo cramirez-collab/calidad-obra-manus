@@ -1432,3 +1432,7 @@
 - [x] Mostrar foto después en Seguimiento QR cuando se sube
 - [x] Abrir editor de marcado automáticamente con lápiz activo (ancho 2) al tomar foto antes
 - [x] Simplificar editor de marcado: ancho fijo 4, eliminar slider, ajustar botón guardar
+- [x] Sistema de defectos en cascada vinculados a especialidades
+- [x] Crear 5 defectos típicos para cada especialidad existente
+- [x] Auto-generar defectos al crear nueva especialidad
+- [x] UI para que supervisor gestione defectos por especialidad

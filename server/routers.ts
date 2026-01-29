@@ -1333,7 +1333,7 @@ export const appRouter = router({
         return await db.getDefectosByEspecialidad(input.especialidadId);
       }),
     
-    create: adminProcedure
+    create: supervisorProcedure
       .input(z.object({
         nombre: z.string().min(1),
         codigo: z.string().optional(),
@@ -1364,7 +1364,7 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    delete: superadminProcedure
+    delete: supervisorProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteDefecto(input.id);
