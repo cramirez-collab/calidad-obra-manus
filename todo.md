@@ -1415,3 +1415,9 @@
 - [x] Investigar por qué el rol de Carlos se resetea a admin al iniciar sesión - upsertUser sobrescribía el rol
 - [x] Corregir el código de autenticación para preservar el rol superadmin - ahora NUNCA sobrescribe rol de usuarios existentes
 - [x] Verificar que Carlos sea superadmin permanentemente - confirmado en BD y UI
+
+
+## Reorganización Formulario Nuevo Ítem (Enero 2026)
+- [x] Agregar campo Espacio al contenedor de Ubicación y Defecto
+- [x] Reorganizar campos: Nivel, Unidad en fila 1; Espacio, Defecto en fila 2
+- [x] Optimizar para captura rápida y visión ordenada (campos más grandes h-10)

@@ -475,15 +475,15 @@ export default function NuevoItem() {
               Ubicación y Defecto
             </div>
             
-            {/* Nivel, Unidad y Defecto en la misma fila */}
-            <div className="grid grid-cols-3 gap-2">
+            {/* Fila 1: Nivel y Unidad */}
+            <div className="grid grid-cols-2 gap-2">
               {/* Nivel */}
               <Select
                 value={formData.nivelId}
                 onValueChange={(value) => setFormData({ ...formData, nivelId: value, unidadId: "", espacioId: "" })}
               >
-                <SelectTrigger className="h-9 text-xs">
-                  <Layers className="h-3 w-3 mr-1 text-gray-400" />
+                <SelectTrigger className="h-10 text-sm">
+                  <Layers className="h-4 w-4 mr-1 text-gray-400" />
                   <SelectValue placeholder="Nivel" />
                 </SelectTrigger>
                 <SelectContent>
@@ -501,14 +501,36 @@ export default function NuevoItem() {
                 value={formData.unidadId}
                 onValueChange={(value) => setFormData({ ...formData, unidadId: value, espacioId: "" })}
               >
-                <SelectTrigger className="h-9 text-xs">
-                  <MapPin className="h-3 w-3 mr-1 text-gray-400" />
+                <SelectTrigger className="h-10 text-sm">
+                  <MapPin className="h-4 w-4 mr-1 text-gray-400" />
                   <SelectValue placeholder="Unidad *" />
                 </SelectTrigger>
                 <SelectContent>
                   {unidades?.map((unidad) => (
                     <SelectItem key={unidad.id} value={unidad.id.toString()}>
                       {unidad.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Fila 2: Espacio y Defecto */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* Espacio (siempre visible, pero deshabilitado si no hay unidad) */}
+              <Select
+                value={formData.espacioId}
+                onValueChange={(value) => setFormData({ ...formData, espacioId: value })}
+                disabled={!formData.unidadId || !espacios || espacios.length === 0}
+              >
+                <SelectTrigger className="h-10 text-sm">
+                  <Layers className="h-4 w-4 mr-1 text-gray-400" />
+                  <SelectValue placeholder={espacios && espacios.length > 0 ? "Espacio" : "Sin espacios"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {espacios?.map((espacio) => (
+                    <SelectItem key={espacio.id} value={espacio.id.toString()}>
+                      {espacio.nombre}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -520,8 +542,8 @@ export default function NuevoItem() {
                 onValueChange={(value) => setFormData({ ...formData, defectoId: value })}
                 disabled={!residenteSeleccionado?.especialidadId || !defectos || defectos.length === 0}
               >
-                <SelectTrigger className="h-9 text-xs">
-                  <AlertTriangle className="h-3 w-3 mr-1 text-gray-400" />
+                <SelectTrigger className="h-10 text-sm">
+                  <AlertTriangle className="h-4 w-4 mr-1 text-gray-400" />
                   <SelectValue placeholder="Defecto" />
                 </SelectTrigger>
                 <SelectContent>
@@ -540,26 +562,6 @@ export default function NuevoItem() {
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Espacio (solo si hay unidad y espacios disponibles) */}
-            {formData.unidadId && espacios && espacios.length > 0 && (
-              <Select
-                value={formData.espacioId}
-                onValueChange={(value) => setFormData({ ...formData, espacioId: value })}
-              >
-                <SelectTrigger className="h-9 text-xs">
-                  <Layers className="h-3 w-3 mr-1 text-gray-400" />
-                  <SelectValue placeholder="Espacio (Sala, Cocina, Baño...)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {espacios.map((espacio) => (
-                    <SelectItem key={espacio.id} value={espacio.id.toString()}>
-                      {espacio.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
           </CardContent>
         </Card>
 
