@@ -1384,3 +1384,11 @@
 - [x] Verificar si existe funcionalidad de cambio de contraseña
 - [x] Crear sección de cambio de contraseña en Configuración
 - [x] Permitir que cada usuario cambie su propia contraseña (ruta users.changePassword)
+
+
+## Limpieza de Proyectos Duplicados (Enero 2026)
+- [x] Investigar proyectos duplicados en la base de datos
+- [x] Identificar el proyecto correcto (TRN-Hidalma, ID 1)
+- [x] Eliminar proyectos duplicados (01, 02 - IDs 120001, 120002)
+- [x] Eliminar usuario duplicado de Estefany (ID 1230002)
+- [x] Verificar que no queden referencias rotas - BASE DE DATOS LIMPIA
