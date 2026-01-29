@@ -249,8 +249,10 @@ export default function ItemDetail() {
     return users?.find(u => u.id === id)?.name || "-";
   };
 
+  // Solo superadmin, admin, supervisor y jefe_residente pueden subir foto después
+  // Residente NO puede subir foto después
   const canAddFotoDespues = item?.status === "pendiente_foto_despues" && 
-    ["admin", "supervisor", "jefe_residente"].includes(user?.role || "");
+    ["superadmin", "admin", "supervisor", "jefe_residente"].includes(user?.role || "");
   
   const canApprove = item?.status === "pendiente_aprobacion" && 
     ["admin", "supervisor"].includes(user?.role || "");

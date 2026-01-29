@@ -1426,3 +1426,4 @@
 ## Selector de Espacios desde Plantilla (Enero 2026)
 - [x] Modificar selector de Espacio para cargar espacios de la plantilla del proyecto
 - [x] Mostrar solo el nombre del espacio (sin código ni descripción)
+- [x] Superadmin, admin, supervisor y jefe_residente pueden tomar fotos del después (residente NO)

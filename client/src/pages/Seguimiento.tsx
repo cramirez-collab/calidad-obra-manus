@@ -155,11 +155,13 @@ export default function Seguimiento() {
   };
 
   // Determinar permisos del usuario
+  // Solo superadmin, admin, supervisor y jefe_residente pueden subir foto después
+  // Residente NO puede subir foto después
   const canUploadFotoDespues = user && (
-    user.role === "admin" || 
     user.role === "superadmin" || 
-    user.role === "jefe_residente" ||
-    user.role === "residente"
+    user.role === "admin" || 
+    user.role === "supervisor" ||
+    user.role === "jefe_residente"
   );
 
   const canValidate = user && (
