@@ -1436,3 +1436,4 @@
 - [x] Crear 5 defectos típicos para cada especialidad existente
 - [x] Auto-generar defectos al crear nueva especialidad
 - [x] UI para que supervisor gestione defectos por especialidad
+- [x] Corregir ciclo al mover unidades en módulo Unidades y reflejar orden en Stacking

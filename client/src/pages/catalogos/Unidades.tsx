@@ -64,11 +64,12 @@ export default function Unidades() {
   );
   
   // Sincronizar unidades locales cuando cambian las del servidor
+  // IMPORTANTE: No sobrescribir durante modo organización para evitar ciclos
   useEffect(() => {
-    if (unidades) {
+    if (unidades && !isOrganizing) {
       setLocalUnidades([...unidades]);
     }
-  }, [unidades]);
+  }, [unidades, isOrganizing]);
 
   const createMutation = trpc.unidades.create.useMutation({
     onSuccess: () => {
@@ -86,6 +87,16 @@ export default function Unidades() {
       utils.unidades.list.invalidate();
       toast.success("Unidad actualizada correctamente");
       handleClose();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+  
+  // Mutación para actualizar orden en batch (evita ciclos)
+  const updateOrdenMutation = trpc.unidades.updateOrden.useMutation({
+    onSuccess: () => {
+      utils.unidades.list.invalidate();
     },
     onError: (error) => {
       toast.error(error.message);
@@ -201,26 +212,21 @@ export default function Unidades() {
     setDragOverIndex(null);
   };
   
-  // Guardar el nuevo orden
+  // Guardar el nuevo orden usando batch update para evitar ciclos
   const handleSaveOrder = async () => {
     try {
-      // Actualizar cada unidad con su nuevo orden
-      for (let i = 0; i < localUnidades.length; i++) {
-        const unidad = localUnidades[i];
-        await updateMutation.mutateAsync({
-          id: unidad.id,
-          nombre: unidad.nombre,
-          codigo: unidad.codigo || undefined,
-          descripcion: unidad.descripcion || undefined,
-          ubicacion: unidad.ubicacion || undefined,
-          proyectoId: unidad.proyectoId || undefined,
-          nivel: unidad.nivel || undefined,
-          orden: i + 1,
-        });
-      }
+      // Preparar array de actualizaciones
+      const updates = localUnidades.map((unidad, idx) => ({
+        id: unidad.id,
+        orden: idx + 1,
+        nivel: unidad.nivel || undefined,
+      }));
+      
+      // Actualizar todo en una sola llamada
+      await updateOrdenMutation.mutateAsync({ unidades: updates });
+      
       toast.success("Orden guardado correctamente");
       setIsOrganizing(false);
-      utils.unidades.list.invalidate();
     } catch (error) {
       toast.error("Error al guardar el orden");
     }
