@@ -304,7 +304,7 @@ export default function ItemDetail() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="space-y-2">
             <Button variant="ghost" size="sm" onClick={() => setLocation("/items")} className="mb-2">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -353,35 +353,42 @@ export default function ItemDetail() {
             </div>
           </div>
 
-          <div className="flex gap-2">
+          {/* Botones de acción - responsivos */}
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
             {canAddFotoDespues && (
-              <Button onClick={() => setShowFotoDespuesDialog(true)}>
-                <Camera className="h-4 w-4 mr-2" />
-                Agregar Foto Después
+              <Button 
+                onClick={() => setShowFotoDespuesDialog(true)}
+                className="flex-1 md:flex-none min-w-0"
+                size="sm"
+              >
+                <Camera className="h-4 w-4 mr-1 md:mr-2 shrink-0" />
+                <span className="truncate">Foto Después</span>
               </Button>
             )}
             {canApprove && (
               <>
                 <Button
                   variant="outline"
-                  className="text-red-600 border-red-200 hover:bg-red-50"
+                  size="sm"
+                  className="text-red-600 border-red-200 hover:bg-red-50 flex-1 md:flex-none min-w-0"
                   onClick={() => {
                     setApprovalAction("rechazar");
                     setShowApprovalDialog(true);
                   }}
                 >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Rechazar
+                  <XCircle className="h-4 w-4 mr-1 md:mr-2 shrink-0" />
+                  <span className="truncate">Rechazar</span>
                 </Button>
                 <Button
-                  className="bg-emerald-600 hover:bg-emerald-700"
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 flex-1 md:flex-none min-w-0"
                   onClick={() => {
                     setApprovalAction("aprobar");
                     setShowApprovalDialog(true);
                   }}
                 >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Aprobar
+                  <CheckCircle2 className="h-4 w-4 mr-1 md:mr-2 shrink-0" />
+                  <span className="truncate">Aprobar</span>
                 </Button>
               </>
             )}
@@ -389,7 +396,7 @@ export default function ItemDetail() {
               <Button
                 variant="outline"
                 size="icon"
-                className="text-red-600 border-red-200 hover:bg-red-50"
+                className="text-red-600 border-red-200 hover:bg-red-50 shrink-0"
                 onClick={() => setShowDeleteDialog(true)}
                 title="Eliminar ítem"
               >
@@ -506,59 +513,7 @@ export default function ItemDetail() {
               </CardContent>
             </Card>
 
-            {/* Comentarios */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Comentarios y Observaciones
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Lista de comentarios */}
-                <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                  {comentarios && comentarios.length > 0 ? (
-                    comentarios.map((c: any) => (
-                      <div key={c.id} className="bg-muted/50 rounded-lg p-3 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-sm">
-                            {c.usuario?.name || "Usuario"}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDate(c.createdAt)}
-                          </span>
-                        </div>
-                        <p className="text-sm">{c.texto}</p>
-                        <Badge variant="outline" className="text-xs">
-                          {statusLabels[c.etapa] || c.etapa}
-                        </Badge>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No hay comentarios aún
-                    </p>
-                  )}
-                </div>
 
-                {/* Agregar comentario */}
-                <div className="border-t pt-4 space-y-2">
-                  <Textarea
-                    value={nuevoComentario}
-                    onChange={(e) => setNuevoComentario(e.target.value)}
-                    placeholder="Escribe un comentario u observación..."
-                    rows={2}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={handleAddComentario}
-                    disabled={!nuevoComentario.trim() || enviandoComentario}
-                  >
-                    {enviandoComentario ? "Enviando..." : "Agregar Comentario"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Columna lateral - Info y QR */}

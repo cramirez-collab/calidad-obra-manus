@@ -1,0 +1,14 @@
+Hallazgos de la revisión:
+
+1. En la página ItemDetail.tsx hay DOS secciones de comunicación:
+   - "Comentarios y Observaciones" (líneas 509-561) - usa textarea y botón "Agregar Comentario"
+   - "Chat del Ítem" (líneas 640-645) - usa el componente ItemChat
+
+2. Ambas secciones aparecen en la columna derecha de la página de detalle.
+
+3. El usuario quiere solo UNA sección de chat, no dos.
+
+4. Solución: Eliminar la sección "Comentarios y Observaciones" y dejar solo el "Chat del Ítem"
+
+5. El botón de foto después no aparece porque el ítem ya tiene foto después (está en "Pendiente Aprobación")
+   - El botón solo aparece cuando status === "pendiente_foto_despues"

@@ -1427,3 +1427,5 @@
 - [x] Modificar selector de Espacio para cargar espacios de la plantilla del proyecto
 - [x] Mostrar solo el nombre del espacio (sin código ni descripción)
 - [x] Superadmin, admin, supervisor y jefe_residente pueden tomar fotos del después (residente NO)
+- [x] Eliminar chat duplicado en detalle de ítem (eliminada sección Comentarios y Observaciones)
+- [x] Ajustar botones de acción para responsividad en móvil
