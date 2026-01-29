@@ -154,10 +154,12 @@ export default function GenerarQR() {
       return;
     }
 
-    // Diseño optimizado para 30 etiquetas por hoja carta (3 columnas x 10 filas)
+    // Diseño para etiquetas Office Depot 64413 (compatible Avery 5160)
     // Hoja carta: 8.5" x 11" = 215.9mm x 279.4mm
-    // Con márgenes de 5mm, área útil: 205.9mm x 269.4mm
-    // Cada celda: ~68.6mm x ~26.9mm
+    // Etiqueta: 6.7cm x 2.5cm (2-5/8" x 1") = 66.675mm x 25.4mm
+    // 30 etiquetas por hoja (3 columnas x 10 filas)
+    // Márgenes: Superior/Inferior 12.7mm (0.5"), Izquierdo/Derecho 4.76mm
+    // Espacio horizontal entre etiquetas: 3.175mm (1/8")
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -166,7 +168,7 @@ export default function GenerarQR() {
           <style>
             @page {
               size: letter portrait;
-              margin: 5mm;
+              margin: 0;
             }
             * {
               box-sizing: border-box;
@@ -179,32 +181,40 @@ export default function GenerarQR() {
               print-color-adjust: exact;
             }
             .page {
-              width: 205.9mm;
-              height: 269.4mm;
-              display: grid;
-              grid-template-columns: repeat(3, 1fr);
-              grid-template-rows: repeat(10, 1fr);
-              gap: 1mm;
+              width: 215.9mm;
+              height: 279.4mm;
+              padding: 12.7mm 4.76mm;
+              display: flex;
+              flex-wrap: wrap;
+              align-content: flex-start;
               page-break-after: always;
             }
             .page:last-child {
               page-break-after: auto;
             }
             .qr-card {
-              border: 1px solid #002C63;
-              border-radius: 4px;
-              padding: 1mm;
+              width: 66.675mm;
+              height: 25.4mm;
               display: flex;
               flex-direction: row;
               align-items: center;
               justify-content: flex-start;
               background: white;
               overflow: hidden;
+              padding: 1mm 2mm;
               gap: 2mm;
             }
+            /* Espacio horizontal entre columnas */
+            .qr-card:nth-child(3n+1),
+            .qr-card:nth-child(3n+2) {
+              margin-right: 3.175mm;
+            }
+            .qr-card:nth-child(3n) {
+              margin-right: 0;
+            }
             .qr-card img {
-              width: 20mm;
-              height: 20mm;
+              width: 21mm;
+              height: 21mm;
               object-fit: contain;
               flex-shrink: 0;
             }
@@ -214,9 +224,10 @@ export default function GenerarQR() {
               justify-content: center;
               overflow: hidden;
               flex: 1;
+              min-width: 0;
             }
             .codigo {
-              font-size: 8pt;
+              font-size: 9pt;
               font-weight: bold;
               color: #002C63;
               letter-spacing: 0.3px;
@@ -226,9 +237,10 @@ export default function GenerarQR() {
             .titulo {
               font-size: 6pt;
               color: #333;
-              max-height: 8mm;
               overflow: hidden;
-              line-height: 1.1;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              line-height: 1.2;
               margin-top: 0.5mm;
             }
             .logo {
@@ -238,12 +250,20 @@ export default function GenerarQR() {
               margin-top: 0.5mm;
             }
             .empty-cell {
-              border: 1px dashed #ddd;
-              border-radius: 4px;
+              width: 66.675mm;
+              height: 25.4mm;
+            }
+            .empty-cell:nth-child(3n+1),
+            .empty-cell:nth-child(3n+2) {
+              margin-right: 3.175mm;
+            }
+            .empty-cell:nth-child(3n) {
+              margin-right: 0;
             }
             @media print {
-              .qr-card {
-                border: 1px solid #002C63 !important;
+              body {
+                margin: 0;
+                padding: 0;
               }
             }
           </style>
@@ -505,7 +525,7 @@ export default function GenerarQR() {
               <div>
                 <CardTitle>Vista Previa ({qrItems.length} códigos)</CardTitle>
                 <CardDescription>
-                  30 etiquetas por hoja carta (3x10) - Revisa antes de imprimir
+                  Etiquetas Office Depot 64413 (6.7x2.5cm) - 30 por hoja
                 </CardDescription>
               </div>
               <Button onClick={handlePrint} variant="default">
@@ -559,8 +579,9 @@ export default function GenerarQR() {
               <li>Elige el modo: Por Ítems (para QR de ítems existentes) o Por Rango (para QR nuevos)</li>
               <li>En modo Ítems, selecciona los ítems deseados</li>
               <li>Haz clic en "Generar QR"</li>
-              <li>Revisa la vista previa (30 etiquetas por hoja carta)</li>
-              <li>Haz clic en "Imprimir" para imprimir o guardar como PDF</li>
+              <li>Revisa la vista previa</li>
+              <li>Usa etiquetas Office Depot 64413 (6.7x2.5cm, 30 por hoja)</li>
+              <li>Haz clic en "Imprimir" para imprimir</li>
             </ol>
           </CardContent>
         </Card>

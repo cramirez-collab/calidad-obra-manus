@@ -1448,3 +1448,9 @@
 - [x] Orientación vertical (portrait)
 - [x] Etiquetas compactas con QR + código + título + logo
 - [x] Actualizar descripción en vista previa
+
+### Etiquetas Office Depot 64413
+- [x] Ajustar layout para etiquetas 6.7 x 2.5 cm
+- [x] Configurar para plantilla Avery 5160 compatible
+- [x] 30 etiquetas por hoja (3 columnas x 10 filas)
+- [x] Márgenes y espaciado precisos para alineación
