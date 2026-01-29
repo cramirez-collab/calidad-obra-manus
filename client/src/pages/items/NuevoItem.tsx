@@ -229,6 +229,8 @@ export default function NuevoItem() {
     reader.onload = (event) => {
       setFotoAntes(event.target?.result as string);
       setFotoAntesMarcada(null);
+      // Abrir automáticamente el editor de marcado
+      setShowMarker(true);
     };
     reader.readAsDataURL(file);
   };
@@ -307,6 +309,7 @@ export default function NuevoItem() {
                   imageUrl={fotoAntes}
                   onSave={handleMarkedImage}
                   onCancel={() => setShowMarker(false)}
+                  initialBrushSize={2}
                 />
               </div>
             </CardContent>

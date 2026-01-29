@@ -15,14 +15,16 @@ interface ImageMarkerProps {
   imageUrl: string;
   onSave: (markedImageBase64: string) => void;
   onCancel?: () => void;
+  initialBrushSize?: number; // Tamaño inicial del pincel
+  autoStartDrawing?: boolean; // Iniciar con lápiz activo
 }
 
-export default function ImageMarker({ imageUrl, onSave, onCancel }: ImageMarkerProps) {
+export default function ImageMarker({ imageUrl, onSave, onCancel, initialBrushSize = 5, autoStartDrawing = false }: ImageMarkerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState<"pen" | "eraser">("pen");
-  const [brushSize, setBrushSize] = useState(5);
+  const [brushSize, setBrushSize] = useState(initialBrushSize);
   const [history, setHistory] = useState<ImageData[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [scale, setScale] = useState(1);
