@@ -119,8 +119,8 @@ const getMenuItems = (role: string): MenuItem[] => {
 };
 
 const roleLabels: Record<string, string> = {
-  superadmin: "Super Admin",
-  admin: "Admin",
+  superadmin: "Superadministrador",
+  admin: "Administrador",
   supervisor: "Supervisor",
   jefe_residente: "Jefe Residente",
   residente: "Residente",
