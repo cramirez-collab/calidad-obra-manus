@@ -1431,3 +1431,4 @@
 - [x] Ajustar botones de acción para responsividad en móvil
 - [x] Mostrar foto después en Seguimiento QR cuando se sube
 - [x] Abrir editor de marcado automáticamente con lápiz activo (ancho 2) al tomar foto antes
+- [x] Simplificar editor de marcado: ancho fijo 4, eliminar slider, ajustar botón guardar

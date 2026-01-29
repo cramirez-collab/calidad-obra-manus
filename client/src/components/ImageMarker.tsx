@@ -1,30 +1,29 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { 
   Pencil, 
   Eraser, 
   RotateCcw, 
-  Download, 
+  Check,
+  X,
   ZoomIn, 
-  ZoomOut,
-  Circle
+  ZoomOut
 } from "lucide-react";
 
 interface ImageMarkerProps {
   imageUrl: string;
   onSave: (markedImageBase64: string) => void;
   onCancel?: () => void;
-  initialBrushSize?: number; // Tamaño inicial del pincel
-  autoStartDrawing?: boolean; // Iniciar con lápiz activo
 }
 
-export default function ImageMarker({ imageUrl, onSave, onCancel, initialBrushSize = 5, autoStartDrawing = false }: ImageMarkerProps) {
+// Ancho de lápiz fijo en 4
+const BRUSH_SIZE = 4;
+
+export default function ImageMarker({ imageUrl, onSave, onCancel }: ImageMarkerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState<"pen" | "eraser">("pen");
-  const [brushSize, setBrushSize] = useState(initialBrushSize);
   const [history, setHistory] = useState<ImageData[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [scale, setScale] = useState(1);
@@ -171,10 +170,10 @@ export default function ImageMarker({ imageUrl, onSave, onCancel, initialBrushSi
     if (tool === "pen") {
       ctx.globalCompositeOperation = "source-over";
       ctx.strokeStyle = "#FF0000"; // Tinta roja
-      ctx.lineWidth = brushSize * 2;
+      ctx.lineWidth = BRUSH_SIZE * 2;
     } else {
       ctx.globalCompositeOperation = "destination-out";
-      ctx.lineWidth = brushSize * 4;
+      ctx.lineWidth = BRUSH_SIZE * 4;
     }
 
     if (isStart) {
@@ -217,72 +216,84 @@ export default function ImageMarker({ imageUrl, onSave, onCancel, initialBrushSi
 
   return (
     <div className="flex flex-col h-full bg-slate-900 rounded-lg overflow-hidden">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between p-3 bg-slate-800 border-b border-slate-700">
-        <div className="flex items-center gap-2">
+      {/* Toolbar simplificado */}
+      <div className="flex items-center justify-between p-2 sm:p-3 bg-slate-800 border-b border-slate-700">
+        {/* Herramientas izquierda */}
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button
             variant={tool === "pen" ? "default" : "secondary"}
-            size="sm"
+            size="icon"
             onClick={() => setTool("pen")}
-            className={tool === "pen" ? "bg-red-600 hover:bg-red-700" : ""}
+            className={`h-8 w-8 sm:h-9 sm:w-9 ${tool === "pen" ? "bg-red-600 hover:bg-red-700" : ""}`}
+            title="Marcar"
           >
-            <Pencil className="h-4 w-4 mr-1" />
-            Marcar
+            <Pencil className="h-4 w-4" />
           </Button>
           <Button
             variant={tool === "eraser" ? "default" : "secondary"}
-            size="sm"
+            size="icon"
             onClick={() => setTool("eraser")}
+            className="h-8 w-8 sm:h-9 sm:w-9"
+            title="Borrar"
           >
-            <Eraser className="h-4 w-4 mr-1" />
-            Borrar
+            <Eraser className="h-4 w-4" />
           </Button>
           
-          <div className="h-6 w-px bg-slate-600 mx-2" />
+          <div className="h-6 w-px bg-slate-600 mx-1" />
           
-          <div className="flex items-center gap-2 min-w-[150px]">
-            <Circle className="h-4 w-4 text-slate-400" />
-            <Slider
-              value={[brushSize]}
-              onValueChange={([value]) => setBrushSize(value)}
-              min={1}
-              max={20}
-              step={1}
-              className="w-24"
-            />
-            <span className="text-xs text-slate-400 w-6">{brushSize}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={undo}
             disabled={historyIndex <= 0}
-            className="text-slate-300"
+            className="h-8 w-8 sm:h-9 sm:w-9 text-slate-300"
+            title="Deshacer"
           >
             <RotateCcw className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={resetCanvas}
-            className="text-slate-300"
+        </div>
+
+        {/* Zoom y acciones derecha */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={zoomOut} 
+            className="h-8 w-8 sm:h-9 sm:w-9 text-slate-300 hidden sm:flex"
+            title="Alejar"
           >
-            Reiniciar
-          </Button>
-          
-          <div className="h-6 w-px bg-slate-600 mx-2" />
-          
-          <Button variant="ghost" size="sm" onClick={zoomOut} className="text-slate-300">
             <ZoomOut className="h-4 w-4" />
           </Button>
-          <span className="text-xs text-slate-400 w-12 text-center">
-            {Math.round(scale * 100)}%
-          </span>
-          <Button variant="ghost" size="sm" onClick={zoomIn} className="text-slate-300">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={zoomIn} 
+            className="h-8 w-8 sm:h-9 sm:w-9 text-slate-300 hidden sm:flex"
+            title="Acercar"
+          >
             <ZoomIn className="h-4 w-4" />
+          </Button>
+          
+          <div className="h-6 w-px bg-slate-600 mx-1" />
+          
+          {onCancel && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={onCancel} 
+              className="h-8 w-8 sm:h-9 sm:w-9 text-slate-300"
+              title="Cancelar"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+          <Button 
+            size="icon"
+            onClick={handleSave} 
+            className="h-8 w-8 sm:h-9 sm:w-9 bg-emerald-600 hover:bg-emerald-700"
+            title="Guardar"
+          >
+            <Check className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -290,8 +301,8 @@ export default function ImageMarker({ imageUrl, onSave, onCancel, initialBrushSi
       {/* Canvas area */}
       <div 
         ref={containerRef}
-        className="flex-1 overflow-auto flex items-center justify-center p-4 bg-slate-950"
-        style={{ minHeight: "400px" }}
+        className="flex-1 overflow-auto flex items-center justify-center p-2 sm:p-4 bg-slate-950"
+        style={{ minHeight: "350px" }}
       >
         <div 
           style={{ 
@@ -315,22 +326,11 @@ export default function ImageMarker({ imageUrl, onSave, onCancel, initialBrushSi
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-between p-3 bg-slate-800 border-t border-slate-700">
-        <p className="text-xs text-slate-400">
-          Usa el lápiz rojo para marcar las áreas con problemas
+      {/* Footer con instrucción */}
+      <div className="p-2 bg-slate-800 border-t border-slate-700">
+        <p className="text-xs text-slate-400 text-center">
+          Dibuja sobre la imagen para marcar el problema
         </p>
-        <div className="flex gap-2">
-          {onCancel && (
-            <Button variant="ghost" onClick={onCancel} className="text-slate-300">
-              Cancelar
-            </Button>
-          )}
-          <Button onClick={handleSave} className="bg-red-600 hover:bg-red-700">
-            <Download className="h-4 w-4 mr-2" />
-            Guardar Marcado
-          </Button>
-        </div>
       </div>
     </div>
   );

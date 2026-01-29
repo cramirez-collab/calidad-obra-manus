@@ -309,7 +309,6 @@ export default function NuevoItem() {
                   imageUrl={fotoAntes}
                   onSave={handleMarkedImage}
                   onCancel={() => setShowMarker(false)}
-                  initialBrushSize={2}
                 />
               </div>
             </CardContent>
