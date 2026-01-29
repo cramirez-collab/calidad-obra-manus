@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, name, email, role, activo FROM users WHERE activo = 1 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, name, email, role, activo FROM users WHERE activo = 1 LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Carlos Ramirez",
+      "email": "cramirez@objetiva.mx",
+      "role": "superadmin",
+      "activo": "1"
+    },
+    {
+      "id": "540085",
+      "name": "Julian Rodríguez Ramírez",
+      "email": "jrodriguez@objetiva.mx",
+      "role": "admin",
+      "activo": "1"
+    },
+    {
+      "id": "721649",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@objetiva.mx",
+      "role": "admin",
+      "activo": "1"
+    },
+    {
+      "id": "721666",
+      "name": "Ing.Daniel Vazquez",
+      "email": "dvazquez@objetiva.mx",
+      "role": "admin",
+      "activo": "1"
+    },
+    {
+      "id": "781860",
+      "name": "Omar Palencia",
+      "email": "opalencia@objetiva.mx",
+      "role": "supervisor",
+      "activo": "1"
+    },
+    {
+      "id": "1410108",
+      "name": "Karen Navith",
+      "email": "kanaah0995@gmail.com",
+      "role": "residente",
+      "activo": "1"
+    },
+    {
+      "id": "1410147",
+      "name": "Diego Macias",
+      "email": "diego.macias@iteso.mx",
+      "role": "residente",
+      "activo": "1"
+    },
+    {
+      "id": "1410178",
+      "name": "Natalia Diaz",
+      "email": "nataliadiazbr@gmail.com",
+      "role": "residente",
+      "activo": "1"
+    },
+    {
+      "id": "1470049",
+      "name": "Esteban Guerrero ",
+      "email": "arqestebanguerrero@garcab.com",
+      "role": "residente",
+      "activo": "1"
+    },
+    {
+      "id": "1470059",
+      "name": "Jairo Briseño",
+      "email": "iimsa5825@gmail.com",
+      "role": "residente",
+      "activo": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\tactivo\n1\tCarlos Ramirez\tcramirez@objetiva.mx\tsuperadmin\t1\n540085\tJulian Rodríguez Ramírez\tjrodriguez@objetiva.mx\tadmin\t1\n721649\tEstefany Sanchez\tesanchez@objetiva.mx\tadmin\t1\n721666\tIng.Daniel Vazquez\tdvazquez@objetiva.mx\tadmin\t1\n781860\tOmar Palencia\topalencia@objetiva.mx\tsupervisor\t1\n1410108\tKaren Navith\tkanaah0995@gmail.com\tresidente\t1\n1410147\tDiego Macias\tdiego.macias@iteso.mx\tresidente\t1\n1410178\tNatalia Diaz\tnataliadiazbr@gmail.com\tresidente\t1\n1470049\tEsteban Guerrero \tarqestebanguerrero@garcab.com\tresidente\t1\n1470059\tJairo Briseño\tiimsa5825@gmail.com\tresidente\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1565
+}

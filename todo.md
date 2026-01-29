@@ -1481,3 +1481,8 @@
 - [x] Agregar campo linkEspecificaciones al schema
 - [x] Actualizar página de configuración de enlaces
 - [x] Actualizar menú para mostrar nuevos enlaces
+
+
+### Eliminación Permanente de Ítems por Superadmin
+- [x] Superadmin puede borrar ítems permanentemente de la base de datos
+- [x] Refrescar la vista automáticamente después de eliminar

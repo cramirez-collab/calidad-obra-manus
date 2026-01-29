@@ -75,13 +75,15 @@ export default function ItemsList() {
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const utils = trpc.useUtils();
   
-  // Solo admin, superadmin y supervisor pueden eliminar
-  const canDelete = user?.role === 'admin' || user?.role === 'superadmin' || user?.role === 'supervisor';
+  // Solo superadmin puede eliminar permanentemente
+  const canDelete = user?.role === 'superadmin';
   
   const deleteMutation = trpc.items.delete.useMutation({
     onSuccess: () => {
-      toast.success('Ítem eliminado correctamente');
+      toast.success('Ítem eliminado permanentemente de la base de datos');
+      // Invalidar caché para refrescar la lista
       utils.items.list.invalidate();
+      utils.estadisticas.general.invalidate();
       setItemToDelete(null);
     },
     onError: (error) => {

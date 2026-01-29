@@ -257,12 +257,15 @@ export default function ItemDetail() {
   const canApprove = item?.status === "pendiente_aprobacion" && 
     ["admin", "supervisor"].includes(user?.role || "");
   
-  // Solo admin, superadmin y supervisor pueden eliminar
-  const canDelete = ["admin", "superadmin", "supervisor"].includes(user?.role || "");
+  // Solo superadmin puede eliminar permanentemente
+  const canDelete = user?.role === 'superadmin';
   
   const deleteMutation = trpc.items.delete.useMutation({
     onSuccess: () => {
-      toast.success('Ítem eliminado correctamente');
+      toast.success('Ítem eliminado permanentemente de la base de datos');
+      // Invalidar caché para refrescar la lista
+      utils.items.list.invalidate();
+      utils.estadisticas.general.invalidate();
       setLocation('/items');
     },
     onError: (error) => {
