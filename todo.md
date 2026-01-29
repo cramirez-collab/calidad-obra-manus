@@ -1399,3 +1399,13 @@
 - [x] Mostrar "Superadmin" en la interfaz para Carlos
 - [x] Implementar restricción: solo superadmin puede eliminar usuarios
 - [x] Implementar restricción: solo superadmin puede eliminar elementos del sistema (empresas, unidades, especialidades, espacios, atributos, ítems, defectos, proyectos, mensajes, metas)
+
+
+## Pruebas Pre-Lanzamiento (Enero 2026)
+- [x] Login con Estefany (admin) - funciona correctamente
+- [x] Login con Carlos (superadmin) - funciona correctamente
+- [x] Formulario Nuevo Ítem - carga residentes, defectos correctamente
+- [x] Permisos superadmin - Carlos ve botón "Eliminar permanentemente", Estefany no lo ve
+- [x] Carlos actualizado a superadmin en base de datos
+- [x] Verificación de usuarios: 5 usuarios activos, todos con contraseña 123456
+- [x] Verificación de proyectos: 1 proyecto (TRN-Hidalma), sin duplicados
