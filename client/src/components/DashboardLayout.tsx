@@ -105,7 +105,7 @@ const getMenuItems = (role: string): MenuItem[] => {
     return items;
   }
 
-  if (role === 'admin' || role === 'superadmin' || role === 'supervisor') {
+  if (role === 'admin' || role === 'superadmin') {
     items = [...items, ...analysisItems];
     items.push({
       icon: Settings,
