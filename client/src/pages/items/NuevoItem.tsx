@@ -188,10 +188,10 @@ export default function NuevoItem() {
     return todasUnidades.filter(u => u.nivel?.toString() === formData.nivelId);
   }, [todasUnidades, formData.nivelId]);
   
-  // Espacios filtrados por unidad seleccionada
-  const { data: espacios } = trpc.espacios.byUnidad.useQuery(
-    { unidadId: parseInt(formData.unidadId) },
-    { enabled: !!formData.unidadId }
+  // Espacios de la plantilla del proyecto (no por unidad)
+  const { data: espaciosPlantilla } = trpc.espacios.plantilla.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId }
   );
   
   // Defectos filtrados por especialidad
@@ -517,18 +517,18 @@ export default function NuevoItem() {
 
             {/* Fila 2: Espacio y Defecto */}
             <div className="grid grid-cols-2 gap-2">
-              {/* Espacio (siempre visible, pero deshabilitado si no hay unidad) */}
+              {/* Espacio (de la plantilla del proyecto) */}
               <Select
                 value={formData.espacioId}
                 onValueChange={(value) => setFormData({ ...formData, espacioId: value })}
-                disabled={!formData.unidadId || !espacios || espacios.length === 0}
+                disabled={!espaciosPlantilla || espaciosPlantilla.length === 0}
               >
                 <SelectTrigger className="h-10 text-sm">
                   <Layers className="h-4 w-4 mr-1 text-gray-400" />
-                  <SelectValue placeholder={espacios && espacios.length > 0 ? "Espacio" : "Sin espacios"} />
+                  <SelectValue placeholder={espaciosPlantilla && espaciosPlantilla.length > 0 ? "Espacio" : "Sin espacios"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {espacios?.map((espacio) => (
+                  {espaciosPlantilla?.map((espacio) => (
                     <SelectItem key={espacio.id} value={espacio.id.toString()}>
                       {espacio.nombre}
                     </SelectItem>

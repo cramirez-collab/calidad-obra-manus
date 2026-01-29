@@ -1421,3 +1421,8 @@
 - [x] Agregar campo Espacio al contenedor de Ubicación y Defecto
 - [x] Reorganizar campos: Nivel, Unidad en fila 1; Espacio, Defecto en fila 2
 - [x] Optimizar para captura rápida y visión ordenada (campos más grandes h-10)
+
+
+## Selector de Espacios desde Plantilla (Enero 2026)
+- [x] Modificar selector de Espacio para cargar espacios de la plantilla del proyecto
+- [x] Mostrar solo el nombre del espacio (sin código ni descripción)
