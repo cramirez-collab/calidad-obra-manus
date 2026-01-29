@@ -1454,3 +1454,8 @@
 - [x] Configurar para plantilla Avery 5160 compatible
 - [x] 30 etiquetas por hoja (3 columnas x 10 filas)
 - [x] Márgenes y espaciado precisos para alineación
+
+### Menú Curvas
+- [x] Agregar elemento de menú "Curvas" con icono (Activity)
+- [x] Ubicar antes de Secuencias en el menú lateral
+- [x] Enlazar a bit.ly/49OgS7d (enlace externo)
