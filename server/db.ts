@@ -56,9 +56,35 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   try {
-    // Verificar si el usuario ya existe
-    const existingUser = await db.select().from(users).where(eq(users.openId, user.openId)).limit(1);
-    const isNewUser = existingUser.length === 0;
+    // Verificar si el usuario ya existe por openId
+    let existingUser = await db.select().from(users).where(eq(users.openId, user.openId)).limit(1);
+    let isNewUser = existingUser.length === 0;
+    
+    // Si es usuario nuevo y tiene email, buscar si existe un usuario manual con ese email
+    // para heredar su rol y empresa (vinculación por email)
+    let inheritedRole: string | undefined;
+    let inheritedEmpresaId: number | null = null;
+    let inheritedProyectos: number[] = [];
+    
+    if (isNewUser && user.email) {
+      const manualUser = await db.select().from(users)
+        .where(and(
+          eq(users.email, user.email),
+          like(users.openId, 'manual_%')
+        ))
+        .limit(1);
+      
+      if (manualUser.length > 0) {
+        console.log(`[Database] Encontrado usuario manual con email ${user.email}, heredando configuración`);
+        inheritedRole = manualUser[0].role;
+        inheritedEmpresaId = manualUser[0].empresaId;
+        
+        // Obtener proyectos del usuario manual
+        const proyectosDelManual = await db.select().from(proyectoUsuarios)
+          .where(eq(proyectoUsuarios.usuarioId, manualUser[0].id));
+        inheritedProyectos = proyectosDelManual.map(p => p.proyectoId);
+      }
+    }
 
     const values: InsertUser = {
       openId: user.openId,
@@ -82,12 +108,23 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.lastSignedIn = user.lastSignedIn;
       updateSet.lastSignedIn = user.lastSignedIn;
     }
+    
+    // Asignar rol: prioridad -> user.role > inheritedRole > ownerOpenId > default
     if (user.role !== undefined) {
       values.role = user.role;
       updateSet.role = user.role;
+    } else if (inheritedRole) {
+      values.role = inheritedRole as any;
+      updateSet.role = inheritedRole;
     } else if (user.openId === ENV.ownerOpenId) {
       values.role = 'admin';
       updateSet.role = 'admin';
+    }
+    
+    // Asignar empresa heredada si existe
+    if (inheritedEmpresaId) {
+      values.empresaId = inheritedEmpresaId;
+      updateSet.empresaId = inheritedEmpresaId;
     }
 
     if (!values.lastSignedIn) {
@@ -102,20 +139,32 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       set: updateSet,
     });
 
-    // Si es un usuario nuevo, asignarlo automáticamente al proyecto Hidalma (ID 1)
+    // Si es un usuario nuevo, asignarlo a proyectos
     if (isNewUser) {
       try {
         // Obtener el ID del usuario recién creado
         const newUser = await db.select().from(users).where(eq(users.openId, user.openId)).limit(1);
         if (newUser.length > 0) {
-          // Asignar al proyecto Hidalma (ID 1) si existe
-          const proyectoHidalma = await db.select().from(proyectos).where(eq(proyectos.id, 1)).limit(1);
-          if (proyectoHidalma.length > 0) {
-            await db.insert(proyectoUsuarios).values({
-              proyectoId: 1,
-              usuarioId: newUser[0].id,
-            }).onDuplicateKeyUpdate({ set: { activo: true } });
-            console.log(`[Database] Usuario ${user.openId} asignado automáticamente al proyecto Hidalma`);
+          // Si hay proyectos heredados del usuario manual, asignarlos
+          if (inheritedProyectos.length > 0) {
+            for (const proyectoId of inheritedProyectos) {
+              await db.insert(proyectoUsuarios).values({
+                proyectoId,
+                usuarioId: newUser[0].id,
+                rolEnProyecto: (inheritedRole as any) || 'residente',
+              }).onDuplicateKeyUpdate({ set: { activo: true } });
+            }
+            console.log(`[Database] Usuario ${user.openId} asignado a ${inheritedProyectos.length} proyectos heredados`);
+          } else {
+            // Si no hay proyectos heredados, asignar al proyecto Hidalma (ID 1) por defecto
+            const proyectoHidalma = await db.select().from(proyectos).where(eq(proyectos.id, 1)).limit(1);
+            if (proyectoHidalma.length > 0) {
+              await db.insert(proyectoUsuarios).values({
+                proyectoId: 1,
+                usuarioId: newUser[0].id,
+              }).onDuplicateKeyUpdate({ set: { activo: true } });
+              console.log(`[Database] Usuario ${user.openId} asignado automáticamente al proyecto Hidalma`);
+            }
           }
         }
       } catch (assignError) {

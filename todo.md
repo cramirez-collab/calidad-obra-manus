@@ -1350,3 +1350,11 @@
 ## Mejoras UI Detalle Ítem y Formulario Nuevo Ítem (Enero 2026)
 - [x] Caja de código del ítem: reducir tamaño, fondo blanco, texto azul Objetiva (#002C63)
 - [x] Formulario Nuevo Ítem: poner Nivel, Unidad y Defecto en la misma línea (grid 3 columnas)
+
+
+## Corrección de Acceso de Usuarios (Enero 2026 - URGENTE LANZAMIENTO)
+- [x] Verificar flujo de autenticación y vinculación por clave/correo
+- [x] Asegurar persistencia de sesión para usuarios logueados (cookie de 1 año)
+- [x] Verificar usuarios Stephanie y Julián en la base de datos
+- [x] Corregir problemas de vinculación: Estefany actualizada a admin con empresaId correcto
+- [x] Implementar herencia de rol/empresa desde usuario manual cuando login con Google/OAuth
