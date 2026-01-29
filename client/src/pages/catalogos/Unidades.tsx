@@ -92,6 +92,13 @@ export default function Unidades() {
     },
   });
 
+  // Mutación silenciosa para reordenamiento (sin toast individual)
+  const reorderMutation = trpc.unidades.update.useMutation({
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const deleteMutation = trpc.unidades.delete.useMutation({
     onSuccess: () => {
       utils.unidades.list.invalidate();
@@ -204,10 +211,9 @@ export default function Unidades() {
   // Guardar el nuevo orden
   const handleSaveOrder = async () => {
     try {
-      // Actualizar cada unidad con su nuevo orden
-      for (let i = 0; i < localUnidades.length; i++) {
-        const unidad = localUnidades[i];
-        await updateMutation.mutateAsync({
+      // Actualizar cada unidad con su nuevo orden usando mutación silenciosa
+      const promises = localUnidades.map((unidad, i) => 
+        reorderMutation.mutateAsync({
           id: unidad.id,
           nombre: unidad.nombre,
           codigo: unidad.codigo || undefined,
@@ -216,8 +222,9 @@ export default function Unidades() {
           proyectoId: unidad.proyectoId || undefined,
           nivel: unidad.nivel || undefined,
           orden: i + 1,
-        });
-      }
+        })
+      );
+      await Promise.all(promises);
       toast.success("Orden guardado correctamente");
       setIsOrganizing(false);
       utils.unidades.list.invalidate();
