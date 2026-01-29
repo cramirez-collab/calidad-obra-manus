@@ -1,0 +1,32 @@
+{
+  "query": "SELECT id, openId, name, email, role, empresaId, activo, passwordHash IS NOT NULL as tienePassword, lastSignedIn FROM users WHERE email LIKE '%sanchez%' OR email LIKE '%esanchez%' OR name LIKE '%Estefany%' OR name LIKE '%Stephanie%' ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, openId, name, email, role, empresaId, activo, passwordHash IS NOT NULL as tienePassword, lastSignedIn FROM users WHERE email LIKE '%sanchez%' OR email LIKE '%esanchez%' OR name LIKE '%Estefany%' OR name LIKE '%Stephanie%' ORDER BY id;",
+  "rows": [
+    {
+      "id": "721649",
+      "openId": "manual_NdPo0efE9QYcurtX",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@objetiva.mx",
+      "role": "admin",
+      "empresaId": "240001",
+      "activo": "1",
+      "tienePassword": "1",
+      "lastSignedIn": "2026-01-27 07:12:50"
+    },
+    {
+      "id": "1230002",
+      "openId": "F4VGwZuv9dK55WypwVC4iS",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@objetiva.mx",
+      "role": "admin",
+      "empresaId": "240001",
+      "activo": "1",
+      "tienePassword": "0",
+      "lastSignedIn": "2026-01-29 02:02:18"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\trole\tempresaId\tactivo\ttienePassword\tlastSignedIn\n721649\tmanual_NdPo0efE9QYcurtX\tEstefany Sanchez\tesanchez@objetiva.mx\tadmin\t240001\t1\t1\t2026-01-27 07:12:50\n1230002\tF4VGwZuv9dK55WypwVC4iS\tEstefany Sanchez\tesanchez@objetiva.mx\tadmin\t240001\t1\t0\t2026-01-29 02:02:18\n",
+  "stderr": "",
+  "execution_time_ms": 1581
+}

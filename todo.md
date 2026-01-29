@@ -1368,3 +1368,12 @@
 - [x] Verificar persistencia de sesión y cookies - cookie de 1 año, name opcional en token
 - [x] Validar que la cadena de datos no se rompa - busca todos los usuarios con email para login
 - [x] Agregar endpoint /api/auth/status para debugging
+
+## Corrección Definitiva de Usuarios (Enero 2026 - LANZAMIENTO)
+- [x] Investigar problema de login de esanchez@objetiva.mx
+- [x] Identificar causa raíz: contraseña era Objetiva2026, no 123456
+- [x] Estandarizar TODAS las contraseñas a 123456 para todos los usuarios
+- [x] Verificar y corregir roles en proyecto_usuarios (Carlos y Daniel)
+- [x] Verificar empresas asignadas a todos los usuarios
+- [x] Verificar proyectos asignados a todos los usuarios
+- [x] Confirmación final: 6 usuarios, todos con contraseña 123456, todos con empresa y proyecto
