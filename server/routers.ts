@@ -1478,10 +1478,29 @@ export const appRouter = router({
         cliente: z.string().optional(),
         fechaInicio: z.date().optional(),
         fechaFin: z.date().optional(),
+        linkCurvas: z.string().nullable().optional(),
+        linkSecuencias: z.string().nullable().optional(),
+        linkVisor: z.string().nullable().optional(),
+        linkPlanos: z.string().nullable().optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
         await db.updateProyecto(id, data);
+        return { success: true };
+      }),
+    
+    // Actualizar solo enlaces externos del proyecto
+    updateEnlaces: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        linkCurvas: z.string().nullable().optional(),
+        linkSecuencias: z.string().nullable().optional(),
+        linkVisor: z.string().nullable().optional(),
+        linkPlanos: z.string().nullable().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...enlaces } = input;
+        await db.updateProyecto(id, enlaces);
         return { success: true };
       }),
     

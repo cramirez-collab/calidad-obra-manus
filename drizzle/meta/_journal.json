@@ -176,6 +176,13 @@
       "when": 1769551428943,
       "tag": "0024_mean_mariko_yashida",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1769713260476,
+      "tag": "0025_dry_mathemanic",
+      "breakpoints": true
     }
   ]
 }

@@ -1466,3 +1466,10 @@
 ### Visibilidad de Menú por Rol
 - [x] Todos los usuarios ven todos los iconos excepto Configuración
 - [x] Configuración solo visible para admin y superadmin
+
+### Enlaces Externos por Proyecto
+- [x] Agregar campos de enlaces al schema de proyectos (curvas, secuencias, visor, planos)
+- [x] Crear página de configuración de enlaces en Configuración
+- [x] Modificar menú para usar enlaces dinámicos del proyecto activo
+- [x] Migrar enlaces actuales de Hidalma
+- [x] Ocultar iconos si el enlace no está configurado

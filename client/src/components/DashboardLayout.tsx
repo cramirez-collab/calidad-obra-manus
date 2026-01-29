@@ -35,7 +35,8 @@ import {
   ExternalLink,
   Menu,
   X,
-  Activity
+  Activity,
+  Link2
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -48,6 +49,8 @@ import { BadgeNotifications } from "./BadgeNotifications";
 import { QRScannerButton } from "./QRScanner";
 import { ProjectSelector } from "./ProjectSelector";
 import { useRealTimeItems } from "@/hooks/useRealTimeData";
+import { useProject } from "@/contexts/ProjectContext";
+import { trpc } from "@/lib/trpc";
 
 // Tipo para items de menú
 type MenuItem = {
@@ -58,8 +61,16 @@ type MenuItem = {
   children?: MenuItem[];
 };
 
-// Menú principal según rol
-const getMenuItems = (role: string): MenuItem[] => {
+// Tipo para proyecto con enlaces
+type ProyectoConEnlaces = {
+  linkCurvas?: string | null;
+  linkSecuencias?: string | null;
+  linkVisor?: string | null;
+  linkPlanos?: string | null;
+} | null;
+
+// Menú principal según rol y proyecto
+const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] => {
   // Items base para todos los usuarios
   const baseItems: MenuItem[] = [
     { icon: LayoutDashboard, label: "Inicio", path: "/bienvenida" },
@@ -71,19 +82,31 @@ const getMenuItems = (role: string): MenuItem[] => {
   // Aprobación solo para supervisores y admins (no duplicar con Ítems)
   const supervisorItems: MenuItem[] = [];
 
+  // Items de análisis (los enlaces externos dependen del proyecto)
   const analysisItems: MenuItem[] = [
     { icon: Layers, label: "Stacking", path: "/panoramica" },
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
     { icon: TrendingUp, label: "KPIs", path: "/kpis" },
-    { icon: Activity, label: "Curvas", path: "https://bit.ly/49OgS7d", external: true },
-    { icon: ListOrdered, label: "Secuencias", path: "https://www.appsheet.com/start/bad5370e-61b3-4a42-8347-643e96d15f32?platform=desktop#appName=Secuencias-226234876&vss=H4sIAAAAAAAAA6WQwU7EIBCG32XOYADb7ZaretgYPejGg-KBFpoQW2iAqpuGdxd0jR68qMf5Z74vf2aFZ6NfbqPsn4A_rF_TpT4Ah1XA_jBrAVzAmbPRu1EAEnAtp2O46BCNs9IbJyBBekSfjqgD8PX3Cv7_FgiM0jaawWhffIXOniOb14UswTcOEoJpibIb9Xv5wh2Bn64R3DgXczo4P-XpXEaZuWnOESOsxpRhQveM8YpyUp1UrKkZq-9Lt7CzF8rEK6eyNvpFI4he2iD7ot-prOi3XUNOhy1WVLa4aliLO8IoZq3qN5SQtt_UkFLuPLh-CVrd5Zf98VWlzussrfooNMgx6PQGxeoKAhkCAAA=&view=Cuestionario", external: true },
-    { icon: FileSpreadsheet, label: "Visor", path: "https://docs.google.com/spreadsheets/d/1QhfpVCXE2SwpTazhH96wrc2Q0HIFMS3SpO6GXvS2DJA/edit?gid=464225867#gid=464225867", external: true },
-    { icon: FolderOpen, label: "Planos", path: "https://drive.google.com/drive/folders/1BsaAtPcfOmmGkJMgtLw_zJujxFQmfiro", external: true },
   ];
+  
+  // Agregar enlaces externos solo si están configurados en el proyecto
+  if (proyecto?.linkCurvas) {
+    analysisItems.push({ icon: Activity, label: "Curvas", path: proyecto.linkCurvas, external: true });
+  }
+  if (proyecto?.linkSecuencias) {
+    analysisItems.push({ icon: ListOrdered, label: "Secuencias", path: proyecto.linkSecuencias, external: true });
+  }
+  if (proyecto?.linkVisor) {
+    analysisItems.push({ icon: FileSpreadsheet, label: "Visor", path: proyecto.linkVisor, external: true });
+  }
+  if (proyecto?.linkPlanos) {
+    analysisItems.push({ icon: FolderOpen, label: "Planos", path: proyecto.linkPlanos, external: true });
+  }
 
   // Submenú de Configuración
   const configSubItems: MenuItem[] = [
     { icon: FolderKanban, label: "Proyectos", path: "/proyectos" },
+    { icon: Link2, label: "Enlaces Externos", path: "/enlaces-externos" },
     { icon: QrCode, label: "QR", path: "/generar-qr" },
     { icon: Building2, label: "Empresas", path: "/empresas" },
     { icon: MapPin, label: "Unidades", path: "/unidades" },
@@ -159,10 +182,15 @@ function DashboardLayoutContent({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   
+  // Obtener proyecto actual para los enlaces dinámicos
+  const { selectedProjectId } = useProject();
+  const { data: proyectos } = trpc.proyectos.list.useQuery();
+  const proyectoActual = proyectos?.find(p => p.id === selectedProjectId) || null;
+  
   // Activar sincronización en tiempo real
   useRealTimeItems();
   
-  const menuItems = getMenuItems(user?.role || 'residente');
+  const menuItems = getMenuItems(user?.role || 'residente', proyectoActual);
 
   // Cerrar dropdown de config al navegar
   useEffect(() => {

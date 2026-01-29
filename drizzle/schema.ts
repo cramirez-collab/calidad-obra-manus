@@ -43,6 +43,11 @@ export const proyectos = mysqlTable("proyectos", {
   cliente: varchar("cliente", { length: 255 }),
   fechaInicio: timestamp("fechaInicio"),
   fechaFin: timestamp("fechaFin"),
+  // Enlaces externos configurables por proyecto
+  linkCurvas: text("linkCurvas"),
+  linkSecuencias: text("linkSecuencias"),
+  linkVisor: text("linkVisor"),
+  linkPlanos: text("linkPlanos"),
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
