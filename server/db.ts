@@ -4001,19 +4001,20 @@ export async function getUserByEmailAndPassword(email: string, password: string)
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-  const user = result[0];
+  // Buscar todos los usuarios con ese email (puede haber duplicados manual_ y OAuth)
+  const result = await db.select().from(users).where(eq(users.email, email));
   
-  if (!user || !user.passwordHash) {
-    return null;
+  // Priorizar usuario con contraseña (manual o con passwordHash)
+  for (const user of result) {
+    if (user.passwordHash) {
+      const isValid = await bcrypt.compare(password, user.passwordHash);
+      if (isValid) {
+        return user;
+      }
+    }
   }
   
-  const isValid = await bcrypt.compare(password, user.passwordHash);
-  if (!isValid) {
-    return null;
-  }
-  
-  return user;
+  return null;
 }
 
 // Actualizar último acceso del usuario

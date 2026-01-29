@@ -212,19 +212,19 @@ class SDKServer {
       });
       const { openId, appId, name } = payload as Record<string, unknown>;
 
+      // Solo openId y appId son requeridos, name puede estar vacío
       if (
         !isNonEmptyString(openId) ||
-        !isNonEmptyString(appId) ||
-        !isNonEmptyString(name)
+        !isNonEmptyString(appId)
       ) {
-        console.warn("[Auth] Session payload missing required fields");
+        console.warn("[Auth] Session payload missing required fields (openId or appId)");
         return null;
       }
 
       return {
         openId,
         appId,
-        name,
+        name: typeof name === 'string' ? name : '',
       };
     } catch (error) {
       console.warn("[Auth] Session verification failed", String(error));
@@ -272,8 +272,11 @@ class SDKServer {
 
     // If user not in DB, sync from OAuth server automatically
     if (!user) {
+      console.log(`[Auth] Usuario ${sessionUserId} no encontrado en BD, sincronizando desde OAuth...`);
       try {
         const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
+        console.log(`[Auth] Info de OAuth obtenida: ${userInfo.email}, openId: ${userInfo.openId}`);
+        
         await db.upsertUser({
           openId: userInfo.openId,
           name: userInfo.name || null,
@@ -282,9 +285,25 @@ class SDKServer {
           lastSignedIn: signedInAt,
         });
         user = await db.getUserByOpenId(userInfo.openId);
+        
+        if (user) {
+          console.log(`[Auth] Usuario sincronizado exitosamente: ${user.email}, rol: ${user.role}`);
+        }
       } catch (error) {
         console.error("[Auth] Failed to sync user from OAuth:", error);
-        throw ForbiddenError("Failed to sync user info");
+        // En lugar de fallar, intentar crear un usuario básico con la info del token
+        try {
+          await db.upsertUser({
+            openId: sessionUserId,
+            name: session.name || null,
+            lastSignedIn: signedInAt,
+          });
+          user = await db.getUserByOpenId(sessionUserId);
+          console.log(`[Auth] Usuario creado con info básica del token: ${sessionUserId}`);
+        } catch (fallbackError) {
+          console.error("[Auth] Fallback user creation also failed:", fallbackError);
+          throw ForbiddenError("Failed to sync user info");
+        }
       }
     }
 
@@ -292,10 +311,16 @@ class SDKServer {
       throw ForbiddenError("User not found");
     }
 
-    await db.upsertUser({
-      openId: user.openId,
-      lastSignedIn: signedInAt,
-    });
+    // Actualizar último acceso sin lanzar error si falla
+    try {
+      await db.upsertUser({
+        openId: user.openId,
+        lastSignedIn: signedInAt,
+      });
+    } catch (updateError) {
+      console.warn("[Auth] Failed to update lastSignedIn:", updateError);
+      // No lanzar error, el usuario ya está autenticado
+    }
 
     return user;
   }

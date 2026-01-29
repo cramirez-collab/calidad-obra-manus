@@ -1358,3 +1358,13 @@
 - [x] Verificar usuarios Stephanie y Julián en la base de datos
 - [x] Corregir problemas de vinculación: Estefany actualizada a admin con empresaId correcto
 - [x] Implementar herencia de rol/empresa desde usuario manual cuando login con Google/OAuth
+
+
+## Fortalecimiento Autenticación (Enero 2026 - PRE-LANZAMIENTO)
+- [x] Revisar flujo completo de OAuth callback - mejorado con logging detallado
+- [x] Verificar manejo de errores en autenticación - fallback para crear usuario básico si falla OAuth
+- [x] Asegurar que usuarios existentes no tengan problemas al re-ingresar - actualiza lastSignedIn sin fallar
+- [x] Asegurar que usuarios nuevos se registren correctamente - hereda rol/empresa de usuario manual
+- [x] Verificar persistencia de sesión y cookies - cookie de 1 año, name opcional en token
+- [x] Validar que la cadena de datos no se rompa - busca todos los usuarios con email para login
+- [x] Agregar endpoint /api/auth/status para debugging
