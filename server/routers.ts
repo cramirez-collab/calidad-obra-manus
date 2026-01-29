@@ -199,6 +199,26 @@ export const appRouter = router({
         return { success: true };
       }),
     
+    // Cambiar contraseña del usuario actual
+    changePassword: protectedProcedure
+      .input(z.object({
+        currentPassword: z.string().min(1),
+        newPassword: z.string().min(6),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Verificar contraseña actual
+        if (!ctx.user.email) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Usuario sin email configurado' });
+        }
+        const user = await db.getUserByEmailAndPassword(ctx.user.email, input.currentPassword);
+        if (!user) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Contraseña actual incorrecta' });
+        }
+        // Actualizar contraseña
+        await db.updateUserWithPassword(ctx.user.id, { password: input.newPassword });
+        return { success: true, message: 'Contraseña actualizada correctamente' };
+      }),
+    
     // Cambiar proyecto activo del usuario actual
     setProyectoActivo: protectedProcedure
       .input(z.object({ proyectoId: z.number().nullable() }))

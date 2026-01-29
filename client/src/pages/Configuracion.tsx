@@ -16,7 +16,10 @@ import {
   Palette,
   Building2,
   Lock,
-  Info
+  Info,
+  Key,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -72,6 +75,37 @@ export default function Configuracion() {
   });
 
   const [values, setValues] = useState<Record<string, string>>({});
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showPasswords, setShowPasswords] = useState(false);
+  
+  const changePasswordMutation = trpc.users.changePassword.useMutation({
+    onSuccess: () => {
+      toast.success("Contraseña actualizada correctamente");
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Error al cambiar contraseña");
+    }
+  });
+  
+  const handleChangePassword = () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("Las contraseñas no coinciden");
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      toast.error("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+    changePasswordMutation.mutate({
+      currentPassword: passwordData.currentPassword,
+      newPassword: passwordData.newPassword,
+    });
+  };
 
   useEffect(() => {
     if (configData) {
@@ -198,6 +232,71 @@ export default function Configuracion() {
             );
           })}
         </div>
+
+        {/* Sección Cambiar Contraseña */}
+        <Card className="mt-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Key className="h-5 w-5 text-primary" />
+              Cambiar Contraseña
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword" className="text-sm">Contraseña Actual</Label>
+                <div className="relative">
+                  <Input
+                    id="currentPassword"
+                    type={showPasswords ? "text" : "password"}
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                    placeholder="••••••"
+                    className="pr-10"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newPassword" className="text-sm">Nueva Contraseña</Label>
+                <Input
+                  id="newPassword"
+                  type={showPasswords ? "text" : "password"}
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-sm">Confirmar Contraseña</Label>
+                <Input
+                  id="confirmPassword"
+                  type={showPasswords ? "text" : "password"}
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  placeholder="Repetir contraseña"
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setShowPasswords(!showPasswords)}
+                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                {showPasswords ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPasswords ? "Ocultar" : "Mostrar"} contraseñas
+              </button>
+              <Button
+                onClick={handleChangePassword}
+                disabled={changePasswordMutation.isPending || !passwordData.currentPassword || !passwordData.newPassword}
+                className="gap-2"
+              >
+                <Key className="h-4 w-4" />
+                {changePasswordMutation.isPending ? "Guardando..." : "Cambiar Contraseña"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Info */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground bg-accent/50 rounded-lg p-3">

@@ -1377,3 +1377,10 @@
 - [x] Verificar empresas asignadas a todos los usuarios
 - [x] Verificar proyectos asignados a todos los usuarios
 - [x] Confirmación final: 6 usuarios, todos con contraseña 123456, todos con empresa y proyecto
+
+
+## Roles y Cambio de Contraseña (Enero 2026)
+- [x] Cambiar rol de Carlos Ramirez a superadmin
+- [x] Verificar si existe funcionalidad de cambio de contraseña
+- [x] Crear sección de cambio de contraseña en Configuración
+- [x] Permitir que cada usuario cambie su propia contraseña (ruta users.changePassword)
