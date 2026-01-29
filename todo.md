@@ -1436,3 +1436,6 @@
 - [x] Crear 5 defectos típicos para cada especialidad existente
 - [x] Auto-generar defectos al crear nueva especialidad
 - [x] UI para que supervisor gestione defectos por especialidad
+
+- [x] Verificar que defectos del catálogo se cargan en formulario de nuevo ítem
+- [x] Verificar que módulo Configuración solo visible para superadmin, admin y supervisor
