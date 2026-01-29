@@ -121,10 +121,14 @@ export default function SeleccionProyecto() {
                 const proyecto = proyectoData.proyecto;
                 if (!proyecto) return null;
                 return (
-                <Card 
-                  key={proyecto.id} 
-                  className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 group"
+                <button
+                  key={proyecto.id}
+                  type="button"
+                  className="w-full text-left"
                   onClick={() => handleSelectProject(proyecto)}
+                >
+                <Card 
+                  className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 group"
                 >
                   {/* Imagen de Portada o Color Header */}
                   <div className={`h-32 relative ${!proyecto.imagenPortadaUrl ? `bg-gradient-to-r ${getProjectColor(index)}` : ''}`}>
@@ -185,14 +189,19 @@ export default function SeleccionProyecto() {
                     </div>
                   </CardContent>
                 </Card>
+                </button>
               );
               })}
               
               {/* Create Project Card - Only for admins */}
               {canCreateProject && (
+                <button
+                  type="button"
+                  className="w-full text-left"
+                  onClick={handleCreateProject}
+                >
                 <Card 
                   className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 border-dashed border-2 bg-slate-50/50"
-                  onClick={handleCreateProject}
                 >
                   <div className="h-full min-h-[200px] flex flex-col items-center justify-center p-6 text-center">
                     <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -206,6 +215,7 @@ export default function SeleccionProyecto() {
                     </p>
                   </div>
                 </Card>
+                </button>
               )}
             </div>
           ) : (

@@ -62,9 +62,15 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const isLoadingProjects = isSuperadmin ? isLoadingAll : isLoadingUser;
 
   // Función auxiliar para obtener el ID del proyecto
+  // Para usuarios normales: p.proyectoId o p.proyecto.id (de la relación proyecto_usuarios)
+  // Para superadmin: p.id (del proyecto directamente)
   const getProjectId = (p: any): number | null => {
-    if (p.id) return p.id;
+    // Primero verificar si es una relación proyecto_usuarios (tiene proyectoId)
+    if (p.proyectoId) return p.proyectoId;
+    // Luego verificar si tiene el proyecto anidado
     if (p.proyecto?.id) return p.proyecto.id;
+    // Finalmente, si es un proyecto directo (para superadmin)
+    if (p.id && !p.usuarioId) return p.id;
     return null;
   };
 
