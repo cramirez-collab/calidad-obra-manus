@@ -1,0 +1,82 @@
+{
+  "query": "SELECT u.id, u.name, u.role, u.activo as user_activo, \n       pu.proyectoId, pu.activo as proyecto_activo, p.nombre as proyecto\nFROM users u \nLEFT JOIN proyecto_usuarios pu ON u.id = pu.usuarioId\nLEFT JOIN proyectos p ON pu.proyectoId = p.id\nWHERE u.role IN ('residente', 'jefe_residente')\nORDER BY u.name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT u.id, u.name, u.role, u.activo as user_activo, \n       pu.proyectoId, pu.activo as proyecto_activo, p.nombre as proyecto\nFROM users u \nLEFT JOIN proyecto_usuarios pu ON u.id = pu.usuarioId\nLEFT JOIN proyectos p ON pu.proyectoId = p.id\nWHERE u.role IN ('residente', 'jefe_residente')\nORDER BY u.name;",
+  "rows": [
+    {
+      "id": "1410147",
+      "name": "Diego Macias",
+      "role": "residente",
+      "user_activo": "1",
+      "proyectoId": "1",
+      "proyecto_activo": "1",
+      "proyecto": "Hidalma "
+    },
+    {
+      "id": "1470095",
+      "name": "Eduardo ",
+      "role": "residente",
+      "user_activo": "1",
+      "proyectoId": "1",
+      "proyecto_activo": "1",
+      "proyecto": "Hidalma "
+    },
+    {
+      "id": "1470049",
+      "name": "Esteban Guerrero ",
+      "role": "residente",
+      "user_activo": "1",
+      "proyectoId": "1",
+      "proyecto_activo": "1",
+      "proyecto": "Hidalma "
+    },
+    {
+      "id": "1470059",
+      "name": "Jairo Briseño",
+      "role": "residente",
+      "user_activo": "1",
+      "proyectoId": "1",
+      "proyecto_activo": "1",
+      "proyecto": "Hidalma "
+    },
+    {
+      "id": "1410108",
+      "name": "Karen Navith",
+      "role": "residente",
+      "user_activo": "1",
+      "proyectoId": "1",
+      "proyecto_activo": "1",
+      "proyecto": "Hidalma "
+    },
+    {
+      "id": "1470115",
+      "name": "Katy Orozco ",
+      "role": "residente",
+      "user_activo": "1",
+      "proyectoId": "1",
+      "proyecto_activo": "1",
+      "proyecto": "Hidalma "
+    },
+    {
+      "id": "1410178",
+      "name": "Natalia Diaz",
+      "role": "residente",
+      "user_activo": "1",
+      "proyectoId": "1",
+      "proyecto_activo": "1",
+      "proyecto": "Hidalma "
+    },
+    {
+      "id": "1470083",
+      "name": "Saul Tovar",
+      "role": "residente",
+      "user_activo": "1",
+      "proyectoId": "1",
+      "proyecto_activo": "1",
+      "proyecto": "Hidalma "
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trole\tuser_activo\tproyectoId\tproyecto_activo\tproyecto\n1410147\tDiego Macias\tresidente\t1\t1\t1\tHidalma \n1470095\tEduardo \tresidente\t1\t1\t1\tHidalma \n1470049\tEsteban Guerrero \tresidente\t1\t1\t1\tHidalma \n1470059\tJairo Briseño\tresidente\t1\t1\t1\tHidalma \n1410108\tKaren Navith\tresidente\t1\t1\t1\tHidalma \n1470115\tKaty Orozco \tresidente\t1\t1\t1\tHidalma \n1410178\tNatalia Diaz\tresidente\t1\t1\t1\tHidalma \n1470083\tSaul Tovar\tresidente\t1\t1\t1\tHidalma \n",
+  "stderr": "",
+  "execution_time_ms": 1550
+}

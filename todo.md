@@ -1439,3 +1439,8 @@
 
 - [x] Verificar que defectos del catálogo se cargan en formulario de nuevo ítem
 - [x] Verificar que módulo Configuración solo visible para superadmin, admin y supervisor
+
+## Flujo de Cascada y Acceso de Usuarios (Enero 2026)
+- [x] Corregir acceso de residentes y jefes de residente a proyectos
+- [x] Implementar pestañas en Detalle de Empresa (General, Unidades, Equipo)
+- [x] Formulario de usuario dentro de empresa con especialidad y rol
