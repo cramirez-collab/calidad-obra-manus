@@ -1429,3 +1429,4 @@
 - [x] Superadmin, admin, supervisor y jefe_residente pueden tomar fotos del después (residente NO)
 - [x] Eliminar chat duplicado en detalle de ítem (eliminada sección Comentarios y Observaciones)
 - [x] Ajustar botones de acción para responsividad en móvil
+- [x] Mostrar foto después en Seguimiento QR cuando se sube

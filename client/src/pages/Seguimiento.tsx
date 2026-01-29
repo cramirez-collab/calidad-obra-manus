@@ -437,7 +437,14 @@ export default function Seguimiento() {
                   <h4 className="font-medium text-sm">Después (Corrección)</h4>
                 </div>
                 <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100">
-                  {item.fotoDespuesUrl ? (
+                  {/* Mostrar foto subida (preview) o foto guardada */}
+                  {fotoDespues ? (
+                    <img
+                      src={fotoDespues}
+                      alt="Foto después (preview)"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : item.fotoDespuesUrl ? (
                     <img
                       src={item.fotoDespuesUrl}
                       alt="Foto después"
@@ -450,7 +457,12 @@ export default function Seguimiento() {
                     </div>
                   )}
                 </div>
-                {item.fechaFotoDespues && (
+                {fotoDespues && (
+                  <p className="text-xs text-emerald-600 font-medium">
+                    Vista previa - Confirma para guardar
+                  </p>
+                )}
+                {!fotoDespues && item.fechaFotoDespues && (
                   <p className="text-xs text-muted-foreground">
                     Corregido: {formatDate(item.fechaFotoDespues)}
                   </p>
