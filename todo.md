@@ -1462,3 +1462,7 @@
 
 ### Ajuste de Márgenes Etiquetas
 - [x] Aumentar margen superior 3mm adicionales para alineación exacta (15.7mm total)
+
+### Visibilidad de Menú por Rol
+- [x] Todos los usuarios ven todos los iconos excepto Configuración
+- [x] Configuración solo visible para admin y superadmin

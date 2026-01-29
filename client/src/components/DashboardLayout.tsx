@@ -94,21 +94,11 @@ const getMenuItems = (role: string): MenuItem[] => {
     { icon: History, label: "Bitácora", path: "/bitacora" },
   ];
 
-  let items: MenuItem[] = [...baseItems];
+  // Todos los usuarios ven los items base y de análisis
+  let items: MenuItem[] = [...baseItems, ...analysisItems];
 
-  if (role === 'supervisor' || role === 'admin' || role === 'superadmin') {
-    items = [...items, ...supervisorItems];
-  }
-
-  // Desarrollador: puede ver y crear ítems, pero NO accede a Configuración
-  if (role === 'desarrollador') {
-    // Solo tiene acceso a los baseItems (Inicio, Nuevo, Ítems, Mis Tareas)
-    // No se agregan analysisItems ni configSubItems
-    return items;
-  }
-
+  // Solo admin y superadmin ven Configuración
   if (role === 'admin' || role === 'superadmin') {
-    items = [...items, ...analysisItems];
     items.push({
       icon: Settings,
       label: "Configuración",
