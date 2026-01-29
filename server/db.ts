@@ -109,17 +109,18 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = user.lastSignedIn;
     }
     
-    // Asignar rol: prioridad -> user.role > inheritedRole > ownerOpenId > default
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (inheritedRole) {
-      values.role = inheritedRole as any;
-      updateSet.role = inheritedRole;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
+    // Asignar rol SOLO para usuarios nuevos
+    // NUNCA sobrescribir el rol de usuarios existentes para preservar superadmin, etc.
+    if (isNewUser) {
+      if (user.role !== undefined) {
+        values.role = user.role;
+      } else if (inheritedRole) {
+        values.role = inheritedRole as any;
+      } else if (user.openId === ENV.ownerOpenId) {
+        values.role = 'admin';
+      }
     }
+    // NO agregar role a updateSet - el rol nunca se sobrescribe en login
     
     // Asignar empresa heredada si existe
     if (inheritedEmpresaId) {

@@ -1409,3 +1409,9 @@
 - [x] Carlos actualizado a superadmin en base de datos
 - [x] Verificación de usuarios: 5 usuarios activos, todos con contraseña 123456
 - [x] Verificación de proyectos: 1 proyecto (TRN-Hidalma), sin duplicados
+
+
+## URGENTE: Rol Superadmin de Carlos (Enero 2026)
+- [x] Investigar por qué el rol de Carlos se resetea a admin al iniciar sesión - upsertUser sobrescribía el rol
+- [x] Corregir el código de autenticación para preservar el rol superadmin - ahora NUNCA sobrescribe rol de usuarios existentes
+- [x] Verificar que Carlos sea superadmin permanentemente - confirmado en BD y UI
