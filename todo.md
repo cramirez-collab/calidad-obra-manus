@@ -1437,3 +1437,14 @@
 - [x] Auto-generar defectos al crear nueva especialidad
 - [x] UI para que supervisor gestione defectos por especialidad
 - [x] Corregir ciclo al mover unidades en módulo Unidades y reflejar orden en Stacking
+- [ ] Modificar impresión QR a 30 etiquetas por hoja carta (3x10) vertical
+
+
+## Mejoras de Impresión QR (Iteración Actual)
+
+### Layout de Etiquetas QR
+- [x] Modificar impresión a 30 etiquetas por hoja carta
+- [x] Layout de 3 columnas x 10 filas
+- [x] Orientación vertical (portrait)
+- [x] Etiquetas compactas con QR + código + título + logo
+- [x] Actualizar descripción en vista previa

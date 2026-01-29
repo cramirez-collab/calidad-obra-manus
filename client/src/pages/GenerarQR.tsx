@@ -154,10 +154,10 @@ export default function GenerarQR() {
       return;
     }
 
-    // Diseño optimizado para 6 QR por hoja carta (2 columnas x 3 filas)
+    // Diseño optimizado para 30 etiquetas por hoja carta (3 columnas x 10 filas)
     // Hoja carta: 8.5" x 11" = 215.9mm x 279.4mm
-    // Con márgenes de 10mm, área útil: 195.9mm x 259.4mm
-    // Cada celda: 97.95mm x 86.47mm aprox
+    // Con márgenes de 5mm, área útil: 205.9mm x 269.4mm
+    // Cada celda: ~68.6mm x ~26.9mm
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -166,7 +166,7 @@ export default function GenerarQR() {
           <style>
             @page {
               size: letter portrait;
-              margin: 10mm;
+              margin: 5mm;
             }
             * {
               box-sizing: border-box;
@@ -179,69 +179,71 @@ export default function GenerarQR() {
               print-color-adjust: exact;
             }
             .page {
-              width: 195.9mm;
-              height: 259.4mm;
+              width: 205.9mm;
+              height: 269.4mm;
               display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              grid-template-rows: repeat(3, 1fr);
-              gap: 3mm;
+              grid-template-columns: repeat(3, 1fr);
+              grid-template-rows: repeat(10, 1fr);
+              gap: 1mm;
               page-break-after: always;
             }
             .page:last-child {
               page-break-after: auto;
             }
             .qr-card {
-              border: 2px solid #002C63;
-              border-radius: 8px;
-              padding: 4mm;
+              border: 1px solid #002C63;
+              border-radius: 4px;
+              padding: 1mm;
               display: flex;
-              flex-direction: column;
+              flex-direction: row;
               align-items: center;
-              justify-content: center;
+              justify-content: flex-start;
               background: white;
               overflow: hidden;
+              gap: 2mm;
             }
             .qr-card img {
-              width: 55mm;
-              height: 55mm;
+              width: 20mm;
+              height: 20mm;
               object-fit: contain;
+              flex-shrink: 0;
+            }
+            .qr-info {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              overflow: hidden;
+              flex: 1;
             }
             .codigo {
-              font-size: 14pt;
+              font-size: 8pt;
               font-weight: bold;
               color: #002C63;
-              margin-top: 2mm;
-              letter-spacing: 0.5px;
-              text-align: center;
+              letter-spacing: 0.3px;
               word-break: break-all;
+              line-height: 1.1;
             }
             .titulo {
-              font-size: 9pt;
+              font-size: 6pt;
               color: #333;
-              margin-top: 1mm;
-              text-align: center;
-              max-height: 10mm;
+              max-height: 8mm;
               overflow: hidden;
-              line-height: 1.2;
-            }
-            .unidad {
-              font-size: 8pt;
-              color: #666;
-              margin-top: 1mm;
+              line-height: 1.1;
+              margin-top: 0.5mm;
             }
             .logo {
-              font-size: 10pt;
+              font-size: 6pt;
               color: #02B381;
               font-weight: bold;
-              margin-top: 2mm;
+              margin-top: 0.5mm;
             }
             .empty-cell {
-              border: 1px dashed #ccc;
-              border-radius: 8px;
+              border: 1px dashed #ddd;
+              border-radius: 4px;
             }
             @media print {
               .qr-card {
-                border: 2px solid #002C63 !important;
+                border: 1px solid #002C63 !important;
               }
             }
           </style>
@@ -262,10 +264,10 @@ export default function GenerarQR() {
     printWindow.document.close();
   };
 
-  // Función para generar páginas con 6 QR cada una
+  // Función para generar páginas con 30 QR cada una (3 columnas x 10 filas)
   const generatePrintPages = (items: QRItem[], proyectoNombre: string) => {
     const pages: string[] = [];
-    const itemsPerPage = 6;
+    const itemsPerPage = 30;
     
     for (let i = 0; i < items.length; i += itemsPerPage) {
       const pageItems = items.slice(i, i + itemsPerPage);
@@ -276,10 +278,11 @@ export default function GenerarQR() {
         cells.push(`
           <div class="qr-card">
             <img src="${item.qrDataUrl}" alt="${item.codigo}" />
-            <div class="codigo">${item.codigo}</div>
-            ${item.titulo ? `<div class="titulo">${item.titulo}</div>` : ''}
-            ${item.unidad ? `<div class="unidad">${item.unidad}</div>` : ''}
-            <div class="logo">OBJETIVA</div>
+            <div class="qr-info">
+              <div class="codigo">${item.codigo}</div>
+              ${item.titulo ? `<div class="titulo">${item.titulo}</div>` : ''}
+              <div class="logo">OBJETIVA</div>
+            </div>
           </div>
         `);
       }
@@ -502,7 +505,7 @@ export default function GenerarQR() {
               <div>
                 <CardTitle>Vista Previa ({qrItems.length} códigos)</CardTitle>
                 <CardDescription>
-                  6 QR por hoja carta - Revisa antes de imprimir
+                  30 etiquetas por hoja carta (3x10) - Revisa antes de imprimir
                 </CardDescription>
               </div>
               <Button onClick={handlePrint} variant="default">
@@ -556,7 +559,7 @@ export default function GenerarQR() {
               <li>Elige el modo: Por Ítems (para QR de ítems existentes) o Por Rango (para QR nuevos)</li>
               <li>En modo Ítems, selecciona los ítems deseados</li>
               <li>Haz clic en "Generar QR"</li>
-              <li>Revisa la vista previa (6 QR por hoja carta)</li>
+              <li>Revisa la vista previa (30 etiquetas por hoja carta)</li>
               <li>Haz clic en "Imprimir" para imprimir o guardar como PDF</li>
             </ol>
           </CardContent>
