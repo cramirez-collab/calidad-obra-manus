@@ -1392,3 +1392,10 @@
 - [x] Eliminar proyectos duplicados (01, 02 - IDs 120001, 120002)
 - [x] Eliminar usuario duplicado de Estefany (ID 1230002)
 - [x] Verificar que no queden referencias rotas - BASE DE DATOS LIMPIA
+
+
+## Rol Superadmin y Restricción de Eliminación (Enero 2026)
+- [x] Verificar que Carlos tenga rol superadmin en la base de datos
+- [x] Mostrar "Superadmin" en la interfaz para Carlos
+- [x] Implementar restricción: solo superadmin puede eliminar usuarios
+- [x] Implementar restricción: solo superadmin puede eliminar elementos del sistema (empresas, unidades, especialidades, espacios, atributos, ítems, defectos, proyectos, mensajes, metas)

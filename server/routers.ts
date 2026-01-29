@@ -297,7 +297,7 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    delete: adminProcedure
+    delete: superadminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteEmpresa(input.id);
@@ -344,7 +344,7 @@ export const appRouter = router({
       }),
     
     // Eliminar residente de empresa
-    removeResidente: adminProcedure
+    removeResidente: superadminProcedure
       .input(z.object({
         empresaId: z.number(),
         usuarioId: z.number(),
@@ -434,7 +434,7 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    delete: adminProcedure
+    delete: superadminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteUnidad(input.id);
@@ -539,7 +539,7 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    delete: adminProcedure
+    delete: superadminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteEspecialidad(input.id);
@@ -633,7 +633,7 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    delete: adminProcedure
+    delete: superadminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteEspacio(input.id);
@@ -677,7 +677,7 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    delete: adminProcedure
+    delete: superadminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteAtributo(input.id);
@@ -999,16 +999,11 @@ export const appRouter = router({
         return await db.getItemHistorial(input.itemId);
       }),
     
-    delete: supervisorProcedure
+    delete: superadminProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input, ctx }) => {
+      .mutation(async ({ input }) => {
         const item = await db.getItemById(input.id);
         if (!item) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ítem no encontrado' });
-        
-        // Solo admin, superadmin y supervisor pueden eliminar
-        if (ctx.user.role !== 'admin' && ctx.user.role !== 'superadmin' && ctx.user.role !== 'supervisor') {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permisos para eliminar ítems' });
-        }
         
         await db.deleteItem(input.id);
         return { success: true };
@@ -1369,7 +1364,7 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    delete: adminProcedure
+    delete: superadminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteDefecto(input.id);
@@ -1491,7 +1486,7 @@ export const appRouter = router({
       }),
     
     // Eliminar proyecto (soft delete)
-    delete: adminProcedure
+    delete: superadminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteProyecto(input.id);
@@ -1523,7 +1518,7 @@ export const appRouter = router({
       }),
     
     // Remover usuario de proyecto
-    removerUsuario: adminProcedure
+    removerUsuario: superadminProcedure
       .input(z.object({
         proyectoId: z.number(),
         usuarioId: z.number(),
@@ -1664,8 +1659,8 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    // Eliminar mensaje (solo admin/superadmin)
-    delete: adminProcedure
+    // Eliminar mensaje (solo superadmin)
+    delete: superadminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ ctx, input }) => {
         await db.deleteMensaje(input.id);
