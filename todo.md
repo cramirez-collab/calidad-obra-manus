@@ -1473,3 +1473,11 @@
 - [x] Modificar menú para usar enlaces dinámicos del proyecto activo
 - [x] Migrar enlaces actuales de Hidalma
 - [x] Ocultar iconos si el enlace no está configurado
+
+### Verificación y Ampliación de Enlaces Externos
+- [x] Verificar que nuevos proyectos no muestren iconos de enlaces sin configurar
+- [x] Verificar que enlaces migrados de Hidalma funcionen correctamente
+- [x] Agregar campo linkManuales al schema
+- [x] Agregar campo linkEspecificaciones al schema
+- [x] Actualizar página de configuración de enlaces
+- [x] Actualizar menú para mostrar nuevos enlaces

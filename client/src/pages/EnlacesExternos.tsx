@@ -15,7 +15,9 @@ import {
   Save,
   ExternalLink,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  BookOpen,
+  FileText
 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -31,6 +33,8 @@ export default function EnlacesExternos() {
     linkSecuencias: "",
     linkVisor: "",
     linkPlanos: "",
+    linkManuales: "",
+    linkEspecificaciones: "",
   });
   
   const [hasChanges, setHasChanges] = useState(false);
@@ -43,6 +47,8 @@ export default function EnlacesExternos() {
         linkSecuencias: proyectoActual.linkSecuencias || "",
         linkVisor: proyectoActual.linkVisor || "",
         linkPlanos: proyectoActual.linkPlanos || "",
+        linkManuales: proyectoActual.linkManuales || "",
+        linkEspecificaciones: proyectoActual.linkEspecificaciones || "",
       });
       setHasChanges(false);
     }
@@ -73,6 +79,8 @@ export default function EnlacesExternos() {
       linkSecuencias: enlaces.linkSecuencias || null,
       linkVisor: enlaces.linkVisor || null,
       linkPlanos: enlaces.linkPlanos || null,
+      linkManuales: enlaces.linkManuales || null,
+      linkEspecificaciones: enlaces.linkEspecificaciones || null,
     });
   };
 
@@ -103,6 +111,20 @@ export default function EnlacesExternos() {
       label: "Planos",
       icon: FolderOpen,
       description: "Enlace a la carpeta de planos (Google Drive, etc.)",
+      placeholder: "https://drive.google.com/...",
+    },
+    {
+      key: "linkManuales" as const,
+      label: "Manuales",
+      icon: BookOpen,
+      description: "Enlace a manuales de instalación o procedimientos",
+      placeholder: "https://drive.google.com/...",
+    },
+    {
+      key: "linkEspecificaciones" as const,
+      label: "Especificaciones",
+      icon: FileText,
+      description: "Enlace a especificaciones técnicas del proyecto",
       placeholder: "https://drive.google.com/...",
     },
   ];

@@ -48,6 +48,8 @@ export const proyectos = mysqlTable("proyectos", {
   linkSecuencias: text("linkSecuencias"),
   linkVisor: text("linkVisor"),
   linkPlanos: text("linkPlanos"),
+  linkManuales: text("linkManuales"),
+  linkEspecificaciones: text("linkEspecificaciones"),
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

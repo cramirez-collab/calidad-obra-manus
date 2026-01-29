@@ -36,7 +36,9 @@ import {
   Menu,
   X,
   Activity,
-  Link2
+  Link2,
+  BookOpen,
+  FileText
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -67,6 +69,8 @@ type ProyectoConEnlaces = {
   linkSecuencias?: string | null;
   linkVisor?: string | null;
   linkPlanos?: string | null;
+  linkManuales?: string | null;
+  linkEspecificaciones?: string | null;
 } | null;
 
 // Menú principal según rol y proyecto
@@ -101,6 +105,12 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
   }
   if (proyecto?.linkPlanos) {
     analysisItems.push({ icon: FolderOpen, label: "Planos", path: proyecto.linkPlanos, external: true });
+  }
+  if (proyecto?.linkManuales) {
+    analysisItems.push({ icon: BookOpen, label: "Manuales", path: proyecto.linkManuales, external: true });
+  }
+  if (proyecto?.linkEspecificaciones) {
+    analysisItems.push({ icon: FileText, label: "Especificaciones", path: proyecto.linkEspecificaciones, external: true });
   }
 
   // Submenú de Configuración

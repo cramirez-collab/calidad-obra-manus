@@ -1497,6 +1497,8 @@ export const appRouter = router({
         linkSecuencias: z.string().nullable().optional(),
         linkVisor: z.string().nullable().optional(),
         linkPlanos: z.string().nullable().optional(),
+        linkManuales: z.string().nullable().optional(),
+        linkEspecificaciones: z.string().nullable().optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...enlaces } = input;
