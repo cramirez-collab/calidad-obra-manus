@@ -1399,7 +1399,3 @@
 - [x] Mostrar "Superadmin" en la interfaz para Carlos
 - [x] Implementar restricción: solo superadmin puede eliminar usuarios
 - [x] Implementar restricción: solo superadmin puede eliminar elementos del sistema (empresas, unidades, especialidades, espacios, atributos, ítems, defectos, proyectos, mensajes, metas)
-
-
-## Bug Reordenamiento Unidades (Enero 2026)
-- [x] Corregir ciclado al reordenar unidades - ahora usa mutación silenciosa y Promise.all para un solo mensaje de éxito
