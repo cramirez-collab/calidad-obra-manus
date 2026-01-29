@@ -1459,3 +1459,6 @@
 - [x] Agregar elemento de menú "Curvas" con icono (Activity)
 - [x] Ubicar antes de Secuencias en el menú lateral
 - [x] Enlazar a bit.ly/49OgS7d (enlace externo)
+
+### Ajuste de Márgenes Etiquetas
+- [x] Aumentar margen superior 3mm adicionales para alineación exacta (15.7mm total)
