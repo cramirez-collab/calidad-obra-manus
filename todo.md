@@ -1486,3 +1486,9 @@
 ### Eliminación Permanente de Ítems por Superadmin
 - [x] Superadmin puede borrar ítems permanentemente de la base de datos
 - [x] Refrescar la vista automáticamente después de eliminar
+
+
+### Corrección Pantalla Selección de Proyectos
+- [x] Investigar por qué nuevos proyectos no aparecen en la pantalla de selección
+- [x] Corregir sin afectar proyecto Hidalma
+- [x] Asignar automáticamente al creador como admin del nuevo proyecto

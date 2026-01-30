@@ -1445,7 +1445,7 @@ export const appRouter = router({
         fechaInicio: z.date().optional(),
         fechaFin: z.date().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         let imagenUrl = input.imagenPortadaUrl;
         
         // Si la imagen es base64, subirla a storage
@@ -1461,6 +1461,14 @@ export const appRouter = router({
         }
         
         const id = await db.createProyecto({ ...input, imagenPortadaUrl: imagenUrl });
+        
+        // Asignar automáticamente al creador como admin del proyecto
+        await db.asignarUsuarioAProyecto({
+          proyectoId: id,
+          usuarioId: ctx.user.id,
+          rolEnProyecto: 'admin',
+        });
+        
         return { id, success: true };
       }),
     
