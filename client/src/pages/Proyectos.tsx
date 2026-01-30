@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +27,8 @@ import {
 } from "lucide-react";
 
 export default function Proyectos() {
+  const { user } = useAuth();
+  const isSuperadmin = user?.role === 'superadmin';
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [usuariosDialogOpen, setUsuariosDialogOpen] = useState(false);
@@ -268,14 +271,15 @@ export default function Proyectos() {
             Gestiona los proyectos de obra y asigna usuarios
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Nuevo Proyecto</span>
-              <span className="sm:hidden">Nuevo</span>
-            </Button>
-          </DialogTrigger>
+        {isSuperadmin && (
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Nuevo Proyecto</span>
+                <span className="sm:hidden">Nuevo</span>
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingProyecto ? "Editar Proyecto" : "Nuevo Proyecto"}</DialogTitle>
@@ -404,6 +408,7 @@ export default function Proyectos() {
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {/* Estadísticas generales */}
@@ -489,22 +494,26 @@ export default function Proyectos() {
                   >
                     <UserPlus className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleEdit(proyecto)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive"
-                    onClick={() => handleDelete(proyecto.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {isSuperadmin && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEdit(proyecto)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive"
+                        onClick={() => handleDelete(proyecto.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </CardHeader>

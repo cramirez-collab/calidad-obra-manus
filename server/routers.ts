@@ -1472,8 +1472,8 @@ export const appRouter = router({
         return { id, success: true };
       }),
     
-    // Actualizar proyecto
-    update: adminProcedure
+    // Actualizar proyecto (solo superadmin)
+    update: superadminProcedure
       .input(z.object({
         id: z.number(),
         nombre: z.string().min(1).optional(),
@@ -1590,8 +1590,8 @@ export const appRouter = router({
         return await db.getEspecialidadesByProyecto(input.proyectoId);
       }),
     
-    // Subir imagen de portada del proyecto
-    uploadImagenPortada: adminProcedure
+    // Subir imagen de portada del proyecto (solo superadmin)
+    uploadImagenPortada: superadminProcedure
       .input(z.object({
         proyectoId: z.number(),
         imagenBase64: z.string(),

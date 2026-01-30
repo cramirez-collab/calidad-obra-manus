@@ -1492,3 +1492,13 @@
 - [x] Investigar por qué nuevos proyectos no aparecen en la pantalla de selección
 - [x] Corregir sin afectar proyecto Hidalma
 - [x] Asignar automáticamente al creador como admin del nuevo proyecto
+
+
+### Edición de Proyectos
+- [ ] Permitir editar nombre del proyecto
+- [ ] Permitir editar/cambiar portada del proyecto
+
+
+### Restricción de Edición de Proyectos
+- [x] Solo superadmin puede editar proyectos (nombre, portada, etc.)
+- [x] Ocultar botones de edición para otros roles
