@@ -1507,3 +1507,14 @@
 ### Restricción de Acceso a Códigos QR
 - [x] Solo usuarios registrados pueden leer códigos QR
 - [x] Redirigir a login si no está autenticado
+
+
+### Verificación de Caché en Búsqueda
+- [ ] Verificar ítems reales en base de datos de Hidalma
+- [ ] Revisar si búsqueda muestra datos eliminados por caché
+- [ ] Corregir problemas de caché si existen
+
+
+### Verificación de Vinculación de Datos en Stacking
+- [x] Verificar que el ítem aprobado esté correctamente vinculado al proyecto/usuario
+- [x] Corregir contadores en Stacking/Notificaciones para mostrar datos en tiempo real

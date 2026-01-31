@@ -2366,17 +2366,59 @@ export async function getUserBadges(usuarioId: number) {
   const db = await getDb();
   if (!db) return null;
   
-  const badges = await db.select().from(userBadges)
-    .where(eq(userBadges.usuarioId, usuarioId))
+  // Obtener el usuario para saber su proyecto activo
+  const usuario = await db.select().from(users)
+    .where(eq(users.id, usuarioId))
     .limit(1);
   
-  if (badges.length === 0) {
-    // Crear registro de badges si no existe
-    await db.insert(userBadges).values({ usuarioId });
+  if (usuario.length === 0) {
     return { usuarioId, rechazados: 0, aprobadosJefe: 0, aprobadosSupervisor: 0, mensajesNoLeidos: 0 };
   }
   
-  return badges[0];
+  const proyectoActivoId = usuario[0].proyectoActivoId;
+  
+  // Calcular conteos en tiempo real basados en ítems del proyecto activo
+  let rechazados = 0;
+  let aprobadosJefe = 0;
+  let aprobadosSupervisor = 0;
+  
+  if (proyectoActivoId) {
+    // Contar ítems rechazados del proyecto activo
+    const rechazadosResult = await db.select({ count: sql<number>`COUNT(*)` })
+      .from(items)
+      .where(and(
+        eq(items.proyectoId, proyectoActivoId),
+        eq(items.status, 'rechazado')
+      ));
+    rechazados = Number(rechazadosResult[0]?.count || 0);
+    
+    // Contar ítems aprobados del proyecto activo
+    const aprobadosResult = await db.select({ count: sql<number>`COUNT(*)` })
+      .from(items)
+      .where(and(
+        eq(items.proyectoId, proyectoActivoId),
+        eq(items.status, 'aprobado')
+      ));
+    aprobadosJefe = Number(aprobadosResult[0]?.count || 0);
+    
+    // OK Supervisor = ítems aprobados (mismo conteo por ahora)
+    aprobadosSupervisor = aprobadosJefe;
+  }
+  
+  // Obtener mensajes no leídos del registro de badges (este sí se mantiene como contador)
+  const badgesRecord = await db.select().from(userBadges)
+    .where(eq(userBadges.usuarioId, usuarioId))
+    .limit(1);
+  
+  const mensajesNoLeidos = badgesRecord.length > 0 ? badgesRecord[0].mensajesNoLeidos : 0;
+  
+  return { 
+    usuarioId, 
+    rechazados, 
+    aprobadosJefe, 
+    aprobadosSupervisor, 
+    mensajesNoLeidos 
+  };
 }
 
 export async function incrementBadge(usuarioId: number, tipo: 'rechazados' | 'aprobadosJefe' | 'aprobadosSupervisor' | 'mensajesNoLeidos') {
