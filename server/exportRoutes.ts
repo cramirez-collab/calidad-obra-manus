@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as XLSX from "xlsx";
 import * as db from "./db";
-import { storagePut } from "./storage";
+import { storagePut, storageGet } from "./storage";
 import multer from "multer";
 
 // Configurar multer para archivos en memoria
@@ -267,6 +267,25 @@ router.post("/api/upload", upload.single('file'), async (req: any, res) => {
   } catch (error) {
     console.error("Error uploading file:", error);
     res.status(500).json({ error: "Error al subir archivo" });
+  }
+});
+
+// Proxy para imágenes de usuarios (genera URL firmada)
+router.get("/api/image/:path(*)", async (req, res) => {
+  try {
+    const imagePath = req.params.path;
+    if (!imagePath) {
+      return res.status(400).json({ error: "Path de imagen requerido" });
+    }
+    
+    // Obtener URL firmada de S3
+    const { url } = await storageGet(imagePath);
+    
+    // Redirigir a la URL firmada
+    res.redirect(url);
+  } catch (error) {
+    console.error("Error getting image:", error);
+    res.status(404).json({ error: "Imagen no encontrada" });
   }
 });
 

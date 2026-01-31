@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, name, email, fotoUrl FROM users WHERE fotoUrl IS NOT NULL AND fotoUrl != '' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, name, email, fotoUrl FROM users WHERE fotoUrl IS NOT NULL AND fotoUrl != '' LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Carlos Ramirez",
+      "email": "cramirez@objetiva.mx",
+      "fotoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/usuarios/1/foto-sWKIKYOt.jpeg"
+    },
+    {
+      "id": "540085",
+      "name": "Julian Rodríguez Ramírez",
+      "email": "jrodriguez@objetiva.mx",
+      "fotoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/usuarios/540085/foto-tGNGVyVF.png"
+    },
+    {
+      "id": "721666",
+      "name": "Ing.Daniel Vazquez",
+      "email": "dvazquez@objetiva.mx",
+      "fotoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/usuarios/721666/foto-CiULezOv.png"
+    },
+    {
+      "id": "1500804",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@objetiva.mx",
+      "fotoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/usuarios/1500804/foto-M3xeUY01.png"
+    },
+    {
+      "id": "1530106",
+      "name": "Jesús Contreras",
+      "email": "jcontreras@objetiva.mx",
+      "fotoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/usuarios/1530106/foto-MW0sqSbf.png"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tfotoUrl\n1\tCarlos Ramirez\tcramirez@objetiva.mx\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/usuarios/1/foto-sWKIKYOt.jpeg\n540085\tJulian Rodríguez Ramírez\tjrodriguez@objetiva.mx\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/usuarios/540085/foto-tGNGVyVF.png\n721666\tIng.Daniel Vazquez\tdvazquez@objetiva.mx\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/usuarios/721666/foto-CiULezOv.png\n1500804\tEstefany Sanchez\tesanchez@objetiva.mx\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/usuarios/1500804/foto-M3xeUY01.png\n1530106\tJesús Contreras\tjcontreras@objetiva.mx\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/usuarios/1530106/foto-MW0sqSbf.png\n",
+  "stderr": "",
+  "execution_time_ms": 1664
+}

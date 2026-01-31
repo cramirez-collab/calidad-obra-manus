@@ -1756,3 +1756,19 @@
 - [x] Agregar campo whatsappGrupoUrl en tabla de proyectos
 - [x] Crear UI para editar enlace WhatsApp en Configuración
 - [x] Mostrar enlace por proyecto para reportes automáticos
+
+
+## Bug: Fotos Avatar no se Mantienen (31 Enero 2026)
+- [ ] Verificar cómo se guardan las fotos de perfil en la base de datos
+- [ ] Verificar que el componente UserAvatar cargue correctamente las fotos
+- [ ] Corregir el problema de persistencia de fotos de avatar
+
+
+## Bug: Fotos Avatar no se Mantienen (31 Enero 2026)
+- [x] Identificar problema: URLs de CloudFront expiran (403 Forbidden)
+- [x] Crear endpoint proxy /api/image/:path para generar URLs firmadas
+- [x] Crear función helper getImageUrl() en /lib/imageUrl.ts
+- [x] Actualizar UserAvatar para usar getImageUrl()
+- [x] Actualizar DashboardLayout para usar getImageUrl()
+- [x] Actualizar UserProfile para usar getImageUrl()
+- [x] Actualizar Usuarios.tsx para usar getImageUrl()

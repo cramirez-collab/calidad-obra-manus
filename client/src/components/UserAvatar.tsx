@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { getImageUrl } from "@/lib/imageUrl";
 
 interface UserAvatarProps {
   name?: string | null;
@@ -34,6 +35,8 @@ export function UserAvatar({
     .join('')
     .toUpperCase() || 'U';
 
+  const imageUrl = getImageUrl(fotoUrl);
+
   return (
     <div className={cn("flex items-center gap-2 min-w-0", className)}>
       <Avatar className={cn(
@@ -41,7 +44,7 @@ export function UserAvatar({
         sizeClasses[size]
       )}>
         <AvatarImage 
-          src={fotoUrl || ''} 
+          src={imageUrl} 
           alt={name || 'Usuario'} 
           className="object-cover"
         />

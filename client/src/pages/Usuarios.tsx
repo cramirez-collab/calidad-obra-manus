@@ -34,7 +34,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
 import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search, FolderKanban, Lock, Trash2, Camera } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
-
+import { getImageUrl } from "@/lib/imageUrl";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -1115,7 +1115,7 @@ export default function Usuarios() {
               <div className="relative">
                 {photoEditingUser?.fotoUrl ? (
                   <img 
-                    src={photoEditingUser.fotoUrl} 
+                    src={getImageUrl(photoEditingUser.fotoUrl)} 
                     alt={photoEditingUser.name || 'Usuario'}
                     className="h-24 w-24 rounded-full object-cover border-4 border-muted"
                   />

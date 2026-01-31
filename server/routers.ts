@@ -272,11 +272,11 @@ export const appRouter = router({
         const base64Data = matches[2];
         const buffer = Buffer.from(base64Data, 'base64');
         const fileName = `usuarios/${ctx.user.id}/foto-${nanoid(8)}.${ext}`;
-        const { url } = await storagePut(fileName, buffer, `image/${ext}`);
+        const { key } = await storagePut(fileName, buffer, `image/${ext}`);
         
-        // Actualizar en base de datos
-        await db.updateUserFoto(ctx.user.id, url);
-        return { success: true, fotoUrl: url };
+        // Guardar el key del archivo (no la URL) para poder generar URLs firmadas
+        await db.updateUserFoto(ctx.user.id, key);
+        return { success: true, fotoUrl: key };
       }),
     
     // Actualizar foto de perfil de cualquier usuario (solo superadmin)
@@ -297,11 +297,11 @@ export const appRouter = router({
         const base64Data = matches[2];
         const buffer = Buffer.from(base64Data, 'base64');
         const fileName = `usuarios/${input.userId}/foto-${nanoid(8)}.${ext}`;
-        const { url } = await storagePut(fileName, buffer, `image/${ext}`);
+        const { key } = await storagePut(fileName, buffer, `image/${ext}`);
         
-        // Actualizar en base de datos
-        await db.updateUserFoto(input.userId, url);
-        return { success: true, fotoUrl: url };
+        // Guardar el key del archivo (no la URL) para poder generar URLs firmadas
+        await db.updateUserFoto(input.userId, key);
+        return { success: true, fotoUrl: key };
       }),
     
     // Obtener mi perfil completo
