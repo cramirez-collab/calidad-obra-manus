@@ -1,5 +1,5 @@
-// Service Worker para notificaciones push - ObjetivaOQC
-const CACHE_NAME = 'objetivaoqc-push-v1';
+// Service Worker para notificaciones push - OQC
+const CACHE_NAME = 'oqc-push-v2';
 
 // Evento de instalación
 self.addEventListener('install', (event) => {
@@ -18,11 +18,11 @@ self.addEventListener('push', (event) => {
   console.log('[SW Push] Notificación recibida');
   
   let data = {
-    title: 'ObjetivaOQC',
+    title: 'OQC',
     body: 'Nueva notificación',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/badge-72x72.png',
-    tag: 'objetivaoqc-notification',
+    tag: 'oqc-notification',
     data: {}
   };
   

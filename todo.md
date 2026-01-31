@@ -1533,3 +1533,8 @@
 - [x] Verificar favicon correcto para descarga de app
 - [x] Numeración secuencial automática de especialidades (1, 2, 3... sin importar orden alfabético)
 - [x] Agregar submenú "Lista" en Especialidades que muestre todas con su número asignado
+
+
+### Corrección Urgente - Título de App (30/01/2026)
+- [x] Corregir título "ObjetivaOQC" a "OQC" en service workers y caches
+- [x] Verificar que no haya residuales del título anterior en ningún lugar

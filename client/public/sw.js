@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calidad-obra-v1';
+const CACHE_NAME = 'oqc-v2';
 const OFFLINE_URL = '/offline.html';
 
 // Recursos que se cachean inmediatamente
@@ -144,7 +144,7 @@ async function syncPendingItems() {
 // Helpers para IndexedDB
 function openIndexedDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('CalidadObraOffline', 1);
+    const request = indexedDB.open('OQCOffline', 2);
     
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
@@ -202,7 +202,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Calidad de Obra', options)
+    self.registration.showNotification(data.title || 'OQC', options)
   );
 });
 

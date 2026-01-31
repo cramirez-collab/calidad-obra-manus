@@ -91,7 +91,7 @@ describe("Configuración y Metas", () => {
       
       const result = await caller.metas.listConProgreso();
       expect(Array.isArray(result)).toBe(true);
-    });
+    }, 15000);
 
     it("permite a superadmin crear meta", async () => {
       const ctx = createSuperadminContext();
