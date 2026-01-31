@@ -21,7 +21,9 @@ import {
   Eye,
   EyeOff,
   Zap,
-  ArrowRight
+  ArrowRight,
+  MessageCircle,
+  ExternalLink
 } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
@@ -320,6 +322,86 @@ export default function Configuracion() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
+          </CardContent>
+        </Card>
+
+        {/* Sección WhatsApp - Reportes Automáticos */}
+        <Card className="mt-6 border-green-500/20 bg-green-500/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <MessageCircle className="h-5 w-5 text-green-600" />
+              WhatsApp - Reportes Automáticos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Configura el enlace del grupo de WhatsApp para recibir reportes automáticos de defectos por empresa.
+            </p>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="whatsappUrl" className="text-sm font-medium">Enlace del Grupo de WhatsApp</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="whatsappUrl"
+                    type="url"
+                    value={values['whatsapp_grupo_url'] || ''}
+                    onChange={(e) => setValues(prev => ({ ...prev, whatsapp_grupo_url: e.target.value }))}
+                    placeholder="https://chat.whatsapp.com/..."
+                    className="flex-1"
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleSave('whatsapp_grupo_url', true)}
+                    disabled={setConfigMutation.isPending}
+                    className="h-10 w-10"
+                  >
+                    <Save className="h-4 w-4" />
+                  </Button>
+                  {values['whatsapp_grupo_url'] && (
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => window.open(values['whatsapp_grupo_url'], '_blank')}
+                      className="h-10 w-10"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Pega el enlace de invitación del grupo donde quieres recibir los reportes.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="whatsappApiKey" className="text-sm font-medium">API Key de TextMeBot (Opcional)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="whatsappApiKey"
+                    type="password"
+                    value={values['whatsapp_api_key'] || ''}
+                    onChange={(e) => setValues(prev => ({ ...prev, whatsapp_api_key: e.target.value }))}
+                    placeholder="Tu API Key de TextMeBot"
+                    className="flex-1"
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleSave('whatsapp_api_key', true)}
+                    disabled={setConfigMutation.isPending}
+                    className="h-10 w-10"
+                  >
+                    <Save className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Obtén tu API Key en <a href="https://textmebot.com" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">textmebot.com</a> para enviar reportes automáticos.
+                </p>
+              </div>
+            </div>
+            <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 text-xs text-green-700 dark:text-green-300">
+              <strong>Horarios de reportes:</strong> L-V: 9am, 1pm, 5pm | Sábados: 9am, 1pm | Alerta de inactividad: 6pm
+            </div>
           </CardContent>
         </Card>
 

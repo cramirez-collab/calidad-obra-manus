@@ -60,6 +60,9 @@ export const proyectos = mysqlTable("proyectos", {
   tituloPlanos: varchar("tituloPlanos", { length: 100 }),
   tituloManuales: varchar("tituloManuales", { length: 100 }),
   tituloEspecificaciones: varchar("tituloEspecificaciones", { length: 100 }),
+  // Configuración de WhatsApp para reportes automáticos
+  whatsappGrupoUrl: text("whatsappGrupoUrl"), // Enlace del grupo de WhatsApp para reportes
+  whatsappApiKey: varchar("whatsappApiKey", { length: 255 }), // API Key de TextMeBot para enviar mensajes
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

@@ -1750,3 +1750,9 @@
 - [x] Incluir información del ítem: número, unidad, defecto (itemCodigo, unidadNombre, defectoNombre)
 - [x] Al hacer clic en notificación, navegar directamente al ítem (url: /items/{itemId})
 - [x] Configurar prioridad alta para notificaciones urgentes (vibración larga, renotify: true)
+
+
+## Enlace WhatsApp por Proyecto (31 Enero 2026)
+- [x] Agregar campo whatsappGrupoUrl en tabla de proyectos
+- [x] Crear UI para editar enlace WhatsApp en Configuración
+- [x] Mostrar enlace por proyecto para reportes automáticos
