@@ -4255,6 +4255,17 @@ export async function updateUserFoto(userId: number, fotoUrl: string) {
   return { success: true };
 }
 
+// Actualizar foto de perfil del usuario con base64 (evita problemas de S3)
+export async function updateUserFotoBase64(userId: number, fotoBase64: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(users)
+    .set({ fotoBase64, fotoUrl: null })
+    .where(eq(users.id, userId));
+  
+  return { success: true };
+}
 
 // Aceptar términos y condiciones
 export async function aceptarTerminos(userId: number) {

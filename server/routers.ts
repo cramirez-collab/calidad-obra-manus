@@ -10,7 +10,7 @@ import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { sendEmail, getAprobadoEmailTemplate, getRechazadoEmailTemplate, getPendienteAprobacionEmailTemplate } from "./emailService";
 import pushService from "./pushService";
-import { transcribeAudio } from "./_core/voiceTranscription";
+import { transcribeAudio, transcribeAudioBase64 } from "./_core/voiceTranscription";
 import { invokeLLM } from "./_core/llm";
 
 // Middleware para verificar rol de superadmin (acceso total)
@@ -263,20 +263,15 @@ export const appRouter = router({
     updateFoto: protectedProcedure
       .input(z.object({ fotoBase64: z.string() }))
       .mutation(async ({ ctx, input }) => {
-        // Decodificar base64 y subir a S3
+        // Validar formato de imagen base64
         const matches = input.fotoBase64.match(/^data:image\/(\w+);base64,(.+)$/);
         if (!matches) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Formato de imagen inválido' });
         }
-        const ext = matches[1];
-        const base64Data = matches[2];
-        const buffer = Buffer.from(base64Data, 'base64');
-        const fileName = `usuarios/${ctx.user.id}/foto-${nanoid(8)}.${ext}`;
-        const { key } = await storagePut(fileName, buffer, `image/${ext}`);
         
-        // Guardar el key del archivo (no la URL) para poder generar URLs firmadas
-        await db.updateUserFoto(ctx.user.id, key);
-        return { success: true, fotoUrl: key };
+        // Guardar directamente el base64 en la base de datos (evita problemas de S3/CloudFront)
+        await db.updateUserFotoBase64(ctx.user.id, input.fotoBase64);
+        return { success: true, fotoBase64: input.fotoBase64 };
       }),
     
     // Actualizar foto de perfil de cualquier usuario (solo superadmin)
@@ -1375,16 +1370,35 @@ export const appRouter = router({
     // Transcribir audio y generar resumen técnico
     transcribir: protectedProcedure
       .input(z.object({
-        audioUrl: z.string(),
+        audioBase64: z.string().optional(),
+        audioUrl: z.string().optional(),
+        mimeType: z.string().optional().default('audio/webm'),
         language: z.string().optional().default('es-MX'),
       }))
       .mutation(async ({ input }) => {
-        // Paso 1: Transcribir el audio
-        const transcripcion = await transcribeAudio({
-          audioUrl: input.audioUrl,
-          language: input.language,
-          prompt: 'Transcribir voz a texto en español de México, con puntuación correcta y capitalización.',
-        });
+        // Paso 1: Transcribir el audio (soporta base64 o URL)
+        let transcripcion;
+        
+        if (input.audioBase64) {
+          // Usar transcripción directa con base64 (evita problemas de S3)
+          transcripcion = await transcribeAudioBase64({
+            audioBase64: input.audioBase64,
+            mimeType: input.mimeType,
+            language: input.language,
+            prompt: 'Transcribir voz a texto en español de México, con puntuación correcta y capitalización.',
+          });
+        } else if (input.audioUrl) {
+          transcripcion = await transcribeAudio({
+            audioUrl: input.audioUrl,
+            language: input.language,
+            prompt: 'Transcribir voz a texto en español de México, con puntuación correcta y capitalización.',
+          });
+        } else {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Se requiere audioBase64 o audioUrl',
+          });
+        }
         
         if ('error' in transcripcion) {
           throw new TRPCError({

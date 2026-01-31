@@ -1794,3 +1794,23 @@
 - [x] Integración con API de Whisper para transcripción
 - [x] 185 pruebas pasando correctamente
 
+
+
+## Bugs Reportados (31 Enero 2026 - 13:10)
+- [ ] Error "Failed to download audio file" al usar transcripción de voz
+- [ ] Fotos de proyectos no se muestran
+- [ ] No permite tomar fotos
+
+
+
+## Correcciones de Imágenes y Audio (31 Enero 2026)
+
+### Transcripción de Voz
+- [x] Error "Failed to download audio file" - CORREGIDO: Sistema ahora usa base64 directamente
+- [x] Transcripción de audio funciona sin depender de S3/CloudFront
+
+### Sistema de Imágenes Base64
+- [x] Fotos de perfil de usuarios se guardan como base64
+- [x] Imágenes de portada de proyectos se guardan como base64
+- [x] Sistema evita problemas de URLs de CloudFront con error 403
+

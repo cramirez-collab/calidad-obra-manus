@@ -20,6 +20,7 @@ export const users = mysqlTable("users", {
   empresaId: int("empresaId"),
   proyectoActivoId: int("proyectoActivoId"), // Proyecto actualmente seleccionado por el usuario
   fotoUrl: text("fotoUrl"), // URL de la foto de perfil del usuario
+  fotoBase64: text("fotoBase64"), // Foto de perfil en base64 (alternativa a S3)
   terminosAceptados: boolean("terminosAceptados").default(false).notNull(), // Si aceptó términos y condiciones
   fechaAceptacionTerminos: timestamp("fechaAceptacionTerminos"), // Fecha de aceptación de términos
   activo: boolean("activo").default(true).notNull(),
@@ -42,6 +43,7 @@ export const proyectos = mysqlTable("proyectos", {
   descripcion: text("descripcion"),
   logoUrl: text("logoUrl"),
   imagenPortadaUrl: text("imagenPortadaUrl"), // Imagen de portada para tarjeta de proyecto
+  imagenPortadaBase64: text("imagenPortadaBase64"), // Imagen de portada en base64 (alternativa a S3)
   direccion: varchar("direccion", { length: 500 }),
   cliente: varchar("cliente", { length: 255 }),
   fechaInicio: timestamp("fechaInicio"),

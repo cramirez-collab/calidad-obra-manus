@@ -137,24 +137,23 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
         
         setVoiceState('transcribing');
         
-        // Subir audio a S3 y transcribir
+        // Convertir audio a base64 y transcribir directamente (evita problemas de S3)
         try {
-          const formData = new FormData();
-          formData.append('file', audioBlob, 'audio.webm');
-          
-          const uploadResponse = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData,
-          });
-          
-          if (!uploadResponse.ok) {
-            throw new Error('Error al subir audio');
-          }
-          
-          const { url } = await uploadResponse.json();
-          
-          setVoiceState('summarizing');
-          transcribirMutation.mutate({ audioUrl: url, language: 'es-MX' });
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64Data = reader.result as string;
+            setVoiceState('summarizing');
+            transcribirMutation.mutate({ 
+              audioBase64: base64Data, 
+              mimeType: 'audio/webm',
+              language: 'es-MX' 
+            });
+          };
+          reader.onerror = () => {
+            setVoiceState('error');
+            setVoiceError('Error al procesar audio');
+          };
+          reader.readAsDataURL(audioBlob);
         } catch (err) {
           setVoiceState('error');
           setVoiceError('Error al procesar audio');

@@ -1,10 +1,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { getImageUrl } from "@/lib/imageUrl";
 
 interface UserAvatarProps {
   name?: string | null;
   fotoUrl?: string | null;
+  fotoBase64?: string | null;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   showName?: boolean;
   className?: string;
@@ -23,6 +23,7 @@ const sizeClasses = {
 export function UserAvatar({ 
   name, 
   fotoUrl, 
+  fotoBase64,
   size = "sm", 
   showName = true,
   className,
@@ -35,7 +36,8 @@ export function UserAvatar({
     .join('')
     .toUpperCase() || 'U';
 
-  const imageUrl = getImageUrl(fotoUrl);
+  // Priorizar fotoBase64 sobre fotoUrl (base64 siempre funciona, URLs de S3 pueden fallar)
+  const imageUrl = fotoBase64 || (fotoUrl ? `/api/image/${fotoUrl}` : '');
 
   return (
     <div className={cn("flex items-center gap-2 min-w-0", className)}>
