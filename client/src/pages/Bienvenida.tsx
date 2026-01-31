@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import DashboardLayout from "@/components/DashboardLayout";
+import { UserAvatar } from "@/components/UserAvatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -68,13 +69,21 @@ export default function Bienvenida() {
       <div className="space-y-4 sm:space-y-6">
         {/* Header con iconos de acceso rápido a la derecha */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg sm:text-xl font-semibold text-[#002C63]">
-              Hola, {user?.name?.split(' ')[0] || 'Usuario'}
-            </h1>
-            <p className="text-xs text-[#6E6E6E]">
-              {pendientes?.length || 0} pendientes
-            </p>
+          <div className="flex items-center gap-3">
+            <UserAvatar 
+              name={user?.name} 
+              fotoUrl={user?.fotoUrl}
+              size="md"
+              showName={false}
+            />
+            <div>
+              <h1 className="text-lg sm:text-xl font-semibold text-[#002C63]">
+                Hola, {user?.name?.split(' ')[0] || 'Usuario'}
+              </h1>
+              <p className="text-xs text-[#6E6E6E]">
+                {pendientes?.length || 0} pendientes
+              </p>
+            </div>
           </div>
           {/* Iconos de acceso rápido - siempre visibles arriba */}
           <div className="flex gap-2">

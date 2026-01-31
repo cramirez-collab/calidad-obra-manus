@@ -11,10 +11,10 @@ interface UserAvatarProps {
 }
 
 const sizeClasses = {
-  xs: "h-5 w-5 text-[8px]",
-  sm: "h-6 w-6 text-[10px]",
-  md: "h-8 w-8 text-xs",
-  lg: "h-10 w-10 text-sm",
+  xs: "h-4 w-4 min-w-[16px] text-[7px]",
+  sm: "h-5 w-5 min-w-[20px] text-[8px]",
+  md: "h-6 w-6 min-w-[24px] text-[9px]",
+  lg: "h-8 w-8 min-w-[32px] text-xs",
 };
 
 export function UserAvatar({ 
@@ -33,8 +33,8 @@ export function UserAvatar({
     .toUpperCase() || 'U';
 
   return (
-    <div className={cn("flex items-center gap-1.5", className)}>
-      <Avatar className={cn("border shrink-0", sizeClasses[size])}>
+    <div className={cn("flex items-center gap-2 min-w-0", className)}>
+      <Avatar className={cn("border shrink-0 flex-shrink-0", sizeClasses[size])}>
         <AvatarImage 
           src={fotoUrl || ''} 
           alt={name || 'Usuario'} 
@@ -45,7 +45,7 @@ export function UserAvatar({
         </AvatarFallback>
       </Avatar>
       {showName && name && (
-        <span className={cn("truncate", nameClassName)}>{name}</span>
+        <span className={cn("truncate min-w-0 flex-1", nameClassName)}>{name}</span>
       )}
     </div>
   );

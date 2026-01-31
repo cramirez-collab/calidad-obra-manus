@@ -4240,3 +4240,179 @@ export async function aceptarTerminos(userId: number) {
   
   return { success: true };
 }
+
+
+// ==================== ESTADÍSTICAS DE TIEMPOS Y ACTIVIDAD ====================
+
+export async function getEstadisticasTiemposUsuarios(proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Obtener todos los usuarios activos
+  const usuariosData = await db.select().from(users)
+    .where(eq(users.activo, true));
+  
+  // Obtener bitácora con filtros
+  let bitacoraData;
+  if (proyectoId) {
+    // Filtrar por proyecto si está especificado
+    bitacoraData = await db.select().from(bitacora);
+  } else {
+    bitacoraData = await db.select().from(bitacora);
+  }
+  
+  // Obtener items para contar capturas
+  let itemsData;
+  if (proyectoId) {
+    itemsData = await db.select().from(items).where(eq(items.proyectoId, proyectoId));
+  } else {
+    itemsData = await db.select().from(items);
+  }
+  
+  // Obtener mensajes para contar lecturas
+  const mensajesData = await db.select().from(mensajes);
+  
+  // Calcular estadísticas por usuario
+  const ahora = new Date();
+  const inicioSemana = new Date(ahora);
+  inicioSemana.setDate(ahora.getDate() - ahora.getDay()); // Domingo de esta semana
+  inicioSemana.setHours(0, 0, 0, 0);
+  
+  const estadisticas = usuariosData.map(usuario => {
+    // Bitácora del usuario
+    const bitacoraUsuario = bitacoraData.filter(b => b.usuarioId === usuario.id);
+    
+    // Capturas (crear_item, subir_foto_antes, subir_foto_despues)
+    const capturas = bitacoraUsuario.filter(b => 
+      b.accion === 'crear_item' || 
+      b.accion === 'subir_foto_antes' || 
+      b.accion === 'subir_foto_despues' ||
+      b.accion?.includes('foto')
+    );
+    
+    // Lecturas de mensajes
+    const lecturasChat = bitacoraUsuario.filter(b => 
+      b.accion === 'leer_mensaje' || 
+      b.accion === 'ver_chat' ||
+      b.accion?.includes('mensaje')
+    );
+    
+    // Items creados por este usuario
+    const itemsCreados = itemsData.filter(i => i.residenteId === usuario.id);
+    
+    // Mensajes enviados por este usuario
+    const mensajesEnviados = mensajesData.filter(m => m.usuarioId === usuario.id);
+    
+    // Actividad de la semana
+    const bitacoraSemana = bitacoraUsuario.filter(b => 
+      new Date(b.createdAt) >= inicioSemana
+    );
+    const capturasSemana = bitacoraSemana.filter(b => 
+      b.accion === 'crear_item' || 
+      b.accion?.includes('foto')
+    ).length;
+    const lecturasSemana = bitacoraSemana.filter(b => 
+      b.accion?.includes('mensaje') || b.accion === 'leer_mensaje'
+    ).length;
+    
+    // Última actividad
+    const ultimaActividad = bitacoraUsuario.length > 0 
+      ? bitacoraUsuario.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0].createdAt
+      : null;
+    
+    // Primer registro (fecha de creación del usuario)
+    const fechaRegistro = usuario.createdAt;
+    
+    return {
+      usuarioId: usuario.id,
+      usuarioNombre: usuario.name,
+      usuarioEmail: usuario.email,
+      usuarioRol: usuario.role,
+      usuarioFotoUrl: usuario.fotoUrl,
+      // Conteos totales
+      totalCapturas: itemsCreados.length,
+      totalLecturasMensajes: lecturasChat.length,
+      totalMensajesEnviados: mensajesEnviados.length,
+      totalAcciones: bitacoraUsuario.length,
+      // Resumen semanal
+      capturasSemana,
+      lecturasSemana,
+      accionesSemana: bitacoraSemana.length,
+      // Fechas
+      fechaRegistro,
+      ultimaActividad,
+      // Estado
+      haCapturado: itemsCreados.length > 0,
+      haEnviadoMensajes: mensajesEnviados.length > 0,
+    };
+  });
+  
+  // Ordenar por total de acciones (mayor a menor)
+  return estadisticas.sort((a, b) => b.totalAcciones - a.totalAcciones);
+}
+
+export async function getResumenSemanalActividad(proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const ahora = new Date();
+  const inicioSemana = new Date(ahora);
+  inicioSemana.setDate(ahora.getDate() - ahora.getDay());
+  inicioSemana.setHours(0, 0, 0, 0);
+  
+  // Obtener bitácora de la semana
+  const bitacoraSemana = await db.select().from(bitacora)
+    .where(gte(bitacora.createdAt, inicioSemana));
+  
+  // Obtener items creados esta semana
+  let itemsSemana;
+  if (proyectoId) {
+    itemsSemana = await db.select().from(items)
+      .where(and(
+        eq(items.proyectoId, proyectoId),
+        gte(items.fechaCreacion, inicioSemana)
+      ));
+  } else {
+    itemsSemana = await db.select().from(items)
+      .where(gte(items.fechaCreacion, inicioSemana));
+  }
+  
+  // Obtener mensajes de la semana
+  const mensajesSemana = await db.select().from(mensajes)
+    .where(gte(mensajes.createdAt, inicioSemana));
+  
+  // Usuarios activos esta semana
+  const usuariosActivosSemana = new Set(bitacoraSemana.map(b => b.usuarioId));
+  
+  // Usuarios que han capturado
+  const usuariosQueCapturaron = new Set(itemsSemana.map(i => i.residenteId).filter(Boolean));
+  
+  // Usuarios que han enviado mensajes
+  const usuariosQueEnviaronMensajes = new Set(mensajesSemana.map(m => m.usuarioId));
+  
+  // Actividad por día de la semana
+  const actividadPorDia: Record<number, number> = {};
+  for (let i = 0; i < 7; i++) {
+    actividadPorDia[i] = 0;
+  }
+  bitacoraSemana.forEach(b => {
+    const dia = new Date(b.createdAt).getDay();
+    actividadPorDia[dia]++;
+  });
+  
+  return {
+    periodo: {
+      inicio: inicioSemana,
+      fin: ahora,
+    },
+    resumen: {
+      totalAcciones: bitacoraSemana.length,
+      itemsCreados: itemsSemana.length,
+      mensajesEnviados: mensajesSemana.length,
+      usuariosActivos: usuariosActivosSemana.size,
+      usuariosQueCapturaron: usuariosQueCapturaron.size,
+      usuariosQueEnviaronMensajes: usuariosQueEnviaronMensajes.size,
+    },
+    actividadPorDia,
+  };
+}

@@ -42,8 +42,14 @@ import {
   ArrowDown,
   MapPin,
   Layers,
-  AlertTriangle
+  AlertTriangle,
+  Clock,
+  Users,
+  Activity,
+  BarChart3,
+  TrendingUp
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useState, useMemo } from "react";
@@ -78,8 +84,21 @@ export default function Bitacora() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const isSuperadmin = user?.role === 'superadmin';
 
+  // Estado de tabs
+  const [activeTab, setActiveTab] = useState<string>("bitacora");
+  
   // Queries
   const { data: usuarios } = trpc.users.list.useQuery();
+  
+  // Queries para sección Tiempos
+  const { data: estadisticasTiempos, isLoading: loadingTiempos } = trpc.bitacora.estadisticasTiempos.useQuery(
+    undefined,
+    { enabled: activeTab === "tiempos" }
+  );
+  const { data: resumenSemanal, isLoading: loadingResumen } = trpc.bitacora.resumenSemanal.useQuery(
+    undefined,
+    { enabled: activeTab === "tiempos" }
+  );
   
   const filtros = useMemo(() => ({
     usuarioId: filtroUsuario && filtroUsuario !== 'all' ? parseInt(filtroUsuario) : undefined,
@@ -498,6 +517,20 @@ export default function Bitacora() {
             </div>
           </div>
           
+          {/* Tabs de navegación */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
+            <TabsList className="grid w-full grid-cols-2 md:w-auto">
+              <TabsTrigger value="bitacora" className="gap-2">
+                <History className="h-4 w-4" />
+                <span className="hidden sm:inline">Bitácora</span>
+              </TabsTrigger>
+              <TabsTrigger value="tiempos" className="gap-2">
+                <Clock className="h-4 w-4" />
+                <span className="hidden sm:inline">Tiempos</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
           {/* Botones de exportación y eliminación */}
           <div className="flex gap-2">
             {isSuperadmin && selectedIds.length > 0 && (
@@ -522,6 +555,9 @@ export default function Bitacora() {
           </div>
         </div>
 
+        {/* Tab: Bitácora */}
+        {activeTab === "bitacora" && (
+        <>
         {/* Filtros */}
         <Card>
           <CardHeader className="pb-3">
@@ -933,6 +969,192 @@ export default function Bitacora() {
             )}
           </CardContent>
         </Card>
+        </>
+        )}
+        
+        {/* Tab: Tiempos */}
+        {activeTab === "tiempos" && (
+          <div className="space-y-4">
+            {/* Resumen Semanal */}
+            {loadingResumen ? (
+              <div className="flex items-center justify-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : resumenSemanal && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    Resumen Semanal
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-2xl font-bold text-primary">{resumenSemanal.resumen?.totalAcciones || 0}</p>
+                      <p className="text-xs text-muted-foreground">Acciones Totales</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-2xl font-bold text-emerald-600">{resumenSemanal.resumen?.itemsCreados || 0}</p>
+                      <p className="text-xs text-muted-foreground">Ítems Creados</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-2xl font-bold text-blue-600">{resumenSemanal.resumen?.mensajesEnviados || 0}</p>
+                      <p className="text-xs text-muted-foreground">Mensajes</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-2xl font-bold text-amber-600">{resumenSemanal.resumen?.usuariosActivos || 0}</p>
+                      <p className="text-xs text-muted-foreground">Usuarios Activos</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-2xl font-bold text-green-600">{resumenSemanal.resumen?.usuariosQueCapturaron || 0}</p>
+                      <p className="text-xs text-muted-foreground">Capturaron</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-2xl font-bold text-purple-600">{resumenSemanal.resumen?.usuariosQueEnviaronMensajes || 0}</p>
+                      <p className="text-xs text-muted-foreground">Enviaron Mensajes</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Tabla de Actividad por Usuario */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  Actividad por Usuario
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingTiempos ? (
+                  <div className="flex items-center justify-center h-32">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : estadisticasTiempos && estadisticasTiempos.length > 0 ? (
+                  <>
+                    {/* Vista desktop */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b bg-muted/50">
+                            <th className="text-left p-2 font-medium">Usuario</th>
+                            <th className="text-center p-2 font-medium">Capturas</th>
+                            <th className="text-center p-2 font-medium">Mensajes</th>
+                            <th className="text-center p-2 font-medium">Acciones</th>
+                            <th className="text-center p-2 font-medium">Semana</th>
+                            <th className="text-left p-2 font-medium">Registro</th>
+                            <th className="text-left p-2 font-medium">Última Actividad</th>
+                            <th className="text-center p-2 font-medium">Estado</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {estadisticasTiempos.map((est: any) => (
+                            <tr key={est.usuarioId} className="border-b hover:bg-muted/30">
+                              <td className="p-2">
+                                <UserAvatar 
+                                  name={est.usuarioNombre} 
+                                  fotoUrl={est.usuarioFotoUrl}
+                                  size="sm"
+                                  showName={true}
+                                  nameClassName="truncate max-w-[150px]"
+                                />
+                              </td>
+                              <td className="p-2 text-center">
+                                <span className={`font-medium ${est.totalCapturas > 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                                  {est.totalCapturas}
+                                </span>
+                              </td>
+                              <td className="p-2 text-center">
+                                <span className={`font-medium ${est.totalMensajesEnviados > 0 ? 'text-blue-600' : 'text-muted-foreground'}`}>
+                                  {est.totalMensajesEnviados}
+                                </span>
+                              </td>
+                              <td className="p-2 text-center">
+                                <span className="font-medium">{est.totalAcciones}</span>
+                              </td>
+                              <td className="p-2 text-center">
+                                <div className="flex flex-col items-center gap-0.5">
+                                  <span className="text-xs text-emerald-600">{est.capturasSemana} cap</span>
+                                  <span className="text-xs text-blue-600">{est.lecturasSemana} lec</span>
+                                </div>
+                              </td>
+                              <td className="p-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {est.fechaRegistro ? format(new Date(est.fechaRegistro), "dd/MM/yy") : "-"}
+                                </span>
+                              </td>
+                              <td className="p-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {est.ultimaActividad ? format(new Date(est.ultimaActividad), "dd/MM/yy HH:mm") : "-"}
+                                </span>
+                              </td>
+                              <td className="p-2 text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                  {est.haCapturado ? (
+                                    <Badge className="bg-emerald-100 text-emerald-800 text-xs">Capturó</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-xs text-muted-foreground">Sin capturas</Badge>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Vista móvil */}
+                    <div className="md:hidden space-y-2">
+                      {estadisticasTiempos.map((est: any) => (
+                        <div key={est.usuarioId} className="p-3 border rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <UserAvatar 
+                              name={est.usuarioNombre} 
+                              fotoUrl={est.usuarioFotoUrl}
+                              size="md"
+                              showName={true}
+                              nameClassName="truncate max-w-[120px] font-medium"
+                            />
+                            {est.haCapturado ? (
+                              <Badge className="bg-emerald-100 text-emerald-800 text-xs">Capturó</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs">Sin capturas</Badge>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-center">
+                            <div className="p-2 bg-muted/50 rounded">
+                              <p className="text-lg font-bold text-emerald-600">{est.totalCapturas}</p>
+                              <p className="text-xs text-muted-foreground">Capturas</p>
+                            </div>
+                            <div className="p-2 bg-muted/50 rounded">
+                              <p className="text-lg font-bold text-blue-600">{est.totalMensajesEnviados}</p>
+                              <p className="text-xs text-muted-foreground">Mensajes</p>
+                            </div>
+                            <div className="p-2 bg-muted/50 rounded">
+                              <p className="text-lg font-bold">{est.totalAcciones}</p>
+                              <p className="text-xs text-muted-foreground">Acciones</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mt-2 pt-2 border-t text-xs text-muted-foreground">
+                            <span>Registro: {est.fechaRegistro ? format(new Date(est.fechaRegistro), "dd/MM/yy") : "-"}</span>
+                            <span>Último: {est.ultimaActividad ? format(new Date(est.ultimaActividad), "dd/MM/yy HH:mm") : "-"}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground">No hay datos de actividad disponibles</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

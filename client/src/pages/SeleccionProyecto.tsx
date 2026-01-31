@@ -4,7 +4,8 @@ import { Building2, Users, Calendar, MapPin, Plus, Settings, LogOut } from 'luci
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserAvatar } from '@/components/UserAvatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/_core/hooks/useAuth';
@@ -71,13 +72,14 @@ export default function SeleccionProyecto() {
           
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                  {user?.name ? getInitials(user.name) : 'U'}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar 
+                name={user?.name} 
+                fotoUrl={user?.fotoUrl}
+                size="sm"
+                showName={true}
+                nameClassName="hidden sm:block text-sm font-medium"
+              />
               <div className="hidden sm:block">
-                <p className="text-sm font-medium">{user?.name}</p>
                 <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
               </div>
             </div>

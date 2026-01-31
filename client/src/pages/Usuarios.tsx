@@ -658,16 +658,16 @@ export default function Usuarios() {
                   {filteredUsuarios?.map((usuario) => (
                     <div key={usuario.id} className="p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
                           <UserAvatar 
                             name={usuario.name} 
                             fotoUrl={usuario.fotoUrl}
-                            size="lg"
+                            size="md"
                             showName={false}
                           />
-                          <div>
-                            <p className="font-medium text-sm">{usuario.name || "Sin nombre"}</p>
-                            <p className="text-xs text-muted-foreground">{usuario.email || "-"}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm truncate">{usuario.name || "Sin nombre"}</p>
+                            <p className="text-xs text-muted-foreground truncate">{usuario.email || "-"}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-1">

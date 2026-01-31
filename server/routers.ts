@@ -1319,6 +1319,20 @@ export const appRouter = router({
         const count = await db.clearBitacoraByFilters(input);
         return { success: true, count };
       }),
+    
+    // Estadísticas de tiempos y actividad de usuarios
+    estadisticasTiempos: adminProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getEstadisticasTiemposUsuarios(input?.proyectoId);
+      }),
+    
+    // Resumen semanal de actividad
+    resumenSemanal: adminProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getResumenSemanalActividad(input?.proyectoId);
+      }),
   }),
 
   // ==================== PENDIENTES POR USUARIO ====================

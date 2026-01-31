@@ -1603,3 +1603,52 @@
 - Prioridades - nombre del residente
 - ItemChat - mensajes de chat
 - ItemDetail - información del residente
+
+
+## Correcciones de Avatares y Nueva Sección Tiempos (31/01/2026)
+
+### Corrección de Avatares Encimados
+- [x] Corregir avatares que tapan texto en lista de usuarios móvil
+- [x] Ajustar espaciado para que avatar y texto no se encimen
+
+### Nueva Sección "Tiempos" en Configuración
+- [ ] Crear sección "Tiempos" en página de Configuración
+- [ ] Reportar cuántas veces ha capturado cada usuario
+- [ ] Reportar cuántas veces ha leído mensajes cada usuario
+- [ ] Mostrar quién ha capturado y quién no
+- [ ] Fecha y hora de registro de cada actividad
+- [ ] Resumen semanal de actividad
+
+### Avatares Faltantes
+- [ ] Agregar avatar en portada de selección de proyectos (junto al usuario)
+- [ ] Agregar avatar en pantalla de bienvenida junto al nombre del usuario
+
+
+## Correcciones de Avatares y Sección Tiempos (31 Enero 2026)
+
+### Corrección de Avatares Encimados
+- [x] Corregir avatares que tapan texto en lista de usuarios móvil
+- [x] Ajustar espaciado para que avatar y texto no se encimen
+- [x] Mejorar componente UserAvatar con mejor espaciado
+
+### Sección Tiempos en Bitácora
+- [x] Crear nueva sección "Tiempos" en Bitácora
+- [x] Resumen semanal de actividad (acciones, ítems, mensajes, usuarios activos)
+- [x] Tabla de actividad por usuario (capturas, mensajes, acciones)
+- [x] Mostrar quién ha capturado y quién no
+- [x] Fechas de registro y última actividad
+- [x] Estadísticas semanales por usuario
+
+### Avatares en Portada y Bienvenida
+- [x] Agregar avatar en portada de selección de proyectos junto al nombre del usuario
+- [x] Agregar avatar en pantalla de bienvenida junto al nombre
+
+### Lugares donde se agregó UserAvatar:
+- Bitácora de auditoría (tabla y vista móvil)
+- Lista de usuarios (tabla y vista móvil)
+- Proyectos - lista de usuarios asignados
+- Prioridades - nombre del residente
+- ItemChat - mensajes de chat
+- ItemDetail - información del residente
+- SeleccionProyecto - header del usuario
+- Bienvenida - saludo con avatar
