@@ -1,0 +1,1 @@
+ALTER TABLE `proyectos` MODIFY COLUMN `imagenPortadaBase64` text;

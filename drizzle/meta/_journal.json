@@ -239,6 +239,20 @@
       "when": 1769887191868,
       "tag": "0033_loose_sharon_carter",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "5",
+      "when": 1769887929220,
+      "tag": "0034_illegal_doctor_doom",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "5",
+      "when": 1769889124825,
+      "tag": "0035_bumpy_zaladane",
+      "breakpoints": true
     }
   ]
 }

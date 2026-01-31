@@ -1,0 +1,11 @@
+{
+  "query": "SELECT id, nombre, imagenPortadaUrl, CASE WHEN imagenPortadaBase64 IS NOT NULL THEN 'SI' ELSE 'NO' END as tiene_base64 FROM proyectos; SELECT id, name, foto, CASE WHEN fotoBase64 IS NOT NULL THEN 'SI' ELSE 'NO' END as tiene_base64 FROM users LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, imagenPortadaUrl, CASE WHEN imagenPortadaBase64 IS NOT NULL THEN 'SI' ELSE 'NO' END as tiene_base64 FROM proyectos; SELECT id, name, foto, CASE WHEN fotoBase64 IS NOT NULL THEN 'SI' ELSE 'NO' END as tiene_base64 FROM users LIMIT 10;",
+  "returncode": 1,
+  "logs": [
+    "id\tnombre\timagenPortadaUrl\ttiene_base64",
+    "1\tHidalma \tNULL\tNO",
+    "150001\tMayas Habitat\tNULL\tNO",
+    "ERROR 1054 (42S22) at line 1: Unknown column 'foto' in 'field list'"
+  ]
+}

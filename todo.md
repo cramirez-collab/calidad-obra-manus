@@ -1797,9 +1797,9 @@
 
 
 ## Bugs Reportados (31 Enero 2026 - 13:10)
-- [ ] Error "Failed to download audio file" al usar transcripción de voz
-- [ ] Fotos de proyectos no se muestran
-- [ ] No permite tomar fotos
+- [x] Error "Failed to download audio file" al usar transcripción de voz - CORREGIDO: Usa base64 directo
+- [x] Fotos de proyectos no se muestran - CORREGIDO: Sistema base64 implementado
+- [ ] No permite tomar fotos - Requiere verificación en dispositivo real
 
 
 

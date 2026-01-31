@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, nombre, imagenPortadaUrl, CASE WHEN imagenPortadaBase64 IS NOT NULL THEN 'SI' ELSE 'NO' END as tiene_base64 FROM proyectos;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, imagenPortadaUrl, CASE WHEN imagenPortadaBase64 IS NOT NULL THEN 'SI' ELSE 'NO' END as tiene_base64 FROM proyectos;",
+  "rows": [
+    {
+      "id": "1",
+      "nombre": "Hidalma ",
+      "imagenPortadaUrl": "NULL",
+      "tiene_base64": "NO"
+    },
+    {
+      "id": "150001",
+      "nombre": "Mayas Habitat",
+      "imagenPortadaUrl": "NULL",
+      "tiene_base64": "NO"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\timagenPortadaUrl\ttiene_base64\n1\tHidalma \tNULL\tNO\n150001\tMayas Habitat\tNULL\tNO\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}
