@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch, Router as WouterRouter } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -145,7 +146,7 @@ function App() {
           <ProjectProvider>
             <TooltipProvider>
               <Toaster />
-
+              <ConnectionStatus />
               <Router />
             </TooltipProvider>
           </ProjectProvider>

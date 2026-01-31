@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
+import { OfflineSyncProvider } from "./contexts/OfflineSyncContext";
 import "./index.css";
 
 const queryClient = new QueryClient({
@@ -77,7 +78,9 @@ const root = createRoot(document.getElementById("root")!);
 root.render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <OfflineSyncProvider>
+        <App />
+      </OfflineSyncProvider>
     </QueryClientProvider>
   </trpc.Provider>
 );

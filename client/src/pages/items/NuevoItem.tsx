@@ -29,6 +29,8 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
+import { addPendingAction, cacheData } from "@/lib/offlineDB";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 export default function NuevoItem() {
   const [, setLocation] = useLocation();
@@ -265,34 +267,48 @@ export default function NuevoItem() {
     }
 
     setIsSubmitting(true);
+    
+    // Usar nombre del defecto como título si hay defecto seleccionado
+    const defectoSeleccionado = defectos?.find(d => d.id.toString() === formData.defectoId);
+    const tituloFinal = defectoSeleccionado?.nombre || 'Sin título';
+    
+    // Generar ID de cliente único para evitar duplicados
+    const clientId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const itemData = {
+      proyectoId: selectedProjectId || 0,
+      empresaId: residenteSeleccionado.empresaId,
+      unidadId: parseInt(formData.unidadId),
+      especialidadId: residenteSeleccionado.especialidadId || undefined,
+      defectoId: formData.defectoId ? parseInt(formData.defectoId) : undefined,
+      espacioId: formData.espacioId ? parseInt(formData.espacioId) : undefined,
+      titulo: tituloFinal,
+      fotoAntesBase64: fotoAntes,
+      fotoAntesMarcadaBase64: fotoAntesMarcada || undefined,
+      clientId,
+    };
+    
     try {
-      // Usar nombre del defecto como título si hay defecto seleccionado
-      const defectoSeleccionado = defectos?.find(d => d.id.toString() === formData.defectoId);
-      const tituloFinal = defectoSeleccionado?.nombre || 'Sin título';
-      
-      // Generar ID de cliente único para evitar duplicados
-      const clientId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Crear el ítem con fotos incluidas (una sola transacción)
-      const result = await createItemMutation.mutateAsync({
-        proyectoId: selectedProjectId || 0,
-        empresaId: residenteSeleccionado.empresaId,
-        unidadId: parseInt(formData.unidadId),
-        especialidadId: residenteSeleccionado.especialidadId || undefined,
-        defectoId: formData.defectoId ? parseInt(formData.defectoId) : undefined,
-        espacioId: formData.espacioId ? parseInt(formData.espacioId) : undefined,
-        titulo: tituloFinal,
-        // Incluir fotos directamente para evitar problemas de conexión
-        fotoAntesBase64: fotoAntes,
-        fotoAntesMarcadaBase64: fotoAntesMarcada || undefined,
-        // ID de cliente para evitar duplicados por reintentos
-        clientId,
-      });
-
+      // Intentar crear online
+      const result = await createItemMutation.mutateAsync(itemData);
       toast.success("Ítem creado correctamente");
       setLocation(`/items/${result.id}`);
     } catch (error: any) {
-      toast.error(error.message || "Error al crear el ítem");
+      // Si falla por conexión, guardar offline
+      if (!navigator.onLine || error.message?.includes('fetch') || error.message?.includes('network')) {
+        try {
+          await addPendingAction({
+            type: 'createItem',
+            data: itemData,
+          });
+          toast.success("Ítem guardado offline. Se sincronizará cuando haya conexión.");
+          setLocation("/items");
+        } catch (offlineError) {
+          toast.error("Error al guardar offline");
+        }
+      } else {
+        toast.error(error.message || "Error al crear el ítem");
+      }
     } finally {
       setIsSubmitting(false);
     }

@@ -1859,3 +1859,10 @@
 ## Bugs Críticos (31 Enero 2026 - 14:50)
 - [x] Duplicación de ítems cuando vuelve la señal - CORREGIDO: clientId evita duplicados por reintentos
 - [x] Fotos no se muestran en lista de ítems - CORREGIDO: Fotos incluidas en creación (una sola transacción)
+
+
+## Modo Offline Completo (31 Enero 2026 - 15:10)
+- [x] Caché local con IndexedDB para datos e imágenes
+- [x] Indicador visual de estado de conexión (online/offline)
+- [x] Cola de sincronización automática cuando vuelva internet
+- [x] Integrar modo offline en componentes principales
