@@ -1,6 +1,14 @@
 import { Router } from "express";
 import * as XLSX from "xlsx";
 import * as db from "./db";
+import { storagePut } from "./storage";
+import multer from "multer";
+
+// Configurar multer para archivos en memoria
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 16 * 1024 * 1024 } // 16MB max
+});
 
 const router = Router();
 
@@ -237,6 +245,28 @@ router.get("/api/export/estadisticas", async (req, res) => {
   } catch (error) {
     console.error("Error exporting estadisticas:", error);
     res.status(500).json({ error: "Error al exportar estadisticas" });
+  }
+});
+
+// Endpoint para subir archivos de audio (para transcripción de voz)
+router.post("/api/upload", upload.single('file'), async (req: any, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No se proporcionó archivo" });
+    }
+    
+    const file = req.file as Express.Multer.File;
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const extension = file.originalname.split('.').pop() || 'webm';
+    const fileKey = `audio/${timestamp}-${randomSuffix}.${extension}`;
+    
+    const { url } = await storagePut(fileKey, file.buffer, file.mimetype);
+    
+    res.json({ url, key: fileKey });
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    res.status(500).json({ error: "Error al subir archivo" });
   }
 });
 

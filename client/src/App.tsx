@@ -49,6 +49,7 @@ const ListaEspecialidades = lazy(() => import("./pages/ListaEspecialidades"));
 const Defectos = lazy(() => import("./pages/Defectos"));
 const EnlacesExternos = lazy(() => import("./pages/EnlacesExternos"));
 const Terminos = lazy(() => import("./pages/Terminos"));
+const AltaRapidaEmpresa = lazy(() => import("./pages/catalogos/AltaRapidaEmpresa"));
 
 
 
@@ -100,6 +101,8 @@ function Router() {
         <Route path="/lista-especialidades" component={ListaEspecialidades} />
         <Route path="/defectos" component={Defectos} />
         <Route path="/catalogos/defectos" component={Defectos} />
+        <Route path="/alta-rapida-empresa" component={AltaRapidaEmpresa} />
+        <Route path="/configuracion/alta-rapida" component={AltaRapidaEmpresa} />
         
 
         

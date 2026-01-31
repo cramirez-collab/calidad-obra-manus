@@ -1724,3 +1724,15 @@
 - [x] Pegar resumen en input de mensaje sin enviarlo automáticamente
 - [x] No guardar audio en base de datos ni storage (solo memoria temporal para transcripción)
 - [x] Funcionar en móvil y desktop sin romper diseño existente
+
+
+## Correcciones Urgentes (31 Enero 2026)
+### Error Micrófono en Mensajería
+- [x] Crear endpoint /api/upload para subir archivos de audio
+- [x] Corregir flujo de transcripción de voz
+
+### Simplificar Alta de Empresas en Cascada
+- [x] Crear wizard simple de alta: Empresa → Especialidad → Usuarios → Defectos
+- [x] Todo en una sola pantalla sin entrar y salir
+- [x] Enlace desde Configuración a Alta Rápida
+- [ ] Flujo terriblemente simple sin romper nada existente

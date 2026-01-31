@@ -19,8 +19,11 @@ import {
   Info,
   Key,
   Eye,
-  EyeOff
+  EyeOff,
+  Zap,
+  ArrowRight
 } from "lucide-react";
+import { Link } from "wouter";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -295,6 +298,28 @@ export default function Configuracion() {
                 {changePasswordMutation.isPending ? "Guardando..." : "Cambiar Contraseña"}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Sección Alta Rápida */}
+        <Card className="mt-6 border-primary/20 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Zap className="h-5 w-5 text-primary" />
+              Alta Rápida de Empresa
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Configura una nueva empresa con especialidad, usuarios y defectos en un solo flujo simple de 4 pasos.
+            </p>
+            <Link href="/configuracion/alta-rapida">
+              <Button className="gap-2">
+                <Building2 className="h-4 w-4" />
+                Iniciar Alta Rápida
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 
