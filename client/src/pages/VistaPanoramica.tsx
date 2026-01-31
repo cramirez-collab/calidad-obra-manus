@@ -1012,7 +1012,7 @@ export default function VistaPanoramica() {
           </div>
         </div>
 
-        {/* Estadísticas rápidas */}
+        {/* Estadísticas rápidas - clickeables para navegar a ítems filtrados */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <Card className="bg-gradient-to-br from-slate-50 to-slate-100">
             <CardContent className="p-4 text-center">
@@ -1020,22 +1020,34 @@ export default function VistaPanoramica() {
               <p className="text-xs text-muted-foreground">Total Unidades</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100">
+          <Card 
+            className="bg-gradient-to-br from-emerald-50 to-emerald-100 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => setLocation('/items?status=aprobado')}
+          >
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-emerald-600">{estadisticas.completadas}</p>
               <p className="text-xs text-muted-foreground">Completadas</p>
+              <p className="text-[10px] text-emerald-500 mt-1">Click para ver ítems</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-amber-50 to-amber-100">
+          <Card 
+            className="bg-gradient-to-br from-amber-50 to-amber-100 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => setLocation('/items?status=pendiente_foto_despues,pendiente_aprobacion')}
+          >
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-amber-600">{estadisticas.pendientes}</p>
               <p className="text-xs text-muted-foreground">Con Pendientes</p>
+              <p className="text-[10px] text-amber-500 mt-1">Click para ver ítems</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-red-50 to-red-100">
+          <Card 
+            className="bg-gradient-to-br from-red-50 to-red-100 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => setLocation('/items?status=rechazado')}
+          >
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-red-600">{estadisticas.rechazadas}</p>
               <p className="text-xs text-muted-foreground">Con Rechazados</p>
+              <p className="text-[10px] text-red-500 mt-1">Click para ver ítems</p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-br from-gray-50 to-gray-100">

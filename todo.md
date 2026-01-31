@@ -1524,5 +1524,5 @@
 - [ ] Badges de notificación desaparecen cuando el usuario lee el ítem
 - [x] Títulos de enlaces externos editables por superadmin (Curvas, Secuencias, etc.)
 - [x] Eliminación en cascada: al eliminar ítem, borrar bitácora relacionada
-- [ ] Conteos de Stacking: al hacer clic, navegar a lista filtrada de ítems
+- [x] Conteos de Stacking: al hacer clic, navegar a lista filtrada de ítems
 - [x] Verificar que superadmin pueda borrar datos de bitácora

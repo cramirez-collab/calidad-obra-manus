@@ -31,7 +31,7 @@ import {
   Plus,
   Download
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
 import {
@@ -104,6 +104,26 @@ export default function ItemsList() {
     busqueda: "",
   });
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Leer parámetros de URL para aplicar filtros (desde Stacking u otras páginas)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const statusParam = urlParams.get('status');
+    const unidadParam = urlParams.get('unidad');
+    const empresaParam = urlParams.get('empresa');
+    
+    if (statusParam || unidadParam || empresaParam) {
+      setFilters(prev => ({
+        ...prev,
+        status: statusParam || prev.status,
+        unidadId: unidadParam || prev.unidadId,
+        empresaId: empresaParam || prev.empresaId,
+      }));
+      setShowFilters(true);
+      // Limpiar URL después de aplicar filtros
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const { data: empresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
