@@ -1538,3 +1538,10 @@
 ### Corrección Urgente - Título de App (30/01/2026)
 - [x] Corregir título "ObjetivaOQC" a "OQC" en service workers y caches
 - [x] Verificar que no haya residuales del título anterior en ningún lugar
+
+
+### Limpieza de Datos Residuales (30/01/2026)
+- [x] Investigar y eliminar ítems huérfanos que aparecen en estadísticas
+- [ ] Agregar herramienta para superadmin para limpiar datos residuales
+
+- [x] Click en celdas de Stacking navega a ítems filtrados por unidad (ya implementado)

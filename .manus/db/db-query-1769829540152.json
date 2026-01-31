@@ -1,0 +1,9 @@
+{
+  "query": "SELECT i.id, i.status, i.proyectoId, i.unidadId, i.empresaId, i.especialidadId, i.createdAt \nFROM items i \nLEFT JOIN proyectos p ON i.proyectoId = p.id \nWHERE p.id IS NULL OR i.proyectoId IS NULL\nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT i.id, i.status, i.proyectoId, i.unidadId, i.empresaId, i.especialidadId, i.createdAt \nFROM items i \nLEFT JOIN proyectos p ON i.proyectoId = p.id \nWHERE p.id IS NULL OR i.proyectoId IS NULL\nLIMIT 20;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1603
+}

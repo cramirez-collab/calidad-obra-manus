@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, codigo, status, proyectoId, empresaId, unidadId, titulo, createdAt FROM items;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, status, proyectoId, empresaId, unidadId, titulo, createdAt FROM items;",
+  "rows": [
+    {
+      "id": "330002",
+      "codigo": "Hidalma-00003",
+      "status": "aprobado",
+      "proyectoId": "1",
+      "empresaId": "480003",
+      "unidadId": "30178",
+      "titulo": "Falta de elemento",
+      "createdAt": "2026-01-29 21:45:23"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\tstatus\tproyectoId\tempresaId\tunidadId\ttitulo\tcreatedAt\n330002\tHidalma-00003\taprobado\t1\t480003\t30178\tFalta de elemento\t2026-01-29 21:45:23\n",
+  "stderr": "",
+  "execution_time_ms": 1536
+}
