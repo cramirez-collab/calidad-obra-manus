@@ -383,13 +383,14 @@ function DashboardLayoutContent({
         {/* Header */}
         <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
           <div className="flex items-center h-14 px-2 sm:px-4">
-            {/* Logo */}
+            {/* Logo y OQC */}
             <div className="flex items-center gap-2 mr-2 sm:mr-4 shrink-0">
               <img 
                 src="/logo-objetiva.jpg" 
                 alt="OQC" 
                 className="h-7 sm:h-8 object-contain"
               />
+              <span className="font-bold text-lg text-primary hidden sm:inline">OQC</span>
             </div>
 
             {/* Selector de proyecto */}

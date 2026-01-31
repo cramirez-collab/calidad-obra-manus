@@ -1545,3 +1545,5 @@
 - [ ] Agregar herramienta para superadmin para limpiar datos residuales
 
 - [x] Click en celdas de Stacking navega a ítems filtrados por unidad (ya implementado)
+
+- [x] Centrar el texto OQC en el header
