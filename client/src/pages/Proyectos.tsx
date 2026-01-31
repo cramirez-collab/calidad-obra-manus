@@ -25,6 +25,7 @@ import {
   ImagePlus,
   Upload
 } from "lucide-react";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export default function Proyectos() {
   const { user } = useAuth();
@@ -654,11 +655,12 @@ export default function Proyectos() {
                     className="flex items-center justify-between p-3 border rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-primary font-medium">
-                          {pu.usuario?.name?.charAt(0) || "U"}
-                        </span>
-                      </div>
+                      <UserAvatar 
+                        name={pu.usuario?.name} 
+                        fotoUrl={pu.usuario?.fotoUrl}
+                        size="lg"
+                        showName={false}
+                      />
                       <div>
                         <p className="font-medium">{pu.usuario?.name || "Usuario"}</p>
                         <p className="text-sm text-muted-foreground">{pu.usuario?.email}</p>

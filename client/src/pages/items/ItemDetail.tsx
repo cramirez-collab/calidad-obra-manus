@@ -31,6 +31,7 @@ import {
   Upload,
   Trash2
 } from "lucide-react";
+import { UserAvatar } from "@/components/UserAvatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -247,6 +248,11 @@ export default function ItemDetail() {
   const getUserName = (id: number | null) => {
     if (!id) return "-";
     return users?.find(u => u.id === id)?.name || "-";
+  };
+  
+  const getUserInfo = (id: number | null) => {
+    if (!id) return null;
+    return users?.find(u => u.id === id) || null;
   };
 
   // Solo superadmin, admin, supervisor y jefe_residente pueden subir foto después
@@ -564,7 +570,17 @@ export default function ItemDetail() {
                   <User className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-xs text-muted-foreground">Residente</p>
-                    <p className="font-medium">{getUserName(item.residenteId)}</p>
+                    {getUserInfo(item.residenteId) ? (
+                      <UserAvatar 
+                        name={getUserInfo(item.residenteId)?.name} 
+                        fotoUrl={getUserInfo(item.residenteId)?.fotoUrl}
+                        size="sm"
+                        showName={true}
+                        nameClassName="font-medium"
+                      />
+                    ) : (
+                      <p className="font-medium">-</p>
+                    )}
                   </div>
                 </div>
 

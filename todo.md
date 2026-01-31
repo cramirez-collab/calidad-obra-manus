@@ -1589,3 +1589,17 @@
 - [x] Botón de cámara visible en lista de usuarios para superadmin
 - [x] Diálogo de editar foto con preview y subida
 
+
+
+### Avatar y Bitácora Mejorada (31/01/2026)
+- [x] Mostrar foto de perfil en el avatar del header (donde está "CR")
+- [x] Mejorar bitácora para indicar nombre de fotografía subida (no solo "subió foto")
+- [x] Agregar avatar miniatura junto al nombre en todos los lugares donde aparezca
+
+### Lugares donde se agregó UserAvatar:
+- Bitácora de auditoría (tabla y vista móvil)
+- Lista de usuarios (tabla y vista móvil)
+- Proyectos - lista de usuarios asignados
+- Prioridades - nombre del residente
+- ItemChat - mensajes de chat
+- ItemDetail - información del residente

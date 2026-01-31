@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
 import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search, FolderKanban, Lock, Trash2, Camera } from "lucide-react";
+import { UserAvatar } from "@/components/UserAvatar";
 
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
@@ -658,19 +659,12 @@ export default function Usuarios() {
                     <div key={usuario.id} className="p-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          {usuario.fotoUrl ? (
-                            <img 
-                              src={usuario.fotoUrl} 
-                              alt={usuario.name || 'Usuario'}
-                              className="h-10 w-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="h-10 w-10 rounded-full bg-[#002C63]/10 flex items-center justify-center">
-                              <span className="text-sm font-medium text-[#002C63]">
-                                {usuario.name?.charAt(0).toUpperCase() || "U"}
-                              </span>
-                            </div>
-                          )}
+                          <UserAvatar 
+                            name={usuario.name} 
+                            fotoUrl={usuario.fotoUrl}
+                            size="lg"
+                            showName={false}
+                          />
                           <div>
                             <p className="font-medium text-sm">{usuario.name || "Sin nombre"}</p>
                             <p className="text-xs text-muted-foreground">{usuario.email || "-"}</p>
@@ -775,19 +769,12 @@ export default function Usuarios() {
                         <TableRow key={usuario.id}>
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              {usuario.fotoUrl ? (
-                                <img 
-                                  src={usuario.fotoUrl} 
-                                  alt={usuario.name || 'Usuario'}
-                                  className="h-9 w-9 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="h-9 w-9 rounded-full bg-[#002C63]/10 flex items-center justify-center">
-                                  <span className="text-sm font-medium text-[#002C63]">
-                                    {usuario.name?.charAt(0).toUpperCase() || "U"}
-                                  </span>
-                                </div>
-                              )}
+                              <UserAvatar 
+                                name={usuario.name} 
+                                fotoUrl={usuario.fotoUrl}
+                                size="md"
+                                showName={false}
+                              />
                               <div>
                                 <p className="font-medium">{usuario.name || "Sin nombre"}</p>
                                 <p className="text-xs text-muted-foreground">

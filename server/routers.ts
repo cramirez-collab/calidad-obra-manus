@@ -882,7 +882,7 @@ export const appRouter = router({
           accion: 'subir_foto',
           entidad: 'item',
           entidadId: input.itemId,
-          detalles: `Foto antes subida para ${item.codigo}`,
+          detalles: `Subió fotografía "antes" (${fotoKey.split('/').pop()}) para ítem ${item.codigo}`,
         });
         
         return { success: true, fotoUrl };
@@ -926,6 +926,15 @@ export const appRouter = router({
           statusAnterior: 'pendiente_foto_despues',
           statusNuevo: 'pendiente_aprobacion',
           comentario: input.comentario || 'Foto después agregada',
+        });
+        
+        // Registrar en bitácora con nombre de archivo
+        await db.registrarActividad({
+          usuarioId: ctx.user.id,
+          accion: 'subir_foto',
+          entidad: 'item',
+          entidadId: input.itemId,
+          detalles: `Subió fotografía "después" (${fotoKey.split('/').pop()}) para ítem ${item.codigo}`,
         });
         
         // Emitir evento de tiempo real

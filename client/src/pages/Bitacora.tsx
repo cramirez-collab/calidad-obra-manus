@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/UserAvatar";
 import { 
   History, 
   User, 
@@ -789,19 +790,15 @@ export default function Bitacora() {
                               {format(new Date(actividad.createdAt), "dd/MM/yy HH:mm")}
                             </div>
                           </td>
-                          <td className="p-2">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                {actividad.usuario?.fotoUrl && <AvatarImage src={actividad.usuario.fotoUrl} alt={actividad.usuario?.name || 'Usuario'} />}
-                                <AvatarFallback className="text-xs bg-muted">
-                                  {actividad.usuario?.name?.charAt(0).toUpperCase() || 'U'}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="truncate max-w-[120px]">
-                                {actividad.usuario?.name || "-"}
-                              </span>
-                            </div>
-                          </td>
+<td className="p-2">
+                                            <UserAvatar 
+                                              name={actividad.usuario?.name} 
+                                              fotoUrl={actividad.usuario?.fotoUrl}
+                                              size="sm"
+                                              showName={true}
+                                              nameClassName="truncate max-w-[120px]"
+                                            />
+                                          </td>
                           <td className="p-2">
                             <Badge className={`text-xs ${getRolColor(actividad.usuario?.role)}`}>
                               {actividad.usuario?.role || "-"}
@@ -852,12 +849,12 @@ export default function Bitacora() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            {actividad.usuario?.fotoUrl && <AvatarImage src={actividad.usuario.fotoUrl} alt={actividad.usuario?.name || 'Usuario'} />}
-                            <AvatarFallback className="text-xs bg-muted">
-                              {actividad.usuario?.name?.charAt(0).toUpperCase() || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
+                          <UserAvatar 
+                            name={actividad.usuario?.name} 
+                            fotoUrl={actividad.usuario?.fotoUrl}
+                            size="md"
+                            showName={false}
+                          />
                           <div>
                             <p className="font-medium text-sm">
                               {getAccionLabel(actividad.accion)}

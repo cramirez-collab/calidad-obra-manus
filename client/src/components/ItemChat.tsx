@@ -4,6 +4,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/UserAvatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Send, 
@@ -223,12 +224,12 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
                   key={msg.id} 
                   className={`flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}
                 >
-                  <Avatar className={`h-8 w-8 ${getRoleColor(msg.usuario?.role || 'residente')}`}>
-                    {msg.usuario?.fotoUrl && <AvatarImage src={msg.usuario.fotoUrl} alt={msg.usuario?.name || 'Usuario'} />}
-                    <AvatarFallback className="text-white text-xs">
-                      {getInitials(msg.usuario?.name)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar 
+                    name={msg.usuario?.name} 
+                    fotoUrl={msg.usuario?.fotoUrl}
+                    size="md"
+                    showName={false}
+                  />
                   
                   <div className={`flex flex-col max-w-[75%] ${isOwn ? 'items-end' : ''}`}>
                     <div className="flex items-center gap-2 mb-1">

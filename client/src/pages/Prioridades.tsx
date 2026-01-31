@@ -15,6 +15,7 @@ import {
   TrendingDown,
   Target
 } from "lucide-react";
+import { UserAvatar } from "@/components/UserAvatar";
 import { useLocation } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -135,7 +136,13 @@ export default function Prioridades() {
                           {item.residente && (
                             <>
                               <span>•</span>
-                              <span className="truncate">{item.residente.name}</span>
+                              <UserAvatar 
+                                name={item.residente.name} 
+                                fotoUrl={item.residente.fotoUrl}
+                                size="xs"
+                                showName={true}
+                                nameClassName="truncate"
+                              />
                             </>
                           )}
                         </div>

@@ -444,9 +444,9 @@ function DashboardLayoutContent({
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-1 rounded-lg px-1 sm:px-2 py-1 hover:bg-accent transition-colors focus:outline-none">
                       <Avatar className="h-8 w-8 border">
-                        {user?.fotoUrl && <AvatarImage src={user.fotoUrl} alt={user?.name || 'Usuario'} />}
+                        <AvatarImage src={user?.fotoUrl || ''} alt={user?.name || 'Usuario'} className="object-cover" />
                         <AvatarFallback className={`text-white text-xs font-medium ${roleColors[user?.role || 'residente']}`}>
-                          {user?.name?.charAt(0).toUpperCase() || 'U'}
+                          {user?.name?.split(' ').map(n => n.charAt(0)).slice(0, 2).join('').toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
