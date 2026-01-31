@@ -353,7 +353,7 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
                   <UserAvatar 
                     name={msg.usuario?.name} 
                     fotoUrl={msg.usuario?.fotoUrl}
-                    size="md"
+                    size="lg"
                     showName={false}
                   />
                   
@@ -431,8 +431,8 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
                   className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted rounded text-left text-sm"
                   onClick={() => insertMention(u.id, u.name || 'Usuario')}
                 >
-                  <Avatar className={`h-6 w-6 ${getRoleColor(u.role)}`}>
-                    <AvatarFallback className="text-white text-xs">
+                  <Avatar className={`h-8 w-8 ${getRoleColor(u.role)}`}>
+                    <AvatarFallback className="text-white text-sm font-semibold">
                       {getInitials(u.name)}
                     </AvatarFallback>
                   </Avatar>
@@ -480,8 +480,8 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
                           setMenciones([...menciones, u.id]);
                         }}
                       >
-                        <Avatar className={`h-6 w-6 ${getRoleColor(u.role)}`}>
-                          <AvatarFallback className="text-white text-xs">
+                        <Avatar className={`h-8 w-8 ${getRoleColor(u.role)}`}>
+                          <AvatarFallback className="text-white text-sm font-semibold">
                             {getInitials(u.name)}
                           </AvatarFallback>
                         </Avatar>

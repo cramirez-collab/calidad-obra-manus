@@ -1736,3 +1736,10 @@
 - [x] Todo en una sola pantalla sin entrar y salir
 - [x] Enlace desde Configuración a Alta Rápida
 - [ ] Flujo terriblemente simple sin romper nada existente
+
+
+## Ajuste de Avatares (31 Enero 2026)
+- [x] Aumentar tamaño de avatares un 30% en toda la aplicación (UserAvatar: xs=24px, sm=32px, md=40px, lg=48px, xl=56px)
+- [x] Verificar avatares visibles en mensajería (ItemChat) - aumentados a lg
+- [x] Mantener diseño estético sin encimar elementos (gap y flex-shrink)
+- [x] Hacer avatares legibles e identificables (texto más grande en iniciales)

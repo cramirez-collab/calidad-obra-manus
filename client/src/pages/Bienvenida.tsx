@@ -73,7 +73,7 @@ export default function Bienvenida() {
             <UserAvatar 
               name={user?.name} 
               fotoUrl={user?.fotoUrl}
-              size="md"
+              size="lg"
               showName={false}
             />
             <div>

@@ -662,7 +662,7 @@ export default function Usuarios() {
                           <UserAvatar 
                             name={usuario.name} 
                             fotoUrl={usuario.fotoUrl}
-                            size="md"
+                            size="lg"
                             showName={false}
                           />
                           <div className="min-w-0 flex-1">
@@ -772,7 +772,7 @@ export default function Usuarios() {
                               <UserAvatar 
                                 name={usuario.name} 
                                 fotoUrl={usuario.fotoUrl}
-                                size="md"
+                                size="lg"
                                 showName={false}
                               />
                               <div>
