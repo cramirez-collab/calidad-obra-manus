@@ -1560,3 +1560,9 @@
 - [x] Eliminar campanas de notificación duplicadas (dejar solo 1)
 - [x] Mover lista de especialidades fuera del menú de configuración
 - [x] Renumerar especialidades empezando desde 1
+
+
+### Mejoras Solicitadas (30/01/2026)
+- [x] Limpiar especialidades duplicadas (consolidar por nombre)
+- [x] Implementar badges de notificación con tracking por usuario (ya implementado - cada usuario tiene su propio contador)
+- [x] Mostrar foto de perfil en lista de usuarios para administradores

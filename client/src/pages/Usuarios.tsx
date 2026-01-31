@@ -600,11 +600,19 @@ export default function Usuarios() {
                     <div key={usuario.id} className="p-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-[#002C63]/10 flex items-center justify-center">
-                            <span className="text-sm font-medium text-[#002C63]">
-                              {usuario.name?.charAt(0).toUpperCase() || "U"}
-                            </span>
-                          </div>
+                          {usuario.fotoUrl ? (
+                            <img 
+                              src={usuario.fotoUrl} 
+                              alt={usuario.name || 'Usuario'}
+                              className="h-10 w-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-[#002C63]/10 flex items-center justify-center">
+                              <span className="text-sm font-medium text-[#002C63]">
+                                {usuario.name?.charAt(0).toUpperCase() || "U"}
+                              </span>
+                            </div>
+                          )}
                           <div>
                             <p className="font-medium text-sm">{usuario.name || "Sin nombre"}</p>
                             <p className="text-xs text-muted-foreground">{usuario.email || "-"}</p>
@@ -698,11 +706,19 @@ export default function Usuarios() {
                         <TableRow key={usuario.id}>
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <div className="h-9 w-9 rounded-full bg-[#002C63]/10 flex items-center justify-center">
-                                <span className="text-sm font-medium text-[#002C63]">
-                                  {usuario.name?.charAt(0).toUpperCase() || "U"}
-                                </span>
-                              </div>
+                              {usuario.fotoUrl ? (
+                                <img 
+                                  src={usuario.fotoUrl} 
+                                  alt={usuario.name || 'Usuario'}
+                                  className="h-9 w-9 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="h-9 w-9 rounded-full bg-[#002C63]/10 flex items-center justify-center">
+                                  <span className="text-sm font-medium text-[#002C63]">
+                                    {usuario.name?.charAt(0).toUpperCase() || "U"}
+                                  </span>
+                                </div>
+                              )}
                               <div>
                                 <p className="font-medium">{usuario.name || "Sin nombre"}</p>
                                 <p className="text-xs text-muted-foreground">
