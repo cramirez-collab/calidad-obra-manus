@@ -16,10 +16,11 @@ import {
   Check,
   X
 } from "lucide-react";
-import { useParams } from "wouter";
-import { useState, useRef } from "react";
+import { useParams, useLocation } from "wouter";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 
 const statusLabels: Record<string, string> = {
   pendiente_foto_despues: "En Proceso - Pendiente Corrección",
@@ -51,8 +52,17 @@ const statusIcons: Record<string, typeof Clock> = {
 
 export default function Seguimiento() {
   const { codigo } = useParams<{ codigo: string }>();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const [, setLocation] = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Redirigir a login si no está autenticado
+  useEffect(() => {
+    if (!authLoading && !user) {
+      // Redirigir a la página de login
+      window.location.href = getLoginUrl();
+    }
+  }, [user, authLoading]);
   
   const [fotoDespues, setFotoDespues] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -169,6 +179,38 @@ export default function Seguimiento() {
     user.role === "superadmin" || 
     user.role === "supervisor"
   );
+
+  // Mostrar loading mientras se verifica autenticación
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-muted-foreground">Verificando acceso...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no hay usuario, mostrar mensaje (el useEffect redirigirá a login)
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 text-center">
+            <XCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Acceso Restringido</h2>
+            <p className="text-muted-foreground mb-4">
+              Debes iniciar sesión para ver la información de este código QR.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Redirigiendo al inicio de sesión...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

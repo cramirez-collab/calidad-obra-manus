@@ -1502,3 +1502,8 @@
 ### Restricción de Edición de Proyectos
 - [x] Solo superadmin puede editar proyectos (nombre, portada, etc.)
 - [x] Ocultar botones de edición para otros roles
+
+
+### Restricción de Acceso a Códigos QR
+- [x] Solo usuarios registrados pueden leer códigos QR
+- [x] Redirigir a login si no está autenticado
