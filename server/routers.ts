@@ -436,10 +436,39 @@ export const appRouter = router({
         return await db.getAllResidentesConEmpresas(input?.proyectoId);
       }),
     
-    // Migrar datos existentes de residenteId y jefeResidenteId
+   // Migrar datos existentes de residenteId y jefeResidenteId
     migrarResidentes: superadminProcedure
       .mutation(async () => {
         return await db.migrarResidentesExistentes();
+      }),
+    
+    // Obtener historial de cambios de una empresa
+    getHistorial: protectedProcedure
+      .input(z.object({ empresaId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getEmpresaHistorial(input.empresaId);
+      }),
+    
+    // Registrar cambio en historial
+    registrarCambio: adminProcedure
+      .input(z.object({
+        empresaId: z.number(),
+        tipoAccion: z.enum(['empresa_creada','empresa_editada','usuario_agregado','usuario_eliminado','usuario_rol_cambiado','defecto_agregado','defecto_editado','defecto_eliminado','especialidad_cambiada']),
+        descripcion: z.string(),
+        valorAnterior: z.string().optional(),
+        valorNuevo: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.createEmpresaHistorial({
+          empresaId: input.empresaId,
+          usuarioId: ctx.user.id,
+          usuarioNombre: ctx.user.name || 'Usuario',
+          tipoAccion: input.tipoAccion,
+          descripcion: input.descripcion,
+          valorAnterior: input.valorAnterior,
+          valorNuevo: input.valorNuevo,
+        });
+        return { id, success: true };
       }),
   }),
 

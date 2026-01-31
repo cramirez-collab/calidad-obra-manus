@@ -1678,3 +1678,24 @@
 - [x] Desarrollador NO puede modificar catálogos (adminProcedure ya lo restringe)
 
 ### Versión de respaldo: bd6f85fd
+
+
+## Mejoras Adicionales Formulario Empresas (31 Enero 2026)
+
+### Crear Especialidad desde Formulario
+- [x] Agregar botón "+" junto al selector de especialidad
+- [x] Diálogo inline para crear nueva especialidad sin salir del formulario
+- [x] Auto-seleccionar la especialidad recién creada
+
+### Importación Masiva de Usuarios
+- [x] Agregar botón "Importar desde Excel/CSV" en pestaña Equipo
+- [x] Parser de archivos Excel (.xlsx) y CSV
+- [x] Validación de datos antes de importar
+- [x] Mostrar preview de usuarios a importar
+- [x] Asignar rol y empresa automáticamente
+
+### Historial de Cambios por Empresa
+- [x] Crear tabla de historial de cambios en base de datos (empresa_historial)
+- [x] Registrar cambios en datos de empresa, usuarios y defectos
+- [x] Mostrar log de cambios en pestaña "Historial" del formulario de empresa
+- [x] Incluir quién hizo el cambio y cuándo

@@ -474,3 +474,33 @@ export const empresaResidentes = mysqlTable("empresa_residentes", {
 
 export type EmpresaResidente = typeof empresaResidentes.$inferSelect;
 export type InsertEmpresaResidente = typeof empresaResidentes.$inferInsert;
+
+
+/**
+ * Tabla de historial de cambios de empresas
+ * Registra todas las modificaciones realizadas a empresas, usuarios y defectos
+ */
+export const empresaHistorial = mysqlTable("empresa_historial", {
+  id: int("id").autoincrement().primaryKey(),
+  empresaId: int("empresaId").notNull(),
+  usuarioId: int("usuarioId").notNull(), // Quién hizo el cambio
+  usuarioNombre: varchar("usuarioNombre", { length: 255 }),
+  tipoAccion: mysqlEnum("tipoAccion", [
+    "empresa_creada",
+    "empresa_editada",
+    "usuario_agregado",
+    "usuario_eliminado",
+    "usuario_rol_cambiado",
+    "defecto_agregado",
+    "defecto_editado",
+    "defecto_eliminado",
+    "especialidad_cambiada"
+  ]).notNull(),
+  descripcion: text("descripcion").notNull(), // Descripción legible del cambio
+  valorAnterior: text("valorAnterior"), // JSON con estado anterior
+  valorNuevo: text("valorNuevo"), // JSON con estado nuevo
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EmpresaHistorial = typeof empresaHistorial.$inferSelect;
+export type InsertEmpresaHistorial = typeof empresaHistorial.$inferInsert;

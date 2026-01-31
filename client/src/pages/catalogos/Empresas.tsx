@@ -32,7 +32,7 @@ import { trpc } from "@/lib/trpc";
 import { 
   Building2, Edit, Plus, Trash2, FileDown, ChevronDown, ChevronRight, 
   AlertTriangle, Wrench, ArrowUpDown, User, UserPlus, Mail, Phone, 
-  Lock, Users, Eye, EyeOff, X
+  Lock, Users, Eye, EyeOff, X, History, Upload, FileSpreadsheet
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -133,6 +133,14 @@ export default function Empresas() {
   const [isDeleteDefectoOpen, setIsDeleteDefectoOpen] = useState(false);
   const [defectoToDelete, setDefectoToDelete] = useState<{ id: number; nombre: string } | null>(null);
 
+  // Estado para crear nueva especialidad
+  const [isCreateEspecialidadOpen, setIsCreateEspecialidadOpen] = useState(false);
+  const [nuevaEspecialidad, setNuevaEspecialidad] = useState({ nombre: "", color: "#3B82F6" });
+
+  // Estado para importar usuarios desde Excel/CSV
+  const [isImportUsersOpen, setIsImportUsersOpen] = useState(false);
+  const [importedUsers, setImportedUsers] = useState<Array<{ nombre: string; email: string; rol: string }>>([]);
+
   const utils = trpc.useUtils();
   
   // Queries
@@ -150,6 +158,12 @@ export default function Empresas() {
 
   // Query para obtener residentes de la empresa actual (cuando se está editando)
   const { data: residentesEmpresa, refetch: refetchResidentes } = trpc.empresas.getResidentes.useQuery(
+    { empresaId: editingEmpresa?.id || 0 },
+    { enabled: !!editingEmpresa?.id }
+  );
+
+  // Query para obtener historial de cambios de la empresa
+  const { data: historialEmpresa } = trpc.empresas.getHistorial.useQuery(
     { empresaId: editingEmpresa?.id || 0 },
     { enabled: !!editingEmpresa?.id }
   );
@@ -225,6 +239,20 @@ export default function Empresas() {
   const removeResidenteMutation = trpc.empresas.removeResidente.useMutation({
     onSuccess: () => {
       refetchResidentes();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const createEspecialidadMutation = trpc.especialidades.create.useMutation({
+    onSuccess: (data) => {
+      utils.especialidades.list.invalidate();
+      toast.success("Especialidad creada correctamente");
+      setIsCreateEspecialidadOpen(false);
+      setNuevaEspecialidad({ nombre: "", color: "#3B82F6" });
+      // Auto-seleccionar la especialidad recién creada
+      setFormData({ ...formData, especialidadId: data.id.toString() });
     },
     onError: (error) => {
       toast.error(error.message);
@@ -766,7 +794,7 @@ export default function Empresas() {
             </DialogHeader>
             
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className={`grid w-full ${editingEmpresa ? 'grid-cols-4' : 'grid-cols-3'}`}>
                 <TabsTrigger value="datos" className="flex items-center gap-1">
                   <Building2 className="h-4 w-4" />
                   <span className="hidden sm:inline">Datos</span>
@@ -779,6 +807,12 @@ export default function Empresas() {
                   <AlertTriangle className="h-4 w-4" />
                   <span className="hidden sm:inline">Defectos</span>
                 </TabsTrigger>
+                {editingEmpresa && (
+                  <TabsTrigger value="historial" className="flex items-center gap-1">
+                    <History className="h-4 w-4" />
+                    <span className="hidden sm:inline">Historial</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <ScrollArea className="h-[400px] mt-4 pr-4">
@@ -791,28 +825,39 @@ export default function Empresas() {
                         <Wrench className="h-4 w-4" />
                         Especialidad *
                       </Label>
-                      <Select
-                        value={formData.especialidadId}
-                        onValueChange={(value) => setFormData({ ...formData, especialidadId: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar especialidad" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Sin especialidad</SelectItem>
-                          {especialidades?.map((esp) => (
-                            <SelectItem key={esp.id} value={esp.id.toString()}>
-                              <div className="flex items-center gap-2">
-                                <div 
-                                  className="w-3 h-3 rounded-full" 
-                                  style={{ backgroundColor: esp.color || '#3B82F6' }}
-                                />
-                                {esp.nombre}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2">
+                        <Select
+                          value={formData.especialidadId}
+                          onValueChange={(value) => setFormData({ ...formData, especialidadId: value })}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Seleccionar especialidad" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Sin especialidad</SelectItem>
+                            {especialidades?.map((esp) => (
+                              <SelectItem key={esp.id} value={esp.id.toString()}>
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="w-3 h-3 rounded-full" 
+                                    style={{ backgroundColor: esp.color || '#3B82F6' }}
+                                  />
+                                  {esp.nombre}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setIsCreateEspecialidadOpen(true)}
+                          title="Crear nueva especialidad"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     {/* Nombre */}
@@ -1202,6 +1247,43 @@ export default function Empresas() {
                     </div>
                   )}
                 </TabsContent>
+
+                {/* TAB: Historial de Cambios */}
+                {editingEmpresa && (
+                  <TabsContent value="historial" className="space-y-4 mt-0">
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-sm flex items-center gap-2">
+                        <History className="h-4 w-4" />
+                        Historial de Cambios
+                      </h4>
+                      
+                      {!historialEmpresa || historialEmpresa.length === 0 ? (
+                        <p className="text-sm text-muted-foreground italic py-4 text-center">
+                          No hay cambios registrados para esta empresa
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {historialEmpresa.map((cambio: any) => (
+                            <div 
+                              key={cambio.id} 
+                              className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border"
+                            >
+                              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <History className="h-4 w-4 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm">{cambio.descripcion}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {cambio.usuarioNombre} - {new Date(cambio.createdAt).toLocaleString('es-MX')}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                )}
               </ScrollArea>
             </Tabs>
 
@@ -1322,6 +1404,61 @@ export default function Empresas() {
               </Button>
               <Button variant="destructive" onClick={handleDeleteDefecto} disabled={deleteDefectoMutation.isPending}>
                 {deleteDefectoMutation.isPending ? "Eliminando..." : "Eliminar"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog para crear especialidad */}
+        <Dialog open={isCreateEspecialidadOpen} onOpenChange={setIsCreateEspecialidadOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Crear Nueva Especialidad</DialogTitle>
+              <DialogDescription>
+                Crea una nueva especialidad para asignar a empresas
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Nombre de la Especialidad *</Label>
+                <Input
+                  value={nuevaEspecialidad.nombre}
+                  onChange={(e) => setNuevaEspecialidad({ ...nuevaEspecialidad, nombre: e.target.value })}
+                  placeholder="Ej: Plomería, Electricidad, Albañilería"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Color</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={nuevaEspecialidad.color}
+                    onChange={(e) => setNuevaEspecialidad({ ...nuevaEspecialidad, color: e.target.value })}
+                    className="w-10 h-10 rounded border cursor-pointer"
+                  />
+                  <span className="text-sm text-muted-foreground">{nuevaEspecialidad.color}</span>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateEspecialidadOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (!nuevaEspecialidad.nombre.trim()) {
+                    toast.error("El nombre es requerido");
+                    return;
+                  }
+                  createEspecialidadMutation.mutate({
+                    nombre: nuevaEspecialidad.nombre,
+                    color: nuevaEspecialidad.color,
+                    proyectoId: selectedProjectId || undefined,
+                  });
+                }}
+                disabled={createEspecialidadMutation.isPending}
+              >
+                {createEspecialidadMutation.isPending ? "Creando..." : "Crear Especialidad"}
               </Button>
             </DialogFooter>
           </DialogContent>

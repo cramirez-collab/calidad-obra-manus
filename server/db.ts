@@ -23,7 +23,8 @@ import {
   auditoria, InsertAuditoria,
   pushSubscriptions, InsertPushSubscription,
   empresaEspecialidades, InsertEmpresaEspecialidad,
-  empresaResidentes, InsertEmpresaResidente
+  empresaResidentes, InsertEmpresaResidente,
+  empresaHistorial, InsertEmpresaHistorial
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -4415,4 +4416,45 @@ export async function getResumenSemanalActividad(proyectoId?: number) {
     },
     actividadPorDia,
   };
+}
+
+
+// ==================== HISTORIAL DE EMPRESAS ====================
+
+export async function createEmpresaHistorial(data: {
+  empresaId: number;
+  usuarioId: number;
+  usuarioNombre: string;
+  tipoAccion: 'empresa_creada' | 'empresa_editada' | 'usuario_agregado' | 'usuario_eliminado' | 'usuario_rol_cambiado' | 'defecto_agregado' | 'defecto_editado' | 'defecto_eliminado' | 'especialidad_cambiada';
+  descripcion: string;
+  valorAnterior?: string;
+  valorNuevo?: string;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(empresaHistorial).values({
+    empresaId: data.empresaId,
+    usuarioId: data.usuarioId,
+    usuarioNombre: data.usuarioNombre,
+    tipoAccion: data.tipoAccion,
+    descripcion: data.descripcion,
+    valorAnterior: data.valorAnterior,
+    valorNuevo: data.valorNuevo,
+  });
+  
+  return result[0].insertId;
+}
+
+export async function getEmpresaHistorial(empresaId: number): Promise<any[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const historial = await db
+    .select()
+    .from(empresaHistorial)
+    .where(eq(empresaHistorial.empresaId, empresaId))
+    .orderBy(desc(empresaHistorial.createdAt));
+  
+  return historial;
 }
