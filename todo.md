@@ -1830,3 +1830,5 @@
 - [ ] Optimizar velocidad de carga, descarga y guardado
 
 - [x] Corregir que no se guardan fotos de avatares de usuarios
+
+- [x] Bug: Foto de avatar se guarda pero no se muestra en lista de usuarios - CORREGIDO: Agregado fotoBase64 a UserAvatar

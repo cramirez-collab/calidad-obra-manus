@@ -662,6 +662,7 @@ export default function Usuarios() {
                           <UserAvatar 
                             name={usuario.name} 
                             fotoUrl={usuario.fotoUrl}
+                            fotoBase64={usuario.fotoBase64}
                             size="lg"
                             showName={false}
                           />
@@ -772,6 +773,7 @@ export default function Usuarios() {
                               <UserAvatar 
                                 name={usuario.name} 
                                 fotoUrl={usuario.fotoUrl}
+                                fotoBase64={usuario.fotoBase64}
                                 size="lg"
                                 showName={false}
                               />
