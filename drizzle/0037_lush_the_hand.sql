@@ -1,0 +1,1 @@
+ALTER TABLE `items` ADD `clientId` varchar(100);

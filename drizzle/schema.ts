@@ -241,6 +241,9 @@ export const items = mysqlTable("items", {
   comentarioJefeResidente: text("comentarioJefeResidente"),
   comentarioSupervisor: text("comentarioSupervisor"),
   
+  // ID de cliente para evitar duplicados (generado en el cliente)
+  clientId: varchar("clientId", { length: 100 }),
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

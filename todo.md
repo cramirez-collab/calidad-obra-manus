@@ -1846,3 +1846,16 @@
 - [x] Avatar no se muestra en lista después de subirlo - CORREGIDO: Agregado fotoBase64 a todos los UserAvatar
 - [x] Desbordamiento de pantalla en lista de ítems - CORREGIDO: Badge en nueva línea
 - [x] Avatares no aparecen en otros lugares - CORREGIDO: Agregado fotoBase64 en Bienvenida, SeleccionProyecto, ItemChat, Bitacora, Prioridades, Proyectos
+
+
+## Optimización Offline y Velocidad (31 Enero 2026 - 14:45)
+- [ ] Caché local con IndexedDB para imágenes (sin comprimir)
+- [ ] Cola de sincronización para modo offline
+- [ ] Indicador de estado de conexión (online/offline)
+- [ ] Lazy loading de imágenes
+- [ ] Sincronización automática cuando haya conexión
+
+
+## Bugs Críticos (31 Enero 2026 - 14:50)
+- [x] Duplicación de ítems cuando vuelve la señal - CORREGIDO: clientId evita duplicados por reintentos
+- [x] Fotos no se muestran en lista de ítems - CORREGIDO: Fotos incluidas en creación (una sola transacción)

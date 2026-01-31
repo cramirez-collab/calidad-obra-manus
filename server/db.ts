@@ -2344,6 +2344,15 @@ export async function getItemsByProyecto(proyectoId: number) {
     .orderBy(desc(items.fechaCreacion));
 }
 
+export async function getItemByClientId(clientId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(items)
+    .where(eq(items.clientId, clientId))
+    .limit(1);
+  return result[0] || null;
+}
+
 
 // ==================== MENSAJES (CHAT POR ÍTEM) ====================
 

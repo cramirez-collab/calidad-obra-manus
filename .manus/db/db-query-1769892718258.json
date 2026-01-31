@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, codigo, fotoAntesUrl, LEFT(fotoAntesBase64, 50) as fotoAntesBase64_preview, LEFT(fotoAntesMarcadaBase64, 50) as fotoAntesMarcadaBase64_preview FROM items ORDER BY id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, fotoAntesUrl, LEFT(fotoAntesBase64, 50) as fotoAntesBase64_preview, LEFT(fotoAntesMarcadaBase64, 50) as fotoAntesMarcadaBase64_preview FROM items ORDER BY id DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "480004",
+      "codigo": "Hidalma-00002",
+      "fotoAntesUrl": "NULL",
+      "fotoAntesBase64_preview": "NULL",
+      "fotoAntesMarcadaBase64_preview": "NULL"
+    },
+    {
+      "id": "480003",
+      "codigo": "Hidalma-00001",
+      "fotoAntesUrl": "NULL",
+      "fotoAntesBase64_preview": "NULL",
+      "fotoAntesMarcadaBase64_preview": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\tfotoAntesUrl\tfotoAntesBase64_preview\tfotoAntesMarcadaBase64_preview\n480004\tHidalma-00002\tNULL\tNULL\tNULL\n480003\tHidalma-00001\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 93
+}

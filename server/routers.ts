@@ -877,12 +877,65 @@ export const appRouter = router({
         descripcion: z.string().optional(),
         ubicacionDetalle: z.string().optional(),
         comentarioResidente: z.string().optional(),
+        // Fotos incluidas para crear en una sola transacción
+        fotoAntesBase64: z.string().optional(),
+        fotoAntesMarcadaBase64: z.string().optional(),
+        // ID de cliente para evitar duplicados
+        clientId: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        // Verificar duplicados por clientId (evita duplicados por reintentos)
+        if (input.clientId) {
+          const existente = await db.getItemByClientId(input.clientId);
+          if (existente) {
+            // Ya existe, devolver el existente sin crear duplicado
+            return existente;
+          }
+        }
+        
+        // Preparar datos de fotos si se incluyen
+        let fotoData: any = {};
+        if (input.fotoAntesBase64) {
+          fotoData.fotoAntesBase64 = input.fotoAntesBase64;
+          
+          // Subir a S3 como respaldo (no bloquea si falla)
+          try {
+            const mimeMatch = input.fotoAntesBase64.match(/^data:(image\/\w+);base64,/);
+            const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+            const extension = mimeType === 'image/jpeg' ? 'jpg' : 'png';
+            const fotoBuffer = Buffer.from(input.fotoAntesBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+            const tempCode = `temp-${Date.now()}`;
+            const fotoKey = `items/${tempCode}/antes-${nanoid(8)}.${extension}`;
+            const { url: fotoUrl } = await storagePut(fotoKey, fotoBuffer, mimeType);
+            fotoData.fotoAntesUrl = fotoUrl;
+            fotoData.fotoAntesKey = fotoKey;
+          } catch (e) {
+            // S3 falló, pero tenemos base64 como respaldo
+            console.log('S3 upload failed, using base64 only');
+          }
+        }
+        
+        if (input.fotoAntesMarcadaBase64) {
+          fotoData.fotoAntesMarcadaBase64 = input.fotoAntesMarcadaBase64;
+          
+          try {
+            const fotoMarcadaBuffer = Buffer.from(input.fotoAntesMarcadaBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+            const tempCode = `temp-${Date.now()}`;
+            const fotoMarcadaKey = `items/${tempCode}/antes-marcada-${nanoid(8)}.png`;
+            const { url: fotoMarcadaUrl } = await storagePut(fotoMarcadaKey, fotoMarcadaBuffer, 'image/png');
+            fotoData.fotoAntesMarcadaUrl = fotoMarcadaUrl;
+            fotoData.fotoAntesMarcadaKey = fotoMarcadaKey;
+          } catch (e) {
+            console.log('S3 upload failed for marked photo, using base64 only');
+          }
+        }
+        
         const result = await db.createItem({
           ...input,
+          ...fotoData,
           residenteId: ctx.user.id,
           status: 'pendiente_foto_despues',
+          clientId: input.clientId, // Guardar para evitar duplicados
         });
         
         // Registrar en historial

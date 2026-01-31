@@ -260,6 +260,13 @@
       "when": 1769891596023,
       "tag": "0036_violet_domino",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "5",
+      "when": 1769892866744,
+      "tag": "0037_lush_the_hand",
+      "breakpoints": true
     }
   ]
 }

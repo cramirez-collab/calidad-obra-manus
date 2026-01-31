@@ -270,7 +270,10 @@ export default function NuevoItem() {
       const defectoSeleccionado = defectos?.find(d => d.id.toString() === formData.defectoId);
       const tituloFinal = defectoSeleccionado?.nombre || 'Sin título';
       
-      // Crear el ítem
+      // Generar ID de cliente único para evitar duplicados
+      const clientId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Crear el ítem con fotos incluidas (una sola transacción)
       const result = await createItemMutation.mutateAsync({
         proyectoId: selectedProjectId || 0,
         empresaId: residenteSeleccionado.empresaId,
@@ -279,13 +282,11 @@ export default function NuevoItem() {
         defectoId: formData.defectoId ? parseInt(formData.defectoId) : undefined,
         espacioId: formData.espacioId ? parseInt(formData.espacioId) : undefined,
         titulo: tituloFinal,
-      });
-
-      // Subir las fotos
-      await uploadFotoMutation.mutateAsync({
-        itemId: result.id,
-        fotoBase64: fotoAntes,
-        fotoMarcadaBase64: fotoAntesMarcada || undefined,
+        // Incluir fotos directamente para evitar problemas de conexión
+        fotoAntesBase64: fotoAntes,
+        fotoAntesMarcadaBase64: fotoAntesMarcada || undefined,
+        // ID de cliente para evitar duplicados por reintentos
+        clientId,
       });
 
       toast.success("Ítem creado correctamente");
