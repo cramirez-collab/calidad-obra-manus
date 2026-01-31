@@ -1566,3 +1566,11 @@
 - [x] Limpiar especialidades duplicadas (consolidar por nombre)
 - [x] Implementar badges de notificación con tracking por usuario (ya implementado - cada usuario tiene su propio contador)
 - [x] Mostrar foto de perfil en lista de usuarios para administradores
+
+
+### Foto de Perfil de Usuario (30/01/2026)
+- [x] Agregar botón visible para subir foto de perfil en el menú de usuario
+- [x] Mostrar foto de perfil en mensajería
+- [x] Mostrar foto de perfil en comentarios de ítems
+- [x] Mostrar foto de perfil en bitácora
+- [x] Mostrar foto de perfil en cualquier lugar donde aparezca el nombre del usuario

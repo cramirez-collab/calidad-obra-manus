@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   History, 
   User, 
@@ -790,7 +791,12 @@ export default function Bitacora() {
                           </td>
                           <td className="p-2">
                             <div className="flex items-center gap-2">
-                              <User className="h-3 w-3 text-muted-foreground" />
+                              <Avatar className="h-6 w-6">
+                                {actividad.usuario?.fotoUrl && <AvatarImage src={actividad.usuario.fotoUrl} alt={actividad.usuario?.name || 'Usuario'} />}
+                                <AvatarFallback className="text-xs bg-muted">
+                                  {actividad.usuario?.name?.charAt(0).toUpperCase() || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
                               <span className="truncate max-w-[120px]">
                                 {actividad.usuario?.name || "-"}
                               </span>
@@ -846,9 +852,12 @@ export default function Bitacora() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <div className="p-1.5 rounded-full bg-muted">
-                            {getAccionIcon(actividad.accion)}
-                          </div>
+                          <Avatar className="h-8 w-8">
+                            {actividad.usuario?.fotoUrl && <AvatarImage src={actividad.usuario.fotoUrl} alt={actividad.usuario?.name || 'Usuario'} />}
+                            <AvatarFallback className="text-xs bg-muted">
+                              {actividad.usuario?.name?.charAt(0).toUpperCase() || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
                           <div>
                             <p className="font-medium text-sm">
                               {getAccionLabel(actividad.accion)}

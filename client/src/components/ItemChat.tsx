@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Send, 
@@ -224,6 +224,7 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
                   className={`flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}
                 >
                   <Avatar className={`h-8 w-8 ${getRoleColor(msg.usuario?.role || 'residente')}`}>
+                    {msg.usuario?.fotoUrl && <AvatarImage src={msg.usuario.fotoUrl} alt={msg.usuario?.name || 'Usuario'} />}
                     <AvatarFallback className="text-white text-xs">
                       {getInitials(msg.usuario?.name)}
                     </AvatarFallback>

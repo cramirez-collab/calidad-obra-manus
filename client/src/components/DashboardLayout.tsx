@@ -512,16 +512,24 @@ function DashboardLayoutContent({
               {/* Info del usuario */}
               <div className="p-4 border-b bg-muted/30">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12 border-2">
-                    <AvatarFallback className={`text-white text-lg font-medium ${roleColors[user?.role || 'residente']}`}>
-                      {user?.name?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserProfileEditor 
+                    user={{ 
+                      id: user?.id || 0, 
+                      name: user?.name, 
+                      email: user?.email, 
+                      role: user?.role,
+                      fotoUrl: user?.fotoUrl 
+                    }} 
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold truncate">{user?.name}</p>
                     <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                     <p className="text-xs text-primary font-medium mt-0.5">
                       {roleLabels[user?.role || 'residente']}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      <Camera className="h-3 w-3 inline mr-1" />
+                      Toca tu foto para cambiarla
                     </p>
                   </div>
                 </div>
