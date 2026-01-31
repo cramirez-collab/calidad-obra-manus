@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO items (codigo, proyectoId, empresaId, unidadId, residenteId, titulo, descripcion, status, fechaCreacion, createdAt, updatedAt) \nSELECT \n  CONCAT('TEST-', UNIX_TIMESTAMP()),\n  1,\n  (SELECT id FROM empresas WHERE proyectoId = 1 LIMIT 1),\n  (SELECT id FROM unidades WHERE nombre = '101' AND proyectoId = 1 LIMIT 1),\n  (SELECT id FROM users WHERE name LIKE '%Saul%' LIMIT 1),\n  'Ítem de Prueba para Transcripción',\n  'Ítem creado para probar la funcionalidad de transcripción de voz',\n  'pendiente_foto_despues',\n  NOW(),\n  NOW(),\n  NOW();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute INSERT INTO items (codigo, proyectoId, empresaId, unidadId, residenteId, titulo, descripcion, status, fechaCreacion, createdAt, updatedAt) \nSELECT \n  CONCAT('TEST-', UNIX_TIMESTAMP()),\n  1,\n  (SELECT id FROM empresas WHERE proyectoId = 1 LIMIT 1),\n  (SELECT id FROM unidades WHERE nombre = '101' AND proyectoId = 1 LIMIT 1),\n  (SELECT id FROM users WHERE name LIKE '%Saul%' LIMIT 1),\n  'Ítem de Prueba para Transcripción',\n  'Ítem creado para probar la funcionalidad de transcripción de voz',\n  'pendiente_foto_despues',\n  NOW(),\n  NOW(),\n  NOW();",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 76
+}

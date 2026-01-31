@@ -1778,3 +1778,19 @@
 - [x] Identificar dónde se muestran las fotos de portada de proyectos (SeleccionProyecto, Proyectos, NuevoProyecto)
 - [x] Aplicar getImageUrl() a las imágenes de portada en los 3 archivos
 - [x] Verificar que las fotos se muestren correctamente
+
+
+## Notas sobre Imágenes y Almacenamiento (31 Enero 2026)
+
+### Estado del Sistema de Imágenes
+- [x] Sistema de imágenes base64 implementado como fallback
+- [x] Colores de fondo generados automáticamente cuando no hay imagen
+- [ ] URLs de CloudFront del servicio de almacenamiento de Manus devuelven error 403
+- [x] Las nuevas imágenes subidas se guardarán correctamente como base64
+
+### Transcripción de Voz
+- [x] Código de transcripción implementado en servidor (routers.ts)
+- [x] Componente ItemChat.tsx con botón de micrófono
+- [x] Integración con API de Whisper para transcripción
+- [x] 185 pruebas pasando correctamente
+

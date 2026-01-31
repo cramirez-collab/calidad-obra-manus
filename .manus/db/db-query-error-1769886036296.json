@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO items (proyectoId, titulo, descripcion, estado, prioridad, unidadId, espacioId, defectoId, residenteId, creadoPorId, createdAt, updatedAt) \nSELECT 1, 'Ítem de Prueba', 'Ítem creado para probar la transcripción de voz', 'abierto', 'media', \n(SELECT id FROM unidades WHERE nombre = '101' AND proyectoId = 1 LIMIT 1),\nNULL, NULL,\n(SELECT id FROM users WHERE name LIKE '%Saul%' LIMIT 1),\n(SELECT id FROM users WHERE name LIKE '%Carlos%' LIMIT 1),\nNOW(), NOW();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute INSERT INTO items (proyectoId, titulo, descripcion, estado, prioridad, unidadId, espacioId, defectoId, residenteId, creadoPorId, createdAt, updatedAt) \nSELECT 1, 'Ítem de Prueba', 'Ítem creado para probar la transcripción de voz', 'abierto', 'media', \n(SELECT id FROM unidades WHERE nombre = '101' AND proyectoId = 1 LIMIT 1),\nNULL, NULL,\n(SELECT id FROM users WHERE name LIKE '%Saul%' LIMIT 1),\n(SELECT id FROM users WHERE name LIKE '%Carlos%' LIMIT 1),\nNOW(), NOW();",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'estado' in 'field list'"
+  ]
+}
