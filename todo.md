@@ -1526,3 +1526,10 @@
 - [x] Eliminación en cascada: al eliminar ítem, borrar bitácora relacionada
 - [x] Conteos de Stacking: al hacer clic, navegar a lista filtrada de ítems
 - [x] Verificar que superadmin pueda borrar datos de bitácora
+
+
+### Mejoras Solicitadas (31/01/2026)
+- [x] Cambiar título de app de "ObjetivaOQC" a "OQC" en header y manifest
+- [x] Verificar favicon correcto para descarga de app
+- [x] Numeración secuencial automática de especialidades (1, 2, 3... sin importar orden alfabético)
+- [x] Agregar submenú "Lista" en Especialidades que muestre todas con su número asignado

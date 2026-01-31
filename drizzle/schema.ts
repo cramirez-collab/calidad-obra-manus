@@ -151,6 +151,7 @@ export const especialidades = mysqlTable("especialidades", {
   id: int("id").autoincrement().primaryKey(),
   proyectoId: int("proyectoId"), // Relación con proyecto
   residenteId: int("residenteId"), // Usuario residente responsable de esta especialidad
+  numero: int("numero"), // Número secuencial asignado automáticamente (1, 2, 3...)
   nombre: varchar("nombre", { length: 255 }).notNull(),
   codigo: varchar("codigo", { length: 50 }),
   descripcion: text("descripcion"),

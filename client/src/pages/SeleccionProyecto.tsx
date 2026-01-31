@@ -66,7 +66,7 @@ export default function SeleccionProyecto() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/logo-objetiva.jpg" alt="Objetiva" className="h-10" />
-            <span className="text-xl font-bold text-slate-800">ObjetivaOQC</span>
+            <span className="text-xl font-bold text-slate-800">OQC</span>
           </div>
           
           <div className="flex items-center gap-4">

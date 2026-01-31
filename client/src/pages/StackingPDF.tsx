@@ -49,7 +49,7 @@ function EncabezadoPDF({ proyectoNombre, fecha }: { proyectoNombre: string; fech
 function PiePaginaPDF({ proyectoNombre, pagina, totalPaginas }: { proyectoNombre: string; pagina: number; totalPaginas: number }) {
   return (
     <div className="flex justify-between items-center mt-auto pt-2 border-t text-xs text-gray-500">
-      <span>ObjetivaOQC - {proyectoNombre}</span>
+      <span>OQC - {proyectoNombre}</span>
       <span>Página {pagina} de {totalPaginas}</span>
     </div>
   );

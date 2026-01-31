@@ -86,7 +86,7 @@ export default function Login() {
               }}
             />
           </div>
-          <CardTitle className="text-2xl font-bold text-[#002C63]">ObjetivaOQC</CardTitle>
+          <CardTitle className="text-2xl font-bold text-[#002C63]">OQC</CardTitle>
           <CardDescription>Control de Calidad de Obra</CardDescription>
         </CardHeader>
         

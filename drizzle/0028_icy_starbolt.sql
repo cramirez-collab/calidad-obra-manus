@@ -1,0 +1,1 @@
+ALTER TABLE `especialidades` ADD `numero` int;

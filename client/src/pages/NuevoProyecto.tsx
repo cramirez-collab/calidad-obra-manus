@@ -101,7 +101,7 @@ export default function NuevoProyecto() {
           </Button>
           <div className="flex items-center gap-3">
             <img src="/logo-objetiva.jpg" alt="Objetiva" className="h-10" />
-            <span className="text-xl font-bold text-slate-800">ObjetivaOQC</span>
+            <span className="text-xl font-bold text-slate-800">OQC</span>
           </div>
         </div>
       </header>

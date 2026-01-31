@@ -693,9 +693,9 @@ export async function getAllEspecialidades(proyectoId?: number) {
   if (proyectoId) {
     return await db.select().from(especialidades)
       .where(and(eq(especialidades.activo, true), eq(especialidades.proyectoId, proyectoId)))
-      .orderBy(especialidades.nombre);
+      .orderBy(especialidades.numero);
   }
-  return await db.select().from(especialidades).where(eq(especialidades.activo, true)).orderBy(especialidades.nombre);
+  return await db.select().from(especialidades).where(eq(especialidades.activo, true)).orderBy(especialidades.numero);
 }
 
 export async function getEspecialidadById(id: number) {
@@ -731,10 +731,10 @@ export async function getAllEspecialidadesConAtributos(proyectoId?: number) {
   const todasEspecialidades = proyectoId
     ? await db.select().from(especialidades)
         .where(and(eq(especialidades.activo, true), eq(especialidades.proyectoId, proyectoId)))
-        .orderBy(especialidades.nombre)
+        .orderBy(especialidades.numero)
     : await db.select().from(especialidades)
         .where(eq(especialidades.activo, true))
-        .orderBy(especialidades.nombre);
+        .orderBy(especialidades.numero);
   
   const todosAtributos = await db.select().from(atributos)
     .where(eq(atributos.activo, true));
@@ -823,7 +823,16 @@ function getDefectosTipicos(nombreEspecialidad: string): string[] {
 export async function createEspecialidad(data: InsertEspecialidad) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(especialidades).values(data);
+  
+  // Obtener el siguiente número secuencial para el proyecto
+  const existentes = await db.select({ numero: especialidades.numero })
+    .from(especialidades)
+    .where(data.proyectoId ? eq(especialidades.proyectoId, data.proyectoId) : undefined);
+  
+  const maxNumero = existentes.reduce((max, e) => Math.max(max, e.numero || 0), 0);
+  const nuevoNumero = maxNumero + 1;
+  
+  const result = await db.insert(especialidades).values({ ...data, numero: nuevoNumero });
   const especialidadId = result[0].insertId;
   
   // Crear defectos típicos automáticamente

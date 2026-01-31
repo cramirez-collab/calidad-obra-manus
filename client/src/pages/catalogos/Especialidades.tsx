@@ -28,13 +28,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Wrench, Edit, Plus, Trash2, User } from "lucide-react";
+import { Wrench, Edit, Plus, Trash2, User, ListOrdered } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
 
 type Especialidad = {
   id: number;
+  numero?: number | null;
   nombre: string;
   codigo?: string | null;
   descripcion?: string | null;
@@ -174,14 +176,28 @@ export default function Especialidades() {
           </Button>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5" />
-              Lista de Especialidades
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Tabs defaultValue="gestion" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="gestion" className="flex items-center gap-2">
+              <Wrench className="h-4 w-4" />
+              Gestión
+            </TabsTrigger>
+            <TabsTrigger value="lista" className="flex items-center gap-2">
+              <ListOrdered className="h-4 w-4" />
+              Lista Numerada
+            </TabsTrigger>
+          </TabsList>
+          
+          {/* Tab de Gestión */}
+          <TabsContent value="gestion">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wrench className="h-5 w-5" />
+                  Gestión de Especialidades
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">
                 Cargando...
@@ -194,6 +210,7 @@ export default function Especialidades() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[50px] text-center">#</TableHead>
                     <TableHead className="w-[60px]">Color</TableHead>
                     <TableHead>Código</TableHead>
                     <TableHead>Nombre</TableHead>
@@ -205,6 +222,9 @@ export default function Especialidades() {
                 <TableBody>
                   {especialidades?.map((especialidad) => (
                     <TableRow key={especialidad.id}>
+                      <TableCell className="text-center font-bold text-lg text-primary">
+                        {especialidad.numero || "-"}
+                      </TableCell>
                       <TableCell>
                         <div
                           className="h-6 w-6 rounded-full border"
@@ -246,8 +266,67 @@ export default function Especialidades() {
                 </TableBody>
               </Table>
             )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Tab de Lista Numerada */}
+          <TabsContent value="lista">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ListOrdered className="h-5 w-5" />
+                  Lista Numerada de Especialidades
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Cargando...
+                  </div>
+                ) : especialidades?.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No hay especialidades registradas
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Esta lista muestra el número asignado a cada especialidad. 
+                      Los números se asignan automáticamente en orden de creación.
+                    </p>
+                    <div className="grid gap-2">
+                      {especialidades?.map((especialidad) => (
+                        <div 
+                          key={especialidad.id}
+                          className="flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                        >
+                          <div 
+                            className="flex items-center justify-center h-10 w-10 rounded-full text-white font-bold text-lg"
+                            style={{ backgroundColor: especialidad.color || "#3B82F6" }}
+                          >
+                            {especialidad.numero || "-"}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium">{especialidad.nombre}</p>
+                            {especialidad.codigo && (
+                              <p className="text-sm text-muted-foreground">Código: {especialidad.codigo}</p>
+                            )}
+                          </div>
+                          {especialidad.residenteId && (
+                            <div className="text-sm text-muted-foreground flex items-center gap-1">
+                              <User className="h-4 w-4" />
+                              {usuarios?.find(u => u.id === especialidad.residenteId)?.name || "-"}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogContent>

@@ -279,7 +279,7 @@ export default function Estadisticas() {
                 const htmlContent = `
                   <html>
                     <head>
-                      <title>Estadísticas - ObjetivaOQC</title>
+                      <title>Estadísticas - OQC</title>
                       <style>
                         @page { size: letter; margin: 15mm; }
                         body { font-family: Arial, sans-serif; padding: 20px; }
@@ -340,7 +340,7 @@ export default function Estadisticas() {
                       ` : ''}
                       
                       <div class="footer">
-                        Generado por ObjetivaOQC - Control de Calidad de Obra<br/>
+                        Generado por OQC - Control de Calidad de Obra<br/>
                         Página 1 de 1
                       </div>
                     </body>

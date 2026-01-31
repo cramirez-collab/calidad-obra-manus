@@ -387,7 +387,7 @@ function DashboardLayoutContent({
             <div className="flex items-center gap-2 mr-2 sm:mr-4 shrink-0">
               <img 
                 src="/logo-objetiva.jpg" 
-                alt="ObjetivaQC" 
+                alt="OQC" 
                 className="h-7 sm:h-8 object-contain"
               />
             </div>
