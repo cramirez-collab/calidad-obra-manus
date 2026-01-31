@@ -1,4 +1,4 @@
-import { eq, and, gte, lte, like, desc, asc, sql, inArray } from "drizzle-orm";
+import { eq, and, or, gte, lte, like, desc, asc, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import bcrypt from 'bcryptjs';
 import { 
@@ -2837,15 +2837,47 @@ export async function asignarEspecialidadesAEmpresa(empresaId: number, especiali
   }
 }
 
-// Eliminar un ítem y su historial
+// Eliminar un ítem y todos sus datos relacionados (eliminación en cascada)
 export async function deleteItem(itemId: number) {
   const db = await getDb();
   if (!db) return;
   
-  // Primero eliminar el historial relacionado
+  // Obtener el código del ítem para buscar en bitácora
+  const item = await db.select({ codigo: items.codigo }).from(items).where(eq(items.id, itemId)).limit(1);
+  const itemCodigo = item[0]?.codigo;
+  
+  // Eliminar historial relacionado
   await db.delete(itemHistorial).where(eq(itemHistorial.itemId, itemId));
   
-  // Luego eliminar el ítem
+  // Eliminar notificaciones relacionadas con este ítem
+  await db.delete(notificaciones).where(eq(notificaciones.itemId, itemId));
+  
+  // Eliminar comentarios relacionados
+  await db.delete(comentarios).where(eq(comentarios.itemId, itemId));
+  
+  // Eliminar entradas de bitácora relacionadas con este ítem
+  // La tabla bitacora usa entidad='item' y entidadId para referenciar ítems
+  // También buscamos por código en detalles si existe
+  if (itemCodigo) {
+    await db.delete(bitacora).where(
+      or(
+        and(
+          eq(bitacora.entidad, 'item'),
+          eq(bitacora.entidadId, itemId)
+        ),
+        like(bitacora.detalles, `%${itemCodigo}%`)
+      )
+    );
+  } else {
+    await db.delete(bitacora).where(
+      and(
+        eq(bitacora.entidad, 'item'),
+        eq(bitacora.entidadId, itemId)
+      )
+    );
+  }
+  
+  // Finalmente eliminar el ítem
   await db.delete(items).where(eq(items.id, itemId));
 }
 
@@ -4099,4 +4131,74 @@ export async function deleteUser(userId: number) {
   await db.delete(users).where(eq(users.id, userId));
   
   return { success: true };
+}
+
+
+// ==================== ELIMINACIÓN DE BITÁCORA (SUPERADMIN) ====================
+
+// Eliminar una entrada de bitácora por ID
+export async function deleteBitacoraEntry(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(bitacora).where(eq(bitacora.id, id));
+  return { success: true };
+}
+
+// Eliminar múltiples entradas de bitácora por IDs
+export async function deleteBitacoraEntries(ids: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  if (ids.length === 0) return { success: true, count: 0 };
+  
+  await db.delete(bitacora).where(inArray(bitacora.id, ids));
+  return { success: true, count: ids.length };
+}
+
+// Limpiar bitácora por filtros
+export async function clearBitacoraByFilters(filters: {
+  usuarioId?: number;
+  accion?: string;
+  entidad?: string;
+  fechaDesde?: Date;
+  fechaHasta?: Date;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const conditions: any[] = [];
+  
+  if (filters.usuarioId) {
+    conditions.push(eq(bitacora.usuarioId, filters.usuarioId));
+  }
+  if (filters.accion) {
+    conditions.push(eq(bitacora.accion, filters.accion));
+  }
+  if (filters.entidad) {
+    conditions.push(eq(bitacora.entidad, filters.entidad));
+  }
+  if (filters.fechaDesde) {
+    conditions.push(gte(bitacora.createdAt, filters.fechaDesde));
+  }
+  if (filters.fechaHasta) {
+    conditions.push(lte(bitacora.createdAt, filters.fechaHasta));
+  }
+  
+  // Si no hay filtros, no eliminar nada (seguridad)
+  if (conditions.length === 0) {
+    return 0;
+  }
+  
+  // Contar antes de eliminar
+  const countResult = await db.select({ count: sql<number>`count(*)` })
+    .from(bitacora)
+    .where(and(...conditions));
+  
+  const count = countResult[0]?.count || 0;
+  
+  // Eliminar
+  await db.delete(bitacora).where(and(...conditions));
+  
+  return count;
 }

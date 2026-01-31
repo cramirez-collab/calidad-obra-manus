@@ -63,7 +63,7 @@ type MenuItem = {
   children?: MenuItem[];
 };
 
-// Tipo para proyecto con enlaces
+// Tipo para proyecto con enlaces y títulos
 type ProyectoConEnlaces = {
   linkCurvas?: string | null;
   linkSecuencias?: string | null;
@@ -71,6 +71,12 @@ type ProyectoConEnlaces = {
   linkPlanos?: string | null;
   linkManuales?: string | null;
   linkEspecificaciones?: string | null;
+  tituloCurvas?: string | null;
+  tituloSecuencias?: string | null;
+  tituloVisor?: string | null;
+  tituloPlanos?: string | null;
+  tituloManuales?: string | null;
+  tituloEspecificaciones?: string | null;
 } | null;
 
 // Menú principal según rol y proyecto
@@ -93,24 +99,24 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: TrendingUp, label: "KPIs", path: "/kpis" },
   ];
   
-  // Agregar enlaces externos solo si están configurados en el proyecto
+  // Agregar enlaces externos solo si están configurados en el proyecto (con títulos personalizados)
   if (proyecto?.linkCurvas) {
-    analysisItems.push({ icon: Activity, label: "Curvas", path: proyecto.linkCurvas, external: true });
+    analysisItems.push({ icon: Activity, label: proyecto.tituloCurvas || "Curvas", path: proyecto.linkCurvas, external: true });
   }
   if (proyecto?.linkSecuencias) {
-    analysisItems.push({ icon: ListOrdered, label: "Secuencias", path: proyecto.linkSecuencias, external: true });
+    analysisItems.push({ icon: ListOrdered, label: proyecto.tituloSecuencias || "Secuencias", path: proyecto.linkSecuencias, external: true });
   }
   if (proyecto?.linkVisor) {
-    analysisItems.push({ icon: FileSpreadsheet, label: "Visor", path: proyecto.linkVisor, external: true });
+    analysisItems.push({ icon: FileSpreadsheet, label: proyecto.tituloVisor || "Visor", path: proyecto.linkVisor, external: true });
   }
   if (proyecto?.linkPlanos) {
-    analysisItems.push({ icon: FolderOpen, label: "Planos", path: proyecto.linkPlanos, external: true });
+    analysisItems.push({ icon: FolderOpen, label: proyecto.tituloPlanos || "Planos", path: proyecto.linkPlanos, external: true });
   }
   if (proyecto?.linkManuales) {
-    analysisItems.push({ icon: BookOpen, label: "Manuales", path: proyecto.linkManuales, external: true });
+    analysisItems.push({ icon: BookOpen, label: proyecto.tituloManuales || "Manuales", path: proyecto.linkManuales, external: true });
   }
   if (proyecto?.linkEspecificaciones) {
-    analysisItems.push({ icon: FileText, label: "Especificaciones", path: proyecto.linkEspecificaciones, external: true });
+    analysisItems.push({ icon: FileText, label: proyecto.tituloEspecificaciones || "Especificaciones", path: proyecto.linkEspecificaciones, external: true });
   }
 
   // Submenú de Configuración

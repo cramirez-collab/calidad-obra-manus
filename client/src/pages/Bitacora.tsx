@@ -71,6 +71,10 @@ export default function Bitacora() {
   // Estado de ordenamiento
   const [sortField, setSortField] = useState<SortField>('fecha');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  
+  // Estado para selección múltiple (solo superadmin)
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const isSuperadmin = user?.role === 'superadmin';
 
   // Queries
   const { data: usuarios } = trpc.users.list.useQuery();
@@ -84,7 +88,7 @@ export default function Bitacora() {
     offset: (pagina - 1) * ITEMS_PER_PAGE,
   }), [filtroUsuario, filtroCategoria, fechaDesde, fechaHasta, pagina]);
 
-  const { data: auditoria, isLoading } = isAdmin 
+  const { data: auditoria, isLoading, refetch } = isAdmin 
     ? trpc.bitacora.list.useQuery({
         usuarioId: filtros.usuarioId,
         accion: filtros.categoria,
@@ -93,6 +97,61 @@ export default function Bitacora() {
         limit: 500, // Cargar más para ordenar localmente
       })
     : trpc.bitacora.miActividad.useQuery({});
+  
+  // Mutación para eliminar entradas (solo superadmin)
+  const deleteMutation = trpc.bitacora.delete.useMutation({
+    onSuccess: () => {
+      toast.success('Entrada eliminada correctamente');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error('Error al eliminar: ' + error.message);
+    },
+  });
+  
+  const deleteManyMutation = trpc.bitacora.deleteMany.useMutation({
+    onSuccess: (data) => {
+      toast.success(`${data.count} entradas eliminadas correctamente`);
+      setSelectedIds([]);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error('Error al eliminar: ' + error.message);
+    },
+  });
+  
+  // Función para eliminar una entrada
+  const handleDelete = (id: number) => {
+    if (confirm('¿Estás seguro de eliminar esta entrada de bitácora?')) {
+      deleteMutation.mutate({ id });
+    }
+  };
+  
+  // Función para eliminar múltiples entradas
+  const handleDeleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    if (confirm(`¿Estás seguro de eliminar ${selectedIds.length} entradas de bitácora?`)) {
+      deleteManyMutation.mutate({ ids: selectedIds });
+    }
+  };
+  
+  // Función para seleccionar/deseleccionar una entrada
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(i => i !== id)
+        : [...prev, id]
+    );
+  };
+  
+  // Función para seleccionar/deseleccionar todas las entradas visibles
+  const toggleSelectAll = () => {
+    if (selectedIds.length === actividadesFiltradas.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(actividadesFiltradas.map((a: any) => a.id));
+    }
+  };
 
   // Contar total para paginación (aproximado basado en datos cargados)
   const totalCount = auditoria?.length || 0;
@@ -437,8 +496,19 @@ export default function Bitacora() {
             </div>
           </div>
           
-          {/* Botones de exportación */}
+          {/* Botones de exportación y eliminación */}
           <div className="flex gap-2">
+            {isSuperadmin && selectedIds.length > 0 && (
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={handleDeleteSelected}
+                disabled={deleteManyMutation.isPending}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar ({selectedIds.length})
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={exportarCSV}>
               <FileSpreadsheet className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Exportar</span> CSV
@@ -630,6 +700,16 @@ export default function Bitacora() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b bg-muted/50">
+                        {isSuperadmin && (
+                          <th className="p-2 w-10">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.length === actividadesFiltradas.length && actividadesFiltradas.length > 0}
+                              onChange={toggleSelectAll}
+                              className="h-4 w-4 rounded border-gray-300"
+                            />
+                          </th>
+                        )}
                         <th 
                           className="text-left p-2 font-medium cursor-pointer hover:bg-muted/80 transition-colors"
                           onClick={() => handleSort('fecha')}
@@ -684,11 +764,24 @@ export default function Bitacora() {
                             {getSortIcon('detalles')}
                           </div>
                         </th>
+                        {isSuperadmin && (
+                          <th className="p-2 w-16 text-center font-medium">Acciones</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
                       {actividadesFiltradas.map((actividad: any) => (
-                        <tr key={actividad.id} className="border-b hover:bg-muted/30">
+                        <tr key={actividad.id} className={`border-b hover:bg-muted/30 ${selectedIds.includes(actividad.id) ? 'bg-primary/5' : ''}`}>
+                          {isSuperadmin && (
+                            <td className="p-2">
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.includes(actividad.id)}
+                                onChange={() => toggleSelect(actividad.id)}
+                                className="h-4 w-4 rounded border-gray-300"
+                              />
+                            </td>
+                          )}
                           <td className="p-2 whitespace-nowrap">
                             <div className="flex items-center gap-1 text-xs">
                               <Calendar className="h-3 w-3 text-muted-foreground" />
@@ -725,6 +818,19 @@ export default function Bitacora() {
                               {actividad.detalles || "-"}
                             </span>
                           </td>
+                          {isSuperadmin && (
+                            <td className="p-2 text-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(actividad.id)}
+                                disabled={deleteMutation.isPending}
+                                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
@@ -765,9 +871,22 @@ export default function Bitacora() {
                         <Badge variant="outline" className="text-xs">
                           {getCategoriaLabel(actividad.entidad)}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(actividad.createdAt), "dd/MM/yy HH:mm")}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(actividad.createdAt), "dd/MM/yy HH:mm")}
+                          </span>
+                          {isSuperadmin && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(actividad.id)}
+                              disabled={deleteMutation.isPending}
+                              className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

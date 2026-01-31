@@ -50,6 +50,13 @@ export const proyectos = mysqlTable("proyectos", {
   linkPlanos: text("linkPlanos"),
   linkManuales: text("linkManuales"),
   linkEspecificaciones: text("linkEspecificaciones"),
+  // Títulos personalizados para enlaces externos
+  tituloCurvas: varchar("tituloCurvas", { length: 100 }),
+  tituloSecuencias: varchar("tituloSecuencias", { length: 100 }),
+  tituloVisor: varchar("tituloVisor", { length: 100 }),
+  tituloPlanos: varchar("tituloPlanos", { length: 100 }),
+  tituloManuales: varchar("tituloManuales", { length: 100 }),
+  tituloEspecificaciones: varchar("tituloEspecificaciones", { length: 100 }),
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

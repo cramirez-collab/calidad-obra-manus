@@ -17,7 +17,8 @@ import {
   Loader2,
   AlertCircle,
   BookOpen,
-  FileText
+  FileText,
+  Pencil
 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -37,9 +38,18 @@ export default function EnlacesExternos() {
     linkEspecificaciones: "",
   });
   
+  const [titulos, setTitulos] = useState({
+    tituloCurvas: "",
+    tituloSecuencias: "",
+    tituloVisor: "",
+    tituloPlanos: "",
+    tituloManuales: "",
+    tituloEspecificaciones: "",
+  });
+  
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Cargar enlaces del proyecto actual
+  // Cargar enlaces y títulos del proyecto actual
   useEffect(() => {
     if (proyectoActual) {
       setEnlaces({
@@ -50,23 +60,36 @@ export default function EnlacesExternos() {
         linkManuales: proyectoActual.linkManuales || "",
         linkEspecificaciones: proyectoActual.linkEspecificaciones || "",
       });
+      setTitulos({
+        tituloCurvas: (proyectoActual as any).tituloCurvas || "",
+        tituloSecuencias: (proyectoActual as any).tituloSecuencias || "",
+        tituloVisor: (proyectoActual as any).tituloVisor || "",
+        tituloPlanos: (proyectoActual as any).tituloPlanos || "",
+        tituloManuales: (proyectoActual as any).tituloManuales || "",
+        tituloEspecificaciones: (proyectoActual as any).tituloEspecificaciones || "",
+      });
       setHasChanges(false);
     }
   }, [proyectoActual]);
 
   const updateEnlacesMutation = trpc.proyectos.updateEnlaces.useMutation({
     onSuccess: () => {
-      toast.success("Enlaces actualizados exitosamente");
+      toast.success("Enlaces y títulos actualizados exitosamente");
       setHasChanges(false);
       refetchProyecto();
     },
     onError: (error) => {
-      toast.error("Error al actualizar enlaces: " + error.message);
+      toast.error("Error al actualizar: " + error.message);
     },
   });
 
-  const handleChange = (field: keyof typeof enlaces, value: string) => {
+  const handleEnlaceChange = (field: keyof typeof enlaces, value: string) => {
     setEnlaces(prev => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  };
+
+  const handleTituloChange = (field: keyof typeof titulos, value: string) => {
+    setTitulos(prev => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
 
@@ -81,48 +104,60 @@ export default function EnlacesExternos() {
       linkPlanos: enlaces.linkPlanos || null,
       linkManuales: enlaces.linkManuales || null,
       linkEspecificaciones: enlaces.linkEspecificaciones || null,
+      tituloCurvas: titulos.tituloCurvas || null,
+      tituloSecuencias: titulos.tituloSecuencias || null,
+      tituloVisor: titulos.tituloVisor || null,
+      tituloPlanos: titulos.tituloPlanos || null,
+      tituloManuales: titulos.tituloManuales || null,
+      tituloEspecificaciones: titulos.tituloEspecificaciones || null,
     });
   };
 
   const enlacesConfig = [
     {
-      key: "linkCurvas" as const,
-      label: "Curvas",
+      linkKey: "linkCurvas" as const,
+      tituloKey: "tituloCurvas" as const,
+      defaultLabel: "Curvas",
       icon: Activity,
       description: "Enlace a la aplicación de curvas S del proyecto",
       placeholder: "https://ejemplo.com/curvas",
     },
     {
-      key: "linkSecuencias" as const,
-      label: "Secuencias",
+      linkKey: "linkSecuencias" as const,
+      tituloKey: "tituloSecuencias" as const,
+      defaultLabel: "Secuencias",
       icon: ListOrdered,
       description: "Enlace a la aplicación de secuencias (AppSheet, etc.)",
       placeholder: "https://www.appsheet.com/...",
     },
     {
-      key: "linkVisor" as const,
-      label: "Visor",
+      linkKey: "linkVisor" as const,
+      tituloKey: "tituloVisor" as const,
+      defaultLabel: "Visor",
       icon: FileSpreadsheet,
       description: "Enlace al visor de datos (Google Sheets, etc.)",
       placeholder: "https://docs.google.com/spreadsheets/...",
     },
     {
-      key: "linkPlanos" as const,
-      label: "Planos",
+      linkKey: "linkPlanos" as const,
+      tituloKey: "tituloPlanos" as const,
+      defaultLabel: "Planos",
       icon: FolderOpen,
       description: "Enlace a la carpeta de planos (Google Drive, etc.)",
       placeholder: "https://drive.google.com/...",
     },
     {
-      key: "linkManuales" as const,
-      label: "Manuales",
+      linkKey: "linkManuales" as const,
+      tituloKey: "tituloManuales" as const,
+      defaultLabel: "Manuales",
       icon: BookOpen,
       description: "Enlace a manuales de instalación o procedimientos",
       placeholder: "https://drive.google.com/...",
     },
     {
-      key: "linkEspecificaciones" as const,
-      label: "Especificaciones",
+      linkKey: "linkEspecificaciones" as const,
+      tituloKey: "tituloEspecificaciones" as const,
+      defaultLabel: "Especificaciones",
       icon: FileText,
       description: "Enlace a especificaciones técnicas del proyecto",
       placeholder: "https://drive.google.com/...",
@@ -178,36 +213,59 @@ export default function EnlacesExternos() {
             <CardTitle>Enlaces del Menú</CardTitle>
             <CardDescription>
               Estos enlaces aparecerán en el menú lateral cuando estén configurados. 
-              Si un enlace está vacío, el icono correspondiente no se mostrará en el menú.
+              Puedes personalizar el título de cada enlace o dejar el valor por defecto.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {enlacesConfig.map(({ key, label, icon: Icon, description, placeholder }) => (
-              <div key={key} className="space-y-2">
-                <Label htmlFor={key} className="flex items-center gap-2">
-                  <Icon className="h-4 w-4 text-muted-foreground" />
-                  {label}
-                </Label>
+          <CardContent className="space-y-8">
+            {enlacesConfig.map(({ linkKey, tituloKey, defaultLabel, icon: Icon, description, placeholder }) => (
+              <div key={linkKey} className="space-y-3 pb-6 border-b last:border-b-0 last:pb-0">
+                <div className="flex items-center gap-2">
+                  <Icon className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">{titulos[tituloKey] || defaultLabel}</span>
+                </div>
                 <p className="text-sm text-muted-foreground">{description}</p>
-                <div className="flex gap-2">
+                
+                {/* Campo de título editable */}
+                <div className="space-y-1">
+                  <Label htmlFor={`titulo-${linkKey}`} className="text-xs flex items-center gap-1 text-muted-foreground">
+                    <Pencil className="h-3 w-3" />
+                    Título personalizado (opcional)
+                  </Label>
                   <Input
-                    id={key}
-                    type="url"
-                    placeholder={placeholder}
-                    value={enlaces[key]}
-                    onChange={(e) => handleChange(key, e.target.value)}
-                    className="flex-1"
+                    id={`titulo-${linkKey}`}
+                    type="text"
+                    placeholder={defaultLabel}
+                    value={titulos[tituloKey]}
+                    onChange={(e) => handleTituloChange(tituloKey, e.target.value)}
+                    className="max-w-xs"
                   />
-                  {enlaces[key] && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => window.open(enlaces[key], '_blank')}
-                      title="Abrir enlace"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  )}
+                </div>
+                
+                {/* Campo de URL */}
+                <div className="space-y-1">
+                  <Label htmlFor={linkKey} className="text-xs text-muted-foreground">
+                    URL del enlace
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id={linkKey}
+                      type="url"
+                      placeholder={placeholder}
+                      value={enlaces[linkKey]}
+                      onChange={(e) => handleEnlaceChange(linkKey, e.target.value)}
+                      className="flex-1"
+                    />
+                    {enlaces[linkKey] && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => window.open(enlaces[linkKey], '_blank')}
+                        title="Abrir enlace"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -220,8 +278,8 @@ export default function EnlacesExternos() {
             <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
               <li>Los enlaces configurados aquí son específicos para este proyecto.</li>
               <li>Si un enlace está vacío, el icono no aparecerá en el menú.</li>
+              <li>Puedes personalizar el título que aparece en el menú para cada enlace.</li>
               <li>Los enlaces se abren en una nueva pestaña del navegador.</li>
-              <li>Puedes usar enlaces de Google Drive, Google Sheets, AppSheet, o cualquier URL válida.</li>
             </ul>
           </CardContent>
         </Card>

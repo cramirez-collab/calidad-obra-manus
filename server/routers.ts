@@ -1213,6 +1213,36 @@ export const appRouter = router({
       .query(async ({ ctx, input }) => {
         return await db.getBitacoraByUsuario(ctx.user.id, input?.limit || 50);
       }),
+    
+    // Eliminar una entrada de bitácora (solo superadmin)
+    delete: superadminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteBitacoraEntry(input.id);
+        return { success: true };
+      }),
+    
+    // Eliminar múltiples entradas de bitácora (solo superadmin)
+    deleteMany: superadminProcedure
+      .input(z.object({ ids: z.array(z.number()) }))
+      .mutation(async ({ input }) => {
+        await db.deleteBitacoraEntries(input.ids);
+        return { success: true, count: input.ids.length };
+      }),
+    
+    // Limpiar bitácora por filtros (solo superadmin)
+    clearByFilters: superadminProcedure
+      .input(z.object({
+        usuarioId: z.number().optional(),
+        accion: z.string().optional(),
+        entidad: z.string().optional(),
+        fechaDesde: z.date().optional(),
+        fechaHasta: z.date().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const count = await db.clearBitacoraByFilters(input);
+        return { success: true, count };
+      }),
   }),
 
   // ==================== PENDIENTES POR USUARIO ====================
@@ -1497,8 +1527,8 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    // Actualizar solo enlaces externos del proyecto
-    updateEnlaces: adminProcedure
+    // Actualizar solo enlaces externos del proyecto (solo superadmin puede cambiar títulos)
+    updateEnlaces: superadminProcedure
       .input(z.object({
         id: z.number(),
         linkCurvas: z.string().nullable().optional(),
@@ -1507,6 +1537,12 @@ export const appRouter = router({
         linkPlanos: z.string().nullable().optional(),
         linkManuales: z.string().nullable().optional(),
         linkEspecificaciones: z.string().nullable().optional(),
+        tituloCurvas: z.string().nullable().optional(),
+        tituloSecuencias: z.string().nullable().optional(),
+        tituloVisor: z.string().nullable().optional(),
+        tituloPlanos: z.string().nullable().optional(),
+        tituloManuales: z.string().nullable().optional(),
+        tituloEspecificaciones: z.string().nullable().optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...enlaces } = input;
