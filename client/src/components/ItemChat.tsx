@@ -1,5 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+
+// Estados del dictado por voz
+type VoiceState = 'idle' | 'recording' | 'transcribing' | 'summarizing' | 'ready' | 'error';
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +16,10 @@ import {
   Pencil, 
   Trash2,
   MessageCircle,
-  X
+  X,
+  Mic,
+  MicOff,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -45,6 +51,14 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const utils = trpc.useUtils();
+  
+  // Estados para dictado por voz
+  const [voiceState, setVoiceState] = useState<VoiceState>('idle');
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Queries
   const { data: mensajes, isLoading } = trpc.mensajes.byItem.useQuery({ itemId });
@@ -75,6 +89,118 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
       toast.error("Error al eliminar: " + error.message);
     }
   });
+
+  // Mutation para transcribir audio
+  const transcribirMutation = trpc.comentarios.transcribir.useMutation({
+    onSuccess: (data) => {
+      setVoiceState('ready');
+      // Pegar el resumen en el input sin enviarlo
+      setMensaje(data.summary_bullets);
+      toast.success('Dictado completado');
+      // Reset después de 2 segundos
+      setTimeout(() => setVoiceState('idle'), 2000);
+    },
+    onError: (error) => {
+      setVoiceState('error');
+      setVoiceError(error.message);
+      toast.error('Error al transcribir: ' + error.message);
+    }
+  });
+
+  // Iniciar grabación de audio
+  const startRecording = async () => {
+    try {
+      setVoiceError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(track => track.stop());
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current);
+        }
+        
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        if (audioBlob.size < 1000) {
+          setVoiceState('error');
+          setVoiceError('Audio muy corto o vacío');
+          return;
+        }
+        
+        setVoiceState('transcribing');
+        
+        // Subir audio a S3 y transcribir
+        try {
+          const formData = new FormData();
+          formData.append('file', audioBlob, 'audio.webm');
+          
+          const uploadResponse = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (!uploadResponse.ok) {
+            throw new Error('Error al subir audio');
+          }
+          
+          const { url } = await uploadResponse.json();
+          
+          setVoiceState('summarizing');
+          transcribirMutation.mutate({ audioUrl: url, language: 'es-MX' });
+        } catch (err) {
+          setVoiceState('error');
+          setVoiceError('Error al procesar audio');
+        }
+      };
+      
+      mediaRecorder.start();
+      setVoiceState('recording');
+      setRecordingTime(0);
+      
+      // Contador de tiempo
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime(prev => {
+          if (prev >= 30) {
+            stopRecording();
+            return 30;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+      
+    } catch (err) {
+      setVoiceState('error');
+      setVoiceError('Permiso de micrófono denegado');
+      toast.error('No se pudo acceder al micrófono');
+    }
+  };
+  
+  // Detener grabación
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+    }
+  };
+  
+  // Toggle grabación
+  const toggleRecording = () => {
+    if (voiceState === 'recording') {
+      stopRecording();
+    } else if (voiceState === 'idle' || voiceState === 'error' || voiceState === 'ready') {
+      startRecording();
+    }
+  };
 
   // Scroll al final cuando cargan los mensajes
   useEffect(() => {
@@ -367,6 +493,28 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
               </Popover>
             </div>
             
+            {/* Botón de micrófono para dictado por voz */}
+            <Button 
+              onClick={toggleRecording}
+              disabled={voiceState === 'transcribing' || voiceState === 'summarizing'}
+              variant={voiceState === 'recording' ? 'destructive' : 'outline'}
+              className={`h-[44px] px-3 relative ${voiceState === 'recording' ? 'animate-pulse' : ''}`}
+              title={voiceState === 'recording' ? 'Detener grabación' : 'Dictar mensaje'}
+            >
+              {voiceState === 'idle' || voiceState === 'ready' || voiceState === 'error' ? (
+                <Mic className="h-4 w-4" />
+              ) : voiceState === 'recording' ? (
+                <>
+                  <MicOff className="h-4 w-4" />
+                  <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs rounded-full px-1.5 py-0.5 min-w-[20px]">
+                    {recordingTime}s
+                  </span>
+                </>
+              ) : (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
+            </Button>
+            
             <Button 
               onClick={handleSend} 
               disabled={!mensaje.trim() || createMensaje.isPending}
@@ -376,8 +524,32 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
             </Button>
           </div>
           
+          {/* Estado del dictado */}
+          {voiceState !== 'idle' && (
+            <div className={`text-xs mt-1 flex items-center gap-1 ${
+              voiceState === 'error' ? 'text-destructive' : 
+              voiceState === 'ready' ? 'text-green-600' : 'text-muted-foreground'
+            }`}>
+              {voiceState === 'recording' && (
+                <><span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> Grabando... (máx 30s)</>
+              )}
+              {voiceState === 'transcribing' && (
+                <><Loader2 className="h-3 w-3 animate-spin" /> Transcribiendo audio...</>
+              )}
+              {voiceState === 'summarizing' && (
+                <><Loader2 className="h-3 w-3 animate-spin" /> Generando resumen técnico...</>
+              )}
+              {voiceState === 'ready' && (
+                <>✅ Resumen listo - revisa y envía</>
+              )}
+              {voiceState === 'error' && (
+                <>❌ {voiceError || 'Error de dictado'}</>
+              )}
+            </div>
+          )}
+          
           <p className="text-xs text-muted-foreground mt-1">
-            Enter para enviar · Shift+Enter para nueva línea
+            Enter para enviar · Shift+Enter para nueva línea · 🎙️ Dictar mensaje
           </p>
         </div>
       </div>

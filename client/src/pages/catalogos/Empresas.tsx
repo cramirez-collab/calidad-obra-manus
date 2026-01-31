@@ -1038,19 +1038,30 @@ export default function Empresas() {
 
                     {/* Crear nuevo usuario */}
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
                         <h4 className="font-medium text-sm flex items-center gap-2">
                           <UserPlus className="h-4 w-4" />
                           Crear Nuevo Usuario
                         </h4>
-                        <Button
-                          type="button"
-                          variant={crearNuevoUsuario ? "secondary" : "outline"}
-                          size="sm"
-                          onClick={() => setCrearNuevoUsuario(!crearNuevoUsuario)}
-                        >
-                          {crearNuevoUsuario ? "Cancelar" : "Crear Usuario"}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsImportUsersOpen(true)}
+                          >
+                            <Upload className="h-4 w-4 mr-1" />
+                            Importar
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={crearNuevoUsuario ? "secondary" : "outline"}
+                            size="sm"
+                            onClick={() => setCrearNuevoUsuario(!crearNuevoUsuario)}
+                          >
+                            {crearNuevoUsuario ? "Cancelar" : "Crear Usuario"}
+                          </Button>
+                        </div>
                       </div>
 
                       {crearNuevoUsuario && (
@@ -1459,6 +1470,150 @@ export default function Empresas() {
                 disabled={createEspecialidadMutation.isPending}
               >
                 {createEspecialidadMutation.isPending ? "Creando..." : "Crear Especialidad"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog para importar usuarios desde Excel/CSV */}
+        <Dialog open={isImportUsersOpen} onOpenChange={setIsImportUsersOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileSpreadsheet className="h-5 w-5" />
+                Importar Usuarios desde Excel/CSV
+              </DialogTitle>
+              <DialogDescription>
+                Sube un archivo Excel o CSV con los usuarios a importar
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              {/* Botón descargar plantilla */}
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
+                <div>
+                  <p className="font-medium text-sm">Plantilla de Ejemplo</p>
+                  <p className="text-xs text-muted-foreground">Descarga la plantilla con el formato correcto</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // Generar y descargar plantilla Excel
+                    const csvContent = "Nombre,Email,Rol\nJuan Perez,juan@ejemplo.com,residente\nMaria Lopez,maria@ejemplo.com,jefe_residente\nCarlos Garcia,carlos@ejemplo.com,supervisor";
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'plantilla_usuarios.csv';
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    toast.success("Plantilla descargada");
+                  }}
+                >
+                  <FileDown className="h-4 w-4 mr-1" />
+                  Descargar
+                </Button>
+              </div>
+
+              {/* Subir archivo */}
+              <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                <input
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  className="hidden"
+                  id="import-users-file"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    
+                    try {
+                      const text = await file.text();
+                      const lines = text.split('\n').filter(l => l.trim());
+                      const users: Array<{ nombre: string; email: string; rol: string }> = [];
+                      
+                      for (let i = 1; i < lines.length; i++) {
+                        const [nombre, email, rol] = lines[i].split(',').map(s => s.trim());
+                        if (nombre && email) {
+                          users.push({ nombre, email, rol: rol || 'residente' });
+                        }
+                      }
+                      
+                      setImportedUsers(users);
+                      toast.success(`${users.length} usuarios encontrados`);
+                    } catch (err) {
+                      toast.error("Error al leer el archivo");
+                    }
+                  }}
+                />
+                <label htmlFor="import-users-file" className="cursor-pointer">
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm font-medium">Arrastra un archivo o haz clic para seleccionar</p>
+                  <p className="text-xs text-muted-foreground">CSV o Excel (.xlsx, .xls)</p>
+                </label>
+              </div>
+
+              {/* Preview de usuarios */}
+              {importedUsers.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Vista previa ({importedUsers.length} usuarios)</h4>
+                  <div className="max-h-40 overflow-y-auto border rounded-lg">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-50 sticky top-0">
+                        <tr>
+                          <th className="text-left p-2">Nombre</th>
+                          <th className="text-left p-2">Email</th>
+                          <th className="text-left p-2">Rol</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importedUsers.map((u, i) => (
+                          <tr key={i} className="border-t">
+                            <td className="p-2">{u.nombre}</td>
+                            <td className="p-2">{u.email}</td>
+                            <td className="p-2">
+                              <Badge variant="outline">{u.rol}</Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setIsImportUsersOpen(false);
+                setImportedUsers([]);
+              }}>
+                Cancelar
+              </Button>
+              <Button 
+                disabled={importedUsers.length === 0}
+                onClick={async () => {
+                  // Importar usuarios uno por uno
+                  let imported = 0;
+                  for (const u of importedUsers) {
+                    try {
+                      await createUserMutation.mutateAsync({
+                        name: u.nombre,
+                        email: u.email,
+                        password: 'Temporal123!',
+                        role: u.rol as any,
+                        empresaId: editingEmpresa?.id,
+                      });
+                      imported++;
+                    } catch (err) {
+                      console.error('Error importando usuario:', u.nombre);
+                    }
+                  }
+                  toast.success(`${imported} usuarios importados correctamente`);
+                  setIsImportUsersOpen(false);
+                  setImportedUsers([]);
+                  refetchResidentes();
+                }}
+              >
+                Importar {importedUsers.length} Usuarios
               </Button>
             </DialogFooter>
           </DialogContent>

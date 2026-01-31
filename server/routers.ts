@@ -10,6 +10,8 @@ import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { sendEmail, getAprobadoEmailTemplate, getRechazadoEmailTemplate, getPendienteAprobacionEmailTemplate } from "./emailService";
 import pushService from "./pushService";
+import { transcribeAudio } from "./_core/voiceTranscription";
+import { invokeLLM } from "./_core/llm";
 
 // Middleware para verificar rol de superadmin (acceso total)
 const superadminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -348,8 +350,16 @@ export const appRouter = router({
         telefono: z.string().optional(),
         email: z.string().email().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const id = await db.createEmpresa(input);
+        // Registrar en historial
+        await db.createEmpresaHistorial({
+          empresaId: id,
+          usuarioId: ctx.user.id,
+          usuarioNombre: ctx.user.name || 'Usuario',
+          tipoAccion: 'empresa_creada',
+          descripcion: `Empresa "${input.nombre}" creada`,
+        });
         return { id, success: true };
       }),
     
@@ -366,9 +376,17 @@ export const appRouter = router({
         telefono: z.string().optional(),
         email: z.string().email().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { id, ...data } = input;
         await db.updateEmpresa(id, data);
+        // Registrar en historial
+        await db.createEmpresaHistorial({
+          empresaId: id,
+          usuarioId: ctx.user.id,
+          usuarioNombre: ctx.user.name || 'Usuario',
+          tipoAccion: 'empresa_editada',
+          descripcion: `Empresa actualizada${input.nombre ? `: ${input.nombre}` : ''}`,
+        });
         return { success: true };
       }),
     
@@ -413,8 +431,17 @@ export const appRouter = router({
         usuarioId: z.number(),
         tipoResidente: z.enum(['residente', 'jefe_residente']).default('residente'),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const id = await db.addResidenteToEmpresa(input.empresaId, input.usuarioId, input.tipoResidente);
+        // Registrar en historial
+        const usuario = await db.getUserById(input.usuarioId);
+        await db.createEmpresaHistorial({
+          empresaId: input.empresaId,
+          usuarioId: ctx.user.id,
+          usuarioNombre: ctx.user.name || 'Usuario',
+          tipoAccion: 'usuario_agregado',
+          descripcion: `Usuario "${usuario?.name || 'Desconocido'}" agregado como ${input.tipoResidente === 'jefe_residente' ? 'Jefe de Residente' : 'Residente'}`,
+        });
         return { id, success: true };
       }),
     
@@ -424,8 +451,18 @@ export const appRouter = router({
         empresaId: z.number(),
         usuarioId: z.number(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        // Obtener info del usuario antes de eliminar
+        const usuario = await db.getUserById(input.usuarioId);
         await db.removeResidenteFromEmpresa(input.empresaId, input.usuarioId);
+        // Registrar en historial
+        await db.createEmpresaHistorial({
+          empresaId: input.empresaId,
+          usuarioId: ctx.user.id,
+          usuarioNombre: ctx.user.name || 'Usuario',
+          tipoAccion: 'usuario_eliminado',
+          descripcion: `Usuario "${usuario?.name || 'Desconocido'}" eliminado de la empresa`,
+        });
         return { success: true };
       }),
     
@@ -1303,6 +1340,54 @@ export const appRouter = router({
           texto: input.texto,
         });
         return { id, success: true };
+      }),
+    
+    // Transcribir audio y generar resumen técnico
+    transcribir: protectedProcedure
+      .input(z.object({
+        audioUrl: z.string(),
+        language: z.string().optional().default('es-MX'),
+      }))
+      .mutation(async ({ input }) => {
+        // Paso 1: Transcribir el audio
+        const transcripcion = await transcribeAudio({
+          audioUrl: input.audioUrl,
+          language: input.language,
+          prompt: 'Transcribir voz a texto en español de México, con puntuación correcta y capitalización.',
+        });
+        
+        if ('error' in transcripcion) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: transcripcion.error,
+            cause: transcripcion,
+          });
+        }
+        
+        const textoTranscrito = transcripcion.text;
+        
+        // Paso 2: Generar resumen técnico con LLM
+        const resumenResponse = await invokeLLM({
+          messages: [
+            {
+              role: 'system',
+              content: 'Eres un asistente especializado en control de calidad de obra. Resume el siguiente texto en máximo 5 bullets. Cada bullet máximo 10 palabras. Usa lenguaje técnico claro de obra y calidad. No repitas ideas. No agregues explicaciones. Devuelve solo los bullets. Mantiene términos técnicos como: OQC, no conformidad, colado, cimbra, armado, plomo, nivel, fisura, anclaje, trazo.'
+            },
+            {
+              role: 'user',
+              content: textoTranscrito
+            }
+          ],
+        });
+        
+        const resumenBullets = resumenResponse.choices[0]?.message?.content || textoTranscrito;
+        
+        return {
+          transcript_clean: textoTranscrito,
+          summary_bullets: typeof resumenBullets === 'string' ? resumenBullets : textoTranscrito,
+          duration: transcripcion.duration,
+          language: transcripcion.language,
+        };
       }),
   }),
 

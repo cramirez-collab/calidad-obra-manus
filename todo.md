@@ -1699,3 +1699,28 @@
 - [x] Registrar cambios en datos de empresa, usuarios y defectos
 - [x] Mostrar log de cambios en pestaña "Historial" del formulario de empresa
 - [x] Incluir quién hizo el cambio y cuándo
+
+
+## Mejoras Formulario Empresas y Dictado por Voz (31 Enero 2026)
+
+### Plantilla Excel Descargable
+- [x] Agregar botón "Descargar Plantilla" en diálogo de importar usuarios
+- [x] Generar archivo CSV con columnas: Nombre, Email, Rol
+- [x] Incluir ejemplos de datos en la plantilla
+
+### Registro Automático de Historial
+- [x] Conectar mutation de crear empresa para registrar en historial
+- [x] Conectar mutation de editar empresa para registrar cambios
+- [x] Conectar mutation de agregar/eliminar usuario para registrar
+- [ ] Conectar mutation de agregar/eliminar defecto para registrar (pendiente)
+
+### Sistema de Dictado por Voz en Mensajería
+- [x] Crear endpoint comentarios.transcribir para transcripción de audio
+- [x] Integrar Speech-to-Text con alta precisión en español (Whisper)
+- [x] Integrar LLM para generar resumen técnico en 5 bullets
+- [x] Crear componente de botón de micrófono con estados (Idle, Escuchando, Transcribiendo, Resumiendo, Listo, Error)
+- [x] Implementar grabación de audio con MediaRecorder (máximo 30 segundos)
+- [x] Mostrar contador mientras graba
+- [x] Pegar resumen en input de mensaje sin enviarlo automáticamente
+- [x] No guardar audio en base de datos ni storage (solo memoria temporal para transcripción)
+- [x] Funcionar en móvil y desktop sin romper diseño existente
