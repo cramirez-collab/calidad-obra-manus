@@ -1652,3 +1652,9 @@
 - ItemDetail - información del residente
 - SeleccionProyecto - header del usuario
 - Bienvenida - saludo con avatar
+
+
+## PDF de Tiempos en Bitácora (31 Enero 2026)
+- [x] Agregar botón de descarga PDF en sección Tiempos de Bitácora
+- [x] PDF con resumen semanal y tabla de actividad por usuario
+- [x] Formato profesional con colores Objetiva

@@ -464,6 +464,78 @@ export default function Bitacora() {
     toast.success("Archivo PDF exportado correctamente");
   };
 
+  // Exportar Tiempos a PDF
+  const exportarTiemposPDF = () => {
+    if (!estadisticasTiempos || estadisticasTiempos.length === 0) {
+      toast.error("No hay datos para exportar");
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: 'landscape' });
+    
+    // Header con logo
+    doc.setFontSize(18);
+    doc.setTextColor(0, 44, 99); // #002C63
+    doc.text("Reporte de Tiempos y Actividad", 14, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generado: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, 28);
+    
+    // Resumen semanal
+    if (resumenSemanal?.resumen) {
+      doc.setFontSize(12);
+      doc.setTextColor(0, 44, 99);
+      doc.text("Resumen Semanal", 14, 38);
+      
+      doc.setFontSize(9);
+      doc.setTextColor(60);
+      const resumen = resumenSemanal.resumen;
+      doc.text(`Acciones Totales: ${resumen.totalAcciones || 0}`, 14, 46);
+      doc.text(`Items Creados: ${resumen.itemsCreados || 0}`, 80, 46);
+      doc.text(`Mensajes: ${resumen.mensajesEnviados || 0}`, 140, 46);
+      doc.text(`Usuarios Activos: ${resumen.usuariosActivos || 0}`, 14, 52);
+      doc.text(`Usuarios que Capturaron: ${resumen.usuariosQueCapturaron || 0}`, 80, 52);
+      doc.text(`Usuarios que Enviaron Mensajes: ${resumen.usuariosQueEnviaronMensajes || 0}`, 160, 52);
+    }
+
+    // Tabla de actividad por usuario
+    const tableData = estadisticasTiempos.map((est: any) => [
+      est.usuarioNombre || "-",
+      est.usuarioRol || "-",
+      est.totalCapturas?.toString() || "0",
+      est.totalMensajesEnviados?.toString() || "0",
+      est.totalAcciones?.toString() || "0",
+      `${est.capturasSemana || 0} cap / ${est.lecturasSemana || 0} lec`,
+      est.fechaRegistro ? format(new Date(est.fechaRegistro), "dd/MM/yy") : "-",
+      est.ultimaActividad ? format(new Date(est.ultimaActividad), "dd/MM/yy HH:mm") : "-",
+      est.haCapturado ? "Si" : "No",
+    ]);
+
+    autoTable(doc, {
+      head: [["Usuario", "Rol", "Capturas", "Mensajes", "Acciones", "Semana", "Registro", "Ultima Actividad", "Capturo"]],
+      body: tableData,
+      startY: 60,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [0, 44, 99], textColor: 255 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 20, halign: 'center' },
+        3: { cellWidth: 20, halign: 'center' },
+        4: { cellWidth: 20, halign: 'center' },
+        5: { cellWidth: 35 },
+        6: { cellWidth: 25 },
+        7: { cellWidth: 35 },
+        8: { cellWidth: 18, halign: 'center' },
+      },
+    });
+
+    doc.save(`tiempos_actividad_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
+    toast.success("Archivo PDF de Tiempos exportado correctamente");
+  };
+
   // Limpiar filtros
   const limpiarFiltros = () => {
     setFiltroUsuario("all");
@@ -975,6 +1047,13 @@ export default function Bitacora() {
         {/* Tab: Tiempos */}
         {activeTab === "tiempos" && (
           <div className="space-y-4">
+            {/* Botón de exportar PDF */}
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={exportarTiemposPDF} disabled={loadingTiempos || !estadisticasTiempos}>
+                <Download className="h-4 w-4 mr-2" />
+                Descargar PDF
+              </Button>
+            </div>
             {/* Resumen Semanal */}
             {loadingResumen ? (
               <div className="flex items-center justify-center h-32">
