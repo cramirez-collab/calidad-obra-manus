@@ -19,6 +19,7 @@ export const users = mysqlTable("users", {
   role: mysqlEnum("role", ["superadmin", "admin", "supervisor", "jefe_residente", "residente", "desarrollador"]).default("residente").notNull(),
   empresaId: int("empresaId"),
   proyectoActivoId: int("proyectoActivoId"), // Proyecto actualmente seleccionado por el usuario
+  fotoUrl: text("fotoUrl"), // URL de la foto de perfil del usuario
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

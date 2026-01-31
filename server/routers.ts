@@ -231,6 +231,31 @@ export const appRouter = router({
         });
         return { success: true, proyectoId: input.proyectoId };
       }),
+    
+    // Actualizar foto de perfil del usuario actual
+    updateFoto: protectedProcedure
+      .input(z.object({ fotoBase64: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        // Decodificar base64 y subir a S3
+        const matches = input.fotoBase64.match(/^data:image\/(\w+);base64,(.+)$/);
+        if (!matches) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Formato de imagen inválido' });
+        }
+        const ext = matches[1];
+        const base64Data = matches[2];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const fileName = `usuarios/${ctx.user.id}/foto-${nanoid(8)}.${ext}`;
+        const { url } = await storagePut(fileName, buffer, `image/${ext}`);
+        
+        // Actualizar en base de datos
+        await db.updateUserFoto(ctx.user.id, url);
+        return { success: true, fotoUrl: url };
+      }),
+    
+    // Obtener mi perfil completo
+    getMiPerfil: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUserById(ctx.user.id);
+    }),
   }),
 
   // ==================== EMPRESAS ====================

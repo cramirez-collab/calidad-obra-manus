@@ -45,6 +45,7 @@ const EmpresaDetalle = lazy(() => import("./pages/catalogos/EmpresaDetalle"));
 const Unidades = lazy(() => import("./pages/catalogos/Unidades"));
 const Espacios = lazy(() => import("./pages/catalogos/Espacios"));
 const Especialidades = lazy(() => import("./pages/catalogos/Especialidades"));
+const ListaEspecialidades = lazy(() => import("./pages/ListaEspecialidades"));
 const Defectos = lazy(() => import("./pages/Defectos"));
 const EnlacesExternos = lazy(() => import("./pages/EnlacesExternos"));
 
@@ -95,6 +96,7 @@ function Router() {
         <Route path="/catalogos/espacios" component={Espacios} />
         <Route path="/espacios" component={Espacios} />
         <Route path="/catalogos/especialidades" component={Especialidades} />
+        <Route path="/lista-especialidades" component={ListaEspecialidades} />
         <Route path="/defectos" component={Defectos} />
         <Route path="/catalogos/defectos" component={Defectos} />
         

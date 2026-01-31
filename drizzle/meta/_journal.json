@@ -204,6 +204,13 @@
       "when": 1769827849438,
       "tag": "0028_icy_starbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1769831258467,
+      "tag": "0029_special_norman_osborn",
+      "breakpoints": true
     }
   ]
 }

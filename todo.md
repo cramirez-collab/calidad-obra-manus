@@ -1547,3 +1547,10 @@
 - [x] Click en celdas de Stacking navega a ítems filtrados por unidad (ya implementado)
 
 - [x] Centrar el texto OQC en el header
+
+
+### Mejoras UI (30/01/2026)
+- [x] Asignar números secuenciales a especialidades existentes (migración)
+- [x] Crear página separada de lista de especialidades (solo número y nombre, sin edición)
+- [x] Centrar OQC en el header entre logo y usuario
+- [x] Implementar foto de perfil para usuarios

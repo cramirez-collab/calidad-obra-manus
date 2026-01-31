@@ -4211,3 +4211,17 @@ export async function clearBitacoraByFilters(filters: {
   
   return count;
 }
+
+
+// Actualizar foto de perfil del usuario
+export async function updateUserFoto(userId: number, fotoUrl: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(users)
+    .set({ fotoUrl })
+    .where(eq(users.id, userId));
+  
+  return { success: true };
+}
+

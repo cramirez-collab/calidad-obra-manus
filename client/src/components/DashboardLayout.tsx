@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserProfileEditor } from "./UserProfile";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -128,6 +129,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: MapPin, label: "Unidades", path: "/unidades" },
     { icon: Layers, label: "Espacios", path: "/espacios" },
     { icon: Wrench, label: "Especialidades", path: "/especialidades" },
+    { icon: ListOrdered, label: "Lista Especialidades", path: "/lista-especialidades" },
     { icon: AlertTriangle, label: "Defectos", path: "/defectos" },
     { icon: Users, label: "Usuarios", path: "/usuarios" },
     { icon: History, label: "Bitácora", path: "/bitacora" },
@@ -383,27 +385,23 @@ function DashboardLayoutContent({
         {/* Header */}
         <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
           <div className="flex items-center h-14 px-2 sm:px-4">
-            {/* Logo y OQC */}
-            <div className="flex items-center gap-2 mr-2 sm:mr-4 shrink-0">
+            {/* Logo */}
+            <div className="flex items-center gap-2 shrink-0">
               <img 
                 src="/logo-objetiva.jpg" 
                 alt="OQC" 
                 className="h-7 sm:h-8 object-contain"
               />
-              <span className="font-bold text-lg text-primary hidden sm:inline">OQC</span>
             </div>
 
             {/* Selector de proyecto */}
-            <div className="shrink-0 mr-2">
+            <div className="shrink-0 mx-2">
               <ProjectSelector collapsed={isMobile} />
             </div>
 
-            {/* Separador - solo desktop */}
-            <div className="h-6 w-px bg-border mx-1 sm:mx-2 hidden md:block" />
-
             {/* Navegación de iconos - SOLO DESKTOP */}
             {!isMobile && (
-              <nav className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto flex-1 scrollbar-hide py-1">
+              <nav className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto scrollbar-hide py-1">
                 {menuItems.map(item => {
                   const isActive = item.path === '/bienvenida' 
                     ? (location === '/bienvenida' || location === '/') 
@@ -416,8 +414,10 @@ function DashboardLayoutContent({
               </nav>
             )}
 
-            {/* Espaciador en móvil */}
-            {isMobile && <div className="flex-1" />}
+            {/* OQC CENTRADO */}
+            <div className="flex-1 flex justify-center">
+              <span className="font-bold text-xl text-primary tracking-wide">OQC</span>
+            </div>
 
             {/* Separador */}
             <div className="h-6 w-px bg-border mx-1 sm:mx-2" />
@@ -435,6 +435,7 @@ function DashboardLayoutContent({
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-1 rounded-lg px-1 sm:px-2 py-1 hover:bg-accent transition-colors focus:outline-none">
                       <Avatar className="h-8 w-8 border">
+                        {user?.fotoUrl && <AvatarImage src={user.fotoUrl} alt={user?.name || 'Usuario'} />}
                         <AvatarFallback className={`text-white text-xs font-medium ${roleColors[user?.role || 'residente']}`}>
                           {user?.name?.charAt(0).toUpperCase() || 'U'}
                         </AvatarFallback>
@@ -442,13 +443,24 @@ function DashboardLayoutContent({
                       <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <div className="px-3 py-2">
-                      <p className="text-sm font-medium truncate">{user?.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {roleLabels[user?.role || 'residente']}
-                      </p>
+                  <DropdownMenuContent align="end" className="w-64">
+                    <div className="px-3 py-3 flex items-center gap-3">
+                      <UserProfileEditor 
+                        user={{ 
+                          id: user?.id || 0, 
+                          name: user?.name, 
+                          email: user?.email, 
+                          role: user?.role,
+                          fotoUrl: user?.fotoUrl 
+                        }} 
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{user?.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {roleLabels[user?.role || 'residente']}
+                        </p>
+                      </div>
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
