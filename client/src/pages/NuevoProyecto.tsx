@@ -17,6 +17,7 @@ import {
   Loader2,
   Save
 } from "lucide-react";
+import { getImageUrl } from "@/lib/imageUrl";
 
 export default function NuevoProyecto() {
   const [, navigate] = useLocation();
@@ -128,7 +129,7 @@ export default function NuevoProyecto() {
                     {formData.imagenPortadaUrl ? (
                       <div className="relative w-32 h-20 rounded-lg overflow-hidden border">
                         <img 
-                          src={formData.imagenPortadaUrl} 
+                          src={formData.imagenPortadaUrl.startsWith('data:') ? formData.imagenPortadaUrl : getImageUrl(formData.imagenPortadaUrl)} 
                           alt="Portada" 
                           className="w-full h-full object-cover"
                         />

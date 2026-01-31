@@ -1772,3 +1772,9 @@
 - [x] Actualizar DashboardLayout para usar getImageUrl()
 - [x] Actualizar UserProfile para usar getImageUrl()
 - [x] Actualizar Usuarios.tsx para usar getImageUrl()
+
+
+## Bug: Fotos Portada de Proyectos no se Ven (31 Enero 2026)
+- [x] Identificar dónde se muestran las fotos de portada de proyectos (SeleccionProyecto, Proyectos, NuevoProyecto)
+- [x] Aplicar getImageUrl() a las imágenes de portada en los 3 archivos
+- [x] Verificar que las fotos se muestren correctamente

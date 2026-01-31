@@ -26,6 +26,7 @@ import {
   Upload
 } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
+import { getImageUrl } from "@/lib/imageUrl";
 
 export default function Proyectos() {
   const { user } = useAuth();
@@ -355,7 +356,7 @@ export default function Proyectos() {
                   {formData.imagenPortadaUrl ? (
                     <div className="relative">
                       <img 
-                        src={formData.imagenPortadaUrl} 
+                        src={formData.imagenPortadaUrl.startsWith('data:') ? formData.imagenPortadaUrl : getImageUrl(formData.imagenPortadaUrl)} 
                         alt="Portada" 
                         className="w-full h-32 object-cover rounded-md"
                       />

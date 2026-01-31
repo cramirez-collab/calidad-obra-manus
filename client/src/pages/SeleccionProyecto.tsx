@@ -9,6 +9,7 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/_core/hooks/useAuth';
+import { getImageUrl } from '@/lib/imageUrl';
 import { useProject } from '@/contexts/ProjectContext';
 
 // Usamos el tipo inferido de la respuesta del servidor
@@ -136,7 +137,7 @@ export default function SeleccionProyecto() {
                   <div className={`h-32 relative ${!proyecto.imagenPortadaUrl ? `bg-gradient-to-r ${getProjectColor(index)}` : ''}`}>
                     {proyecto.imagenPortadaUrl ? (
                       <img 
-                        src={proyecto.imagenPortadaUrl} 
+                        src={getImageUrl(proyecto.imagenPortadaUrl)} 
                         alt={proyecto.nombre}
                         className="w-full h-full object-cover"
                       />
