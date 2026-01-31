@@ -19,10 +19,16 @@ export interface PushPayload {
     itemId?: number;
     tipo?: string;
   };
+  // Información detallada del ítem para mostrar en la notificación
+  itemCodigo?: string;
+  unidadNombre?: string;
+  defectoNombre?: string;
+  itemId?: number;
 }
 
 /**
  * Envía una notificación push a una suscripción específica
+ * Incluye información detallada del ítem (código, unidad, defecto)
  */
 export async function sendPushNotification(
   subscription: { endpoint: string; p256dh: string; auth: string },
@@ -42,8 +48,17 @@ export async function sendPushNotification(
       body: payload.body,
       icon: payload.icon || "/icons/icon-192x192.png",
       badge: payload.badge || "/icons/badge-72x72.png",
-      tag: payload.tag || "objetivaoqc-notification",
-      data: payload.data || {},
+      tag: payload.tag || `objetivaoqc-item-${payload.itemId || Date.now()}`,
+      data: {
+        ...payload.data,
+        itemId: payload.itemId,
+        url: payload.data?.url || (payload.itemId ? `/items/${payload.itemId}` : '/')
+      },
+      // Información del ítem para mostrar en la notificación
+      itemCodigo: payload.itemCodigo,
+      unidadNombre: payload.unidadNombre,
+      defectoNombre: payload.defectoNombre,
+      itemId: payload.itemId
     });
 
     await webpush.sendNotification(pushSubscription, notificationPayload);
@@ -87,8 +102,51 @@ export function getVapidPublicKey(): string {
   return VAPID_PUBLIC_KEY;
 }
 
+/**
+ * Envía una notificación push con información completa del ítem
+ * Esta función es la preferida para notificaciones relacionadas con ítems
+ */
+export async function sendItemPushNotification(
+  subscription: { endpoint: string; p256dh: string; auth: string },
+  itemInfo: {
+    itemId: number;
+    codigo: string;
+    unidadNombre: string;
+    defectoNombre: string;
+    titulo?: string;
+    tipo: 'nuevo' | 'aprobado' | 'rechazado' | 'mensaje' | 'mencion' | 'foto_despues';
+  }
+): Promise<boolean> {
+  const tipoTitulos: Record<string, string> = {
+    nuevo: '🆕 Nuevo Ítem Creado',
+    aprobado: '✅ Ítem Aprobado',
+    rechazado: '❌ Ítem Rechazado',
+    mensaje: '💬 Nuevo Mensaje',
+    mencion: '📢 Te Mencionaron',
+    foto_despues: '📸 Foto Después Agregada'
+  };
+
+  const payload: PushPayload = {
+    title: tipoTitulos[itemInfo.tipo] || 'OQC - Notificación',
+    body: itemInfo.titulo || 'Tienes una actualización en un ítem',
+    itemCodigo: itemInfo.codigo,
+    unidadNombre: itemInfo.unidadNombre,
+    defectoNombre: itemInfo.defectoNombre,
+    itemId: itemInfo.itemId,
+    tag: `oqc-item-${itemInfo.itemId}-${itemInfo.tipo}`,
+    data: {
+      itemId: itemInfo.itemId,
+      url: `/items/${itemInfo.itemId}`,
+      tipo: itemInfo.tipo
+    }
+  };
+
+  return sendPushNotification(subscription, payload);
+}
+
 export default {
   sendPushNotification,
   sendPushToMultiple,
+  sendItemPushNotification,
   getVapidPublicKey,
 };

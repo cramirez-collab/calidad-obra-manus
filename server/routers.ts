@@ -1079,6 +1079,21 @@ export const appRouter = router({
           mensaje: `El ítem "${item.titulo}" ha sido aprobado por el supervisor.`,
         });
         
+        // Enviar notificación push con info del ítem
+        const itemInfo = await db.getItemInfoForPush(input.itemId);
+        const pushSubs = await db.getPushSubscriptionsByUsuario(item.residenteId);
+        if (pushSubs.length > 0 && itemInfo) {
+          await pushService.sendPushToMultiple(pushSubs, {
+            title: '✅ Ítem Aprobado',
+            body: `Tu ítem ha sido aprobado`,
+            itemCodigo: itemInfo.codigo,
+            unidadNombre: itemInfo.unidadNombre,
+            defectoNombre: itemInfo.defectoNombre,
+            itemId: input.itemId,
+            data: { url: `/items/${input.itemId}`, itemId: input.itemId, tipo: 'aprobado' }
+          });
+        }
+        
         // Enviar email al residente
         const residente = await db.getUserById(item.residenteId);
         if (residente?.email) {
@@ -1129,6 +1144,21 @@ export const appRouter = router({
           titulo: 'Ítem Rechazado',
           mensaje: `El ítem "${item.titulo}" ha sido rechazado. Motivo: ${input.comentario}`,
         });
+        
+        // Enviar notificación push con info del ítem
+        const itemInfoRechazado = await db.getItemInfoForPush(input.itemId);
+        const pushSubsRechazado = await db.getPushSubscriptionsByUsuario(item.residenteId);
+        if (pushSubsRechazado.length > 0 && itemInfoRechazado) {
+          await pushService.sendPushToMultiple(pushSubsRechazado, {
+            title: '❌ Ítem Rechazado',
+            body: `Tu ítem ha sido rechazado`,
+            itemCodigo: itemInfoRechazado.codigo,
+            unidadNombre: itemInfoRechazado.unidadNombre,
+            defectoNombre: itemInfoRechazado.defectoNombre,
+            itemId: input.itemId,
+            data: { url: `/items/${input.itemId}`, itemId: input.itemId, tipo: 'rechazado' }
+          });
+        }
         
         // Enviar email al residente
         const residenteRechazado = await db.getUserById(item.residenteId);
@@ -1903,6 +1933,9 @@ export const appRouter = router({
         
         // Incrementar badge de mensajes no leídos para usuarios mencionados
         if (input.menciones && input.menciones.length > 0) {
+          // Obtener info del ítem para push notifications
+          const itemInfoMencion = await db.getItemInfoForPush(input.itemId);
+          
           for (const userId of input.menciones) {
             await db.incrementBadge(userId, 'mensajesNoLeidos');
             // Crear notificación
@@ -1913,6 +1946,20 @@ export const appRouter = router({
               titulo: 'Te mencionaron en un comentario',
               mensaje: `${ctx.user.name || 'Un usuario'} te mencionó en el ítem #${input.itemId}`,
             });
+            
+            // Enviar notificación push con info del ítem
+            const pushSubsMencion = await db.getPushSubscriptionsByUsuario(userId);
+            if (pushSubsMencion.length > 0 && itemInfoMencion) {
+              await pushService.sendPushToMultiple(pushSubsMencion, {
+                title: '📢 Te Mencionaron',
+                body: `${ctx.user.name || 'Un usuario'} te mencionó`,
+                itemCodigo: itemInfoMencion.codigo,
+                unidadNombre: itemInfoMencion.unidadNombre,
+                defectoNombre: itemInfoMencion.defectoNombre,
+                itemId: input.itemId,
+                data: { url: `/items/${input.itemId}`, itemId: input.itemId, tipo: 'mencion' }
+              });
+            }
           }
           // Emitir evento de socket para notificaciones en tiempo real
           socketEvents.itemUpdated({ id: input.itemId, action: 'mensaje_nuevo' });

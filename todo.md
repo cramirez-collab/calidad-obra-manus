@@ -1743,3 +1743,10 @@
 - [x] Verificar avatares visibles en mensajería (ItemChat) - aumentados a lg
 - [x] Mantener diseño estético sin encimar elementos (gap y flex-shrink)
 - [x] Hacer avatares legibles e identificables (texto más grande en iniciales)
+
+
+## Notificaciones Push Mejoradas (31 Enero 2026)
+- [x] Mostrar notificaciones incluso con pantalla bloqueada (requireInteraction: true, urgency: high)
+- [x] Incluir información del ítem: número, unidad, defecto (itemCodigo, unidadNombre, defectoNombre)
+- [x] Al hacer clic en notificación, navegar directamente al ítem (url: /items/{itemId})
+- [x] Configurar prioridad alta para notificaciones urgentes (vibración larga, renotify: true)

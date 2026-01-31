@@ -1020,6 +1020,35 @@ export async function getItemById(id: number) {
   return result[0];
 }
 
+// Obtener información completa del ítem para notificaciones push
+export async function getItemInfoForPush(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db
+    .select({
+      item: items,
+      unidad: unidades,
+      defecto: defectos,
+    })
+    .from(items)
+    .leftJoin(unidades, eq(items.unidadId, unidades.id))
+    .leftJoin(defectos, eq(items.defectoId, defectos.id))
+    .where(eq(items.id, id))
+    .limit(1);
+  
+  if (result.length === 0) return undefined;
+  
+  return {
+    itemId: result[0].item.id,
+    codigo: result[0].item.codigo,
+    titulo: result[0].item.titulo,
+    unidadNombre: result[0].unidad?.nombre || 'Sin unidad',
+    defectoNombre: result[0].defecto?.nombre || result[0].item.titulo || 'Sin defecto',
+    residenteId: result[0].item.residenteId,
+  };
+}
+
 export async function getItemByCodigo(codigo: string) {
   const db = await getDb();
   if (!db) return undefined;
