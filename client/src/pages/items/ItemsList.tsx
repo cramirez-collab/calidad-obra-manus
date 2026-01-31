@@ -404,9 +404,9 @@ export default function ItemsList() {
                     <div className="flex items-start gap-4">
                       {/* Thumbnail de foto */}
                       <div className="h-20 w-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                        {item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
+                        {(item as any).fotoAntesMarcadaBase64 || (item as any).fotoAntesBase64 || item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
                           <img
-                            src={item.fotoAntesMarcadaUrl || item.fotoAntesUrl || ""}
+                            src={(item as any).fotoAntesMarcadaBase64 || (item as any).fotoAntesBase64 || item.fotoAntesMarcadaUrl || item.fotoAntesUrl || ""}
                             alt="Foto antes"
                             className="h-full w-full object-cover"
                           />
@@ -416,19 +416,17 @@ export default function ItemsList() {
                       </div>
 
                       {/* Información principal */}
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 overflow-hidden">
                         <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold truncate">{item.titulo}</h3>
-                              <Badge className={statusColors[item.status]}>
-                                <StatusIcon className="h-3 w-3 mr-1" />
-                                {statusLabels[item.status]}
-                              </Badge>
-                            </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold truncate">{item.titulo}</h3>
                             <p className="text-sm text-muted-foreground font-mono">
                               {item.codigo}
                             </p>
+                            <Badge className={`${statusColors[item.status]} mt-1 text-xs`}>
+                              <StatusIcon className="h-3 w-3 mr-1" />
+                              {statusLabels[item.status]}
+                            </Badge>
                           </div>
                           <div className="flex items-center gap-1">
                             <Button variant="ghost" size="icon" onClick={(e) => {

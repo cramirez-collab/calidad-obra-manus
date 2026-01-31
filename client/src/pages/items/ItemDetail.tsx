@@ -433,12 +433,11 @@ export default function ItemDetail() {
                       Antes
                     </h4>
                     <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100">
-                      {item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
+                      {(item as any).fotoAntesMarcadaBase64 || (item as any).fotoAntesBase64 || item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
                         <img
-                          src={getImageUrl(item.fotoAntesMarcadaUrl || item.fotoAntesUrl || "")}
+                          src={(item as any).fotoAntesMarcadaBase64 || (item as any).fotoAntesBase64 || getImageUrl(item.fotoAntesMarcadaUrl || item.fotoAntesUrl || "")}
                           alt="Foto antes"
                           className="w-full h-full object-contain"
-                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -446,7 +445,7 @@ export default function ItemDetail() {
                         </div>
                       )}
                     </div>
-                    {item.fotoAntesMarcadaUrl && (
+                    {((item as any).fotoAntesMarcadaBase64 || item.fotoAntesMarcadaUrl) && (
                       <p className="text-xs text-muted-foreground">Con marcado en rojo</p>
                     )}
                   </div>
@@ -458,12 +457,11 @@ export default function ItemDetail() {
                       Después
                     </h4>
                     <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100">
-                      {item.fotoDespuesUrl ? (
+                      {(item as any).fotoDespuesBase64 || item.fotoDespuesUrl ? (
                         <img
-                          src={getImageUrl(item.fotoDespuesUrl)}
+                          src={(item as any).fotoDespuesBase64 || getImageUrl(item.fotoDespuesUrl || "")}
                           alt="Foto después"
                           className="w-full h-full object-contain"
-                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground flex-col gap-2">
@@ -577,6 +575,7 @@ export default function ItemDetail() {
                       <UserAvatar 
                         name={getUserInfo(item.residenteId)?.name} 
                         fotoUrl={getUserInfo(item.residenteId)?.fotoUrl}
+                        fotoBase64={(getUserInfo(item.residenteId) as any)?.fotoBase64}
                         size="sm"
                         showName={true}
                         nameClassName="font-medium"

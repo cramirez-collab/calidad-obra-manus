@@ -76,6 +76,7 @@ export default function SeleccionProyecto() {
               <UserAvatar 
                 name={user?.name} 
                 fotoUrl={user?.fotoUrl}
+                fotoBase64={(user as any)?.fotoBase64}
                 size="md"
                 showName={true}
                 nameClassName="hidden sm:block text-sm font-medium"

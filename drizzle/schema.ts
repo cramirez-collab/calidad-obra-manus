@@ -220,10 +220,13 @@ export const items = mysqlTable("items", {
   // Fotos
   fotoAntesUrl: text("fotoAntesUrl"),
   fotoAntesKey: varchar("fotoAntesKey", { length: 255 }),
+  fotoAntesBase64: text("fotoAntesBase64"), // Foto antes en base64 (carga inmediata)
   fotoAntesMarcadaUrl: text("fotoAntesMarcadaUrl"),
   fotoAntesMarcadaKey: varchar("fotoAntesMarcadaKey", { length: 255 }),
+  fotoAntesMarcadaBase64: text("fotoAntesMarcadaBase64"), // Foto antes marcada en base64
   fotoDespuesUrl: text("fotoDespuesUrl"),
   fotoDespuesKey: varchar("fotoDespuesKey", { length: 255 }),
+  fotoDespuesBase64: text("fotoDespuesBase64"), // Foto después en base64 (carga inmediata)
   
   // Estado y flujo de aprobación
   status: mysqlEnum("status", ["pendiente_foto_despues", "pendiente_aprobacion", "aprobado", "rechazado"]).default("pendiente_foto_despues").notNull(),

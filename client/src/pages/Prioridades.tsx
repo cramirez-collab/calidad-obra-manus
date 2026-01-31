@@ -139,6 +139,7 @@ export default function Prioridades() {
                               <UserAvatar 
                                 name={item.residente.name} 
                                 fotoUrl={item.residente.fotoUrl}
+                                fotoBase64={(item.residente as any).fotoBase64}
                                 size="xs"
                                 showName={true}
                                 nameClassName="truncate"

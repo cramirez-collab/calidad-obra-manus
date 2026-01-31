@@ -641,6 +641,7 @@ export default function Proyectos() {
                       <UserAvatar 
                         name={pu.usuario?.name} 
                         fotoUrl={pu.usuario?.fotoUrl}
+                        fotoBase64={(pu.usuario as any)?.fotoBase64}
                         size="lg"
                         showName={false}
                       />

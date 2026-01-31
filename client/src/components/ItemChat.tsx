@@ -352,6 +352,7 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
                   <UserAvatar 
                     name={msg.usuario?.name} 
                     fotoUrl={msg.usuario?.fotoUrl}
+                    fotoBase64={(msg.usuario as any)?.fotoBase64}
                     size="lg"
                     showName={false}
                   />

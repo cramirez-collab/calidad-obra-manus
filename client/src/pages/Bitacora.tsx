@@ -902,6 +902,7 @@ export default function Bitacora() {
                                             <UserAvatar 
                                               name={actividad.usuario?.name} 
                                               fotoUrl={actividad.usuario?.fotoUrl}
+                                              fotoBase64={(actividad.usuario as any)?.fotoBase64}
                                               size="sm"
                                               showName={true}
                                               nameClassName="truncate max-w-[120px]"
@@ -960,6 +961,7 @@ export default function Bitacora() {
                           <UserAvatar 
                             name={actividad.usuario?.name} 
                             fotoUrl={actividad.usuario?.fotoUrl}
+                            fotoBase64={(actividad.usuario as any)?.fotoBase64}
                             size="md"
                             showName={false}
                           />
@@ -1135,6 +1137,7 @@ export default function Bitacora() {
                                 <UserAvatar 
                                   name={est.usuarioNombre} 
                                   fotoUrl={est.usuarioFotoUrl}
+                                  fotoBase64={est.usuarioFotoBase64}
                                   size="sm"
                                   showName={true}
                                   nameClassName="truncate max-w-[150px]"
@@ -1192,6 +1195,7 @@ export default function Bitacora() {
                             <UserAvatar 
                               name={est.usuarioNombre} 
                               fotoUrl={est.usuarioFotoUrl}
+                              fotoBase64={est.usuarioFotoBase64}
                               size="md"
                               showName={true}
                               nameClassName="truncate max-w-[120px] font-medium"

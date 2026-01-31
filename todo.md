@@ -1832,3 +1832,17 @@
 - [x] Corregir que no se guardan fotos de avatares de usuarios
 
 - [x] Bug: Foto de avatar se guarda pero no se muestra en lista de usuarios - CORREGIDO: Agregado fotoBase64 a UserAvatar
+
+
+## Bugs Reportados (31 Enero 2026 - 14:28)
+- [ ] Fotos antes/después no se muestran (aparece "Foto antes" como texto)
+- [ ] Avatar no se muestra después de subirlo (sigue mostrando "CR")
+- [ ] Desbordamiento de pantalla en lista de ítems (badge "Pendiente" cortado)
+- [ ] Avatares no aparecen en otros lugares donde se mencionan usuarios
+
+
+## Correcciones de Bugs (31 Enero 2026 - 14:38)
+- [x] Fotos antes/después no se muestran en ItemDetail - CORREGIDO: Usa base64 directo
+- [x] Avatar no se muestra en lista después de subirlo - CORREGIDO: Agregado fotoBase64 a todos los UserAvatar
+- [x] Desbordamiento de pantalla en lista de ítems - CORREGIDO: Badge en nueva línea
+- [x] Avatares no aparecen en otros lugares - CORREGIDO: Agregado fotoBase64 en Bienvenida, SeleccionProyecto, ItemChat, Bitacora, Prioridades, Proyectos

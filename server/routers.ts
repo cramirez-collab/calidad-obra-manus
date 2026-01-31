@@ -927,7 +927,12 @@ export const appRouter = router({
         const fotoKey = `items/${item.codigo}/antes-${nanoid(8)}.${extension}`;
         const { url: fotoUrl } = await storagePut(fotoKey, fotoBuffer, mimeType);
         
-        const updateData: any = { fotoAntesUrl: fotoUrl, fotoAntesKey: fotoKey };
+        // Guardar base64 directamente para carga inmediata + URL para respaldo
+        const updateData: any = { 
+          fotoAntesUrl: fotoUrl, 
+          fotoAntesKey: fotoKey,
+          fotoAntesBase64: input.fotoBase64 // Guardar base64 para carga inmediata
+        };
         
         // Subir foto marcada si existe (PNG para preservar marcas)
         if (input.fotoMarcadaBase64) {
@@ -936,6 +941,7 @@ export const appRouter = router({
           const { url: fotoMarcadaUrl } = await storagePut(fotoMarcadaKey, fotoMarcadaBuffer, 'image/png');
           updateData.fotoAntesMarcadaUrl = fotoMarcadaUrl;
           updateData.fotoAntesMarcadaKey = fotoMarcadaKey;
+          updateData.fotoAntesMarcadaBase64 = input.fotoMarcadaBase64; // Guardar base64 marcada
         }
         
         await db.updateItem(input.itemId, updateData);
@@ -978,6 +984,7 @@ export const appRouter = router({
         await db.updateItem(input.itemId, {
           fotoDespuesUrl: fotoUrl,
           fotoDespuesKey: fotoKey,
+          fotoDespuesBase64: input.fotoBase64, // Guardar base64 para carga inmediata
           jefeResidenteId: ctx.user.id,
           fechaFotoDespues: new Date(),
           status: 'pendiente_aprobacion',
