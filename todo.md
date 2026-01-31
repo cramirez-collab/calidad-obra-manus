@@ -1658,3 +1658,23 @@
 - [x] Agregar botón de descarga PDF en sección Tiempos de Bitácora
 - [x] PDF con resumen semanal y tabla de actividad por usuario
 - [x] Formato profesional con colores Objetiva
+
+
+## Reestructuración Formulario Empresas Unificado (31 Enero 2026)
+
+### Formulario Unificado de Empresa
+- [x] Crear formulario con pestañas: Datos, Especialidad, Usuarios, Defectos (ya existía, mejorado)
+- [x] Pestaña Datos: nombre, contacto, RFC, teléfono, email, especialidad
+- [x] Pestaña Especialidad: selector integrado en pestaña Datos
+- [x] Pestaña Usuarios: agregar/editar usuarios con roles (Residente, Jefe Residente, Supervisor, Desarrollador)
+- [x] Pestaña Defectos: lista editable con botones de agregar, editar y eliminar
+- [x] Modo edición para empresas existentes con todas las pestañas
+
+### Permisos Rol Desarrollador
+- [x] Desarrollador puede ver ítems y estadísticas (protectedProcedure permite lectura)
+- [x] Desarrollador puede comentar en mensajería (comentarios.create usa protectedProcedure)
+- [x] Desarrollador NO puede crear/editar/eliminar ítems (items.create usa noDesarrolladorProcedure)
+- [x] Desarrollador NO puede acceder a Configuración (DashboardLayout ya lo restringe)
+- [x] Desarrollador NO puede modificar catálogos (adminProcedure ya lo restringe)
+
+### Versión de respaldo: bd6f85fd

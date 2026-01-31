@@ -56,7 +56,7 @@ type NuevoUsuario = {
   email: string;
   telefono: string;
   password: string;
-  role: 'residente' | 'jefe_residente' | 'supervisor';
+  role: 'residente' | 'jefe_residente' | 'supervisor' | 'desarrollador';
 };
 
 type ResidenteAsignado = {
@@ -76,6 +76,9 @@ const roleLabels: Record<string, string> = {
   residente: "Residente",
   jefe_residente: "Jefe de Residente",
   supervisor: "Supervisor",
+  desarrollador: "Desarrollador",
+  admin: "Administrador",
+  superadmin: "Superadministrador",
 };
 
 export default function Empresas() {
@@ -1020,6 +1023,7 @@ export default function Empresas() {
                                 <SelectItem value="residente">Residente</SelectItem>
                                 <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
                                 <SelectItem value="supervisor">Supervisor</SelectItem>
+                                <SelectItem value="desarrollador">Desarrollador (solo ver y comentar)</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1112,27 +1116,85 @@ export default function Empresas() {
                         <h4 className="font-medium">
                           Defectos de {especialidades?.find(e => e.id === parseInt(formData.especialidadId))?.nombre}
                         </h4>
-                        <Badge variant="outline">{defectosPorEspecialidad.length} defectos</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{defectosPorEspecialidad.length} defectos</Badge>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setAddDefectoEspecialidadId(parseInt(formData.especialidadId));
+                              setIsAddDefectoOpen(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Agregar
+                          </Button>
+                        </div>
                       </div>
                       
                       {defectosPorEspecialidad.length === 0 ? (
-                        <p className="text-sm text-muted-foreground italic text-center py-4">
-                          No hay defectos definidos para esta especialidad
-                        </p>
+                        <div className="text-center py-8 text-muted-foreground">
+                          <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">No hay defectos definidos para esta especialidad</p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mt-3"
+                            onClick={() => {
+                              setAddDefectoEspecialidadId(parseInt(formData.especialidadId));
+                              setIsAddDefectoOpen(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Crear primer defecto
+                          </Button>
+                        </div>
                       ) : (
                         <div className="space-y-2">
                           {defectosPorEspecialidad.map((defecto: any) => (
                             <div 
                               key={defecto.id} 
-                              className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                              className="flex items-center justify-between p-3 bg-slate-50 rounded-lg group hover:bg-slate-100 transition-colors"
                             >
-                              <span>{defecto.nombre}</span>
-                              <Badge 
-                                variant="secondary" 
-                                className={severidadColors[defecto.severidad] || ''}
-                              >
-                                {defecto.severidad}
-                              </Badge>
+                              <div className="flex items-center gap-3">
+                                <span className="font-medium">{defecto.nombre}</span>
+                                <Badge 
+                                  variant="secondary" 
+                                  className={severidadColors[defecto.severidad] || ''}
+                                >
+                                  {defecto.severidad}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  type="button"
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8"
+                                  onClick={() => {
+                                    setEditingDefecto({ id: defecto.id, nombre: defecto.nombre, severidad: defecto.severidad });
+                                    setIsEditDefectoOpen(true);
+                                  }}
+                                  title="Editar defecto"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                  onClick={() => {
+                                    setDefectoToDelete({ id: defecto.id, nombre: defecto.nombre });
+                                    setIsDeleteDefectoOpen(true);
+                                  }}
+                                  title="Eliminar defecto"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
                           ))}
                         </div>

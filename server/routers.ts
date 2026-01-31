@@ -43,6 +43,14 @@ const jefeResidenteProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+// Middleware para excluir desarrollador de operaciones de escritura (solo puede ver y comentar)
+const noDesarrolladorProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role === 'desarrollador') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'El rol Desarrollador solo puede ver y comentar. No puede crear, editar o eliminar registros.' });
+  }
+  return next({ ctx });
+});
+
 export const appRouter = router({
   system: systemRouter,
   
@@ -153,7 +161,7 @@ export const appRouter = router({
         name: z.string().min(1),
         email: z.string().email().optional(),
         password: z.string().min(6),
-        role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente']),
+        role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente', 'desarrollador']),
         empresaId: z.number().nullable().optional(),
         proyectoId: z.number().optional(),
       }))
@@ -800,7 +808,7 @@ export const appRouter = router({
         return await db.getItemByCodigo(input.codigo);
       }),
     
-    create: protectedProcedure
+    create: noDesarrolladorProcedure
       .input(z.object({
         proyectoId: z.number().optional(),
         empresaId: z.number(),
@@ -843,7 +851,7 @@ export const appRouter = router({
         return result;
       }),
     
-    uploadFotoAntes: protectedProcedure
+    uploadFotoAntes: noDesarrolladorProcedure
       .input(z.object({
         itemId: z.number(),
         fotoBase64: z.string(),
