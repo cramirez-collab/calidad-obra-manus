@@ -45,10 +45,8 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
-import NotificationCenter from "./NotificationCenter";
 import { NotificationBell } from "./NotificationBell";
 import OnlineUsers from "./OnlineUsers";
-import { BadgeNotifications } from "./BadgeNotifications";
 import { QRScannerButton } from "./QRScanner";
 import { ProjectSelector } from "./ProjectSelector";
 import { useRealTimeItems } from "@/hooks/useRealTimeData";
@@ -98,6 +96,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: Layers, label: "Stacking", path: "/panoramica" },
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
     { icon: TrendingUp, label: "KPIs", path: "/kpis" },
+    { icon: ListOrdered, label: "Especialidades", path: "/lista-especialidades" },
   ];
   
   // Agregar enlaces externos solo si están configurados en el proyecto (con títulos personalizados)
@@ -424,10 +423,8 @@ function DashboardLayoutContent({
 
             {/* Acciones del lado derecho */}
             <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-              <BadgeNotifications />
               <OnlineUsers />
               <NotificationBell />
-              <NotificationCenter />
 
               {/* Menú de usuario - solo desktop */}
               {!isMobile && (

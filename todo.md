@@ -1554,3 +1554,9 @@
 - [x] Crear página separada de lista de especialidades (solo número y nombre, sin edición)
 - [x] Centrar OQC en el header entre logo y usuario
 - [x] Implementar foto de perfil para usuarios
+
+
+### Correcciones UI (30/01/2026)
+- [x] Eliminar campanas de notificación duplicadas (dejar solo 1)
+- [x] Mover lista de especialidades fuera del menú de configuración
+- [x] Renumerar especialidades empezando desde 1
