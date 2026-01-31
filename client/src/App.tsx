@@ -48,6 +48,7 @@ const Especialidades = lazy(() => import("./pages/catalogos/Especialidades"));
 const ListaEspecialidades = lazy(() => import("./pages/ListaEspecialidades"));
 const Defectos = lazy(() => import("./pages/Defectos"));
 const EnlacesExternos = lazy(() => import("./pages/EnlacesExternos"));
+const Terminos = lazy(() => import("./pages/Terminos"));
 
 
 
@@ -116,6 +117,9 @@ function Router() {
         {/* Seguimiento público (QR) */}
         <Route path="/seguimiento/:codigo" component={Seguimiento} />
         <Route path="/generar-qr" component={GenerarQR} />
+        
+        {/* Términos y Condiciones */}
+        <Route path="/terminos" component={Terminos} />
         
         {/* Configuración y Metas */}
         <Route path="/configuracion" component={Configuracion} />

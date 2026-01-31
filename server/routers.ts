@@ -85,6 +85,23 @@ export const appRouter = router({
         
         return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
       }),
+    
+    // Aceptar términos y condiciones
+    aceptarTerminos: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        await db.aceptarTerminos(ctx.user.id);
+        return { success: true };
+      }),
+    
+    // Verificar si el usuario ha aceptado los términos
+    verificarTerminos: protectedProcedure
+      .query(async ({ ctx }) => {
+        const user = await db.getUserById(ctx.user.id);
+        return { 
+          aceptados: user?.terminosAceptados || false,
+          fechaAceptacion: user?.fechaAceptacionTerminos || null
+        };
+      }),
   }),
 
   // ==================== USUARIOS ====================
@@ -249,6 +266,31 @@ export const appRouter = router({
         
         // Actualizar en base de datos
         await db.updateUserFoto(ctx.user.id, url);
+        return { success: true, fotoUrl: url };
+      }),
+    
+    // Actualizar foto de perfil de cualquier usuario (solo superadmin)
+    updateFotoAdmin: protectedProcedure
+      .input(z.object({ userId: z.number(), fotoBase64: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        // Solo superadmin puede editar fotos de otros usuarios
+        if (ctx.user.role !== 'superadmin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo el superadministrador puede editar fotos de otros usuarios' });
+        }
+        
+        // Decodificar base64 y subir a S3
+        const matches = input.fotoBase64.match(/^data:image\/(\w+);base64,(.+)$/);
+        if (!matches) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Formato de imagen inválido' });
+        }
+        const ext = matches[1];
+        const base64Data = matches[2];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const fileName = `usuarios/${input.userId}/foto-${nanoid(8)}.${ext}`;
+        const { url } = await storagePut(fileName, buffer, `image/${ext}`);
+        
+        // Actualizar en base de datos
+        await db.updateUserFoto(input.userId, url);
         return { success: true, fotoUrl: url };
       }),
     

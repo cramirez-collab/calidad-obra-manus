@@ -211,6 +211,13 @@
       "when": 1769831258467,
       "tag": "0029_special_norman_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1769836361323,
+      "tag": "0030_faithful_prism",
+      "breakpoints": true
     }
   ]
 }

@@ -52,6 +52,7 @@ import { ProjectSelector } from "./ProjectSelector";
 import { useRealTimeItems } from "@/hooks/useRealTimeData";
 import { useProject } from "@/contexts/ProjectContext";
 import { trpc } from "@/lib/trpc";
+import { TermsModal } from "./TermsModal";
 
 // Tipo para items de menú
 type MenuItem = {
@@ -203,6 +204,17 @@ function DashboardLayoutContent({
   const { selectedProjectId } = useProject();
   const { data: proyectos } = trpc.proyectos.list.useQuery();
   const proyectoActual = proyectos?.find(p => p.id === selectedProjectId) || null;
+  
+  // Verificar si el usuario ha aceptado los términos
+  const { data: terminosData, refetch: refetchTerminos } = trpc.auth.verificarTerminos.useQuery();
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  
+  // Mostrar modal de términos si no han sido aceptados
+  useEffect(() => {
+    if (terminosData && !terminosData.aceptados) {
+      setShowTermsModal(true);
+    }
+  }, [terminosData]);
   
   // Activar sincronización en tiempo real
   useRealTimeItems();
@@ -552,6 +564,17 @@ function DashboardLayoutContent({
                 })}
               </nav>
 
+              {/* Link a Términos y Condiciones */}
+              <div className="border-t p-2">
+                <button
+                  onClick={() => setLocation('/terminos')}
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors text-sm"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Términos y Privacidad</span>
+                </button>
+              </div>
+              
               {/* Cerrar sesión */}
               <div className="border-t p-4 mt-auto">
                 <button
@@ -573,6 +596,15 @@ function DashboardLayoutContent({
         
         {/* Botón flotante de escáner QR */}
         <QRScannerButton />
+        
+        {/* Modal de Términos y Condiciones */}
+        <TermsModal 
+          open={showTermsModal} 
+          onAccept={() => {
+            setShowTermsModal(false);
+            refetchTerminos();
+          }} 
+        />
       </div>
     </TooltipProvider>
   );

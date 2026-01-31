@@ -32,7 +32,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
-import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search, FolderKanban, Lock, Trash2 } from "lucide-react";
+import { Users, Shield, Plus, Pencil, Building2, UserCheck, UserX, Search, FolderKanban, Lock, Trash2, Camera } from "lucide-react";
+
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -96,6 +97,9 @@ export default function Usuarios() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<string>("all");
   const [filterEmpresa, setFilterEmpresa] = useState<string>("all");
+  const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
+  const [photoEditingUser, setPhotoEditingUser] = useState<any>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const [formData, setFormData] = useState<UserFormData>({
     name: "",
@@ -228,6 +232,60 @@ export default function Usuarios() {
   
   // Solo superadmin puede eliminar usuarios permanentemente
   const canDeletePermanently = user?.role === 'superadmin';
+
+  // Mutación para actualizar foto de usuario (superadmin)
+  const updatePhotoMutation = trpc.users.updateFotoAdmin.useMutation({
+    onSuccess: () => {
+      utils.users.listConEmpresa.invalidate();
+      setIsPhotoDialogOpen(false);
+      setPhotoEditingUser(null);
+      toast.success("Foto actualizada correctamente");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !photoEditingUser) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Solo se permiten imágenes');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no debe superar 5MB');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+      const dataUrl = `data:${file.type};base64,${base64}`;
+      
+      updatePhotoMutation.mutate({
+        userId: photoEditingUser.id,
+        fotoBase64: dataUrl,
+      });
+    } catch (error) {
+      toast.error('Error al subir la imagen');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleEditPhoto = (usuario: any) => {
+    setPhotoEditingUser(usuario);
+    setIsPhotoDialogOpen(true);
+  };
 
   const handleDeleteUser = (usuario: any) => {
     if (!canDeletePermanently) {
@@ -619,6 +677,17 @@ export default function Usuarios() {
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
+                          {canDeletePermanently && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleEditPhoto(usuario)}
+                            title="Cambiar foto"
+                          >
+                            <Camera className="h-4 w-4 text-blue-500" />
+                          </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -758,6 +827,16 @@ export default function Usuarios() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
+                              {canDeletePermanently && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditPhoto(usuario)}
+                                title="Cambiar foto"
+                              >
+                                <Camera className="h-4 w-4 text-blue-500" />
+                              </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -1029,6 +1108,58 @@ export default function Usuarios() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAssignProjectOpen(false)}>
+                Cerrar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de editar foto */}
+        <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Cambiar Foto de Perfil</DialogTitle>
+              <DialogDescription>
+                Selecciona una imagen para {photoEditingUser?.name || 'el usuario'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center gap-4 py-4">
+              {/* Avatar actual */}
+              <div className="relative">
+                {photoEditingUser?.fotoUrl ? (
+                  <img 
+                    src={photoEditingUser.fotoUrl} 
+                    alt={photoEditingUser.name || 'Usuario'}
+                    className="h-24 w-24 rounded-full object-cover border-4 border-muted"
+                  />
+                ) : (
+                  <div className="h-24 w-24 rounded-full bg-[#002C63]/10 flex items-center justify-center border-4 border-muted">
+                    <span className="text-2xl font-bold text-[#002C63]">
+                      {photoEditingUser?.name?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                )}
+                <label className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full cursor-pointer hover:bg-primary/90 transition-colors">
+                  <Camera className="h-4 w-4" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePhotoUpload}
+                    disabled={uploadingPhoto || updatePhotoMutation.isPending}
+                  />
+                </label>
+              </div>
+              <p className="text-sm text-muted-foreground text-center">
+                Haz clic en el ícono de cámara para seleccionar una imagen.<br/>
+                Máximo 5MB. Formatos: JPG, PNG, GIF.
+              </p>
+              {(uploadingPhoto || updatePhotoMutation.isPending) && (
+                <p className="text-sm text-primary">Subiendo imagen...</p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsPhotoDialogOpen(false)}>
                 Cerrar
               </Button>
             </DialogFooter>

@@ -4225,3 +4225,18 @@ export async function updateUserFoto(userId: number, fotoUrl: string) {
   return { success: true };
 }
 
+
+// Aceptar términos y condiciones
+export async function aceptarTerminos(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(users)
+    .set({ 
+      terminosAceptados: true,
+      fechaAceptacionTerminos: new Date()
+    })
+    .where(eq(users.id, userId));
+  
+  return { success: true };
+}

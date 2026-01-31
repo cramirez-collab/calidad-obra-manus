@@ -20,6 +20,8 @@ export const users = mysqlTable("users", {
   empresaId: int("empresaId"),
   proyectoActivoId: int("proyectoActivoId"), // Proyecto actualmente seleccionado por el usuario
   fotoUrl: text("fotoUrl"), // URL de la foto de perfil del usuario
+  terminosAceptados: boolean("terminosAceptados").default(false).notNull(), // Si aceptó términos y condiciones
+  fechaAceptacionTerminos: timestamp("fechaAceptacionTerminos"), // Fecha de aceptación de términos
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

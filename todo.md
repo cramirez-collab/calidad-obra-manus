@@ -1574,3 +1574,18 @@
 - [x] Mostrar foto de perfil en comentarios de ítems
 - [x] Mostrar foto de perfil en bitácora
 - [x] Mostrar foto de perfil en cualquier lugar donde aparezca el nombre del usuario
+
+
+### Términos y Condiciones + Fotos Admin (31/01/2026)
+- [x] Superadmin puede editar fotos de todos los usuarios
+- [x] Crear tabla para tracking de aceptación de términos (campos en users)
+- [x] Modal de términos y condiciones al primer inicio de sesión
+- [x] Aviso de privacidad conforme a LFPDPPP México
+- [x] Link accesible para consultar términos en cualquier momento
+
+
+### Foto de Perfil de Usuarios (30/01/2026)
+- [x] Permitir que superadmin edite fotos de todos los usuarios
+- [x] Botón de cámara visible en lista de usuarios para superadmin
+- [x] Diálogo de editar foto con preview y subida
+
