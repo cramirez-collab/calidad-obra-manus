@@ -1814,3 +1814,19 @@
 - [x] Imágenes de portada de proyectos se guardan como base64
 - [x] Sistema evita problemas de URLs de CloudFront con error 403
 
+
+
+## Bug: Fotos de Portada no se Guardan al Editar (31 Enero 2026)
+- [ ] Investigar por qué las fotos de portada no se guardan al editar proyecto
+- [ ] Verificar que el formulario de edición envíe la imagen base64 al servidor
+- [ ] Verificar que el procedimiento de actualización guarde imagenPortadaBase64
+- [ ] Probar que las fotos se persisten correctamente
+
+
+## Mejoras UX Solicitadas (31 Enero 2026 - 15:00)
+- [ ]- [x] Reducir resumen de chat a 3 bullets de 5 palabrasas
+- [x] Corregir fotos antes/después que no se muestran (error de carga)
+- [ ] Aumentar grosor del lápiz de marcado a 4 puntos
+- [ ] Optimizar velocidad de carga, descarga y guardado
+
+- [x] Corregir que no se guardan fotos de avatares de usuarios

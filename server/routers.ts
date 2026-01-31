@@ -283,20 +283,15 @@ export const appRouter = router({
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo el superadministrador puede editar fotos de otros usuarios' });
         }
         
-        // Decodificar base64 y subir a S3
+        // Validar formato de imagen base64
         const matches = input.fotoBase64.match(/^data:image\/(\w+);base64,(.+)$/);
         if (!matches) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Formato de imagen inválido' });
         }
-        const ext = matches[1];
-        const base64Data = matches[2];
-        const buffer = Buffer.from(base64Data, 'base64');
-        const fileName = `usuarios/${input.userId}/foto-${nanoid(8)}.${ext}`;
-        const { key } = await storagePut(fileName, buffer, `image/${ext}`);
         
-        // Guardar el key del archivo (no la URL) para poder generar URLs firmadas
-        await db.updateUserFoto(input.userId, key);
-        return { success: true, fotoUrl: key };
+        // Guardar directamente el base64 en la base de datos (evita problemas de S3/CloudFront)
+        await db.updateUserFotoBase64(input.userId, input.fotoBase64);
+        return { success: true, fotoBase64: input.fotoBase64 };
       }),
     
     // Obtener mi perfil completo
@@ -1415,7 +1410,7 @@ export const appRouter = router({
           messages: [
             {
               role: 'system',
-              content: 'Eres un asistente especializado en control de calidad de obra. Resume el siguiente texto en máximo 5 bullets. Cada bullet máximo 10 palabras. Usa lenguaje técnico claro de obra y calidad. No repitas ideas. No agregues explicaciones. Devuelve solo los bullets. Mantiene términos técnicos como: OQC, no conformidad, colado, cimbra, armado, plomo, nivel, fisura, anclaje, trazo.'
+              content: 'Eres un asistente de control de calidad de obra. Resume en MÁXIMO 3 bullets. Cada bullet MÁXIMO 5 palabras. Sé muy conciso. Usa términos técnicos. Solo devuelve los bullets, nada más.'
             },
             {
               role: 'user',
@@ -1779,7 +1774,16 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
-        await db.updateProyecto(id, data);
+        
+        // Si la imagen es base64, guardarla directamente (evita problemas de S3/CloudFront)
+        // El sistema base64 es más confiable para este caso de uso
+        if (data.imagenPortadaUrl && data.imagenPortadaUrl.startsWith('data:')) {
+          // Guardar la imagen base64 directamente en la base de datos
+          // Esto evita problemas de URLs de CloudFront que expiran con error 403
+          await db.updateProyecto(id, { ...data, imagenPortadaBase64: data.imagenPortadaUrl, imagenPortadaUrl: null });
+        } else {
+          await db.updateProyecto(id, data);
+        }
         return { success: true };
       }),
     

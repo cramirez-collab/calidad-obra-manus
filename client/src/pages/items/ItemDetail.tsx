@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
+import { getImageUrl } from "@/lib/imageUrl";
 import { 
   ArrowLeft, 
   Camera, 
@@ -434,9 +435,10 @@ export default function ItemDetail() {
                     <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100">
                       {item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
                         <img
-                          src={item.fotoAntesMarcadaUrl || item.fotoAntesUrl || ""}
+                          src={getImageUrl(item.fotoAntesMarcadaUrl || item.fotoAntesUrl || "")}
                           alt="Foto antes"
                           className="w-full h-full object-contain"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -458,9 +460,10 @@ export default function ItemDetail() {
                     <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100">
                       {item.fotoDespuesUrl ? (
                         <img
-                          src={item.fotoDespuesUrl}
+                          src={getImageUrl(item.fotoDespuesUrl)}
                           alt="Foto después"
                           className="w-full h-full object-contain"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground flex-col gap-2">

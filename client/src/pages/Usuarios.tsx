@@ -1113,9 +1113,9 @@ export default function Usuarios() {
             <div className="flex flex-col items-center gap-4 py-4">
               {/* Avatar actual */}
               <div className="relative">
-                {photoEditingUser?.fotoUrl ? (
+                {photoEditingUser?.fotoBase64 || photoEditingUser?.fotoUrl ? (
                   <img 
-                    src={getImageUrl(photoEditingUser.fotoUrl)} 
+                    src={photoEditingUser.fotoBase64 || getImageUrl(photoEditingUser.fotoUrl)} 
                     alt={photoEditingUser.name || 'Usuario'}
                     className="h-24 w-24 rounded-full object-cover border-4 border-muted"
                   />

@@ -181,27 +181,9 @@ export default function Proyectos() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    let dataToSend = { ...formData };
-    
-    // Si la imagen es base64 (nueva imagen), necesitamos subirla primero
-    // pero solo si estamos editando un proyecto existente
-    // Para proyectos nuevos, guardamos la URL base64 temporalmente
-    if (formData.imagenPortadaUrl && formData.imagenPortadaUrl.startsWith('data:')) {
-      if (editingProyecto) {
-        // Subir imagen al servidor
-        try {
-          const result = await uploadImageMutation.mutateAsync({
-            proyectoId: editingProyecto.id,
-            imagenBase64: formData.imagenPortadaUrl,
-          });
-          dataToSend.imagenPortadaUrl = result.url;
-        } catch (error) {
-          toast.error('Error al subir la imagen de portada');
-          return;
-        }
-      }
-      // Para proyectos nuevos, enviamos el base64 y el backend lo procesará
-    }
+    // Enviar directamente el base64 al backend - el servidor lo guardará en la BD
+    // Esto evita problemas con URLs de S3/CloudFront que expiran
+    const dataToSend = { ...formData };
     
     if (editingProyecto) {
       updateMutation.mutate({ id: editingProyecto.id, ...dataToSend });
