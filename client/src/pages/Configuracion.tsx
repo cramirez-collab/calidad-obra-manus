@@ -134,6 +134,10 @@ export default function Configuracion() {
   const [whatsappNumero, setWhatsappNumero] = useState('');
   const [showReportePreview, setShowReportePreview] = useState(false);
   
+  // Días y horarios para reportes automáticos
+  const [diasReporte, setDiasReporte] = useState<string[]>(['lunes', 'martes', 'miercoles', 'jueves', 'viernes']);
+  const [horaReporte, setHoraReporte] = useState('18:00');
+  
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -180,6 +184,21 @@ export default function Configuracion() {
     if (whatsappConfig) {
       setWhatsappUrl(whatsappConfig.grupoUrl || '');
       setWhatsappApiKey(whatsappConfig.apiKey || '');
+      setWhatsappNumero(whatsappConfig.numeroDestino || '');
+      // Parsear días de reporte desde JSON
+      if (whatsappConfig.diasReporte) {
+        try {
+          const dias = JSON.parse(whatsappConfig.diasReporte);
+          if (Array.isArray(dias) && dias.length > 0) {
+            setDiasReporte(dias);
+          }
+        } catch {
+          // Si no es JSON válido, usar default
+        }
+      }
+      if (whatsappConfig.horaReporte) {
+        setHoraReporte(whatsappConfig.horaReporte);
+      }
     }
   }, [whatsappConfig]);
 
@@ -212,12 +231,37 @@ export default function Configuracion() {
       toast.error("Ingresa el enlace del grupo de WhatsApp");
       return;
     }
+    if (diasReporte.length === 0) {
+      toast.error("Selecciona al menos un día para enviar reportes");
+      return;
+    }
     saveWhatsappMutation.mutate({
       proyectoId: selectedProjectId,
       grupoUrl: whatsappUrl,
       apiKey: whatsappApiKey || undefined,
+      numeroDestino: whatsappNumero || undefined,
+      diasReporte: diasReporte,
+      horaReporte: horaReporte,
     });
   };
+
+  const toggleDia = (dia: string) => {
+    setDiasReporte(prev => 
+      prev.includes(dia) 
+        ? prev.filter(d => d !== dia)
+        : [...prev, dia]
+    );
+  };
+
+  const diasSemana = [
+    { id: 'lunes', label: 'Lun' },
+    { id: 'martes', label: 'Mar' },
+    { id: 'miercoles', label: 'Mié' },
+    { id: 'jueves', label: 'Jue' },
+    { id: 'viernes', label: 'Vie' },
+    { id: 'sabado', label: 'Sáb' },
+    { id: 'domingo', label: 'Dom' },
+  ];
 
   const handlePreviewReporte = () => {
     setShowReportePreview(true);
@@ -489,6 +533,48 @@ export default function Configuracion() {
                     </p>
                   </div>
                 )}
+
+                {/* Días de envío */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Días de Envío
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {diasSemana.map((dia) => (
+                      <button
+                        key={dia.id}
+                        type="button"
+                        onClick={() => toggleDia(dia.id)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          diasReporte.includes(dia.id)
+                            ? 'bg-green-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {dia.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Selecciona los días en que deseas recibir el reporte automático.
+                  </p>
+                </div>
+
+                {/* Hora de envío */}
+                <div className="space-y-2">
+                  <Label htmlFor="horaReporte" className="text-sm font-medium">Hora de Envío</Label>
+                  <Input
+                    id="horaReporte"
+                    type="time"
+                    value={horaReporte}
+                    onChange={(e) => setHoraReporte(e.target.value)}
+                    className="w-32"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Hora local (Ciudad de México) en que se enviará el reporte.
+                  </p>
+                </div>
 
                 {/* Botones de acción */}
                 <div className="flex flex-wrap gap-2 pt-2">

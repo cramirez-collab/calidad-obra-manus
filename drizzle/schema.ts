@@ -553,6 +553,8 @@ export const whatsappConfig = mysqlTable("whatsapp_config", {
   grupoUrl: text("grupoUrl"), // Enlace del grupo de WhatsApp
   apiKey: varchar("apiKey", { length: 255 }), // API Key de TextMeBot
   numeroDestino: varchar("numeroDestino", { length: 20 }), // Número de teléfono destino para TextMeBot
+  diasReporte: text("diasReporte"), // Días de la semana para enviar reportes (JSON array: ["lunes","martes",...])
+  horaReporte: varchar("horaReporte", { length: 5 }).default("18:00"), // Hora de envío (formato HH:MM)
   activo: boolean("activo").default(true).notNull(),
   ultimoEnvio: timestamp("ultimoEnvio"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

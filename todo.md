@@ -2159,3 +2159,11 @@
 - [x] Diálogo de foto después se cierra inmediatamente (onMutate)
 - [x] Toast de loading mientras se procesa
 - [x] Toast de éxito/error al completar
+
+
+## Configuración Días y Horarios WhatsApp (1 Febrero 2026)
+- [x] Agregar selector de días de la semana (botones toggle Lun-Dom)
+- [x] Agregar selector de horarios (input type=time)
+- [x] Guardar configuración en backend (diasReporte como JSON, horaReporte)
+- [x] Campos agregados a tabla whatsapp_config
+- [x] 201 pruebas pasan correctamente
