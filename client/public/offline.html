@@ -124,6 +124,22 @@
       background: #d1fae5;
       color: #065f46;
     }
+    
+    .btn-continue {
+      display: block;
+      background: #10b981;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      margin-top: 12px;
+      transition: background 0.2s;
+    }
+    
+    .btn-continue:hover {
+      background: #059669;
+    }
   </style>
 </head>
 <body>
@@ -151,6 +167,10 @@
       Reintentar Conexión
     </a>
     
+    <a href="/" class="btn-continue" onclick="forceOfflineMode(); return false;">
+      Continuar sin conexión
+    </a>
+    
     <div class="status" id="status">
       Esperando conexión...
     </div>
@@ -174,6 +194,13 @@
     window.addEventListener('online', updateStatus);
     window.addEventListener('offline', updateStatus);
     updateStatus();
+    
+    function forceOfflineMode() {
+      // Marcar que el usuario quiere continuar offline
+      sessionStorage.setItem('forceOfflineMode', 'true');
+      // Navegar a la app principal
+      window.location.href = '/';
+    }
   </script>
 </body>
 </html>

@@ -1866,3 +1866,8 @@
 - [x] Indicador visual de estado de conexión (online/offline)
 - [x] Cola de sincronización automática cuando vuelva internet
 - [x] Integrar modo offline en componentes principales
+
+
+## Bugs Reportados (31 Enero 2026 - 19:15)
+- [x] Pantalla Sin Conexión no permite continuar a la app offline - CORREGIDO: Botón "Continuar sin conexión" agregado
+- [x] Lápiz de marcar necesita ser el doble de grueso - CORREGIDO: BRUSH_SIZE de 4 a 8
