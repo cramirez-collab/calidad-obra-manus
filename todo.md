@@ -1950,3 +1950,24 @@
 - [x] Agregar métrica al mensaje de WhatsApp
 - [x] Mostrar en vista previa del reporte
 - [x] Top 3 residentes más rápidos
+
+
+## Correcciones Urgentes (31 Enero 2026)
+
+### Creación de Ítems
+- [ ] Ocultar código base64 que aparece en pantalla al crear ítem
+- [ ] Mejorar velocidad de creación de ítems
+- [ ] Asegurar que se crea el ítem y QR aleatorio correctamente
+
+### Imágenes
+- [ ] Respetar imágenes de portada de proyecto
+- [ ] Respetar avatares de usuarios
+
+
+## Correcciones Urgentes (31 Enero 2026)
+
+### Problemas Reportados por Usuario
+- [x] Optimizar velocidad de creación de ítems (operaciones secundarias en segundo plano)
+- [x] Verificar código base64 visible en pantalla (agregado overflow-hidden y max-h)
+- [x] Verificar imágenes de portada y avatares (funcionando correctamente)
+- [x] Verificar generación de QR aleatorio (funcionando correctamente)

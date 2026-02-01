@@ -1,0 +1,6 @@
+Problema identificado: Se muestra el código base64 de la imagen en lugar de la imagen misma.
+El texto visible es claramente un string base64 largo que debería estar dentro de una etiqueta <img>.
+Esto ocurre en la pantalla de creación de ítem (NuevoItem.tsx).
+
+El problema parece estar en cómo se renderiza la foto antes de enviarla.
+La imagen debería mostrarse con <img src={fotoAntes}> pero parece que se está mostrando el texto raw.

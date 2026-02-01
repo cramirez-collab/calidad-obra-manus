@@ -266,3 +266,33 @@
     width: 64px;
   }
 }
+
+
+/* Prevenir que contenido base64 largo se muestre como texto */
+.overflow-hidden {
+  overflow: hidden !important;
+}
+
+/* Asegurar que las imágenes no muestren su src como texto */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Cards con overflow oculto por defecto */
+[class*="CardContent"] {
+  overflow: hidden;
+}
+
+/* Prevenir que texto largo rompa el layout */
+.break-words {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Truncar texto largo */
+.truncate-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

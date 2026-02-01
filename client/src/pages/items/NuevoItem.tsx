@@ -366,15 +366,15 @@ export default function NuevoItem() {
         />
 
         {/* PASO 1: Foto primero (más importante) */}
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-4">
+        <Card className="border-0 shadow-sm overflow-hidden">
+          <CardContent className="p-4 overflow-hidden max-h-[400px]">
             {fotoAntes ? (
-              <div className="space-y-3">
+              <div className="space-y-3 overflow-hidden">
                 <div className="relative rounded-lg overflow-hidden bg-slate-100">
                   <img
                     src={fotoAntesMarcada || fotoAntes}
                     alt="Foto del problema"
-                    className="w-full h-auto max-h-[200px] object-contain"
+                    className="w-full h-auto max-h-[200px] object-contain max-w-full"
                   />
                   <Button
                     variant="destructive"

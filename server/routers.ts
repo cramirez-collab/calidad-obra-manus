@@ -939,26 +939,37 @@ export const appRouter = router({
           clientId: input.clientId, // Guardar para evitar duplicados
         });
         
-        // Registrar en historial
-        await db.addItemHistorial({
-          itemId: result.id,
-          usuarioId: ctx.user.id,
-          statusNuevo: 'pendiente_foto_despues',
-          comentario: 'Ítem creado',
+        // Devolver resultado inmediatamente para mayor velocidad
+        // Las operaciones secundarias se ejecutan en segundo plano
+        const itemResult = result;
+        
+        // Ejecutar operaciones secundarias en segundo plano (no bloquean)
+        setImmediate(async () => {
+          try {
+            // Registrar en historial
+            await db.addItemHistorial({
+              itemId: itemResult.id,
+              usuarioId: ctx.user.id,
+              statusNuevo: 'pendiente_foto_despues',
+              comentario: 'Ítem creado',
+            });
+            
+            // Emitir evento de tiempo real
+            socketEvents.itemCreated(itemResult);
+            
+            // Notificar a jefes de residente sobre nuevo ítem pendiente
+            await db.notificarJefesResidente(
+              itemResult.id,
+              input.empresaId,
+              'Nuevo Ítem Pendiente',
+              `Se ha registrado un nuevo ítem "${input.titulo}" pendiente de revisión.`
+            );
+          } catch (e) {
+            console.error('Error en operaciones secundarias de item:', e);
+          }
         });
         
-        // Emitir evento de tiempo real
-        socketEvents.itemCreated(result);
-        
-        // Notificar a jefes de residente sobre nuevo ítem pendiente
-        await db.notificarJefesResidente(
-          result.id,
-          input.empresaId,
-          'Nuevo Ítem Pendiente',
-          `Se ha registrado un nuevo ítem "${input.titulo}" pendiente de revisión.`
-        );
-        
-        return result;
+        return itemResult;
       }),
     
     uploadFotoAntes: noDesarrolladorProcedure
