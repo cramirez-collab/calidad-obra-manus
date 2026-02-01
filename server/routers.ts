@@ -2210,18 +2210,9 @@ export const appRouter = router({
         grupoUrl: z.string().min(1),
         apiKey: z.string().optional(),
         numeroDestino: z.string().optional(),
-        diasEnvio: z.array(z.number().min(0).max(6)).optional(), // 0=Dom, 1=Lun, ..., 6=Sab
-        horariosEnvio: z.array(z.string().regex(/^\d{2}:\d{2}$/)).optional(), // Formato HH:MM
       }))
       .mutation(async ({ ctx, input }) => {
-        await whatsappService.saveWhatsappConfig(
-          input.proyectoId, 
-          input.grupoUrl, 
-          input.apiKey, 
-          input.numeroDestino,
-          input.diasEnvio,
-          input.horariosEnvio
-        );
+        await whatsappService.saveWhatsappConfig(input.proyectoId, input.grupoUrl, input.apiKey, input.numeroDestino);
         await db.createAuditoria({
           usuarioId: ctx.user.id,
           usuarioNombre: ctx.user.name || 'Usuario',

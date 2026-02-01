@@ -1,2 +1,0 @@
-ALTER TABLE `whatsapp_config` ADD `diasEnvio` varchar(50) DEFAULT '[1,2,3,4,5,6]' NOT NULL;--> statement-breakpoint
-ALTER TABLE `whatsapp_config` ADD `horariosEnvio` varchar(100) DEFAULT '["09:00","12:00","17:00"]' NOT NULL;

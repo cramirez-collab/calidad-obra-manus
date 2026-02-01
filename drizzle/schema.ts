@@ -551,10 +551,6 @@ export const whatsappConfig = mysqlTable("whatsapp_config", {
   apiKey: varchar("apiKey", { length: 255 }), // API Key de TextMeBot
   numeroDestino: varchar("numeroDestino", { length: 20 }), // Número de teléfono destino para TextMeBot
   activo: boolean("activo").default(true).notNull(),
-  // Configuración de días de envío (JSON array de días: 0=Dom, 1=Lun, ..., 6=Sab)
-  diasEnvio: varchar("diasEnvio", { length: 50 }).default('[1,2,3,4,5,6]').notNull(), // Por defecto L-S
-  // Configuración de horarios de envío (JSON array de horas en formato 24h)
-  horariosEnvio: varchar("horariosEnvio", { length: 100 }).default('["09:00","12:00","17:00"]').notNull(), // Por defecto 9am, 12pm, 5pm
   ultimoEnvio: timestamp("ultimoEnvio"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

@@ -188,12 +188,10 @@ describe('WhatsApp Service', () => {
       expect(esHoraDeEnvio()).toBe(true);
     });
 
-    it('debe retornar true a las 5:00 PM los sábados (ahora incluido por defecto)', () => {
+    it('debe retornar false a las 5:00 PM los sábados', () => {
       // Sábado 1 de febrero de 2025 a las 5:00 PM
-      // Con la nueva configuración por defecto [1,2,3,4,5,6] y ['09:00','12:00','17:00']
-      // Los sábados (6) ahora están incluidos en los días de envío
       vi.setSystemTime(new Date(2025, 1, 1, 17, 0, 0));
-      expect(esHoraDeEnvio()).toBe(true);
+      expect(esHoraDeEnvio()).toBe(false);
     });
 
     it('debe retornar true a las 9:00 AM los sábados', () => {

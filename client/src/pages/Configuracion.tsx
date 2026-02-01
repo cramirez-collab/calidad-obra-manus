@@ -134,10 +134,6 @@ export default function Configuracion() {
   const [whatsappNumero, setWhatsappNumero] = useState('');
   const [showReportePreview, setShowReportePreview] = useState(false);
   
-  // Estados para días y horarios de envío
-  const [diasEnvio, setDiasEnvio] = useState<number[]>([1, 2, 3, 4, 5, 6]); // L-S por defecto
-  const [horariosEnvio, setHorariosEnvio] = useState<string[]>(['09:00', '12:00', '17:00']);
-  
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -184,17 +180,6 @@ export default function Configuracion() {
     if (whatsappConfig) {
       setWhatsappUrl(whatsappConfig.grupoUrl || '');
       setWhatsappApiKey(whatsappConfig.apiKey || '');
-      // Cargar días y horarios de la configuración
-      try {
-        const dias = whatsappConfig.diasEnvio ? JSON.parse(whatsappConfig.diasEnvio) : [1, 2, 3, 4, 5, 6];
-        const horarios = whatsappConfig.horariosEnvio ? JSON.parse(whatsappConfig.horariosEnvio) : ['09:00', '12:00', '17:00'];
-        setDiasEnvio(dias);
-        setHorariosEnvio(horarios);
-      } catch {
-        // Usar valores por defecto si hay error de parsing
-        setDiasEnvio([1, 2, 3, 4, 5, 6]);
-        setHorariosEnvio(['09:00', '12:00', '17:00']);
-      }
     }
   }, [whatsappConfig]);
 
@@ -231,38 +216,6 @@ export default function Configuracion() {
       proyectoId: selectedProjectId,
       grupoUrl: whatsappUrl,
       apiKey: whatsappApiKey || undefined,
-      diasEnvio: diasEnvio,
-      horariosEnvio: horariosEnvio,
-    });
-  };
-
-  // Funciones para manejar días y horarios
-  const toggleDia = (dia: number) => {
-    setDiasEnvio(prev => 
-      prev.includes(dia) 
-        ? prev.filter(d => d !== dia) 
-        : [...prev, dia].sort((a, b) => a - b)
-    );
-  };
-
-  const addHorario = () => {
-    const nuevoHorario = '12:00';
-    if (!horariosEnvio.includes(nuevoHorario)) {
-      setHorariosEnvio(prev => [...prev, nuevoHorario].sort());
-    }
-  };
-
-  const removeHorario = (horario: string) => {
-    if (horariosEnvio.length > 1) {
-      setHorariosEnvio(prev => prev.filter(h => h !== horario));
-    }
-  };
-
-  const updateHorario = (index: number, nuevoHorario: string) => {
-    setHorariosEnvio(prev => {
-      const nuevos = [...prev];
-      nuevos[index] = nuevoHorario;
-      return nuevos.sort();
     });
   };
 
@@ -537,90 +490,6 @@ export default function Configuracion() {
                   </div>
                 )}
 
-                {/* Configuración de Días de Envío */}
-                <div className="space-y-2 pt-4 border-t border-green-200 dark:border-green-800">
-                  <Label className="text-sm font-medium flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-green-600" />
-                    Días de Envío
-                  </Label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { dia: 0, nombre: 'Dom', corto: 'D' },
-                      { dia: 1, nombre: 'Lun', corto: 'L' },
-                      { dia: 2, nombre: 'Mar', corto: 'M' },
-                      { dia: 3, nombre: 'Mié', corto: 'X' },
-                      { dia: 4, nombre: 'Jue', corto: 'J' },
-                      { dia: 5, nombre: 'Vie', corto: 'V' },
-                      { dia: 6, nombre: 'Sáb', corto: 'S' },
-                    ].map(({ dia, nombre, corto }) => (
-                      <Button
-                        key={dia}
-                        type="button"
-                        variant={diasEnvio.includes(dia) ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => toggleDia(dia)}
-                        className={`w-12 h-10 ${
-                          diasEnvio.includes(dia) 
-                            ? 'bg-green-600 hover:bg-green-700 text-white' 
-                            : 'hover:bg-green-50 dark:hover:bg-green-950'
-                        }`}
-                      >
-                        <span className="hidden sm:inline">{nombre}</span>
-                        <span className="sm:hidden">{corto}</span>
-                      </Button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Selecciona los días en que se enviarán los reportes automáticos.
-                  </p>
-                </div>
-
-                {/* Configuración de Horarios de Envío */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-green-600" />
-                    Horarios de Envío
-                  </Label>
-                  <div className="flex flex-wrap gap-2 items-center">
-                    {horariosEnvio.map((horario, index) => (
-                      <div key={index} className="flex items-center gap-1">
-                        <Input
-                          type="time"
-                          value={horario}
-                          onChange={(e) => updateHorario(index, e.target.value)}
-                          className="w-28 h-10"
-                        />
-                        {horariosEnvio.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeHorario(horario)}
-                            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                    {horariosEnvio.length < 5 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addHorario}
-                        className="h-10 gap-1 border-dashed border-green-500 text-green-600 hover:bg-green-50"
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                        Agregar
-                      </Button>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Define las horas del día en que se enviarán los reportes (máximo 5 horarios).
-                  </p>
-                </div>
-
                 {/* Botones de acción */}
                 <div className="flex flex-wrap gap-2 pt-2">
                   <Button
@@ -696,22 +565,9 @@ export default function Configuracion() {
                 </div>
               )}
 
-              {/* Resumen de configuración actual */}
+              {/* Horarios */}
               <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 text-xs text-green-700 dark:text-green-300">
-                <strong>Configuración actual:</strong>{' '}
-                <span>
-                  {diasEnvio.length === 0 ? 'Sin días seleccionados' : 
-                    diasEnvio.map(d => ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d]).join(', ')}
-                </span>
-                {' | '}
-                <span>
-                  {horariosEnvio.length === 0 ? 'Sin horarios' : 
-                    horariosEnvio.map(h => {
-                      const [hora, min] = h.split(':');
-                      const horaNum = parseInt(hora);
-                      return `${horaNum > 12 ? horaNum - 12 : horaNum}:${min} ${horaNum >= 12 ? 'PM' : 'AM'}`;
-                    }).join(', ')}
-                </span>
+                <strong>Horarios de reportes:</strong> L-V: 9am, 12pm, 5pm | Sábados: 9am, 12pm | Domingos: No se envían
               </div>
             </CardContent>
           </Card>

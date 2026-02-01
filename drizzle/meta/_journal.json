@@ -288,13 +288,6 @@
       "when": 1769918841941,
       "tag": "0040_omniscient_ogun",
       "breakpoints": true
-    },
-    {
-      "idx": 41,
-      "version": "5",
-      "when": 1769929849123,
-      "tag": "0041_next_junta",
-      "breakpoints": true
     }
   ]
 }

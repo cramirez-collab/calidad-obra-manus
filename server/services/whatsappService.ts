@@ -538,9 +538,7 @@ export async function saveWhatsappConfig(
   proyectoId: number, 
   grupoUrl: string, 
   apiKey?: string,
-  numeroDestino?: string,
-  diasEnvio?: number[],
-  horariosEnvio?: string[]
+  numeroDestino?: string
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -553,8 +551,6 @@ export async function saveWhatsappConfig(
         grupoUrl, 
         apiKey: apiKey || null,
         numeroDestino: numeroDestino || null,
-        diasEnvio: diasEnvio ? JSON.stringify(diasEnvio) : existingConfig.diasEnvio,
-        horariosEnvio: horariosEnvio ? JSON.stringify(horariosEnvio) : existingConfig.horariosEnvio,
         updatedAt: new Date()
       })
       .where(eq(whatsappConfig.proyectoId, proyectoId));
@@ -564,51 +560,34 @@ export async function saveWhatsappConfig(
       grupoUrl,
       apiKey: apiKey || null,
       numeroDestino: numeroDestino || null,
-      diasEnvio: diasEnvio ? JSON.stringify(diasEnvio) : '[1,2,3,4,5,6]',
-      horariosEnvio: horariosEnvio ? JSON.stringify(horariosEnvio) : '["09:00","12:00","17:00"]',
     });
   }
 }
 
 /**
- * Verifica si es hora de enviar reporte según la configuración personalizada
- * @param diasEnvio - Array de días (0=Dom, 1=Lun, ..., 6=Sab)
- * @param horariosEnvio - Array de horarios en formato "HH:MM"
- */
-export function esHoraDeEnvioPersonalizado(
-  diasEnvio: number[] = [1, 2, 3, 4, 5, 6],
-  horariosEnvio: string[] = ['09:00', '12:00', '17:00']
-): boolean {
-  const ahora = new Date();
-  const diaSemana = ahora.getDay(); // 0 = Domingo, 6 = Sábado
-  const hora = ahora.getHours();
-  const minutos = ahora.getMinutes();
-
-  // Verificar si es un día de envío
-  if (!diasEnvio.includes(diaSemana)) return false;
-
-  // Verificar si es un horario de envío (con tolerancia de 15 minutos)
-  const horaActual = `${hora.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
-  
-  for (const horario of horariosEnvio) {
-    const [horaConfig, minConfig] = horario.split(':').map(Number);
-    // Tolerancia: desde la hora exacta hasta 15 minutos después
-    if (hora === horaConfig && minutos >= 0 && minutos < 15) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-/**
- * Verifica si es hora de enviar reporte según el horario por defecto
+ * Verifica si es hora de enviar reporte según el horario configurado
  * L-V: 9am, 12pm, 17pm
  * Sábados: 9am, 12pm
  * Domingos: NO enviar
  */
 export function esHoraDeEnvio(): boolean {
-  return esHoraDeEnvioPersonalizado([1, 2, 3, 4, 5, 6], ['09:00', '12:00', '17:00']);
+  const ahora = new Date();
+  const diaSemana = ahora.getDay(); // 0 = Domingo, 6 = Sábado
+  const hora = ahora.getHours();
+  const minutos = ahora.getMinutes();
+
+  // Domingo - no enviar
+  if (diaSemana === 0) return false;
+
+  // Sábado - solo 9am y 12pm
+  if (diaSemana === 6) {
+    return (hora === 9 && minutos < 15) || (hora === 12 && minutos < 15);
+  }
+
+  // Lunes a Viernes - 9am, 12pm, 17pm
+  return (hora === 9 && minutos < 15) || 
+         (hora === 12 && minutos < 15) || 
+         (hora === 17 && minutos < 15);
 }
 
 /**
@@ -624,8 +603,6 @@ export async function getProyectosConWhatsapp() {
     apiKey: whatsappConfig.apiKey,
     numeroDestino: whatsappConfig.numeroDestino,
     activo: whatsappConfig.activo,
-    diasEnvio: whatsappConfig.diasEnvio,
-    horariosEnvio: whatsappConfig.horariosEnvio,
     proyectoNombre: proyectos.nombre,
   })
     .from(whatsappConfig)
