@@ -44,31 +44,32 @@ interface ConfigItem {
   tipo: 'text' | 'number' | 'boolean';
 }
 
+// Ordenados alfabéticamente por label
 const configDefaults: Omit<ConfigItem, 'valor' | 'descripcion'>[] = [
-  { clave: 'nombre_empresa', icon: Building2, tipo: 'text', soloSuperadmin: false },
-  { clave: 'dias_alerta_pendiente', icon: Clock, tipo: 'number', soloSuperadmin: false },
-  { clave: 'notificaciones_email', icon: Bell, tipo: 'boolean', soloSuperadmin: false },
   { clave: 'tema_color', icon: Palette, tipo: 'text', soloSuperadmin: false },
   { clave: 'requiere_comentario_rechazo', icon: Shield, tipo: 'boolean', soloSuperadmin: false },
+  { clave: 'dias_alerta_pendiente', icon: Clock, tipo: 'number', soloSuperadmin: false },
   { clave: 'max_items_por_pagina', icon: Settings, tipo: 'number', soloSuperadmin: true },
+  { clave: 'nombre_empresa', icon: Building2, tipo: 'text', soloSuperadmin: false },
+  { clave: 'notificaciones_email', icon: Bell, tipo: 'boolean', soloSuperadmin: false },
 ];
 
 const configLabels: Record<string, string> = {
-  nombre_empresa: 'Nombre de Empresa',
-  dias_alerta_pendiente: 'Días para Alerta',
-  notificaciones_email: 'Notificaciones Email',
   tema_color: 'Color del Tema',
   requiere_comentario_rechazo: 'Comentario al Rechazar',
+  dias_alerta_pendiente: 'Días para Alerta',
   max_items_por_pagina: 'Ítems por Página',
+  nombre_empresa: 'Nombre de Empresa',
+  notificaciones_email: 'Notificaciones Email',
 };
 
 const configDescriptions: Record<string, string> = {
-  nombre_empresa: 'Nombre que aparece en reportes',
-  dias_alerta_pendiente: 'Días antes de alertar ítems pendientes',
-  notificaciones_email: 'Enviar notificaciones por correo',
   tema_color: 'Color principal de la interfaz',
   requiere_comentario_rechazo: 'Obligar comentario al rechazar',
+  dias_alerta_pendiente: 'Días antes de alertar ítems pendientes',
   max_items_por_pagina: 'Cantidad máxima de ítems en listas',
+  nombre_empresa: 'Nombre que aparece en reportes',
+  notificaciones_email: 'Enviar notificaciones por correo',
 };
 
 export default function Configuracion() {
@@ -328,6 +329,28 @@ export default function Configuracion() {
           })}
         </div>
 
+        {/* Sección Alta Rápida de Empresa */}
+        <Card className="mt-6 border-primary/20 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Zap className="h-5 w-5 text-primary" />
+              Alta Rápida de Empresa
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Configura una nueva empresa con especialidad, usuarios y defectos en un solo flujo simple de 4 pasos.
+            </p>
+            <Link href="/configuracion/alta-rapida">
+              <Button className="gap-2">
+                <Building2 className="h-4 w-4" />
+                Iniciar Alta Rápida
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
         {/* Sección Cambiar Contraseña */}
         <Card className="mt-6">
           <CardHeader className="pb-3">
@@ -390,28 +413,6 @@ export default function Configuracion() {
                 {changePasswordMutation.isPending ? "Guardando..." : "Cambiar Contraseña"}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Sección Alta Rápida */}
-        <Card className="mt-6 border-primary/20 bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Zap className="h-5 w-5 text-primary" />
-              Alta Rápida de Empresa
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Configura una nueva empresa con especialidad, usuarios y defectos en un solo flujo simple de 4 pasos.
-            </p>
-            <Link href="/configuracion/alta-rapida">
-              <Button className="gap-2">
-                <Building2 className="h-4 w-4" />
-                Iniciar Alta Rápida
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
           </CardContent>
         </Card>
 
