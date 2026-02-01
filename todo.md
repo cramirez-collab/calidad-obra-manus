@@ -2090,3 +2090,15 @@
 - Esto NO es código base64 de la aplicación
 - El reporte de WhatsApp solo incluye texto formateado (nombres, fechas, estadísticas)
 - La función formatearMensajeWhatsApp no incluye ningún base64
+
+
+## Tareas Urgentes (1 Febrero 2026 - Madrugada)
+- [x] Configurar TextMeBot para envío automático de reportes
+  - API endpoint: api.textmebot.com/send.php
+  - Precio: $1/mes (mensajes a ti mismo) o $6/mes (mensajes a cualquiera)
+  - Usuario debe obtener API Key en textmebot.com
+- [x] Identificar y corregir el origen del texto base64 visible en la app
+  - CONCLUSIÓN: NO es base64 de la aplicación
+  - El texto largo en WhatsApp es el mensaje codificado en URL (encodeURIComponent)
+  - El reporte de WhatsApp solo genera texto formateado con emojis
+  - Las fotos se muestran como imágenes, no como texto base64
