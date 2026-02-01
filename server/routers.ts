@@ -833,6 +833,7 @@ export const appRouter = router({
         fechaDesde: z.date().optional(),
         fechaHasta: z.date().optional(),
         busqueda: z.string().optional(),
+        numeroInterno: z.number().optional(),
         limit: z.number().default(100),
         offset: z.number().default(0),
       }))

@@ -102,6 +102,7 @@ export default function ItemsList() {
     atributoId: "",
     status: "",
     busqueda: "",
+    numeroInterno: "",
   });
   const [showFilters, setShowFilters] = useState(false);
   
@@ -154,6 +155,7 @@ export default function ItemsList() {
     especialidadId: filters.especialidadId ? parseInt(filters.especialidadId) : undefined,
     status: filters.status || undefined,
     busqueda: filters.busqueda || undefined,
+    numeroInterno: filters.numeroInterno ? parseInt(filters.numeroInterno) : undefined,
     limit: 100,
     offset: 0,
   }), [filters, selectedProjectId]);
@@ -183,6 +185,7 @@ export default function ItemsList() {
       atributoId: "",
       status: "",
       busqueda: "",
+      numeroInterno: "",
     });
   };
 
@@ -257,6 +260,16 @@ export default function ItemsList() {
                     value={filters.busqueda}
                     onChange={(e) => setFilters({ ...filters, busqueda: e.target.value })}
                     className="pl-9"
+                  />
+                </div>
+                <div className="w-24">
+                  <Input
+                    type="number"
+                    placeholder="# Int."
+                    value={filters.numeroInterno}
+                    onChange={(e) => setFilters({ ...filters, numeroInterno: e.target.value })}
+                    className="text-center"
+                    min={1}
                   />
                 </div>
                 <Button

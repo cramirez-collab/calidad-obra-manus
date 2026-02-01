@@ -1113,6 +1113,7 @@ export interface ItemFilters {
   fechaDesde?: Date;
   fechaHasta?: Date;
   busqueda?: string;
+  numeroInterno?: number;
 }
 
 export async function getItems(filters: ItemFilters = {}, limit = 100, offset = 0) {
@@ -1135,6 +1136,9 @@ export async function getItems(filters: ItemFilters = {}, limit = 100, offset = 
   if (filters.fechaHasta) conditions.push(lte(items.fechaCreacion, filters.fechaHasta));
   if (filters.busqueda) {
     conditions.push(like(items.titulo, `%${filters.busqueda}%`));
+  }
+  if (filters.numeroInterno) {
+    conditions.push(eq(items.numeroInterno, filters.numeroInterno));
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

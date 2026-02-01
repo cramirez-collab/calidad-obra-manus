@@ -69,6 +69,7 @@ router.get("/api/export/items", async (req, res) => {
     ];
     
     const data = items.map((item: any) => ({
+      "No. Interno": item.numeroInterno || "-",
       "Codigo": removeAccents(item.codigo || ""),
       "Titulo": removeAccents(item.titulo || ""),
       "Descripcion": removeAccents(item.descripcion || ""),
@@ -86,7 +87,7 @@ router.get("/api/export/items", async (req, res) => {
     XLSX.utils.sheet_add_json(ws, data, { origin: "A8" });
     
     ws["!cols"] = [
-      { wch: 12 }, { wch: 25 }, { wch: 35 }, { wch: 18 }, { wch: 12 },
+      { wch: 10 }, { wch: 12 }, { wch: 25 }, { wch: 35 }, { wch: 18 }, { wch: 12 },
       { wch: 18 }, { wch: 18 }, { wch: 20 }, { wch: 10 }, { wch: 12 }, { wch: 12 },
     ];
     
@@ -133,11 +134,12 @@ router.get("/api/export/items/csv", async (req, res) => {
     };
     
     // CSV header
-    const csvHeader = "Codigo,Titulo,Descripcion,Empresa,Unidad,Especialidad,Estado,Ubicacion,Creacion,Foto Despues,Aprobacion\n";
+    const csvHeader = "No. Interno,Codigo,Titulo,Descripcion,Empresa,Unidad,Especialidad,Estado,Ubicacion,Creacion,Foto Despues,Aprobacion\n";
     
     // CSV rows
     const csvRows = items.map((item: any) => {
       const row = [
+        item.numeroInterno || "-",
         removeAccents(item.codigo || ""),
         `"${removeAccents(item.titulo || "").replace(/"/g, '""')}"`,
         `"${removeAccents(item.descripcion || "").replace(/"/g, '""')}"`,

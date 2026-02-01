@@ -2117,3 +2117,22 @@
 - [x] Verificar que QR no cambia (código aleatorio intacto)
 - [x] 201 pruebas pasan correctamente
 
+
+
+## Mejoras Número Interno (1 Febrero 2026)
+
+### 1. Filtro por Número Interno
+- [x] Agregar campo de búsqueda por número interno en ItemsList (campo "# Int.")
+- [x] Implementar filtro en el backend (routers.ts + db.ts)
+
+### 2. Número Interno en Reportes PDF/Imprimir
+- [x] Incluir columna numeroInterno en reporte (visible al imprimir)
+- [x] Mostrar junto al código QR en ItemDetail
+
+### 3. Número Interno en Reportes Excel/CSV
+- [x] Agregar columna "No. Interno" en exportación Excel (primera columna)
+- [x] Agregar columna "No. Interno" en exportación CSV
+- [x] Remover acentos según preferencia del usuario
+
+### Resultado: 201 pruebas pasan correctamente
+
