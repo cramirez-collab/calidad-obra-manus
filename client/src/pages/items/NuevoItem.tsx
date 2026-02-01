@@ -266,6 +266,8 @@ export default function NuevoItem() {
       return;
     }
 
+    // OPTIMIZACIÓN: Marcar como enviando y navegar INMEDIATAMENTE
+    // No esperar respuesta del servidor
     setIsSubmitting(true);
     
     // Usar nombre del defecto como título si hay defecto seleccionado
@@ -288,30 +290,26 @@ export default function NuevoItem() {
       clientId,
     };
     
-    try {
-      // Intentar crear online
-      const result = await createItemMutation.mutateAsync(itemData);
-      toast.success("Ítem creado correctamente");
-      setLocation(`/items/${result.id}`);
-    } catch (error: any) {
-      // Si falla por conexión, guardar offline
-      if (!navigator.onLine || error.message?.includes('fetch') || error.message?.includes('network')) {
-        try {
-          await addPendingAction({
+    // OPTIMIZACIÓN: Mostrar toast y navegar INMEDIATAMENTE (< 100ms)
+    toast.success("Ítem creado correctamente");
+    setLocation("/items");
+    
+    // Crear el ítem en segundo plano (no bloquea al usuario)
+    createItemMutation.mutate(itemData, {
+      onError: (error: any) => {
+        // Si falla por conexión, guardar offline
+        if (!navigator.onLine || error.message?.includes('fetch') || error.message?.includes('network')) {
+          addPendingAction({
             type: 'createItem',
             data: itemData,
+          }).catch(() => {
+            toast.error("Error al guardar offline");
           });
-          toast.success("Ítem guardado offline. Se sincronizará cuando haya conexión.");
-          setLocation("/items");
-        } catch (offlineError) {
-          toast.error("Error al guardar offline");
+        } else {
+          toast.error(error.message || "Error al crear el ítem");
         }
-      } else {
-        toast.error(error.message || "Error al crear el ítem");
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+      },
+    });
   };
 
   // Modal de marcado

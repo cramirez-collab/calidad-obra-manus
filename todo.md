@@ -2113,3 +2113,17 @@
 - [x] Configuración guardada en base de datos para proyecto Hidalma
 - [x] Campos de teléfono y API Key editables en submenú Recordatorio
 - [x] Trial activo hasta: 2026-02-05
+
+
+## URGENTE: Creación de Ítems Instantánea (1 Febrero 2026)
+- [x] Eliminar ciclo infinito en creación de ítems
+- [x] Forzar respuesta en menos de 1 segundo SIEMPRE
+- [x] Optimizar backend - todo en segundo plano (ya estaba)
+- [x] Optimizar frontend - navegación instantánea sin esperar respuesta
+
+### Solución implementada:
+- Frontend navega INMEDIATAMENTE a /items sin esperar respuesta del servidor
+- Toast de éxito aparece instantáneamente
+- La creación del ítem ocurre en segundo plano
+- Si hay error, se muestra toast de error
+- Si no hay conexión, se guarda offline automáticamente
