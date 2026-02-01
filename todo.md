@@ -2136,3 +2136,26 @@
 
 ### Resultado: 201 pruebas pasan correctamente
 
+
+
+## Correcciones Críticas de Producción (1 Febrero 2026)
+
+### A. Código/Logs visibles en pantalla - CORREGIDO
+- [x] ErrorBoundary reescrito - muestra mensaje limpio sin stack trace
+- [x] Mensajes de error en mutations son limpios para el usuario
+- [x] Logs solo visibles en consola del navegador (para debugging)
+
+### B. Tiempo de respuesta - OPTIMIZADO
+- [x] Compresión de imagen en cliente (1200px, quality 0.7)
+- [x] Backend usa setImmediate para operaciones secundarias
+- [x] Respuesta < 1 segundo (base64 guardado inmediatamente)
+
+### C. Item siempre se crea en BD - VERIFICADO
+- [x] El item se crea ANTES de subir a S3 (flujo correcto)
+- [x] S3 upload es en segundo plano (no bloquea)
+- [x] Fallback offline si falla la conexión
+
+### D. Optimistic UI - IMPLEMENTADO
+- [x] Diálogo de foto después se cierra inmediatamente (onMutate)
+- [x] Toast de loading mientras se procesa
+- [x] Toast de éxito/error al completar

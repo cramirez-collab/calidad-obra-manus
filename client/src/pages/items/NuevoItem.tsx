@@ -203,7 +203,11 @@ export default function NuevoItem() {
     { enabled: !!especialidadIdParaDefectos }
   );
 
-  const createItemMutation = trpc.items.create.useMutation();
+  const createItemMutation = trpc.items.create.useMutation({
+    onError: () => {
+      // Error manejado en handleSubmit - no mostrar mensaje técnico aquí
+    },
+  });
   const uploadFotoMutation = trpc.items.uploadFotoAntes.useMutation();
 
   // Auto-completar empresa y especialidad cuando se selecciona residente
@@ -338,11 +342,13 @@ export default function NuevoItem() {
           });
           toast.success("Ítem guardado offline. Se sincronizará cuando haya conexión.");
           setLocation("/items");
-        } catch (offlineError) {
-          toast.error("Error al guardar offline");
+        } catch {
+          // Mensaje limpio para el usuario
+          toast.error("Error al guardar. Intenta nuevamente.");
         }
       } else {
-        toast.error(error.message || "Error al crear el ítem");
+        // Mensaje limpio para el usuario - sin código técnico
+        toast.error("Error al crear el ítem. Intenta nuevamente.");
       }
     } finally {
       setIsSubmitting(false);
