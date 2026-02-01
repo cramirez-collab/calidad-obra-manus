@@ -302,6 +302,13 @@
       "when": 1769936595251,
       "tag": "0042_next_lila_cheney",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "5",
+      "when": 1769965078584,
+      "tag": "0043_military_kinsey_walden",
+      "breakpoints": true
     }
   ]
 }

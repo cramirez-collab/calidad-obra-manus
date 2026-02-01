@@ -1003,14 +1003,31 @@ export async function deleteAtributo(id: number) {
 
 // ==================== ITEMS ====================
 
+// Obtener el siguiente número interno consecutivo para un proyecto
+export async function getNextNumeroInterno(proyectoId: number | undefined): Promise<number> {
+  const db = await getDb();
+  if (!db) return 1;
+  
+  const result = await db
+    .select({ maxNum: sql<number>`COALESCE(MAX(${items.numeroInterno}), 0)` })
+    .from(items)
+    .where(proyectoId ? eq(items.proyectoId, proyectoId) : sql`1=1`);
+  
+  return (result[0]?.maxNum ?? 0) + 1;
+}
+
 export async function createItem(data: Omit<InsertItem, 'codigo'>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
   // Generar código QR progresivo por proyecto
   const codigo = await getNextOQCCode(data.proyectoId ?? undefined);
-  const result = await db.insert(items).values({ ...data, codigo });
-  return { id: result[0].insertId, codigo };
+  
+  // Obtener número interno consecutivo
+  const numeroInterno = await getNextNumeroInterno(data.proyectoId ?? undefined);
+  
+  const result = await db.insert(items).values({ ...data, codigo, numeroInterno });
+  return { id: result[0].insertId, codigo, numeroInterno };
 }
 
 export async function getItemById(id: number) {

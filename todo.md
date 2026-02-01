@@ -2104,3 +2104,16 @@
 
 ### Resultado: 201 pruebas pasan correctamente
 
+
+
+## Número Consecutivo Interno (1 Febrero 2026)
+
+- [x] Agregar campo numeroInterno al schema
+- [x] Crear helper getNextNumeroInterno en db.ts
+- [x] Modificar createItem para usar numeroInterno
+- [x] Mostrar numeroInterno en ItemDetail.tsx (debajo del código QR)
+- [x] Mostrar numeroInterno en ItemsList.tsx (junto al código)
+- [x] Asignar números a ítems existentes (1 ítem migrado)
+- [x] Verificar que QR no cambia (código aleatorio intacto)
+- [x] 201 pruebas pasan correctamente
+

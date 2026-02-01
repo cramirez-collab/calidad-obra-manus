@@ -1,0 +1,1 @@
+ALTER TABLE `items` ADD `numeroInterno` int DEFAULT 0 NOT NULL;

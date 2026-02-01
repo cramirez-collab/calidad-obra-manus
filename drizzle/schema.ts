@@ -245,6 +245,9 @@ export const items = mysqlTable("items", {
   // ID de cliente para evitar duplicados (generado en el cliente)
   clientId: varchar("clientId", { length: 100 }),
   
+  // Número consecutivo interno (solo control, no participa en QR)
+  numeroInterno: int("numeroInterno").default(0).notNull(),
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

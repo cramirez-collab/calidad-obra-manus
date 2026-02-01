@@ -365,6 +365,10 @@ export default function ItemDetail() {
                 <QrCode className="h-3 w-3" />
                 <span className="font-mono font-semibold text-sm">{item.codigo}</span>
               </div>
+              {/* Número interno consecutivo */}
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <span className="text-xs font-medium">#{item.numeroInterno || '-'}</span>
+              </div>
               <Badge className={statusColors[item.status] + " text-sm py-1 px-3"}>
                 {statusLabels[item.status]}
               </Badge>
@@ -675,6 +679,9 @@ export default function ItemDetail() {
                 )}
                 <p className="text-xs text-muted-foreground mt-2 font-mono">
                   {item.codigo}
+                </p>
+                <p className="text-xs text-muted-foreground font-medium">
+                  Control interno: #{item.numeroInterno || '-'}
                 </p>
                 <Button
                   variant="outline"
