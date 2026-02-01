@@ -68,7 +68,7 @@ export default function Bienvenida() {
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6">
         {/* Header con iconos de acceso rápido a la derecha */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <UserAvatar 
               name={user?.name} 
@@ -86,8 +86,8 @@ export default function Bienvenida() {
               </p>
             </div>
           </div>
-          {/* Iconos de acceso rápido - siempre visibles arriba */}
-          <div className="flex gap-2">
+          {/* Iconos de acceso rápido - SIEMPRE A LA DERECHA */}
+          <div className="flex gap-2 ml-auto">
             {visibleActions.map(action => (
               <Tooltip key={action.path}>
                 <TooltipTrigger asChild>

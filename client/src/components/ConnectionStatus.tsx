@@ -73,8 +73,8 @@ export function ConnectionStatus() {
         </div>
       )}
 
-      {/* Indicador flotante de pendientes (cuando hay conexión pero hay pendientes) */}
-      {isOnline && !showReconnected && pendingCount > 0 && (
+      {/* Indicador flotante de pendientes - solo mostrar brevemente al reconectar */}
+      {isOnline && showReconnected && pendingCount > 0 && (
         <div className="fixed bottom-20 right-4 z-40 bg-blue-500 text-white px-3 py-2 rounded-full shadow-lg text-sm flex items-center gap-2">
           <RefreshCw className="h-4 w-4 animate-spin" />
           <span>Sincronizando {pendingCount}...</span>

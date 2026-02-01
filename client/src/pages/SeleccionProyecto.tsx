@@ -110,7 +110,7 @@ export default function SeleccionProyecto() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
               {[1, 2, 3].map((i) => (
                 <Card key={i} className="overflow-hidden">
-                  <div className="h-32 sm:h-40 md:h-44 bg-gradient-to-r from-slate-200 to-slate-300" />
+                  <div className="h-48 sm:h-56 md:h-64 bg-gradient-to-r from-slate-200 to-slate-300" />
                   <CardContent className="p-4">
                     <Skeleton className="h-6 w-3/4 mb-2" />
                     <Skeleton className="h-4 w-1/2 mb-4" />
@@ -135,7 +135,7 @@ export default function SeleccionProyecto() {
                   className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 group"
                 >
                   {/* Imagen de Portada o Color Header */}
-                  <div className={`h-32 sm:h-40 md:h-44 relative overflow-hidden ${!(proyecto.imagenPortadaBase64 || proyecto.imagenPortadaUrl) ? `bg-gradient-to-r ${getProjectColor(index)}` : ''}`}>
+                  <div className={`h-48 sm:h-56 md:h-64 relative overflow-hidden ${!(proyecto.imagenPortadaBase64 || proyecto.imagenPortadaUrl) ? `bg-gradient-to-r ${getProjectColor(index)}` : ''}`}>
                     {proyecto.imagenPortadaBase64 ? (
                       <img 
                         src={proyecto.imagenPortadaBase64} 

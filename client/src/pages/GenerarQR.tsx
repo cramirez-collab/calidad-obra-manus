@@ -46,8 +46,14 @@ export default function GenerarQR() {
   const codigoProyecto = proyectoActual?.codigo || "OQC";
   const baseUrl = window.location.origin;
 
-  const formatCodigo = (num: number) => {
-    return `${codigoProyecto}-${String(num).padStart(5, '0')}`;
+  // Generar código aleatorio de 6 caracteres alfanuméricos
+  const generateRandomCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Sin I, O, 0, 1 para evitar confusión
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `${codigoProyecto}-${code}`;
   };
 
   const generarQRsItems = async () => {
@@ -119,7 +125,7 @@ export default function GenerarQR() {
 
     try {
       for (let i = rangoInicio; i <= rangoFin; i++) {
-        const codigo = formatCodigo(i);
+        const codigo = generateRandomCode();
         const url = `${baseUrl}/seguimiento/${codigo}`;
         
         const qrDataUrl = await QRCode.toDataURL(url, {
@@ -467,7 +473,7 @@ export default function GenerarQR() {
                     onChange={(e) => setRangoInicio(parseInt(e.target.value) || 1)}
                     placeholder="1"
                   />
-                  <p className="text-xs text-muted-foreground">{formatCodigo(rangoInicio)}</p>
+                  <p className="text-xs text-muted-foreground">Ej: {codigoProyecto}-XXXXXX (aleatorio)</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="fin">Hasta (número)</Label>
@@ -479,7 +485,7 @@ export default function GenerarQR() {
                     onChange={(e) => setRangoFin(parseInt(e.target.value) || 1)}
                     placeholder="6"
                   />
-                  <p className="text-xs text-muted-foreground">{formatCodigo(rangoFin)}</p>
+                  <p className="text-xs text-muted-foreground">Se generarán {rangoFin - rangoInicio + 1} códigos</p>
                 </div>
                 <div className="flex items-end">
                   <Button 

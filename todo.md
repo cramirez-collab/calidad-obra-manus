@@ -2024,3 +2024,10 @@
 
 ## Ajuste de Fotos de Portada (1 Febrero 2026)
 - [x] Aumentar altura de fotos de portada de proyecto en 40% (h-24/28/32 → h-32/40/44)
+
+
+## Correcciones Urgentes (1 Febrero 2026 - Noche)
+- [x] Mover botones + y Estadísticas a la derecha en Bienvenida (justify-end)
+- [x] Arreglar ciclo infinito "Sincronizando" - solo muestra al reconectar
+- [x] Cambiar QR de consecutivos a aleatorios en GenerarQR (6 caracteres)
+- [x] Duplicar tamaño de fotos de portada (h-48/56/64)
