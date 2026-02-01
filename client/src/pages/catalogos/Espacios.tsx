@@ -169,39 +169,35 @@ export default function Espacios() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Espacios</h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground">
             Define los espacios (sala, recámaras, baños, etc.) que tendrán las unidades
           </p>
         </div>
-        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="w-full sm:w-auto">
+        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
           <Plus className="w-4 h-4 mr-2" />
           Nuevo Espacio
         </Button>
       </div>
 
       {/* Tabs para vista */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2">
         <Button 
           variant={vistaPlantilla ? "default" : "outline"}
           onClick={() => setVistaPlantilla(true)}
-          className="flex-1 sm:flex-none text-sm"
         >
-          <Home className="w-4 h-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Plantilla del Proyecto</span>
-          <span className="sm:hidden">Plantilla</span>
+          <Home className="w-4 h-4 mr-2" />
+          Plantilla del Proyecto
         </Button>
         <Button 
           variant={!vistaPlantilla ? "default" : "outline"}
           onClick={() => setVistaPlantilla(false)}
-          className="flex-1 sm:flex-none text-sm"
         >
-          <Building2 className="w-4 h-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Copiar a Unidades</span>
-          <span className="sm:hidden">Copiar</span>
+          <Building2 className="w-4 h-4 mr-2" />
+          Copiar a Unidades
         </Button>
       </div>
 

@@ -26,7 +26,6 @@ const Seguimiento = lazy(() => import("./pages/Seguimiento"));
 const KPIs = lazy(() => import("./pages/KPIs"));
 const GenerarQR = lazy(() => import("./pages/GenerarQR"));
 const Configuracion = lazy(() => import("./pages/Configuracion"));
-const ConfiguracionWhatsApp = lazy(() => import("./pages/ConfiguracionWhatsApp"));
 const Metas = lazy(() => import("./pages/Metas"));
 const DashboardResidente = lazy(() => import("./pages/DashboardResidente"));
 const Login = lazy(() => import("./pages/Login"));
@@ -128,7 +127,6 @@ function Router() {
         
         {/* Configuración y Metas */}
         <Route path="/configuracion" component={Configuracion} />
-        <Route path="/configuracion/whatsapp" component={ConfiguracionWhatsApp} />
         <Route path="/enlaces-externos" component={EnlacesExternos} />
         <Route path="/metas" component={Metas} />
         
