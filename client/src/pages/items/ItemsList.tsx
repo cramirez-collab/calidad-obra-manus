@@ -208,10 +208,10 @@ export default function ItemsList() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Ítems de Calidad</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Ítems de Calidad</h1>
+            <p className="text-sm text-muted-foreground">
               {data?.total || 0} ítems encontrados
             </p>
           </div>
@@ -403,7 +403,7 @@ export default function ItemsList() {
                   <CardContent className="p-4">
                     <div className="flex items-start gap-4">
                       {/* Thumbnail de foto */}
-                      <div className="h-20 w-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                      <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                         {(item as any).fotoAntesMarcadaBase64 || (item as any).fotoAntesBase64 || item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
                           <img
                             src={(item as any).fotoAntesMarcadaBase64 || (item as any).fotoAntesBase64 || item.fotoAntesMarcadaUrl || item.fotoAntesUrl || ""}

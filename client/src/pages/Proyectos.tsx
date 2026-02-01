@@ -243,11 +243,11 @@ export default function Proyectos() {
   ) || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
             <FolderKanban className="h-6 w-6 text-primary" />
             Proyectos
           </h1>
@@ -404,7 +404,7 @@ export default function Proyectos() {
                 <FolderKanban className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{proyectos?.length || 0}</p>
+                <p className="text-xl sm:text-2xl font-bold">{proyectos?.length || 0}</p>
                 <p className="text-xs text-muted-foreground">Proyectos</p>
               </div>
             </div>
@@ -417,7 +417,7 @@ export default function Proyectos() {
                 <Building2 className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-xl sm:text-2xl font-bold">
                   {proyectos?.reduce((acc, p) => acc + (p.conteo?.empresas || 0), 0) || 0}
                 </p>
                 <p className="text-xs text-muted-foreground">Empresas</p>
@@ -432,7 +432,7 @@ export default function Proyectos() {
                 <Users className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-xl sm:text-2xl font-bold">
                   {proyectos?.reduce((acc, p) => acc + (p.conteo?.usuarios || 0), 0) || 0}
                 </p>
                 <p className="text-xs text-muted-foreground">Usuarios</p>
@@ -447,7 +447,7 @@ export default function Proyectos() {
                 <BarChart3 className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-xl sm:text-2xl font-bold">
                   {proyectos?.reduce((acc, p) => acc + (p.conteo?.items || 0), 0) || 0}
                 </p>
                 <p className="text-xs text-muted-foreground">Ítems</p>

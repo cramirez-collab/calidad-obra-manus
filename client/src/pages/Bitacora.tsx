@@ -751,29 +751,29 @@ export default function Bitacora() {
         {/* Estadísticas rápidas */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <Card className="p-3">
-            <div className="text-2xl font-bold text-[#002C63]">{totalCount || 0}</div>
+            <div className="text-xl sm:text-2xl font-bold text-[#002C63]">{totalCount || 0}</div>
             <div className="text-xs text-muted-foreground">Total registros</div>
           </Card>
           <Card className="p-3">
-            <div className="text-2xl font-bold text-emerald-600">
+            <div className="text-xl sm:text-2xl font-bold text-emerald-600">
               {auditoria?.filter((a: any) => a.accion === 'aprobar_item').length || 0}
             </div>
             <div className="text-xs text-muted-foreground">Aprobaciones</div>
           </Card>
           <Card className="p-3">
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-xl sm:text-2xl font-bold text-red-600">
               {auditoria?.filter((a: any) => a.accion === 'rechazar_item').length || 0}
             </div>
             <div className="text-xs text-muted-foreground">Rechazos</div>
           </Card>
           <Card className="p-3">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">
               {auditoria?.filter((a: any) => a.accion?.startsWith('crear_')).length || 0}
             </div>
             <div className="text-xs text-muted-foreground">Creaciones</div>
           </Card>
           <Card className="p-3">
-            <div className="text-2xl font-bold text-amber-600">
+            <div className="text-xl sm:text-2xl font-bold text-amber-600">
               {auditoria?.filter((a: any) => a.accion?.startsWith('editar_') || a.accion === 'actualizar').length || 0}
             </div>
             <div className="text-xs text-muted-foreground">Ediciones</div>
@@ -783,7 +783,7 @@ export default function Bitacora() {
         {/* Lista de actividades */}
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <CardTitle className="text-base">
                 Registros de Auditoría
               </CardTitle>
@@ -1072,27 +1072,27 @@ export default function Bitacora() {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                     <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <p className="text-2xl font-bold text-primary">{resumenSemanal.resumen?.totalAcciones || 0}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-primary">{resumenSemanal.resumen?.totalAcciones || 0}</p>
                       <p className="text-xs text-muted-foreground">Acciones Totales</p>
                     </div>
                     <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <p className="text-2xl font-bold text-emerald-600">{resumenSemanal.resumen?.itemsCreados || 0}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-emerald-600">{resumenSemanal.resumen?.itemsCreados || 0}</p>
                       <p className="text-xs text-muted-foreground">Ítems Creados</p>
                     </div>
                     <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <p className="text-2xl font-bold text-blue-600">{resumenSemanal.resumen?.mensajesEnviados || 0}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-blue-600">{resumenSemanal.resumen?.mensajesEnviados || 0}</p>
                       <p className="text-xs text-muted-foreground">Mensajes</p>
                     </div>
                     <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <p className="text-2xl font-bold text-amber-600">{resumenSemanal.resumen?.usuariosActivos || 0}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-amber-600">{resumenSemanal.resumen?.usuariosActivos || 0}</p>
                       <p className="text-xs text-muted-foreground">Usuarios Activos</p>
                     </div>
                     <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <p className="text-2xl font-bold text-green-600">{resumenSemanal.resumen?.usuariosQueCapturaron || 0}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-green-600">{resumenSemanal.resumen?.usuariosQueCapturaron || 0}</p>
                       <p className="text-xs text-muted-foreground">Capturaron</p>
                     </div>
                     <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <p className="text-2xl font-bold text-purple-600">{resumenSemanal.resumen?.usuariosQueEnviaronMensajes || 0}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-purple-600">{resumenSemanal.resumen?.usuariosQueEnviaronMensajes || 0}</p>
                       <p className="text-xs text-muted-foreground">Enviaron Mensajes</p>
                     </div>
                   </div>

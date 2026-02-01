@@ -249,7 +249,7 @@ export default function Seguimiento() {
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="container max-w-3xl py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-3">
               <ClipboardCheck className="h-6 w-6 text-primary" />
               <div>

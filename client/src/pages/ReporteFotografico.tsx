@@ -301,11 +301,11 @@ export default function ReporteFotografico() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Reporte Fotográfico</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Reporte Fotográfico</h1>
             <p className="text-muted-foreground">
               Genera reportes PDF con fotos antes/después y logo Objetiva
             </p>
@@ -501,7 +501,7 @@ export default function ReporteFotografico() {
                   <FileImage className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
                   <p className="text-xs text-muted-foreground">Total Ítems</p>
                 </div>
               </div>
@@ -514,7 +514,7 @@ export default function ReporteFotografico() {
                   <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.aprobados}</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.aprobados}</p>
                   <p className="text-xs text-muted-foreground">Aprobados</p>
                 </div>
               </div>
@@ -527,7 +527,7 @@ export default function ReporteFotografico() {
                   <XCircle className="h-5 w-5 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.rechazados}</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.rechazados}</p>
                   <p className="text-xs text-muted-foreground">Rechazados</p>
                 </div>
               </div>
@@ -540,7 +540,7 @@ export default function ReporteFotografico() {
                   <Clock className="h-5 w-5 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.pendientes}</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.pendientes}</p>
                   <p className="text-xs text-muted-foreground">Pendientes</p>
                 </div>
               </div>
@@ -553,7 +553,7 @@ export default function ReporteFotografico() {
                   <Camera className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{stats.conFotos}</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.conFotos}</p>
                   <p className="text-xs text-muted-foreground">Con Fotos</p>
                 </div>
               </div>
@@ -582,7 +582,7 @@ export default function ReporteFotografico() {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {items.slice(0, 9).map((item) => (
                   <div key={item.id} className="border rounded-lg p-3 space-y-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <span className="font-mono text-sm font-bold text-[#002C63]">
                         {item.codigo}
                       </span>

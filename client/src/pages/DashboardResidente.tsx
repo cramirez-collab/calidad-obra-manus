@@ -66,7 +66,7 @@ export default function DashboardResidente() {
     <DashboardLayout>
       <div className="space-y-4">
         {/* Header con estadísticas rápidas */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h1 className="text-lg font-bold text-[#002C63]">Mis Tareas</h1>
             <p className="text-xs text-gray-500">
@@ -253,7 +253,7 @@ export default function DashboardResidente() {
         {(dashboard?.estadisticas?.total || 0) > 0 && (
           <Card className="border shadow-sm">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-[#02B381]/10 flex items-center justify-center">
                     <CheckCircle2 className="h-5 w-5 text-[#02B381]" />

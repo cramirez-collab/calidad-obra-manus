@@ -401,19 +401,19 @@ function ModalEstadisticas({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-muted/50 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold">{unidad.items.total}</p>
+              <p className="text-xl sm:text-2xl font-bold">{unidad.items.total}</p>
               <p className="text-xs text-muted-foreground">Total Ítems</p>
             </div>
             <div className="bg-emerald-50 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-emerald-600">{unidad.items.aprobados}</p>
+              <p className="text-xl sm:text-2xl font-bold text-emerald-600">{unidad.items.aprobados}</p>
               <p className="text-xs text-muted-foreground">Aprobados</p>
             </div>
             <div className="bg-red-50 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-red-600">{unidad.items.rechazados}</p>
+              <p className="text-xl sm:text-2xl font-bold text-red-600">{unidad.items.rechazados}</p>
               <p className="text-xs text-muted-foreground">Rechazados</p>
             </div>
             <div className="bg-amber-50 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-amber-600">{unidad.items.pendientes}</p>
+              <p className="text-xl sm:text-2xl font-bold text-amber-600">{unidad.items.pendientes}</p>
               <p className="text-xs text-muted-foreground">Pendientes</p>
             </div>
           </div>
@@ -951,11 +951,11 @@ export default function VistaPanoramica() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
               <Layers className="h-6 w-6 text-primary" />
               Stacking
             </h1>
@@ -1016,7 +1016,7 @@ export default function VistaPanoramica() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <Card className="bg-gradient-to-br from-slate-50 to-slate-100">
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold">{estadisticas.total}</p>
+              <p className="text-xl sm:text-2xl font-bold">{estadisticas.total}</p>
               <p className="text-xs text-muted-foreground">Total Unidades</p>
             </CardContent>
           </Card>
@@ -1025,7 +1025,7 @@ export default function VistaPanoramica() {
             onClick={() => setLocation('/items?status=aprobado')}
           >
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-emerald-600">{estadisticas.completadas}</p>
+              <p className="text-xl sm:text-2xl font-bold text-emerald-600">{estadisticas.completadas}</p>
               <p className="text-xs text-muted-foreground">Completadas</p>
               <p className="text-[10px] text-emerald-500 mt-1">Click para ver ítems</p>
             </CardContent>
@@ -1035,7 +1035,7 @@ export default function VistaPanoramica() {
             onClick={() => setLocation('/items?status=pendiente_foto_despues,pendiente_aprobacion')}
           >
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-amber-600">{estadisticas.pendientes}</p>
+              <p className="text-xl sm:text-2xl font-bold text-amber-600">{estadisticas.pendientes}</p>
               <p className="text-xs text-muted-foreground">Con Pendientes</p>
               <p className="text-[10px] text-amber-500 mt-1">Click para ver ítems</p>
             </CardContent>
@@ -1045,14 +1045,14 @@ export default function VistaPanoramica() {
             onClick={() => setLocation('/items?status=rechazado')}
           >
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-red-600">{estadisticas.rechazadas}</p>
+              <p className="text-xl sm:text-2xl font-bold text-red-600">{estadisticas.rechazadas}</p>
               <p className="text-xs text-muted-foreground">Con Rechazados</p>
               <p className="text-[10px] text-red-500 mt-1">Click para ver ítems</p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-br from-gray-50 to-gray-100">
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-600">{estadisticas.sinItems}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-600">{estadisticas.sinItems}</p>
               <p className="text-xs text-muted-foreground">Sin Ítems</p>
             </CardContent>
           </Card>
@@ -1064,7 +1064,7 @@ export default function VistaPanoramica() {
         {/* Cuadrícula por niveles con drag and drop */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
                 Cuadrícula de Unidades por Nivel
@@ -1118,7 +1118,7 @@ export default function VistaPanoramica() {
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
               >
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {Array.from(celdasPorNivel.entries()).map(([nivel, celdas]) => (
                     <div key={nivel} className="space-y-2">
                       <div className="flex items-center gap-2 sticky top-0 bg-background py-1 z-10">

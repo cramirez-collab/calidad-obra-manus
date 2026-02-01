@@ -396,13 +396,13 @@ function DashboardLayoutContent({
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header */}
         <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-          <div className="flex items-center h-14 px-2 sm:px-4">
+          <div className="flex items-center h-14 px-2 sm:px-4 max-w-full overflow-hidden">
             {/* Logo */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <img 
                 src="/logo-objetiva.jpg" 
                 alt="OQC" 
-                className="h-7 sm:h-8 object-contain"
+                className="h-6 sm:h-7 md:h-8 max-w-[80px] sm:max-w-[100px] md:max-w-[120px] object-contain"
               />
             </div>
 
@@ -426,9 +426,9 @@ function DashboardLayoutContent({
               </nav>
             )}
 
-            {/* OQC CENTRADO */}
+            {/* OQC CENTRADO - oculto en móvil para ahorrar espacio */}
             <div className="flex-1 flex justify-center">
-              <span className="font-bold text-xl text-primary tracking-wide">OQC</span>
+              <span className="font-bold text-base sm:text-lg md:text-xl text-primary tracking-wide hidden sm:block">OQC</span>
             </div>
 
             {/* Separador */}
@@ -591,8 +591,10 @@ function DashboardLayoutContent({
         )}
         
         {/* Contenido principal */}
-        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden">
-          {children}
+        <main className="flex-1 p-2 sm:p-3 md:p-4 lg:p-6 overflow-x-hidden max-w-full">
+          <div className="max-w-full overflow-hidden">
+            {children}
+          </div>
         </main>
         
         {/* Botón flotante de escáner QR */}

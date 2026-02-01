@@ -86,10 +86,10 @@ export default function EstadisticasAvanzadas() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-[#002C63]">Estadísticas Avanzadas</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#002C63]">Estadísticas Avanzadas</h1>
           <p className="text-muted-foreground">
             Análisis completo por usuario, defecto, mensajería y seguimiento
           </p>
@@ -216,25 +216,25 @@ export default function EstadisticasAvanzadas() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Card className="bg-blue-50">
                       <CardContent className="pt-4 text-center">
-                        <p className="text-2xl font-bold text-blue-600">{estadsUsuario.estadisticas.total}</p>
+                        <p className="text-xl sm:text-2xl font-bold text-blue-600">{estadsUsuario.estadisticas.total}</p>
                         <p className="text-xs text-muted-foreground">Total Ítems</p>
                       </CardContent>
                     </Card>
                     <Card className="bg-green-50">
                       <CardContent className="pt-4 text-center">
-                        <p className="text-2xl font-bold text-green-600">{estadsUsuario.estadisticas.aprobados}</p>
+                        <p className="text-xl sm:text-2xl font-bold text-green-600">{estadsUsuario.estadisticas.aprobados}</p>
                         <p className="text-xs text-muted-foreground">Aprobados</p>
                       </CardContent>
                     </Card>
                     <Card className="bg-red-50">
                       <CardContent className="pt-4 text-center">
-                        <p className="text-2xl font-bold text-red-600">{estadsUsuario.estadisticas.rechazados}</p>
+                        <p className="text-xl sm:text-2xl font-bold text-red-600">{estadsUsuario.estadisticas.rechazados}</p>
                         <p className="text-xs text-muted-foreground">Rechazados</p>
                       </CardContent>
                     </Card>
                     <Card className="bg-purple-50">
                       <CardContent className="pt-4 text-center">
-                        <p className="text-2xl font-bold text-purple-600">{estadsUsuario.estadisticas.tiempoPromedioResolucion}d</p>
+                        <p className="text-xl sm:text-2xl font-bold text-purple-600">{estadsUsuario.estadisticas.tiempoPromedioResolucion}d</p>
                         <p className="text-xs text-muted-foreground">Tiempo Promedio</p>
                       </CardContent>
                     </Card>
@@ -292,25 +292,25 @@ export default function EstadisticasAvanzadas() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <Card className="bg-blue-50">
                         <CardContent className="pt-4 text-center">
-                          <p className="text-2xl font-bold text-blue-600">{estadsDefecto.estadisticas.total}</p>
+                          <p className="text-xl sm:text-2xl font-bold text-blue-600">{estadsDefecto.estadisticas.total}</p>
                           <p className="text-xs text-muted-foreground">Ocurrencias</p>
                         </CardContent>
                       </Card>
                       <Card className="bg-yellow-50">
                         <CardContent className="pt-4 text-center">
-                          <p className="text-2xl font-bold text-yellow-600">{estadsDefecto.estadisticas.pendientes}</p>
+                          <p className="text-xl sm:text-2xl font-bold text-yellow-600">{estadsDefecto.estadisticas.pendientes}</p>
                           <p className="text-xs text-muted-foreground">Pendientes</p>
                         </CardContent>
                       </Card>
                       <Card className="bg-green-50">
                         <CardContent className="pt-4 text-center">
-                          <p className="text-2xl font-bold text-green-600">{estadsDefecto.estadisticas.tasaAprobacion}%</p>
+                          <p className="text-xl sm:text-2xl font-bold text-green-600">{estadsDefecto.estadisticas.tasaAprobacion}%</p>
                           <p className="text-xs text-muted-foreground">Tasa Corrección</p>
                         </CardContent>
                       </Card>
                       <Card className="bg-purple-50">
                         <CardContent className="pt-4 text-center">
-                          <p className="text-2xl font-bold text-purple-600">{estadsDefecto.estadisticas.tiempoPromedioCorreccion}d</p>
+                          <p className="text-xl sm:text-2xl font-bold text-purple-600">{estadsDefecto.estadisticas.tiempoPromedioCorreccion}d</p>
                           <p className="text-xs text-muted-foreground">Tiempo Corrección</p>
                         </CardContent>
                       </Card>
@@ -361,21 +361,21 @@ export default function EstadisticasAvanzadas() {
               <Card className="bg-blue-50">
                 <CardContent className="pt-6 text-center">
                   <MessageSquare className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                  <p className="text-3xl font-bold text-blue-600">{estadsMensajeria?.totalMensajes || 0}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-blue-600">{estadsMensajeria?.totalMensajes || 0}</p>
                   <p className="text-sm text-muted-foreground">Total Mensajes</p>
                 </CardContent>
               </Card>
               <Card className="bg-green-50">
                 <CardContent className="pt-6 text-center">
                   <Users className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                  <p className="text-3xl font-bold text-green-600">{estadsMensajeria?.usuariosActivos?.length || 0}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-green-600">{estadsMensajeria?.usuariosActivos?.length || 0}</p>
                   <p className="text-sm text-muted-foreground">Usuarios Activos</p>
                 </CardContent>
               </Card>
               <Card className="bg-purple-50">
                 <CardContent className="pt-6 text-center">
                   <Activity className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-                  <p className="text-3xl font-bold text-purple-600">{estadsMensajeria?.itemsConMasMensajes?.length || 0}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-purple-600">{estadsMensajeria?.itemsConMasMensajes?.length || 0}</p>
                   <p className="text-sm text-muted-foreground">Ítems con Actividad</p>
                 </CardContent>
               </Card>
@@ -430,14 +430,14 @@ export default function EstadisticasAvanzadas() {
               <Card className="bg-blue-50">
                 <CardContent className="pt-6 text-center">
                   <Activity className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                  <p className="text-3xl font-bold text-blue-600">{estadsSeguimiento?.totalAcciones || 0}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-blue-600">{estadsSeguimiento?.totalAcciones || 0}</p>
                   <p className="text-sm text-muted-foreground">Acciones (últimos 30 días)</p>
                 </CardContent>
               </Card>
               <Card className="bg-green-50">
                 <CardContent className="pt-6 text-center">
                   <Users className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                  <p className="text-3xl font-bold text-green-600">{estadsSeguimiento?.usuariosMasActivos?.length || 0}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-green-600">{estadsSeguimiento?.usuariosMasActivos?.length || 0}</p>
                   <p className="text-sm text-muted-foreground">Usuarios Activos</p>
                 </CardContent>
               </Card>
@@ -500,14 +500,14 @@ export default function EstadisticasAvanzadas() {
               <Card className="bg-blue-50">
                 <CardContent className="pt-6 text-center">
                   <QrCode className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                  <p className="text-3xl font-bold text-blue-600">{estadsQR?.totalItems || 0}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-blue-600">{estadsQR?.totalItems || 0}</p>
                   <p className="text-sm text-muted-foreground">Total Ítems</p>
                 </CardContent>
               </Card>
               <Card className="bg-green-50">
                 <CardContent className="pt-6 text-center">
                   <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                  <p className="text-3xl font-bold text-green-600">{estadsQR?.itemsConCodigo || 0}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-green-600">{estadsQR?.itemsConCodigo || 0}</p>
                   <p className="text-sm text-muted-foreground">Con Código QR</p>
                 </CardContent>
               </Card>

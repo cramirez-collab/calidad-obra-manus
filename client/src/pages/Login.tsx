@@ -86,11 +86,11 @@ export default function Login() {
               }}
             />
           </div>
-          <CardTitle className="text-2xl font-bold text-[#002C63]">OQC</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl font-bold text-[#002C63]">OQC</CardTitle>
           <CardDescription>Control de Calidad de Obra</CardDescription>
         </CardHeader>
         
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 sm:space-y-6">
           {/* Formulario de login con contraseña */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">

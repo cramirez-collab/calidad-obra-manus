@@ -68,7 +68,7 @@ export default function Bienvenida() {
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6">
         {/* Header con iconos de acceso rápido a la derecha */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <UserAvatar 
               name={user?.name} 

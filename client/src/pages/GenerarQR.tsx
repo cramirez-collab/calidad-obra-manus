@@ -336,9 +336,9 @@ export default function GenerarQR() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Generar Códigos QR</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Generar Códigos QR</h1>
           <p className="text-muted-foreground">
             Genera códigos QR para ítems existentes o por rangos
           </p>
@@ -392,7 +392,7 @@ export default function GenerarQR() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <Button variant="outline" size="sm" onClick={selectAll}>
                       {selectedItems.length === items.length ? "Deseleccionar todos" : "Seleccionar todos"}
                     </Button>

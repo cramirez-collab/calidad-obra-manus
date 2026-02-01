@@ -121,7 +121,7 @@ export default function NuevoProyecto() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 {/* Imagen de Portada */}
                 <div className="space-y-2">
                   <Label>Imagen de Portada</Label>

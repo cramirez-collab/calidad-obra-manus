@@ -1971,3 +1971,42 @@
 - [x] Verificar código base64 visible en pantalla (agregado overflow-hidden y max-h)
 - [x] Verificar imágenes de portada y avatares (funcionando correctamente)
 - [x] Verificar generación de QR aleatorio (funcionando correctamente)
+
+
+## Verificación QR → Detalle de Ítem (1 Febrero 2026)
+- [ ] Verificar que al escanear QR de ítem, redirija directamente al detalle del ítem
+- [ ] Corregir redirección si es necesario
+
+
+## Corrección Urgente de Diseño Responsivo (1 Febrero 2026)
+
+### Problemas Reportados
+- [ ] Pantallas desbordadas - contenido fuera de contenedores
+- [ ] Logo enorme en móvil
+- [ ] Fotos de portada desbordadas
+- [ ] Navegación imposible en móvil
+- [ ] Elementos fuera de sus contenedores
+- [ ] Falta de responsividad en PC, tablet y móvil
+
+### Correcciones Necesarias
+- [ ] Revisar CSS global (index.css) para overflow y contenedores
+- [ ] Reducir tamaño de logo en móvil
+- [ ] Corregir imágenes de portada con object-fit y max-width
+- [ ] Revisar cada pantalla principal para responsividad
+- [ ] Forzar mejor ajuste para todos los dispositivos
+
+
+## Corrección Urgente de Diseño Responsivo (1 Febrero 2026)
+
+### Problemas Corregidos
+- [x] CSS global con overflow-hidden y max-width: 100%
+- [x] Logo responsivo en header (h-6 sm:h-7 md:h-8)
+- [x] DashboardLayout con header responsivo
+- [x] Selección de proyecto con grid responsivo
+- [x] Headers de páginas con text-xl sm:text-2xl
+- [x] Contenedores con max-w-full overflow-hidden
+- [x] Imágenes con object-fit: cover
+- [x] Flexbox con min-width: 0
+- [x] Botones y badges con truncate
+- [x] Tablas responsivas con overflow-x: auto
+- [x] Inputs con max-width: 100%

@@ -65,10 +65,10 @@ export default function SeleccionProyecto() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <header className="bg-white border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/logo-objetiva.jpg" alt="Objetiva" className="h-10" />
-            <span className="text-xl font-bold text-slate-800">OQC</span>
+        <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4 flex items-center justify-between max-w-full overflow-hidden">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <img src="/logo-objetiva.jpg" alt="Objetiva" className="h-6 sm:h-8 md:h-10 max-w-[80px] sm:max-w-[100px] md:max-w-[120px] object-contain" />
+            <span className="text-base sm:text-lg md:text-xl font-bold text-slate-800">OQC</span>
           </div>
           
           <div className="flex items-center gap-4">
@@ -93,21 +93,21 @@ export default function SeleccionProyecto() {
       </header>
       
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 max-w-full overflow-hidden">
         <div className="max-w-5xl mx-auto">
           {/* Title Section */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">
+          <div className="text-center mb-4 sm:mb-8">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-800 mb-2">
               Selecciona un Proyecto
             </h1>
-            <p className="text-slate-600">
+            <p className="text-sm sm:text-base text-slate-600">
               Elige el proyecto en el que deseas trabajar
             </p>
           </div>
           
           {/* Projects Grid */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
               {[1, 2, 3].map((i) => (
                 <Card key={i} className="overflow-hidden">
                   <div className="h-24 bg-gradient-to-r from-slate-200 to-slate-300" />
@@ -120,7 +120,7 @@ export default function SeleccionProyecto() {
               ))}
             </div>
           ) : proyectos && proyectos.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
               {proyectos.map((proyectoData, index: number) => {
                 const proyecto = proyectoData.proyecto;
                 if (!proyecto) return null;
@@ -135,7 +135,7 @@ export default function SeleccionProyecto() {
                   className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 group"
                 >
                   {/* Imagen de Portada o Color Header */}
-                  <div className={`h-32 relative ${!(proyecto.imagenPortadaBase64 || proyecto.imagenPortadaUrl) ? `bg-gradient-to-r ${getProjectColor(index)}` : ''}`}>
+                  <div className={`h-24 sm:h-28 md:h-32 relative overflow-hidden ${!(proyecto.imagenPortadaBase64 || proyecto.imagenPortadaUrl) ? `bg-gradient-to-r ${getProjectColor(index)}` : ''}`}>
                     {proyecto.imagenPortadaBase64 ? (
                       <img 
                         src={proyecto.imagenPortadaBase64} 
@@ -157,8 +157,8 @@ export default function SeleccionProyecto() {
                     </div>
                   </div>
                   
-                  <CardContent className="p-4">
-                    <h3 className="text-lg font-semibold text-slate-800 mb-1 group-hover:text-primary transition-colors">
+                  <CardContent className="p-3 sm:p-4">
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-1 group-hover:text-primary transition-colors truncate">
                       {proyecto.nombre}
                     </h3>
                     

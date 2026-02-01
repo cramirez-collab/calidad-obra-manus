@@ -108,11 +108,11 @@ export default function KPIs() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Dashboard de KPIs</h1>
+            <h1 className="text-xl sm:text-2xl font-bold">Dashboard de KPIs</h1>
             <p className="text-muted-foreground">Métricas de rendimiento y tendencias</p>
           </div>
           <div className="flex gap-2">
@@ -213,7 +213,7 @@ export default function KPIs() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Total Ítems</p>
-                      <p className="text-2xl font-bold">{kpis?.resumen?.total || 0}</p>
+                      <p className="text-xl sm:text-2xl font-bold">{kpis?.resumen?.total || 0}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -228,7 +228,7 @@ export default function KPIs() {
                     <div>
                       <p className="text-sm text-muted-foreground">Tasa Aprobación</p>
                       <div className="flex items-center gap-2">
-                        <p className="text-2xl font-bold text-emerald-600">
+                        <p className="text-xl sm:text-2xl font-bold text-emerald-600">
                           {kpis?.resumen?.tasaAprobacion || 0}%
                         </p>
                         <TrendingUp className="h-4 w-4 text-emerald-500" />
@@ -247,7 +247,7 @@ export default function KPIs() {
                     <div>
                       <p className="text-sm text-muted-foreground">Tasa Rechazo</p>
                       <div className="flex items-center gap-2">
-                        <p className="text-2xl font-bold text-red-600">
+                        <p className="text-xl sm:text-2xl font-bold text-red-600">
                           {kpis?.resumen?.tasaRechazo || 0}%
                         </p>
                         <TrendingDown className="h-4 w-4 text-red-500" />
@@ -265,7 +265,7 @@ export default function KPIs() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Tiempo Promedio</p>
-                      <p className="text-2xl font-bold">
+                      <p className="text-xl sm:text-2xl font-bold">
                         {kpis?.resumen?.tiempoPromedioHoras || 0}h
                       </p>
                     </div>
@@ -390,7 +390,7 @@ export default function KPIs() {
                   <div className="space-y-4">
                     {kpis?.comparativaEmpresas?.map((emp: any) => (
                       <div key={emp.empresaId} className="space-y-2">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <span className="font-medium">{getEmpresaName(emp.empresaId)}</span>
                           <span className="text-sm text-muted-foreground">
                             {emp.total} ítems • {emp.tasaAprobacion}% aprobación
@@ -423,7 +423,7 @@ export default function KPIs() {
                   <div className="space-y-4">
                     {kpis?.comparativaUnidades?.map((uni: any) => (
                       <div key={uni.unidadId} className="space-y-2">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <span className="font-medium">{getUnidadName(uni.unidadId)}</span>
                           <span className="text-sm text-muted-foreground">
                             {uni.total} ítems • {uni.tasaAprobacion}% aprobación
@@ -454,22 +454,22 @@ export default function KPIs() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                   <div className="text-center p-4 bg-emerald-50 rounded-lg">
                     <CheckCircle2 className="h-8 w-8 text-emerald-600 mx-auto mb-2" />
-                    <p className="text-3xl font-bold text-emerald-600">{kpis?.resumen?.aprobados || 0}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-emerald-600">{kpis?.resumen?.aprobados || 0}</p>
                     <p className="text-sm text-muted-foreground">Aprobados</p>
                   </div>
                   <div className="text-center p-4 bg-red-50 rounded-lg">
                     <XCircle className="h-8 w-8 text-red-600 mx-auto mb-2" />
-                    <p className="text-3xl font-bold text-red-600">{kpis?.resumen?.rechazados || 0}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-red-600">{kpis?.resumen?.rechazados || 0}</p>
                     <p className="text-sm text-muted-foreground">Rechazados</p>
                   </div>
                   <div className="text-center p-4 bg-amber-50 rounded-lg">
                     <Clock className="h-8 w-8 text-amber-600 mx-auto mb-2" />
-                    <p className="text-3xl font-bold text-amber-600">{kpis?.resumen?.pendientes || 0}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-amber-600">{kpis?.resumen?.pendientes || 0}</p>
                     <p className="text-sm text-muted-foreground">Pendientes</p>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <BarChart3 className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                    <p className="text-3xl font-bold text-blue-600">{kpis?.resumen?.total || 0}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-blue-600">{kpis?.resumen?.total || 0}</p>
                     <p className="text-sm text-muted-foreground">Total</p>
                   </div>
                 </div>

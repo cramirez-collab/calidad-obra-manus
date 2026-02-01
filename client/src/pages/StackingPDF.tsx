@@ -32,7 +32,7 @@ function EncabezadoPDF({ proyectoNombre, fecha }: { proyectoNombre: string; fech
   return (
     <div className="flex justify-between items-start border-b-2 border-[#002C63] pb-3 mb-4">
       <div>
-        <div className="text-2xl font-bold text-[#002C63] tracking-tight">
+        <div className="text-xl sm:text-2xl font-bold text-[#002C63] tracking-tight">
           OBJETIV<span className="text-[#02B381]">A</span>
         </div>
         <div className="text-xs text-gray-500 mt-1">Control de Calidad</div>
@@ -184,7 +184,7 @@ export default function StackingPDF() {
     <div className="min-h-screen bg-white print:bg-white">
       {/* Header con botones - NO se imprime */}
       <div className="bg-gray-50 border-b p-4 print:hidden">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => setLocation("/panoramica")}>
               <ArrowLeft className="h-4 w-4" />

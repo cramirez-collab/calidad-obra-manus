@@ -393,11 +393,11 @@ export default function Usuarios() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Gestión de Usuarios</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Gestión de Usuarios</h1>
             <p className="text-muted-foreground">
               Alta, edición y asignación de roles, empresas y proyectos
             </p>
@@ -657,7 +657,7 @@ export default function Usuarios() {
                 <div className="sm:hidden divide-y">
                   {filteredUsuarios?.map((usuario) => (
                     <div key={usuario.id} className="p-4 space-y-3">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                           <UserAvatar 
                             name={usuario.name} 
@@ -1123,7 +1123,7 @@ export default function Usuarios() {
                   />
                 ) : (
                   <div className="h-24 w-24 rounded-full bg-[#002C63]/10 flex items-center justify-center border-4 border-muted">
-                    <span className="text-2xl font-bold text-[#002C63]">
+                    <span className="text-xl sm:text-2xl font-bold text-[#002C63]">
                       {photoEditingUser?.name?.charAt(0).toUpperCase() || 'U'}
                     </span>
                   </div>

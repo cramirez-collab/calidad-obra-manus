@@ -223,19 +223,19 @@ export default function Defectos() {
         <div className="grid grid-cols-3 gap-2">
           <Card className="p-3">
             <div className="text-center">
-              <p className="text-2xl font-bold text-[#02B381]">{stats.total}</p>
+              <p className="text-xl sm:text-2xl font-bold text-[#02B381]">{stats.total}</p>
               <p className="text-xs text-muted-foreground">Defectos</p>
             </div>
           </Card>
           <Card className="p-3">
             <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats.especialidades}</p>
+              <p className="text-xl sm:text-2xl font-bold text-blue-600">{stats.especialidades}</p>
               <p className="text-xs text-muted-foreground">Especialidades</p>
             </div>
           </Card>
           <Card className="p-3">
             <div className="text-center">
-              <p className="text-2xl font-bold text-purple-600">{stats.totalItems}</p>
+              <p className="text-xl sm:text-2xl font-bold text-purple-600">{stats.totalItems}</p>
               <p className="text-xs text-muted-foreground">Ítems</p>
             </div>
           </Card>

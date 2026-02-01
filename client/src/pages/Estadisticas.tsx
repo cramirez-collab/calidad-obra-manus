@@ -260,12 +260,12 @@ export default function Estadisticas() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4">
+      <div className="space-y-4 max-w-full overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Estadísticas</h1>
-            <p className="text-muted-foreground text-sm">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Estadísticas</h1>
+            <p className="text-muted-foreground text-xs sm:text-sm">
               Análisis y métricas del control de calidad
             </p>
           </div>
@@ -719,7 +719,7 @@ export default function Estadisticas() {
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.total || 0}</div>
+              <div className="text-xl sm:text-2xl font-bold">{stats?.total || 0}</div>
             </CardContent>
           </Card>
 
@@ -731,7 +731,7 @@ export default function Estadisticas() {
               <Clock className="h-4 w-4 text-amber-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-amber-600">
+              <div className="text-xl sm:text-2xl font-bold text-amber-600">
                 {(Number(stats?.porStatus?.find(s => s.status === 'pendiente_foto_despues')?.count) || 0) +
                  (Number(stats?.porStatus?.find(s => s.status === 'pendiente_aprobacion')?.count) || 0)}
               </div>
@@ -746,7 +746,7 @@ export default function Estadisticas() {
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-emerald-600">
+              <div className="text-xl sm:text-2xl font-bold text-emerald-600">
                 {Number(stats?.porStatus?.find(s => s.status === 'aprobado')?.count) || 0}
               </div>
             </CardContent>
@@ -760,7 +760,7 @@ export default function Estadisticas() {
               <XCircle className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-xl sm:text-2xl font-bold text-red-600">
                 {Number(stats?.porStatus?.find(s => s.status === 'rechazado')?.count) || 0}
               </div>
             </CardContent>
@@ -881,7 +881,7 @@ export default function Estadisticas() {
                     <AlertTriangle className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{defectosStats?.totalItems || 0}</p>
+                    <p className="text-xl sm:text-2xl font-bold">{defectosStats?.totalItems || 0}</p>
                     <p className="text-xs text-muted-foreground">Total con Defecto</p>
                   </div>
                 </div>
@@ -894,7 +894,7 @@ export default function Estadisticas() {
                     <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-emerald-600">
+                    <p className="text-xl sm:text-2xl font-bold text-emerald-600">
                       {tasaAprobacionGlobal.toFixed(1)}%
                     </p>
                     <p className="text-xs text-muted-foreground">Tasa Aprobación</p>
@@ -909,7 +909,7 @@ export default function Estadisticas() {
                     <AlertTriangle className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-orange-600">
+                    <p className="text-xl sm:text-2xl font-bold text-orange-600">
                       {defectosStats?.porSeveridad?.find(s => s.severidad === 'grave')?.total || 0}
                     </p>
                     <p className="text-xs text-muted-foreground">Defectos Graves</p>
@@ -924,7 +924,7 @@ export default function Estadisticas() {
                     <AlertTriangle className="h-5 w-5 text-red-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-red-600">
+                    <p className="text-xl sm:text-2xl font-bold text-red-600">
                       {defectosStats?.porSeveridad?.find(s => s.severidad === 'critico')?.total || 0}
                     </p>
                     <p className="text-xs text-muted-foreground">Defectos Críticos</p>
@@ -1059,7 +1059,7 @@ function RendimientoUsuarios() {
   })) || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* KPIs de Rendimiento */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -1069,7 +1069,7 @@ function RendimientoUsuarios() {
                 <TrendingUp className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{rendimiento?.length || 0}</p>
+                <p className="text-xl sm:text-2xl font-bold">{rendimiento?.length || 0}</p>
                 <p className="text-xs text-muted-foreground">Usuarios Activos</p>
               </div>
             </div>
@@ -1082,7 +1082,7 @@ function RendimientoUsuarios() {
                 <CheckCircle2 className="h-5 w-5 text-emerald-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-emerald-600">
+                <p className="text-xl sm:text-2xl font-bold text-emerald-600">
                   {rendimiento?.reduce((acc: number, u: any) => acc + (u.aprobados || 0), 0) || 0}
                 </p>
                 <p className="text-xs text-muted-foreground">Total Aprobados</p>
@@ -1097,7 +1097,7 @@ function RendimientoUsuarios() {
                 <Clock className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-amber-600">
+                <p className="text-xl sm:text-2xl font-bold text-amber-600">
                   {rendimiento && rendimiento.length > 0 
                     ? (rendimiento.reduce((acc: number, u: any) => acc + (u.tiempoPromedioHoras || 0), 0) / rendimiento.length).toFixed(1)
                     : 0}h
@@ -1114,7 +1114,7 @@ function RendimientoUsuarios() {
                 <BarChart3 className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-purple-600">
+                <p className="text-xl sm:text-2xl font-bold text-purple-600">
                   {rendimiento?.reduce((acc: number, u: any) => acc + (u.okSupervisor || 0), 0) || 0}
                 </p>
                 <p className="text-xs text-muted-foreground">OK Supervisor</p>
