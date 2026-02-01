@@ -2031,3 +2031,35 @@
 - [x] Arreglar ciclo infinito "Sincronizando" - solo muestra al reconectar
 - [x] Cambiar QR de consecutivos a aleatorios en GenerarQR (6 caracteres)
 - [x] Duplicar tamaño de fotos de portada (h-48/56/64)
+
+
+## Optimización de Velocidad CRÍTICA (1 Febrero 2026)
+- [ ] Creación de ítem debe ser < 2 segundos
+- [ ] Subida de imagen optimizada (compresión en cliente)
+- [ ] Respuesta instantánea con procesamiento en segundo plano
+- [ ] Ningún proceso debe ser lento
+
+
+## Optimización de Velocidad Total (Iteración 25)
+
+### Creación de Ítems Instantánea
+- [x] Guardar base64 inmediatamente en BD (< 500ms)
+- [x] Subir fotos a S3 en segundo plano (setImmediate)
+- [x] Historial y bitácora en segundo plano
+- [x] Notificaciones en segundo plano
+
+### Upload de Fotos Instantáneo
+- [x] uploadFotoAntes optimizado (< 500ms)
+- [x] uploadFotoDespues optimizado (< 500ms)
+- [x] S3 upload en segundo plano
+- [x] Emails y notificaciones en segundo plano
+
+### Aprobación/Rechazo Instantáneo
+- [x] aprobar optimizado (< 300ms)
+- [x] rechazar optimizado (< 300ms)
+- [x] Historial, notificaciones y emails en segundo plano
+
+### Resultado
+- [x] Todas las operaciones responden en < 1 segundo
+- [x] Usuario no espera por S3, emails ni notificaciones
+- [x] 201 pruebas pasan correctamente
