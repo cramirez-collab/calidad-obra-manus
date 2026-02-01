@@ -12,10 +12,17 @@ import "./index.css";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 2 * 60 * 1000, // 2 minutos de cache
-      gcTime: 10 * 60 * 1000, // 10 minutos en memoria
+      staleTime: 5 * 60 * 1000, // 5 minutos de cache (datos frescos)
+      gcTime: 30 * 60 * 1000, // 30 minutos en memoria
       refetchOnWindowFocus: false, // No refetch al cambiar de ventana
+      refetchOnReconnect: false, // No refetch al reconectar
+      refetchOnMount: false, // No refetch al montar si hay datos en cache
       retry: 1, // Solo 1 reintento
+      networkMode: 'offlineFirst', // Usar cache primero si está offline
+    },
+    mutations: {
+      retry: 2, // 2 reintentos para mutaciones
+      networkMode: 'offlineFirst',
     },
   },
 });

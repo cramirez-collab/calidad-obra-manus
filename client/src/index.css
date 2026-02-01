@@ -393,3 +393,55 @@ button, .btn, [role="button"] {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+/* ========================================
+   PREVENIR VISUALIZACIÓN DE BASE64 COMO TEXTO
+   ======================================== */
+
+/* Ocultar cualquier texto que parezca base64 */
+* {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Contenedores de imagen nunca muestran texto largo */
+.image-container,
+[class*="image"],
+[class*="foto"],
+[class*="photo"],
+[class*="avatar"] {
+  overflow: hidden !important;
+  max-width: 100% !important;
+}
+
+/* Cards nunca desbordan */
+[class*="Card"],
+[class*="card"] {
+  overflow: hidden !important;
+  max-width: 100% !important;
+}
+
+/* Prevenir que cualquier elemento muestre texto muy largo */
+p, span, div {
+  max-width: 100%;
+}
+
+/* Asegurar que las imágenes base64 se muestren correctamente */
+img[src^="data:image"] {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block !important;
+}
+
+/* Forzar que el body y html no desborden */
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+
+/* Root container */
+#root {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}

@@ -1,10 +1,7 @@
 import { useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getImageUrl } from "@/lib/imageUrl";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 import { Camera, Loader2, User } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +13,7 @@ interface UserProfileProps {
     email?: string | null;
     role?: string;
     fotoUrl?: string | null;
+    fotoBase64?: string | null;
   };
   size?: "sm" | "md" | "lg";
   editable?: boolean;
@@ -39,11 +37,14 @@ const roleColors: Record<string, string> = {
 export function UserAvatar({ user, size = "md" }: UserProfileProps) {
   const initial = user.name?.charAt(0).toUpperCase() || "U";
   const bgColor = roleColors[user.role || "residente"] || "bg-gray-500";
+  
+  // Priorizar fotoBase64 sobre fotoUrl
+  const imageUrl = user.fotoBase64 || (user.fotoUrl ? `/api/image/${user.fotoUrl}` : '');
 
   return (
     <Avatar className={`${sizeClasses[size]} border`}>
-      {user.fotoUrl ? (
-        <AvatarImage src={getImageUrl(user.fotoUrl)} alt={user.name || "Usuario"} />
+      {imageUrl ? (
+        <AvatarImage src={imageUrl} alt={user.name || "Usuario"} className="object-cover" />
       ) : null}
       <AvatarFallback className={`${bgColor} text-white text-xs font-medium`}>
         {initial}
@@ -55,12 +56,17 @@ export function UserAvatar({ user, size = "md" }: UserProfileProps) {
 export function UserProfileEditor({ user, onUpdate }: { user: UserProfileProps["user"]; onUpdate?: () => void }) {
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const utils = trpc.useUtils();
 
   const updateFotoMutation = trpc.users.updateFoto.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Foto de perfil actualizada");
+      // Actualizar el preview con la nueva foto
+      if (data.fotoBase64) {
+        setPreviewUrl(data.fotoBase64);
+      }
       utils.auth.me.invalidate();
       utils.users.getMiPerfil.invalidate();
       onUpdate?.();
@@ -96,6 +102,7 @@ export function UserProfileEditor({ user, onUpdate }: { user: UserProfileProps["
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result as string;
+      setPreviewUrl(base64); // Mostrar preview inmediato
       updateFotoMutation.mutate({ fotoBase64: base64 });
     };
     reader.onerror = () => {
@@ -105,11 +112,18 @@ export function UserProfileEditor({ user, onUpdate }: { user: UserProfileProps["
     reader.readAsDataURL(file);
   };
 
+  // Usar preview si existe, sino usar la foto actual del usuario
+  const currentImageUrl = previewUrl || user.fotoBase64 || (user.fotoUrl ? `/api/image/${user.fotoUrl}` : '');
+  const hasPhoto = !!currentImageUrl;
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen);
+      if (!isOpen) setPreviewUrl(null); // Limpiar preview al cerrar
+    }}>
       <DialogTrigger asChild>
         <button className="relative group">
-          <UserAvatar user={user} size="lg" />
+          <UserAvatar user={{ ...user, fotoBase64: previewUrl || user.fotoBase64 }} size="lg" />
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
             <Camera className="h-5 w-5 text-white" />
           </div>
@@ -123,9 +137,16 @@ export function UserProfileEditor({ user, onUpdate }: { user: UserProfileProps["
           </DialogTitle>
         </DialogHeader>
         <div className="flex flex-col items-center gap-4 py-4">
-          <UserAvatar user={user} size="lg" />
+          <Avatar className="h-24 w-24 border-2">
+            {currentImageUrl ? (
+              <AvatarImage src={currentImageUrl} alt={user.name || "Usuario"} className="object-cover" />
+            ) : null}
+            <AvatarFallback className={`${roleColors[user.role || "residente"]} text-white text-2xl font-medium`}>
+              {user.name?.charAt(0).toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
           <p className="text-sm text-muted-foreground text-center">
-            {user.fotoUrl ? "Haz clic para cambiar tu foto" : "Sube una foto para que te reconozcan"}
+            {hasPhoto ? "Haz clic para cambiar tu foto" : "Sube una foto para que te reconozcan"}
           </p>
           <input
             ref={fileInputRef}
@@ -147,7 +168,7 @@ export function UserProfileEditor({ user, onUpdate }: { user: UserProfileProps["
             ) : (
               <>
                 <Camera className="h-4 w-4 mr-2" />
-                {user.fotoUrl ? "Cambiar Foto" : "Subir Foto"}
+                {hasPhoto ? "Cambiar Foto" : "Subir Foto"}
               </>
             )}
           </Button>

@@ -2010,3 +2010,13 @@
 - [x] Botones y badges con truncate
 - [x] Tablas responsivas con overflow-x: auto
 - [x] Inputs con max-width: 100%
+
+
+## Bugs Críticos (1 Febrero 2026)
+
+### Problemas Corregidos
+- [x] Foto de perfil se sube pero no se muestra - Corregido UserProfile.tsx y DashboardLayout.tsx para usar fotoBase64
+- [x] Código base64 visible en pantalla - Agregado CSS global con overflow-hidden
+- [x] Botones Nuevo y Estadística al lado derecho - Ya estaban correctamente posicionados
+- [x] Flujo de creación de ítem - Verificado y funcionando correctamente
+- [x] Optimizar velocidad - Configurado QueryClient con staleTime 5min, gcTime 30min, offlineFirst
