@@ -1871,3 +1871,9 @@
 ## Bugs Reportados (31 Enero 2026 - 19:15)
 - [x] Pantalla Sin Conexión no permite continuar a la app offline - CORREGIDO: Botón "Continuar sin conexión" agregado
 - [x] Lápiz de marcar necesita ser el doble de grueso - CORREGIDO: BRUSH_SIZE de 4 a 8
+
+
+## Mejora: Códigos Aleatorios para Ítems (1 Febrero 2026)
+- [x] Cambiar generación de código de ítem de consecutivo a aleatorio (ej: Hidalma-A7X9K2)
+- [x] Mantener contador de ítems para estadísticas (se cuenta por cantidad de ítems en BD)
+- [x] Permitir trabajo simultáneo de múltiples revisores (códigos únicos garantizados)

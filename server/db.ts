@@ -1522,11 +1522,23 @@ export async function getBitacoraGeneral(filtros: {
   }));
 }
 
-// ==================== CÓDIGO OQC PROGRESIVO ====================
+// ==================== CÓDIGOS ALEATORIOS ====================
 
+// Generar código aleatorio único para ítem (6 caracteres alfanuméricos)
+// Permite trabajo simultáneo de múltiples revisores sin conflictos
+function generateRandomCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Sin I, O, 0, 1 para evitar confusión
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+// Generar código único para ítem (formato: PROYECTO-XXXXXX)
 export async function getNextOQCCode(proyectoId?: number): Promise<string> {
   const db = await getDb();
-  if (!db) return 'OQC-00001';
+  if (!db) return `OQC-${generateRandomCode()}`;
   
   // Si hay proyectoId, obtener el código del proyecto para el prefijo
   let prefix = 'OQC';
@@ -1537,38 +1549,31 @@ export async function getNextOQCCode(proyectoId?: number): Promise<string> {
     }
   }
   
-  // Buscar el último código de este proyecto específico
-  let result;
-  if (proyectoId) {
-    result = await db
-      .select({ codigo: items.codigo })
+  // Generar código aleatorio y verificar que no exista
+  let codigo: string;
+  let intentos = 0;
+  const maxIntentos = 10;
+  
+  do {
+    codigo = `${prefix}-${generateRandomCode()}`;
+    
+    // Verificar si ya existe
+    const existe = await db
+      .select({ id: items.id })
       .from(items)
-      .where(eq(items.proyectoId, proyectoId))
-      .orderBy(desc(items.id))
+      .where(eq(items.codigo, codigo))
       .limit(1);
-  } else {
-    result = await db
-      .select({ codigo: items.codigo })
-      .from(items)
-      .orderBy(desc(items.id))
-      .limit(1);
-  }
+    
+    if (existe.length === 0) {
+      return codigo;
+    }
+    
+    intentos++;
+  } while (intentos < maxIntentos);
   
-  if (result.length === 0) {
-    return `${prefix}-00001`;
-  }
-  
-  const lastCode = result[0].codigo;
-  // Extraer el número del código (formato: PREFIJO-XXXXX)
-  const match = lastCode.match(/[A-Za-z0-9]+-?(\d+)/);
-  if (!match) {
-    return `${prefix}-00001`;
-  }
-  
-  const nextNumber = parseInt(match[1], 10) + 1;
-  return `${prefix}-${nextNumber.toString().padStart(5, '0')}`;
+  // Si después de 10 intentos no se encontró uno único, agregar timestamp
+  return `${prefix}-${generateRandomCode()}${Date.now().toString(36).slice(-3).toUpperCase()}`;
 }
-
 // ==================== PENDIENTES POR USUARIO ====================
 
 export async function getPendientesByUsuario(userId: number, role: string) {
