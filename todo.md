@@ -2020,3 +2020,7 @@
 - [x] Botones Nuevo y Estadística al lado derecho - Ya estaban correctamente posicionados
 - [x] Flujo de creación de ítem - Verificado y funcionando correctamente
 - [x] Optimizar velocidad - Configurado QueryClient con staleTime 5min, gcTime 30min, offlineFirst
+
+
+## Ajuste de Fotos de Portada (1 Febrero 2026)
+- [x] Aumentar altura de fotos de portada de proyecto en 40% (h-24/28/32 → h-32/40/44)
