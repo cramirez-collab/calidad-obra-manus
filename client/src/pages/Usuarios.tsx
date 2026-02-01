@@ -474,7 +474,12 @@ export default function Usuarios() {
                       <SelectItem value="supervisor">Supervisor</SelectItem>
                       <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
                       <SelectItem value="residente">Residente</SelectItem>
-                      <SelectItem value="desarrollador">Desarrollador</SelectItem>
+                      <SelectItem value="desarrollador">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-cyan-500" />
+                          Desarrollador (Solo lectura)
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -985,9 +990,17 @@ export default function Usuarios() {
                     <SelectItem value="supervisor">Supervisor</SelectItem>
                     <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
                     <SelectItem value="residente">Residente</SelectItem>
-                    <SelectItem value="desarrollador">Desarrollador</SelectItem>
+                    <SelectItem value="desarrollador">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-cyan-500" />
+                        Desarrollador (Solo lectura)
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  El rol Desarrollador solo puede ver y comentar, no puede crear ni modificar ítems.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-empresa">Empresa</Label>

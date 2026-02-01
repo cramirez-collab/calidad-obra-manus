@@ -2071,3 +2071,10 @@
 - [x] Guardar configuración de horarios en base de datos
 - [x] Actualizar backend para usar horarios configurables
 - [x] TextMeBot API ya configurado (endpoint: api.textmebot.com/send.php)
+
+
+## Correcciones UI Febrero 2026
+- [ ] Eliminar código base64 visible al crear ítems (respuesta instantánea) - PENDIENTE VERIFICAR
+- [x] Corregir iconos que se salen de pantalla en móvil (Unidades, Espacios)
+- [x] Agregar descripción del rol Desarrollador (Solo lectura)
+- [x] Crear submenú de WhatsApp en Configuración (/configuracion/whatsapp)
