@@ -121,19 +121,21 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     analysisItems.push({ icon: FileText, label: proyecto.tituloEspecificaciones || "Especificaciones", path: proyecto.linkEspecificaciones, external: true });
   }
 
-  // Submenú de Configuración
+  // Submenú de Configuración (ordenado alfabéticamente)
   const configSubItems: MenuItem[] = [
-    { icon: FolderKanban, label: "Proyectos", path: "/proyectos" },
-    { icon: Link2, label: "Enlaces Externos", path: "/enlaces-externos" },
-    { icon: QrCode, label: "QR", path: "/generar-qr" },
+    { icon: History, label: "Bitácora", path: "/bitacora" },
+    { icon: Settings, label: "Configuración General", path: "/configuracion" },
+    { icon: AlertTriangle, label: "Defectos", path: "/defectos" },
     { icon: Building2, label: "Empresas", path: "/empresas" },
-    { icon: MapPin, label: "Unidades", path: "/unidades" },
+    { icon: Link2, label: "Enlaces Externos", path: "/enlaces-externos" },
     { icon: Layers, label: "Espacios", path: "/espacios" },
     { icon: Wrench, label: "Especialidades", path: "/especialidades" },
     { icon: ListOrdered, label: "Lista Especialidades", path: "/lista-especialidades" },
-    { icon: AlertTriangle, label: "Defectos", path: "/defectos" },
+    { icon: FolderKanban, label: "Proyectos", path: "/proyectos" },
+    { icon: QrCode, label: "QR", path: "/generar-qr" },
+    { icon: MapPin, label: "Unidades", path: "/unidades" },
     { icon: Users, label: "Usuarios", path: "/usuarios" },
-    { icon: History, label: "Bitácora", path: "/bitacora" },
+    { icon: Activity, label: "WhatsApp", path: "/configuracion#whatsapp" },
   ];
 
   // Todos los usuarios ven los items base y de análisis
