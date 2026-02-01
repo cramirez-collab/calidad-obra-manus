@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `whatsapp_config` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`proyectoId` int NOT NULL,\n\t`grupoUrl` text,\n\t`apiKey` varchar(255),\n\t`activo` boolean NOT NULL DEFAULT true,\n\t`ultimoEnvio` timestamp NULL,\n\t`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n\t`updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `whatsapp_config_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `whatsapp_config_proyectoId_unique` UNIQUE(`proyectoId`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute CREATE TABLE IF NOT EXISTS `whatsapp_config` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`proyectoId` int NOT NULL,\n\t`grupoUrl` text,\n\t`apiKey` varchar(255),\n\t`activo` boolean NOT NULL DEFAULT true,\n\t`ultimoEnvio` timestamp NULL,\n\t`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n\t`updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `whatsapp_config_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `whatsapp_config_proyectoId_unique` UNIQUE(`proyectoId`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 59
+}

@@ -515,3 +515,44 @@ export const empresaHistorial = mysqlTable("empresa_historial", {
 
 export type EmpresaHistorial = typeof empresaHistorial.$inferSelect;
 export type InsertEmpresaHistorial = typeof empresaHistorial.$inferInsert;
+
+
+/**
+ * Tabla de tracking de actividad de usuarios
+ * Registra clics en botones de calidad y secuencias para reportes WhatsApp
+ */
+export const actividadUsuarios = mysqlTable("actividad_usuarios", {
+  id: int("id").autoincrement().primaryKey(),
+  usuarioId: int("usuarioId").notNull(),
+  proyectoId: int("proyectoId").notNull(),
+  tipoActividad: mysqlEnum("tipoActividad", [
+    "click_calidad",
+    "click_secuencias", 
+    "crear_item",
+    "subir_foto_despues",
+    "aprobar_item",
+    "rechazar_item"
+  ]).notNull(),
+  metadata: text("metadata"), // JSON con datos adicionales
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ActividadUsuario = typeof actividadUsuarios.$inferSelect;
+export type InsertActividadUsuario = typeof actividadUsuarios.$inferInsert;
+
+/**
+ * Tabla de configuración de reportes WhatsApp
+ */
+export const whatsappConfig = mysqlTable("whatsapp_config", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull().unique(),
+  grupoUrl: text("grupoUrl"), // Enlace del grupo de WhatsApp
+  apiKey: varchar("apiKey", { length: 255 }), // API Key de TextMeBot
+  activo: boolean("activo").default(true).notNull(),
+  ultimoEnvio: timestamp("ultimoEnvio"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type WhatsappConfig = typeof whatsappConfig.$inferSelect;
+export type InsertWhatsappConfig = typeof whatsappConfig.$inferInsert;

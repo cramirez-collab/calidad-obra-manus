@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useProject } from "@/contexts/ProjectContext";
 import { 
   Settings, 
   Save, 
@@ -23,7 +24,12 @@ import {
   Zap,
   ArrowRight,
   MessageCircle,
-  ExternalLink
+  ExternalLink,
+  Send,
+  RefreshCw,
+  CheckCircle2,
+  XCircle,
+  Users
 } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
@@ -67,7 +73,10 @@ const configDescriptions: Record<string, string> = {
 
 export default function Configuracion() {
   const { user } = useAuth();
+  const { selectedProjectId } = useProject();
   const isSuperadmin = user?.role === 'superadmin';
+  const isAdmin = ['superadmin', 'admin'].includes(user?.role || '');
+  
   const { data: configData, isLoading, refetch } = trpc.configuracion.list.useQuery();
   const setConfigMutation = trpc.configuracion.set.useMutation({
     onSuccess: () => {
@@ -79,7 +88,51 @@ export default function Configuracion() {
     }
   });
 
+  // WhatsApp config
+  const { data: whatsappConfig, refetch: refetchWhatsapp } = trpc.whatsapp.getConfig.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId && isAdmin }
+  );
+  
+  const { data: reportePreview, refetch: refetchReporte, isLoading: isLoadingReporte } = trpc.whatsapp.generarReporte.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: false } // Solo se ejecuta manualmente
+  );
+
+  const saveWhatsappMutation = trpc.whatsapp.saveConfig.useMutation({
+    onSuccess: () => {
+      toast.success("Configuración de WhatsApp guardada");
+      refetchWhatsapp();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Error al guardar configuración de WhatsApp");
+    }
+  });
+
+  const enviarReporteMutation = trpc.whatsapp.enviarReporte.useMutation({
+    onSuccess: (result) => {
+      if (result.success) {
+        if (result.enlace) {
+          // Abrir enlace de WhatsApp
+          window.open(result.enlace, '_blank');
+          toast.success("Enlace de WhatsApp generado. Se abrirá en una nueva pestaña.");
+        } else {
+          toast.success("Reporte enviado exitosamente");
+        }
+      } else {
+        toast.error(result.mensaje);
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || "Error al enviar reporte");
+    }
+  });
+
   const [values, setValues] = useState<Record<string, string>>({});
+  const [whatsappUrl, setWhatsappUrl] = useState('');
+  const [whatsappApiKey, setWhatsappApiKey] = useState('');
+  const [showReportePreview, setShowReportePreview] = useState(false);
+  
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -122,6 +175,13 @@ export default function Configuracion() {
     }
   }, [configData]);
 
+  useEffect(() => {
+    if (whatsappConfig) {
+      setWhatsappUrl(whatsappConfig.grupoUrl || '');
+      setWhatsappApiKey(whatsappConfig.apiKey || '');
+    }
+  }, [whatsappConfig]);
+
   const handleSave = (clave: string, soloSuperadmin: boolean) => {
     setConfigMutation.mutate({
       clave,
@@ -140,6 +200,35 @@ export default function Configuracion() {
       descripcion: configDescriptions[clave],
       soloSuperadmin,
     });
+  };
+
+  const handleSaveWhatsapp = () => {
+    if (!selectedProjectId) {
+      toast.error("Selecciona un proyecto primero");
+      return;
+    }
+    if (!whatsappUrl) {
+      toast.error("Ingresa el enlace del grupo de WhatsApp");
+      return;
+    }
+    saveWhatsappMutation.mutate({
+      proyectoId: selectedProjectId,
+      grupoUrl: whatsappUrl,
+      apiKey: whatsappApiKey || undefined,
+    });
+  };
+
+  const handlePreviewReporte = () => {
+    setShowReportePreview(true);
+    refetchReporte();
+  };
+
+  const handleEnviarReporte = () => {
+    if (!selectedProjectId) {
+      toast.error("Selecciona un proyecto primero");
+      return;
+    }
+    enviarReporteMutation.mutate({ proyectoId: selectedProjectId });
   };
 
   if (isLoading) {
@@ -325,85 +414,151 @@ export default function Configuracion() {
           </CardContent>
         </Card>
 
-        {/* Sección WhatsApp - Reportes Automáticos */}
-        <Card className="mt-6 border-green-500/20 bg-green-500/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <MessageCircle className="h-5 w-5 text-green-600" />
-              WhatsApp - Reportes Automáticos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Configura el enlace del grupo de WhatsApp para recibir reportes automáticos de defectos por empresa.
-            </p>
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="whatsappUrl" className="text-sm font-medium">Enlace del Grupo de WhatsApp</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="whatsappUrl"
-                    type="url"
-                    value={values['whatsapp_grupo_url'] || ''}
-                    onChange={(e) => setValues(prev => ({ ...prev, whatsapp_grupo_url: e.target.value }))}
-                    placeholder="https://chat.whatsapp.com/..."
-                    className="flex-1"
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => handleSave('whatsapp_grupo_url', true)}
-                    disabled={setConfigMutation.isPending}
-                    className="h-10 w-10"
-                  >
-                    <Save className="h-4 w-4" />
-                  </Button>
-                  {values['whatsapp_grupo_url'] && (
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => window.open(values['whatsapp_grupo_url'], '_blank')}
-                      className="h-10 w-10"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  )}
+        {/* Sección WhatsApp - Reportes Automáticos (Solo Admin) */}
+        {isAdmin && selectedProjectId && (
+          <Card className="mt-6 border-green-500/20 bg-green-500/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <MessageCircle className="h-5 w-5 text-green-600" />
+                WhatsApp - Reportes Automáticos
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Configura el enlace del grupo de WhatsApp para recibir reportes automáticos de actividad de residentes.
+              </p>
+              
+              <div className="space-y-3">
+                {/* Enlace del grupo */}
+                <div className="space-y-2">
+                  <Label htmlFor="whatsappUrl" className="text-sm font-medium">Enlace del Grupo de WhatsApp</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="whatsappUrl"
+                      type="url"
+                      value={whatsappUrl}
+                      onChange={(e) => setWhatsappUrl(e.target.value)}
+                      placeholder="https://chat.whatsapp.com/..."
+                      className="flex-1"
+                    />
+                    {whatsappUrl && (
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => window.open(whatsappUrl, '_blank')}
+                        className="h-10 w-10"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Pega el enlace de invitación del grupo donde quieres recibir los reportes.
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Pega el enlace de invitación del grupo donde quieres recibir los reportes.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="whatsappApiKey" className="text-sm font-medium">API Key de TextMeBot (Opcional)</Label>
-                <div className="flex gap-2">
+
+                {/* API Key (opcional) */}
+                <div className="space-y-2">
+                  <Label htmlFor="whatsappApiKey" className="text-sm font-medium">API Key de TextMeBot (Opcional)</Label>
                   <Input
                     id="whatsappApiKey"
                     type="password"
-                    value={values['whatsapp_api_key'] || ''}
-                    onChange={(e) => setValues(prev => ({ ...prev, whatsapp_api_key: e.target.value }))}
+                    value={whatsappApiKey}
+                    onChange={(e) => setWhatsappApiKey(e.target.value)}
                     placeholder="Tu API Key de TextMeBot"
-                    className="flex-1"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Obtén tu API Key en <a href="https://textmebot.com" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">textmebot.com</a> para enviar reportes automáticos.
+                  </p>
+                </div>
+
+                {/* Botones de acción */}
+                <div className="flex flex-wrap gap-2 pt-2">
                   <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => handleSave('whatsapp_api_key', true)}
-                    disabled={setConfigMutation.isPending}
-                    className="h-10 w-10"
+                    onClick={handleSaveWhatsapp}
+                    disabled={saveWhatsappMutation.isPending || !whatsappUrl}
+                    className="gap-2 bg-green-600 hover:bg-green-700"
                   >
                     <Save className="h-4 w-4" />
+                    {saveWhatsappMutation.isPending ? "Guardando..." : "Guardar Configuración"}
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={handlePreviewReporte}
+                    disabled={isLoadingReporte}
+                    className="gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isLoadingReporte ? 'animate-spin' : ''}`} />
+                    Vista Previa
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={handleEnviarReporte}
+                    disabled={enviarReporteMutation.isPending || !whatsappUrl}
+                    className="gap-2 border-green-500 text-green-600 hover:bg-green-50"
+                  >
+                    <Send className="h-4 w-4" />
+                    {enviarReporteMutation.isPending ? "Enviando..." : "Enviar Ahora"}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Obtén tu API Key en <a href="https://textmebot.com" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">textmebot.com</a> para enviar reportes automáticos.
+              </div>
+
+              {/* Vista previa del reporte */}
+              {showReportePreview && reportePreview && (
+                <div className="mt-4 p-4 bg-white dark:bg-slate-900 rounded-lg border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users className="h-4 w-4 text-green-600" />
+                    <span className="font-medium text-sm">Vista Previa del Reporte</span>
+                  </div>
+                  <pre className="text-xs whitespace-pre-wrap font-mono bg-slate-50 dark:bg-slate-800 p-3 rounded overflow-x-auto">
+                    {reportePreview.mensaje}
+                  </pre>
+                  
+                  {/* Resumen de estadísticas */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+                    <div className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-950/30 rounded text-xs">
+                      <XCircle className="h-4 w-4 text-red-500" />
+                      <span>{reportePreview.reporte.sinCapturarCalidad.length} sin calidad</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-orange-50 dark:bg-orange-950/30 rounded text-xs">
+                      <XCircle className="h-4 w-4 text-orange-500" />
+                      <span>{reportePreview.reporte.sinCapturarSecuencias.length} sin secuencias</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-yellow-50 dark:bg-yellow-950/30 rounded text-xs">
+                      <Clock className="h-4 w-4 text-yellow-600" />
+                      <span>{reportePreview.reporte.conPendientesMas3Dias.length} pendientes +3d</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-950/30 rounded text-xs">
+                      <XCircle className="h-4 w-4 text-red-600" />
+                      <span>{reportePreview.reporte.conRechazadosMas3Dias.length} rechazados +3d</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Horarios */}
+              <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 text-xs text-green-700 dark:text-green-300">
+                <strong>Horarios de reportes:</strong> L-V: 9am, 12pm, 5pm | Sábados: 9am, 12pm | Domingos: No se envían
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Mensaje si no hay proyecto seleccionado */}
+        {isAdmin && !selectedProjectId && (
+          <Card className="mt-6 border-yellow-500/20 bg-yellow-500/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Info className="h-5 w-5 text-yellow-600" />
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  Selecciona un proyecto para configurar los reportes de WhatsApp.
                 </p>
               </div>
-            </div>
-            <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 text-xs text-green-700 dark:text-green-300">
-              <strong>Horarios de reportes:</strong> L-V: 9am, 1pm, 5pm | Sábados: 9am, 1pm | Alerta de inactividad: 6pm
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Info */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground bg-accent/50 rounded-lg p-3">

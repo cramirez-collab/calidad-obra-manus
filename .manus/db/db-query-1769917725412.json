@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `actividad_usuarios` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`usuarioId` int NOT NULL,\n\t`proyectoId` int NOT NULL,\n\t`tipoActividad` enum('click_calidad','click_secuencias','crear_item','subir_foto_despues','aprobar_item','rechazar_item') NOT NULL,\n\t`metadata` text,\n\t`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n\tCONSTRAINT `actividad_usuarios_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute CREATE TABLE IF NOT EXISTS `actividad_usuarios` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`usuarioId` int NOT NULL,\n\t`proyectoId` int NOT NULL,\n\t`tipoActividad` enum('click_calidad','click_secuencias','crear_item','subir_foto_despues','aprobar_item','rechazar_item') NOT NULL,\n\t`metadata` text,\n\t`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n\tCONSTRAINT `actividad_usuarios_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 50
+}

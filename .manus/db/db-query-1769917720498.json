@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO __drizzle_migrations (hash, created_at) VALUES \n('0036_violet_domino', 1769891596023),\n('0037_lush_the_hand', 1769892866744),\n('0038_curious_power_pack', 1769917312843);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute INSERT INTO __drizzle_migrations (hash, created_at) VALUES \n('0036_violet_domino', 1769891596023),\n('0037_lush_the_hand', 1769892866744),\n('0038_curious_power_pack', 1769917312843);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 64
+}

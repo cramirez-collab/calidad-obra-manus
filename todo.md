@@ -1877,3 +1877,60 @@
 - [x] Cambiar generación de código de ítem de consecutivo a aleatorio (ej: Hidalma-A7X9K2)
 - [x] Mantener contador de ítems para estadísticas (se cuenta por cantidad de ítems en BD)
 - [x] Permitir trabajo simultáneo de múltiples revisores (códigos únicos garantizados)
+
+
+## Reportes Automáticos WhatsApp (1 Febrero 2026)
+- [ ] Crear sistema de tracking de actividad de usuarios (clics en botones calidad/secuencias)
+- [ ] Implementar servicio de envío a WhatsApp via API
+- [ ] Crear endpoint de reportes programados con estadísticas por residente
+- [ ] Lista de quiénes no han capturado en calidad/secuencias
+- [ ] Lista de pendientes/rechazos con más de 3 días sin atender
+- [ ] Agregar menú WhatsApp en Configuración para pegar enlace del grupo
+- [ ] Configurar cron: L-V 9am, 12pm, 17pm | Sábados 9am, 12pm | Domingos NO
+- [ ] Enlace grupo: https://chat.whatsapp.com/CBYjOPZU6z21FGKh6R49K5
+
+
+## Reportes Automáticos a WhatsApp (Iteración WhatsApp)
+
+### Sistema de Tracking de Actividad
+- [x] Tabla actividad_usuarios en base de datos
+- [x] Registro de clics en Calidad y Secuencias
+- [x] Registro de creación de ítems
+- [x] Registro de subida de fotos después
+- [x] Registro de aprobaciones y rechazos
+
+### Servicio de WhatsApp
+- [x] Servicio whatsappService.ts para generar reportes
+- [x] Función para obtener estadísticas de residentes
+- [x] Función para formatear mensaje de WhatsApp
+- [x] Función para generar enlace de WhatsApp
+- [x] Integración con TextMeBot API (opcional)
+
+### Endpoints de WhatsApp
+- [x] Endpoint para obtener configuración de WhatsApp
+- [x] Endpoint para guardar configuración de WhatsApp
+- [x] Endpoint para generar vista previa del reporte
+- [x] Endpoint para enviar reporte manualmente
+- [x] Endpoint para registrar actividad de usuarios
+
+### Interfaz de Configuración
+- [x] Sección de WhatsApp en página de Configuración
+- [x] Campo para enlace del grupo de WhatsApp
+- [x] Campo para API Key de TextMeBot (opcional)
+- [x] Botón de vista previa del reporte
+- [x] Botón de envío manual del reporte
+- [x] Resumen de estadísticas en vista previa
+
+### Cron Jobs Programados
+- [x] Cron job para 9:00 AM (L-S)
+- [x] Cron job para 12:00 PM (L-S)
+- [x] Cron job para 5:00 PM (L-V)
+- [x] Zona horaria configurada para México
+- [x] Logs de ejecución de cron jobs
+
+### Contenido del Reporte
+- [x] Lista de residentes sin revisar Calidad hoy
+- [x] Lista de residentes sin revisar Secuencias hoy
+- [x] Lista de residentes con pendientes +3 días
+- [x] Lista de residentes con rechazados +3 días sin corregir
+- [x] Resumen total de observaciones

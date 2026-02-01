@@ -267,6 +267,13 @@
       "when": 1769892866744,
       "tag": "0037_lush_the_hand",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "5",
+      "when": 1769917312843,
+      "tag": "0038_curious_power_pack",
+      "breakpoints": true
     }
   ]
 }
