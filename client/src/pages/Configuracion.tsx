@@ -417,8 +417,8 @@ export default function Configuracion() {
         </Card>
 
         {/* Sección WhatsApp - Reportes Automáticos (Solo Admin) */}
-        {isAdmin && selectedProjectId && (
-          <Card className="mt-6 border-green-500/20 bg-green-500/5">
+        {isAdmin && (
+          <Card id="whatsapp" className="mt-6 border-green-500/20 bg-green-500/5 scroll-mt-20">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <MessageCircle className="h-5 w-5 text-green-600" />
@@ -566,23 +566,17 @@ export default function Configuracion() {
                 </div>
               )}
 
+              {/* Mensaje si no hay proyecto seleccionado */}
+              {!selectedProjectId && (
+                <div className="bg-yellow-50 dark:bg-yellow-950/30 rounded-lg p-3 text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
+                  <Info className="h-4 w-4 shrink-0" />
+                  <span>Selecciona un proyecto en el menú superior para configurar los reportes de WhatsApp.</span>
+                </div>
+              )}
+
               {/* Horarios */}
               <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 text-xs text-green-700 dark:text-green-300">
                 <strong>Horarios de reportes:</strong> L-V: 9am, 12pm, 5pm | Sábados: 9am, 12pm | Domingos: No se envían
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Mensaje si no hay proyecto seleccionado */}
-        {isAdmin && !selectedProjectId && (
-          <Card className="mt-6 border-yellow-500/20 bg-yellow-500/5">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Info className="h-5 w-5 text-yellow-600" />
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  Selecciona un proyecto para configurar los reportes de WhatsApp.
-                </p>
               </div>
             </CardContent>
           </Card>
