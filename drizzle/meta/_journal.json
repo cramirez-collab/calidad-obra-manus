@@ -274,6 +274,20 @@
       "when": 1769917312843,
       "tag": "0038_curious_power_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "5",
+      "when": 1769918480192,
+      "tag": "0039_overrated_stature",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "5",
+      "when": 1769918841941,
+      "tag": "0040_omniscient_ogun",
+      "breakpoints": true
     }
   ]
 }

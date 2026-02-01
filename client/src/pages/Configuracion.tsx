@@ -131,6 +131,7 @@ export default function Configuracion() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [whatsappUrl, setWhatsappUrl] = useState('');
   const [whatsappApiKey, setWhatsappApiKey] = useState('');
+  const [whatsappNumero, setWhatsappNumero] = useState('');
   const [showReportePreview, setShowReportePreview] = useState(false);
   
   const [passwordData, setPasswordData] = useState({
@@ -472,6 +473,23 @@ export default function Configuracion() {
                   </p>
                 </div>
 
+                {/* Número de teléfono destino (requerido si hay API Key) */}
+                {whatsappApiKey && (
+                  <div className="space-y-2">
+                    <Label htmlFor="whatsappNumero" className="text-sm font-medium">Número de Teléfono Destino</Label>
+                    <Input
+                      id="whatsappNumero"
+                      type="tel"
+                      value={whatsappNumero}
+                      onChange={(e) => setWhatsappNumero(e.target.value)}
+                      placeholder="+52 1 33 1234 5678"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Número de WhatsApp donde se enviarán los reportes automáticos (incluye código de país).
+                    </p>
+                  </div>
+                )}
+
                 {/* Botones de acción */}
                 <div className="flex flex-wrap gap-2 pt-2">
                   <Button
@@ -517,7 +535,7 @@ export default function Configuracion() {
                   </pre>
                   
                   {/* Resumen de estadísticas */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-3">
                     <div className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-950/30 rounded text-xs">
                       <XCircle className="h-4 w-4 text-red-500" />
                       <span>{reportePreview.reporte.sinCapturarCalidad.length} sin calidad</span>
@@ -534,6 +552,15 @@ export default function Configuracion() {
                       <XCircle className="h-4 w-4 text-red-600" />
                       <span>{reportePreview.reporte.conRechazadosMas3Dias.length} rechazados +3d</span>
                     </div>
+                    {reportePreview.reporte.tiempoPromedioGlobal && (
+                      <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-950/30 rounded text-xs">
+                        <Clock className="h-4 w-4 text-blue-600" />
+                        <span>⏱️ {reportePreview.reporte.tiempoPromedioGlobal < 24 
+                          ? `${Math.round(reportePreview.reporte.tiempoPromedioGlobal)} hrs` 
+                          : `${Math.round(reportePreview.reporte.tiempoPromedioGlobal / 24 * 10) / 10} días`} prom.
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

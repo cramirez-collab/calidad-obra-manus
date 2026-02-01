@@ -1,10 +1,10 @@
 /**
  * Servicio de envío de mensajes a WhatsApp
- * Usa la API de WhatsApp Web directamente mediante enlaces de chat
+ * Integración con TextMeBot API para envío automático
  */
 
-import { items, users, actividadUsuarios, proyectos, whatsappConfig } from '../../drizzle/schema';
-import { eq, and, lt, inArray, sql, gte } from 'drizzle-orm';
+import { items, users, actividadUsuarios, proyectos, whatsappConfig, itemHistorial } from '../../drizzle/schema';
+import { eq, and, lt, inArray, sql, gte, isNotNull } from 'drizzle-orm';
 import { getDb } from '../db';
 
 // Tipos para el reporte
@@ -16,6 +16,7 @@ interface ResidenteStats {
   clickSecuencias: boolean;
   pendientesMas3Dias: number;
   rechazadosMas3Dias: number;
+  tiempoPromedioResolucion: number | null; // en horas
 }
 
 interface ReporteWhatsApp {
@@ -26,6 +27,51 @@ interface ReporteWhatsApp {
   sinCapturarSecuencias: ResidenteStats[];
   conPendientesMas3Dias: ResidenteStats[];
   conRechazadosMas3Dias: ResidenteStats[];
+  tiempoPromedioGlobal: number | null; // en horas
+}
+
+/**
+ * Calcula el tiempo promedio de resolución de ítems para un residente
+ * Tiempo desde creación hasta aprobación
+ */
+async function calcularTiempoPromedioResolucion(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  residenteId: number,
+  proyectoId: number
+): Promise<number | null> {
+  // Obtener ítems aprobados del residente con sus fechas
+  const itemsAprobados = await db.select({
+    id: items.id,
+    createdAt: items.createdAt,
+    updatedAt: items.updatedAt,
+  })
+    .from(items)
+    .where(and(
+      eq(items.proyectoId, proyectoId),
+      eq(items.residenteId, residenteId),
+      eq(items.status, 'aprobado')
+    ));
+
+  if (itemsAprobados.length === 0) return null;
+
+  // Calcular tiempo promedio en horas
+  let totalHoras = 0;
+  let itemsConTiempo = 0;
+
+  for (const item of itemsAprobados) {
+    if (item.createdAt && item.updatedAt) {
+      const creacion = new Date(item.createdAt).getTime();
+      const aprobacion = new Date(item.updatedAt).getTime();
+      const horasDiferencia = (aprobacion - creacion) / (1000 * 60 * 60);
+      
+      if (horasDiferencia > 0) {
+        totalHoras += horasDiferencia;
+        itemsConTiempo++;
+      }
+    }
+  }
+
+  return itemsConTiempo > 0 ? Math.round(totalHoras / itemsConTiempo * 10) / 10 : null;
 }
 
 /**
@@ -96,6 +142,9 @@ export async function getResidentesStats(proyectoId: number): Promise<ResidenteS
         lt(items.updatedAt, hace3Dias)
       ));
 
+    // Calcular tiempo promedio de resolución
+    const tiempoPromedio = await calcularTiempoPromedioResolucion(db, residente.id, proyectoId);
+
     stats.push({
       id: residente.id,
       nombre: residente.name || 'Sin nombre',
@@ -104,10 +153,49 @@ export async function getResidentesStats(proyectoId: number): Promise<ResidenteS
       clickSecuencias: clickSecuencias.length > 0,
       pendientesMas3Dias: pendientesMas3Dias[0]?.count || 0,
       rechazadosMas3Dias: rechazadosMas3Dias[0]?.count || 0,
+      tiempoPromedioResolucion: tiempoPromedio,
     });
   }
 
   return stats;
+}
+
+/**
+ * Calcula el tiempo promedio global de resolución del proyecto
+ */
+async function calcularTiempoPromedioGlobal(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  proyectoId: number
+): Promise<number | null> {
+  const itemsAprobados = await db.select({
+    createdAt: items.createdAt,
+    updatedAt: items.updatedAt,
+  })
+    .from(items)
+    .where(and(
+      eq(items.proyectoId, proyectoId),
+      eq(items.status, 'aprobado')
+    ));
+
+  if (itemsAprobados.length === 0) return null;
+
+  let totalHoras = 0;
+  let itemsConTiempo = 0;
+
+  for (const item of itemsAprobados) {
+    if (item.createdAt && item.updatedAt) {
+      const creacion = new Date(item.createdAt).getTime();
+      const aprobacion = new Date(item.updatedAt).getTime();
+      const horasDiferencia = (aprobacion - creacion) / (1000 * 60 * 60);
+      
+      if (horasDiferencia > 0) {
+        totalHoras += horasDiferencia;
+        itemsConTiempo++;
+      }
+    }
+  }
+
+  return itemsConTiempo > 0 ? Math.round(totalHoras / itemsConTiempo * 10) / 10 : null;
 }
 
 /**
@@ -123,6 +211,7 @@ export async function generarReporteWhatsApp(proyectoId: number): Promise<Report
     .limit(1);
 
   const stats = await getResidentesStats(proyectoId);
+  const tiempoPromedioGlobal = await calcularTiempoPromedioGlobal(db, proyectoId);
 
   const ahora = new Date();
   const fecha = ahora.toLocaleDateString('es-MX', { 
@@ -144,7 +233,22 @@ export async function generarReporteWhatsApp(proyectoId: number): Promise<Report
     sinCapturarSecuencias: stats.filter(r => !r.clickSecuencias),
     conPendientesMas3Dias: stats.filter(r => r.pendientesMas3Dias > 0),
     conRechazadosMas3Dias: stats.filter(r => r.rechazadosMas3Dias > 0),
+    tiempoPromedioGlobal,
   };
+}
+
+/**
+ * Formatea el tiempo en horas a un formato legible
+ */
+function formatearTiempo(horas: number): string {
+  if (horas < 1) {
+    return `${Math.round(horas * 60)} min`;
+  } else if (horas < 24) {
+    return `${Math.round(horas * 10) / 10} hrs`;
+  } else {
+    const dias = Math.round(horas / 24 * 10) / 10;
+    return `${dias} días`;
+  }
 }
 
 /**
@@ -196,6 +300,27 @@ export function formatearMensajeWhatsApp(reporte: ReporteWhatsApp): string {
     mensaje += `\n`;
   }
 
+  // Tiempo promedio de resolución
+  if (reporte.tiempoPromedioGlobal !== null) {
+    mensaje += `⏱️ *Tiempo promedio de resolución:* ${formatearTiempo(reporte.tiempoPromedioGlobal)}\n\n`;
+  }
+
+  // Top 3 residentes más rápidos
+  const residentesConTiempo = [...reporte.sinCapturarCalidad, ...reporte.sinCapturarSecuencias, 
+    ...reporte.conPendientesMas3Dias, ...reporte.conRechazadosMas3Dias]
+    .filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i) // Eliminar duplicados
+    .filter(r => r.tiempoPromedioResolucion !== null)
+    .sort((a, b) => (a.tiempoPromedioResolucion || 999) - (b.tiempoPromedioResolucion || 999));
+
+  if (residentesConTiempo.length > 0) {
+    mensaje += `🏆 *Top 3 más rápidos:*\n`;
+    residentesConTiempo.slice(0, 3).forEach((r, i) => {
+      const medalla = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
+      mensaje += `${medalla} ${r.nombre}: ${formatearTiempo(r.tiempoPromedioResolucion!)}\n`;
+    });
+    mensaje += `\n`;
+  }
+
   // Resumen
   const totalProblemas = reporte.sinCapturarCalidad.length + 
     reporte.sinCapturarSecuencias.length + 
@@ -231,39 +356,131 @@ export function generarEnlaceWhatsApp(grupoUrl: string, mensaje: string): string
 }
 
 /**
+ * Envía mensaje usando TextMeBot API
+ * Documentación: https://textmebot.com
+ * Endpoint: https://api.textmebot.com/send.php
+ * Parámetros: recipient (número), apikey, text
+ */
+async function enviarConTextMeBot(
+  apiKey: string,
+  recipient: string,
+  mensaje: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Limpiar el número de teléfono (solo dígitos)
+    const numeroLimpio = recipient.replace(/\D/g, '');
+    
+    // Construir URL con parámetros GET (TextMeBot usa GET)
+    const params = new URLSearchParams({
+      recipient: numeroLimpio,
+      apikey: apiKey,
+      text: mensaje,
+    });
+
+    const url = `https://api.textmebot.com/send.php?${params.toString()}`;
+    
+    console.log(`[TextMeBot] Enviando mensaje a ${numeroLimpio.substring(0, 4)}...`);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    const responseText = await response.text();
+    console.log(`[TextMeBot] Respuesta: ${responseText}`);
+
+    // TextMeBot retorna "success" o un mensaje de error
+    if (response.ok && responseText.toLowerCase().includes('success')) {
+      return { success: true };
+    }
+
+    return { 
+      success: false, 
+      error: responseText || 'Error desconocido de TextMeBot' 
+    };
+  } catch (error) {
+    console.error('[TextMeBot] Error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Error de conexión' 
+    };
+  }
+}
+
+/**
+ * Extrae el número de teléfono del administrador del proyecto para enviar el mensaje
+ */
+async function obtenerNumeroAdmin(proyectoId: number): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  // Buscar el admin o superadmin del proyecto
+  const admin = await db.select({
+    telefono: users.telefono,
+  })
+    .from(users)
+    .where(and(
+      eq(users.activo, true),
+      inArray(users.role, ['superadmin', 'admin']),
+      isNotNull(users.telefono)
+    ))
+    .limit(1);
+
+  return admin[0]?.telefono || null;
+}
+
+/**
  * Envía el reporte a WhatsApp usando TextMeBot API (si hay API key)
  * o genera el enlace para envío manual
  */
 export async function enviarReporteWhatsApp(
   proyectoId: number, 
   grupoUrl: string, 
-  apiKey?: string
+  apiKey?: string,
+  numeroDestino?: string
 ): Promise<{ success: boolean; mensaje: string; enlace?: string }> {
   try {
     const reporte = await generarReporteWhatsApp(proyectoId);
     const mensaje = formatearMensajeWhatsApp(reporte);
 
-    // Si hay API key de TextMeBot, enviar automáticamente
+    // Si hay API key de TextMeBot, intentar enviar automáticamente
     if (apiKey) {
-      // Extraer número del grupo (si es posible) o usar API de TextMeBot
-      const response = await fetch('https://api.textmebot.com/send.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          apikey: apiKey,
-          text: mensaje,
-          // Para grupos, TextMeBot requiere el ID del grupo
-        }),
-      });
+      // Obtener número de destino (del parámetro o del admin)
+      let numero: string | undefined = numeroDestino;
+      if (!numero) {
+        const adminNumero = await obtenerNumeroAdmin(proyectoId);
+        numero = adminNumero || undefined;
+      }
 
-      if (response.ok) {
-        return { success: true, mensaje: 'Reporte enviado exitosamente' };
+      if (numero) {
+        console.log(`[WhatsApp] Intentando envío automático con TextMeBot...`);
+        const resultado = await enviarConTextMeBot(apiKey, numero, mensaje);
+        
+        if (resultado.success) {
+          // Actualizar último envío
+          const db = await getDb();
+          if (db) {
+            await db.update(whatsappConfig)
+              .set({ ultimoEnvio: new Date() })
+              .where(eq(whatsappConfig.proyectoId, proyectoId));
+          }
+          
+          return { 
+            success: true, 
+            mensaje: 'Reporte enviado automáticamente via TextMeBot' 
+          };
+        } else {
+          console.log(`[WhatsApp] TextMeBot falló: ${resultado.error}. Generando enlace manual...`);
+          // Fallback a enlace manual si falla
+        }
+      } else {
+        console.log(`[WhatsApp] No hay número de destino configurado. Generando enlace manual...`);
       }
     }
 
-    // Si no hay API key, generar enlace para envío manual
+    // Si no hay API key o falló, generar enlace para envío manual
     const enlace = generarEnlaceWhatsApp(grupoUrl, mensaje);
     return { 
       success: true, 
@@ -317,7 +534,12 @@ export async function getWhatsappConfig(proyectoId: number) {
 /**
  * Guarda o actualiza la configuración de WhatsApp para un proyecto
  */
-export async function saveWhatsappConfig(proyectoId: number, grupoUrl: string, apiKey?: string) {
+export async function saveWhatsappConfig(
+  proyectoId: number, 
+  grupoUrl: string, 
+  apiKey?: string,
+  numeroDestino?: string
+) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -328,6 +550,7 @@ export async function saveWhatsappConfig(proyectoId: number, grupoUrl: string, a
       .set({ 
         grupoUrl, 
         apiKey: apiKey || null,
+        numeroDestino: numeroDestino || null,
         updatedAt: new Date()
       })
       .where(eq(whatsappConfig.proyectoId, proyectoId));
@@ -336,6 +559,7 @@ export async function saveWhatsappConfig(proyectoId: number, grupoUrl: string, a
       proyectoId,
       grupoUrl,
       apiKey: apiKey || null,
+      numeroDestino: numeroDestino || null,
     });
   }
 }
@@ -377,6 +601,7 @@ export async function getProyectosConWhatsapp() {
     proyectoId: whatsappConfig.proyectoId,
     grupoUrl: whatsappConfig.grupoUrl,
     apiKey: whatsappConfig.apiKey,
+    numeroDestino: whatsappConfig.numeroDestino,
     activo: whatsappConfig.activo,
     proyectoNombre: proyectos.nombre,
   })
@@ -410,12 +635,14 @@ export async function ejecutarEnvioReportesProgramados(): Promise<{
       const resultado = await enviarReporteWhatsApp(
         config.proyectoId,
         config.grupoUrl,
-        config.apiKey || undefined
+        config.apiKey || undefined,
+        config.numeroDestino || undefined
       );
 
-      if (resultado.success) {
+      if (resultado.success && !resultado.enlace) {
+        // Solo contar como enviado si fue automático (sin enlace)
         enviados++;
-      } else {
+      } else if (!resultado.success) {
         errores++;
       }
 

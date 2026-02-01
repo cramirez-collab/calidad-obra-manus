@@ -1,0 +1,1 @@
+ALTER TABLE `whatsapp_config` ADD `numeroDestino` varchar(20);

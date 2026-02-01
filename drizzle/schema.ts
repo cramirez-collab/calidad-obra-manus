@@ -21,6 +21,7 @@ export const users = mysqlTable("users", {
   proyectoActivoId: int("proyectoActivoId"), // Proyecto actualmente seleccionado por el usuario
   fotoUrl: text("fotoUrl"), // URL de la foto de perfil del usuario
   fotoBase64: text("fotoBase64"), // Foto de perfil en base64 (alternativa a S3)
+  telefono: varchar("telefono", { length: 20 }), // Teléfono para notificaciones WhatsApp
   terminosAceptados: boolean("terminosAceptados").default(false).notNull(), // Si aceptó términos y condiciones
   fechaAceptacionTerminos: timestamp("fechaAceptacionTerminos"), // Fecha de aceptación de términos
   activo: boolean("activo").default(true).notNull(),
@@ -548,6 +549,7 @@ export const whatsappConfig = mysqlTable("whatsapp_config", {
   proyectoId: int("proyectoId").notNull().unique(),
   grupoUrl: text("grupoUrl"), // Enlace del grupo de WhatsApp
   apiKey: varchar("apiKey", { length: 255 }), // API Key de TextMeBot
+  numeroDestino: varchar("numeroDestino", { length: 20 }), // Número de teléfono destino para TextMeBot
   activo: boolean("activo").default(true).notNull(),
   ultimoEnvio: timestamp("ultimoEnvio"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

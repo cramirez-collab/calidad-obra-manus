@@ -2211,9 +2211,10 @@ export const appRouter = router({
         proyectoId: z.number(),
         grupoUrl: z.string().min(1),
         apiKey: z.string().optional(),
+        numeroDestino: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        await whatsappService.saveWhatsappConfig(input.proyectoId, input.grupoUrl, input.apiKey);
+        await whatsappService.saveWhatsappConfig(input.proyectoId, input.grupoUrl, input.apiKey, input.numeroDestino);
         await db.createAuditoria({
           usuarioId: ctx.user.id,
           usuarioNombre: ctx.user.name || 'Usuario',

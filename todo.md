@@ -1934,3 +1934,19 @@
 - [x] Lista de residentes con pendientes +3 días
 - [x] Lista de residentes con rechazados +3 días sin corregir
 - [x] Resumen total de observaciones
+
+
+## Mejoras de WhatsApp (Iteración WhatsApp v2)
+
+### Integración TextMeBot API
+- [x] Investigar documentación de TextMeBot API
+- [x] Implementar envío automático via API
+- [x] Manejar errores y reintentos
+- [x] Fallback a enlace manual si falla API
+- [x] Campo para número de teléfono destino
+
+### Métricas Adicionales en Reporte
+- [x] Calcular tiempo promedio de resolución por residente
+- [x] Agregar métrica al mensaje de WhatsApp
+- [x] Mostrar en vista previa del reporte
+- [x] Top 3 residentes más rápidos

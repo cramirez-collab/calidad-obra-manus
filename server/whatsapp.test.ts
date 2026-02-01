@@ -16,6 +16,7 @@ describe('WhatsApp Service', () => {
         sinCapturarSecuencias: [],
         conPendientesMas3Dias: [],
         conRechazadosMas3Dias: [],
+        tiempoPromedioGlobal: null,
       };
 
       const mensaje = formatearMensajeWhatsApp(reporte);
@@ -35,12 +36,13 @@ describe('WhatsApp Service', () => {
         hora: '09:00',
         proyectoNombre: 'Hidalma',
         sinCapturarCalidad: [
-          { id: 1, nombre: 'Juan Pérez', email: 'juan@test.com', clickCalidad: false, clickSecuencias: true, pendientesMas3Dias: 0, rechazadosMas3Dias: 0 },
-          { id: 2, nombre: 'María López', email: 'maria@test.com', clickCalidad: false, clickSecuencias: true, pendientesMas3Dias: 0, rechazadosMas3Dias: 0 },
+          { id: 1, nombre: 'Juan Pérez', email: 'juan@test.com', clickCalidad: false, clickSecuencias: true, pendientesMas3Dias: 0, rechazadosMas3Dias: 0, tiempoPromedioResolucion: null },
+          { id: 2, nombre: 'María López', email: 'maria@test.com', clickCalidad: false, clickSecuencias: true, pendientesMas3Dias: 0, rechazadosMas3Dias: 0, tiempoPromedioResolucion: null },
         ],
         sinCapturarSecuencias: [],
         conPendientesMas3Dias: [],
         conRechazadosMas3Dias: [],
+        tiempoPromedioGlobal: null,
       };
 
       const mensaje = formatearMensajeWhatsApp(reporte);
@@ -59,9 +61,10 @@ describe('WhatsApp Service', () => {
         sinCapturarCalidad: [],
         sinCapturarSecuencias: [],
         conPendientesMas3Dias: [
-          { id: 1, nombre: 'Juan Pérez', email: 'juan@test.com', clickCalidad: true, clickSecuencias: true, pendientesMas3Dias: 5, rechazadosMas3Dias: 0 },
+          { id: 1, nombre: 'Juan Pérez', email: 'juan@test.com', clickCalidad: true, clickSecuencias: true, pendientesMas3Dias: 5, rechazadosMas3Dias: 0, tiempoPromedioResolucion: 12.5 },
         ],
         conRechazadosMas3Dias: [],
+        tiempoPromedioGlobal: 24.5,
       };
 
       const mensaje = formatearMensajeWhatsApp(reporte);
@@ -79,14 +82,51 @@ describe('WhatsApp Service', () => {
         sinCapturarSecuencias: [],
         conPendientesMas3Dias: [],
         conRechazadosMas3Dias: [
-          { id: 1, nombre: 'María López', email: 'maria@test.com', clickCalidad: true, clickSecuencias: true, pendientesMas3Dias: 0, rechazadosMas3Dias: 3 },
+          { id: 1, nombre: 'María López', email: 'maria@test.com', clickCalidad: true, clickSecuencias: true, pendientesMas3Dias: 0, rechazadosMas3Dias: 3, tiempoPromedioResolucion: 8.2 },
         ],
+        tiempoPromedioGlobal: 18.3,
       };
 
       const mensaje = formatearMensajeWhatsApp(reporte);
 
       expect(mensaje).toContain('🔴 *RECHAZADOS +3 días sin corregir:*');
       expect(mensaje).toContain('• María López: 3 ítem(s)');
+    });
+
+    it('debe mostrar tiempo promedio de resolución global', () => {
+      const reporte = {
+        fecha: 'viernes, 31 de enero de 2025',
+        hora: '09:00',
+        proyectoNombre: 'Hidalma',
+        sinCapturarCalidad: [],
+        sinCapturarSecuencias: [],
+        conPendientesMas3Dias: [],
+        conRechazadosMas3Dias: [],
+        tiempoPromedioGlobal: 12.5, // 12.5 horas
+      };
+
+      const mensaje = formatearMensajeWhatsApp(reporte);
+
+      expect(mensaje).toContain('⏱️ *Tiempo promedio de resolución:*');
+      expect(mensaje).toContain('12.5 hrs');
+    });
+
+    it('debe mostrar tiempo promedio en días cuando es mayor a 24 horas', () => {
+      const reporte = {
+        fecha: 'viernes, 31 de enero de 2025',
+        hora: '09:00',
+        proyectoNombre: 'Hidalma',
+        sinCapturarCalidad: [],
+        sinCapturarSecuencias: [],
+        conPendientesMas3Dias: [],
+        conRechazadosMas3Dias: [],
+        tiempoPromedioGlobal: 48.0, // 48 horas = 2 días
+      };
+
+      const mensaje = formatearMensajeWhatsApp(reporte);
+
+      expect(mensaje).toContain('⏱️ *Tiempo promedio de resolución:*');
+      expect(mensaje).toContain('2 días');
     });
   });
 
