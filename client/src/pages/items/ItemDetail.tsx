@@ -176,15 +176,50 @@ export default function ItemDetail() {
     }
   }, [item?.codigo]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Función para comprimir imagen (máxima velocidad)
+  const compressImage = (file: File, maxWidth = 1200, quality = 0.7): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Error leyendo archivo'));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Error cargando imagen'));
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let { width, height } = img;
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setFotoDespues(event.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Comprimir imagen para máxima velocidad
+      const compressedImage = await compressImage(file, 1200, 0.7);
+      setFotoDespues(compressedImage);
+    } catch (error) {
+      console.error('Error comprimiendo imagen:', error);
+      // Fallback: usar imagen original
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFotoDespues(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleUploadFotoDespues = async () => {
@@ -199,6 +234,9 @@ export default function ItemDetail() {
         fotoBase64: fotoDespues,
         comentario: comentario || undefined,
       });
+    } catch (error: any) {
+      console.error('Error subiendo foto después:', error);
+      toast.error(error.message || 'Error al subir la foto');
     } finally {
       setIsSubmitting(false);
     }

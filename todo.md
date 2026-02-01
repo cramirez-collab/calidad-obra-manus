@@ -2071,3 +2071,36 @@
 - [x] Probado: Creación de ítem completa en < 1 segundo
 - [x] Verificado: Navegación automática al detalle del ítem
 - [x] 201 pruebas pasan correctamente
+
+
+## Correcciones Críticas OMNIPROMPT (1 Febrero 2026)
+
+### 1. Foto Después - Ciclo Infinito y Base64 Visible
+- [x] Corregir handleUploadFotoDespues con try/catch/finally
+- [x] Agregar overflow-hidden al contenedor de imagen (ya existía)
+- [x] Asegurar que setLoading(false) siempre se ejecute
+- [x] Agregar compresión de imagen (1200px, quality 0.7)
+
+### 2. Velocidad de Conexión Lenta
+- [x] Reducir staleTime a 30 segundos (era 5 min)
+- [x] Reducir retry a 0 (era 1)
+- [x] Configurar refetchOnWindowFocus: false (ya estaba)
+- [x] Configurar refetchOnReconnect: false (ya estaba)
+- [x] Reducir gcTime a 5 minutos (era 30 min)
+
+### 3. Menú WhatsApp en Configuración
+- [x] Sección WhatsApp ya existe en Configuracion.tsx
+- [x] Campo enlace grupo WhatsApp
+- [x] Campo API Key TextMeBot
+- [x] Campo número destino
+- [x] Botón vista previa del reporte
+- [x] Botón enviar reporte manual
+
+### 4. Optimización Total de Velocidad
+- [x] Patrón setImmediate en todas las mutaciones (ya implementado)
+- [x] Compresión de imágenes en cliente (0.7 quality) - NuevoItem.tsx
+- [x] Compresión de imágenes en cliente (0.7 quality) - ItemDetail.tsx
+- [x] max-h-[300px] en contenedores de imagen (ya existía)
+
+### Resultado: 201 pruebas pasan correctamente
+
