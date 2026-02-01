@@ -115,6 +115,7 @@ export default function ConfiguracionWhatsApp() {
       proyectoId: selectedProjectId,
       grupoUrl: whatsappUrl,
       apiKey: whatsappApiKey || undefined,
+      numeroDestino: whatsappNumero || undefined,
       diasEnvio: diasEnvio,
       horariosEnvio: horariosEnvio,
     });
@@ -258,21 +259,19 @@ export default function ConfiguracionWhatsApp() {
                   </p>
                 </div>
 
-                {whatsappApiKey && (
-                  <div className="space-y-2">
-                    <Label htmlFor="whatsappNumero" className="text-sm font-medium">Número de Teléfono Destino</Label>
-                    <Input
-                      id="whatsappNumero"
-                      type="tel"
-                      value={whatsappNumero}
-                      onChange={(e) => setWhatsappNumero(e.target.value)}
-                      placeholder="+52 1 33 1234 5678"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Número de WhatsApp donde se enviarán los reportes automáticos (incluye código de país).
-                    </p>
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label htmlFor="whatsappNumero" className="text-sm font-medium">Número de Teléfono para Reportes</Label>
+                  <Input
+                    id="whatsappNumero"
+                    type="tel"
+                    value={whatsappNumero}
+                    onChange={(e) => setWhatsappNumero(e.target.value)}
+                    placeholder="+52 33 1234 5678"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Número de WhatsApp donde se enviarán los reportes automáticos (incluye código de país, ej: +523331283677).
+                  </p>
+                </div>
               </CardContent>
             </Card>
 

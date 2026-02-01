@@ -2102,3 +2102,14 @@
   - El texto largo en WhatsApp es el mensaje codificado en URL (encodeURIComponent)
   - El reporte de WhatsApp solo genera texto formateado con emojis
   - Las fotos se muestran como imágenes, no como texto base64
+
+
+## TextMeBot Configurado (1 Febrero 2026)
+- [x] Registro en TextMeBot completado
+- [x] API Key obtenida: kykgZowheXr8
+- [x] Número vinculado: +5213331283677 (Mtro. Ing. Carlos Ramírez)
+- [x] WhatsApp conectado exitosamente (DB Status: Connected)
+- [x] Mensaje de prueba enviado y recibido correctamente
+- [x] Configuración guardada en base de datos para proyecto Hidalma
+- [x] Campos de teléfono y API Key editables en submenú Recordatorio
+- [x] Trial activo hasta: 2026-02-05

@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO whatsapp_config (proyectoId, grupoUrl, apiKey, numeroDestino, activo, diasEnvio, horariosEnvio) VALUES (1, 'https://chat.whatsapp.com/placeholder', 'kykgZowheXr8', '+5213331283677', 1, '[1,2,3,4,5,6]', '[\"09:00\",\"12:00\",\"17:00\"]');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute INSERT INTO whatsapp_config (proyectoId, grupoUrl, apiKey, numeroDestino, activo, diasEnvio, horariosEnvio) VALUES (1, 'https://chat.whatsapp.com/placeholder', 'kykgZowheXr8', '+5213331283677', 1, '[1,2,3,4,5,6]', '[\"09:00\",\"12:00\",\"17:00\"]');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 65
+}
