@@ -2063,3 +2063,11 @@
 - [x] Todas las operaciones responden en < 1 segundo
 - [x] Usuario no espera por S3, emails ni notificaciones
 - [x] 201 pruebas pasan correctamente
+
+
+## Verificación Bug Ciclo Infinito (1 Febrero 2026 - 04:40)
+- [x] Bug reportado: ciclo infinito en "Creando..." al crear ítems
+- [x] Verificado: El bug NO existe en la versión actual (checkpoint 647166c0)
+- [x] Probado: Creación de ítem completa en < 1 segundo
+- [x] Verificado: Navegación automática al detalle del ítem
+- [x] 201 pruebas pasan correctamente
