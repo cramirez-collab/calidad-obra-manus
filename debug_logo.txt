@@ -1,0 +1,8 @@
+Observación de la captura de pantalla:
+- El logo de OBJETIVA ocupa casi toda la parte superior de la pantalla
+- Está mostrando el logo completo con el slogan "INNOVACIÓN EN DESARROLLOS INMOBILIARIOS"
+- Esto es diferente al código que tenemos en SeleccionProyecto.tsx que usa h-6 sm:h-8 md:h-10
+
+El problema parece ser que el archivo logo-objetiva.jpg es muy grande y el navegador lo está mostrando a tamaño completo antes de aplicar los estilos CSS.
+
+Solución: Agregar max-height y width: auto para forzar el tamaño del logo.

@@ -101,7 +101,7 @@ export default function NuevoProyecto() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-3">
-            <img src="/logo-objetiva.jpg" alt="Objetiva" className="h-10" />
+            <img src="/logo-objetiva.jpg" alt="Objetiva" style={{ maxHeight: '40px', width: 'auto' }} className="h-8 sm:h-10 object-contain" />
             <span className="text-xl font-bold text-slate-800">OQC</span>
           </div>
         </div>

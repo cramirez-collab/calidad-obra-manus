@@ -67,7 +67,7 @@ export default function SeleccionProyecto() {
       <header className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4 flex items-center justify-between max-w-full overflow-hidden">
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <img src="/logo-objetiva.jpg" alt="Objetiva" className="h-6 sm:h-8 md:h-10 max-w-[80px] sm:max-w-[100px] md:max-w-[120px] object-contain" />
+            <img src="/logo-objetiva.jpg" alt="Objetiva" style={{ maxHeight: '40px', width: 'auto' }} className="h-8 sm:h-10 object-contain" />
             <span className="text-base sm:text-lg md:text-xl font-bold text-slate-800">OQC</span>
           </div>
           

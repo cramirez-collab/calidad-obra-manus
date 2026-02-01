@@ -402,7 +402,8 @@ function DashboardLayoutContent({
               <img 
                 src="/logo-objetiva.jpg" 
                 alt="OQC" 
-                className="h-6 sm:h-7 md:h-8 max-w-[80px] sm:max-w-[100px] md:max-w-[120px] object-contain"
+                style={{ maxHeight: '32px', width: 'auto' }}
+                className="h-6 sm:h-7 md:h-8 object-contain"
               />
             </div>
 

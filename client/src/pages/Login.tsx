@@ -80,7 +80,8 @@ export default function Login() {
             <img 
               src="/logo-objetiva.png" 
               alt="Objetiva" 
-              className="h-12 mx-auto"
+              style={{ maxHeight: '48px', width: 'auto' }}
+              className="h-10 sm:h-12 mx-auto object-contain"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
