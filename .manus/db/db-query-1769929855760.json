@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE whatsapp_config ADD COLUMN diasEnvio VARCHAR(50) DEFAULT '[1,2,3,4,5,6]' NOT NULL; ALTER TABLE whatsapp_config ADD COLUMN horariosEnvio VARCHAR(100) DEFAULT '[\"09:00\",\"12:00\",\"17:00\"]' NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute ALTER TABLE whatsapp_config ADD COLUMN diasEnvio VARCHAR(50) DEFAULT '[1,2,3,4,5,6]' NOT NULL; ALTER TABLE whatsapp_config ADD COLUMN horariosEnvio VARCHAR(100) DEFAULT '[\"09:00\",\"12:00\",\"17:00\"]' NOT NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 852
+}
