@@ -723,7 +723,7 @@ export default function ItemDetail() {
               <div className="space-y-2">
                 <div className="rounded-lg overflow-hidden border">
                   <img
-                    src={fotoDespues}
+                    src={getImageUrl(fotoDespues)}
                     alt="Foto después"
                     className="w-full h-auto max-h-[300px] object-contain bg-slate-100"
                   />

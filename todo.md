@@ -2198,3 +2198,10 @@
 - [x] Agregar filtros en lista de pendientes (Foto/Aprobar/Todos/Corregir)
 - [x] Configurar notificaciones push para ítems pendientes (+3 días, 9am y 3pm L-S)
 - [ ] Verificar funcionamiento completo en móvil
+
+
+## Corrección Crítica: Base64 como Texto Plano (Febrero 2026)
+- [ ] Analizar dónde se renderiza Base64 como texto en el proyecto
+- [ ] Implementar función base64ToBlob como utilidad global
+- [ ] Corregir todos los componentes que muestran fotos
+- [ ] Verificar que no se muestre código Base64 en ninguna parte

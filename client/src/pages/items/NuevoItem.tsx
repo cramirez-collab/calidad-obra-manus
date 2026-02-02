@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
+import { getImageUrl } from "@/lib/imageUrl";
 import { 
   Camera, 
   Upload, 
@@ -407,7 +408,7 @@ export default function NuevoItem() {
               <div className="space-y-3 overflow-hidden">
                 <div className="relative rounded-lg overflow-hidden bg-slate-100">
                   <img
-                    src={fotoAntesMarcada || fotoAntes}
+                    src={getImageUrl(fotoAntesMarcada || fotoAntes)}
                     alt="Foto del problema"
                     className="w-full h-auto max-h-[200px] object-contain max-w-full"
                   />

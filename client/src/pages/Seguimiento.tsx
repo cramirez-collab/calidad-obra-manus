@@ -318,7 +318,7 @@ export default function Seguimiento() {
                       {fotoDespues ? (
                         <div className="space-y-3">
                           <img 
-                            src={fotoDespues} 
+                            src={getImageUrl(fotoDespues)} 
                             alt="Preview" 
                             className="w-full max-h-48 object-contain rounded-lg border"
                           />
@@ -483,7 +483,7 @@ export default function Seguimiento() {
                   {/* Mostrar foto subida (preview) o foto guardada */}
                   {fotoDespues ? (
                     <img
-                      src={fotoDespues}
+                      src={getImageUrl(fotoDespues)}
                       alt="Foto después (preview)"
                       className="w-full h-full object-contain"
                     />
