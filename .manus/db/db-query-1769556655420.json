@@ -1,9 +1,0 @@
-{
-  "query": "INSERT INTO proyecto_usuarios (proyectoId, usuarioId, rolEnProyecto, activo)\nSELECT 1, u.id, \n  CASE \n    WHEN u.role = 'admin' THEN 'admin'\n    WHEN u.role = 'superadmin' THEN 'admin'\n    WHEN u.role = 'supervisor' THEN 'supervisor'\n    WHEN u.role = 'jefe_residente' THEN 'jefe_residente'\n    WHEN u.role = 'desarrollador' THEN 'desarrollador'\n    ELSE 'residente'\n  END,\n  1\nFROM users u \nWHERE u.activo = 1 \nAND u.id NOT IN (SELECT usuarioId FROM proyecto_usuarios WHERE proyectoId = 1);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute INSERT INTO proyecto_usuarios (proyectoId, usuarioId, rolEnProyecto, activo)\nSELECT 1, u.id, \n  CASE \n    WHEN u.role = 'admin' THEN 'admin'\n    WHEN u.role = 'superadmin' THEN 'admin'\n    WHEN u.role = 'supervisor' THEN 'supervisor'\n    WHEN u.role = 'jefe_residente' THEN 'jefe_residente'\n    WHEN u.role = 'desarrollador' THEN 'desarrollador'\n    ELSE 'residente'\n  END,\n  1\nFROM users u \nWHERE u.activo = 1 \nAND u.id NOT IN (SELECT usuarioId FROM proyecto_usuarios WHERE proyectoId = 1);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 79
-}

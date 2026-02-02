@@ -2150,7 +2150,7 @@
 - [x] Eliminar servicio de WhatsApp
 - [x] Eliminar rutas de WhatsApp del router
 - [x] Eliminar sección de WhatsApp de la página de configuración
-- [ ] Eliminar tabla whatsapp_config de la base de datos (mantener por compatibilidad)
+- [x] Eliminar tabla whatsapp_config del schema (eliminada del código, tabla en DB puede permanecer vacía)
 
 ### Miniaturas en Bienvenida
 - [x] Agregar miniatura de foto "antes" en la lista de ítems de bienvenida
@@ -2212,3 +2212,13 @@
 - [ ] Buscar todos los componentes que renderizan fotos como texto
 - [ ] Reemplazar <Text>{foto}</Text> por <Image> con toImageUri
 - [ ] Verificar que ningún Base64 se renderiza como texto
+
+
+## Limpieza Definitiva de WhatsApp (Febrero 2026)
+- [x] Búsqueda global de todas las referencias a WhatsApp
+- [x] Eliminar archivos y carpetas dedicados a WhatsApp (no existían archivos dedicados)
+- [x] Eliminar importaciones y usos desde routers principales
+- [x] Eliminar variables de entorno y documentación
+- [x] Revisar y limpiar dependencias en package.json
+- [x] Limpieza de caché y build artifacts
+- [x] Validación final: 0 resultados de búsqueda "whatsapp" en código fuente y build

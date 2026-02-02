@@ -21,7 +21,7 @@ export const users = mysqlTable("users", {
   proyectoActivoId: int("proyectoActivoId"), // Proyecto actualmente seleccionado por el usuario
   fotoUrl: text("fotoUrl"), // URL de la foto de perfil del usuario
   fotoBase64: text("fotoBase64"), // Foto de perfil en base64 (alternativa a S3)
-  telefono: varchar("telefono", { length: 20 }), // Teléfono para notificaciones WhatsApp
+  telefono: varchar("telefono", { length: 20 }), // Teléfono de contacto
   terminosAceptados: boolean("terminosAceptados").default(false).notNull(), // Si aceptó términos y condiciones
   fechaAceptacionTerminos: timestamp("fechaAceptacionTerminos"), // Fecha de aceptación de términos
   activo: boolean("activo").default(true).notNull(),
@@ -63,9 +63,6 @@ export const proyectos = mysqlTable("proyectos", {
   tituloPlanos: varchar("tituloPlanos", { length: 100 }),
   tituloManuales: varchar("tituloManuales", { length: 100 }),
   tituloEspecificaciones: varchar("tituloEspecificaciones", { length: 100 }),
-  // Configuración de WhatsApp para reportes automáticos
-  whatsappGrupoUrl: text("whatsappGrupoUrl"), // Enlace del grupo de WhatsApp para reportes
-  whatsappApiKey: varchar("whatsappApiKey", { length: 255 }), // API Key de TextMeBot para enviar mensajes
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -523,7 +520,7 @@ export type InsertEmpresaHistorial = typeof empresaHistorial.$inferInsert;
 
 /**
  * Tabla de tracking de actividad de usuarios
- * Registra clics en botones de calidad y secuencias para reportes WhatsApp
+ * Registra clics en botones de calidad y secuencias
  */
 export const actividadUsuarios = mysqlTable("actividad_usuarios", {
   id: int("id").autoincrement().primaryKey(),
@@ -544,20 +541,4 @@ export const actividadUsuarios = mysqlTable("actividad_usuarios", {
 export type ActividadUsuario = typeof actividadUsuarios.$inferSelect;
 export type InsertActividadUsuario = typeof actividadUsuarios.$inferInsert;
 
-/**
- * Tabla de configuración de reportes WhatsApp
- */
-export const whatsappConfig = mysqlTable("whatsapp_config", {
-  id: int("id").autoincrement().primaryKey(),
-  proyectoId: int("proyectoId").notNull().unique(),
-  grupoUrl: text("grupoUrl"), // Enlace del grupo de WhatsApp
-  apiKey: varchar("apiKey", { length: 255 }), // API Key de TextMeBot
-  numeroDestino: varchar("numeroDestino", { length: 20 }), // Número de teléfono destino para TextMeBot
-  activo: boolean("activo").default(true).notNull(),
-  ultimoEnvio: timestamp("ultimoEnvio"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
 
-export type WhatsappConfig = typeof whatsappConfig.$inferSelect;
-export type InsertWhatsappConfig = typeof whatsappConfig.$inferInsert;

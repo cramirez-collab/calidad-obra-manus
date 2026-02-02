@@ -1,9 +1,0 @@
-{
-  "query": "DELETE t1 FROM proyecto_usuarios t1 INNER JOIN proyecto_usuarios t2 WHERE t1.id > t2.id AND t1.usuarioId = t2.usuarioId AND t1.proyectoId = t2.proyectoId;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute DELETE t1 FROM proyecto_usuarios t1 INNER JOIN proyecto_usuarios t2 WHERE t1.id > t2.id AND t1.usuarioId = t2.usuarioId AND t1.proyectoId = t2.proyectoId;",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 61
-}

@@ -1,8 +1,0 @@
-{
-  "query": "INSERT INTO proyecto_usuarios (proyectoId, usuarioId, rolEnProyecto, activo, createdAt, updatedAt) VALUES (1, 1, 'admin', true, NOW(), NOW()) ON DUPLICATE KEY UPDATE activo = true;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute INSERT INTO proyecto_usuarios (proyectoId, usuarioId, rolEnProyecto, activo, createdAt, updatedAt) VALUES (1, 1, 'admin', true, NOW(), NOW()) ON DUPLICATE KEY UPDATE activo = true;",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1054 (42S22) at line 1: Unknown column 'updatedAt' in 'field list'"
-  ]
-}

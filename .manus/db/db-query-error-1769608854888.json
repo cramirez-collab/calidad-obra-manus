@@ -1,8 +1,0 @@
-{
-  "query": "SELECT er.*, u.name as usuario_nombre, e.nombre as empresa_nombre \nFROM empresa_residentes er \nLEFT JOIN users u ON er.usuario_id = u.id \nLEFT JOIN empresas e ON er.empresa_id = e.id;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT er.*, u.name as usuario_nombre, e.nombre as empresa_nombre \nFROM empresa_residentes er \nLEFT JOIN users u ON er.usuario_id = u.id \nLEFT JOIN empresas e ON er.empresa_id = e.id;",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1054 (42S22) at line 1: Unknown column 'er.usuario_id' in 'on clause'"
-  ]
-}

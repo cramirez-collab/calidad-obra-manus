@@ -351,6 +351,13 @@
       "when": 1769994155234,
       "tag": "0049_whole_gravity",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "5",
+      "when": 1770019171980,
+      "tag": "0050_chief_wasp",
+      "breakpoints": true
     }
   ]
 }

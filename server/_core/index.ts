@@ -74,7 +74,7 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
     
-    // Inicializar cron jobs para reportes de WhatsApp
+    // Inicializar cron jobs para notificaciones programadas
     initializeCronJobs();
   });
 }

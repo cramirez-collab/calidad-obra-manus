@@ -72,9 +72,9 @@ async function notificarItemsPendientesUrgentes() {
     console.log(`[CronJobs] Encontrados ${itemsPendientesFoto.length} ítems pendientes de foto y ${itemsPendientesAprobacion.length} pendientes de aprobación`);
     
     // Obtener IDs únicos de usuarios a notificar
-    const residenteIds = [...new Set(itemsPendientesFoto.map(i => i.residenteId).filter(Boolean))] as number[];
-    const supervisorIds = [...new Set(itemsPendientesAprobacion.map(i => i.supervisorId).filter(Boolean))] as number[];
-    const allUserIds = [...new Set([...residenteIds, ...supervisorIds])];
+    const residenteIds = Array.from(new Set(itemsPendientesFoto.map(i => i.residenteId).filter(Boolean))) as number[];
+    const supervisorIds = Array.from(new Set(itemsPendientesAprobacion.map(i => i.supervisorId).filter(Boolean))) as number[];
+    const allUserIds = Array.from(new Set([...residenteIds, ...supervisorIds]));
     
     if (allUserIds.length === 0) {
       console.log('[CronJobs] No hay usuarios para notificar');
