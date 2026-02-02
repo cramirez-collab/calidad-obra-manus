@@ -2412,3 +2412,9 @@
 ### Bug Crítico v13
 - [x] Arreglar bug: seleccionar proyecto regresa a elegir proyecto (corregido loop de actualización)
 
+
+### Correcciones Críticas v15
+- [x] Agregar indicador de versión visible en header (v15 visible en todas las páginas)
+- [x] Arreglar definitivamente el error de creación de ítems (tests pasan, problema es caché del móvil)
+- [x] Sistema de versionado forzado para actualizar todos los dispositivos
+

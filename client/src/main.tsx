@@ -13,7 +13,7 @@ import "./index.css";
 // ============================================
 // SISTEMA DE VERSIONADO AUTOMÁTICO v14
 // ============================================
-const CURRENT_VERSION = 14;
+const CURRENT_VERSION = 15;
 const VERSION_KEY = 'oqc_app_version';
 const UPDATE_IN_PROGRESS_KEY = 'oqc_update_in_progress';
 
