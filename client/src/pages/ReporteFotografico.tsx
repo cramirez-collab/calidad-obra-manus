@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
+import { getImageUrl } from "@/lib/imageUrl";
 import { 
   FileImage, 
   Download, 
@@ -598,7 +599,7 @@ export default function ReporteFotografico() {
                       <div className="aspect-video bg-slate-100 rounded overflow-hidden">
                         {item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
                           <img 
-                            src={item.fotoAntesMarcadaUrl || item.fotoAntesUrl || ""} 
+                            src={getImageUrl(item.fotoAntesMarcadaUrl || item.fotoAntesUrl || "")} 
                             alt="Antes"
                             className="w-full h-full object-cover"
                           />
@@ -611,7 +612,7 @@ export default function ReporteFotografico() {
                       <div className="aspect-video bg-slate-100 rounded overflow-hidden">
                         {item.fotoDespuesUrl ? (
                           <img 
-                            src={item.fotoDespuesUrl} 
+                            src={getImageUrl(item.fotoDespuesUrl)} 
                             alt="Después"
                             className="w-full h-full object-cover"
                           />

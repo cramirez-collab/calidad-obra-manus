@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { getImageUrl } from "@/lib/imageUrl";
 import DashboardLayout from "@/components/DashboardLayout";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -127,7 +128,7 @@ export default function Bienvenida() {
                       <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg overflow-hidden shrink-0 bg-slate-100">
                         {item.fotoAntes ? (
                           <img 
-                            src={item.fotoAntes} 
+                            src={getImageUrl(item.fotoAntes)} 
                             alt="Foto antes" 
                             className="h-full w-full object-cover"
                             loading="lazy"

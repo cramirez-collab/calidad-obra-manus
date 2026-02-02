@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FileSpreadsheet, FileText, Trash2, FileDown } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { getImageUrl } from "@/lib/imageUrl";
 import { 
   ClipboardCheck, 
   Search, 
@@ -419,7 +420,7 @@ export default function ItemsList() {
                       <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                         {item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
                           <img
-                            src={item.fotoAntesMarcadaUrl || item.fotoAntesUrl || ""}
+                            src={getImageUrl(item.fotoAntesMarcadaUrl || item.fotoAntesUrl || "")}
                             alt="Foto antes"
                             className="h-full w-full object-cover"
                             loading="lazy"

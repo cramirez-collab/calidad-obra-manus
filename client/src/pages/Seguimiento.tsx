@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
+import { getImageUrl } from "@/lib/imageUrl";
 import { 
   Camera, 
   CheckCircle2, 
@@ -457,7 +458,7 @@ export default function Seguimiento() {
                 <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100">
                   {item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
                     <img
-                      src={item.fotoAntesMarcadaUrl || item.fotoAntesUrl || ""}
+                      src={getImageUrl(item.fotoAntesMarcadaUrl || item.fotoAntesUrl || "")}
                       alt="Foto antes"
                       className="w-full h-full object-contain"
                     />
@@ -488,7 +489,7 @@ export default function Seguimiento() {
                     />
                   ) : item.fotoDespuesUrl ? (
                     <img
-                      src={item.fotoDespuesUrl}
+                      src={getImageUrl(item.fotoDespuesUrl)}
                       alt="Foto después"
                       className="w-full h-full object-contain"
                     />
