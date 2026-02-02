@@ -538,17 +538,12 @@ export async function saveWhatsappConfig(
   proyectoId: number, 
   grupoUrl: string, 
   apiKey?: string,
-  numeroDestino?: string,
-  diasReporte?: string[],
-  horaReporte?: string
+  numeroDestino?: string
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
   const existingConfig = await getWhatsappConfig(proyectoId);
-  
-  // Serializar días como JSON
-  const diasReporteJson = diasReporte ? JSON.stringify(diasReporte) : null;
 
   if (existingConfig) {
     await db.update(whatsappConfig)
@@ -556,8 +551,6 @@ export async function saveWhatsappConfig(
         grupoUrl, 
         apiKey: apiKey || null,
         numeroDestino: numeroDestino || null,
-        diasReporte: diasReporteJson,
-        horaReporte: horaReporte || '18:00',
         updatedAt: new Date()
       })
       .where(eq(whatsappConfig.proyectoId, proyectoId));
@@ -567,8 +560,6 @@ export async function saveWhatsappConfig(
       grupoUrl,
       apiKey: apiKey || null,
       numeroDestino: numeroDestino || null,
-      diasReporte: diasReporteJson,
-      horaReporte: horaReporte || '18:00',
     });
   }
 }
