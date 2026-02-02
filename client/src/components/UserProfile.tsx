@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { trpc } from "@/lib/trpc";
 import { Camera, Loader2, User } from "lucide-react";
 import { toast } from "sonner";
+import { getImageUrl } from "@/lib/imageUrl";
 
 interface UserProfileProps {
   user: {
@@ -38,8 +39,8 @@ export function UserAvatar({ user, size = "md" }: UserProfileProps) {
   const initial = user.name?.charAt(0).toUpperCase() || "U";
   const bgColor = roleColors[user.role || "residente"] || "bg-gray-500";
   
-  // Priorizar fotoBase64 sobre fotoUrl
-  const imageUrl = user.fotoBase64 || (user.fotoUrl ? `/api/image/${user.fotoUrl}` : '');
+  // Usar getImageUrl para convertir Base64 a URL de objeto y evitar mostrar texto
+  const imageUrl = user.fotoBase64 ? getImageUrl(user.fotoBase64) : (user.fotoUrl ? getImageUrl(user.fotoUrl) : '');
 
   return (
     <Avatar className={`${sizeClasses[size]} border`}>
@@ -113,7 +114,8 @@ export function UserProfileEditor({ user, onUpdate }: { user: UserProfileProps["
   };
 
   // Usar preview si existe, sino usar la foto actual del usuario
-  const currentImageUrl = previewUrl || user.fotoBase64 || (user.fotoUrl ? `/api/image/${user.fotoUrl}` : '');
+  // Usar getImageUrl para convertir Base64 a URL de objeto y evitar mostrar texto
+  const currentImageUrl = previewUrl ? getImageUrl(previewUrl) : (user.fotoBase64 ? getImageUrl(user.fotoBase64) : (user.fotoUrl ? getImageUrl(user.fotoUrl) : ''));
   const hasPhoto = !!currentImageUrl;
 
   return (

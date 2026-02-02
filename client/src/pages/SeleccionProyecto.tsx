@@ -136,15 +136,9 @@ export default function SeleccionProyecto() {
                 >
                   {/* Imagen de Portada o Color Header */}
                   <div className={`h-48 sm:h-56 md:h-64 relative overflow-hidden ${!(proyecto.imagenPortadaBase64 || proyecto.imagenPortadaUrl) ? `bg-gradient-to-r ${getProjectColor(index)}` : ''}`}>
-                    {proyecto.imagenPortadaBase64 ? (
+                    {(proyecto.imagenPortadaBase64 || proyecto.imagenPortadaUrl) ? (
                       <img 
-                        src={proyecto.imagenPortadaBase64} 
-                        alt={proyecto.nombre}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : proyecto.imagenPortadaUrl ? (
-                      <img 
-                        src={getImageUrl(proyecto.imagenPortadaUrl)} 
+                        src={getImageUrl(proyecto.imagenPortadaBase64 || proyecto.imagenPortadaUrl)} 
                         alt={proyecto.nombre}
                         className="w-full h-full object-cover"
                       />

@@ -2268,3 +2268,22 @@
 - [x] Creación de ítems funciona correctamente
 - [x] Fotos se muestran como imágenes, NO como texto Base64
 - [x] Función getImageUrl() maneja correctamente URLs y Base64
+
+
+### Correcciones Adicionales (Febrero 2026)
+- [x] UserAvatar.tsx: Ahora usa getImageUrl() para fotoBase64
+- [x] UserProfile.tsx: Ahora usa getImageUrl() para fotoBase64
+- [x] SeleccionProyecto.tsx: Ahora usa getImageUrl() para imagenPortadaBase64
+- [x] Usuarios.tsx: Ahora usa getImageUrl() para fotoBase64
+
+### Verificación en Navegador
+- [x] Creación de ítem Hidalma-V757CF #3 exitosa
+- [x] Foto "Antes" se muestra correctamente como imagen
+- [x] Lista de ítems muestra miniaturas correctamente
+- [x] No aparece texto Base64 largo en ninguna parte
+
+### RESULTADO FINAL: TODO FUNCIONA CORRECTAMENTE
+- 197 tests Vitest pasando
+- Creación de ítems funciona
+- Fotos se muestran como imágenes
+- getImageUrl() convierte Base64 a blob URL para evitar texto largo

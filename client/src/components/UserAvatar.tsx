@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { getImageUrl } from "@/lib/imageUrl";
 
 interface UserAvatarProps {
   name?: string | null;
@@ -36,8 +37,8 @@ export function UserAvatar({
     .join('')
     .toUpperCase() || 'U';
 
-  // Priorizar fotoBase64 sobre fotoUrl (base64 siempre funciona, URLs de S3 pueden fallar)
-  const imageUrl = fotoBase64 || (fotoUrl ? `/api/image/${fotoUrl}` : '');
+  // Usar getImageUrl para convertir Base64 a URL de objeto y evitar mostrar texto
+  const imageUrl = fotoBase64 ? getImageUrl(fotoBase64) : (fotoUrl ? getImageUrl(fotoUrl) : '');
 
   return (
     <div className={cn("flex items-center gap-2 min-w-0", className)}>

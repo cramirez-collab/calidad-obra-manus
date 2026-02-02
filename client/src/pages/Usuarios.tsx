@@ -1117,7 +1117,7 @@ export default function Usuarios() {
               <div className="relative">
                 {photoEditingUser?.fotoBase64 || photoEditingUser?.fotoUrl ? (
                   <img 
-                    src={photoEditingUser.fotoBase64 || getImageUrl(photoEditingUser.fotoUrl)} 
+                    src={getImageUrl(photoEditingUser.fotoBase64 || photoEditingUser.fotoUrl)} 
                     alt={photoEditingUser.name || 'Usuario'}
                     className="h-24 w-24 rounded-full object-cover border-4 border-muted"
                   />
