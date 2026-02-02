@@ -2148,3 +2148,9 @@
 - [x] Hacer obligatorio seleccionar un defecto
 - [x] Generar título automático basado en defecto, unidad y espacio
 - [x] Agregar diálogo de confirmación antes de crear el ítem
+
+
+## Bug Crítico - Base64 Visible (1 Febrero 2026)
+- [x] Corregir código base64 visible en pantalla al crear ítem (no era bug, era problema de caché del Service Worker)
+- [x] Asegurar que el ítem se cree correctamente sin mostrar datos crudos
+- [x] Ocultar completamente el procesamiento de imágenes del usuario
