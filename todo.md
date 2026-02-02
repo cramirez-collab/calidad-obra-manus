@@ -2382,3 +2382,17 @@
 - [x] Arreglar error de creación de ítems (simplificado flujo)
 - [x] Forzar captura de foto inmediata y obligatoria
 
+
+
+## Correcciones v12.3 (Febrero 2026)
+
+### Botón Limpiar Caché
+- [x] Agregar botón Limpiar Caché en menú de usuario PC
+- [x] Botón Limpiar Caché en menú móvil (ya existía)
+- [x] Limpieza automática de caché cada 4 horas en Service Worker
+
+### Creación de Ítems
+- [x] Tests de creación de ítems pasando (209 tests)
+- [x] Flujo simplificado de captura de foto
+- [ ] Investigar error específico del usuario (posible caché antigua)
+

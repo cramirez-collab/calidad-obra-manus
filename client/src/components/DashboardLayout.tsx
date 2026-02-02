@@ -477,6 +477,32 @@ function DashboardLayoutContent({
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
+                      onClick={async () => {
+                        try {
+                          if ('caches' in window) {
+                            const cacheNames = await caches.keys();
+                            await Promise.all(cacheNames.map(name => caches.delete(name)));
+                          }
+                          const proyectoGuardado = localStorage.getItem('selectedProjectId');
+                          localStorage.clear();
+                          sessionStorage.clear();
+                          if (proyectoGuardado) localStorage.setItem('selectedProjectId', proyectoGuardado);
+                          if ('serviceWorker' in navigator) {
+                            const registration = await navigator.serviceWorker.getRegistration();
+                            if (registration) await registration.update();
+                          }
+                          setTimeout(() => window.location.reload(), 500);
+                        } catch (e) {
+                          window.location.reload();
+                        }
+                      }}
+                      className="cursor-pointer text-orange-600 focus:text-orange-600"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Limpiar Caché
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
                       onClick={logout}
                       className="cursor-pointer text-destructive focus:text-destructive"
                     >
