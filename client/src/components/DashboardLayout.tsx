@@ -40,7 +40,8 @@ import {
   Activity,
   Link2,
   BookOpen,
-  FileText
+  FileText,
+  RefreshCw
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -576,6 +577,46 @@ function DashboardLayoutContent({
                 >
                   <FileText className="h-4 w-4" />
                   <span>Términos y Privacidad</span>
+                </button>
+              </div>
+              
+              {/* Limpiar Caché */}
+              <div className="border-t p-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      // Limpiar caches del Service Worker
+                      if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        await Promise.all(cacheNames.map(name => caches.delete(name)));
+                      }
+                      // Limpiar localStorage (excepto proyecto seleccionado)
+                      const selectedProject = localStorage.getItem('selectedProjectId');
+                      localStorage.clear();
+                      if (selectedProject) localStorage.setItem('selectedProjectId', selectedProject);
+                      // Limpiar sessionStorage
+                      sessionStorage.clear();
+                      // Forzar actualización del Service Worker
+                      if ('serviceWorker' in navigator) {
+                        const registration = await navigator.serviceWorker.getRegistration();
+                        if (registration) {
+                          registration.update();
+                          if (registration.waiting) {
+                            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                          }
+                        }
+                      }
+                      // Recargar
+                      setTimeout(() => window.location.reload(), 500);
+                    } catch (error) {
+                      console.error('Error limpiando caché:', error);
+                      window.location.reload();
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-orange-600 hover:bg-orange-50 transition-colors text-sm"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span>Limpiar Caché y Recargar</span>
                 </button>
               </div>
               

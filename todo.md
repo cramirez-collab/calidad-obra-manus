@@ -2372,3 +2372,8 @@
 - [x] Configurar notificaciones push con badges en el icono de la app
 - [x] Actualizar versión a v12
 
+
+### Correcciones v12
+- [x] Agregar botón Limpiar Caché visible en el menú lateral
+- [x] Vaciar la tabla de items de la base de datos
+
