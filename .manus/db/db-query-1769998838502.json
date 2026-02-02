@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, nombre FROM especialidades WHERE nombre LIKE '%Desarrollador%' OR nombre LIKE '%Supervisor%' OR nombre LIKE '%Supervision%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre FROM especialidades WHERE nombre LIKE '%Desarrollador%' OR nombre LIKE '%Supervisor%' OR nombre LIKE '%Supervision%';",
+  "rows": [
+    {
+      "id": "30003",
+      "nombre": "Supervision"
+    },
+    {
+      "id": "60001",
+      "nombre": "Desarrollador"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\n30003\tSupervision\n60001\tDesarrollador\n",
+  "stderr": "",
+  "execution_time_ms": 100
+}

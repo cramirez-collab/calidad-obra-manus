@@ -461,8 +461,9 @@ export default function ItemDetail() {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Columna principal - Fotos */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Comparación Antes/Después */}
-            <Card>
+            {/* PASO 1: Comparación Antes/Después */}
+            <Card className="relative">
+              <div className="absolute -top-2 -left-2 w-7 h-7 bg-[#02B381] text-white rounded-full flex items-center justify-center text-sm font-bold z-10 shadow-md">1</div>
               <CardHeader>
                 <CardTitle>Fotos del Ítem</CardTitle>
               </CardHeader>
@@ -522,8 +523,9 @@ export default function ItemDetail() {
               </CardContent>
             </Card>
 
-            {/* Timeline / Historial */}
-            <Card>
+            {/* PASO 2: Timeline / Historial */}
+            <Card className="relative">
+              <div className="absolute -top-2 -left-2 w-7 h-7 bg-[#02B381] text-white rounded-full flex items-center justify-center text-sm font-bold z-10 shadow-md">2</div>
               <CardHeader>
                 <CardTitle>Historial</CardTitle>
               </CardHeader>
@@ -570,8 +572,9 @@ export default function ItemDetail() {
 
           {/* Columna lateral - Info y QR */}
           <div className="space-y-6">
-            {/* Información */}
-            <Card>
+            {/* PASO 3: Información */}
+            <Card className="relative">
+              <div className="absolute -top-2 -left-2 w-7 h-7 bg-[#002C63] text-white rounded-full flex items-center justify-center text-sm font-bold z-10 shadow-md">3</div>
               <CardHeader>
                 <CardTitle>Información</CardTitle>
               </CardHeader>
@@ -655,15 +658,17 @@ export default function ItemDetail() {
               </CardContent>
             </Card>
 
-            {/* Chat del Ítem */}
-            <Card className="lg:col-span-1">
+            {/* PASO 4: Chat del Ítem */}
+            <Card className="lg:col-span-1 relative">
+              <div className="absolute -top-2 -left-2 w-7 h-7 bg-[#002C63] text-white rounded-full flex items-center justify-center text-sm font-bold z-10 shadow-md">4</div>
               <CardContent className="p-0 h-[400px]">
                 <ItemChat itemId={itemId} itemCodigo={item.codigo} />
               </CardContent>
             </Card>
 
-            {/* QR Code */}
-            <Card>
+            {/* PASO 5: QR Code */}
+            <Card className="relative">
+              <div className="absolute -top-2 -left-2 w-7 h-7 bg-[#002C63] text-white rounded-full flex items-center justify-center text-sm font-bold z-10 shadow-md">5</div>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <QrCode className="h-5 w-5" />

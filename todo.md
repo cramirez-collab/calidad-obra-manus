@@ -2154,3 +2154,9 @@
 - [x] Corregir código base64 visible en pantalla al crear ítem (no era bug, era problema de caché del Service Worker)
 - [x] Asegurar que el ítem se cree correctamente sin mostrar datos crudos
 - [x] Ocultar completamente el procesamiento de imágenes del usuario
+
+
+## Mejoras Solicitadas (1 Febrero 2026)
+- [x] Eliminar defectos de especialidades Desarrollador y Supervisor (13 defectos eliminados)
+- [x] Agregar números de secuencia en pantallas de llenado y consulta
+- [x] Verificar y documentar funcionamiento del QR del ítem vs QR montero
