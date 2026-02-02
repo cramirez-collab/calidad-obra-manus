@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oqc-v11';
+const CACHE_NAME = 'oqc-v12';
 const OFFLINE_URL = '/offline.html';
 
 // Solo recursos estáticos mínimos
@@ -14,23 +14,23 @@ const AUTO_CLEAR_INTERVAL = 4 * 60 * 60 * 1000; // 4 horas
 
 // Instalar Service Worker - Limpieza TOTAL de toda caché anterior
 self.addEventListener('install', (event) => {
-  console.log('[SW v11] Installing - CLEARING ALL CACHE...');
+  console.log('[SW v12] Installing - CLEARING ALL CACHE...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
-      console.log('[SW v11] Found caches to delete:', cacheNames);
+      console.log('[SW v12] Found caches to delete:', cacheNames);
       return Promise.all(
         cacheNames.map((name) => {
-          console.log('[SW v11] Deleting cache:', name);
+          console.log('[SW v12] Deleting cache:', name);
           return caches.delete(name);
         })
       );
     }).then(() => {
-      console.log('[SW v11] All old caches deleted, creating new cache...');
+      console.log('[SW v12] All old caches deleted, creating new cache...');
       return caches.open(CACHE_NAME).then((cache) => {
         return cache.addAll(PRECACHE_ASSETS);
       });
     }).then(() => {
-      console.log('[SW v11] Installation complete');
+      console.log('[SW v12] Installation complete');
     })
   );
   // Forzar activación inmediata
@@ -39,25 +39,25 @@ self.addEventListener('install', (event) => {
 
 // Activar - Tomar control inmediato y limpiar cualquier caché restante
 self.addEventListener('activate', (event) => {
-  console.log('[SW v11] Activating - Taking control...');
+  console.log('[SW v12] Activating - Taking control...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
           .filter((name) => name !== CACHE_NAME)
           .map((name) => {
-            console.log('[SW v11] Deleting old cache:', name);
+            console.log('[SW v12] Deleting old cache:', name);
             return caches.delete(name);
           })
       );
     }).then(() => {
-      console.log('[SW v11] Claiming all clients...');
+      console.log('[SW v12] Claiming all clients...');
       return self.clients.claim();
     }).then(() => {
       // Notificar a todos los clientes que recarguen
       return self.clients.matchAll().then((clients) => {
         clients.forEach((client) => {
-          client.postMessage({ type: 'SW_UPDATED', version: 'v11' });
+          client.postMessage({ type: 'SW_UPDATED', version: 'v12' });
         });
       });
     }).then(() => {
@@ -69,7 +69,7 @@ self.addEventListener('activate', (event) => {
 
 // Función para limpiar caché automáticamente
 async function clearAllCaches() {
-  console.log('[SW v11] Auto-clearing all caches...');
+  console.log('[SW v12] Auto-clearing all caches...');
   const cacheNames = await caches.keys();
   await Promise.all(cacheNames.map(name => caches.delete(name)));
   
@@ -77,7 +77,7 @@ async function clearAllCaches() {
   const cache = await caches.open(CACHE_NAME);
   await cache.addAll(PRECACHE_ASSETS);
   
-  console.log('[SW v11] Auto-clear complete at', new Date().toISOString());
+  console.log('[SW v12] Auto-clear complete at', new Date().toISOString());
   
   // Notificar a los clientes
   const clients = await self.clients.matchAll();
@@ -88,7 +88,7 @@ async function clearAllCaches() {
 
 // Iniciar limpieza automática cada 4 horas
 function startAutoCacheClear() {
-  console.log('[SW v11] Starting auto-clear interval (every 4 hours)');
+  console.log('[SW v12] Starting auto-clear interval (every 4 hours)');
   setInterval(() => {
     clearAllCaches();
   }, AUTO_CLEAR_INTERVAL);
@@ -127,23 +127,82 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(fetch(request));
 });
 
-// Push notifications
+// Push notifications con badges
 self.addEventListener('push', (event) => {
   const data = event.data?.json() || {};
+  
+  // Actualizar badge del icono de la app
+  if ('setAppBadge' in navigator) {
+    const badgeCount = data.badge || 1;
+    navigator.setAppBadge(badgeCount).catch(err => {
+      console.log('[SW] Error setting badge:', err);
+    });
+  }
+  
   event.waitUntil(
     self.registration.showNotification(data.title || 'OQC', {
       body: data.body || 'Nueva notificación',
       icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      vibrate: [100, 50, 100],
-      data: { url: data.url || '/' },
+      badge: '/icon-72.png', // Badge pequeño para la notificación
+      vibrate: [200, 100, 200],
+      tag: data.tag || 'oqc-notification', // Agrupar notificaciones similares
+      renotify: true,
+      requireInteraction: data.requireInteraction || false,
+      data: { 
+        url: data.url || '/',
+        itemId: data.itemId,
+        tipo: data.tipo
+      },
+      actions: data.actions || [
+        { action: 'open', title: 'Ver' },
+        { action: 'dismiss', title: 'Cerrar' }
+      ]
     })
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow(event.notification.data.url));
+  
+  // Limpiar badge al hacer click
+  if ('clearAppBadge' in navigator) {
+    navigator.clearAppBadge().catch(err => {
+      console.log('[SW] Error clearing badge:', err);
+    });
+  }
+  
+  const action = event.action;
+  const url = event.notification.data?.url || '/';
+  
+  if (action === 'dismiss') {
+    return; // Solo cerrar
+  }
+  
+  // Abrir o enfocar la ventana existente
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      // Buscar ventana existente
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.focus();
+          client.navigate(url);
+          return;
+        }
+      }
+      // Si no hay ventana, abrir una nueva
+      return clients.openWindow(url);
+    })
+  );
+});
+
+// Limpiar badge cuando se cierra la notificación
+self.addEventListener('notificationclose', (event) => {
+  // Verificar si hay más notificaciones pendientes
+  self.registration.getNotifications().then(notifications => {
+    if (notifications.length === 0 && 'clearAppBadge' in navigator) {
+      navigator.clearAppBadge().catch(() => {});
+    }
+  });
 });
 
 // Mensajes de control
@@ -158,5 +217,16 @@ self.addEventListener('message', (event) => {
   }
   if (event.data?.type === 'FORCE_CLEAR_NOW') {
     clearAllCaches();
+  }
+  // Actualizar badge manualmente
+  if (event.data?.type === 'SET_BADGE') {
+    if ('setAppBadge' in navigator) {
+      navigator.setAppBadge(event.data.count || 0).catch(() => {});
+    }
+  }
+  if (event.data?.type === 'CLEAR_BADGE') {
+    if ('clearAppBadge' in navigator) {
+      navigator.clearAppBadge().catch(() => {});
+    }
   }
 });

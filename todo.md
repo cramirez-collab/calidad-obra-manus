@@ -2365,3 +2365,10 @@
 ### Acceso Rápido a Limpiar Caché
 - [x] Mover botón Limpiar Caché más arriba en Configuración (visible sin scroll)
 
+
+### PWA e Instalación Automática (v12)
+- [x] Implementar prompt de instalación automática de PWA para nuevos usuarios
+- [x] Soporte para Android, iOS y PC
+- [x] Configurar notificaciones push con badges en el icono de la app
+- [x] Actualizar versión a v12
+

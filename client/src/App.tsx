@@ -1,6 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch, Router as WouterRouter } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -146,6 +147,7 @@ function App() {
               <Suspense fallback={<PageLoader />}>
                 <Toaster />
                 <ConnectionStatus />
+                <PWAInstallPrompt />
                 <AppRoutes />
               </Suspense>
             </ErrorBoundary>
