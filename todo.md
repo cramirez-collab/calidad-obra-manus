@@ -2192,3 +2192,9 @@
 - [x] Modificar getItems para excluir campos base64
 - [x] Actualizar Service Worker a v5 con limpieza agresiva
 - [x] Actualizar main.tsx con limpieza de caché al inicio
+
+
+## Mejoras de UX y Notificaciones (Febrero 2026)
+- [x] Agregar filtros en lista de pendientes (Foto/Aprobar/Todos/Corregir)
+- [x] Configurar notificaciones push para ítems pendientes (+3 días, 9am y 3pm L-S)
+- [ ] Verificar funcionamiento completo en móvil

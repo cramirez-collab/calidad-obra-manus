@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { getImageUrl } from "@/lib/imageUrl";
@@ -16,17 +16,21 @@ import {
   MapPin,
   BarChart3,
   Plus,
-  Loader2
+  Loader2,
+  Filter
 } from "lucide-react";
 import { useLocation, Redirect } from "wouter";
 import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
+
+type FilterType = "todos" | "foto" | "aprobar" | "corregir";
 
 export default function Bienvenida() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { selectedProjectId, isLoadingProjects } = useProject();
   const { data: pendientes, isLoading } = trpc.pendientes.misPendientes.useQuery();
+  const [activeFilter, setActiveFilter] = useState<FilterType>("todos");
 
   // Redirigir a selección de proyecto si no hay proyecto seleccionado
   if (!isLoadingProjects && !selectedProjectId) {
@@ -45,14 +49,29 @@ export default function Bienvenida() {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "pendiente_foto_despues":
-        return { icon: Camera, color: "text-[#002C63]", bg: "bg-[#002C63]/10", label: "Foto" };
+        return { icon: Camera, color: "text-[#002C63]", bg: "bg-[#002C63]/10", label: "Foto", filter: "foto" as FilterType };
       case "pendiente_aprobacion":
-        return { icon: Clock, color: "text-[#002C63]", bg: "bg-[#002C63]/10", label: "Aprobar" };
+        return { icon: Clock, color: "text-[#002C63]", bg: "bg-[#002C63]/10", label: "Aprobar", filter: "aprobar" as FilterType };
       case "rechazado":
-        return { icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", label: "Corregir" };
+        return { icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", label: "Corregir", filter: "corregir" as FilterType };
       default:
-        return { icon: CheckCircle2, color: "text-[#02B381]", bg: "bg-[#02B381]/10", label: "OK" };
+        return { icon: CheckCircle2, color: "text-[#02B381]", bg: "bg-[#02B381]/10", label: "OK", filter: "todos" as FilterType };
     }
+  };
+
+  // Filtrar pendientes según el filtro activo
+  const filteredPendientes = pendientes?.filter((item: any) => {
+    if (activeFilter === "todos") return true;
+    const config = getStatusConfig(item.status);
+    return config.filter === activeFilter;
+  }) || [];
+
+  // Contar por tipo
+  const counts = {
+    todos: pendientes?.length || 0,
+    foto: pendientes?.filter((i: any) => i.status === "pendiente_foto_despues").length || 0,
+    aprobar: pendientes?.filter((i: any) => i.status === "pendiente_aprobacion").length || 0,
+    corregir: pendientes?.filter((i: any) => i.status === "rechazado").length || 0,
   };
 
   // Solo dos acciones: Nuevo y Stats
@@ -64,6 +83,13 @@ export default function Bienvenida() {
   const visibleActions = quickActions.filter(a => 
     a.roles.includes('all') || a.roles.includes(user?.role || '')
   );
+
+  const filterButtons: { key: FilterType; label: string; icon: any; color: string }[] = [
+    { key: "todos", label: "Todos", icon: Filter, color: "bg-slate-500" },
+    { key: "foto", label: "Foto", icon: Camera, color: "bg-[#002C63]" },
+    { key: "aprobar", label: "Aprobar", icon: Clock, color: "bg-[#02B381]" },
+    { key: "corregir", label: "Corregir", icon: AlertCircle, color: "bg-red-500" },
+  ];
 
   return (
     <DashboardLayout>
@@ -83,7 +109,7 @@ export default function Bienvenida() {
                 Hola, {user?.name?.split(' ')[0] || 'Usuario'}
               </h1>
               <p className="text-xs text-[#6E6E6E]">
-                {pendientes?.length || 0} pendientes
+                {filteredPendientes.length} pendientes
               </p>
             </div>
           </div>
@@ -106,14 +132,41 @@ export default function Bienvenida() {
           </div>
         </div>
 
+        {/* Filtros de estado */}
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+          {filterButtons.map(filter => (
+            <Button
+              key={filter.key}
+              variant={activeFilter === filter.key ? "default" : "outline"}
+              size="sm"
+              className={`shrink-0 gap-1.5 ${
+                activeFilter === filter.key 
+                  ? `${filter.color} text-white border-0` 
+                  : "bg-white border-slate-200"
+              }`}
+              onClick={() => setActiveFilter(filter.key)}
+            >
+              <filter.icon className="h-3.5 w-3.5" />
+              <span>{filter.label}</span>
+              <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs ${
+                activeFilter === filter.key 
+                  ? "bg-white/20" 
+                  : "bg-slate-100"
+              }`}>
+                {counts[filter.key]}
+              </span>
+            </Button>
+          ))}
+        </div>
+
         {/* Lista de pendientes - compacta */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#02B381]" />
           </div>
-        ) : pendientes && pendientes.length > 0 ? (
+        ) : filteredPendientes.length > 0 ? (
           <div className="space-y-2">
-            {pendientes.map((item: any) => {
+            {filteredPendientes.map((item: any) => {
               const config = getStatusConfig(item.status);
               const Icon = config.icon;
               return (
@@ -176,8 +229,12 @@ export default function Bienvenida() {
               <div className="h-16 w-16 rounded-full bg-[#02B381]/10 flex items-center justify-center mb-4">
                 <CheckCircle2 className="h-8 w-8 text-[#02B381]" />
               </div>
-              <p className="font-semibold text-[#002C63]">¡Todo al día!</p>
-              <p className="text-sm text-[#6E6E6E]">Sin pendientes</p>
+              <p className="font-semibold text-[#002C63]">
+                {activeFilter === "todos" ? "¡Todo al día!" : `Sin ítems de "${activeFilter}"`}
+              </p>
+              <p className="text-sm text-[#6E6E6E]">
+                {activeFilter === "todos" ? "Sin pendientes" : "Prueba otro filtro"}
+              </p>
             </CardContent>
           </Card>
         )}
