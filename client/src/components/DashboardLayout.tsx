@@ -40,8 +40,7 @@ import {
   Activity,
   Link2,
   BookOpen,
-  FileText,
-  MessageCircle
+  FileText
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -122,21 +121,19 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     analysisItems.push({ icon: FileText, label: proyecto.tituloEspecificaciones || "Especificaciones", path: proyecto.linkEspecificaciones, external: true });
   }
 
-  // Submenú de Configuración (ordenado alfabéticamente)
+  // Submenú de Configuración
   const configSubItems: MenuItem[] = [
-    { icon: History, label: "Bitácora", path: "/bitacora" },
-    { icon: Settings, label: "Configuración General", path: "/configuracion" },
-    { icon: AlertTriangle, label: "Defectos", path: "/defectos" },
-    { icon: Building2, label: "Empresas", path: "/empresas" },
+    { icon: FolderKanban, label: "Proyectos", path: "/proyectos" },
     { icon: Link2, label: "Enlaces Externos", path: "/enlaces-externos" },
+    { icon: QrCode, label: "QR", path: "/generar-qr" },
+    { icon: Building2, label: "Empresas", path: "/empresas" },
+    { icon: MapPin, label: "Unidades", path: "/unidades" },
     { icon: Layers, label: "Espacios", path: "/espacios" },
     { icon: Wrench, label: "Especialidades", path: "/especialidades" },
     { icon: ListOrdered, label: "Lista Especialidades", path: "/lista-especialidades" },
-    { icon: FolderKanban, label: "Proyectos", path: "/proyectos" },
-    { icon: QrCode, label: "QR", path: "/generar-qr" },
-    { icon: MapPin, label: "Unidades", path: "/unidades" },
+    { icon: AlertTriangle, label: "Defectos", path: "/defectos" },
     { icon: Users, label: "Usuarios", path: "/usuarios" },
-    { icon: MessageCircle, label: "WhatsApp", path: "/configuracion#whatsapp" },
+    { icon: History, label: "Bitácora", path: "/bitacora" },
   ];
 
   // Todos los usuarios ven los items base y de análisis

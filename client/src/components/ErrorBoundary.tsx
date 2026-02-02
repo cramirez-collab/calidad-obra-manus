@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { AlertTriangle, RotateCcw } from "lucide-react";
+import { AlertTriangle, RotateCcw, Home } from "lucide-react";
 import { Component, ReactNode } from "react";
 
 interface Props {
@@ -18,38 +18,65 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    // Log error to console for debugging (server-side only in production)
+    console.error("[ErrorBoundary] Error capturado:", error);
     return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Log error details for debugging (only visible in console, not to user)
+    console.error("[ErrorBoundary] Detalles del error:", {
+      error: error.message,
+      componentStack: errorInfo.componentStack,
+    });
   }
 
   render() {
     if (this.state.hasError) {
+      // MENSAJE LIMPIO PARA EL USUARIO - SIN CÓDIGO TÉCNICO
       return (
-        <div className="flex items-center justify-center min-h-screen p-8 bg-background">
-          <div className="flex flex-col items-center w-full max-w-2xl p-8">
-            <AlertTriangle
-              size={48}
-              className="text-destructive mb-6 flex-shrink-0"
-            />
-
-            <h2 className="text-xl mb-4">An unexpected error occurred.</h2>
-
-            <div className="p-4 w-full rounded bg-muted overflow-auto mb-6">
-              <pre className="text-sm text-muted-foreground whitespace-break-spaces">
-                {this.state.error?.stack}
-              </pre>
+        <div className="flex items-center justify-center min-h-screen p-8 bg-slate-50">
+          <div className="flex flex-col items-center w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
+            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6">
+              <AlertTriangle
+                size={32}
+                className="text-red-500"
+              />
             </div>
 
-            <button
-              onClick={() => window.location.reload()}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg",
-                "bg-primary text-primary-foreground",
-                "hover:opacity-90 cursor-pointer"
-              )}
-            >
-              <RotateCcw size={16} />
-              Reload Page
-            </button>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2 text-center">
+              Ocurrió un error inesperado
+            </h2>
+            
+            <p className="text-gray-500 text-center mb-6">
+              Lo sentimos, algo salió mal. Por favor intenta recargar la página o volver al inicio.
+            </p>
+
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => window.location.href = '/'}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg",
+                  "bg-gray-100 text-gray-700",
+                  "hover:bg-gray-200 cursor-pointer transition-colors"
+                )}
+              >
+                <Home size={18} />
+                Inicio
+              </button>
+              
+              <button
+                onClick={() => window.location.reload()}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg",
+                  "bg-[#02B381] text-white",
+                  "hover:bg-[#02B381]/90 cursor-pointer transition-colors"
+                )}
+              >
+                <RotateCcw size={18} />
+                Recargar
+              </button>
+            </div>
           </div>
         </div>
       );
