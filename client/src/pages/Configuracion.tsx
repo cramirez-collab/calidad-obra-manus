@@ -442,10 +442,13 @@ export default function Configuracion() {
           </CardContent>
         </Card>
 
-        {/* Info */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-accent/50 rounded-lg p-3">
-          <Info className="h-4 w-4 shrink-0" />
-          <span>Los cambios se aplican inmediatamente</span>
+        {/* Info y Versión */}
+        <div className="flex items-center justify-between text-xs text-muted-foreground bg-accent/50 rounded-lg p-3">
+          <div className="flex items-center gap-2">
+            <Info className="h-4 w-4 shrink-0" />
+            <span>Los cambios se aplican inmediatamente</span>
+          </div>
+          <span className="font-mono bg-primary/10 text-primary px-2 py-0.5 rounded">v11</span>
         </div>
       </div>
     </DashboardLayout>

@@ -17,7 +17,9 @@ import {
   BarChart3,
   Plus,
   Loader2,
-  Filter
+  Filter,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useLocation, Redirect } from "wouter";
 import { formatDate } from "@/lib/dateFormat";
@@ -25,12 +27,15 @@ import { useProject } from "@/contexts/ProjectContext";
 
 type FilterType = "todos" | "foto" | "aprobar" | "corregir";
 
+const ITEMS_PER_PAGE = 20;
+
 export default function Bienvenida() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { selectedProjectId, isLoadingProjects } = useProject();
   const { data: pendientes, isLoading } = trpc.pendientes.misPendientes.useQuery();
   const [activeFilter, setActiveFilter] = useState<FilterType>("todos");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Redirigir a selección de proyecto si no hay proyecto seleccionado
   if (!isLoadingProjects && !selectedProjectId) {
@@ -65,6 +70,17 @@ export default function Bienvenida() {
     const config = getStatusConfig(item.status);
     return config.filter === activeFilter;
   }) || [];
+
+  // Paginación
+  const totalPages = Math.ceil(filteredPendientes.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedItems = filteredPendientes.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Resetear página cuando cambia el filtro
+  const handleFilterChange = (filter: FilterType) => {
+    setActiveFilter(filter);
+    setCurrentPage(1);
+  };
 
   // Contar por tipo
   const counts = {
@@ -145,7 +161,7 @@ export default function Bienvenida() {
                       ? `${filter.color} text-white border-0 shadow-md` 
                       : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
                   }`}
-                  onClick={() => setActiveFilter(filter.key)}
+                  onClick={() => handleFilterChange(filter.key)}
                 >
                   <filter.icon className="h-5 w-5" />
                   {/* Badge con contador */}
@@ -165,14 +181,14 @@ export default function Bienvenida() {
           ))}
         </div>
 
-        {/* Lista de pendientes - compacta */}
+        {/* Lista de pendientes - compacta con paginación */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#02B381]" />
           </div>
-        ) : filteredPendientes.length > 0 ? (
+        ) : paginatedItems.length > 0 ? (
           <div className="space-y-2">
-            {filteredPendientes.map((item: any) => {
+            {paginatedItems.map((item: any) => {
               const config = getStatusConfig(item.status);
               const Icon = config.icon;
               return (
@@ -228,6 +244,33 @@ export default function Bienvenida() {
                 </Card>
               );
             })}
+
+            {/* Controles de paginación */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm text-[#6E6E6E] px-3">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <Card className="border-0 shadow-sm">
