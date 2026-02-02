@@ -363,7 +363,7 @@ export default function Configuracion() {
             <Info className="h-4 w-4 shrink-0" />
             <span>Los cambios se aplican inmediatamente</span>
           </div>
-          <span className="font-mono bg-primary/10 text-primary px-2 py-0.5 rounded">v12</span>
+          <span className="font-mono bg-primary/10 text-primary px-2 py-0.5 rounded">v13</span>
         </div>
 
         {/* Sección Alta Rápida de Empresa */}

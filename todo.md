@@ -2401,3 +2401,10 @@
 - [x] Hacer visible botón Limpiar Caché en PC (menú usuario) - YA ESTABA
 - [x] Agregar opción eliminar ítems desde Bienvenida para superadmin
 
+
+### Sistema de Versionado Automático v13
+- [x] Implementar sistema de versionado con limpieza automática de caché
+- [x] Agregar verificación de versión al cargar la app
+- [x] Forzar actualización del Service Worker con nueva versión
+- [x] Hacer que funcione independientemente del caché de cada dispositivo
+

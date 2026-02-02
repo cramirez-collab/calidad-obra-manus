@@ -1,4 +1,10 @@
-const CACHE_NAME = 'oqc-v12';
+// ============================================
+// SISTEMA DE VERSIONADO AUTOMÁTICO v13
+// ============================================
+// Este número DEBE incrementarse con cada deploy
+// El SW detectará cambios y forzará actualización en TODOS los dispositivos
+const APP_VERSION = 13;
+const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
 // Solo recursos estáticos mínimos
@@ -9,67 +15,71 @@ const PRECACHE_ASSETS = [
   '/icon-512.png',
 ];
 
-// Intervalo de limpieza automática: 4 horas en milisegundos
-const AUTO_CLEAR_INTERVAL = 4 * 60 * 60 * 1000; // 4 horas
+// Intervalo de verificación de versión: 5 minutos
+const VERSION_CHECK_INTERVAL = 5 * 60 * 1000;
 
 // Instalar Service Worker - Limpieza TOTAL de toda caché anterior
 self.addEventListener('install', (event) => {
-  console.log('[SW v12] Installing - CLEARING ALL CACHE...');
+  console.log(`[SW v${APP_VERSION}] Installing - CLEARING ALL CACHE...`);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
-      console.log('[SW v12] Found caches to delete:', cacheNames);
+      console.log(`[SW v${APP_VERSION}] Found caches to delete:`, cacheNames);
       return Promise.all(
         cacheNames.map((name) => {
-          console.log('[SW v12] Deleting cache:', name);
+          console.log(`[SW v${APP_VERSION}] Deleting cache:`, name);
           return caches.delete(name);
         })
       );
     }).then(() => {
-      console.log('[SW v12] All old caches deleted, creating new cache...');
+      console.log(`[SW v${APP_VERSION}] All old caches deleted, creating new cache...`);
       return caches.open(CACHE_NAME).then((cache) => {
         return cache.addAll(PRECACHE_ASSETS);
       });
     }).then(() => {
-      console.log('[SW v12] Installation complete');
+      console.log(`[SW v${APP_VERSION}] Installation complete`);
     })
   );
-  // Forzar activación inmediata
+  // Forzar activación inmediata SIN esperar
   self.skipWaiting();
 });
 
 // Activar - Tomar control inmediato y limpiar cualquier caché restante
 self.addEventListener('activate', (event) => {
-  console.log('[SW v12] Activating - Taking control...');
+  console.log(`[SW v${APP_VERSION}] Activating - Taking control...`);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
           .filter((name) => name !== CACHE_NAME)
           .map((name) => {
-            console.log('[SW v12] Deleting old cache:', name);
+            console.log(`[SW v${APP_VERSION}] Deleting old cache:`, name);
             return caches.delete(name);
           })
       );
     }).then(() => {
-      console.log('[SW v12] Claiming all clients...');
+      console.log(`[SW v${APP_VERSION}] Claiming all clients...`);
       return self.clients.claim();
     }).then(() => {
       // Notificar a todos los clientes que recarguen
       return self.clients.matchAll().then((clients) => {
         clients.forEach((client) => {
-          client.postMessage({ type: 'SW_UPDATED', version: 'v12' });
+          client.postMessage({ 
+            type: 'SW_UPDATED', 
+            version: APP_VERSION,
+            forceReload: true 
+          });
         });
       });
     }).then(() => {
-      // Iniciar limpieza automática cada 4 horas
-      startAutoCacheClear();
+      // Iniciar verificación periódica de versión
+      startVersionCheck();
     })
   );
 });
 
 // Función para limpiar caché automáticamente
 async function clearAllCaches() {
-  console.log('[SW v12] Auto-clearing all caches...');
+  console.log(`[SW v${APP_VERSION}] Clearing all caches...`);
   const cacheNames = await caches.keys();
   await Promise.all(cacheNames.map(name => caches.delete(name)));
   
@@ -77,24 +87,33 @@ async function clearAllCaches() {
   const cache = await caches.open(CACHE_NAME);
   await cache.addAll(PRECACHE_ASSETS);
   
-  console.log('[SW v12] Auto-clear complete at', new Date().toISOString());
+  console.log(`[SW v${APP_VERSION}] Cache cleared at`, new Date().toISOString());
   
   // Notificar a los clientes
   const clients = await self.clients.matchAll();
   clients.forEach(client => {
-    client.postMessage({ type: 'AUTO_CACHE_CLEARED', timestamp: Date.now() });
+    client.postMessage({ type: 'CACHE_CLEARED', timestamp: Date.now() });
   });
 }
 
-// Iniciar limpieza automática cada 4 horas
-function startAutoCacheClear() {
-  console.log('[SW v12] Starting auto-clear interval (every 4 hours)');
-  setInterval(() => {
-    clearAllCaches();
-  }, AUTO_CLEAR_INTERVAL);
+// Verificar si hay nueva versión del SW
+async function checkForUpdates() {
+  try {
+    // Forzar actualización del SW
+    await self.registration.update();
+    console.log(`[SW v${APP_VERSION}] Version check completed`);
+  } catch (err) {
+    console.log(`[SW v${APP_VERSION}] Version check failed:`, err);
+  }
 }
 
-// Fetch - Network Only para TODO (máxima frescura, sin caché)
+// Iniciar verificación periódica de versión
+function startVersionCheck() {
+  console.log(`[SW v${APP_VERSION}] Starting version check interval (every 5 min)`);
+  setInterval(checkForUpdates, VERSION_CHECK_INTERVAL);
+}
+
+// Fetch - Network First para TODO (máxima frescura)
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -102,10 +121,10 @@ self.addEventListener('fetch', (event) => {
   // Ignorar otros orígenes
   if (url.origin !== location.origin) return;
 
-  // API - Network Only
+  // API - Network Only (nunca cachear)
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(request).catch(() => {
+      fetch(request, { cache: 'no-store' }).catch(() => {
         return new Response(
           JSON.stringify({ error: 'offline' }),
           { headers: { 'Content-Type': 'application/json' } }
@@ -118,13 +137,24 @@ self.addEventListener('fetch', (event) => {
   // Navegación - Network con fallback
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match(OFFLINE_URL))
+      fetch(request, { cache: 'no-store' }).catch(() => caches.match(OFFLINE_URL))
     );
     return;
   }
 
-  // Todo lo demás - Network Only (sin cache)
-  event.respondWith(fetch(request));
+  // Assets estáticos - Network First con caché como fallback
+  event.respondWith(
+    fetch(request, { cache: 'no-store' })
+      .then(response => {
+        // Clonar respuesta para guardar en caché
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(request, responseClone);
+        });
+        return response;
+      })
+      .catch(() => caches.match(request))
+  );
 });
 
 // Push notifications con badges
@@ -143,9 +173,9 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title || 'OQC', {
       body: data.body || 'Nueva notificación',
       icon: '/icon-192.png',
-      badge: '/icon-72.png', // Badge pequeño para la notificación
+      badge: '/icon-72.png',
       vibrate: [200, 100, 200],
-      tag: data.tag || 'oqc-notification', // Agrupar notificaciones similares
+      tag: data.tag || 'oqc-notification',
       renotify: true,
       requireInteraction: data.requireInteraction || false,
       data: { 
@@ -166,22 +196,16 @@ self.addEventListener('notificationclick', (event) => {
   
   // Limpiar badge al hacer click
   if ('clearAppBadge' in navigator) {
-    navigator.clearAppBadge().catch(err => {
-      console.log('[SW] Error clearing badge:', err);
-    });
+    navigator.clearAppBadge().catch(() => {});
   }
   
   const action = event.action;
   const url = event.notification.data?.url || '/';
   
-  if (action === 'dismiss') {
-    return; // Solo cerrar
-  }
+  if (action === 'dismiss') return;
   
-  // Abrir o enfocar la ventana existente
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-      // Buscar ventana existente
       for (const client of windowClients) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.focus();
@@ -189,15 +213,12 @@ self.addEventListener('notificationclick', (event) => {
           return;
         }
       }
-      // Si no hay ventana, abrir una nueva
       return clients.openWindow(url);
     })
   );
 });
 
-// Limpiar badge cuando se cierra la notificación
 self.addEventListener('notificationclose', (event) => {
-  // Verificar si hay más notificaciones pendientes
   self.registration.getNotifications().then(notifications => {
     if (notifications.length === 0 && 'clearAppBadge' in navigator) {
       navigator.clearAppBadge().catch(() => {});
@@ -218,7 +239,9 @@ self.addEventListener('message', (event) => {
   if (event.data?.type === 'FORCE_CLEAR_NOW') {
     clearAllCaches();
   }
-  // Actualizar badge manualmente
+  if (event.data?.type === 'GET_VERSION') {
+    event.source?.postMessage({ type: 'VERSION', version: APP_VERSION });
+  }
   if (event.data?.type === 'SET_BADGE') {
     if ('setAppBadge' in navigator) {
       navigator.setAppBadge(event.data.count || 0).catch(() => {});
