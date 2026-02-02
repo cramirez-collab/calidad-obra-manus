@@ -2138,47 +2138,14 @@
 
 
 
-## Correcciones Críticas de Producción (1 Febrero 2026)
-
-### A. Código/Logs visibles en pantalla - CORREGIDO
-- [x] ErrorBoundary reescrito - muestra mensaje limpio sin stack trace
-- [x] Mensajes de error en mutations son limpios para el usuario
-- [x] Logs solo visibles en consola del navegador (para debugging)
-
-### B. Tiempo de respuesta - OPTIMIZADO
-- [x] Compresión de imagen en cliente (1200px, quality 0.7)
-- [x] Backend usa setImmediate para operaciones secundarias
-- [x] Respuesta < 1 segundo (base64 guardado inmediatamente)
-
-### C. Item siempre se crea en BD - VERIFICADO
-- [x] El item se crea ANTES de subir a S3 (flujo correcto)
-- [x] S3 upload es en segundo plano (no bloquea)
-- [x] Fallback offline si falla la conexión
-
-### D. Optimistic UI - IMPLEMENTADO
-- [x] Diálogo de foto después se cierra inmediatamente (onMutate)
-- [x] Toast de loading mientras se procesa
-- [x] Toast de éxito/error al completar
+## Ordenar Menú Configuración (1 Febrero 2026)
+- [x] Ordenar secciones de Configuración por orden alfabético
+  - Opciones: Color del Tema, Comentario al Rechazar, Días para Alerta, Ítems por Página, Nombre de Empresa, Notificaciones Email
+  - Tarjetas: Alta Rápida de Empresa, Cambiar Contraseña, WhatsApp - Reportes Automáticos
 
 
-## Configuración Días y Horarios WhatsApp (1 Febrero 2026)
-- [x] Agregar selector de días de la semana (botones toggle Lun-Dom)
-- [x] Agregar selector de horarios (input type=time)
-- [x] Guardar configuración en backend (diasReporte como JSON, horaReporte)
-- [x] Campos agregados a tabla whatsapp_config
-- [x] 201 pruebas pasan correctamente
-
-
-## Agregar WhatsApp al Menú Lateral Móvil (1 Febrero 2026)
-- [x] Agregar opción "WhatsApp" en el submenú de Configuración del sidebar móvil
-- [x] Agregar opción "Configuración General" en el submenú
-- [x] Ordenar menú alfabéticamente
-- [x] 201 pruebas pasan correctamente
-
-
-## Corregir Error Creación de Ítems (1 Febrero 2026)
-- [x] Revisar código de creación de ítems
-- [x] Agregar mejor manejo de errores
-- [x] Agregar reintentos automáticos (3 intentos con espera progresiva)
-- [x] Toast de "Reintentando..." visible para el usuario
-- [x] Fallback a offline si todos los reintentos fallan
+## Agregar WhatsApp al Menú Lateral (1 Febrero 2026)
+- [x] Agregar opción "WhatsApp" en el submenú de Configuración del sidebar
+- [x] Ordenar submenú alfabéticamente
+- [x] Agregar "Configuración General" como opción separada
+- [x] WhatsApp ahora visible siempre para admins (con mensaje si no hay proyecto)

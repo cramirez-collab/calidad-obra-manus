@@ -40,7 +40,8 @@ import {
   Activity,
   Link2,
   BookOpen,
-  FileText
+  FileText,
+  MessageCircle
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -135,7 +136,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: QrCode, label: "QR", path: "/generar-qr" },
     { icon: MapPin, label: "Unidades", path: "/unidades" },
     { icon: Users, label: "Usuarios", path: "/usuarios" },
-    { icon: Activity, label: "WhatsApp", path: "/configuracion#whatsapp" },
+    { icon: MessageCircle, label: "WhatsApp", path: "/configuracion#whatsapp" },
   ];
 
   // Todos los usuarios ven los items base y de análisis

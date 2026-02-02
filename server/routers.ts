@@ -2211,18 +2211,9 @@ export const appRouter = router({
         grupoUrl: z.string().min(1),
         apiKey: z.string().optional(),
         numeroDestino: z.string().optional(),
-        diasReporte: z.array(z.string()).optional(),
-        horaReporte: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        await whatsappService.saveWhatsappConfig(
-          input.proyectoId, 
-          input.grupoUrl, 
-          input.apiKey, 
-          input.numeroDestino,
-          input.diasReporte,
-          input.horaReporte
-        );
+        await whatsappService.saveWhatsappConfig(input.proyectoId, input.grupoUrl, input.apiKey, input.numeroDestino);
         await db.createAuditoria({
           usuarioId: ctx.user.id,
           usuarioNombre: ctx.user.name || 'Usuario',
@@ -2231,7 +2222,7 @@ export const appRouter = router({
           categoria: 'configuracion',
           entidadTipo: 'proyecto',
           entidadId: input.proyectoId,
-          detalles: `Configuración de WhatsApp actualizada (Días: ${input.diasReporte?.join(', ') || 'default'}, Hora: ${input.horaReporte || '18:00'})`,
+          detalles: `Configuración de WhatsApp actualizada`,
         });
         return { success: true };
       }),

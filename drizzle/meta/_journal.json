@@ -309,13 +309,6 @@
       "when": 1769965078584,
       "tag": "0043_military_kinsey_walden",
       "breakpoints": true
-    },
-    {
-      "idx": 44,
-      "version": "5",
-      "when": 1769982742135,
-      "tag": "0044_spotty_pestilence",
-      "breakpoints": true
     }
   ]
 }

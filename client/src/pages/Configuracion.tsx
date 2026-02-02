@@ -44,31 +44,32 @@ interface ConfigItem {
   tipo: 'text' | 'number' | 'boolean';
 }
 
+// Ordenados alfabéticamente por label
 const configDefaults: Omit<ConfigItem, 'valor' | 'descripcion'>[] = [
-  { clave: 'nombre_empresa', icon: Building2, tipo: 'text', soloSuperadmin: false },
-  { clave: 'dias_alerta_pendiente', icon: Clock, tipo: 'number', soloSuperadmin: false },
-  { clave: 'notificaciones_email', icon: Bell, tipo: 'boolean', soloSuperadmin: false },
   { clave: 'tema_color', icon: Palette, tipo: 'text', soloSuperadmin: false },
   { clave: 'requiere_comentario_rechazo', icon: Shield, tipo: 'boolean', soloSuperadmin: false },
+  { clave: 'dias_alerta_pendiente', icon: Clock, tipo: 'number', soloSuperadmin: false },
   { clave: 'max_items_por_pagina', icon: Settings, tipo: 'number', soloSuperadmin: true },
+  { clave: 'nombre_empresa', icon: Building2, tipo: 'text', soloSuperadmin: false },
+  { clave: 'notificaciones_email', icon: Bell, tipo: 'boolean', soloSuperadmin: false },
 ];
 
 const configLabels: Record<string, string> = {
-  nombre_empresa: 'Nombre de Empresa',
-  dias_alerta_pendiente: 'Días para Alerta',
-  notificaciones_email: 'Notificaciones Email',
   tema_color: 'Color del Tema',
   requiere_comentario_rechazo: 'Comentario al Rechazar',
+  dias_alerta_pendiente: 'Días para Alerta',
   max_items_por_pagina: 'Ítems por Página',
+  nombre_empresa: 'Nombre de Empresa',
+  notificaciones_email: 'Notificaciones Email',
 };
 
 const configDescriptions: Record<string, string> = {
-  nombre_empresa: 'Nombre que aparece en reportes',
-  dias_alerta_pendiente: 'Días antes de alertar ítems pendientes',
-  notificaciones_email: 'Enviar notificaciones por correo',
   tema_color: 'Color principal de la interfaz',
   requiere_comentario_rechazo: 'Obligar comentario al rechazar',
+  dias_alerta_pendiente: 'Días antes de alertar ítems pendientes',
   max_items_por_pagina: 'Cantidad máxima de ítems en listas',
+  nombre_empresa: 'Nombre que aparece en reportes',
+  notificaciones_email: 'Enviar notificaciones por correo',
 };
 
 export default function Configuracion() {
@@ -134,10 +135,6 @@ export default function Configuracion() {
   const [whatsappNumero, setWhatsappNumero] = useState('');
   const [showReportePreview, setShowReportePreview] = useState(false);
   
-  // Días y horarios para reportes automáticos
-  const [diasReporte, setDiasReporte] = useState<string[]>(['lunes', 'martes', 'miercoles', 'jueves', 'viernes']);
-  const [horaReporte, setHoraReporte] = useState('18:00');
-  
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -184,21 +181,6 @@ export default function Configuracion() {
     if (whatsappConfig) {
       setWhatsappUrl(whatsappConfig.grupoUrl || '');
       setWhatsappApiKey(whatsappConfig.apiKey || '');
-      setWhatsappNumero(whatsappConfig.numeroDestino || '');
-      // Parsear días de reporte desde JSON
-      if (whatsappConfig.diasReporte) {
-        try {
-          const dias = JSON.parse(whatsappConfig.diasReporte);
-          if (Array.isArray(dias) && dias.length > 0) {
-            setDiasReporte(dias);
-          }
-        } catch {
-          // Si no es JSON válido, usar default
-        }
-      }
-      if (whatsappConfig.horaReporte) {
-        setHoraReporte(whatsappConfig.horaReporte);
-      }
     }
   }, [whatsappConfig]);
 
@@ -231,37 +213,12 @@ export default function Configuracion() {
       toast.error("Ingresa el enlace del grupo de WhatsApp");
       return;
     }
-    if (diasReporte.length === 0) {
-      toast.error("Selecciona al menos un día para enviar reportes");
-      return;
-    }
     saveWhatsappMutation.mutate({
       proyectoId: selectedProjectId,
       grupoUrl: whatsappUrl,
       apiKey: whatsappApiKey || undefined,
-      numeroDestino: whatsappNumero || undefined,
-      diasReporte: diasReporte,
-      horaReporte: horaReporte,
     });
   };
-
-  const toggleDia = (dia: string) => {
-    setDiasReporte(prev => 
-      prev.includes(dia) 
-        ? prev.filter(d => d !== dia)
-        : [...prev, dia]
-    );
-  };
-
-  const diasSemana = [
-    { id: 'lunes', label: 'Lun' },
-    { id: 'martes', label: 'Mar' },
-    { id: 'miercoles', label: 'Mié' },
-    { id: 'jueves', label: 'Jue' },
-    { id: 'viernes', label: 'Vie' },
-    { id: 'sabado', label: 'Sáb' },
-    { id: 'domingo', label: 'Dom' },
-  ];
 
   const handlePreviewReporte = () => {
     setShowReportePreview(true);
@@ -372,6 +329,28 @@ export default function Configuracion() {
           })}
         </div>
 
+        {/* Sección Alta Rápida de Empresa */}
+        <Card className="mt-6 border-primary/20 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Zap className="h-5 w-5 text-primary" />
+              Alta Rápida de Empresa
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Configura una nueva empresa con especialidad, usuarios y defectos en un solo flujo simple de 4 pasos.
+            </p>
+            <Link href="/configuracion/alta-rapida">
+              <Button className="gap-2">
+                <Building2 className="h-4 w-4" />
+                Iniciar Alta Rápida
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
         {/* Sección Cambiar Contraseña */}
         <Card className="mt-6">
           <CardHeader className="pb-3">
@@ -437,31 +416,9 @@ export default function Configuracion() {
           </CardContent>
         </Card>
 
-        {/* Sección Alta Rápida */}
-        <Card className="mt-6 border-primary/20 bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Zap className="h-5 w-5 text-primary" />
-              Alta Rápida de Empresa
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Configura una nueva empresa con especialidad, usuarios y defectos en un solo flujo simple de 4 pasos.
-            </p>
-            <Link href="/configuracion/alta-rapida">
-              <Button className="gap-2">
-                <Building2 className="h-4 w-4" />
-                Iniciar Alta Rápida
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
         {/* Sección WhatsApp - Reportes Automáticos (Solo Admin) */}
-        {isAdmin && selectedProjectId && (
-          <Card className="mt-6 border-green-500/20 bg-green-500/5">
+        {isAdmin && (
+          <Card id="whatsapp" className="mt-6 border-green-500/20 bg-green-500/5 scroll-mt-20">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <MessageCircle className="h-5 w-5 text-green-600" />
@@ -533,48 +490,6 @@ export default function Configuracion() {
                     </p>
                   </div>
                 )}
-
-                {/* Días de envío */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Días de Envío
-                  </Label>
-                  <div className="flex flex-wrap gap-2">
-                    {diasSemana.map((dia) => (
-                      <button
-                        key={dia.id}
-                        type="button"
-                        onClick={() => toggleDia(dia.id)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          diasReporte.includes(dia.id)
-                            ? 'bg-green-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                      >
-                        {dia.label}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Selecciona los días en que deseas recibir el reporte automático.
-                  </p>
-                </div>
-
-                {/* Hora de envío */}
-                <div className="space-y-2">
-                  <Label htmlFor="horaReporte" className="text-sm font-medium">Hora de Envío</Label>
-                  <Input
-                    id="horaReporte"
-                    type="time"
-                    value={horaReporte}
-                    onChange={(e) => setHoraReporte(e.target.value)}
-                    className="w-32"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Hora local (Ciudad de México) en que se enviará el reporte.
-                  </p>
-                </div>
 
                 {/* Botones de acción */}
                 <div className="flex flex-wrap gap-2 pt-2">
@@ -651,23 +566,17 @@ export default function Configuracion() {
                 </div>
               )}
 
+              {/* Mensaje si no hay proyecto seleccionado */}
+              {!selectedProjectId && (
+                <div className="bg-yellow-50 dark:bg-yellow-950/30 rounded-lg p-3 text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
+                  <Info className="h-4 w-4 shrink-0" />
+                  <span>Selecciona un proyecto en el menú superior para configurar los reportes de WhatsApp.</span>
+                </div>
+              )}
+
               {/* Horarios */}
               <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 text-xs text-green-700 dark:text-green-300">
                 <strong>Horarios de reportes:</strong> L-V: 9am, 12pm, 5pm | Sábados: 9am, 12pm | Domingos: No se envían
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Mensaje si no hay proyecto seleccionado */}
-        {isAdmin && !selectedProjectId && (
-          <Card className="mt-6 border-yellow-500/20 bg-yellow-500/5">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Info className="h-5 w-5 text-yellow-600" />
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  Selecciona un proyecto para configurar los reportes de WhatsApp.
-                </p>
               </div>
             </CardContent>
           </Card>
