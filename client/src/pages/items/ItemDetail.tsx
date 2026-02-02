@@ -375,7 +375,7 @@ export default function ItemDetail() {
     ["superadmin", "admin", "supervisor", "jefe_residente"].includes(user?.role || "");
   
   const canApprove = item?.status === "pendiente_aprobacion" && 
-    ["admin", "supervisor"].includes(user?.role || "");
+    ["superadmin", "admin", "supervisor"].includes(user?.role || "");
   
   // Solo superadmin puede eliminar permanentemente
   const canDelete = user?.role === 'superadmin';

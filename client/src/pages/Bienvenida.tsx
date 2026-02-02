@@ -132,30 +132,33 @@ export default function Bienvenida() {
           </div>
         </div>
 
-        {/* Filtros de estado */}
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+        {/* Filtros de estado - solo iconos con contador */}
+        <div className="flex gap-1.5 flex-wrap">
           {filterButtons.map(filter => (
-            <Button
-              key={filter.key}
-              variant={activeFilter === filter.key ? "default" : "outline"}
-              size="sm"
-              className={`shrink-0 gap-1.5 ${
-                activeFilter === filter.key 
-                  ? `${filter.color} text-white border-0` 
-                  : "bg-white border-slate-200"
-              }`}
-              onClick={() => setActiveFilter(filter.key)}
-            >
-              <filter.icon className="h-3.5 w-3.5" />
-              <span>{filter.label}</span>
-              <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs ${
-                activeFilter === filter.key 
-                  ? "bg-white/20" 
-                  : "bg-slate-100"
-              }`}>
-                {counts[filter.key]}
-              </span>
-            </Button>
+            <Tooltip key={filter.key}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={activeFilter === filter.key ? "default" : "outline"}
+                  size="sm"
+                  className={`h-9 px-2.5 gap-1 ${
+                    activeFilter === filter.key 
+                      ? `${filter.color} text-white border-0` 
+                      : "bg-white border-slate-200 text-slate-600"
+                  }`}
+                  onClick={() => setActiveFilter(filter.key)}
+                >
+                  <filter.icon className="h-4 w-4" />
+                  <span className={`text-xs font-medium ${
+                    activeFilter === filter.key 
+                      ? "text-white" 
+                      : "text-slate-500"
+                  }`}>
+                    {counts[filter.key]}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{filter.label}</TooltipContent>
+            </Tooltip>
           ))}
         </div>
 
