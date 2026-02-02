@@ -59,100 +59,100 @@ const ItemsList = lazy(() => import("./pages/items/ItemsList"));
 const NuevoItem = lazy(() => import("./pages/items/NuevoItem"));
 const ItemDetail = lazy(() => import("./pages/items/ItemDetail"));
 
-function Router() {
+function AppRoutes() {
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Switch>
-        {/* Login */}
-        <Route path="/login" component={Login} />
-        
-        {/* Selección de Proyecto (punto de entrada) */}
-        <Route path="/seleccionar-proyecto" component={SeleccionProyecto} />
-        
-        {/* Dashboard y Bienvenida */}
-        <Route path="/" component={SeleccionProyecto} />
-        <Route path="/dashboard" component={Home} />
-        <Route path="/bienvenida" component={Bienvenida} />
-        
-        {/* Proyectos */}
-        <Route path="/proyectos/nuevo" component={NuevoProyecto} />
-        <Route path="/proyectos" component={Proyectos} />
-        <Route path="/panoramica" component={VistaPanoramica} />
-        <Route path="/stacking/pdf" component={StackingPDF} />
-        <Route path="/unidades/importar" component={ImportarUnidades} />
-        
-        {/* Items */}
-        <Route path="/items" component={ItemsList} />
-        <Route path="/nuevo-item" component={NuevoItem} />
-        <Route path="/items/nuevo" component={NuevoItem} />
+    <Switch>
+      {/* Login */}
+      <Route path="/login" component={Login} />
+      
+      {/* Selección de Proyecto (punto de entrada) */}
+      <Route path="/seleccionar-proyecto" component={SeleccionProyecto} />
+      
+      {/* Dashboard y Bienvenida */}
+      <Route path="/" component={SeleccionProyecto} />
+      <Route path="/dashboard" component={Home} />
+      <Route path="/bienvenida" component={Bienvenida} />
+      
+      {/* Proyectos */}
+      <Route path="/proyectos/nuevo" component={NuevoProyecto} />
+      <Route path="/proyectos" component={Proyectos} />
+      <Route path="/panoramica" component={VistaPanoramica} />
+      <Route path="/stacking/pdf" component={StackingPDF} />
+      <Route path="/unidades/importar" component={ImportarUnidades} />
+      
+      {/* Items */}
+      <Route path="/items" component={ItemsList} />
+      <Route path="/nuevo-item" component={NuevoItem} />
+      <Route path="/items/nuevo" component={NuevoItem} />
 
-        <Route path="/items/aprobacion" component={ItemsList} />
-        <Route path="/items/:id" component={ItemDetail} />
-        
-        {/* Catálogos */}
-        <Route path="/empresas" component={Empresas} />
-        <Route path="/empresas/:id" component={EmpresaDetalle} />
-        <Route path="/unidades" component={Unidades} />
-        <Route path="/especialidades" component={Especialidades} />
-        <Route path="/catalogos/empresas" component={Empresas} />
-        <Route path="/catalogos/unidades" component={Unidades} />
-        <Route path="/catalogos/espacios" component={Espacios} />
-        <Route path="/espacios" component={Espacios} />
-        <Route path="/catalogos/especialidades" component={Especialidades} />
-        <Route path="/lista-especialidades" component={ListaEspecialidades} />
-        <Route path="/defectos" component={Defectos} />
-        <Route path="/catalogos/defectos" component={Defectos} />
-        <Route path="/alta-rapida-empresa" component={AltaRapidaEmpresa} />
-        <Route path="/configuracion/alta-rapida" component={AltaRapidaEmpresa} />
-        
+      <Route path="/items/aprobacion" component={ItemsList} />
+      <Route path="/items/:id" component={ItemDetail} />
+      
+      {/* Catálogos */}
+      <Route path="/empresas" component={Empresas} />
+      <Route path="/empresas/:id" component={EmpresaDetalle} />
+      <Route path="/unidades" component={Unidades} />
+      <Route path="/especialidades" component={Especialidades} />
+      <Route path="/catalogos/empresas" component={Empresas} />
+      <Route path="/catalogos/unidades" component={Unidades} />
+      <Route path="/catalogos/espacios" component={Espacios} />
+      <Route path="/espacios" component={Espacios} />
+      <Route path="/catalogos/especialidades" component={Especialidades} />
+      <Route path="/lista-especialidades" component={ListaEspecialidades} />
+      <Route path="/defectos" component={Defectos} />
+      <Route path="/catalogos/defectos" component={Defectos} />
+      <Route path="/alta-rapida-empresa" component={AltaRapidaEmpresa} />
+      <Route path="/configuracion/alta-rapida" component={AltaRapidaEmpresa} />
+      
 
-        
-        {/* Usuarios y Bitácora */}
-        <Route path="/usuarios" component={Usuarios} />
-        <Route path="/bitacora" component={Bitacora} />
-        
-        {/* Estadísticas */}
-        <Route path="/estadisticas" component={Estadisticas} />
-        <Route path="/kpis" component={KPIs} />
-        
-        {/* Flujo Rápido */}
-        <Route path="/mis-tareas" component={DashboardResidente} />
-        
-        {/* Seguimiento público (QR) */}
-        <Route path="/seguimiento/:codigo" component={Seguimiento} />
-        <Route path="/generar-qr" component={GenerarQR} />
-        
-        {/* Términos y Condiciones */}
-        <Route path="/terminos" component={Terminos} />
-        
-        {/* Configuración y Metas */}
-        <Route path="/configuracion" component={Configuracion} />
-        <Route path="/enlaces-externos" component={EnlacesExternos} />
-        <Route path="/metas" component={Metas} />
-        
-        {/* 404 */}
-        <Route path="/404" component={NotFound} />
-        <Route component={NotFound} />
-      </Switch>
-    </Suspense>
+      
+      {/* Usuarios y Bitácora */}
+      <Route path="/usuarios" component={Usuarios} />
+      <Route path="/bitacora" component={Bitacora} />
+      
+      {/* Estadísticas */}
+      <Route path="/estadisticas" component={Estadisticas} />
+      <Route path="/kpis" component={KPIs} />
+      
+      {/* Flujo Rápido */}
+      <Route path="/mis-tareas" component={DashboardResidente} />
+      
+      {/* Seguimiento público (QR) */}
+      <Route path="/seguimiento/:codigo" component={Seguimiento} />
+      <Route path="/generar-qr" component={GenerarQR} />
+      
+      {/* Términos y Condiciones */}
+      <Route path="/terminos" component={Terminos} />
+      
+      {/* Configuración y Metas */}
+      <Route path="/configuracion" component={Configuracion} />
+      <Route path="/enlaces-externos" component={EnlacesExternos} />
+      <Route path="/metas" component={Metas} />
+      
+      {/* 404 */}
+      <Route path="/404" component={NotFound} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
 function App() {
   return (
-    <ErrorBoundary>
-      <WouterRouter>
-        <ThemeProvider defaultTheme="light">
-          <ProjectProvider>
-            <TooltipProvider>
-              <Toaster />
-              <ConnectionStatus />
-              <Router />
-            </TooltipProvider>
-          </ProjectProvider>
-        </ThemeProvider>
-      </WouterRouter>
-    </ErrorBoundary>
+    <WouterRouter>
+      <ThemeProvider defaultTheme="light">
+        <ProjectProvider>
+          <TooltipProvider>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Toaster />
+                <ConnectionStatus />
+                <AppRoutes />
+              </Suspense>
+            </ErrorBoundary>
+          </TooltipProvider>
+        </ProjectProvider>
+      </ThemeProvider>
+    </WouterRouter>
   );
 }
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oqc-v2';
+const CACHE_NAME = 'oqc-v3';
 const OFFLINE_URL = '/offline.html';
 
 // Recursos que se cachean inmediatamente
