@@ -2205,3 +2205,10 @@
 - [ ] Implementar función base64ToBlob como utilidad global
 - [ ] Corregir todos los componentes que muestran fotos
 - [ ] Verificar que no se muestre código Base64 en ninguna parte
+
+
+## Fix Definitivo Base64 como Texto (Febrero 2026)
+- [ ] Crear función utilitaria toImageUri global
+- [ ] Buscar todos los componentes que renderizan fotos como texto
+- [ ] Reemplazar <Text>{foto}</Text> por <Image> con toImageUri
+- [ ] Verificar que ningún Base64 se renderiza como texto

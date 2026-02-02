@@ -1142,9 +1142,42 @@ export async function getItemByCodigo(codigo: string) {
   const db = await getDb();
   if (!db) return undefined;
   
+  // Usar campos específicos sin Base64 para evitar enviar datos enormes
   const result = await db
     .select({
-      item: items,
+      id: items.id,
+      codigo: items.codigo,
+      qrCode: items.qrCode,
+      proyectoId: items.proyectoId,
+      empresaId: items.empresaId,
+      unidadId: items.unidadId,
+      especialidadId: items.especialidadId,
+      atributoId: items.atributoId,
+      defectoId: items.defectoId,
+      espacioId: items.espacioId,
+      residenteId: items.residenteId,
+      jefeResidenteId: items.jefeResidenteId,
+      supervisorId: items.supervisorId,
+      titulo: items.titulo,
+      descripcion: items.descripcion,
+      ubicacionDetalle: items.ubicacionDetalle,
+      fotoAntesUrl: items.fotoAntesUrl,
+      fotoAntesKey: items.fotoAntesKey,
+      fotoAntesMarcadaUrl: items.fotoAntesMarcadaUrl,
+      fotoAntesMarcadaKey: items.fotoAntesMarcadaKey,
+      fotoDespuesUrl: items.fotoDespuesUrl,
+      fotoDespuesKey: items.fotoDespuesKey,
+      status: items.status,
+      fechaCreacion: items.fechaCreacion,
+      fechaFotoDespues: items.fechaFotoDespues,
+      fechaAprobacion: items.fechaAprobacion,
+      comentarioResidente: items.comentarioResidente,
+      comentarioJefeResidente: items.comentarioJefeResidente,
+      comentarioSupervisor: items.comentarioSupervisor,
+      clientId: items.clientId,
+      numeroInterno: items.numeroInterno,
+      createdAt: items.createdAt,
+      updatedAt: items.updatedAt,
       empresa: empresas,
       unidad: unidades,
       especialidad: especialidades,
@@ -1158,12 +1191,7 @@ export async function getItemByCodigo(codigo: string) {
   
   if (result.length === 0) return undefined;
   
-  return {
-    ...result[0].item,
-    empresa: result[0].empresa,
-    unidad: result[0].unidad,
-    especialidad: result[0].especialidad,
-  };
+  return result[0];
 }
 
 export async function updateItem(id: number, data: Partial<InsertItem>) {

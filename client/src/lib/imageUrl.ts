@@ -102,3 +102,64 @@ export function revokeObjectUrl(url: string): void {
     URL.revokeObjectURL(url);
   }
 }
+
+/**
+ * FUNCIÓN GLOBAL DEFINITIVA para convertir cualquier valor de foto a URI válida
+ * REGLA: Ningún Base64 debe renderizarse como texto
+ * 
+ * @param value - URL, Base64, o cualquier string de foto
+ * @returns URI válida para usar en <Image source={{uri}} /> o null si no es válido
+ */
+export function toImageUri(value: string | undefined | null): string | null {
+  if (!value || typeof value !== 'string' || value.trim() === '') {
+    return null;
+  }
+  
+  const trimmed = value.trim();
+  
+  // Si ya es una URL válida (http, https, file, content)
+  if (trimmed.startsWith('http://') || 
+      trimmed.startsWith('https://') || 
+      trimmed.startsWith('file://') || 
+      trimmed.startsWith('content://')) {
+    return trimmed;
+  }
+  
+  // Si ya tiene el prefijo data:image
+  if (trimmed.startsWith('data:image/')) {
+    return trimmed;
+  }
+  
+  // Si es Base64 de JPEG (empieza con /9j)
+  if (trimmed.startsWith('/9j')) {
+    return `data:image/jpeg;base64,${trimmed}`;
+  }
+  
+  // Si es Base64 de PNG (empieza con iVBOR)
+  if (trimmed.startsWith('iVBOR')) {
+    return `data:image/png;base64,${trimmed}`;
+  }
+  
+  // Si es Base64 de GIF (empieza con R0lGOD)
+  if (trimmed.startsWith('R0lGOD')) {
+    return `data:image/gif;base64,${trimmed}`;
+  }
+  
+  // Si es Base64 de WebP (empieza con UklGR)
+  if (trimmed.startsWith('UklGR')) {
+    return `data:image/webp;base64,${trimmed}`;
+  }
+  
+  // Si parece ser Base64 genérico (muy largo y solo caracteres válidos)
+  if (trimmed.length > 100 && /^[A-Za-z0-9+/=]+$/.test(trimmed)) {
+    return `data:image/jpeg;base64,${trimmed}`;
+  }
+  
+  // Si es un key de S3 o path relativo, usar el proxy de imagen
+  if (!trimmed.includes(' ') && (trimmed.includes('/') || trimmed.includes('.'))) {
+    return `/api/image/${trimmed}`;
+  }
+  
+  // No es una imagen válida
+  return null;
+}
