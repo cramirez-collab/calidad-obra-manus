@@ -1,0 +1,25 @@
+{
+  "query": "SELECT id, codigo, SUBSTRING(fotoAntesUrl, 1, 150) as foto_url FROM items WHERE fotoAntesUrl IS NOT NULL AND fotoAntesUrl != '' LIMIT 3",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, SUBSTRING(fotoAntesUrl, 1, 150) as foto_url FROM items WHERE fotoAntesUrl IS NOT NULL AND fotoAntesUrl != '' LIMIT 3",
+  "rows": [
+    {
+      "id": "600001",
+      "codigo": "Hidalma-56329D",
+      "foto_url": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/Hidalma-56329D/antes-N2BOu0v2.jpg"
+    },
+    {
+      "id": "630001",
+      "codigo": "OQC-M3K2SU",
+      "foto_url": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/OQC-M3K2SU/antes-E1SAsk5y.png"
+    },
+    {
+      "id": "630002",
+      "codigo": "OQC-RMRAXT",
+      "foto_url": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/OQC-RMRAXT/antes-NmiZJLv3.png"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\tfoto_url\n600001\tHidalma-56329D\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/Hidalma-56329D/antes-N2BOu0v2.jpg\n630001\tOQC-M3K2SU\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/OQC-M3K2SU/antes-E1SAsk5y.png\n630002\tOQC-RMRAXT\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/OQC-RMRAXT/antes-NmiZJLv3.png\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

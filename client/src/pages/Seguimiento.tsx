@@ -83,7 +83,8 @@ export default function Seguimiento() {
       setShowUploadSection(false);
     },
     onError: (error) => {
-      toast.error(error.message);
+      const msg = error.message?.length > 100 ? 'Error al subir foto. Intenta de nuevo.' : error.message;
+      toast.error(msg);
     },
   });
 
@@ -93,7 +94,8 @@ export default function Seguimiento() {
       toast.success("Ítem aprobado correctamente");
     },
     onError: (error) => {
-      toast.error(error.message);
+      const msg = error.message?.length > 100 ? 'Error al aprobar. Intenta de nuevo.' : error.message;
+      toast.error(msg);
     },
   });
 
@@ -103,7 +105,8 @@ export default function Seguimiento() {
       toast.success("Ítem rechazado");
     },
     onError: (error) => {
-      toast.error(error.message);
+      const msg = error.message?.length > 100 ? 'Error al rechazar. Intenta de nuevo.' : error.message;
+      toast.error(msg);
     },
   });
 

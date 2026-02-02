@@ -88,7 +88,8 @@ export default function ItemsList() {
       setItemToDelete(null);
     },
     onError: (error) => {
-      toast.error('Error al eliminar: ' + error.message);
+      const msg = error.message?.length > 100 ? 'Error al eliminar. Intenta de nuevo.' : ('Error al eliminar: ' + error.message);
+      toast.error(msg);
     }
   });
   

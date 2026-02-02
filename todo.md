@@ -2287,3 +2287,36 @@
 - Creación de ítems funciona
 - Fotos se muestran como imágenes
 - getImageUrl() convierte Base64 a blob URL para evitar texto largo
+
+
+## Corrección CRÍTICA: Base64 como Texto en Móvil (Febrero 2026)
+- [ ] Revisar NuevoItem.tsx - flujo de creación y manejo de Base64
+- [ ] Revisar ItemDetail.tsx - flujo de foto después
+- [ ] Revisar endpoint items.create y items.addFotoDespues
+- [ ] Identificar dónde se muestra Base64 como texto
+- [ ] Corregir todos los problemas encontrados
+- [ ] Probar exhaustivamente
+
+
+## Corrección CRÍTICA: Sanitización de Mensajes de Error (02-Feb-2026)
+
+### Problema Identificado
+- Los mensajes de error podían contener texto Base64 largo que se mostraba en los toasts
+- Esto ocurría cuando el servidor devolvía errores con datos de imagen incluidos
+
+### Correcciones Realizadas
+- [x] NuevoItem.tsx: Sanitizar error.message (línea 346-349)
+- [x] ItemDetail.tsx: Sanitizar 5 lugares de error.message (líneas 139, 153, 167, 242, 321)
+- [x] ItemsList.tsx: Sanitizar error.message (línea 91)
+- [x] Seguimiento.tsx: Sanitizar 3 lugares de error.message (líneas 86, 97, 108)
+- [x] Crear errorUtils.ts: Función utilitaria para sanitizar errores
+
+### Lógica de Sanitización
+- Si el mensaje tiene más de 100 caracteres, mostrar mensaje genérico
+- Si el mensaje contiene "data:image" o "base64", mostrar mensaje genérico
+- Mensajes cortos se muestran normalmente
+
+### Verificación
+- [x] 197 tests pasando sin errores
+- [x] Ítem #6 (Hidalma-73UZQ4) creado correctamente con foto
+- [x] Foto se muestra como imagen, NO como texto Base64

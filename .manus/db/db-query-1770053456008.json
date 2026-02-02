@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, codigo, LEFT(fotoAntesUrl, 100) as fotoAntesUrl_inicio, LEFT(fotoAntesBase64, 100) as fotoAntesBase64_inicio FROM items WHERE fotoAntesUrl IS NOT NULL LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, LEFT(fotoAntesUrl, 100) as fotoAntesUrl_inicio, LEFT(fotoAntesBase64, 100) as fotoAntesBase64_inicio FROM items WHERE fotoAntesUrl IS NOT NULL LIMIT 5",
+  "rows": [
+    {
+      "id": "600001",
+      "codigo": "Hidalma-56329D",
+      "fotoAntesUrl_inicio": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/Hidalma-56329D",
+      "fotoAntesBase64_inicio": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCI"
+    },
+    {
+      "id": "630001",
+      "codigo": "OQC-M3K2SU",
+      "fotoAntesUrl_inicio": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/OQC-M3K2SU/ant",
+      "fotoAntesBase64_inicio": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9aw"
+    },
+    {
+      "id": "630002",
+      "codigo": "OQC-RMRAXT",
+      "fotoAntesUrl_inicio": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/OQC-RMRAXT/ant",
+      "fotoAntesBase64_inicio": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9aw"
+    },
+    {
+      "id": "630005",
+      "codigo": "Hidalma-AG26KW",
+      "fotoAntesUrl_inicio": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/Hidalma-AG26KW",
+      "fotoAntesBase64_inicio": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCI"
+    },
+    {
+      "id": "630006",
+      "codigo": "OQC-3KY2FQ",
+      "fotoAntesUrl_inicio": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/OQC-3KY2FQ/ant",
+      "fotoAntesBase64_inicio": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9aw"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\tfotoAntesUrl_inicio\tfotoAntesBase64_inicio\n600001\tHidalma-56329D\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/Hidalma-56329D\tdata:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCI\n630001\tOQC-M3K2SU\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/OQC-M3K2SU/ant\tdata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9aw\n630002\tOQC-RMRAXT\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/OQC-RMRAXT/ant\tdata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9aw\n630005\tHidalma-AG26KW\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/Hidalma-AG26KW\tdata:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCI\n630006\tOQC-3KY2FQ\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/OQC-3KY2FQ/ant\tdata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9aw\n",
+  "stderr": "",
+  "execution_time_ms": 99
+}

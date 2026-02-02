@@ -136,7 +136,8 @@ export default function ItemDetail() {
       setComentario("");
     },
     onError: (error) => {
-      toast.error(error.message);
+      const msg = error.message?.length > 100 ? 'Error al subir foto. Intenta de nuevo.' : error.message;
+      toast.error(msg);
     },
   });
 
@@ -149,7 +150,8 @@ export default function ItemDetail() {
       setComentario("");
     },
     onError: (error) => {
-      toast.error(error.message);
+      const msg = error.message?.length > 100 ? 'Error al aprobar. Intenta de nuevo.' : error.message;
+      toast.error(msg);
     },
   });
 
@@ -162,7 +164,8 @@ export default function ItemDetail() {
       setComentario("");
     },
     onError: (error) => {
-      toast.error(error.message);
+      const msg = error.message?.length > 100 ? 'Error al rechazar. Intenta de nuevo.' : error.message;
+      toast.error(msg);
     },
   });
 
@@ -236,7 +239,8 @@ export default function ItemDetail() {
       });
     } catch (error: any) {
       console.error('Error subiendo foto después:', error);
-      toast.error(error.message || 'Error al subir la foto');
+      const msg = error.message?.length > 100 ? 'Error al subir la foto. Intenta de nuevo.' : (error.message || 'Error al subir la foto');
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -314,7 +318,8 @@ export default function ItemDetail() {
       setLocation('/items');
     },
     onError: (error) => {
-      toast.error('Error al eliminar: ' + error.message);
+      const msg = error.message?.length > 100 ? 'Error al eliminar. Intenta de nuevo.' : ('Error al eliminar: ' + error.message);
+      toast.error(msg);
     }
   });
   

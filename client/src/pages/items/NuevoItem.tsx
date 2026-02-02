@@ -343,7 +343,10 @@ export default function NuevoItem() {
           toast.error("Error al guardar offline");
         }
       } else {
-        toast.error(error.message || "Error al crear el ítem");
+        // Sanitizar mensaje de error para evitar mostrar Base64
+        const errorMsg = error.message || "Error al crear el ítem";
+        const sanitizedMsg = errorMsg.length > 100 ? "Error al crear el ítem. Intenta de nuevo." : errorMsg;
+        toast.error(sanitizedMsg);
       }
     } finally {
       setIsSubmitting(false);
