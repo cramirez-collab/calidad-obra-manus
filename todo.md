@@ -2237,3 +2237,34 @@
 - Fotos se muestran correctamente como imágenes (NO como texto Base64)
 - La función getImageUrl() maneja correctamente URLs y Base64
 - La lista de ítems muestra miniaturas correctamente
+
+
+## Corrección DEFINITIVA con Vitest (Febrero 2026)
+- [ ] Analizar flujo completo de creación de ítems
+- [ ] Analizar manejo de imágenes Base64 vs URLs
+- [ ] Crear test Vitest para endpoint items.create
+- [ ] Crear test Vitest para función getImageUrl
+- [ ] Crear test Vitest para subida de fotos a S3
+- [ ] Ejecutar tests y corregir errores
+- [ ] Verificar que no aparece texto Base64 largo
+- [ ] Verificar que ítems se crean correctamente
+
+
+## Corrección DEFINITIVA con Vitest (Febrero 2026)
+
+### Tests Creados
+- [x] items-create-base64.test.ts - 12 tests para creación de ítems y manejo de Base64
+- [x] Verificación de que items.list NO incluye campos Base64
+- [x] Verificación de que items.get NO incluye campos Base64
+- [x] Verificación de que pendientes.misPendientes NO incluye Base64
+
+### Correcciones Aplicadas
+- [x] ReporteFotografico.tsx: Ahora usa getImageUrl() para las fotos en el HTML generado
+- [x] DashboardLayout.tsx: Ahora usa getImageUrl() para el avatar del usuario
+- [x] ux-qr.test.ts: Corregido para usar fechaCreacion en lugar de createdAt
+
+### Resultado Final
+- [x] 197 tests pasando sin errores
+- [x] Creación de ítems funciona correctamente
+- [x] Fotos se muestran como imágenes, NO como texto Base64
+- [x] Función getImageUrl() maneja correctamente URLs y Base64

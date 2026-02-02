@@ -80,11 +80,11 @@ describe("UX y QR Improvements", () => {
     expect(result).toBeDefined();
     expect(Array.isArray(result)).toBe(true);
     
-    // Verify ordering (oldest first)
+    // Verify ordering (oldest first) - usa fechaCreacion, no createdAt
     if (result.length > 1) {
       for (let i = 0; i < result.length - 1; i++) {
-        const currentDate = new Date(result[i].createdAt).getTime();
-        const nextDate = new Date(result[i + 1].createdAt).getTime();
+        const currentDate = new Date(result[i].fechaCreacion).getTime();
+        const nextDate = new Date(result[i + 1].fechaCreacion).getTime();
         expect(currentDate).toBeLessThanOrEqual(nextDate);
       }
     }

@@ -218,14 +218,14 @@ export default function ReporteFotografico() {
         <div class="photo-container">
           <div class="photo-label">ANTES</div>
           ${item.fotoAntesMarcadaUrl || item.fotoAntesUrl 
-            ? `<img src="${item.fotoAntesMarcadaUrl || item.fotoAntesUrl}" class="photo" crossorigin="anonymous" />`
+            ? `<img src="${getImageUrl(item.fotoAntesMarcadaUrl || item.fotoAntesUrl)}" class="photo" crossorigin="anonymous" />`
             : '<div class="no-photo">Sin foto</div>'
           }
         </div>
         <div class="photo-container">
           <div class="photo-label">DESPUÉS</div>
           ${item.fotoDespuesUrl 
-            ? `<img src="${item.fotoDespuesUrl}" class="photo" crossorigin="anonymous" />`
+            ? `<img src="${getImageUrl(item.fotoDespuesUrl)}" class="photo" crossorigin="anonymous" />`
             : '<div class="no-photo">Sin foto</div>'
           }
         </div>
