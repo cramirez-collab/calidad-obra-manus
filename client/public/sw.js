@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oqc-v7';
+const CACHE_NAME = 'oqc-v8';
 const OFFLINE_URL = '/offline.html';
 
 // Solo recursos estáticos mínimos
@@ -11,7 +11,7 @@ const PRECACHE_ASSETS = [
 
 // Instalar Service Worker - Limpieza total
 self.addEventListener('install', (event) => {
-  console.log('[SW v7] Installing...');
+  console.log('[SW v8] Installing...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -31,7 +31,7 @@ self.addEventListener('install', (event) => {
 
 // Activar - Tomar control inmediato
 self.addEventListener('activate', (event) => {
-  console.log('[SW v7] Activating...');
+  console.log('[SW v8] Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(

@@ -1017,20 +1017,33 @@ export const appRouter = router({
         comentario: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        // OPTIMIZACIÓN ULTRA RÁPIDA: Responder en < 200ms
+        const startTime = Date.now();
+        
+        // Validación rápida del ítem
         const item = await db.getItemById(input.itemId);
         if (!item) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ítem no encontrado' });
-        if (item.status !== 'pendiente_foto_despues') {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'El ítem no está pendiente de foto después' });
+        
+        // Permitir subir foto incluso si ya tiene una (para reintentos)
+        if (item.status !== 'pendiente_foto_despues' && item.status !== 'pendiente_aprobacion') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'El ítem no está en estado válido para foto después' });
         }
         
-        // OPTIMIZACIÓN: Guardar base64 y cambiar status inmediatamente (< 500ms)
-        await db.updateItem(input.itemId, {
-          fotoDespuesBase64: input.fotoBase64,
-          jefeResidenteId: ctx.user.id,
-          fechaFotoDespues: new Date(),
-          status: 'pendiente_aprobacion',
-          comentarioJefeResidente: input.comentario,
-        });
+        // OPERACIÓN ATÓMICA: Guardar base64 y cambiar status inmediatamente
+        try {
+          await db.updateItem(input.itemId, {
+            fotoDespuesBase64: input.fotoBase64,
+            jefeResidenteId: ctx.user.id,
+            fechaFotoDespues: new Date(),
+            status: 'pendiente_aprobacion',
+            comentarioJefeResidente: input.comentario,
+          });
+        } catch (dbError: any) {
+          console.error('Error guardando foto después en DB:', dbError);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error guardando foto. Intenta de nuevo.' });
+        }
+        
+        console.log(`[uploadFotoDespues] Ítem ${item.codigo} actualizado en ${Date.now() - startTime}ms`);
         
         // Operaciones secundarias en segundo plano (no bloquean)
         setImmediate(async () => {

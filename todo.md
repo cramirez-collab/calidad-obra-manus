@@ -2320,3 +2320,13 @@
 - [x] 197 tests pasando sin errores
 - [x] Ítem #6 (Hidalma-73UZQ4) creado correctamente con foto
 - [x] Foto se muestra como imagen, NO como texto Base64
+
+
+## Robustez MANDATORIA: Foto Después NUNCA FALLA (Febrero 2026)
+- [ ] Revisar flujo actual de foto después en ItemDetail.tsx
+- [ ] Implementar compresión agresiva (600px, 50% calidad)
+- [ ] Implementar reintentos ilimitados con backoff exponencial
+- [ ] Optimizar endpoint del servidor para 20+ usuarios simultáneos
+- [ ] Agregar cola de subida con guardado local (IndexedDB)
+- [ ] Agregar indicador de progreso visible
+- [ ] Probar exhaustivamente con múltiples subidas simultáneas

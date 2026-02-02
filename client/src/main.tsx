@@ -7,6 +7,7 @@ import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
 import { OfflineSyncProvider } from "./contexts/OfflineSyncContext";
+import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // LIMPIEZA AGRESIVA DE CACHÉ AL INICIO
@@ -112,6 +113,7 @@ root.render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
       <OfflineSyncProvider>
+        <SyncManager />
         <App />
       </OfflineSyncProvider>
     </QueryClientProvider>

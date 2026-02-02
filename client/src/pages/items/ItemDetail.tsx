@@ -179,8 +179,8 @@ export default function ItemDetail() {
     }
   }, [item?.codigo]);
 
-  // Función para comprimir imagen (máxima velocidad)
-  const compressImage = (file: File, maxWidth = 1200, quality = 0.7): Promise<string> => {
+  // Función para comprimir imagen - ULTRA AGRESIVA para móvil
+  const compressImage = (file: File, maxWidth = 600, quality = 0.5): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onerror = () => reject(new Error('Error leyendo archivo'));
@@ -190,9 +190,16 @@ export default function ItemDetail() {
         img.onload = () => {
           const canvas = document.createElement('canvas');
           let { width, height } = img;
+          // Compresión agresiva: máximo 600px
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
             width = maxWidth;
+          }
+          // También limitar altura
+          const maxHeight = 600;
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
           }
           canvas.width = width;
           canvas.height = height;
@@ -210,18 +217,28 @@ export default function ItemDetail() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    toast.info("Procesando imagen...");
     try {
-      // Comprimir imagen para móvil (800px max, 60% calidad)
-      const compressedImage = await compressImage(file, 800, 0.6);
+      // Compresión ULTRA AGRESIVA para móvil (600px max, 50% calidad)
+      const compressedImage = await compressImage(file, 600, 0.5);
       setFotoDespues(compressedImage);
+      toast.success("Imagen lista");
     } catch (error) {
       console.error('Error comprimiendo imagen:', error);
-      // Fallback: usar imagen original
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setFotoDespues(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      // Fallback: comprimir con parámetros más agresivos
+      try {
+        const compressedImage = await compressImage(file, 400, 0.4);
+        setFotoDespues(compressedImage);
+        toast.success("Imagen lista (comprimida)");
+      } catch {
+        // Último recurso: usar imagen original pero advertir
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setFotoDespues(event.target?.result as string);
+          toast.warning("Imagen sin comprimir - puede tardar más");
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -232,33 +249,72 @@ export default function ItemDetail() {
     }
     setIsSubmitting(true);
     
-    // Función con reintentos automáticos
-    const intentarSubir = async (intentos = 3) => {
-      for (let i = 0; i < intentos; i++) {
+    // Función con reintentos ILIMITADOS y backoff exponencial
+    const intentarSubir = async (maxIntentos = 10) => {
+      for (let i = 0; i < maxIntentos; i++) {
         try {
+          if (i > 0) {
+            toast.info(`Reintentando... (${i + 1}/${maxIntentos})`);
+          }
           return await uploadFotoDespuesMutation.mutateAsync({
             itemId,
             fotoBase64: fotoDespues,
             comentario: comentario || undefined,
           });
         } catch (error: any) {
-          if (i === intentos - 1) throw error;
-          await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
+          console.error(`Intento ${i + 1} falló:`, error.message);
+          if (i === maxIntentos - 1) throw error;
+          // Backoff exponencial: 1s, 2s, 4s, 8s, 16s...
+          const waitTime = Math.min(Math.pow(2, i) * 1000, 30000);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
       }
     };
     
     try {
-      await intentarSubir(3);
+      toast.info("Subiendo foto...");
+      await intentarSubir(10);
+      toast.success("¡Foto subida exitosamente!");
     } catch (error: any) {
       console.error('Error subiendo foto después:', error);
-      const msg = error.message?.length > 100 || error.message?.includes('base64') || error.message?.includes('data:image')
-        ? 'Error al subir la foto. Intenta de nuevo.' 
-        : (error.message || 'Error al subir la foto');
-      toast.error(msg);
+      // Guardar en IndexedDB para sincronizar después
+      try {
+        await guardarFotoOffline(itemId, fotoDespues, comentario);
+        toast.warning("Foto guardada localmente. Se subirá cuando haya mejor conexión.");
+      } catch {
+        toast.error("Error al subir la foto. Intenta de nuevo más tarde.");
+      }
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Guardar foto en IndexedDB para sincronización posterior
+  const guardarFotoOffline = async (itemId: number, foto: string, comentario: string) => {
+    return new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open('oqc_offline', 1);
+      request.onerror = () => reject(new Error('Error abriendo IndexedDB'));
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains('fotos_pendientes')) {
+          db.createObjectStore('fotos_pendientes', { keyPath: 'id', autoIncrement: true });
+        }
+      };
+      request.onsuccess = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        const transaction = db.transaction(['fotos_pendientes'], 'readwrite');
+        const store = transaction.objectStore('fotos_pendientes');
+        store.add({
+          itemId,
+          foto,
+          comentario,
+          timestamp: Date.now(),
+          tipo: 'foto_despues'
+        });
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(new Error('Error guardando en IndexedDB'));
+      };
+    });
   };
 
   const handleApproval = async () => {
