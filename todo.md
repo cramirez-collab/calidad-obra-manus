@@ -2142,3 +2142,9 @@
 - [x] Ordenar secciones de Configuración por orden alfabético
   - Opciones: Color del Tema, Comentario al Rechazar, Días para Alerta, Ítems por Página, Nombre de Empresa, Notificaciones Email
   - Tarjetas: Alta Rápida de Empresa, Cambiar Contraseña, WhatsApp - Reportes Automáticos
+
+
+## Mejoras Formulario Nuevo Ítem (1 Febrero 2026)
+- [x] Hacer obligatorio seleccionar un defecto
+- [x] Generar título automático basado en defecto, unidad y espacio
+- [x] Agregar diálogo de confirmación antes de crear el ítem
