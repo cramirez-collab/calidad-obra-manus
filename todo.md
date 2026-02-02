@@ -2136,3 +2136,9 @@
 
 ### Resultado: 201 pruebas pasan correctamente
 
+
+
+## Ordenar Menú Configuración (1 Febrero 2026)
+- [x] Ordenar secciones de Configuración por orden alfabético
+  - Opciones: Color del Tema, Comentario al Rechazar, Días para Alerta, Ítems por Página, Nombre de Empresa, Notificaciones Email
+  - Tarjetas: Alta Rápida de Empresa, Cambiar Contraseña, WhatsApp - Reportes Automáticos
