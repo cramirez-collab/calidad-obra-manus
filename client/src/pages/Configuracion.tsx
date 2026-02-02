@@ -337,8 +337,37 @@ export default function Configuracion() {
           })}
         </div>
 
+        {/* Sección Limpiar Caché - ARRIBA para fácil acceso */}
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+                  <Trash2 className="h-5 w-5 text-orange-600" />
+                </div>
+                <div>
+                  <span className="font-medium text-sm">Limpiar Caché</span>
+                  <p className="text-xs text-muted-foreground">
+                    Resuelve problemas de datos desactualizados
+                  </p>
+                </div>
+              </div>
+              <ClearCacheButton />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Info y Versión */}
+        <div className="flex items-center justify-between text-xs text-muted-foreground bg-accent/50 rounded-lg p-3">
+          <div className="flex items-center gap-2">
+            <Info className="h-4 w-4 shrink-0" />
+            <span>Los cambios se aplican inmediatamente</span>
+          </div>
+          <span className="font-mono bg-primary/10 text-primary px-2 py-0.5 rounded">v11</span>
+        </div>
+
         {/* Sección Alta Rápida de Empresa */}
-        <Card className="mt-6 border-primary/20 bg-primary/5">
+        <Card className="border-primary/20 bg-primary/5">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Zap className="h-5 w-5 text-primary" />
@@ -425,31 +454,7 @@ export default function Configuracion() {
         </Card>
 
 
-        {/* Sección Limpiar Caché */}
-        <Card className="mt-6 border-orange-200 bg-orange-50">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Trash2 className="h-5 w-5 text-orange-600" />
-              Limpiar Caché
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Si experimentas problemas con la aplicación (imágenes que no cargan, datos desactualizados, errores extraños), 
-              limpia la caché para forzar una actualización completa.
-            </p>
-            <ClearCacheButton />
-          </CardContent>
-        </Card>
 
-        {/* Info y Versión */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground bg-accent/50 rounded-lg p-3">
-          <div className="flex items-center gap-2">
-            <Info className="h-4 w-4 shrink-0" />
-            <span>Los cambios se aplican inmediatamente</span>
-          </div>
-          <span className="font-mono bg-primary/10 text-primary px-2 py-0.5 rounded">v11</span>
-        </div>
       </div>
     </DashboardLayout>
   );

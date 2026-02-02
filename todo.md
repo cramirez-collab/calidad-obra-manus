@@ -2361,3 +2361,7 @@
 - [x] Agregar indicador de versión v11 visible en la app
 - [x] Implementar paginación de 20 ítems por página en Bienvenida
 
+
+### Acceso Rápido a Limpiar Caché
+- [x] Mover botón Limpiar Caché más arriba en Configuración (visible sin scroll)
+

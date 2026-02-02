@@ -12,7 +12,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 // getLoginUrl se usa en Login.tsx
 import { useIsMobile } from "@/hooks/useMobile";
-import { 
+import {
   LayoutDashboard, 
   LogOut, 
   Building2, 
@@ -568,7 +568,7 @@ function DashboardLayoutContent({
                 })}
               </nav>
 
-              {/* Link a Términos y Condiciones */}
+              {/* Link a Términos y Privacidad */}
               <div className="border-t p-2">
                 <button
                   onClick={() => setLocation('/terminos')}
