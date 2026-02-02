@@ -31,6 +31,43 @@ import { nanoid } from 'nanoid';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
+// Campos de items sin Base64 para evitar cargar datos enormes
+const itemFieldsWithoutBase64 = {
+  id: items.id,
+  codigo: items.codigo,
+  qrCode: items.qrCode,
+  proyectoId: items.proyectoId,
+  empresaId: items.empresaId,
+  unidadId: items.unidadId,
+  especialidadId: items.especialidadId,
+  atributoId: items.atributoId,
+  defectoId: items.defectoId,
+  espacioId: items.espacioId,
+  residenteId: items.residenteId,
+  jefeResidenteId: items.jefeResidenteId,
+  supervisorId: items.supervisorId,
+  titulo: items.titulo,
+  descripcion: items.descripcion,
+  ubicacionDetalle: items.ubicacionDetalle,
+  fotoAntesUrl: items.fotoAntesUrl,
+  fotoAntesKey: items.fotoAntesKey,
+  fotoAntesMarcadaUrl: items.fotoAntesMarcadaUrl,
+  fotoAntesMarcadaKey: items.fotoAntesMarcadaKey,
+  fotoDespuesUrl: items.fotoDespuesUrl,
+  fotoDespuesKey: items.fotoDespuesKey,
+  status: items.status,
+  fechaCreacion: items.fechaCreacion,
+  fechaFotoDespues: items.fechaFotoDespues,
+  fechaAprobacion: items.fechaAprobacion,
+  comentarioResidente: items.comentarioResidente,
+  comentarioJefeResidente: items.comentarioJefeResidente,
+  comentarioSupervisor: items.comentarioSupervisor,
+  clientId: items.clientId,
+  numeroInterno: items.numeroInterno,
+  createdAt: items.createdAt,
+  updatedAt: items.updatedAt,
+};
+
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -234,7 +271,7 @@ export async function getResidenteConDatosCompletos(userId: number) {
   }
   
   // Obtener todos los ítems del residente
-  const itemsResidente = await db.select().from(items).where(eq(items.residenteId, userId));
+  const itemsResidente = await db.select(itemFieldsWithoutBase64).from(items).where(eq(items.residenteId, userId));
   
   // Obtener especialidades únicas de los ítems del residente (filtrar nulls)
   const especialidadIds = Array.from(new Set(itemsResidente.map(i => i.especialidadId).filter((id): id is number => id !== null)));
@@ -295,7 +332,7 @@ export async function getAllResidentesConEstadisticas() {
   const empresasMap = new Map(todasEmpresas.map(e => [e.id, e]));
   
   // Obtener todos los ítems
-  const todosItems = await db.select().from(items);
+  const todosItems = await db.select(itemFieldsWithoutBase64).from(items);
   
   return residentes.map(residente => {
     const itemsResidente = todosItems.filter(i => i.residenteId === residente.id);
@@ -351,7 +388,7 @@ export async function getEmpresaConDatosCompletos(id: number) {
   const usuariosEmpresa = await db.select().from(users).where(eq(users.empresaId, id));
   
   // Obtener ítems de la empresa
-  const itemsEmpresa = await db.select().from(items).where(eq(items.empresaId, id));
+  const itemsEmpresa = await db.select(itemFieldsWithoutBase64).from(items).where(eq(items.empresaId, id));
   
   // Obtener unidades únicas de los ítems
   const unidadIds = Array.from(new Set(itemsEmpresa.map(i => i.unidadId)));
@@ -391,8 +428,8 @@ export async function getAllEmpresasConEstadisticas(proyectoId?: number) {
     ? await db.select().from(empresas).where(and(eq(empresas.activo, true), eq(empresas.proyectoId, proyectoId))).orderBy(empresas.nombre)
     : await db.select().from(empresas).where(eq(empresas.activo, true)).orderBy(empresas.nombre);
   const todosItems = proyectoId
-    ? await db.select().from(items).where(eq(items.proyectoId, proyectoId))
-    : await db.select().from(items);
+    ? await db.select(itemFieldsWithoutBase64).from(items).where(eq(items.proyectoId, proyectoId))
+    : await db.select(itemFieldsWithoutBase64).from(items);
   const todosUsuarios = await db.select().from(users);
   
   return todasEmpresas.map(empresa => {
@@ -487,7 +524,7 @@ export async function getUnidadConDatosCompletos(id: number) {
   if (!unidad[0]) return undefined;
   
   // Obtener ítems de la unidad
-  const itemsUnidad = await db.select().from(items).where(eq(items.unidadId, id));
+  const itemsUnidad = await db.select(itemFieldsWithoutBase64).from(items).where(eq(items.unidadId, id));
   
   // Obtener empresas únicas de los ítems
   const empresaIds = Array.from(new Set(itemsUnidad.map(i => i.empresaId)));
@@ -532,8 +569,8 @@ export async function getAllUnidadesConEstadisticas(proyectoId?: number) {
   // Ordenar numéricamente por nombre
   const todasUnidades = naturalSort(unidadesRaw, u => u.nombre);
   const todosItems = proyectoId
-    ? await db.select().from(items).where(eq(items.proyectoId, proyectoId))
-    : await db.select().from(items);
+    ? await db.select(itemFieldsWithoutBase64).from(items).where(eq(items.proyectoId, proyectoId))
+    : await db.select(itemFieldsWithoutBase64).from(items);
   
   return todasUnidades.map(unidad => {
     const itemsUnidad = todosItems.filter(i => i.unidadId === unidad.id);
@@ -577,7 +614,7 @@ export async function getUnidadesParaPanoramica(proyectoId: number) {
     return nombreA.localeCompare(nombreB, 'es', { numeric: true });
   });
   
-  const todosItems = await db.select().from(items).where(eq(items.proyectoId, proyectoId));
+  const todosItems = await db.select(itemFieldsWithoutBase64).from(items).where(eq(items.proyectoId, proyectoId));
   
   return todasUnidades.map(unidad => {
     const itemsUnidad = todosItems.filter(i => i.unidadId === unidad.id);
@@ -1230,14 +1267,51 @@ export async function getItemsByUser(userId: number, role: string) {
   const db = await getDb();
   if (!db) return [];
 
+  // Campos a seleccionar (excluyendo Base64)
+  const selectFields = {
+    id: items.id,
+    codigo: items.codigo,
+    qrCode: items.qrCode,
+    proyectoId: items.proyectoId,
+    empresaId: items.empresaId,
+    unidadId: items.unidadId,
+    especialidadId: items.especialidadId,
+    atributoId: items.atributoId,
+    defectoId: items.defectoId,
+    espacioId: items.espacioId,
+    residenteId: items.residenteId,
+    jefeResidenteId: items.jefeResidenteId,
+    supervisorId: items.supervisorId,
+    titulo: items.titulo,
+    descripcion: items.descripcion,
+    ubicacionDetalle: items.ubicacionDetalle,
+    fotoAntesUrl: items.fotoAntesUrl,
+    fotoAntesKey: items.fotoAntesKey,
+    fotoAntesMarcadaUrl: items.fotoAntesMarcadaUrl,
+    fotoAntesMarcadaKey: items.fotoAntesMarcadaKey,
+    fotoDespuesUrl: items.fotoDespuesUrl,
+    fotoDespuesKey: items.fotoDespuesKey,
+    status: items.status,
+    fechaCreacion: items.fechaCreacion,
+    fechaFotoDespues: items.fechaFotoDespues,
+    fechaAprobacion: items.fechaAprobacion,
+    comentarioResidente: items.comentarioResidente,
+    comentarioJefeResidente: items.comentarioJefeResidente,
+    comentarioSupervisor: items.comentarioSupervisor,
+    clientId: items.clientId,
+    numeroInterno: items.numeroInterno,
+    createdAt: items.createdAt,
+    updatedAt: items.updatedAt,
+  };
+
   if (role === 'admin' || role === 'supervisor') {
-    return await db.select().from(items).orderBy(desc(items.createdAt)).limit(100);
+    return await db.select(selectFields).from(items).orderBy(desc(items.createdAt)).limit(100);
   } else if (role === 'jefe_residente') {
-    return await db.select().from(items)
+    return await db.select(selectFields).from(items)
       .where(eq(items.status, 'pendiente_foto_despues'))
       .orderBy(desc(items.createdAt)).limit(100);
   } else {
-    return await db.select().from(items)
+    return await db.select(selectFields).from(items)
       .where(eq(items.residenteId, userId))
       .orderBy(desc(items.createdAt)).limit(100);
   }
@@ -1890,7 +1964,7 @@ export async function getDefectosConEstadisticas() {
   if (!db) return [];
   
   const todosDefectos = await db.select().from(defectos).where(eq(defectos.activo, true)).orderBy(defectos.nombre);
-  const todosItems = await db.select().from(items);
+  const todosItems = await db.select(itemFieldsWithoutBase64).from(items);
   const todasEspecialidades = await db.select().from(especialidades);
   
   const especialidadesMap = new Map(todasEspecialidades.map(e => [e.id, e]));
@@ -2066,7 +2140,7 @@ export async function getEstadisticasDefectos(filters: ItemFilters = {}) {
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
   
   // Obtener todos los items con filtros
-  const itemsFiltrados = await db.select().from(items).where(whereClause);
+  const itemsFiltrados = await db.select(itemFieldsWithoutBase64).from(items).where(whereClause);
   
   // Obtener todos los defectos
   const todosDefectos = await db.select().from(defectos).where(eq(defectos.activo, true));
@@ -2137,7 +2211,7 @@ export async function getItemsParaReporte(filters: ItemFilters = {}) {
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
   
   // Obtener items con todas las relaciones
-  const itemsResult = await db.select().from(items).where(whereClause).orderBy(desc(items.fechaCreacion));
+  const itemsResult = await db.select(itemFieldsWithoutBase64).from(items).where(whereClause).orderBy(desc(items.fechaCreacion));
   
   // Obtener datos relacionados
   const todasEmpresas = await db.select().from(empresas);
@@ -2229,7 +2303,7 @@ export async function getProyectoConEstadisticas(id: number) {
     .where(and(eq(unidades.proyectoId, id), eq(unidades.activo, true)));
   
   // Obtener ítems del proyecto
-  const itemsProyecto = await db.select().from(items).where(eq(items.proyectoId, id));
+  const itemsProyecto = await db.select(itemFieldsWithoutBase64).from(items).where(eq(items.proyectoId, id));
   
   const aprobados = itemsProyecto.filter(i => i.status === 'aprobado').length;
   const rechazados = itemsProyecto.filter(i => i.status === 'rechazado').length;
@@ -2262,7 +2336,7 @@ export async function getAllProyectosConEstadisticas() {
   if (!db) return [];
   
   const todosProyectos = await db.select().from(proyectos).where(eq(proyectos.activo, true)).orderBy(proyectos.nombre);
-  const todosItems = await db.select().from(items);
+  const todosItems = await db.select(itemFieldsWithoutBase64).from(items);
   const todasEmpresas = await db.select().from(empresas).where(eq(empresas.activo, true));
   const todasUnidades = await db.select().from(unidades).where(eq(unidades.activo, true));
   const todosUsuariosProyecto = await db.select().from(proyectoUsuarios).where(eq(proyectoUsuarios.activo, true));
@@ -2446,7 +2520,7 @@ export async function getEspecialidadesByProyecto(proyectoId: number) {
 export async function getItemsByProyecto(proyectoId: number) {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(items)
+  return await db.select(itemFieldsWithoutBase64).from(items)
     .where(eq(items.proyectoId, proyectoId))
     .orderBy(desc(items.fechaCreacion));
 }
@@ -2454,7 +2528,7 @@ export async function getItemsByProyecto(proyectoId: number) {
 export async function getItemByClientId(clientId: string) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(items)
+  const result = await db.select(itemFieldsWithoutBase64).from(items)
     .where(eq(items.clientId, clientId))
     .limit(1);
   return result[0] || null;
@@ -2722,7 +2796,7 @@ export async function getEstadisticasRendimientoUsuarios() {
     .where(eq(users.activo, true));
   
   // Obtener todos los items
-  const itemsData = await db.select().from(items);
+  const itemsData = await db.select(itemFieldsWithoutBase64).from(items);
   
   // Calcular estadísticas por usuario
   const estadisticas = usuariosData.map(usuario => {
@@ -2791,7 +2865,7 @@ export async function getEstadisticasSupervisores() {
     ));
   
   // Obtener items aprobados
-  const itemsData = await db.select().from(items)
+  const itemsData = await db.select(itemFieldsWithoutBase64).from(items)
     .where(eq(items.status, 'aprobado'));
   
   return supervisores.map(supervisor => {
@@ -2826,7 +2900,7 @@ export async function getDefectosPorUsuario() {
   if (!db) return [];
   
   // Obtener items con defectos
-  const itemsData = await db.select().from(items)
+  const itemsData = await db.select(itemFieldsWithoutBase64).from(items)
     .where(sql`${items.defectoId} IS NOT NULL`);
   
   // Obtener usuarios
@@ -3079,7 +3153,7 @@ export async function getDatosPrellenaUsuario(userId: number, proyectoId?: numbe
   }
   
   // Obtener defectos más frecuentes del usuario (top 5)
-  const itemsUsuario = await db.select().from(items)
+  const itemsUsuario = await db.select(itemFieldsWithoutBase64).from(items)
     .where(eq(items.residenteId, userId))
     .orderBy(desc(items.fechaCreacion))
     .limit(100);
@@ -3128,7 +3202,7 @@ export async function getItemsCriticosPriorizados(proyectoId?: number, limit = 2
   }
   
   // Obtener ítems pendientes
-  const itemsPendientes = await db.select().from(items)
+  const itemsPendientes = await db.select(itemFieldsWithoutBase64).from(items)
     .where(and(...conditions))
     .orderBy(asc(items.fechaCreacion)); // Más antiguos primero
   
@@ -3194,7 +3268,7 @@ export async function getDashboardResidente(userId: number, proyectoId?: number)
   }
   
   // Obtener todos los ítems del residente
-  const itemsResidente = await db.select().from(items)
+  const itemsResidente = await db.select(itemFieldsWithoutBase64).from(items)
     .where(and(...conditions))
     .orderBy(asc(items.fechaCreacion));
   
@@ -3262,7 +3336,7 @@ export async function getTop5Peores(proyectoId?: number) {
   }
   
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-  const todosItems = await db.select().from(items).where(whereClause);
+  const todosItems = await db.select(itemFieldsWithoutBase64).from(items).where(whereClause);
   
   // Obtener datos relacionados
   const todasEmpresas = await db.select().from(empresas);
@@ -3368,7 +3442,7 @@ export async function getEstadisticasUsuario(usuarioId: number, proyectoId?: num
     conditions.push(eq(items.proyectoId, proyectoId));
   }
   
-  const itemsUsuario = await db.select().from(items).where(and(...conditions));
+  const itemsUsuario = await db.select(itemFieldsWithoutBase64).from(items).where(and(...conditions));
   
   // Estadísticas básicas
   const total = itemsUsuario.length;
@@ -3461,7 +3535,7 @@ export async function getEstadisticasDefecto(defectoId: number, proyectoId?: num
     conditions.push(eq(items.proyectoId, proyectoId));
   }
   
-  const itemsDefecto = await db.select().from(items).where(and(...conditions));
+  const itemsDefecto = await db.select(itemFieldsWithoutBase64).from(items).where(and(...conditions));
   
   // Estadísticas básicas
   const total = itemsDefecto.length;
@@ -3546,7 +3620,7 @@ export async function getEstadisticasMensajeria(proyectoId?: number) {
   
   // Filtrar por proyecto si se especifica
   if (proyectoId) {
-    const itemsProyecto = await db.select().from(items).where(eq(items.proyectoId, proyectoId));
+    const itemsProyecto = await db.select(itemFieldsWithoutBase64).from(items).where(eq(items.proyectoId, proyectoId));
     const itemIds = new Set(itemsProyecto.map(i => i.id));
     todosMensajes = todosMensajes.filter(m => itemIds.has(m.itemId));
   }
@@ -3597,7 +3671,7 @@ export async function getEstadisticasMensajeria(proyectoId?: number) {
     mensajesPorItem[m.itemId] = (mensajesPorItem[m.itemId] || 0) + 1;
   });
   
-  const todosItems = await db.select().from(items);
+  const todosItems = await db.select(itemFieldsWithoutBase64).from(items);
   const itemsMap = new Map(todosItems.map(i => [i.id, i]));
   
   const itemsConMasMensajes = Object.entries(mensajesPorItem)
@@ -3694,7 +3768,7 @@ export async function getRankingRendimientoUsuarios(proyectoId?: number) {
   }
   
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-  const todosItems = await db.select().from(items).where(whereClause);
+  const todosItems = await db.select(itemFieldsWithoutBase64).from(items).where(whereClause);
   
   // Calcular rendimiento por usuario
   const ranking = todosUsuarios.map(usuario => {
@@ -3763,7 +3837,7 @@ export async function getEstadisticasQR(proyectoId?: number) {
   }
   
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-  const todosItems = await db.select().from(items).where(whereClause);
+  const todosItems = await db.select(itemFieldsWithoutBase64).from(items).where(whereClause);
   
   // Ítems con código QR
   const itemsConCodigo = todosItems.filter(i => i.codigo);
@@ -3809,7 +3883,7 @@ export async function getKPIsMejoresPeores(proyectoId?: number) {
   }
   
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-  const todosItems = await db.select().from(items).where(whereClause);
+  const todosItems = await db.select(itemFieldsWithoutBase64).from(items).where(whereClause);
   
   // Obtener datos relacionados
   const todasEmpresas = await db.select().from(empresas);
@@ -4421,9 +4495,9 @@ export async function getEstadisticasTiemposUsuarios(proyectoId?: number) {
   // Obtener items para contar capturas
   let itemsData;
   if (proyectoId) {
-    itemsData = await db.select().from(items).where(eq(items.proyectoId, proyectoId));
+    itemsData = await db.select(itemFieldsWithoutBase64).from(items).where(eq(items.proyectoId, proyectoId));
   } else {
-    itemsData = await db.select().from(items);
+    itemsData = await db.select(itemFieldsWithoutBase64).from(items);
   }
   
   // Obtener mensajes para contar lecturas
@@ -4524,13 +4598,13 @@ export async function getResumenSemanalActividad(proyectoId?: number) {
   // Obtener items creados esta semana
   let itemsSemana;
   if (proyectoId) {
-    itemsSemana = await db.select().from(items)
+    itemsSemana = await db.select(itemFieldsWithoutBase64).from(items)
       .where(and(
         eq(items.proyectoId, proyectoId),
         gte(items.fechaCreacion, inicioSemana)
       ));
   } else {
-    itemsSemana = await db.select().from(items)
+    itemsSemana = await db.select(itemFieldsWithoutBase64).from(items)
       .where(gte(items.fechaCreacion, inicioSemana));
   }
   
