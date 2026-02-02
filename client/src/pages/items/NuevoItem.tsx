@@ -219,8 +219,8 @@ export default function NuevoItem() {
     }
   }, [residenteSeleccionado]);
 
-  // Función para comprimir imagen (máxima velocidad)
-  const compressImage = (file: File, maxWidth = 1200, quality = 0.7): Promise<string> => {
+  // Función para comprimir imagen (optimizada para móvil)
+  const compressImage = (file: File, maxWidth = 800, quality = 0.6): Promise<string> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -254,8 +254,8 @@ export default function NuevoItem() {
     }
 
     try {
-      // Comprimir imagen para máxima velocidad
-      const compressedImage = await compressImage(file, 1200, 0.7);
+      // Comprimir imagen para móvil (800px max, 60% calidad)
+      const compressedImage = await compressImage(file, 800, 0.6);
       setFotoAntes(compressedImage);
       setFotoAntesMarcada(null);
       // Abrir automáticamente el editor de marcado
@@ -324,14 +324,27 @@ export default function NuevoItem() {
       clientId,
     };
     
+    // Función con reintentos automáticos
+    const intentarCrear = async (intentos = 3): Promise<any> => {
+      for (let i = 0; i < intentos; i++) {
+        try {
+          return await createItemMutation.mutateAsync(itemData);
+        } catch (error: any) {
+          if (i === intentos - 1) throw error;
+          // Esperar antes de reintentar (1s, 2s, 3s)
+          await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
+        }
+      }
+    };
+    
     try {
-      // Intentar crear online
-      const result = await createItemMutation.mutateAsync(itemData);
+      // Intentar crear online con reintentos
+      const result = await intentarCrear(3);
       toast.success("Ítem creado correctamente");
       setLocation(`/items/${result.id}`);
     } catch (error: any) {
       // Si falla por conexión, guardar offline
-      if (!navigator.onLine || error.message?.includes('fetch') || error.message?.includes('network')) {
+      if (!navigator.onLine || error.message?.includes('fetch') || error.message?.includes('network') || error.message?.includes('timeout')) {
         try {
           await addPendingAction({
             type: 'createItem',
@@ -345,7 +358,9 @@ export default function NuevoItem() {
       } else {
         // Sanitizar mensaje de error para evitar mostrar Base64
         const errorMsg = error.message || "Error al crear el ítem";
-        const sanitizedMsg = errorMsg.length > 100 ? "Error al crear el ítem. Intenta de nuevo." : errorMsg;
+        const sanitizedMsg = errorMsg.length > 100 || errorMsg.includes('base64') || errorMsg.includes('data:image') 
+          ? "Error al crear el ítem. Intenta de nuevo." 
+          : errorMsg;
         toast.error(sanitizedMsg);
       }
     } finally {

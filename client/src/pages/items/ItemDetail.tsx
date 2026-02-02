@@ -211,8 +211,8 @@ export default function ItemDetail() {
     if (!file) return;
 
     try {
-      // Comprimir imagen para máxima velocidad
-      const compressedImage = await compressImage(file, 1200, 0.7);
+      // Comprimir imagen para móvil (800px max, 60% calidad)
+      const compressedImage = await compressImage(file, 800, 0.6);
       setFotoDespues(compressedImage);
     } catch (error) {
       console.error('Error comprimiendo imagen:', error);
@@ -231,15 +231,30 @@ export default function ItemDetail() {
       return;
     }
     setIsSubmitting(true);
+    
+    // Función con reintentos automáticos
+    const intentarSubir = async (intentos = 3) => {
+      for (let i = 0; i < intentos; i++) {
+        try {
+          return await uploadFotoDespuesMutation.mutateAsync({
+            itemId,
+            fotoBase64: fotoDespues,
+            comentario: comentario || undefined,
+          });
+        } catch (error: any) {
+          if (i === intentos - 1) throw error;
+          await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
+        }
+      }
+    };
+    
     try {
-      await uploadFotoDespuesMutation.mutateAsync({
-        itemId,
-        fotoBase64: fotoDespues,
-        comentario: comentario || undefined,
-      });
+      await intentarSubir(3);
     } catch (error: any) {
       console.error('Error subiendo foto después:', error);
-      const msg = error.message?.length > 100 ? 'Error al subir la foto. Intenta de nuevo.' : (error.message || 'Error al subir la foto');
+      const msg = error.message?.length > 100 || error.message?.includes('base64') || error.message?.includes('data:image')
+        ? 'Error al subir la foto. Intenta de nuevo.' 
+        : (error.message || 'Error al subir la foto');
       toast.error(msg);
     } finally {
       setIsSubmitting(false);
