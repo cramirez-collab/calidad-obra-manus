@@ -9,20 +9,44 @@ import { getLoginUrl } from "./const";
 import { OfflineSyncProvider } from "./contexts/OfflineSyncContext";
 import "./index.css";
 
+// LIMPIEZA AGRESIVA DE CACHÉ AL INICIO
+(async () => {
+  // 1. Limpiar todos los caches del navegador
+  if ('caches' in window) {
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map(name => caches.delete(name)));
+    console.log('[App] Todos los caches eliminados');
+  }
+  
+  // 2. Desregistrar Service Workers antiguos y registrar el nuevo
+  if ('serviceWorker' in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const registration of registrations) {
+      // Forzar actualización
+      await registration.update();
+      // Si hay un SW esperando, activarlo
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        registration.waiting.postMessage({ type: 'CLEAR_CACHE' });
+      }
+    }
+  }
+})();
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30 * 1000, // 30 segundos - datos frescos rápido
-      gcTime: 5 * 60 * 1000, // 5 minutos en memoria
+      staleTime: 0, // Datos siempre frescos
+      gcTime: 60 * 1000, // 1 minuto en memoria
       refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      refetchOnMount: false,
-      retry: 0, // Sin reintentos para máxima velocidad
-      networkMode: 'offlineFirst',
+      refetchOnReconnect: true,
+      refetchOnMount: true,
+      retry: 0,
+      networkMode: 'online', // Siempre usar red
     },
     mutations: {
-      retry: 1, // 1 reintento para mutaciones
-      networkMode: 'offlineFirst',
+      retry: 1,
+      networkMode: 'online',
     },
   },
 });
@@ -63,6 +87,8 @@ const trpcClient = trpc.createClient({
         return globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
+          // Forzar no usar caché
+          cache: 'no-store',
         });
       },
     }),
@@ -95,21 +121,9 @@ root.render(
 // Ocultar splash después de un breve delay para asegurar que la UI esté lista
 setTimeout(hideSplashScreen, 500);
 
-// Forzar actualización del Service Worker
+// Escuchar cuando hay un nuevo SW disponible
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    for (const registration of registrations) {
-      registration.update();
-      // Forzar activación inmediata del nuevo SW
-      if (registration.waiting) {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      }
-    }
-  });
-  
-  // Escuchar cuando hay un nuevo SW disponible
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    console.log('[App] Service Worker actualizado, recargando...');
-    // No recargar automáticamente para evitar loops
+    console.log('[App] Service Worker actualizado');
   });
 }

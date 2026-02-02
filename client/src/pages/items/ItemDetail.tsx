@@ -475,11 +475,12 @@ export default function ItemDetail() {
                       Antes
                     </h4>
                     <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100">
-                      {(item as any).fotoAntesMarcadaBase64 || (item as any).fotoAntesBase64 || item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
+                      {item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
                         <img
-                          src={(item as any).fotoAntesMarcadaBase64 || (item as any).fotoAntesBase64 || getImageUrl(item.fotoAntesMarcadaUrl || item.fotoAntesUrl || "")}
+                          src={getImageUrl(item.fotoAntesMarcadaUrl || item.fotoAntesUrl || "")}
                           alt="Foto antes"
                           className="w-full h-full object-contain"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -487,7 +488,7 @@ export default function ItemDetail() {
                         </div>
                       )}
                     </div>
-                    {((item as any).fotoAntesMarcadaBase64 || item.fotoAntesMarcadaUrl) && (
+                    {item.fotoAntesMarcadaUrl && (
                       <p className="text-xs text-muted-foreground">Con marcado en rojo</p>
                     )}
                   </div>
@@ -499,11 +500,12 @@ export default function ItemDetail() {
                       Después
                     </h4>
                     <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100">
-                      {(item as any).fotoDespuesBase64 || item.fotoDespuesUrl ? (
+                      {item.fotoDespuesUrl ? (
                         <img
-                          src={(item as any).fotoDespuesBase64 || getImageUrl(item.fotoDespuesUrl || "")}
+                          src={getImageUrl(item.fotoDespuesUrl || "")}
                           alt="Foto después"
                           className="w-full h-full object-contain"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground flex-col gap-2">

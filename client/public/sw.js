@@ -1,49 +1,59 @@
-const CACHE_NAME = 'oqc-v4';
+const CACHE_NAME = 'oqc-v5';
 const OFFLINE_URL = '/offline.html';
 
-// Recursos que se cachean inmediatamente
+// Recursos mínimos que se cachean
 const PRECACHE_ASSETS = [
-  '/',
   '/offline.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
 ];
 
-// Instalar Service Worker
+// Instalar Service Worker - Limpieza agresiva
 self.addEventListener('install', (event) => {
-  console.log('[SW v4] Installing...');
+  console.log('[SW v5] Installing - Clearing ALL caches...');
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW v4] Precaching assets');
-      return cache.addAll(PRECACHE_ASSETS);
+    // Primero eliminar TODOS los caches existentes
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((name) => {
+          console.log('[SW v5] Deleting cache:', name);
+          return caches.delete(name);
+        })
+      );
+    }).then(() => {
+      // Luego crear el nuevo cache mínimo
+      return caches.open(CACHE_NAME).then((cache) => {
+        console.log('[SW v5] Precaching minimal assets');
+        return cache.addAll(PRECACHE_ASSETS);
+      });
     })
   );
   // Forzar activación inmediata
   self.skipWaiting();
 });
 
-// Activar Service Worker
+// Activar Service Worker - Tomar control inmediato
 self.addEventListener('activate', (event) => {
-  console.log('[SW v4] Activating...');
+  console.log('[SW v5] Activating - Taking control...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
           .filter((name) => name !== CACHE_NAME)
           .map((name) => {
-            console.log('[SW v4] Deleting old cache:', name);
+            console.log('[SW v5] Deleting old cache:', name);
             return caches.delete(name);
           })
       );
     }).then(() => {
-      console.log('[SW v4] Claiming clients');
+      console.log('[SW v5] Claiming clients');
       return self.clients.claim();
     })
   );
 });
 
-// Estrategia de cache: Network First para todo
+// Estrategia: NETWORK ONLY para todo excepto offline
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -53,12 +63,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Para peticiones de API, usar Network Only
+  // Para peticiones de API, Network Only
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request).catch(() => {
         return new Response(
-          JSON.stringify({ error: 'offline', message: 'Sin conexión. Los datos se sincronizarán cuando vuelva la conexión.' }),
+          JSON.stringify({ error: 'offline', message: 'Sin conexión.' }),
           { headers: { 'Content-Type': 'application/json' } }
         );
       })
@@ -66,56 +76,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Para archivos JS/TS/TSX, SIEMPRE usar Network First (nunca cache)
-  if (url.pathname.endsWith('.js') || 
-      url.pathname.endsWith('.ts') || 
-      url.pathname.endsWith('.tsx') ||
-      url.pathname.includes('/src/') ||
-      url.pathname.includes('/@vite/') ||
-      url.pathname.includes('/@fs/') ||
-      url.pathname.includes('/node_modules/')) {
-    event.respondWith(
-      fetch(request).catch(() => {
-        console.log('[SW v4] Network failed for:', url.pathname);
-        return caches.match(request);
-      })
-    );
-    return;
-  }
-
-  // Para navegación, usar Network First
+  // Para navegación, Network First con fallback a offline
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
-          return response;
-        })
-        .catch(() => {
-          return caches.match(request).then((cachedResponse) => {
-            return cachedResponse || caches.match(OFFLINE_URL);
-          });
-        })
+      fetch(request).catch(() => {
+        return caches.match(OFFLINE_URL);
+      })
     );
     return;
   }
 
-  // Para otros recursos estáticos (imágenes, CSS), usar Network First con cache
+  // Para TODOS los demás recursos: NETWORK ONLY (sin cache)
+  // Esto garantiza que siempre se cargue la versión más reciente
   event.respondWith(
-    fetch(request)
-      .then((response) => {
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, responseClone);
-        });
-        return response;
-      })
-      .catch(() => {
+    fetch(request).catch(() => {
+      // Solo para imágenes, intentar cache como fallback
+      if (request.destination === 'image') {
         return caches.match(request);
-      })
+      }
+      return new Response('', { status: 404 });
+    })
   );
 });
 
@@ -126,7 +106,6 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-// Función para sincronizar ítems pendientes
 async function syncPendingItems() {
   try {
     const db = await openIndexedDB();
@@ -144,22 +123,19 @@ async function syncPendingItems() {
           await deletePendingItem(db, item.id);
         }
       } catch (error) {
-        console.error('[SW v4] Error syncing item:', error);
+        console.error('[SW v5] Error syncing item:', error);
       }
     }
   } catch (error) {
-    console.error('[SW v4] Error in sync:', error);
+    console.error('[SW v5] Error in sync:', error);
   }
 }
 
-// Helpers para IndexedDB
 function openIndexedDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('OQCOffline', 2);
-    
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
-    
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
       if (!db.objectStoreNames.contains('pendingItems')) {
@@ -177,7 +153,6 @@ function getAllPendingItems(db) {
     const transaction = db.transaction(['pendingItems'], 'readonly');
     const store = transaction.objectStore('pendingItems');
     const request = store.getAll();
-    
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
   });
@@ -188,7 +163,6 @@ function deletePendingItem(db, id) {
     const transaction = db.transaction(['pendingItems'], 'readwrite');
     const store = transaction.objectStore('pendingItems');
     const request = store.delete(id);
-    
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve();
   });
@@ -197,38 +171,30 @@ function deletePendingItem(db, id) {
 // Notificaciones push
 self.addEventListener('push', (event) => {
   const data = event.data?.json() || {};
-  
   const options = {
     body: data.body || 'Nueva notificación',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     vibrate: [100, 50, 100],
-    data: {
-      url: data.url || '/',
-    },
+    data: { url: data.url || '/' },
     actions: [
       { action: 'open', title: 'Ver' },
       { action: 'close', title: 'Cerrar' },
     ],
   };
-
   event.waitUntil(
     self.registration.showNotification(data.title || 'OQC', options)
   );
 });
 
-// Click en notificación
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-
   if (event.action === 'open' || !event.action) {
-    event.waitUntil(
-      clients.openWindow(event.notification.data.url)
-    );
+    event.waitUntil(clients.openWindow(event.notification.data.url));
   }
 });
 
-// Mensaje para forzar actualización
+// Mensaje para forzar actualización y limpieza
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
@@ -236,6 +202,8 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'CLEAR_CACHE') {
     caches.keys().then((names) => {
       names.forEach((name) => caches.delete(name));
+    }).then(() => {
+      event.source.postMessage({ type: 'CACHE_CLEARED' });
     });
   }
 });

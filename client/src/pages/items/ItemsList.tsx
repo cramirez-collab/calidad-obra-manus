@@ -417,11 +417,12 @@ export default function ItemsList() {
                     <div className="flex items-start gap-4">
                       {/* Thumbnail de foto */}
                       <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                        {(item as any).fotoAntesMarcadaBase64 || (item as any).fotoAntesBase64 || item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
+                        {item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
                           <img
-                            src={(item as any).fotoAntesMarcadaBase64 || (item as any).fotoAntesBase64 || item.fotoAntesMarcadaUrl || item.fotoAntesUrl || ""}
+                            src={item.fotoAntesMarcadaUrl || item.fotoAntesUrl || ""}
                             alt="Foto antes"
                             className="h-full w-full object-cover"
+                            loading="lazy"
                           />
                         ) : (
                           <Camera className="h-8 w-8 text-muted-foreground" />

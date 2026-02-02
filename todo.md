@@ -2156,3 +2156,39 @@
 - [x] Agregar miniatura de foto "antes" en la lista de ítems de bienvenida
 - [x] Mostrar imagen pequeña junto al código del ítem
 - [x] Optimizar carga de miniaturas para rendimiento (lazy loading)
+
+
+## Corrección Urgente: Eliminar Base64 y Optimizar Caché (Febrero 2026)
+
+### Problema Base64
+- [ ] Eliminar código base64 que aparece en lugar de las fotos
+- [ ] Usar solo URLs de S3 para las imágenes
+- [ ] Verificar que no se muestre base64 en ninguna vista
+
+### Optimización de Caché
+- [ ] Forzar limpieza de caché del Service Worker
+- [ ] Actualizar versión del Service Worker
+- [ ] Optimizar carga para que sea instantánea
+
+
+## Corrección Urgente: Eliminar Base64 y WhatsApp (Febrero 2026)
+
+### Eliminar WhatsApp
+- [x] Eliminar servicio de WhatsApp
+- [x] Eliminar rutas de WhatsApp del router
+- [x] Eliminar sección de WhatsApp de la página de configuración
+
+### Miniaturas en Bienvenida
+- [x] Agregar miniatura de foto "antes" en la lista de ítems de bienvenida
+- [x] Mostrar imagen pequeña junto al código del ítem
+- [x] Optimizar carga de miniaturas para rendimiento (lazy loading)
+
+### Eliminar Base64 de la UI
+- [x] Eliminar código base64 de las fotos en la UI
+- [x] Asegurar que solo se muestren URLs de imágenes
+- [x] Forzar limpieza de caché del Service Worker (v5)
+- [x] Optimizar carga para que sea instantánea (Network Only)
+- [x] Modificar getItemById para excluir campos base64
+- [x] Modificar getItems para excluir campos base64
+- [x] Actualizar Service Worker a v5 con limpieza agresiva
+- [x] Actualizar main.tsx con limpieza de caché al inicio

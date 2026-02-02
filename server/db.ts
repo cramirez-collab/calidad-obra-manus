@@ -1033,7 +1033,42 @@ export async function createItem(data: Omit<InsertItem, 'codigo'>) {
 export async function getItemById(id: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(items).where(eq(items.id, id)).limit(1);
+  // Excluir campos base64 para evitar cargar datos enormes
+  const result = await db.select({
+    id: items.id,
+    codigo: items.codigo,
+    qrCode: items.qrCode,
+    proyectoId: items.proyectoId,
+    empresaId: items.empresaId,
+    unidadId: items.unidadId,
+    especialidadId: items.especialidadId,
+    atributoId: items.atributoId,
+    defectoId: items.defectoId,
+    espacioId: items.espacioId,
+    residenteId: items.residenteId,
+    jefeResidenteId: items.jefeResidenteId,
+    supervisorId: items.supervisorId,
+    titulo: items.titulo,
+    descripcion: items.descripcion,
+    ubicacionDetalle: items.ubicacionDetalle,
+    fotoAntesUrl: items.fotoAntesUrl,
+    fotoAntesKey: items.fotoAntesKey,
+    fotoAntesMarcadaUrl: items.fotoAntesMarcadaUrl,
+    fotoAntesMarcadaKey: items.fotoAntesMarcadaKey,
+    fotoDespuesUrl: items.fotoDespuesUrl,
+    fotoDespuesKey: items.fotoDespuesKey,
+    status: items.status,
+    fechaCreacion: items.fechaCreacion,
+    fechaFotoDespues: items.fechaFotoDespues,
+    fechaAprobacion: items.fechaAprobacion,
+    comentarioResidente: items.comentarioResidente,
+    comentarioJefeResidente: items.comentarioJefeResidente,
+    comentarioSupervisor: items.comentarioSupervisor,
+    clientId: items.clientId,
+    numeroInterno: items.numeroInterno,
+    createdAt: items.createdAt,
+    updatedAt: items.updatedAt,
+  }).from(items).where(eq(items.id, id)).limit(1);
   return result[0];
 }
 
@@ -1143,8 +1178,45 @@ export async function getItems(filters: ItemFilters = {}, limit = 100, offset = 
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
+  // Excluir campos base64 para evitar cargar datos enormes
+  const selectFields = {
+    id: items.id,
+    codigo: items.codigo,
+    qrCode: items.qrCode,
+    proyectoId: items.proyectoId,
+    empresaId: items.empresaId,
+    unidadId: items.unidadId,
+    especialidadId: items.especialidadId,
+    atributoId: items.atributoId,
+    defectoId: items.defectoId,
+    espacioId: items.espacioId,
+    residenteId: items.residenteId,
+    jefeResidenteId: items.jefeResidenteId,
+    supervisorId: items.supervisorId,
+    titulo: items.titulo,
+    descripcion: items.descripcion,
+    ubicacionDetalle: items.ubicacionDetalle,
+    fotoAntesUrl: items.fotoAntesUrl,
+    fotoAntesKey: items.fotoAntesKey,
+    fotoAntesMarcadaUrl: items.fotoAntesMarcadaUrl,
+    fotoAntesMarcadaKey: items.fotoAntesMarcadaKey,
+    fotoDespuesUrl: items.fotoDespuesUrl,
+    fotoDespuesKey: items.fotoDespuesKey,
+    status: items.status,
+    fechaCreacion: items.fechaCreacion,
+    fechaFotoDespues: items.fechaFotoDespues,
+    fechaAprobacion: items.fechaAprobacion,
+    comentarioResidente: items.comentarioResidente,
+    comentarioJefeResidente: items.comentarioJefeResidente,
+    comentarioSupervisor: items.comentarioSupervisor,
+    clientId: items.clientId,
+    numeroInterno: items.numeroInterno,
+    createdAt: items.createdAt,
+    updatedAt: items.updatedAt,
+  };
+
   const [itemsResult, countResult] = await Promise.all([
-    db.select().from(items).where(whereClause).orderBy(desc(items.createdAt)).limit(limit).offset(offset),
+    db.select(selectFields).from(items).where(whereClause).orderBy(desc(items.createdAt)).limit(limit).offset(offset),
     db.select({ count: sql<number>`count(*)` }).from(items).where(whereClause)
   ]);
 
