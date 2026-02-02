@@ -123,9 +123,20 @@ export default function Bienvenida() {
                 >
                   <CardContent className="p-3 sm:p-4">
                     <div className="flex items-center gap-3">
-                      {/* Icono de estado */}
-                      <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-xl ${config.bg} flex items-center justify-center shrink-0`}>
-                        <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${config.color}`} />
+                      {/* Miniatura de foto antes */}
+                      <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg overflow-hidden shrink-0 bg-slate-100">
+                        {item.fotoAntes ? (
+                          <img 
+                            src={item.fotoAntes} 
+                            alt="Foto antes" 
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className={`h-full w-full ${config.bg} flex items-center justify-center`}>
+                            <Camera className={`h-5 w-5 ${config.color}`} />
+                          </div>
+                        )}
                       </div>
 
                       {/* Contenido */}

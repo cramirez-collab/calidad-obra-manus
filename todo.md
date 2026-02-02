@@ -2142,3 +2142,17 @@
 - [x] Ordenar secciones de Configuración por orden alfabético
   - Opciones: Color del Tema, Comentario al Rechazar, Días para Alerta, Ítems por Página, Nombre de Empresa, Notificaciones Email
   - Tarjetas: Alta Rápida de Empresa, Cambiar Contraseña, WhatsApp - Reportes Automáticos
+
+
+## Limpieza y Mejoras Finales (Febrero 2026)
+
+### Eliminar WhatsApp
+- [x] Eliminar servicio de WhatsApp
+- [x] Eliminar rutas de WhatsApp del router
+- [x] Eliminar sección de WhatsApp de la página de configuración
+- [ ] Eliminar tabla whatsapp_config de la base de datos (mantener por compatibilidad)
+
+### Miniaturas en Bienvenida
+- [x] Agregar miniatura de foto "antes" en la lista de ítems de bienvenida
+- [x] Mostrar imagen pequeña junto al código del ítem
+- [x] Optimizar carga de miniaturas para rendimiento (lazy loading)

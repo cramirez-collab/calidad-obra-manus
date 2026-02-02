@@ -1,0 +1,19 @@
+VERIFICACIÓN DE PÁGINA DE BIENVENIDA - 2026-02-02
+
+1. MINIATURAS EN BIENVENIDA:
+   - La página de bienvenida muestra una lista de ítems pendientes
+   - Cada ítem muestra: código, estado (Foto/Aprobar), descripción, unidad y fecha
+   - Los ítems tienen un ícono de cámara (📷) indicando que necesitan foto
+   - NO se muestran miniaturas de las fotos en la lista de bienvenida
+   - Solo se muestra el ícono indicando el estado del ítem
+
+2. ÍTEMS VISIBLES:
+   - Hidalma-35TWTH: Foto - Acabado deficiente - U:101
+   - Hidalma-FYJRYM: Aprobar - Material dañado - U:205
+   - Hidalma-Q5JWFL: Foto - Acabado deficiente - U:101
+   - Hidalma-9JBZLJ: Foto - Acabado deficiente - U:101
+   - Hidalma-LM45F2: Aprobar - Falta de elemento - U:205
+
+3. CONCLUSIÓN:
+   - Las miniaturas de fotos NO aparecen en la página de bienvenida
+   - Solo aparece un ícono indicando si el ítem necesita foto o aprobación

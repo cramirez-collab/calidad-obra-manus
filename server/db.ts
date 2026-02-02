@@ -1621,8 +1621,17 @@ export async function getPendientesByUsuario(userId: number, role: string) {
   }
   
   // Ordenar del más antiguo al más nuevo (ASC)
+  // Incluir fotoAntes para mostrar miniatura en la lista
   return await db
-    .select()
+    .select({
+      id: items.id,
+      codigo: items.codigo,
+      titulo: items.titulo,
+      status: items.status,
+      ubicacion: items.ubicacionDetalle,
+      fechaCreacion: items.fechaCreacion,
+      fotoAntes: items.fotoAntesUrl,
+    })
     .from(items)
     .where(whereCondition)
     .orderBy(items.fechaCreacion); // ASC = más antiguo primero

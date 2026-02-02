@@ -12,7 +12,6 @@ import { sendEmail, getAprobadoEmailTemplate, getRechazadoEmailTemplate, getPend
 import pushService from "./pushService";
 import { transcribeAudio, transcribeAudioBase64 } from "./_core/voiceTranscription";
 import { invokeLLM } from "./_core/llm";
-import * as whatsappService from "./services/whatsappService";
 
 // Middleware para verificar rol de superadmin (acceso total)
 const superadminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -2195,119 +2194,6 @@ export const appRouter = router({
       }),
   }),
 
-  // ==================== WHATSAPP ====================
-  whatsapp: router({
-    // Obtener configuración de WhatsApp para un proyecto
-    getConfig: adminProcedure
-      .input(z.object({ proyectoId: z.number() }))
-      .query(async ({ input }) => {
-        return await whatsappService.getWhatsappConfig(input.proyectoId);
-      }),
-    
-    // Guardar configuración de WhatsApp
-    saveConfig: adminProcedure
-      .input(z.object({
-        proyectoId: z.number(),
-        grupoUrl: z.string().min(1),
-        apiKey: z.string().optional(),
-        numeroDestino: z.string().optional(),
-      }))
-      .mutation(async ({ ctx, input }) => {
-        await whatsappService.saveWhatsappConfig(input.proyectoId, input.grupoUrl, input.apiKey, input.numeroDestino);
-        await db.createAuditoria({
-          usuarioId: ctx.user.id,
-          usuarioNombre: ctx.user.name || 'Usuario',
-          usuarioRol: ctx.user.role,
-          accion: 'configurar_whatsapp',
-          categoria: 'configuracion',
-          entidadTipo: 'proyecto',
-          entidadId: input.proyectoId,
-          detalles: `Configuración de WhatsApp actualizada`,
-        });
-        return { success: true };
-      }),
-    
-    // Generar reporte de WhatsApp (vista previa)
-    generarReporte: adminProcedure
-      .input(z.object({ proyectoId: z.number() }))
-      .query(async ({ input }) => {
-        const reporte = await whatsappService.generarReporteWhatsApp(input.proyectoId);
-        const mensaje = whatsappService.formatearMensajeWhatsApp(reporte);
-        return { reporte, mensaje };
-      }),
-    
-    // Enviar reporte a WhatsApp manualmente
-    enviarReporte: adminProcedure
-      .input(z.object({ proyectoId: z.number() }))
-      .mutation(async ({ ctx, input }) => {
-        const config = await whatsappService.getWhatsappConfig(input.proyectoId);
-        if (!config || !config.grupoUrl) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No hay configuración de WhatsApp para este proyecto' });
-        }
-        
-        const resultado = await whatsappService.enviarReporteWhatsApp(
-          input.proyectoId,
-          config.grupoUrl,
-          config.apiKey || undefined
-        );
-        
-        await db.createAuditoria({
-          usuarioId: ctx.user.id,
-          usuarioNombre: ctx.user.name || 'Usuario',
-          usuarioRol: ctx.user.role,
-          accion: 'enviar_reporte_whatsapp',
-          categoria: 'reportes',
-          entidadTipo: 'proyecto',
-          entidadId: input.proyectoId,
-          detalles: resultado.success ? 'Reporte enviado exitosamente' : `Error: ${resultado.mensaje}`,
-        });
-        
-        return resultado;
-      }),
-    
-    // Obtener estadísticas de residentes para el reporte
-    estadisticasResidentes: adminProcedure
-      .input(z.object({ proyectoId: z.number() }))
-      .query(async ({ input }) => {
-        return await whatsappService.getResidentesStats(input.proyectoId);
-      }),
-    
-    // Registrar actividad de usuario (clic en calidad/secuencias)
-    registrarActividad: protectedProcedure
-      .input(z.object({
-        proyectoId: z.number(),
-        tipoActividad: z.enum(['click_calidad', 'click_secuencias', 'crear_item', 'subir_foto_despues', 'aprobar_item', 'rechazar_item']),
-        metadata: z.record(z.string(), z.unknown()).optional(),
-      }))
-      .mutation(async ({ ctx, input }) => {
-        await whatsappService.registrarActividad(
-          ctx.user.id,
-          input.proyectoId,
-          input.tipoActividad,
-          input.metadata
-        );
-        return { success: true };
-      }),
-    
-    // Ejecutar envío de reportes programados (para cron job)
-    ejecutarReportesProgramados: adminProcedure
-      .mutation(async ({ ctx }) => {
-        const resultado = await whatsappService.ejecutarEnvioReportesProgramados();
-        
-        await db.createAuditoria({
-          usuarioId: ctx.user.id,
-          usuarioNombre: ctx.user.name || 'Usuario',
-          usuarioRol: ctx.user.role,
-          accion: 'ejecutar_reportes_programados',
-          categoria: 'reportes',
-          entidadTipo: 'sistema',
-          entidadId: 0,
-          detalles: `Reportes enviados: ${resultado.enviados}, Errores: ${resultado.errores}`,
-        });
-        
-        return resultado;
-      }),
-  }),
 });
 
 export type AppRouter = typeof appRouter;

@@ -94,3 +94,22 @@ root.render(
 
 // Ocultar splash después de un breve delay para asegurar que la UI esté lista
 setTimeout(hideSplashScreen, 500);
+
+// Forzar actualización del Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.update();
+      // Forzar activación inmediata del nuevo SW
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+    }
+  });
+  
+  // Escuchar cuando hay un nuevo SW disponible
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    console.log('[App] Service Worker actualizado, recargando...');
+    // No recargar automáticamente para evitar loops
+  });
+}
