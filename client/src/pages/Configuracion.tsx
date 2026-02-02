@@ -24,7 +24,10 @@ import {
   Zap,
   ArrowRight,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Trash2,
+  RefreshCw,
+  Loader2
 } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
@@ -66,6 +69,92 @@ const configDescriptions: Record<string, string> = {
   nombre_empresa: 'Nombre que aparece en reportes',
   notificaciones_email: 'Enviar notificaciones por correo',
 };
+
+// Componente para limpiar caché
+function ClearCacheButton() {
+  const [isClearing, setIsClearing] = useState(false);
+  const [cleared, setCleared] = useState(false);
+
+  const handleClearCache = async () => {
+    setIsClearing(true);
+    try {
+      // 1. Limpiar todos los caches del navegador
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        console.log('[ClearCache] Todos los caches eliminados:', cacheNames);
+      }
+
+      // 2. Limpiar localStorage excepto datos críticos
+      const keysToKeep = ['selectedProjectId'];
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && !keysToKeep.includes(key)) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      console.log('[ClearCache] localStorage limpiado');
+
+      // 3. Limpiar sessionStorage
+      sessionStorage.clear();
+      console.log('[ClearCache] sessionStorage limpiado');
+
+      // 4. Forzar actualización del Service Worker
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.update();
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            registration.waiting.postMessage({ type: 'CLEAR_CACHE' });
+          }
+        }
+        console.log('[ClearCache] Service Worker actualizado');
+      }
+
+      setCleared(true);
+      toast.success("Caché limpiada correctamente");
+      
+      // Recargar la página después de 1.5 segundos
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      console.error('[ClearCache] Error:', error);
+      toast.error("Error al limpiar caché");
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  return (
+    <Button
+      onClick={handleClearCache}
+      disabled={isClearing || cleared}
+      variant="outline"
+      className="gap-2 border-orange-300 text-orange-700 hover:bg-orange-100"
+    >
+      {isClearing ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Limpiando...
+        </>
+      ) : cleared ? (
+        <>
+          <CheckCircle2 className="h-4 w-4 text-green-600" />
+          Caché Limpiada - Recargando...
+        </>
+      ) : (
+        <>
+          <RefreshCw className="h-4 w-4" />
+          Limpiar Caché y Recargar
+        </>
+      )}
+    </Button>
+  );
+}
 
 export default function Configuracion() {
   const { user } = useAuth();
@@ -335,6 +424,23 @@ export default function Configuracion() {
           </CardContent>
         </Card>
 
+
+        {/* Sección Limpiar Caché */}
+        <Card className="mt-6 border-orange-200 bg-orange-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Trash2 className="h-5 w-5 text-orange-600" />
+              Limpiar Caché
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Si experimentas problemas con la aplicación (imágenes que no cargan, datos desactualizados, errores extraños), 
+              limpia la caché para forzar una actualización completa.
+            </p>
+            <ClearCacheButton />
+          </CardContent>
+        </Card>
 
         {/* Info */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground bg-accent/50 rounded-lg p-3">

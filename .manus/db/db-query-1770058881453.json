@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as total, \n       SUM(CASE WHEN titulo LIKE 'Test%' THEN 1 ELSE 0 END) as items_test\nFROM items;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT COUNT(*) as total, \n       SUM(CASE WHEN titulo LIKE 'Test%' THEN 1 ELSE 0 END) as items_test\nFROM items;",
+  "rows": [
+    {
+      "total": "46",
+      "items_test": "46"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\titems_test\n46\t46\n",
+  "stderr": "",
+  "execution_time_ms": 97
+}

@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, codigo, titulo, status FROM items ORDER BY id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, titulo, status FROM items ORDER BY id DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "660041",
+      "codigo": "Hidalma-JLR9M2",
+      "titulo": "Mal armado ",
+      "status": "pendiente_aprobacion"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\ttitulo\tstatus\n660041\tHidalma-JLR9M2\tMal armado \tpendiente_aprobacion\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

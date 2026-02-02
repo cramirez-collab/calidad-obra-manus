@@ -2330,3 +2330,16 @@
 - [ ] Agregar cola de subida con guardado local (IndexedDB)
 - [ ] Agregar indicador de progreso visible
 - [ ] Probar exhaustivamente con múltiples subidas simultáneas
+
+
+## Mejoras de Caché y Estabilidad (Febrero 2026)
+
+### Botón Limpiar Caché
+- [x] Botón en página de Configuración para limpiar caché
+- [x] Limpia todos los caches del navegador
+- [x] Limpia localStorage (excepto proyecto seleccionado)
+- [x] Limpia sessionStorage
+- [x] Fuerza actualización del Service Worker
+- [x] Recarga automática después de limpiar
+- [x] Feedback visual durante el proceso
+

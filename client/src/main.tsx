@@ -123,9 +123,21 @@ root.render(
 // Ocultar splash después de un breve delay para asegurar que la UI esté lista
 setTimeout(hideSplashScreen, 500);
 
-// Escuchar cuando hay un nuevo SW disponible
+// Escuchar cuando hay un nuevo SW disponible y recargar
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    console.log('[App] Service Worker actualizado');
+    console.log('[App] Service Worker actualizado - Recargando...');
+    window.location.reload();
+  });
+  
+  // Escuchar mensajes del SW
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data?.type === 'SW_UPDATED') {
+      console.log('[App] SW actualizado a', event.data.version, '- Recargando...');
+      window.location.reload();
+    }
+    if (event.data?.type === 'CACHE_CLEARED') {
+      console.log('[App] Caché limpiada por SW');
+    }
   });
 }

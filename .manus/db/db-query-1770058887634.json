@@ -1,0 +1,110 @@
+{
+  "query": "SELECT id, codigo, titulo FROM items ORDER BY id DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, titulo FROM items ORDER BY id DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "660039",
+      "codigo": "OQC-YM6JBX",
+      "titulo": "Test Residente"
+    },
+    {
+      "id": "660038",
+      "codigo": "OQC-Y556MT",
+      "titulo": "Test Sin Foto"
+    },
+    {
+      "id": "660037",
+      "codigo": "OQC-VU7XMT",
+      "titulo": "Test Duplicado"
+    },
+    {
+      "id": "660035",
+      "codigo": "OQC-BVPH2F",
+      "titulo": "Test Residente"
+    },
+    {
+      "id": "660034",
+      "codigo": "OQC-W6CLKQ",
+      "titulo": "Test Sin Foto"
+    },
+    {
+      "id": "660033",
+      "codigo": "OQC-DCJ4PX",
+      "titulo": "Test Duplicado"
+    },
+    {
+      "id": "660032",
+      "codigo": "OQC-96ACCV",
+      "titulo": "Test Item con Base64"
+    },
+    {
+      "id": "660030",
+      "codigo": "OQC-ARBSPH",
+      "titulo": "Test Residente"
+    },
+    {
+      "id": "660029",
+      "codigo": "OQC-5SGCZ8",
+      "titulo": "Test Sin Foto"
+    },
+    {
+      "id": "660028",
+      "codigo": "OQC-JKMWMA",
+      "titulo": "Test Duplicado"
+    },
+    {
+      "id": "660027",
+      "codigo": "OQC-H4PB8A",
+      "titulo": "Test Item con Base64"
+    },
+    {
+      "id": "660025",
+      "codigo": "OQC-9ZVMSJ",
+      "titulo": "Test Residente"
+    },
+    {
+      "id": "660024",
+      "codigo": "OQC-9VUFAA",
+      "titulo": "Test Sin Foto"
+    },
+    {
+      "id": "660023",
+      "codigo": "OQC-U3DZ32",
+      "titulo": "Test Duplicado"
+    },
+    {
+      "id": "660022",
+      "codigo": "OQC-575UR9",
+      "titulo": "Test Item con Base64"
+    },
+    {
+      "id": "660020",
+      "codigo": "OQC-VQBWQZ",
+      "titulo": "Test Residente"
+    },
+    {
+      "id": "660019",
+      "codigo": "OQC-BH73CY",
+      "titulo": "Test Sin Foto"
+    },
+    {
+      "id": "660018",
+      "codigo": "OQC-XTZDHG",
+      "titulo": "Test Duplicado"
+    },
+    {
+      "id": "660017",
+      "codigo": "OQC-4GUT82",
+      "titulo": "Test Item con Base64"
+    },
+    {
+      "id": "660015",
+      "codigo": "OQC-C4LZGT",
+      "titulo": "Test Residente"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\ttitulo\n660039\tOQC-YM6JBX\tTest Residente\n660038\tOQC-Y556MT\tTest Sin Foto\n660037\tOQC-VU7XMT\tTest Duplicado\n660035\tOQC-BVPH2F\tTest Residente\n660034\tOQC-W6CLKQ\tTest Sin Foto\n660033\tOQC-DCJ4PX\tTest Duplicado\n660032\tOQC-96ACCV\tTest Item con Base64\n660030\tOQC-ARBSPH\tTest Residente\n660029\tOQC-5SGCZ8\tTest Sin Foto\n660028\tOQC-JKMWMA\tTest Duplicado\n660027\tOQC-H4PB8A\tTest Item con Base64\n660025\tOQC-9ZVMSJ\tTest Residente\n660024\tOQC-9VUFAA\tTest Sin Foto\n660023\tOQC-U3DZ32\tTest Duplicado\n660022\tOQC-575UR9\tTest Item con Base64\n660020\tOQC-VQBWQZ\tTest Residente\n660019\tOQC-BH73CY\tTest Sin Foto\n660018\tOQC-XTZDHG\tTest Duplicado\n660017\tOQC-4GUT82\tTest Item con Base64\n660015\tOQC-C4LZGT\tTest Residente\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}
