@@ -327,32 +327,50 @@ export default function NuevoItem() {
       clientId,
     };
     
-    try {
-      // Intentar crear online
-      const result = await createItemMutation.mutateAsync(itemData);
-      toast.success("Ítem creado correctamente");
-      setLocation(`/items/${result.id}`);
-    } catch (error: any) {
-      // Si falla por conexión, guardar offline
-      if (!navigator.onLine || error.message?.includes('fetch') || error.message?.includes('network')) {
-        try {
-          await addPendingAction({
-            type: 'createItem',
-            data: itemData,
-          });
-          toast.success("Ítem guardado offline. Se sincronizará cuando haya conexión.");
-          setLocation("/items");
-        } catch {
-          // Mensaje limpio para el usuario
-          toast.error("Error al guardar. Intenta nuevamente.");
+    // Función de reintento con 3 intentos
+    const maxRetries = 3;
+    let lastError: any = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 1) {
+          toast.loading(`Reintentando... (${attempt}/${maxRetries})`, { id: 'retry-toast' });
+          await new Promise(r => setTimeout(r, 1000 * attempt)); // Espera progresiva
         }
-      } else {
-        // Mensaje limpio para el usuario - sin código técnico
-        toast.error("Error al crear el ítem. Intenta nuevamente.");
+        
+        const result = await createItemMutation.mutateAsync(itemData);
+        toast.dismiss('retry-toast');
+        toast.success("Ítem creado correctamente");
+        setLocation(`/items/${result.id}`);
+        return; // Éxito, salir
+      } catch (error: any) {
+        lastError = error;
+        console.log(`Intento ${attempt} falló:`, error.message);
+        
+        // Si es el último intento, no reintentar
+        if (attempt === maxRetries) break;
       }
-    } finally {
-      setIsSubmitting(false);
     }
+    
+    toast.dismiss('retry-toast');
+    
+    // Todos los reintentos fallaron - intentar guardar offline
+    if (!navigator.onLine || lastError?.message?.includes('fetch') || lastError?.message?.includes('network')) {
+      try {
+        await addPendingAction({
+          type: 'createItem',
+          data: itemData,
+        });
+        toast.success("Ítem guardado offline. Se sincronizará cuando haya conexión.");
+        setLocation("/items");
+      } catch {
+        toast.error("Error al guardar. Intenta nuevamente.");
+      }
+    } else {
+      toast.error("Error al crear el ítem. Intenta nuevamente.");
+    }
+    
+    setIsSubmitting(false);
   };
 
   // Modal de marcado

@@ -2174,3 +2174,11 @@
 - [x] Agregar opción "Configuración General" en el submenú
 - [x] Ordenar menú alfabéticamente
 - [x] 201 pruebas pasan correctamente
+
+
+## Corregir Error Creación de Ítems (1 Febrero 2026)
+- [x] Revisar código de creación de ítems
+- [x] Agregar mejor manejo de errores
+- [x] Agregar reintentos automáticos (3 intentos con espera progresiva)
+- [x] Toast de "Reintentando..." visible para el usuario
+- [x] Fallback a offline si todos los reintentos fallan
