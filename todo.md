@@ -2408,3 +2408,7 @@
 - [x] Forzar actualización del Service Worker con nueva versión
 - [x] Hacer que funcione independientemente del caché de cada dispositivo
 
+
+### Bug Crítico v13
+- [x] Arreglar bug: seleccionar proyecto regresa a elegir proyecto (corregido loop de actualización)
+
