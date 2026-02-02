@@ -458,7 +458,7 @@ export default function NuevoItem() {
 
         {/* PASO 1: Foto primero (más importante) */}
         <Card className="border-0 shadow-sm overflow-hidden relative">
-          <div className="absolute -top-1 -left-1 w-6 h-6 bg-gray-200/60 text-gray-400 rounded-full flex items-center justify-center text-xs font-medium z-10">1</div>
+          <div className="absolute -top-1 -left-1 w-6 h-6 bg-[#02B381] text-white rounded-full flex items-center justify-center text-xs font-bold z-10 shadow-md">1</div>
           <CardContent className="p-4 overflow-hidden max-h-[400px] pt-5">
             {fotoAntes ? (
               <div className="space-y-3 overflow-hidden">
@@ -525,7 +525,7 @@ export default function NuevoItem() {
 
         {/* PASO 2: Asignación (Residente obligatorio) */}
         <Card className="border-0 shadow-sm relative">
-          <div className="absolute -top-1 -left-1 w-6 h-6 bg-gray-200/60 text-gray-400 rounded-full flex items-center justify-center text-xs font-medium z-10">2</div>
+          <div className="absolute -top-1 -left-1 w-6 h-6 bg-[#02B381] text-white rounded-full flex items-center justify-center text-xs font-bold z-10 shadow-md">2</div>
           <CardContent className="p-4 space-y-3 pt-5">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
               <User className="h-3 w-3" />
@@ -581,7 +581,7 @@ export default function NuevoItem() {
 
         {/* PASO 3: Ubicación y Defecto en un solo contenedor */}
         <Card className="border-0 shadow-sm relative">
-          <div className="absolute -top-1 -left-1 w-6 h-6 bg-gray-200/60 text-gray-400 rounded-full flex items-center justify-center text-xs font-medium z-10">3</div>
+          <div className="absolute -top-1 -left-1 w-6 h-6 bg-[#02B381] text-white rounded-full flex items-center justify-center text-xs font-bold z-10 shadow-md">3</div>
           <CardContent className="p-4 space-y-3 pt-5">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
               <MapPin className="h-3 w-3" />
@@ -680,7 +680,7 @@ export default function NuevoItem() {
 
         {/* PASO 4: Botón de crear - Siempre visible */}
         <div className="relative">
-          <div className="absolute -top-1 -left-1 w-6 h-6 bg-gray-200/60 text-gray-400 rounded-full flex items-center justify-center text-xs font-medium z-10">4</div>
+          <div className="absolute -top-1 -left-1 w-6 h-6 bg-[#02B381] text-white rounded-full flex items-center justify-center text-xs font-bold z-10 shadow-md">4</div>
         </div>
         <Button 
           onClick={handlePreSubmit} 
