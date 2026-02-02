@@ -127,21 +127,16 @@ export default function ItemDetail() {
   };
 
   const uploadFotoDespuesMutation = trpc.items.uploadFotoDespues.useMutation({
-    onMutate: async () => {
-      // OPTIMISTIC UI: Cerrar diálogo inmediatamente para UX instantánea
-      setShowFotoDespuesDialog(false);
-      toast.loading("Guardando foto...", { id: "foto-despues" });
-    },
     onSuccess: () => {
       utils.items.get.invalidate({ id: itemId });
       utils.items.historial.invalidate({ itemId });
-      toast.success("Foto después guardada correctamente", { id: "foto-despues" });
+      toast.success("Foto después agregada correctamente");
+      setShowFotoDespuesDialog(false);
       setFotoDespues(null);
       setComentario("");
     },
-    onError: () => {
-      // Mensaje limpio para el usuario - sin código técnico
-      toast.error("Error al guardar la foto. Intenta nuevamente.", { id: "foto-despues" });
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 
@@ -234,14 +229,14 @@ export default function ItemDetail() {
     }
     setIsSubmitting(true);
     try {
-      // Mutación con Optimistic UI - el diálogo se cierra inmediatamente
       await uploadFotoDespuesMutation.mutateAsync({
         itemId,
         fotoBase64: fotoDespues,
         comentario: comentario || undefined,
       });
-    } catch {
-      // Error ya manejado en onError del mutation - mensaje limpio al usuario
+    } catch (error: any) {
+      console.error('Error subiendo foto después:', error);
+      toast.error(error.message || 'Error al subir la foto');
     } finally {
       setIsSubmitting(false);
     }
