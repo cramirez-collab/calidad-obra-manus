@@ -19,8 +19,20 @@ import {
   Loader2,
   Filter,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Trash2
 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useLocation, Redirect } from "wouter";
 import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
@@ -36,6 +48,37 @@ export default function Bienvenida() {
   const { data: pendientes, isLoading } = trpc.pendientes.misPendientes.useQuery();
   const [activeFilter, setActiveFilter] = useState<FilterType>("todos");
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const utils = trpc.useUtils();
+  const deleteItemMutation = trpc.items.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Ítem eliminado correctamente");
+      utils.pendientes.misPendientes.invalidate();
+      setItemToDelete(null);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Error al eliminar el ítem");
+    },
+  });
+  
+  const handleDeleteItem = async (itemId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setItemToDelete(itemId);
+  };
+  
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteItemMutation.mutateAsync({ id: itemToDelete });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
+  const isSuperadmin = user?.role === "superadmin" || user?.role === "admin";
 
   // Redirigir a selección de proyecto si no hay proyecto seleccionado
   if (!isLoadingProjects && !selectedProjectId) {
@@ -237,6 +280,23 @@ export default function Bienvenida() {
                         </div>
                       </div>
 
+                      {/* Botón eliminar para superadmin */}
+                      {isSuperadmin && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
+                              onClick={(e) => handleDeleteItem(item.id, e)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Eliminar ítem</TooltipContent>
+                        </Tooltip>
+                      )}
+
                       {/* Flecha */}
                       <ArrowRight className="h-5 w-5 text-[#6E6E6E] shrink-0" />
                     </div>
@@ -288,6 +348,35 @@ export default function Bienvenida() {
           </Card>
         )}
       </div>
+
+      {/* Diálogo de confirmación para eliminar */}
+      <AlertDialog open={itemToDelete !== null} onOpenChange={(open) => !open && setItemToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar este ítem?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El ítem y todas sus fotos serán eliminados permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Eliminando...
+                </>
+              ) : (
+                "Eliminar"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

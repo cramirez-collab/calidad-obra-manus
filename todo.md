@@ -2396,3 +2396,8 @@
 - [x] Flujo simplificado de captura de foto
 - [ ] Investigar error específico del usuario (posible caché antigua)
 
+
+### Mejoras v12.4
+- [x] Hacer visible botón Limpiar Caché en PC (menú usuario) - YA ESTABA
+- [x] Agregar opción eliminar ítems desde Bienvenida para superadmin
+
