@@ -2343,3 +2343,16 @@
 - [x] Recarga automática después de limpiar
 - [x] Feedback visual durante el proceso
 
+
+### Filtros Solo Iconos en Bienvenida
+- [x] Quitar texto de filtros (Foto, Aprobar, Corregir)
+- [x] Mostrar solo iconos con badge de contador
+- [x] Tooltips descriptivos al hacer hover
+- [x] Diseño más compacto y limpio
+
+### Limpieza Automática de Caché
+- [x] Service Worker v11 con limpieza automática cada 4 horas
+- [x] Función clearAllCaches() para limpiar todo
+- [x] Notificación a clientes cuando se limpia automáticamente
+- [x] Mensaje FORCE_CLEAR_NOW para limpiar inmediatamente
+

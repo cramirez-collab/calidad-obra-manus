@@ -84,11 +84,11 @@ export default function Bienvenida() {
     a.roles.includes('all') || a.roles.includes(user?.role || '')
   );
 
-  const filterButtons: { key: FilterType; label: string; icon: any; color: string }[] = [
-    { key: "todos", label: "Todos", icon: Filter, color: "bg-slate-500" },
-    { key: "foto", label: "Foto", icon: Camera, color: "bg-[#002C63]" },
-    { key: "aprobar", label: "Aprobar", icon: Clock, color: "bg-[#02B381]" },
-    { key: "corregir", label: "Corregir", icon: AlertCircle, color: "bg-red-500" },
+  const filterButtons: { key: FilterType; tooltip: string; icon: any; color: string }[] = [
+    { key: "todos", tooltip: "Todos", icon: Filter, color: "bg-slate-500" },
+    { key: "foto", tooltip: "Pendiente foto después", icon: Camera, color: "bg-[#002C63]" },
+    { key: "aprobar", tooltip: "Pendiente aprobación", icon: Clock, color: "bg-[#02B381]" },
+    { key: "corregir", tooltip: "Rechazado - Corregir", icon: AlertCircle, color: "bg-red-500" },
   ];
 
   return (
@@ -132,32 +132,35 @@ export default function Bienvenida() {
           </div>
         </div>
 
-        {/* Filtros de estado - solo iconos con contador */}
-        <div className="flex gap-1.5 flex-wrap">
+        {/* Filtros de estado - SOLO iconos con contador (sin texto) */}
+        <div className="flex gap-2">
           {filterButtons.map(filter => (
             <Tooltip key={filter.key}>
               <TooltipTrigger asChild>
                 <Button
                   variant={activeFilter === filter.key ? "default" : "outline"}
-                  size="sm"
-                  className={`h-9 px-2.5 gap-1 ${
+                  size="icon"
+                  className={`h-10 w-10 relative ${
                     activeFilter === filter.key 
-                      ? `${filter.color} text-white border-0` 
-                      : "bg-white border-slate-200 text-slate-600"
+                      ? `${filter.color} text-white border-0 shadow-md` 
+                      : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
                   }`}
                   onClick={() => setActiveFilter(filter.key)}
                 >
-                  <filter.icon className="h-4 w-4" />
-                  <span className={`text-xs font-medium ${
-                    activeFilter === filter.key 
-                      ? "text-white" 
-                      : "text-slate-500"
-                  }`}>
-                    {counts[filter.key]}
-                  </span>
+                  <filter.icon className="h-5 w-5" />
+                  {/* Badge con contador */}
+                  {counts[filter.key] > 0 && (
+                    <span className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full text-[10px] font-bold flex items-center justify-center px-1 ${
+                      activeFilter === filter.key 
+                        ? "bg-white text-slate-700" 
+                        : `${filter.color} text-white`
+                    }`}>
+                      {counts[filter.key]}
+                    </span>
+                  )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom">{filter.label}</TooltipContent>
+              <TooltipContent side="bottom">{filter.tooltip}</TooltipContent>
             </Tooltip>
           ))}
         </div>
