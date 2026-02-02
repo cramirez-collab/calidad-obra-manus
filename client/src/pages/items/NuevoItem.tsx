@@ -10,14 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import { 
   Camera, 
@@ -56,7 +48,6 @@ export default function NuevoItem() {
   const [fotoAntesMarcada, setFotoAntesMarcada] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMarker, setShowMarker] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -286,46 +277,7 @@ export default function NuevoItem() {
     setShowMarker(false);
   };
 
-  // Obtener datos para el resumen de confirmación
-  const unidadSeleccionada = useMemo(() => {
-    if (!formData.unidadId || !todasUnidades) return null;
-    return todasUnidades.find(u => u.id.toString() === formData.unidadId);
-  }, [formData.unidadId, todasUnidades]);
-
-  const espacioSeleccionado = useMemo(() => {
-    if (!formData.espacioId || !espaciosPlantilla) return null;
-    return espaciosPlantilla.find(e => e.id.toString() === formData.espacioId);
-  }, [formData.espacioId, espaciosPlantilla]);
-
-  const defectoSeleccionado = useMemo(() => {
-    if (!formData.defectoId || !defectos) return null;
-    return defectos.find(d => d.id.toString() === formData.defectoId);
-  }, [formData.defectoId, defectos]);
-
-  // Generar título automático basado en unidad y espacio
-  const tituloAutomatico = useMemo(() => {
-    const partes: string[] = [];
-    
-    // Agregar nombre del defecto si está seleccionado
-    if (defectoSeleccionado) {
-      partes.push(defectoSeleccionado.nombre);
-    }
-    
-    // Agregar unidad
-    if (unidadSeleccionada) {
-      partes.push(`U:${unidadSeleccionada.nombre}`);
-    }
-    
-    // Agregar espacio si está seleccionado
-    if (espacioSeleccionado) {
-      partes.push(`E:${espacioSeleccionado.nombre}`);
-    }
-    
-    return partes.length > 0 ? partes.join(' - ') : 'Sin título';
-  }, [defectoSeleccionado, unidadSeleccionada, espacioSeleccionado]);
-
-  // Función para validar antes de mostrar confirmación
-  const handlePreSubmit = () => {
+  const handleSubmit = async () => {
     // Validación - residente es obligatorio
     if (!formData.residenteId) {
       toast.error("Por favor selecciona un residente");
@@ -335,12 +287,6 @@ export default function NuevoItem() {
     // Validación - unidad es obligatoria
     if (!formData.unidadId) {
       toast.error("Por favor selecciona una unidad");
-      return;
-    }
-
-    // Validación - defecto es obligatorio
-    if (!formData.defectoId) {
-      toast.error("Por favor selecciona un defecto");
       return;
     }
 
@@ -355,26 +301,24 @@ export default function NuevoItem() {
       return;
     }
 
-    // Mostrar diálogo de confirmación
-    setShowConfirmDialog(true);
-  };
-
-  const handleSubmit = async () => {
-    setShowConfirmDialog(false);
     setIsSubmitting(true);
+    
+    // Usar nombre del defecto como título si hay defecto seleccionado
+    const defectoSeleccionado = defectos?.find(d => d.id.toString() === formData.defectoId);
+    const tituloFinal = defectoSeleccionado?.nombre || 'Sin título';
     
     // Generar ID de cliente único para evitar duplicados
     const clientId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     const itemData = {
       proyectoId: selectedProjectId || 0,
-      empresaId: residenteSeleccionado!.empresaId,
+      empresaId: residenteSeleccionado.empresaId,
       unidadId: parseInt(formData.unidadId),
-      especialidadId: residenteSeleccionado!.especialidadId || undefined,
-      defectoId: parseInt(formData.defectoId),
+      especialidadId: residenteSeleccionado.especialidadId || undefined,
+      defectoId: formData.defectoId ? parseInt(formData.defectoId) : undefined,
       espacioId: formData.espacioId ? parseInt(formData.espacioId) : undefined,
-      titulo: tituloAutomatico,
-      fotoAntesBase64: fotoAntes!,
+      titulo: tituloFinal,
+      fotoAntesBase64: fotoAntes,
       fotoAntesMarcadaBase64: fotoAntesMarcada || undefined,
       clientId,
     };
@@ -457,9 +401,8 @@ export default function NuevoItem() {
         />
 
         {/* PASO 1: Foto primero (más importante) */}
-        <Card className="border-0 shadow-sm overflow-hidden relative">
-          <div className="absolute -top-1 -left-1 w-6 h-6 bg-gray-200/60 text-gray-400 rounded-full flex items-center justify-center text-xs font-medium z-10">1</div>
-          <CardContent className="p-4 overflow-hidden max-h-[400px] pt-5">
+        <Card className="border-0 shadow-sm overflow-hidden">
+          <CardContent className="p-4 overflow-hidden max-h-[400px]">
             {fotoAntes ? (
               <div className="space-y-3 overflow-hidden">
                 <div className="relative rounded-lg overflow-hidden bg-slate-100">
@@ -524,9 +467,8 @@ export default function NuevoItem() {
         </Card>
 
         {/* PASO 2: Asignación (Residente obligatorio) */}
-        <Card className="border-0 shadow-sm relative">
-          <div className="absolute -top-1 -left-1 w-6 h-6 bg-gray-200/60 text-gray-400 rounded-full flex items-center justify-center text-xs font-medium z-10">2</div>
-          <CardContent className="p-4 space-y-3 pt-5">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
               <User className="h-3 w-3" />
               Asignación *
@@ -580,9 +522,8 @@ export default function NuevoItem() {
         </Card>
 
         {/* PASO 3: Ubicación y Defecto en un solo contenedor */}
-        <Card className="border-0 shadow-sm relative">
-          <div className="absolute -top-1 -left-1 w-6 h-6 bg-gray-200/60 text-gray-400 rounded-full flex items-center justify-center text-xs font-medium z-10">3</div>
-          <CardContent className="p-4 space-y-3 pt-5">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
               <MapPin className="h-3 w-3" />
               Ubicación y Defecto
@@ -649,7 +590,7 @@ export default function NuevoItem() {
                 </SelectContent>
               </Select>
 
-              {/* Defecto (de la especialidad del residente) - OBLIGATORIO */}
+              {/* Defecto (de la especialidad del residente) */}
               <Select
                 value={formData.defectoId}
                 onValueChange={(value) => setFormData({ ...formData, defectoId: value })}
@@ -657,7 +598,7 @@ export default function NuevoItem() {
               >
                 <SelectTrigger className="h-10 text-sm">
                   <AlertTriangle className="h-4 w-4 mr-1 text-gray-400" />
-                  <SelectValue placeholder="Defecto *" />
+                  <SelectValue placeholder="Defecto" />
                 </SelectTrigger>
                 <SelectContent>
                   {defectos?.map((def) => (
@@ -678,14 +619,11 @@ export default function NuevoItem() {
           </CardContent>
         </Card>
 
-        {/* PASO 4: Botón de crear - Siempre visible */}
-        <div className="relative">
-          <div className="absolute -top-1 -left-1 w-6 h-6 bg-gray-200/60 text-gray-400 rounded-full flex items-center justify-center text-xs font-medium z-10">4</div>
-        </div>
+        {/* Botón de crear - Siempre visible */}
         <Button 
-          onClick={handlePreSubmit} 
-          disabled={isSubmitting || !fotoAntes || !formData.residenteId || !formData.unidadId || !formData.defectoId}
-          className="w-full h-12 bg-[#02B381] hover:bg-[#02B381]/90 text-white font-semibold ml-4"
+          onClick={handleSubmit} 
+          disabled={isSubmitting || !fotoAntes || !formData.residenteId || !formData.unidadId}
+          className="w-full h-12 bg-[#02B381] hover:bg-[#02B381]/90 text-white font-semibold"
         >
           {isSubmitting ? (
             <div className="flex items-center gap-2">
@@ -699,107 +637,6 @@ export default function NuevoItem() {
             </>
           )}
         </Button>
-
-        {/* Diálogo de Confirmación */}
-        <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-[#002C63]">Confirmar Creación de Ítem</DialogTitle>
-              <DialogDescription>
-                Revisa los datos antes de crear el ítem
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              {/* Vista previa de la foto */}
-              {fotoAntes && (
-                <div className="rounded-lg overflow-hidden bg-slate-100">
-                  <img
-                    src={fotoAntesMarcada || fotoAntes}
-                    alt="Foto del problema"
-                    className="w-full h-auto max-h-[150px] object-contain"
-                  />
-                </div>
-              )}
-              
-              {/* Resumen de datos */}
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                  <User className="h-4 w-4 text-[#02B381]" />
-                  <span className="text-gray-600">Residente:</span>
-                  <span className="font-medium">{residenteSeleccionado?.name}</span>
-                </div>
-                
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                  <Building2 className="h-4 w-4 text-[#02B381]" />
-                  <span className="text-gray-600">Empresa:</span>
-                  <span className="font-medium">{residenteSeleccionado?.empresaNombre}</span>
-                </div>
-                
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                  <MapPin className="h-4 w-4 text-[#02B381]" />
-                  <span className="text-gray-600">Unidad:</span>
-                  <span className="font-medium">{unidadSeleccionada?.nombre}</span>
-                </div>
-                
-                {espacioSeleccionado && (
-                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                    <Layers className="h-4 w-4 text-[#02B381]" />
-                    <span className="text-gray-600">Espacio:</span>
-                    <span className="font-medium">{espacioSeleccionado.nombre}</span>
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                  <AlertTriangle className="h-4 w-4 text-[#02B381]" />
-                  <span className="text-gray-600">Defecto:</span>
-                  <div className="flex items-center gap-1">
-                    <span className={`h-2 w-2 rounded-full ${
-                      defectoSeleccionado?.severidad === 'leve' ? 'bg-green-500' :
-                      defectoSeleccionado?.severidad === 'moderado' ? 'bg-yellow-500' :
-                      defectoSeleccionado?.severidad === 'grave' ? 'bg-orange-500' : 'bg-red-500'
-                    }`} />
-                    <span className="font-medium">{defectoSeleccionado?.nombre}</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-2 p-2 bg-[#02B381]/10 rounded-md border border-[#02B381]/20">
-                  <Check className="h-4 w-4 text-[#02B381] mt-0.5" />
-                  <div>
-                    <span className="text-gray-600">Título automático:</span>
-                    <p className="font-medium text-[#002C63]">{tituloAutomatico}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button
-                variant="outline"
-                onClick={() => setShowConfirmDialog(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="bg-[#02B381] hover:bg-[#02B381]/90"
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Creando...
-                  </div>
-                ) : (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Confirmar
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </DashboardLayout>
   );
