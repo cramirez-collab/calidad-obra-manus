@@ -24,14 +24,13 @@ import {
   Wrench,
   AlertTriangle,
   Layers,
-  User
+  User,
+  Loader2
 } from "lucide-react";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
-import { addPendingAction, cacheData } from "@/lib/offlineDB";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 export default function NuevoItem() {
   const [, setLocation] = useLocation();
@@ -49,6 +48,7 @@ export default function NuevoItem() {
   const [fotoAntesMarcada, setFotoAntesMarcada] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMarker, setShowMarker] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -69,8 +69,6 @@ export default function NuevoItem() {
   );
   
   // Crear lista de residentes únicos que tienen empresa asignada
-  // Combina la nueva estructura (empresa_residentes) con la antigua (residenteId/jefeResidenteId)
-  // También incluye usuarios con rol residente/jefe_residente que tengan empresaId asignado
   const residentesConEmpresa = useMemo(() => {
     if (!todasEmpresas || !usuarios) return [];
     
@@ -80,7 +78,6 @@ export default function NuevoItem() {
     if (residentesConEmpresasNuevo && residentesConEmpresasNuevo.length > 0) {
       residentesConEmpresasNuevo.forEach((residente: any) => {
         residente.empresas?.forEach((emp: any) => {
-          // Usar una clave única para cada combinación residente-empresa
           const key = residente.id * 10000 + emp.empresaId;
           if (!residentesMap.has(key)) {
             residentesMap.set(key, {
@@ -98,53 +95,56 @@ export default function NuevoItem() {
     
     // Luego agregar residentes de la estructura antigua (compatibilidad)
     todasEmpresas.forEach(empresa => {
-      // Agregar residente si existe
+      // Residente principal
       if (empresa.residenteId) {
-        const usuario = usuarios.find((u: { id: number }) => u.id === empresa.residenteId);
-        const key = empresa.residenteId * 10000 + empresa.id;
-        if (usuario && !residentesMap.has(key)) {
-          residentesMap.set(key, {
-            id: empresa.residenteId,
-            name: usuario.name || 'Sin nombre',
-            empresaId: empresa.id,
-            empresaNombre: empresa.nombre,
-            especialidadId: empresa.especialidadId || null,
-            tipoResidente: 'residente'
-          });
+        const user = usuarios.find(u => u.id === empresa.residenteId);
+        if (user) {
+          const key = user.id * 10000 + empresa.id;
+          if (!residentesMap.has(key)) {
+            residentesMap.set(key, {
+              id: user.id,
+              name: user.name || 'Sin nombre',
+              empresaId: empresa.id,
+              empresaNombre: empresa.nombre,
+              especialidadId: empresa.especialidadId || null,
+              tipoResidente: 'residente'
+            });
+          }
         }
       }
-      // Agregar jefe de residente si existe
+      // Jefe de residente
       if (empresa.jefeResidenteId) {
-        const usuario = usuarios.find((u: { id: number }) => u.id === empresa.jefeResidenteId);
-        const key = empresa.jefeResidenteId * 10000 + empresa.id;
-        if (usuario && !residentesMap.has(key)) {
-          residentesMap.set(key, {
-            id: empresa.jefeResidenteId,
-            name: usuario.name || 'Sin nombre',
-            empresaId: empresa.id,
-            empresaNombre: empresa.nombre,
-            especialidadId: empresa.especialidadId || null,
-            tipoResidente: 'jefe_residente'
-          });
+        const user = usuarios.find(u => u.id === empresa.jefeResidenteId);
+        if (user) {
+          const key = user.id * 10000 + empresa.id;
+          if (!residentesMap.has(key)) {
+            residentesMap.set(key, {
+              id: user.id,
+              name: user.name || 'Sin nombre',
+              empresaId: empresa.id,
+              empresaNombre: empresa.nombre,
+              especialidadId: empresa.especialidadId || null,
+              tipoResidente: 'jefe_residente'
+            });
+          }
         }
       }
     });
     
-    // Finalmente, agregar usuarios con rol residente/jefe_residente que tengan empresaId asignado
-    // Esto cubre el caso donde el usuario tiene una empresa asignada directamente
-    usuarios.forEach((usuario: any) => {
-      if ((usuario.role === 'residente' || usuario.role === 'jefe_residente') && usuario.empresaId) {
-        const empresa = todasEmpresas.find(e => e.id === usuario.empresaId);
+    // También incluir usuarios con rol residente/jefe_residente que tengan empresaId
+    usuarios.forEach(user => {
+      if (['residente', 'jefe_residente'].includes(user.role) && user.empresaId) {
+        const empresa = todasEmpresas.find(e => e.id === user.empresaId);
         if (empresa) {
-          const key = usuario.id * 10000 + empresa.id;
+          const key = user.id * 10000 + empresa.id;
           if (!residentesMap.has(key)) {
             residentesMap.set(key, {
-              id: usuario.id,
-              name: usuario.name || 'Sin nombre',
+              id: user.id,
+              name: user.name || 'Sin nombre',
               empresaId: empresa.id,
               empresaNombre: empresa.nombre,
               especialidadId: empresa.especialidadId || null,
-              tipoResidente: usuario.role
+              tipoResidente: user.role
             });
           }
         }
@@ -205,7 +205,6 @@ export default function NuevoItem() {
   );
 
   const createItemMutation = trpc.items.create.useMutation();
-  const uploadFotoMutation = trpc.items.uploadFotoAntes.useMutation();
 
   // Auto-completar empresa y especialidad cuando se selecciona residente
   useEffect(() => {
@@ -219,32 +218,45 @@ export default function NuevoItem() {
     }
   }, [residenteSeleccionado]);
 
-  // Función para comprimir imagen (optimizada para móvil)
-  const compressImage = (file: File, maxWidth = 800, quality = 0.6): Promise<string> => {
-    return new Promise((resolve) => {
+  // Función para comprimir imagen RÁPIDA (sin bloquear UI)
+  const compressImage = useCallback((file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let { width, height } = img;
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
+          try {
+            const canvas = document.createElement('canvas');
+            const maxWidth = 800;
+            let { width, height } = img;
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              reject(new Error('No canvas context'));
+              return;
+            }
+            ctx.drawImage(img, 0, 0, width, height);
+            const result = canvas.toDataURL('image/jpeg', 0.6);
+            resolve(result);
+          } catch (err) {
+            reject(err);
           }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d')!;
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', quality));
         };
+        img.onerror = () => reject(new Error('Image load failed'));
         img.src = e.target?.result as string;
       };
+      reader.onerror = () => reject(new Error('File read failed'));
       reader.readAsDataURL(file);
     });
-  };
+  }, []);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handler de captura de foto INMEDIATO
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -253,15 +265,17 @@ export default function NuevoItem() {
       return;
     }
 
+    setIsCapturing(true);
+    
     try {
-      // Comprimir imagen para móvil (800px max, 60% calidad)
-      const compressedImage = await compressImage(file, 800, 0.6);
+      // Comprimir imagen rápidamente
+      const compressedImage = await compressImage(file);
       setFotoAntes(compressedImage);
       setFotoAntesMarcada(null);
       // Abrir automáticamente el editor de marcado
       setShowMarker(true);
     } catch (error) {
-      console.error('Error comprimiendo imagen:', error);
+      console.error('Error procesando imagen:', error);
       // Fallback: usar imagen original
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -270,13 +284,17 @@ export default function NuevoItem() {
         setShowMarker(true);
       };
       reader.readAsDataURL(file);
+    } finally {
+      setIsCapturing(false);
+      // Limpiar el input para permitir seleccionar la misma imagen
+      e.target.value = '';
     }
-  };
+  }, [compressImage]);
 
-  const handleMarkedImage = (markedImageBase64: string) => {
+  const handleMarkedImage = useCallback((markedImageBase64: string) => {
     setFotoAntesMarcada(markedImageBase64);
     setShowMarker(false);
-  };
+  }, []);
 
   const handleSubmit = async () => {
     // Validación - residente es obligatorio
@@ -324,45 +342,19 @@ export default function NuevoItem() {
       clientId,
     };
     
-    // Función con reintentos automáticos
-    const intentarCrear = async (intentos = 3): Promise<any> => {
-      for (let i = 0; i < intentos; i++) {
-        try {
-          return await createItemMutation.mutateAsync(itemData);
-        } catch (error: any) {
-          if (i === intentos - 1) throw error;
-          // Esperar antes de reintentar (1s, 2s, 3s)
-          await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
-        }
-      }
-    };
-    
     try {
-      // Intentar crear online con reintentos
-      const result = await intentarCrear(3);
+      // Crear item directamente sin reintentos complejos
+      const result = await createItemMutation.mutateAsync(itemData);
       toast.success("Ítem creado correctamente");
       setLocation(`/items/${result.id}`);
     } catch (error: any) {
-      // Si falla por conexión, guardar offline
-      if (!navigator.onLine || error.message?.includes('fetch') || error.message?.includes('network') || error.message?.includes('timeout')) {
-        try {
-          await addPendingAction({
-            type: 'createItem',
-            data: itemData,
-          });
-          toast.success("Ítem guardado offline. Se sincronizará cuando haya conexión.");
-          setLocation("/items");
-        } catch (offlineError) {
-          toast.error("Error al guardar offline");
-        }
-      } else {
-        // Sanitizar mensaje de error para evitar mostrar Base64
-        const errorMsg = error.message || "Error al crear el ítem";
-        const sanitizedMsg = errorMsg.length > 100 || errorMsg.includes('base64') || errorMsg.includes('data:image') 
-          ? "Error al crear el ítem. Intenta de nuevo." 
-          : errorMsg;
-        toast.error(sanitizedMsg);
-      }
+      console.error('Error creando item:', error);
+      const errorMsg = error.message || "Error al crear el ítem";
+      // Sanitizar mensaje de error
+      const sanitizedMsg = errorMsg.length > 100 || errorMsg.includes('base64') || errorMsg.includes('data:image') 
+        ? "Error al crear el ítem. Intenta de nuevo." 
+        : errorMsg;
+      toast.error(sanitizedMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -422,7 +414,12 @@ export default function NuevoItem() {
         {/* PASO 1: Foto primero (más importante) */}
         <Card className="border-0 shadow-sm overflow-hidden">
           <CardContent className="p-4 overflow-hidden max-h-[400px]">
-            {fotoAntes ? (
+            {isCapturing ? (
+              <div className="flex items-center justify-center h-20 gap-2">
+                <Loader2 className="h-6 w-6 animate-spin text-[#02B381]" />
+                <span className="text-sm text-gray-500">Procesando foto...</span>
+              </div>
+            ) : fotoAntes ? (
               <div className="space-y-3 overflow-hidden">
                 <div className="relative rounded-lg overflow-hidden bg-slate-100">
                   <img
@@ -504,7 +501,7 @@ export default function NuevoItem() {
               </SelectTrigger>
               <SelectContent>
                 {residentesConEmpresa.map((residente) => (
-                  <SelectItem key={residente.id} value={residente.id.toString()}>
+                  <SelectItem key={`${residente.id}-${residente.empresaId}`} value={residente.id.toString()}>
                     <div className="flex items-center gap-2">
                       <span>{residente.name}</span>
                       <span className="text-gray-400 text-[10px]">({residente.empresaNombre})</span>
@@ -518,29 +515,19 @@ export default function NuevoItem() {
             {residenteSeleccionado && (
               <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
                 <Building2 className="h-3 w-3 text-gray-400" />
-                <span className="text-xs text-gray-600">Empresa:</span>
-                <span className="text-xs font-medium">{residenteSeleccionado.empresaNombre}</span>
-              </div>
-            )}
-            
-            {/* Mostrar Especialidad (solo lectura, auto-completado) */}
-            {especialidadDelResidente && (
-              <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                <Wrench className="h-3 w-3 text-gray-400" />
-                <span className="text-xs text-gray-600">Especialidad:</span>
-                <div className="flex items-center gap-1">
-                  <div
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: especialidadDelResidente.color || "#3B82F6" }}
-                  />
-                  <span className="text-xs font-medium">{especialidadDelResidente.nombre}</span>
-                </div>
+                <span className="text-xs text-gray-600">{residenteSeleccionado.empresaNombre}</span>
+                {especialidadDelResidente && (
+                  <Badge variant="outline" className="text-[10px] ml-auto">
+                    <Wrench className="h-2 w-2 mr-1" />
+                    {especialidadDelResidente.nombre}
+                  </Badge>
+                )}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* PASO 3: Ubicación y Defecto en un solo contenedor */}
+        {/* PASO 3: Ubicación y Defecto */}
         <Card className="border-0 shadow-sm">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
@@ -548,53 +535,48 @@ export default function NuevoItem() {
               Ubicación y Defecto
             </div>
             
-            {/* Fila 1: Nivel y Unidad */}
             <div className="grid grid-cols-2 gap-2">
               {/* Nivel */}
               <Select
                 value={formData.nivelId}
-                onValueChange={(value) => setFormData({ ...formData, nivelId: value, unidadId: "", espacioId: "" })}
+                onValueChange={(value) => setFormData({ ...formData, nivelId: value, unidadId: "" })}
               >
                 <SelectTrigger className="h-10 text-sm">
                   <Layers className="h-4 w-4 mr-1 text-gray-400" />
                   <SelectValue placeholder="Nivel" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="all">Todos los niveles</SelectItem>
                   {niveles.map((nivel) => (
-                    <SelectItem key={nivel} value={nivel!.toString()}>
-                      N{nivel}
+                    <SelectItem key={nivel} value={nivel?.toString() || ''}>
+                      Nivel {nivel}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              
-              {/* Unidad (filtrada por nivel) */}
+
+              {/* Unidad (obligatorio) */}
               <Select
                 value={formData.unidadId}
-                onValueChange={(value) => setFormData({ ...formData, unidadId: value, espacioId: "" })}
+                onValueChange={(value) => setFormData({ ...formData, unidadId: value })}
               >
                 <SelectTrigger className="h-10 text-sm">
                   <MapPin className="h-4 w-4 mr-1 text-gray-400" />
                   <SelectValue placeholder="Unidad *" />
                 </SelectTrigger>
                 <SelectContent>
-                  {unidades?.map((unidad) => (
+                  {unidades.map((unidad) => (
                     <SelectItem key={unidad.id} value={unidad.id.toString()}>
                       {unidad.nombre}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
 
-            {/* Fila 2: Espacio y Defecto */}
-            <div className="grid grid-cols-2 gap-2">
-              {/* Espacio (de la plantilla del proyecto) */}
+              {/* Espacio (opcional) */}
               <Select
                 value={formData.espacioId}
                 onValueChange={(value) => setFormData({ ...formData, espacioId: value })}
-                disabled={!espaciosPlantilla || espaciosPlantilla.length === 0}
               >
                 <SelectTrigger className="h-10 text-sm">
                   <Layers className="h-4 w-4 mr-1 text-gray-400" />
@@ -646,7 +628,7 @@ export default function NuevoItem() {
         >
           {isSubmitting ? (
             <div className="flex items-center gap-2">
-              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               Creando...
             </div>
           ) : (

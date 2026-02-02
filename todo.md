@@ -2377,3 +2377,8 @@
 - [x] Agregar botón Limpiar Caché visible en el menú lateral
 - [x] Vaciar la tabla de items de la base de datos
 
+
+### Corrección Crítica - Creación de Ítems
+- [x] Arreglar error de creación de ítems (simplificado flujo)
+- [x] Forzar captura de foto inmediata y obligatoria
+
