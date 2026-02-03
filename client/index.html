@@ -85,12 +85,13 @@
       src="%VITE_ANALYTICS_ENDPOINT%/umami"
       data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
     
-    <!-- SISTEMA DE VERSIONADO FORZADO v21 -->
+    <!-- SISTEMA DE VERSIONADO FORZADO v24 - PROTEGE DATOS OFFLINE -->
     <script>
       (function() {
-        const REQUIRED_VERSION = 21;
+        const REQUIRED_VERSION = 24;
         const VERSION_KEY = 'oqc_app_version';
         const FORCE_UPDATE_KEY = 'oqc_force_update';
+        const PENDING_DATA_KEY = 'oqc_has_pending';
         
         // Verificar versión inmediatamente (antes de cargar React)
         const storedVersion = parseInt(localStorage.getItem(VERSION_KEY) || '0');
@@ -98,43 +99,105 @@
         
         console.log('[VersionCheck] Versión requerida:', REQUIRED_VERSION, 'Versión almacenada:', storedVersion);
         
+        // Función para verificar si hay datos pendientes en IndexedDB
+        async function hasPendingData() {
+          return new Promise((resolve) => {
+            try {
+              const request = indexedDB.open('objetiva-qc-offline', 1);
+              request.onerror = () => resolve(false);
+              request.onsuccess = () => {
+                const db = request.result;
+                if (!db.objectStoreNames.contains('pendingActions')) {
+                  db.close();
+                  resolve(false);
+                  return;
+                }
+                const tx = db.transaction('pendingActions', 'readonly');
+                const store = tx.objectStore('pendingActions');
+                const countReq = store.count();
+                countReq.onsuccess = () => {
+                  const count = countReq.result;
+                  db.close();
+                  console.log('[VersionCheck] Acciones pendientes:', count);
+                  resolve(count > 0);
+                };
+                countReq.onerror = () => {
+                  db.close();
+                  resolve(false);
+                };
+              };
+            } catch (e) {
+              resolve(false);
+            }
+          });
+        }
+        
         // Si la versión es antigua Y no estamos ya en proceso de actualización
         if (storedVersion < REQUIRED_VERSION && forceUpdate !== 'done') {
-          console.log('[VersionCheck] Versión antigua detectada. Forzando actualización...');
+          console.log('[VersionCheck] Versión antigua detectada. Verificando datos pendientes...');
           
           // Marcar que estamos actualizando
           sessionStorage.setItem(FORCE_UPDATE_KEY, 'in_progress');
           
-          // Limpiar TODO inmediatamente
+          // Verificar datos pendientes antes de limpiar
           (async function() {
             try {
-              // 1. Desregistrar todos los Service Workers
-              if ('serviceWorker' in navigator) {
-                const regs = await navigator.serviceWorker.getRegistrations();
-                for (const reg of regs) {
-                  await reg.unregister();
-                  console.log('[VersionCheck] SW desregistrado');
+              const hasPending = await hasPendingData();
+              
+              if (hasPending) {
+                // HAY DATOS PENDIENTES - NO BORRAR IndexedDB
+                console.log('[VersionCheck] ¡DATOS PENDIENTES DETECTADOS! Actualizando sin borrar datos offline...');
+                
+                // 1. Solo desregistrar Service Workers viejos
+                if ('serviceWorker' in navigator) {
+                  const regs = await navigator.serviceWorker.getRegistrations();
+                  for (const reg of regs) {
+                    await reg.unregister();
+                    console.log('[VersionCheck] SW desregistrado');
+                  }
                 }
+                
+                // 2. Limpiar solo caches del SW (NO IndexedDB)
+                if ('caches' in window) {
+                  const names = await caches.keys();
+                  await Promise.all(names.map(n => caches.delete(n)));
+                  console.log('[VersionCheck] Caches SW eliminados (IndexedDB preservado)');
+                }
+                
+                // 3. Actualizar versión pero preservar todo localStorage
+                localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
+                localStorage.setItem(PENDING_DATA_KEY, 'true');
+                
+              } else {
+                // NO HAY DATOS PENDIENTES - Limpieza completa segura
+                console.log('[VersionCheck] Sin datos pendientes. Limpieza completa...');
+                
+                // 1. Desregistrar todos los Service Workers
+                if ('serviceWorker' in navigator) {
+                  const regs = await navigator.serviceWorker.getRegistrations();
+                  for (const reg of regs) {
+                    await reg.unregister();
+                  }
+                }
+                
+                // 2. Limpiar todos los caches
+                if ('caches' in window) {
+                  const names = await caches.keys();
+                  await Promise.all(names.map(n => caches.delete(n)));
+                }
+                
+                // 3. Limpiar localStorage (preservar proyecto)
+                const proyecto = localStorage.getItem('selectedProjectId');
+                localStorage.clear();
+                if (proyecto) localStorage.setItem('selectedProjectId', proyecto);
+                localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
               }
-              
-              // 2. Limpiar todos los caches
-              if ('caches' in window) {
-                const names = await caches.keys();
-                await Promise.all(names.map(n => caches.delete(n)));
-                console.log('[VersionCheck] Caches eliminados:', names);
-              }
-              
-              // 3. Limpiar localStorage (preservar proyecto)
-              const proyecto = localStorage.getItem('selectedProjectId');
-              localStorage.clear();
-              if (proyecto) localStorage.setItem('selectedProjectId', proyecto);
-              localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
               
               // 4. Marcar como completado
               sessionStorage.setItem(FORCE_UPDATE_KEY, 'done');
               
               // 5. Recargar con cache-bust
-              console.log('[VersionCheck] Recargando con versión fresca...');
+              console.log('[VersionCheck] Recargando con versión v' + REQUIRED_VERSION + '...');
               window.location.href = window.location.origin + '?_v=' + Date.now();
             } catch (e) {
               console.error('[VersionCheck] Error:', e);

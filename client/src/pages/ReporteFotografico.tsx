@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
+import { format } from "date-fns";
 
 const statusLabels: Record<string, string> = {
   pendiente_foto_despues: "Pendiente Foto",
@@ -241,21 +242,23 @@ export default function ReporteFotografico() {
 </html>
       `;
 
-      // Crear blob y descargar
+      // Crear blob y abrir directo en el dispositivo (sin forzar impresión)
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       
-      // Abrir en nueva ventana para imprimir como PDF
-      const printWindow = window.open(url, '_blank');
-      if (printWindow) {
-        printWindow.onload = () => {
-          setTimeout(() => {
-            printWindow.print();
-          }, 500);
-        };
+      // Abrir en nueva ventana - el usuario decide si imprime o guarda
+      const reportWindow = window.open(url, '_blank');
+      if (reportWindow) {
+        // No forzar impresión automática - dejar que el usuario decida
+        toast.success("Reporte abierto. Puedes verlo, compartirlo o guardarlo como PDF.");
+      } else {
+        // Si no se puede abrir ventana, descargar como archivo
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `reporte_fotografico_${format(new Date(), "yyyy-MM-dd_HHmm")}.html`;
+        link.click();
+        toast.success("Reporte descargado. Ábrelo para ver o guardar como PDF.");
       }
-      
-      toast.success("Reporte generado. Use Ctrl+P o Cmd+P para guardar como PDF");
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error("Error al generar el reporte");

@@ -2476,3 +2476,10 @@
 - [x] Comprimir fotos a máximo 350KB (compresión progresiva)
 - [x] Mantener buena legibilidad como WhatsApp (1280px, calidad 0.8-0.3)
 - [x] Facilitar carga rápida de ítems
+
+
+## Mejoras v24 (2 Febrero 2026)
+- [x] PDFs abrir directo en dispositivo (no para imprimir) - ReporteFotografico y Estadisticas
+- [x] Forzar actualización inmediata al publicar nueva versión - Sistema de versionado mejorado
+- [x] Proteger datos offline - Verifica IndexedDB antes de borrar caché
+- [x] Mantener formato oficial Objetiva en PDFs - Logo y colores corporativos

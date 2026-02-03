@@ -347,26 +347,16 @@ export default function Estadisticas() {
                   </html>
                 `;
                 
-                // Crear blob y descargar
+                // Crear blob y abrir directo (sin forzar impresión)
                 const blob = new Blob([htmlContent], { type: 'text/html' });
                 const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `estadisticas_${new Date().toISOString().split('T')[0]}.html`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
                 
-                // También abrir para imprimir como PDF
-                const printWindow = window.open('', '_blank');
-                if (printWindow) {
-                  printWindow.document.write(htmlContent);
-                  printWindow.document.close();
-                  // Dar tiempo para cargar y luego imprimir
-                  setTimeout(() => {
-                    printWindow.print();
-                  }, 250);
+                // Abrir en nueva ventana - el usuario decide si imprime o guarda
+                const reportWindow = window.open('', '_blank');
+                if (reportWindow) {
+                  reportWindow.document.write(htmlContent);
+                  reportWindow.document.close();
+                  // No forzar impresión - el usuario decide
                 }
               }}
               className="text-red-600 border-red-200 hover:bg-red-50"
