@@ -2424,3 +2424,9 @@
 - [x] Forzar invalidación completa del Service Worker (v17)
 - [x] Implementar mecanismo de actualización más agresivo con cache-bust
 
+
+### Forzar Actualización con Rigor v18
+- [x] Implementar invalidación forzada desde el servidor con headers anti-caché
+- [x] Agregar meta tags anti-caché en el HTML
+- [x] Forzar recarga automática si la versión no coincide (script en index.html)
+

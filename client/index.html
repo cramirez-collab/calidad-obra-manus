@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
     <title>OQC</title>
     
+    <!-- ANTI-CACHE: Forzar siempre versión más reciente -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
     <!-- PWA Meta Tags -->
     <meta name="description" content="OQC - Sistema de gestión de calidad de obra" />
     <meta name="theme-color" content="#02B381" />
@@ -80,13 +85,87 @@
       src="%VITE_ANALYTICS_ENDPOINT%/umami"
       data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
     
-    <!-- Register Service Worker -->
+    <!-- SISTEMA DE VERSIONADO FORZADO v18 -->
+    <script>
+      (function() {
+        const REQUIRED_VERSION = 18;
+        const VERSION_KEY = 'oqc_app_version';
+        const FORCE_UPDATE_KEY = 'oqc_force_update';
+        
+        // Verificar versión inmediatamente (antes de cargar React)
+        const storedVersion = parseInt(localStorage.getItem(VERSION_KEY) || '0');
+        const forceUpdate = sessionStorage.getItem(FORCE_UPDATE_KEY);
+        
+        console.log('[VersionCheck] Versión requerida:', REQUIRED_VERSION, 'Versión almacenada:', storedVersion);
+        
+        // Si la versión es antigua Y no estamos ya en proceso de actualización
+        if (storedVersion < REQUIRED_VERSION && forceUpdate !== 'done') {
+          console.log('[VersionCheck] Versión antigua detectada. Forzando actualización...');
+          
+          // Marcar que estamos actualizando
+          sessionStorage.setItem(FORCE_UPDATE_KEY, 'in_progress');
+          
+          // Limpiar TODO inmediatamente
+          (async function() {
+            try {
+              // 1. Desregistrar todos los Service Workers
+              if ('serviceWorker' in navigator) {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                for (const reg of regs) {
+                  await reg.unregister();
+                  console.log('[VersionCheck] SW desregistrado');
+                }
+              }
+              
+              // 2. Limpiar todos los caches
+              if ('caches' in window) {
+                const names = await caches.keys();
+                await Promise.all(names.map(n => caches.delete(n)));
+                console.log('[VersionCheck] Caches eliminados:', names);
+              }
+              
+              // 3. Limpiar localStorage (preservar proyecto)
+              const proyecto = localStorage.getItem('selectedProjectId');
+              localStorage.clear();
+              if (proyecto) localStorage.setItem('selectedProjectId', proyecto);
+              localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
+              
+              // 4. Marcar como completado
+              sessionStorage.setItem(FORCE_UPDATE_KEY, 'done');
+              
+              // 5. Recargar con cache-bust
+              console.log('[VersionCheck] Recargando con versión fresca...');
+              window.location.href = window.location.origin + '?_v=' + Date.now();
+            } catch (e) {
+              console.error('[VersionCheck] Error:', e);
+              localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
+              sessionStorage.setItem(FORCE_UPDATE_KEY, 'done');
+              window.location.reload();
+            }
+          })();
+        } else if (forceUpdate === 'in_progress') {
+          // Actualización en progreso, completar
+          console.log('[VersionCheck] Completando actualización...');
+          localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
+          sessionStorage.setItem(FORCE_UPDATE_KEY, 'done');
+        } else {
+          // Versión correcta
+          console.log('[VersionCheck] Versión correcta v' + REQUIRED_VERSION);
+          localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
+          sessionStorage.removeItem(FORCE_UPDATE_KEY);
+        }
+      })();
+    </script>
+    
+    <!-- Register Service Worker (después de verificación de versión) -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
+          navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
             .then((registration) => {
               console.log('[PWA] Service Worker registered:', registration.scope);
+              // Forzar actualización del SW
+              registration.update();
             })
             .catch((error) => {
               console.log('[PWA] Service Worker registration failed:', error);
