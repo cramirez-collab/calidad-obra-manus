@@ -1,16 +1,14 @@
 // ============================================
-// SISTEMA OFFLINE COMPLETO 24/7 - v36
 // ============================================
-// Dominio mandatorio: objetivaqc.com
-// Actualización forzada SIN ciclos infinitos
+// SISTEMA OFFLINE v37 - MANDATORIO
 // ============================================
-// Funcionalidades:
-// - Modo offline 24/7
-// - Sincronización cada 3 segundos
-// - Fotos instantáneas (máx 80KB)
-// - PDFs descarga automática para Acrobat
-// - Notificaciones push navegan al ítem
-const APP_VERSION = 36;
+// OBLIGATORIO:
+// - Dominio: objetivaqc.com
+// - Modo offline: SIEMPRE ACTIVADO
+// - Notificaciones push: SIEMPRE ACTIVADAS
+// - Actualización: FORZADA EN TODOS LOS DISPOSITIVOS
+// ============================================
+const APP_VERSION = 37;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
