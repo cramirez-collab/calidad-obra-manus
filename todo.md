@@ -2508,3 +2508,8 @@
 - [x] Diagnosticar por qué no aparece - La campana se confundía con otros elementos
 - [x] Hacer campana más visible: botón más grande, borde distintivo, fondo resaltado
 - [x] Mover campana al inicio de las acciones del header para mayor visibilidad
+
+
+## BUG CRÍTICO: App se queda ciclada al abrirse (3 Febrero 2026)
+- [x] Diagnosticar por qué la app se queda ciclada - Conflicto de versiones entre index.html (28) y main.tsx (18)
+- [x] Corregir el bug de ciclo infinito - Sincronizar CURRENT_VERSION a 28 en main.tsx
