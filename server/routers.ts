@@ -2173,19 +2173,25 @@ export const appRouter = router({
   // ==================== ESTADÍSTICAS AVANZADAS ====================
   estadisticasAvanzadas: router({
     // Rendimiento por usuario
-    rendimientoUsuarios: adminProcedure.query(async () => {
-      return await db.getEstadisticasRendimientoUsuarios();
-    }),
+    rendimientoUsuarios: adminProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getEstadisticasRendimientoUsuarios(input?.proyectoId);
+      }),
     
     // Estadísticas de supervisores
-    supervisores: adminProcedure.query(async () => {
-      return await db.getEstadisticasSupervisores();
-    }),
+    supervisores: adminProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getEstadisticasSupervisores(input?.proyectoId);
+      }),
     
     // Defectos por usuario
-    defectosPorUsuario: adminProcedure.query(async () => {
-      return await db.getDefectosPorUsuario();
-    }),
+    defectosPorUsuario: adminProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getDefectosPorUsuario(input?.proyectoId);
+      }),
     
     // KPIs Mejores y Peores (todas las categorías)
     kpisMejoresPeores: protectedProcedure

@@ -1,15 +1,16 @@
 // ============================================
 // ============================================
-// SISTEMA OFFLINE v51 - NUCLEAR
+// SISTEMA OFFLINE v52 - NUCLEAR
 // ============================================
 // MANDATORIO Y OBLIGATORIO:
 // - Dominio: objetivaqc.com (PERMANENTE)
 // - Modo offline: SIEMPRE ACTIVADO
 // - Resolución fotos: 180px ULTRA-RÁPIDO
 // - CONSECUTIVO #N INCREMENTAL DEBAJO DE OBJETIVA
-// - TODOS los dispositivos DEBEN tener v51
+// - ESTADÍSTICAS FILTRADAS POR PROYECTO
+// - TODOS los dispositivos DEBEN tener v52
 // ============================================
-const APP_VERSION = 51;
+const APP_VERSION = 52;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

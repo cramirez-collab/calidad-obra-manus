@@ -700,7 +700,7 @@ export default function Estadisticas() {
         )}
 
         {/* KPIs */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -863,7 +863,7 @@ export default function Estadisticas() {
           </h2>
           
           {/* KPIs de Defectos */}
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardContent className="pt-4">
                 <div className="flex items-center gap-3">
@@ -1022,8 +1022,15 @@ export default function Estadisticas() {
 
 // Componente de Rendimiento de Usuarios
 function RendimientoUsuarios() {
-  const { data: rendimiento, isLoading } = trpc.estadisticasAvanzadas.rendimientoUsuarios.useQuery();
-  const { data: defectosPorUsuario } = trpc.estadisticasAvanzadas.defectosPorUsuario.useQuery();
+  const { selectedProjectId } = useProject();
+  const { data: rendimiento, isLoading } = trpc.estadisticasAvanzadas.rendimientoUsuarios.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: true }
+  );
+  const { data: defectosPorUsuario } = trpc.estadisticasAvanzadas.defectosPorUsuario.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: true }
+  );
 
   if (isLoading) {
     return (
@@ -1051,7 +1058,7 @@ function RendimientoUsuarios() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* KPIs de Rendimiento */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">

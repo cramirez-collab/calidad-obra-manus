@@ -2819,7 +2819,7 @@ export async function getAuditoriaCount(filtros?: {
 
 // ==================== ESTADÍSTICAS AVANZADAS DE RENDIMIENTO ====================
 
-export async function getEstadisticasRendimientoUsuarios() {
+export async function getEstadisticasRendimientoUsuarios(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
   
@@ -2827,8 +2827,15 @@ export async function getEstadisticasRendimientoUsuarios() {
   const usuariosData = await db.select().from(users)
     .where(eq(users.activo, true));
   
-  // Obtener todos los items
-  const itemsData = await db.select(itemFieldsWithoutBase64).from(items);
+  // Filtrar items por proyecto si se especifica
+  const conditions = [];
+  if (proyectoId) {
+    conditions.push(eq(items.proyectoId, proyectoId));
+  }
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  
+  // Obtener items filtrados por proyecto
+  const itemsData = await db.select(itemFieldsWithoutBase64).from(items).where(whereClause);
   
   // Calcular estadísticas por usuario
   const estadisticas = usuariosData.map(usuario => {
@@ -2885,7 +2892,7 @@ export async function getEstadisticasRendimientoUsuarios() {
   return estadisticas.sort((a, b) => b.itemsCompletados - a.itemsCompletados);
 }
 
-export async function getEstadisticasSupervisores() {
+export async function getEstadisticasSupervisores(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
   
@@ -2896,9 +2903,13 @@ export async function getEstadisticasSupervisores() {
       inArray(users.role, ['supervisor', 'admin', 'superadmin'])
     ));
   
-  // Obtener items aprobados
+  // Filtrar items aprobados por proyecto si se especifica
+  const conditions = [eq(items.status, 'aprobado')];
+  if (proyectoId) {
+    conditions.push(eq(items.proyectoId, proyectoId));
+  }
   const itemsData = await db.select(itemFieldsWithoutBase64).from(items)
-    .where(eq(items.status, 'aprobado'));
+    .where(and(...conditions));
   
   return supervisores.map(supervisor => {
     const itemsAprobados = itemsData.filter(i => i.supervisorId === supervisor.id);
@@ -2927,13 +2938,17 @@ export async function getEstadisticasSupervisores() {
   }).sort((a, b) => b.totalAprobados - a.totalAprobados);
 }
 
-export async function getDefectosPorUsuario() {
+export async function getDefectosPorUsuario(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
   
-  // Obtener items con defectos
+  // Filtrar items con defectos por proyecto si se especifica
+  const conditions = [sql`${items.defectoId} IS NOT NULL`];
+  if (proyectoId) {
+    conditions.push(eq(items.proyectoId, proyectoId));
+  }
   const itemsData = await db.select(itemFieldsWithoutBase64).from(items)
-    .where(sql`${items.defectoId} IS NOT NULL`);
+    .where(and(...conditions));
   
   // Obtener usuarios
   const usuariosData = await db.select().from(users)

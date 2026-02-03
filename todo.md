@@ -2747,3 +2747,18 @@
 - [x] Mejorar manejo de error "Timeout starting video source" en QRScanner
 - [x] No bloquear la aplicación si la cámara falla
 - [x] Mensaje amigable para usar ingreso manual
+
+
+## Bug v52 - Estadísticas mezclando proyectos + Layout encimado
+
+- [ ] Estadísticas revuelven usuarios de diferentes proyectos (deben ser independientes)
+- [ ] Containers encimados en PC y tablet
+- [ ] Corregir filtro por proyecto activo en estadísticas
+- [ ] Corregir layout responsivo
+
+
+## Bug v52 - Estadísticas mezclando proyectos + Containers encimados
+
+- [x] Filtrar estadísticas por proyecto activo (agregado proyectoId a todas las funciones)
+- [x] Corregir containers encimados en PC/tablet (grids responsivos mejorados)
+- [x] Verificar layout responsivo (grid-cols-2 en móvil, lg:grid-cols-4 en desktop)

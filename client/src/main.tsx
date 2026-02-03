@@ -11,7 +11,7 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v51 - ObjetivaQC 🔴
+// 🔴 VERSIÓN v52 - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
@@ -19,8 +19,9 @@ import "./index.css";
 // ACTUALIZACIÓN ITERATIVA DE VERSIÓN (OBLIGATORIO)
 // CONSECUTIVO #N INCREMENTAL DEBAJO DE OBJETIVA (OBLIGATORIO)
 // RESOLUCIÓN FOTOS: 180px (ULTRA-RÁPIDO)
+// ESTADÍSTICAS FILTRADAS POR PROYECTO (OBLIGATORIO)
 // ============================================
-const CURRENT_VERSION = 51;
+const CURRENT_VERSION = 52;
 
 // ============================================
 // 🔴 ACTUALIZACIÓN FORZADA DE VERSIÓN 🔴
