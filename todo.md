@@ -2661,3 +2661,24 @@
 - [x] Verificar que funciona en todos los tamaños de pantalla
 - [x] Incluye búsqueda por nombre o empresa
 
+
+## Bug v45 - No cargan residentes/empresas/especialidades
+
+### Bug CRÍTICO: Datos no se cargan al crear ítem
+- [ ] Diagnosticar por qué no se cargan residentes
+- [ ] Diagnosticar por qué no se cargan empresas
+- [ ] Diagnosticar por qué no se cargan especialidades
+- [ ] Corregir el problema
+- [ ] Verificar funcionamiento
+
+
+## Bug v46 - Residentes no cargan + Push agresivo
+
+- [x] Diagnosticar por qué no cargan residentes/empresas/especialidades (FUNCIONAN en dev)
+- [x] Forzar notificaciones push SUPER AGRESIVAMENTE (implementado)
+- [x] Sistema de reintentos cada 10 segundos si no se conceden
+- [x] Alerta al usuario si están denegadas
+- [x] Verificación cada 60 segundos
+- [x] Verificación al volver a la app (visibilitychange)
+- [x] Actualizar a v46
+

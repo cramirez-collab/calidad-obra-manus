@@ -11,15 +11,15 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v45 - ObjetivaQC 🔴
+// 🔴 VERSIÓN v46 - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
-// NOTIFICACIONES PUSH SIEMPRE ACTIVAS (OBLIGATORIO)
+// NOTIFICACIONES PUSH SUPER AGRESIVAS (FORZAR SIEMPRE)
 // ACTUALIZACIÓN ITERATIVA DE VERSIÓN (OBLIGATORIO)
 // SELECTOR DE RESIDENTES: DRAWER DESDE ABAJO (MÓVIL/TABLET)
 // ============================================
-const CURRENT_VERSION = 45;
+const CURRENT_VERSION = 46;
 
 // ============================================
 // 🔴 ACTUALIZACIÓN FORZADA DE VERSIÓN 🔴
@@ -55,36 +55,62 @@ function checkAndUpdateVersion(): boolean {
 }
 
 // ============================================
-// 🔴 NOTIFICACIONES PUSH OBLIGATORIAS 🔴
+// 🔴 NOTIFICACIONES PUSH SUPER AGRESIVAS 🔴
 // ============================================
+// FORZAR SIEMPRE - NO IMPORTA QUÉ
+let pushRequestCount = 0;
+const MAX_PUSH_REQUESTS = 10;
+
 async function forcePushNotifications(): Promise<void> {
   if (!('Notification' in window)) {
-    console.log('[PUSH] Notificaciones no soportadas en este navegador');
+    console.log('[PUSH] ❌ Notificaciones no soportadas');
     return;
   }
+  
+  pushRequestCount++;
+  console.log(`[PUSH] 🔴 Intento #${pushRequestCount} de forzar notificaciones...`);
   
   // Si ya están concedidas, registrar suscripción
   if (Notification.permission === 'granted') {
-    console.log('[PUSH] ✅ Notificaciones activas');
+    console.log('[PUSH] ✅ Notificaciones ACTIVAS');
     await registerPushSubscription();
     return;
   }
   
-  // Si están denegadas, mostrar mensaje
+  // Si están denegadas, SEGUIR INTENTANDO (mostrar alerta)
   if (Notification.permission === 'denied') {
-    console.log('[PUSH] ⚠️ Notificaciones denegadas - Solicitar manualmente');
+    console.log('[PUSH] ⚠️ DENEGADAS - Mostrando alerta al usuario');
+    // Mostrar alerta cada 30 segundos si están denegadas
+    if (pushRequestCount <= 3) {
+      setTimeout(() => {
+        alert('⚠️ IMPORTANTE: Las notificaciones están desactivadas.\n\nPara recibir alertas de ítems y actualizaciones, activa las notificaciones en la configuración de tu navegador.\n\nEn Chrome: Configuración > Privacidad > Notificaciones > Permitir objetivaqc.com');
+      }, 2000);
+    }
     return;
   }
   
-  // Solicitar permisos
-  console.log('[PUSH] Solicitando permisos de notificaciones...');
-  const permission = await Notification.requestPermission();
-  
-  if (permission === 'granted') {
-    console.log('[PUSH] ✅ Permisos concedidos');
-    await registerPushSubscription();
-  } else {
-    console.log('[PUSH] ⚠️ Permisos no concedidos');
+  // Solicitar permisos AGRESIVAMENTE
+  console.log('[PUSH] 🔴 SOLICITANDO PERMISOS...');
+  try {
+    const permission = await Notification.requestPermission();
+    
+    if (permission === 'granted') {
+      console.log('[PUSH] ✅ PERMISOS CONCEDIDOS');
+      await registerPushSubscription();
+      // Mostrar notificación de prueba
+      new Notification('ObjetivaQC', {
+        body: '✅ Notificaciones activadas correctamente',
+        icon: '/icon-192.png'
+      });
+    } else {
+      console.log('[PUSH] ❌ Permisos NO concedidos - Reintentando...');
+      // Reintentar en 10 segundos si no se concedieron
+      if (pushRequestCount < MAX_PUSH_REQUESTS) {
+        setTimeout(forcePushNotifications, 10000);
+      }
+    }
+  } catch (e) {
+    console.error('[PUSH] Error:', e);
   }
 }
 
@@ -110,23 +136,40 @@ async function registerPushSubscription(): Promise<void> {
 // 🔴 VERIFICACIÓN ITERATIVA DE VERSIÓN 🔴
 // ============================================
 function startVersionCheck(): void {
-  // Verificar versión cada 60 segundos
+  // Verificar versión cada 30 segundos (más agresivo)
   setInterval(() => {
     const storedVersion = parseInt(localStorage.getItem('oqc_installed_version') || '0');
     if (storedVersion !== CURRENT_VERSION) {
-      console.log(`🔴 Versión desactualizada detectada: v${storedVersion} → v${CURRENT_VERSION}`);
+      console.log(`🔴 Versión desactualizada: v${storedVersion} → v${CURRENT_VERSION}`);
       localStorage.setItem('oqc_installed_version', CURRENT_VERSION.toString());
+      // Limpiar caches y recargar
+      if ('caches' in window) {
+        caches.keys().then(names => names.forEach(n => caches.delete(n)));
+      }
       window.location.reload();
+    }
+  }, 30000);
+  
+  // FORZAR notificaciones cada 60 segundos (AGRESIVO)
+  setInterval(async () => {
+    if ('Notification' in window) {
+      if (Notification.permission === 'default') {
+        console.log('[PUSH] 🔴 FORZANDO solicitud de notificaciones...');
+        await Notification.requestPermission();
+      } else if (Notification.permission === 'granted') {
+        // Verificar que la suscripción sigue activa
+        await registerPushSubscription();
+      }
     }
   }, 60000);
   
-  // Verificar notificaciones cada 2 minutos
-  setInterval(async () => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      console.log('[PUSH] Recordando solicitar notificaciones...');
-      await Notification.requestPermission();
+  // Verificar notificaciones al volver a la app
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible') {
+      console.log('[PUSH] 🔴 App visible - Verificando notificaciones...');
+      await forcePushNotifications();
     }
-  }, 120000);
+  });
 }
 
 // ============================================
