@@ -16,8 +16,8 @@ interface ImageMarkerProps {
   onCancel?: () => void;
 }
 
-// Ancho de lápiz fijo en 8 (el doble de grueso)
-const BRUSH_SIZE = 8;
+// Ancho de lápiz fijo en 2 (más fino para precisión)
+const BRUSH_SIZE = 2;
 
 export default function ImageMarker({ imageUrl, onSave, onCancel }: ImageMarkerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);

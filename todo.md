@@ -2762,3 +2762,9 @@
 - [x] Filtrar estadísticas por proyecto activo (agregado proyectoId a todas las funciones)
 - [x] Corregir containers encimados en PC/tablet (grids responsivos mejorados)
 - [x] Verificar layout responsivo (grid-cols-2 en móvil, lg:grid-cols-4 en desktop)
+
+
+## Ajustes v53 - Resolución fotos y tamaño lápiz
+
+- [x] Subir resolución de fotos a 275px (antes 180px)
+- [x] Reducir tamaño del lápiz a 2 (antes 8)
