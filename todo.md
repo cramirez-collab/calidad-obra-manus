@@ -2498,3 +2498,7 @@
 - [x] Flujo escáner: escanear QR → si no existe en BD → crear ítem vinculado automáticamente
 - [x] Mantener flujo actual por foto como opción alternativa
 - [x] Indicador visual de QR preasignado en formulario de nuevo ítem
+
+
+## Ajuste v27 (3 Febrero 2026)
+- [x] Reducir intervalo de sincronización de 5 a 3 segundos

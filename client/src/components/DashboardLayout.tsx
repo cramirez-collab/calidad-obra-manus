@@ -436,7 +436,7 @@ function DashboardLayoutContent({
             {/* OQC CENTRADO con versión e indicador de conexión */}
             <div className="flex-1 flex justify-center items-center gap-2">
               <span className="font-bold text-base sm:text-lg md:text-xl text-primary tracking-wide hidden sm:block">OQC</span>
-              <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded">v26</span>
+              <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded">v27</span>
               {/* Indicador de conexión */}
               <div className="flex items-center gap-1">
                 {online ? (

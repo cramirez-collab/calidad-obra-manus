@@ -153,14 +153,14 @@ export function useSyncManager() {
     }
   }, []);
   
-  // Sincronizar periódicamente cada 5 segundos si hay conexión (INSTANTÁNEO)
+  // Sincronizar periódicamente cada 3 segundos si hay conexión (INSTANTÁNEO)
   useEffect(() => {
     const interval = setInterval(() => {
       if (isOnline() && !isSyncing) {
         updatePendingCount();
         syncAll();
       }
-    }, 5000); // Cada 5 segundos para sincronización INSTANTÁNEA
+    }, 3000); // Cada 3 segundos para sincronización INSTANTÁNEA
     
     return () => clearInterval(interval);
   }, [isSyncing, syncAll, updatePendingCount]);

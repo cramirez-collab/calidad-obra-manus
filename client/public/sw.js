@@ -1,12 +1,12 @@
 // ============================================
-// SISTEMA OFFLINE COMPLETO 24/7 - v26
+// SISTEMA OFFLINE COMPLETO 24/7 - v27
 // ============================================
 // Este Service Worker permite que la app funcione
 // completamente sin conexión a internet
 // PROTEGE DATOS OFFLINE - No borra IndexedDB si hay pendientes
-// Sincronización cada 5 segundos para mayor velocidad
+// Sincronización cada 3 segundos para mayor velocidad
 // Flujo QR preasignado: escanear → crear ítem
-const APP_VERSION = 26;
+const APP_VERSION = 27;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
