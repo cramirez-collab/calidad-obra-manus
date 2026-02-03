@@ -1,9 +1,9 @@
 // ============================================
-// SISTEMA DE VERSIONADO AUTOMÁTICO v15
+// SISTEMA DE VERSIONADO AUTOMÁTICO v16
 // ============================================
 // Este número DEBE incrementarse con cada deploy
 // El SW detectará cambios y forzará actualización en TODOS los dispositivos
-const APP_VERSION = 15;
+const APP_VERSION = 16;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

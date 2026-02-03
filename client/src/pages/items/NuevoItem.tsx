@@ -343,18 +343,44 @@ export default function NuevoItem() {
     };
     
     try {
+      console.log('[NuevoItem] Iniciando creación de ítem...', {
+        proyectoId: itemData.proyectoId,
+        empresaId: itemData.empresaId,
+        unidadId: itemData.unidadId,
+        titulo: itemData.titulo,
+        tieneFoto: !!itemData.fotoAntesBase64,
+        tieneFotoMarcada: !!itemData.fotoAntesMarcadaBase64,
+        clientId: itemData.clientId,
+      });
+      
       // Crear item directamente sin reintentos complejos
       const result = await createItemMutation.mutateAsync(itemData);
+      console.log('[NuevoItem] Ítem creado exitosamente:', result);
       toast.success("Ítem creado correctamente");
       setLocation(`/items/${result.id}`);
     } catch (error: any) {
-      console.error('Error creando item:', error);
-      const errorMsg = error.message || "Error al crear el ítem";
-      // Sanitizar mensaje de error
-      const sanitizedMsg = errorMsg.length > 100 || errorMsg.includes('base64') || errorMsg.includes('data:image') 
-        ? "Error al crear el ítem. Intenta de nuevo." 
-        : errorMsg;
-      toast.error(sanitizedMsg);
+      console.error('[NuevoItem] Error completo:', {
+        message: error.message,
+        code: error.data?.code,
+        httpStatus: error.data?.httpStatus,
+        path: error.data?.path,
+        stack: error.stack,
+        fullError: JSON.stringify(error, null, 2),
+      });
+      
+      // Mostrar error más detallado para diagnóstico
+      let errorMsg = error.message || "Error al crear el ítem";
+      
+      // Si es error de red, mostrar mensaje específico
+      if (errorMsg.includes('fetch') || errorMsg.includes('network') || errorMsg.includes('Failed')) {
+        errorMsg = "Error de conexión. Verifica tu internet.";
+      } else if (errorMsg.includes('timeout')) {
+        errorMsg = "Tiempo de espera agotado. Intenta de nuevo.";
+      } else if (errorMsg.length > 100 || errorMsg.includes('base64') || errorMsg.includes('data:image')) {
+        errorMsg = "Error al crear el ítem. Intenta de nuevo.";
+      }
+      
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
