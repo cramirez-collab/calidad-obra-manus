@@ -33,7 +33,7 @@ import { useProject } from "@/contexts/ProjectContext";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { forceDownloadPDF } from "@/lib/pdfDownload";
+import { downloadPDFBestMethod } from "@/lib/pdfDownload";
 
 const statusLabels: Record<string, string> = {
   pendiente_foto_despues: "Pendiente Foto",
@@ -254,7 +254,7 @@ export default function ReporteFotografico() {
       
       // Descargar PDF nativo - se abre en Acrobat Reader
       const nombreProyecto = proyectoSeleccionado?.nombre?.replace(/[^a-zA-Z0-9]/g, '_') || 'reporte';
-      forceDownloadPDF(doc, `reporte_fotografico_${nombreProyecto}_${format(new Date(), 'yyyy-MM-dd_HHmm')}.pdf`);
+      downloadPDFBestMethod(doc, `reporte_fotografico_${nombreProyecto}_${format(new Date(), 'yyyy-MM-dd_HHmm')}.pdf`);
       
       toast.success("PDF descargado - se abrira en Acrobat Reader");
     } catch (error) {

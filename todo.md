@@ -2569,3 +2569,11 @@
 ### Dominio
 - [x] Documentar proceso de configuracion de dominio objetivaqc.com (Settings > Domains en UI)
 
+
+## Mejoras v34 - Forzar descarga PDF en Acrobat
+
+### Descarga forzada de PDFs
+- [x] Forzar que Chrome descargue PDFs automáticamente (tipo MIME octet-stream)
+- [x] Usar downloadPDFBestMethod con detección de dispositivo
+- [x] Aplicar a todos los PDFs: Bitácora, Tiempos, Reporte Fotográfico
+

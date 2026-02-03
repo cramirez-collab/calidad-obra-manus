@@ -56,7 +56,7 @@ import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { forceDownloadPDF } from "@/lib/pdfDownload";
+import { downloadPDFBestMethod } from "@/lib/pdfDownload";
 
 const ITEMS_PER_PAGE = 50;
 
@@ -461,7 +461,7 @@ export default function Bitacora() {
       alternateRowStyles: { fillColor: [245, 245, 245] },
     });
 
-    forceDownloadPDF(doc, `bitacora_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
+    downloadPDFBestMethod(doc, `bitacora_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
     toast.success("PDF descargado - ábrelo con Acrobat Reader");
   };
 
@@ -533,7 +533,7 @@ export default function Bitacora() {
       },
     });
 
-    forceDownloadPDF(doc, `tiempos_actividad_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
+    downloadPDFBestMethod(doc, `tiempos_actividad_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
     toast.success("PDF descargado - ábrelo con Acrobat Reader");
   };
 

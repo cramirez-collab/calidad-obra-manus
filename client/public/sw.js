@@ -1,5 +1,5 @@
 // ============================================
-// SISTEMA OFFLINE COMPLETO 24/7 - v33
+// SISTEMA OFFLINE COMPLETO 24/7 - v34
 // ============================================
 // Este Service Worker permite que la app funcione
 // completamente sin conexión a internet
@@ -7,7 +7,8 @@
 // Sincronización cada 3 segundos para mayor velocidad
 // Carga instantánea de fotos (máx 80KB, 2 seg)
 // Notificaciones push navegan al item correcto
-const APP_VERSION = 33;
+// PDFs se descargan automáticamente para Acrobat Reader
+const APP_VERSION = 34;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

@@ -1,58 +1,76 @@
 /**
- * Utilidad para forzar descarga de PDFs
- * Hace que el PDF se descargue y se abra en Acrobat Reader
- * en lugar de mostrarse en el navegador
+ * Utilidad para forzar descarga de PDFs en Acrobat Reader
+ * ========================================================
+ * Fuerza que Chrome descargue el PDF en lugar de abrirlo
+ * en el visor integrado, para que se abra en Acrobat Reader
+ * o el lector PDF predeterminado del dispositivo.
  */
 
 import jsPDF from 'jspdf';
 
 /**
  * Fuerza la descarga de un PDF generado con jsPDF
- * El archivo se descargará y se abrirá en el lector PDF predeterminado
- * (Acrobat Reader, Preview, etc.)
+ * Usa múltiples técnicas para asegurar que Chrome descargue el archivo
  */
 export function forceDownloadPDF(doc: jsPDF, filename: string): void {
-  // Obtener el blob del PDF
+  const finalFilename = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+  
+  // Método 1: Usar output con tipo 'blob' y crear enlace de descarga
   const pdfBlob = doc.output('blob');
   
-  // Crear URL temporal
-  const url = URL.createObjectURL(pdfBlob);
+  // Crear blob con tipo MIME específico para forzar descarga
+  const downloadBlob = new Blob([pdfBlob], { 
+    type: 'application/octet-stream' // Tipo genérico que fuerza descarga
+  });
   
-  // Crear enlace de descarga
+  // Crear URL temporal
+  const url = URL.createObjectURL(downloadBlob);
+  
+  // Crear enlace de descarga con atributo download
   const link = document.createElement('a');
   link.href = url;
-  link.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+  link.download = finalFilename;
+  link.setAttribute('download', finalFilename);
+  link.style.display = 'none';
   
-  // Forzar descarga
+  // Agregar al DOM, hacer clic y remover
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
   
-  // Limpiar URL temporal después de un momento
+  // Limpiar después de un momento
   setTimeout(() => {
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }, 1000);
+  }, 500);
 }
 
 /**
- * Descarga un PDF desde una URL o blob
+ * Descarga un PDF desde un Blob
  * Fuerza la descarga en lugar de abrir en el navegador
  */
 export function downloadPDFFromBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
+  const finalFilename = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+  
+  // Crear blob con tipo que fuerza descarga
+  const downloadBlob = new Blob([blob], { 
+    type: 'application/octet-stream'
+  });
+  
+  const url = URL.createObjectURL(downloadBlob);
   
   const link = document.createElement('a');
   link.href = url;
-  link.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+  link.download = finalFilename;
+  link.setAttribute('download', finalFilename);
   link.style.display = 'none';
   
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
   
   setTimeout(() => {
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }, 1000);
+  }, 500);
 }
 
 /**
@@ -70,33 +88,39 @@ export async function downloadPDFFromURL(url: string, filename: string): Promise
 }
 
 /**
- * Convierte HTML a PDF y fuerza descarga
- * Útil para reportes generados dinámicamente
+ * Método alternativo: Guardar PDF usando FileSaver-like approach
+ * Para máxima compatibilidad con dispositivos móviles
  */
-export function downloadHTMLAsPDF(htmlContent: string, filename: string): void {
-  // Crear iframe oculto para renderizar el HTML
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'absolute';
-  iframe.style.left = '-9999px';
-  iframe.style.width = '210mm';
-  iframe.style.height = '297mm';
-  document.body.appendChild(iframe);
+export function savePDFToDevice(doc: jsPDF, filename: string): void {
+  const finalFilename = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
   
-  const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-  if (!iframeDoc) {
-    document.body.removeChild(iframe);
-    return;
+  // En móviles, usar el método nativo de jsPDF con save()
+  // que tiene mejor compatibilidad
+  try {
+    // Intentar usar el método save de jsPDF directamente
+    doc.save(finalFilename);
+  } catch {
+    // Fallback al método de blob
+    forceDownloadPDF(doc, finalFilename);
   }
+}
+
+/**
+ * Descarga PDF con máxima compatibilidad
+ * Detecta el dispositivo y usa el mejor método
+ */
+export function downloadPDFBestMethod(doc: jsPDF, filename: string): void {
+  const finalFilename = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
   
-  iframeDoc.open();
-  iframeDoc.write(htmlContent);
-  iframeDoc.close();
+  // Detectar si es móvil
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   
-  // Esperar a que cargue y luego imprimir como PDF
-  setTimeout(() => {
-    iframe.contentWindow?.print();
-    setTimeout(() => {
-      document.body.removeChild(iframe);
-    }, 1000);
-  }, 500);
+  if (isMobile) {
+    // En móviles, usar save() directo de jsPDF que tiene mejor compatibilidad
+    // con los manejadores de archivos del sistema
+    doc.save(finalFilename);
+  } else {
+    // En desktop, forzar descarga con blob
+    forceDownloadPDF(doc, finalFilename);
+  }
 }
