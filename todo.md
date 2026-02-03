@@ -2599,3 +2599,16 @@
 - [x] Confirmación antes de eliminar múltiples ítems
 - [x] Endpoint deleteMultiple en backend
 
+
+## Mejoras v41 - Compresión Adaptativa
+
+### Compresión de imágenes según tipo de conexión
+- [x] Detectar tipo de conexión (2G, 3G, 4G, WiFi) via Network Information API
+- [x] Configurar compresión óptima por tipo de conexión
+- [x] 2G lento: 80KB máximo, 800px resolución (~8s subida)
+- [x] 2G: 100KB máximo, 900px resolución (~10s subida)
+- [x] 3G: 150KB máximo, 1000px resolución (~3s subida)
+- [x] 4G: 250KB máximo, 1200px resolución (<1s subida)
+- [x] WiFi: 400KB máximo, 1400px resolución (instantáneo)
+- [x] Mostrar indicador de calidad de conexión al usuario (label con KB)
+

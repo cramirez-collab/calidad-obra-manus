@@ -1,12 +1,10 @@
 /**
  * Utilidad para comprimir imágenes antes de guardarlas
  * 
- * MODO INSTANTÁNEO v32:
- * - Prioriza VELOCIDAD sobre calidad
- * - Objetivo: subir foto en máximo 2 segundos
- * - Tamaño máximo: 80KB (sube en ~1-2 seg en 3G)
- * - Resolución: 800px (suficiente para ver defectos)
- * - Mantiene legibilidad para control de calidad
+ * MODO ADAPTATIVO v41:
+ * - Detecta tipo de conexión del usuario
+ * - Ajusta calidad y tamaño según velocidad de red
+ * - Prioriza calidad en WiFi, velocidad en 2G/3G
  */
 
 interface CompressionOptions {
@@ -24,34 +22,68 @@ interface AdaptiveSettings {
   maxWidth: number;
   quality: number;
   connectionLabel: string;
+  estimatedUploadTime: string;
 }
 
 // ============================================
-// CONFIGURACIÓN INSTANTÁNEA - MÁXIMO 2 SEGUNDOS
+// CONFIGURACIÓN ADAPTATIVA v41
 // ============================================
-// Cálculo: 3G típico = 384 Kbps = 48 KB/s
-// Para subir en 2 segundos: 48 * 2 = 96 KB máximo
-// Usamos 80KB para margen de seguridad
+// Velocidades típicas:
+// - 2G: 50-100 Kbps = 6-12 KB/s
+// - 3G: 384 Kbps - 2 Mbps = 48-250 KB/s
+// - 4G: 5-50 Mbps = 625KB-6MB/s
+// - WiFi: 10-100+ Mbps = 1.25MB-12MB/s
 // ============================================
 
-const INSTANT_MAX_SIZE_KB = 80;  // Máximo 80KB para carga instantánea
-const INSTANT_MAX_WIDTH = 800;   // 800px es suficiente para ver defectos
-const INSTANT_QUALITY = 0.5;     // Calidad media-baja pero legible
-
-// Configuración por tipo de conexión (todas optimizadas para velocidad)
 const ADAPTIVE_SETTINGS: Record<ConnectionType, AdaptiveSettings> = {
-  'slow-2g': { maxSizeKB: 50, maxWidth: 640, quality: 0.4, connectionLabel: '2G ⚡' },
-  '2g': { maxSizeKB: 60, maxWidth: 720, quality: 0.45, connectionLabel: '2G ⚡' },
-  '3g': { maxSizeKB: 80, maxWidth: 800, quality: 0.5, connectionLabel: '3G ⚡' },
-  '4g': { maxSizeKB: 80, maxWidth: 800, quality: 0.55, connectionLabel: '4G ⚡' },
-  'wifi': { maxSizeKB: 80, maxWidth: 800, quality: 0.6, connectionLabel: 'WiFi ⚡' },
-  'unknown': { maxSizeKB: 80, maxWidth: 800, quality: 0.5, connectionLabel: 'Auto ⚡' }
+  'slow-2g': { 
+    maxSizeKB: 80,    // ~8 segundos en 2G lento
+    maxWidth: 800, 
+    quality: 0.45, 
+    connectionLabel: '2G Lento (80KB)',
+    estimatedUploadTime: '~8s'
+  },
+  '2g': { 
+    maxSizeKB: 100,   // ~10 segundos en 2G
+    maxWidth: 900, 
+    quality: 0.50, 
+    connectionLabel: '2G (100KB)',
+    estimatedUploadTime: '~10s'
+  },
+  '3g': { 
+    maxSizeKB: 150,   // ~3 segundos en 3G típico
+    maxWidth: 1000, 
+    quality: 0.60, 
+    connectionLabel: '3G (150KB)',
+    estimatedUploadTime: '~3s'
+  },
+  '4g': { 
+    maxSizeKB: 250,   // <1 segundo en 4G
+    maxWidth: 1200, 
+    quality: 0.70, 
+    connectionLabel: '4G (250KB)',
+    estimatedUploadTime: '<1s'
+  },
+  'wifi': { 
+    maxSizeKB: 400,   // Instantáneo en WiFi
+    maxWidth: 1400, 
+    quality: 0.80, 
+    connectionLabel: 'WiFi (400KB)',
+    estimatedUploadTime: 'Instantáneo'
+  },
+  'unknown': { 
+    maxSizeKB: 150,   // Por defecto como 3G
+    maxWidth: 1000, 
+    quality: 0.60, 
+    connectionLabel: 'Auto (150KB)',
+    estimatedUploadTime: '~3s'
+  }
 };
 
 const DEFAULT_OPTIONS: CompressionOptions = {
-  maxWidth: INSTANT_MAX_WIDTH,
-  maxHeight: INSTANT_MAX_WIDTH,
-  quality: INSTANT_QUALITY,
+  maxWidth: 1000,
+  maxHeight: 1000,
+  quality: 0.60,
   mimeType: 'image/jpeg'
 };
 
@@ -72,6 +104,7 @@ export function detectConnectionType(): ConnectionType {
   if (effectiveType === '2g') return '2g';
   if (effectiveType === '3g') return '3g';
   if (effectiveType === '4g') {
+    // Verificar si es WiFi o datos móviles
     const type = connection.type as string;
     if (type === 'wifi' || type === 'ethernet') {
       return 'wifi';
@@ -79,6 +112,7 @@ export function detectConnectionType(): ConnectionType {
     return '4g';
   }
   
+  // Fallback por tipo de conexión
   const type = connection.type as string;
   if (type === 'wifi' || type === 'ethernet') {
     return 'wifi';
@@ -98,13 +132,19 @@ export function getAdaptiveSettings(): AdaptiveSettings {
 /**
  * Obtiene información de la conexión para mostrar al usuario
  */
-export function getConnectionInfo(): { type: ConnectionType; label: string; maxSizeKB: number } {
+export function getConnectionInfo(): { 
+  type: ConnectionType; 
+  label: string; 
+  maxSizeKB: number;
+  estimatedUploadTime: string;
+} {
   const connectionType = detectConnectionType();
   const settings = ADAPTIVE_SETTINGS[connectionType];
   return {
     type: connectionType,
     label: settings.connectionLabel,
-    maxSizeKB: settings.maxSizeKB
+    maxSizeKB: settings.maxSizeKB,
+    estimatedUploadTime: settings.estimatedUploadTime
   };
 }
 
@@ -125,6 +165,7 @@ export async function compressImage(
         const maxW = opts.maxWidth!;
         const maxH = opts.maxHeight!;
         
+        // Redimensionar si excede dimensiones máximas
         if (width > maxW || height > maxH) {
           const ratio = Math.min(maxW / width, maxH / height);
           width = Math.round(width * ratio);
@@ -141,6 +182,7 @@ export async function compressImage(
           return;
         }
         
+        // Fondo blanco para transparencias
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
@@ -197,7 +239,7 @@ export function getBase64SizeKB(base64: string): number {
  */
 export async function compressIfNeeded(
   base64: string,
-  maxSizeKB: number = INSTANT_MAX_SIZE_KB,
+  maxSizeKB: number = 150,
   options: CompressionOptions = {}
 ): Promise<string> {
   const currentSize = getBase64SizeKB(base64);
@@ -206,9 +248,10 @@ export async function compressIfNeeded(
     return base64;
   }
   
-  let quality = options.quality || INSTANT_QUALITY;
+  let quality = options.quality || 0.60;
   let compressed = await compressImage(base64, { ...options, quality });
   
+  // Reducir calidad iterativamente hasta alcanzar objetivo
   while (getBase64SizeKB(compressed) > maxSizeKB && quality > 0.2) {
     quality -= 0.1;
     compressed = await compressImage(base64, { ...options, quality });
@@ -218,8 +261,8 @@ export async function compressIfNeeded(
 }
 
 /**
- * COMPRESIÓN INSTANTÁNEA - Función principal
- * Comprime la imagen para carga en máximo 2 segundos
+ * COMPRESIÓN ADAPTATIVA v41 - Función principal
+ * Comprime la imagen según el tipo de conexión del usuario
  * 
  * @param base64 - Imagen en formato base64
  * @returns Objeto con imagen comprimida e información
@@ -231,10 +274,13 @@ export async function compressAdaptive(base64: string): Promise<{
   connectionType: ConnectionType;
   connectionLabel: string;
   targetSizeKB: number;
+  estimatedUploadTime: string;
 }> {
   const originalSizeKB = getBase64SizeKB(base64);
   const connectionType = detectConnectionType();
   const settings = ADAPTIVE_SETTINGS[connectionType];
+  
+  console.log(`[Compresión Adaptativa v41] Conexión: ${connectionType}, Objetivo: ${settings.maxSizeKB}KB, Original: ${originalSizeKB}KB`);
   
   // Si ya es pequeña, no comprimir
   if (originalSizeKB <= settings.maxSizeKB) {
@@ -244,11 +290,12 @@ export async function compressAdaptive(base64: string): Promise<{
       compressedSizeKB: originalSizeKB,
       connectionType,
       connectionLabel: settings.connectionLabel,
-      targetSizeKB: settings.maxSizeKB
+      targetSizeKB: settings.maxSizeKB,
+      estimatedUploadTime: settings.estimatedUploadTime
     };
   }
   
-  // Comprimir agresivamente para carga instantánea
+  // Comprimir según configuración de conexión
   const options: CompressionOptions = {
     maxWidth: settings.maxWidth,
     maxHeight: settings.maxWidth,
@@ -259,28 +306,28 @@ export async function compressAdaptive(base64: string): Promise<{
   let compressed = await compressImage(base64, options);
   let compressedSizeKB = getBase64SizeKB(compressed);
   
-  // Reducir calidad hasta alcanzar objetivo
+  // Reducir calidad iterativamente hasta alcanzar objetivo
   let quality = settings.quality;
-  while (compressedSizeKB > settings.maxSizeKB && quality > 0.2) {
+  while (compressedSizeKB > settings.maxSizeKB && quality > 0.25) {
     quality -= 0.05;
     compressed = await compressImage(base64, { ...options, quality });
     compressedSizeKB = getBase64SizeKB(compressed);
   }
   
-  // Si aún es grande, reducir dimensiones agresivamente
+  // Si aún es grande, reducir dimensiones
   let maxWidth = settings.maxWidth;
-  while (compressedSizeKB > settings.maxSizeKB && maxWidth > 400) {
+  while (compressedSizeKB > settings.maxSizeKB && maxWidth > 600) {
     maxWidth -= 100;
     compressed = await compressImage(base64, { 
       ...options, 
       maxWidth, 
       maxHeight: maxWidth,
-      quality: 0.2 
+      quality: Math.max(0.25, quality) 
     });
     compressedSizeKB = getBase64SizeKB(compressed);
   }
   
-  console.log(`[Compresión Instantánea] ${originalSizeKB}KB → ${compressedSizeKB}KB (${settings.connectionLabel})`);
+  console.log(`[Compresión Adaptativa v41] ${originalSizeKB}KB → ${compressedSizeKB}KB (${settings.connectionLabel})`);
   
   return {
     compressed,
@@ -288,14 +335,34 @@ export async function compressAdaptive(base64: string): Promise<{
     compressedSizeKB,
     connectionType,
     connectionLabel: settings.connectionLabel,
-    targetSizeKB: settings.maxSizeKB
+    targetSizeKB: settings.maxSizeKB,
+    estimatedUploadTime: settings.estimatedUploadTime
   };
 }
 
 /**
- * Comprime imagen de forma instantánea y retorna solo el base64
+ * Comprime imagen de forma adaptativa y retorna solo el base64
  */
 export async function compressAdaptiveSimple(base64: string): Promise<string> {
   const result = await compressAdaptive(base64);
   return result.compressed;
+}
+
+/**
+ * Obtiene emoji de señal según tipo de conexión
+ */
+export function getConnectionEmoji(connectionType: ConnectionType): string {
+  switch (connectionType) {
+    case 'slow-2g':
+    case '2g':
+      return '📶';
+    case '3g':
+      return '📶';
+    case '4g':
+      return '📶';
+    case 'wifi':
+      return '📶';
+    default:
+      return '📶';
+  }
 }

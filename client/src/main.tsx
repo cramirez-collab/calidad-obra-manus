@@ -16,7 +16,7 @@ import "./index.css";
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
 // ============================================
-const CURRENT_VERSION = 40;
+const CURRENT_VERSION = 41;
 
 // Función para verificar y actualizar versión
 function checkAndUpdateVersion(): boolean {
