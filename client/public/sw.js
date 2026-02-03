@@ -1,9 +1,8 @@
 // ============================================
-// SISTEMA OFFLINE COMPLETO 24/7 - v35
+// SISTEMA OFFLINE COMPLETO 24/7 - v36
 // ============================================
-// ACTUALIZACIÓN FORZADA AGRESIVA
-// Elimina versiones anteriores automáticamente
-// Todos los usuarios DEBEN tener la misma versión
+// Dominio mandatorio: objetivaqc.com
+// Actualización forzada SIN ciclos infinitos
 // ============================================
 // Funcionalidades:
 // - Modo offline 24/7
@@ -11,7 +10,7 @@
 // - Fotos instantáneas (máx 80KB)
 // - PDFs descarga automática para Acrobat
 // - Notificaciones push navegan al ítem
-const APP_VERSION = 35;
+const APP_VERSION = 36;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

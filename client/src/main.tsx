@@ -11,88 +11,69 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// SISTEMA DE ACTUALIZACIÓN FORZADA AGRESIVA v35
+// SISTEMA DE ACTUALIZACIÓN FORZADA v36
 // ============================================
-// OBLIGA a todos los usuarios a tener la misma versión.
-// Si detecta versión anterior, ELIMINA TODO y actualiza.
+// Dominio mandatorio: objetivaqc.com
+// Actualización sin ciclos infinitos
 // ============================================
-const CURRENT_VERSION = 35;
+const CURRENT_VERSION = 36;
 const VERSION_KEY = 'oqc_app_version';
-const FORCE_UPDATE_KEY = 'oqc_force_update';
+const UPDATED_KEY = 'oqc_updated_to';
 
-// Función AGRESIVA para eliminar TODO y forzar actualización
-async function forceAggressiveUpdate() {
-  console.log('🔴 [ACTUALIZACIÓN FORZADA] Limpieza total iniciada...');
-  
-  const isUpdating = sessionStorage.getItem(FORCE_UPDATE_KEY);
-  if (isUpdating === 'updating') {
-    console.log('✅ [ACTUALIZACIÓN] Completada');
-    sessionStorage.removeItem(FORCE_UPDATE_KEY);
-    localStorage.setItem(VERSION_KEY, CURRENT_VERSION.toString());
-    return false;
-  }
-  
-  sessionStorage.setItem(FORCE_UPDATE_KEY, 'updating');
-  
-  // 1. ELIMINAR TODOS LOS SERVICE WORKERS
-  if ('serviceWorker' in navigator) {
-    try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (const reg of registrations) {
-        await reg.unregister();
-      }
-      await new Promise(resolve => setTimeout(resolve, 300));
-    } catch (e) {
-      console.error('[SW] Error:', e);
-    }
-  }
-  
-  // 2. ELIMINAR TODOS LOS CACHES
-  if ('caches' in window) {
-    try {
-      const cacheNames = await caches.keys();
-      await Promise.all(cacheNames.map(name => caches.delete(name)));
-    } catch (e) {
-      console.error('[CACHE] Error:', e);
-    }
-  }
-  
-  // 3. LIMPIAR LOCALSTORAGE (preservar datos offline críticos)
-  const keysToPreserve = ['oqc_offline_items', 'oqc_pending_sync'];
-  const preservedData: Record<string, string> = {};
-  keysToPreserve.forEach(key => {
-    const value = localStorage.getItem(key);
-    if (value) preservedData[key] = value;
-  });
-  localStorage.clear();
-  Object.entries(preservedData).forEach(([key, value]) => {
-    localStorage.setItem(key, value);
-  });
-  
-  // 4. GUARDAR NUEVA VERSIÓN
-  localStorage.setItem(VERSION_KEY, CURRENT_VERSION.toString());
-  
-  // 5. FORZAR RECARGA COMPLETA
-  window.location.replace(window.location.pathname + '?v=' + CURRENT_VERSION + '&t=' + Date.now());
-  return true;
-}
-
-// VERIFICACIÓN DE VERSIÓN AL INICIO
+// Verificar si ya se actualizó a esta versión (evita ciclos)
+const alreadyUpdated = localStorage.getItem(UPDATED_KEY) === CURRENT_VERSION.toString();
 const storedVersion = parseInt(localStorage.getItem(VERSION_KEY) || '0');
-const isUpdating = sessionStorage.getItem(FORCE_UPDATE_KEY);
 
-console.log(`📱 [OQC v${CURRENT_VERSION}] Instalada: v${storedVersion || 'ninguna'}`);
+console.log(`📱 [OQC v${CURRENT_VERSION}] Versión almacenada: ${storedVersion}, Ya actualizado: ${alreadyUpdated}`);
 
-if (storedVersion !== CURRENT_VERSION && isUpdating !== 'updating') {
-  console.log(`⚠️ [OBSOLETA] v${storedVersion} → v${CURRENT_VERSION}`);
-  forceAggressiveUpdate();
-} else if (isUpdating === 'updating') {
-  sessionStorage.removeItem(FORCE_UPDATE_KEY);
+// Solo actualizar si la versión es diferente Y no hemos actualizado ya
+if (storedVersion !== CURRENT_VERSION && !alreadyUpdated) {
+  console.log(`⚠️ [ACTUALIZACIÓN] v${storedVersion} → v${CURRENT_VERSION}`);
+  
+  // Marcar que vamos a actualizar a esta versión (ANTES de hacer nada)
+  localStorage.setItem(UPDATED_KEY, CURRENT_VERSION.toString());
+  
+  // Función asíncrona para limpiar y recargar
+  (async () => {
+    // 1. Eliminar Service Workers
+    if ('serviceWorker' in navigator) {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) {
+          await reg.unregister();
+        }
+      } catch (e) {
+        console.error('[SW] Error:', e);
+      }
+    }
+    
+    // 2. Eliminar caches
+    if ('caches' in window) {
+      try {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      } catch (e) {
+        console.error('[CACHE] Error:', e);
+      }
+    }
+    
+    // 3. Actualizar versión
+    localStorage.setItem(VERSION_KEY, CURRENT_VERSION.toString());
+    
+    // 4. Recargar UNA sola vez
+    window.location.reload();
+  })();
+} else {
+  // Asegurar que la versión esté guardada correctamente
   localStorage.setItem(VERSION_KEY, CURRENT_VERSION.toString());
+  // Limpiar flag de actualización si ya pasó
+  if (alreadyUpdated) {
+    localStorage.removeItem(UPDATED_KEY);
+  }
 }
 
-// REGISTRO DE SERVICE WORKER
-if ('serviceWorker' in navigator) {
+// REGISTRO DE SERVICE WORKER (solo si no estamos actualizando)
+if ('serviceWorker' in navigator && storedVersion === CURRENT_VERSION) {
   window.addEventListener('load', async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', {
@@ -190,17 +171,9 @@ root.render(
 
 setTimeout(hideSplashScreen, 500);
 
-// LISTENERS
+// LISTENERS (sin verificación periódica para evitar ciclos)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     console.log('[SW] Controlador actualizado');
   });
 }
-
-// Verificar versión cada 30 segundos
-setInterval(() => {
-  const currentStored = parseInt(localStorage.getItem(VERSION_KEY) || '0');
-  if (currentStored !== CURRENT_VERSION) {
-    forceAggressiveUpdate();
-  }
-}, 30000);
