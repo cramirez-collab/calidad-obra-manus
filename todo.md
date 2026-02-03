@@ -2782,3 +2782,20 @@
 - [x] Actualizar descripción: Solo puede ver (no modificar)
 - [x] Puede descargar bitácora
 - [x] Puede descargar cualquier PDF
+
+
+## v54 - Botón eliminar en Bienvenida móvil
+
+- [x] Hacer visible botón eliminar (papelera) en Bienvenida para Superadmin y Admin en móvil
+- [x] Aumentar tamaño del botón a 40x40px con min-width
+- [x] Icono de papelera más grande (h-5 w-5)
+
+
+## v54 - Corrección Botón Eliminar en Móvil
+
+### Bienvenida - Botón Eliminar Visible
+- [x] Botón de eliminar (icono papelera) visible en móvil para Superadmin/Admin
+- [x] Reducir tamaño de elementos en móvil para dar espacio al botón
+- [x] Ocultar flecha de navegación en móvil cuando hay botón eliminar
+- [x] Ajustar padding y gaps para mejor uso del espacio en pantallas pequeñas
+- [x] Mantener funcionalidad completa en tablet y desktop

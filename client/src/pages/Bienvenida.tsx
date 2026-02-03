@@ -376,8 +376,8 @@ export default function Bienvenida() {
                     }
                   }}
                 >
-                  <CardContent className="p-3 sm:p-4">
-                    <div className="flex items-center gap-3">
+                  <CardContent className="p-2 sm:p-4">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       {/* Checkbox para selección múltiple */}
                       {selectionMode && isSuperadmin && (
                         <Checkbox
@@ -415,19 +415,19 @@ export default function Bienvenida() {
                       </div>
 
                       {/* Contenido */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm font-bold text-[#002C63]">
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                          <span className="font-mono text-xs sm:text-sm font-bold text-[#002C63]">
                             {item.codigo} <span className="text-[#02B381]">#{item.numeroInterno || '-'}</span>
                           </span>
-                          <span className={`text-xs px-1.5 py-0.5 rounded ${config.bg} ${config.color}`}>
+                          <span className={`text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded ${config.bg} ${config.color}`}>
                             {config.label}
                           </span>
                         </div>
-                        <p className="text-sm truncate mt-0.5 text-[#2E2E2E]">{item.titulo}</p>
-                        <div className="flex items-center gap-2 text-xs text-[#6E6E6E] mt-1">
+                        <p className="text-xs sm:text-sm truncate mt-0.5 text-[#2E2E2E]">{item.titulo}</p>
+                        <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-[#6E6E6E] mt-1">
                           {item.ubicacion && (
-                            <span className="flex items-center gap-1 truncate">
+                            <span className="flex items-center gap-1 truncate max-w-[100px] sm:max-w-none">
                               <MapPin className="h-3 w-3 shrink-0" />
                               <span className="truncate">{item.ubicacion}</span>
                             </span>
@@ -436,26 +436,21 @@ export default function Bienvenida() {
                         </div>
                       </div>
 
-                      {/* Botón eliminar para superadmin (solo si no está en modo selección) */}
+                      {/* Botón eliminar para superadmin/admin (solo si no está en modo selección) */}
                       {isSuperadmin && !selectionMode && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
-                              onClick={(e) => handleDeleteItem(item.id, e)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Eliminar ítem</TooltipContent>
-                        </Tooltip>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 sm:h-10 sm:w-10 min-w-[36px] sm:min-w-[40px] text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0 flex-none ml-1"
+                          onClick={(e) => handleDeleteItem(item.id, e)}
+                        >
+                          <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                        </Button>
                       )}
 
-                      {/* Flecha (solo si no está en modo selección) */}
+                      {/* Flecha (solo si no está en modo selección) - oculta en móvil cuando hay botón eliminar */}
                       {!selectionMode && (
-                        <ArrowRight className="h-5 w-5 text-[#6E6E6E] shrink-0" />
+                        <ArrowRight className={`h-5 w-5 text-[#6E6E6E] shrink-0 ${isSuperadmin ? 'hidden sm:block' : ''}`} />
                       )}
                     </div>
                   </CardContent>
