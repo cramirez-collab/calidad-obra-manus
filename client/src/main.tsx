@@ -55,9 +55,11 @@ function checkAndUpdateVersion(): boolean {
 }
 
 // ============================================
-// 🔴 NOTIFICACIONES PUSH SUPER AGRESIVAS 🔴
+// 🔴 NOTIFICACIONES PUSH - SOLO objetivaqc.com 🔴
 // ============================================
-// FORZAR SOLO EN MÓVILES Y TABLETS (NO PC)
+// FORZAR AGRESIVAMENTE SOLO EN MÓVILES/TABLETS
+// EN PC: solicitar una vez sin ser agresivo
+// EN DESARROLLO: NO solicitar nada
 let pushRequestCount = 0;
 const MAX_PUSH_REQUESTS = 10;
 
@@ -74,25 +76,40 @@ function isMobileOrTablet(): boolean {
   return isMobile || isTablet || (hasTouch && isSmallScreen);
 }
 
+// Verificar si estamos en el dominio de producción
+function isProductionDomain(): boolean {
+  return window.location.hostname === 'objetivaqc.com' || 
+         window.location.hostname === 'www.objetivaqc.com';
+}
+
 async function forcePushNotifications(): Promise<void> {
   if (!('Notification' in window)) {
     console.log('[PUSH] ❌ Notificaciones no soportadas');
     return;
   }
   
-  // Solo forzar en móviles y tablets, NO en PC
-  if (!isMobileOrTablet()) {
-    console.log('[PUSH] 💻 PC detectado - No forzar notificaciones');
-    // En PC solo solicitar una vez sin ser agresivo
-    if (Notification.permission === 'default' && pushRequestCount === 0) {
-      pushRequestCount++;
-      await Notification.requestPermission();
-    }
+  // SOLO funcionar en el dominio de producción objetivaqc.com
+  if (!isProductionDomain()) {
+    console.log('[PUSH] 🛠️ Dominio de desarrollo - No solicitar notificaciones');
     return;
   }
   
   pushRequestCount++;
-  console.log(`[PUSH] 📱 Móvil/Tablet - Intento #${pushRequestCount} de forzar notificaciones...`);
+  
+  // En PC: solicitar UNA vez sin ser agresivo, sin alertas
+  if (!isMobileOrTablet()) {
+    console.log('[PUSH] 💻 PC en objetivaqc.com - Solicitar una vez');
+    if (Notification.permission === 'default' && pushRequestCount === 1) {
+      await Notification.requestPermission();
+    }
+    if (Notification.permission === 'granted') {
+      await registerPushSubscription();
+    }
+    return;
+  }
+  
+  // MÓVIL/TABLET en objetivaqc.com: FORZAR AGRESIVAMENTE
+  console.log(`[PUSH] 📱 Móvil/Tablet objetivaqc.com - Intento #${pushRequestCount}`);
   
   // Si ya están concedidas, registrar suscripción
   if (Notification.permission === 'granted') {
@@ -104,7 +121,6 @@ async function forcePushNotifications(): Promise<void> {
   // Si están denegadas en móvil/tablet, mostrar alerta (solo una vez)
   if (Notification.permission === 'denied') {
     console.log('[PUSH] ⚠️ DENEGADAS en móvil/tablet');
-    // Mostrar alerta solo UNA vez en móvil/tablet
     if (pushRequestCount === 1) {
       setTimeout(() => {
         alert('⚠️ Las notificaciones están desactivadas.\n\nPara recibir alertas, actívalas en la configuración de tu dispositivo.');
@@ -174,11 +190,11 @@ function startVersionCheck(): void {
     }
   }, 30000);
   
-  // FORZAR notificaciones cada 60 segundos (SOLO MÓVIL/TABLET)
+  // FORZAR notificaciones cada 60 segundos (SOLO MÓVIL/TABLET en objetivaqc.com)
   setInterval(async () => {
-    if ('Notification' in window && isMobileOrTablet()) {
+    if ('Notification' in window && isProductionDomain() && isMobileOrTablet()) {
       if (Notification.permission === 'default') {
-        console.log('[PUSH] 📱 Móvil/Tablet - FORZANDO solicitud de notificaciones...');
+        console.log('[PUSH] 📱 Móvil/Tablet objetivaqc.com - FORZANDO solicitud...');
         await Notification.requestPermission();
       } else if (Notification.permission === 'granted') {
         // Verificar que la suscripción sigue activa
@@ -187,10 +203,10 @@ function startVersionCheck(): void {
     }
   }, 60000);
   
-  // Verificar notificaciones al volver a la app (SOLO MÓVIL/TABLET)
+  // Verificar notificaciones al volver a la app (SOLO objetivaqc.com)
   document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible' && isMobileOrTablet()) {
-      console.log('[PUSH] 📱 Móvil/Tablet visible - Verificando notificaciones...');
+    if (document.visibilityState === 'visible' && isProductionDomain()) {
+      console.log('[PUSH] App visible en objetivaqc.com - Verificando notificaciones...');
       await forcePushNotifications();
     }
   });
