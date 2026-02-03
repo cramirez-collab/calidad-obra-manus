@@ -2799,3 +2799,16 @@
 - [x] Ocultar flecha de navegación en móvil cuando hay botón eliminar
 - [x] Ajustar padding y gaps para mejor uso del espacio en pantallas pequeñas
 - [x] Mantener funcionalidad completa en tablet y desktop
+
+
+## v55 - Reporte Fotográfico con Imágenes
+
+### PDF con Fotos Antes/Después
+- [x] Incluir foto "antes" en el reporte PDF
+- [x] Incluir foto "después" en el reporte PDF
+- [x] Diseño profesional con ambas fotos lado a lado
+- [x] Mantener calidad de imagen adecuada para impresión
+- [x] Incluir información del ítem junto a las fotos
+- [x] Toggle para activar/desactivar inclusión de fotos
+- [x] Indicador de progreso durante generación
+- [x] Índice de ítems con fotos al inicio del PDF
