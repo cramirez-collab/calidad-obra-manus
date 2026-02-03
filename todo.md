@@ -2470,3 +2470,9 @@
 - [x] Cuando hay internet: crear ítem directo en servidor (sin demora)
 - [x] Solo usar modo offline cuando realmente no hay conexión
 - [x] Usuario necesita ver relación del ítem inmediatamente en sitio
+
+
+## Compresión de Fotos estilo WhatsApp (2 Febrero 2026)
+- [x] Comprimir fotos a máximo 350KB (compresión progresiva)
+- [x] Mantener buena legibilidad como WhatsApp (1280px, calidad 0.8-0.3)
+- [x] Facilitar carga rápida de ítems

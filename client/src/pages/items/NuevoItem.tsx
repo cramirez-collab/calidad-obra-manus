@@ -250,7 +250,7 @@ export default function NuevoItem() {
     }
   }, [residenteSeleccionado]);
 
-  // Función para comprimir imagen RÁPIDA (sin bloquear UI)
+  // Función para comprimir imagen estilo WhatsApp (~350KB máximo)
   const compressImage = useCallback((file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -259,13 +259,18 @@ export default function NuevoItem() {
         img.onload = () => {
           try {
             const canvas = document.createElement('canvas');
-            // Mantener alta resolución para ver detalles de calidad
-            const maxWidth = 1600; // Alta resolución para detalles
+            // Resolución estilo WhatsApp: 1280px máximo (buen balance calidad/tamaño)
+            const maxWidth = 1280;
+            const maxHeight = 1280;
             let { width, height } = img;
-            if (width > maxWidth) {
-              height = (height * maxWidth) / width;
-              width = maxWidth;
+            
+            // Escalar manteniendo proporción
+            if (width > maxWidth || height > maxHeight) {
+              const ratio = Math.min(maxWidth / width, maxHeight / height);
+              width = Math.round(width * ratio);
+              height = Math.round(height * ratio);
             }
+            
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
@@ -274,8 +279,19 @@ export default function NuevoItem() {
               return;
             }
             ctx.drawImage(img, 0, 0, width, height);
-            // Calidad alta (0.85) para preservar detalles
-            const result = canvas.toDataURL('image/jpeg', 0.85);
+            
+            // Compresión progresiva para alcanzar ~350KB
+            const targetSizeKB = 350;
+            let quality = 0.8;
+            let result = canvas.toDataURL('image/jpeg', quality);
+            
+            // Reducir calidad hasta alcanzar el tamaño objetivo
+            while (result.length > targetSizeKB * 1024 * 1.37 && quality > 0.3) {
+              quality -= 0.1;
+              result = canvas.toDataURL('image/jpeg', quality);
+            }
+            
+            console.log(`[Compresión] Tamaño final: ${Math.round(result.length / 1024)}KB, Calidad: ${quality.toFixed(1)}`);
             resolve(result);
           } catch (err) {
             reject(err);
