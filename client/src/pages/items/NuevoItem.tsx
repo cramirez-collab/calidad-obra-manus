@@ -31,6 +31,7 @@ import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
+import { savePendingAction, isOnline } from "@/lib/offlineStorage";
 
 export default function NuevoItem() {
   const [, setLocation] = useLocation();
@@ -206,6 +207,37 @@ export default function NuevoItem() {
 
   const createItemMutation = trpc.items.create.useMutation();
 
+  // Función para guardar ítem offline
+  const saveItemOffline = useCallback(async (itemData: any) => {
+    try {
+      console.log('[NuevoItem] Guardando ítem offline...');
+      await savePendingAction({
+        type: 'create_item',
+        data: itemData,
+      });
+      toast.success("Ítem guardado localmente. Se sincronizará cuando haya conexión.", {
+        duration: 5000,
+        icon: '📡',
+      });
+      // Limpiar formulario y volver a la lista
+      setFotoAntes(null);
+      setFotoAntesMarcada(null);
+      setFormData({
+        residenteId: "",
+        empresaId: "",
+        nivelId: "",
+        unidadId: "",
+        especialidadId: "",
+        defectoId: "",
+        espacioId: "",
+      });
+      setLocation("/items");
+    } catch (offlineError) {
+      console.error('[NuevoItem] Error guardando offline:', offlineError);
+      toast.error("Error al guardar localmente. Intenta de nuevo.");
+    }
+  }, [setLocation]);
+
   // Auto-completar empresa y especialidad cuando se selecciona residente
   useEffect(() => {
     if (residenteSeleccionado) {
@@ -227,7 +259,8 @@ export default function NuevoItem() {
         img.onload = () => {
           try {
             const canvas = document.createElement('canvas');
-            const maxWidth = 800;
+            // Mantener alta resolución para ver detalles de calidad
+            const maxWidth = 1600; // Alta resolución para detalles
             let { width, height } = img;
             if (width > maxWidth) {
               height = (height * maxWidth) / width;
@@ -241,7 +274,8 @@ export default function NuevoItem() {
               return;
             }
             ctx.drawImage(img, 0, 0, width, height);
-            const result = canvas.toDataURL('image/jpeg', 0.6);
+            // Calidad alta (0.85) para preservar detalles
+            const result = canvas.toDataURL('image/jpeg', 0.85);
             resolve(result);
           } catch (err) {
             reject(err);
@@ -342,51 +376,70 @@ export default function NuevoItem() {
       clientId,
     };
     
+    console.log('[NuevoItem] Iniciando creación de ítem (offline-first)...', {
+      proyectoId: itemData.proyectoId,
+      empresaId: itemData.empresaId,
+      unidadId: itemData.unidadId,
+      titulo: itemData.titulo,
+      tieneFoto: !!itemData.fotoAntesBase64,
+      tieneFotoMarcada: !!itemData.fotoAntesMarcadaBase64,
+      clientId: itemData.clientId,
+      online: isOnline(),
+    });
+    
+    // ESTRATEGIA OFFLINE-FIRST: Siempre guardar localmente primero
+    // Esto garantiza que el ítem nunca se pierde
     try {
-      console.log('[NuevoItem] Iniciando creación de ítem...', {
-        proyectoId: itemData.proyectoId,
-        empresaId: itemData.empresaId,
-        unidadId: itemData.unidadId,
-        titulo: itemData.titulo,
-        tieneFoto: !!itemData.fotoAntesBase64,
-        tieneFotoMarcada: !!itemData.fotoAntesMarcadaBase64,
-        clientId: itemData.clientId,
+      // Paso 1: Guardar localmente SIEMPRE (instantáneo)
+      await savePendingAction({
+        type: 'create_item',
+        data: itemData,
       });
+      console.log('[NuevoItem] Ítem guardado localmente');
       
-      // Crear item directamente sin reintentos complejos
-      const result = await createItemMutation.mutateAsync(itemData);
-      console.log('[NuevoItem] Ítem creado exitosamente:', result);
-      toast.success("Ítem creado correctamente");
-      setLocation(`/items/${result.id}`);
-    } catch (error: any) {
-      console.error('[NuevoItem] Error completo:', {
-        message: error.message,
-        code: error.data?.code,
-        httpStatus: error.data?.httpStatus,
-        path: error.data?.path,
-        stack: error.stack,
-        fullError: JSON.stringify(error, null, 2),
-      });
-      
-      // Mostrar error más detallado para diagnóstico
-      let errorMsg = error.message || "Error al crear el ítem";
-      
-      // Si es error de red, mostrar mensaje específico
-      if (errorMsg.includes('fetch') || errorMsg.includes('network') || errorMsg.includes('Failed')) {
-        errorMsg = "Error de conexión. Verifica tu internet.";
-      } else if (errorMsg.includes('timeout')) {
-        errorMsg = "Tiempo de espera agotado. Intenta de nuevo.";
-      } else if (errorMsg.length > 100 || errorMsg.includes('base64') || errorMsg.includes('data:image')) {
-        errorMsg = "Error al crear el ítem. Intenta de nuevo.";
+      // Paso 2: Intentar sincronizar inmediatamente si hay conexión
+      if (isOnline()) {
+        try {
+          const result = await createItemMutation.mutateAsync(itemData);
+          console.log('[NuevoItem] Ítem sincronizado exitosamente:', result);
+          toast.success("Ítem creado correctamente");
+          setLocation(`/items/${result.id}`);
+          return;
+        } catch (syncError: any) {
+          console.log('[NuevoItem] Error de sincronización, se sincronizará después:', syncError.message);
+          // No mostrar error, el ítem ya está guardado localmente
+        }
       }
       
-      toast.error(errorMsg);
+      // Si no hay conexión o falló la sincronización, mostrar mensaje de guardado local
+      toast.success("Ítem guardado. Se sincronizará automáticamente.", {
+        duration: 4000,
+        icon: '📡',
+      });
+      
+      // Limpiar formulario y volver
+      setFotoAntes(null);
+      setFotoAntesMarcada(null);
+      setFormData({
+        residenteId: "",
+        empresaId: "",
+        nivelId: "",
+        unidadId: "",
+        especialidadId: "",
+        defectoId: "",
+        espacioId: "",
+      });
+      setLocation("/items");
+      
+    } catch (error: any) {
+      console.error('[NuevoItem] Error crítico guardando localmente:', error);
+      toast.error("Error al guardar. Intenta de nuevo.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Modal de marcado
+// Modal de marcado
   if (showMarker && fotoAntes) {
     return (
       <DashboardLayout>

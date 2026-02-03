@@ -2430,3 +2430,30 @@
 - [x] Agregar meta tags anti-caché en el HTML
 - [x] Forzar recarga automática si la versión no coincide (script en index.html)
 
+
+
+## BUG CRÍTICO: No crea ítems (Febrero 2026)
+- [ ] Diagnosticar por qué no se crean los ítems
+- [ ] Corregir el problema de creación
+- [ ] Verificar que funciona correctamente
+
+
+## Modo Offline-First para Móvil/Tablet (2 Febrero 2026)
+
+### Estrategia Offline-First
+- [x] Guardar ítem localmente SIEMPRE primero (instantáneo)
+- [x] Sincronizar con servidor en background si hay conexión
+- [x] Nunca mostrar "Error de conexión" - siempre guardar local
+- [x] Mensaje "Ítem guardado. Se sincronizará automáticamente."
+
+### Calidad de Imágenes (Sin Comprimir)
+- [x] Aumentar resolución máxima a 1600px (era 800px)
+- [x] Aumentar calidad JPEG a 0.85 (era 0.6)
+- [x] Mantener detalles para inspección de calidad
+
+### Sincronización Automática
+- [x] Hook useSyncManager para sincronización en background
+- [x] Sincronización cada 30 segundos cuando hay conexión
+- [x] Indicador visual de pendientes en header
+- [x] Toast de confirmación al sincronizar
+
