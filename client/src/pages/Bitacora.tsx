@@ -56,6 +56,7 @@ import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { forceDownloadPDF } from "@/lib/pdfDownload";
 
 const ITEMS_PER_PAGE = 50;
 
@@ -460,8 +461,8 @@ export default function Bitacora() {
       alternateRowStyles: { fillColor: [245, 245, 245] },
     });
 
-    doc.save(`bitacora_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
-    toast.success("Archivo PDF exportado correctamente");
+    forceDownloadPDF(doc, `bitacora_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
+    toast.success("PDF descargado - ábrelo con Acrobat Reader");
   };
 
   // Exportar Tiempos a PDF
@@ -532,8 +533,8 @@ export default function Bitacora() {
       },
     });
 
-    doc.save(`tiempos_actividad_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
-    toast.success("Archivo PDF de Tiempos exportado correctamente");
+    forceDownloadPDF(doc, `tiempos_actividad_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
+    toast.success("PDF descargado - ábrelo con Acrobat Reader");
   };
 
   // Limpiar filtros

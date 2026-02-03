@@ -242,23 +242,23 @@ export default function ReporteFotografico() {
 </html>
       `;
 
-      // Crear blob y abrir directo en el dispositivo (sin forzar impresión)
+      // Forzar descarga del archivo HTML para abrir en navegador/lector
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       
-      // Abrir en nueva ventana - el usuario decide si imprime o guarda
-      const reportWindow = window.open(url, '_blank');
-      if (reportWindow) {
-        // No forzar impresión automática - dejar que el usuario decida
-        toast.success("Reporte abierto. Puedes verlo, compartirlo o guardarlo como PDF.");
-      } else {
-        // Si no se puede abrir ventana, descargar como archivo
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `reporte_fotografico_${format(new Date(), "yyyy-MM-dd_HHmm")}.html`;
-        link.click();
-        toast.success("Reporte descargado. Ábrelo para ver o guardar como PDF.");
-      }
+      // Siempre descargar como archivo
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `reporte_fotografico_${format(new Date(), "yyyy-MM-dd_HHmm")}.html`;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Limpiar URL
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      
+      toast.success("Reporte descargado. Ábrelo y usa 'Guardar como PDF' en tu navegador.");
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error("Error al generar el reporte");

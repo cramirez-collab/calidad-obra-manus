@@ -2544,3 +2544,15 @@
 - [x] Actualizar manifest.json con nombre "ObjetivaQC" y id único
 - [x] Actualizar meta tags y título en index.html a "ObjetivaQC"
 
+
+## Mejoras v32 - Carga Instantánea de Fotos
+
+### Optimización para carga en 2 segundos máximo
+- [x] Reducir tamaño máximo de fotos a 80KB (sube en 1-2 seg en 3G)
+- [x] Priorizar velocidad sobre calidad en todas las conexiones
+- [x] Mantener legibilidad mínima para inspección (800px, calidad 0.5)
+
+
+### Descarga de PDFs
+- [x] Forzar descarga de PDFs para abrir en Acrobat Reader (Bitacora, Tiempos, Reporte Fotográfico)
+

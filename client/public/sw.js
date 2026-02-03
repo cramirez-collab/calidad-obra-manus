@@ -1,13 +1,12 @@
 // ============================================
-// SISTEMA OFFLINE COMPLETO 24/7 - v31
+// SISTEMA OFFLINE COMPLETO 24/7 - v32
 // ============================================
 // Este Service Worker permite que la app funcione
 // completamente sin conexión a internet
 // PROTEGE DATOS OFFLINE - No borra IndexedDB si hay pendientes
 // Sincronización cada 3 segundos para mayor velocidad
-// Flujo QR preasignado: escanear → crear ítem
-// Compresión adaptativa de fotos según velocidad de conexión
-const APP_VERSION = 31;
+// Carga instantánea de fotos (máx 80KB, 2 seg)
+const APP_VERSION = 32;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
