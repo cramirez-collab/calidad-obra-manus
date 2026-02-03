@@ -1,5 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import ImageMarker from "@/components/ImageMarker";
+import ResidenteSelector from "@/components/ResidenteSelector";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -601,32 +602,13 @@ export default function NuevoItem() {
               <User className="h-3 w-3" />
               Asignación *
             </div>
-                        {/* Selector de Residente (obligatorio) - Despliega hacia arriba en móvil */}
-            <Select
+                        {/* Selector de Residente (obligatorio) - Usa Drawer para móvil/tablet */}
+            <ResidenteSelector
               value={formData.residenteId}
               onValueChange={(value) => setFormData({ ...formData, residenteId: value, defectoId: "" })}
-            >
-              <SelectTrigger className="h-9 text-xs">
-                <User className="h-3 w-3 mr-1 text-gray-400" />
-                <SelectValue placeholder="Seleccionar Residente *" />
-              </SelectTrigger>
-              <SelectContent 
-                position="popper" 
-                side="top" 
-                sideOffset={5}
-                className="max-h-[300px] overflow-y-auto z-[9999]"
-                style={{ maxHeight: '300px' }}
-              >
-                {residentesConEmpresa.map((residente) => (
-                  <SelectItem key={`${residente.id}-${residente.empresaId}`} value={residente.id.toString()}>
-                    <div className="flex items-center gap-2">
-                      <span>{residente.name}</span>
-                      <span className="text-gray-400 text-[10px]">({residente.empresaNombre})</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              residentes={residentesConEmpresa}
+              placeholder="Seleccionar Residente *"
+            />
             
             {/* Mostrar Empresa (solo lectura, auto-completado) */}
             {residenteSeleccionado && (

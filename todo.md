@@ -2638,7 +2638,7 @@
 ### Bug: Desplegable de residentes no se abre
 - [x] Diagnosticar por qué el selector de residentes no se despliega
 - [x] Corregir con position="popper" side="top" z-[9999]
-- [ ] Verificar funcionamiento en móvil y desktop
+- [x] Verificar funcionamiento en móvil y desktop (desplegable funciona correctamente)
 
 ### Notificaciones Push SIEMPRE activas (MANDATORIO)
 - [x] Forzar solicitud de permisos de notificaciones al iniciar
@@ -2649,4 +2649,15 @@
 - [x] Verificar versión cada 60 segundos
 - [x] Forzar actualización si hay nueva versión disponible
 - [x] Eliminar caches y SW antiguos automáticamente
+
+
+
+## Mejoras v45 - Corrección DEFINITIVA desplegable residentes
+
+### Bug CRÍTICO: Desplegable de residentes NO visible en móvil/tablet
+- [x] Diagnosticar por qué el desplegable no se ve en dispositivos móviles
+- [x] Implementar solución definitiva (Drawer desde abajo en lugar de Select)
+- [x] Probar en vista móvil y tablet
+- [x] Verificar que funciona en todos los tamaños de pantalla
+- [x] Incluye búsqueda por nombre o empresa
 

@@ -11,14 +11,15 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v44 - ObjetivaQC 🔴
+// 🔴 VERSIÓN v45 - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
 // NOTIFICACIONES PUSH SIEMPRE ACTIVAS (OBLIGATORIO)
 // ACTUALIZACIÓN ITERATIVA DE VERSIÓN (OBLIGATORIO)
+// SELECTOR DE RESIDENTES: DRAWER DESDE ABAJO (MÓVIL/TABLET)
 // ============================================
-const CURRENT_VERSION = 44;
+const CURRENT_VERSION = 45;
 
 // ============================================
 // 🔴 ACTUALIZACIÓN FORZADA DE VERSIÓN 🔴

@@ -1,14 +1,15 @@
 // ============================================
 // ============================================
-// SISTEMA OFFLINE v44 - NUCLEAR
+// SISTEMA OFFLINE v45 - NUCLEAR
 // ============================================
 // MANDATORIO Y OBLIGATORIO:
 // - Dominio: objetivaqc.com (PERMANENTE)
 // - Modo offline: SIEMPRE ACTIVADO
 // - Notificaciones push: SIEMPRE ACTIVADAS
-// - TODOS los dispositivos DEBEN tener v44
+// - TODOS los dispositivos DEBEN tener v45
+// - SELECTOR RESIDENTES: DRAWER DESDE ABAJO
 // ============================================
-const APP_VERSION = 44;
+const APP_VERSION = 45;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
