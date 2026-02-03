@@ -11,16 +11,16 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 ACTUALIZACIÓN ULTRA AGRESIVA v37 🔴
+// 🔴 ACTUALIZACIÓN NUCLEAR v38 🔴
 // ============================================
 // MANDATORIO Y OBLIGATORIO:
 // - Dominio: objetivaqc.com (PERMANENTE)
 // - Notificaciones push: SIEMPRE ACTIVADAS
 // - Modo offline: SIEMPRE ACTIVADO
-// - TODOS los dispositivos DEBEN tener v37
+// - TODOS los dispositivos DEBEN tener v38
 // - NO HAY OPCIÓN de quedarse en versión antigua
 // ============================================
-const CURRENT_VERSION = 37;
+const CURRENT_VERSION = 38;
 
 // ============================================
 // FORZAR ACTUALIZACIÓN - SIN ESCAPE
