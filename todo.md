@@ -2490,3 +2490,11 @@
 - [x] Eliminar módulo KPI (duplicado con Estadísticas) - Eliminado del menú y rutas
 - [x] Clarificar cómo activar notificaciones push - Panel con estado claro y instrucciones
 - [x] Optimizar velocidad de sincronización - Cada 10 segundos, inmediato al conectar
+
+
+## Mejoras v26 (3 Febrero 2026)
+- [x] Dos opciones para crear ítem: por foto (actual) y por escáner QR preasignado
+- [x] Sincronización de fotos INSTANTÁNEA (cada 5 segundos)
+- [x] Flujo escáner: escanear QR → si no existe en BD → crear ítem vinculado automáticamente
+- [x] Mantener flujo actual por foto como opción alternativa
+- [x] Indicador visual de QR preasignado en formulario de nuevo ítem

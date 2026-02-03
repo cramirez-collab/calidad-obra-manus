@@ -34,8 +34,15 @@ import { useProject } from "@/contexts/ProjectContext";
 import { savePendingAction, isOnline } from "@/lib/offlineStorage";
 
 export default function NuevoItem() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { selectedProjectId } = useProject();
+  
+  // Obtener código QR preasignado de la URL (si viene de escanear etiqueta nueva)
+  const qrPreasignado = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('qr') || null;
+  }, [location]);
+  
   const [formData, setFormData] = useState({
     residenteId: "",
     empresaId: "",
@@ -390,6 +397,8 @@ export default function NuevoItem() {
       fotoAntesBase64: fotoAntes,
       fotoAntesMarcadaBase64: fotoAntesMarcada || undefined,
       clientId,
+      // Código QR preasignado (si viene de escanear etiqueta nueva)
+      codigoQrPreasignado: qrPreasignado || undefined,
     };
     
     console.log('[NuevoItem] Iniciando creación de ítem...', {
@@ -482,6 +491,21 @@ export default function NuevoItem() {
             <h1 className="text-lg font-bold text-[#002C63]">Nuevo Ítem</h1>
           </div>
         </div>
+        
+        {/* Indicador de QR preasignado */}
+        {qrPreasignado && (
+          <Card className="border-[#02B381] bg-[#02B381]/5">
+            <CardContent className="p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#02B381]/10 flex items-center justify-center">
+                <Check className="h-5 w-5 text-[#02B381]" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-[#02B381]">Etiqueta QR Preasignada</p>
+                <p className="text-xs text-muted-foreground font-mono">{qrPreasignado}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Inputs ocultos para cámara/archivo */}
         <input

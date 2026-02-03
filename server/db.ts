@@ -1053,17 +1053,21 @@ export async function getNextNumeroInterno(proyectoId: number | undefined): Prom
   return (result[0]?.maxNum ?? 0) + 1;
 }
 
-export async function createItem(data: Omit<InsertItem, 'codigo'>) {
+export async function createItem(data: Omit<InsertItem, 'codigo'> & { codigoQrPreasignado?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  // Generar código QR progresivo por proyecto
-  const codigo = await getNextOQCCode(data.proyectoId ?? undefined);
+  // Usar código QR preasignado si existe (cuando se escanea etiqueta nueva en campo)
+  // Si no, generar código QR progresivo por proyecto
+  const codigo = data.codigoQrPreasignado || await getNextOQCCode(data.proyectoId ?? undefined);
   
   // Obtener número interno consecutivo
   const numeroInterno = await getNextNumeroInterno(data.proyectoId ?? undefined);
   
-  const result = await db.insert(items).values({ ...data, codigo, numeroInterno });
+  // Remover codigoQrPreasignado del data antes de insertar
+  const { codigoQrPreasignado, ...insertData } = data;
+  
+  const result = await db.insert(items).values({ ...insertData, codigo, numeroInterno });
   return { id: result[0].insertId, codigo, numeroInterno };
 }
 

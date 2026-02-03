@@ -49,6 +49,8 @@ export function useSyncManager() {
           fotoAntesBase64: data.fotoAntesBase64,
           fotoAntesMarcadaBase64: data.fotoAntesMarcadaBase64,
           clientId: data.clientId,
+          // Código QR preasignado (si viene de escanear etiqueta nueva)
+          codigoQrPreasignado: data.codigoQrPreasignado,
         });
         console.log('[SyncManager] Ítem sincronizado:', action.id);
         return true;
@@ -151,14 +153,14 @@ export function useSyncManager() {
     }
   }, []);
   
-  // Sincronizar periódicamente cada 10 segundos si hay conexión (más rápido)
+  // Sincronizar periódicamente cada 5 segundos si hay conexión (INSTANTÁNEO)
   useEffect(() => {
     const interval = setInterval(() => {
       if (isOnline() && !isSyncing) {
         updatePendingCount();
         syncAll();
       }
-    }, 10000); // Cada 10 segundos para sincronización más rápida
+    }, 5000); // Cada 5 segundos para sincronización INSTANTÁNEA
     
     return () => clearInterval(interval);
   }, [isSyncing, syncAll, updatePendingCount]);

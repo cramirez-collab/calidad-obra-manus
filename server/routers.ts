@@ -883,6 +883,8 @@ export const appRouter = router({
         fotoAntesMarcadaBase64: z.string().optional(),
         // ID de cliente para evitar duplicados
         clientId: z.string().optional(),
+        // Código QR preasignado (cuando se escanea etiqueta nueva en campo)
+        codigoQrPreasignado: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         // Verificar duplicados por clientId (evita duplicados por reintentos)

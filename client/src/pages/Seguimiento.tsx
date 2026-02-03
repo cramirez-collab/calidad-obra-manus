@@ -232,14 +232,28 @@ export default function Seguimiento() {
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center">
-            <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Ítem no encontrado</h2>
-            <p className="text-muted-foreground mb-4">
-              El código de seguimiento no existe o ha sido eliminado.
+            <div className="w-16 h-16 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-4">
+              <Camera className="h-8 w-8 text-amber-600" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Etiqueta Nueva</h2>
+            <p className="text-muted-foreground mb-2">
+              Esta etiqueta QR aún no tiene un ítem asignado.
             </p>
-            <p className="text-sm text-muted-foreground font-mono mb-4">
-              Código: {codigo}
+            <p className="text-sm text-muted-foreground font-mono mb-4 bg-muted px-3 py-1 rounded inline-block">
+              {codigo}
             </p>
+            <div className="space-y-3 mt-6">
+              <Button 
+                className="w-full bg-[#02B381] hover:bg-[#029970] text-white"
+                onClick={() => setLocation(`/nuevo-item?qr=${encodeURIComponent(codigo || '')}`)}
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                Crear Ítem con esta Etiqueta
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Al crear el ítem, se vinculará automáticamente con esta etiqueta QR
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
