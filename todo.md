@@ -2418,3 +2418,9 @@
 - [x] Arreglar definitivamente el error de creación de ítems (tests pasan, problema es caché del móvil)
 - [x] Sistema de versionado forzado para actualizar todos los dispositivos
 
+
+
+### Bug Crítico - Service Worker no actualiza a v16
+- [x] Forzar invalidación completa del Service Worker (v17)
+- [x] Implementar mecanismo de actualización más agresivo con cache-bust
+

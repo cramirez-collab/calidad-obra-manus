@@ -480,21 +480,37 @@ function DashboardLayoutContent({
                     <DropdownMenuItem
                       onClick={async () => {
                         try {
+                          console.log('[Cache] Iniciando limpieza completa (PC)...');
+                          // 1. Desregistrar TODOS los Service Workers
+                          if ('serviceWorker' in navigator) {
+                            const registrations = await navigator.serviceWorker.getRegistrations();
+                            for (const reg of registrations) {
+                              await reg.unregister();
+                            }
+                          }
+                          // 2. Limpiar caches
                           if ('caches' in window) {
                             const cacheNames = await caches.keys();
                             await Promise.all(cacheNames.map(name => caches.delete(name)));
                           }
+                          // 3. Limpiar storage (preservar proyecto)
                           const proyectoGuardado = localStorage.getItem('selectedProjectId');
                           localStorage.clear();
                           sessionStorage.clear();
                           if (proyectoGuardado) localStorage.setItem('selectedProjectId', proyectoGuardado);
-                          if ('serviceWorker' in navigator) {
-                            const registration = await navigator.serviceWorker.getRegistration();
-                            if (registration) await registration.update();
+                          // 4. Limpiar IndexedDB
+                          if ('indexedDB' in window) {
+                            try {
+                              const dbs = await indexedDB.databases();
+                              for (const db of dbs) {
+                                if (db.name) indexedDB.deleteDatabase(db.name);
+                              }
+                            } catch (e) {}
                           }
-                          setTimeout(() => window.location.reload(), 500);
+                          // 5. Recargar con cache-bust
+                          window.location.href = window.location.origin + '?v=' + Date.now();
                         } catch (e) {
-                          window.location.reload();
+                          window.location.href = window.location.origin + '?v=' + Date.now();
                         }
                       }}
                       className="cursor-pointer text-orange-600 focus:text-orange-600"
@@ -612,32 +628,60 @@ function DashboardLayoutContent({
                 <button
                   onClick={async () => {
                     try {
-                      // Limpiar caches del Service Worker
-                      if ('caches' in window) {
-                        const cacheNames = await caches.keys();
-                        await Promise.all(cacheNames.map(name => caches.delete(name)));
-                      }
-                      // Limpiar localStorage (excepto proyecto seleccionado)
-                      const selectedProject = localStorage.getItem('selectedProjectId');
-                      localStorage.clear();
-                      if (selectedProject) localStorage.setItem('selectedProjectId', selectedProject);
-                      // Limpiar sessionStorage
-                      sessionStorage.clear();
-                      // Forzar actualización del Service Worker
+                      console.log('[Cache] Iniciando limpieza completa...');
+                      
+                      // 1. Desregistrar TODOS los Service Workers primero
                       if ('serviceWorker' in navigator) {
-                        const registration = await navigator.serviceWorker.getRegistration();
-                        if (registration) {
-                          registration.update();
-                          if (registration.waiting) {
-                            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                          }
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        for (const registration of registrations) {
+                          await registration.unregister();
+                          console.log('[Cache] SW desregistrado');
                         }
                       }
-                      // Recargar
-                      setTimeout(() => window.location.reload(), 500);
+                      
+                      // 2. Limpiar TODOS los caches del navegador
+                      if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        await Promise.all(cacheNames.map(name => {
+                          console.log('[Cache] Eliminando cache:', name);
+                          return caches.delete(name);
+                        }));
+                      }
+                      
+                      // 3. Limpiar localStorage COMPLETAMENTE (incluyendo versión)
+                      const selectedProject = localStorage.getItem('selectedProjectId');
+                      localStorage.clear();
+                      // Solo preservar proyecto seleccionado
+                      if (selectedProject) localStorage.setItem('selectedProjectId', selectedProject);
+                      // NO guardar versión - forzar que se detecte como nueva
+                      
+                      // 4. Limpiar sessionStorage
+                      sessionStorage.clear();
+                      
+                      // 5. Limpiar IndexedDB si existe
+                      if ('indexedDB' in window) {
+                        try {
+                          const databases = await indexedDB.databases();
+                          for (const db of databases) {
+                            if (db.name) {
+                              indexedDB.deleteDatabase(db.name);
+                              console.log('[Cache] IndexedDB eliminada:', db.name);
+                            }
+                          }
+                        } catch (e) {
+                          console.log('[Cache] Error limpiando IndexedDB:', e);
+                        }
+                      }
+                      
+                      console.log('[Cache] Limpieza completa. Recargando con cache-bust...');
+                      
+                      // 6. Recargar con parámetro de cache-bust para forzar descarga fresca
+                      const cacheBust = Date.now();
+                      window.location.href = window.location.origin + window.location.pathname + '?v=' + cacheBust;
                     } catch (error) {
-                      console.error('Error limpiando caché:', error);
-                      window.location.reload();
+                      console.error('[Cache] Error limpiando caché:', error);
+                      // Forzar recarga de todas formas
+                      window.location.href = window.location.origin + '?v=' + Date.now();
                     }
                   }}
                   className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-orange-600 hover:bg-orange-50 transition-colors text-sm"
