@@ -128,6 +128,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
 
   // Submenú de Configuración
   const configSubItems: MenuItem[] = [
+    { icon: Settings, label: "Ajustes", path: "/configuracion" },
     { icon: FolderKanban, label: "Proyectos", path: "/proyectos" },
     { icon: Link2, label: "Enlaces Externos", path: "/enlaces-externos" },
     { icon: QrCode, label: "QR", path: "/generar-qr" },

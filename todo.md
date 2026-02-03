@@ -2826,3 +2826,14 @@
 - [x] Botón Eliminar grande y prominente en la primera fila
 - [x] Botones de selección/deselección en segunda fila con flex-wrap
 - [x] Tamaño aumentado del botón eliminar (h-10, icono h-5 w-5)
+
+
+## v57 - Acceso a Ajustes desde Menú Móvil
+
+### Bug Reportado
+- [x] La página de Configuración/Ajustes no era accesible desde el menú móvil
+- [x] El usuario no podía acceder a la configuración del sistema en móvil
+
+### Solución Implementada
+- [x] Agregado enlace "Ajustes" (/configuracion) como primer ítem del submenú de Configuración
+- [x] Ahora accesible desde el menú hamburguesa → Configuración → Ajustes
