@@ -2768,3 +2768,10 @@
 
 - [x] Subir resolución de fotos a 275px (antes 180px)
 - [x] Reducir tamaño del lápiz a 2 (antes 8)
+
+
+## v53 - Descripción rol Desarrollador
+
+- [x] Agregar descripción del rol Desarrollador en la sección de usuarios
+- [x] Mostrar junto a los otros roles en grid de 6 columnas
+- [x] Permisos: Acceso técnico, Soporte y mantenimiento, Configuración avanzada

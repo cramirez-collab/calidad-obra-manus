@@ -886,7 +886,7 @@ export default function Usuarios() {
             <CardTitle className="text-base">Permisos por Rol</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
               <div className="p-3 rounded-lg border">
                 <Badge className={roleColors.superadmin}>Superadmin</Badge>
                 <ul className="mt-2 text-xs text-muted-foreground space-y-1">
@@ -925,6 +925,14 @@ export default function Usuarios() {
                   <li>• Crear nuevos ítems</li>
                   <li>• Capturar foto "antes"</li>
                   <li>• Ver sus propios ítems</li>
+                </ul>
+              </div>
+              <div className="p-3 rounded-lg border">
+                <Badge className={roleColors.desarrollador}>Desarrollador</Badge>
+                <ul className="mt-2 text-xs text-muted-foreground space-y-1">
+                  <li>• Acceso técnico al sistema</li>
+                  <li>• Soporte y mantenimiento</li>
+                  <li>• Configuración avanzada</li>
                 </ul>
               </div>
             </div>
