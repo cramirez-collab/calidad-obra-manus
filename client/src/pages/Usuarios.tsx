@@ -930,9 +930,9 @@ export default function Usuarios() {
               <div className="p-3 rounded-lg border">
                 <Badge className={roleColors.desarrollador}>Desarrollador</Badge>
                 <ul className="mt-2 text-xs text-muted-foreground space-y-1">
-                  <li>• Acceso técnico al sistema</li>
-                  <li>• Soporte y mantenimiento</li>
-                  <li>• Configuración avanzada</li>
+                  <li>• Solo puede ver (no modificar)</li>
+                  <li>• Descargar bitácora</li>
+                  <li>• Descargar cualquier PDF</li>
                 </ul>
               </div>
             </div>

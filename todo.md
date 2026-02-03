@@ -2775,3 +2775,10 @@
 - [x] Agregar descripción del rol Desarrollador en la sección de usuarios
 - [x] Mostrar junto a los otros roles en grid de 6 columnas
 - [x] Permisos: Acceso técnico, Soporte y mantenimiento, Configuración avanzada
+
+
+## v54 - Permisos correctos rol Desarrollador
+
+- [x] Actualizar descripción: Solo puede ver (no modificar)
+- [x] Puede descargar bitácora
+- [x] Puede descargar cualquier PDF
