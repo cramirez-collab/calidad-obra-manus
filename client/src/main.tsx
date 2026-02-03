@@ -11,15 +11,15 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v46 - ObjetivaQC 🔴
+// 🔴 VERSIÓN v48 - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
-// NOTIFICACIONES PUSH SUPER AGRESIVAS (FORZAR SIEMPRE)
+// NOTIFICACIONES PUSH SOLO EN PRODUCCIÓN
 // ACTUALIZACIÓN ITERATIVA DE VERSIÓN (OBLIGATORIO)
-// SELECTOR DE RESIDENTES: DRAWER DESDE ABAJO (MÓVIL/TABLET)
+// CONSECUTIVO #N EN ETIQUETAS QR
 // ============================================
-const CURRENT_VERSION = 47;
+const CURRENT_VERSION = 48;
 
 // ============================================
 // 🔴 ACTUALIZACIÓN FORZADA DE VERSIÓN 🔴

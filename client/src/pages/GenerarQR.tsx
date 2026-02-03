@@ -235,27 +235,34 @@ export default function GenerarQR() {
               min-width: 0;
             }
             .codigo {
-              font-size: 9pt;
+              font-size: 8pt;
               font-weight: bold;
               color: #002C63;
               letter-spacing: 0.3px;
               word-break: break-all;
               line-height: 1.1;
             }
+            .consecutivo {
+              font-size: 10pt;
+              font-weight: bold;
+              color: #02B381;
+              line-height: 1.1;
+              margin-top: 0.5mm;
+            }
             .titulo {
-              font-size: 6pt;
+              font-size: 5pt;
               color: #333;
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
               line-height: 1.2;
-              margin-top: 0.5mm;
+              margin-top: 0.3mm;
             }
             .logo {
-              font-size: 6pt;
+              font-size: 5pt;
               color: #02B381;
               font-weight: bold;
-              margin-top: 0.5mm;
+              margin-top: 0.3mm;
             }
             .empty-cell {
               width: 66.675mm;
@@ -308,7 +315,8 @@ export default function GenerarQR() {
             <img src="${item.qrDataUrl}" alt="${item.codigo}" />
             <div class="qr-info">
               <div class="codigo">${item.codigo}</div>
-              ${item.consecutivo ? `<div class="titulo">#${item.consecutivo}${item.titulo ? ` - ${item.titulo}` : ''}</div>` : (item.titulo ? `<div class="titulo">${item.titulo}</div>` : '')}
+              ${item.consecutivo ? `<div class="consecutivo">#${item.consecutivo}</div>` : ''}
+              ${item.titulo ? `<div class="titulo">${item.titulo}</div>` : ''}
               <div class="logo">OBJETIVA</div>
             </div>
           </div>

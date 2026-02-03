@@ -4,7 +4,7 @@
  */
 
 const DB_NAME = 'objetiva-qc-offline';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Incrementar versión para forzar recreación de stores
 
 interface PendingAction {
   id: string;
@@ -90,16 +90,35 @@ export async function savePendingAction(action: Omit<PendingAction, 'id' | 'time
  * Obtiene todas las acciones pendientes
  */
 export async function getPendingActions(): Promise<PendingAction[]> {
-  const database = await initOfflineDB();
-  
-  return new Promise((resolve, reject) => {
-    const tx = database.transaction('pendingActions', 'readonly');
-    const store = tx.objectStore('pendingActions');
-    const request = store.getAll();
+  try {
+    const database = await initOfflineDB();
     
-    request.onsuccess = () => resolve(request.result || []);
-    request.onerror = () => reject(request.error);
-  });
+    // Verificar que el object store existe
+    if (!database.objectStoreNames.contains('pendingActions')) {
+      console.warn('[OfflineStorage] Object store pendingActions no existe, retornando array vacío');
+      return [];
+    }
+    
+    return new Promise((resolve, reject) => {
+      try {
+        const tx = database.transaction('pendingActions', 'readonly');
+        const store = tx.objectStore('pendingActions');
+        const request = store.getAll();
+        
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => {
+          console.warn('[OfflineStorage] Error leyendo pendingActions:', request.error);
+          resolve([]);
+        };
+      } catch (err) {
+        console.warn('[OfflineStorage] Error en transacción:', err);
+        resolve([]);
+      }
+    });
+  } catch (err) {
+    console.warn('[OfflineStorage] Error inicializando DB:', err);
+    return [];
+  }
 }
 
 /**
@@ -225,8 +244,13 @@ export async function cleanOldCache(): Promise<void> {
  * Cuenta las acciones pendientes
  */
 export async function countPendingActions(): Promise<number> {
-  const actions = await getPendingActions();
-  return actions.length;
+  try {
+    const actions = await getPendingActions();
+    return actions.length;
+  } catch (err) {
+    console.warn('[OfflineStorage] Error contando acciones:', err);
+    return 0;
+  }
 }
 
 

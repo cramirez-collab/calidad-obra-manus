@@ -2709,3 +2709,10 @@
 - [x] Notificaciones push forzadas SOLO en móviles y tablets (NO PC)
 - [x] Eliminar alerta molesta en PC
 - [x] Actualizado a v47
+
+
+## Bug v47 - IndexedDB + Consecutivo en etiquetas QR
+
+- [x] Corregir error IndexedDB: object store not found (manejo de errores mejorado)
+- [x] Agregar consecutivo interno (#N) a las etiquetas QR impresas (en verde grande)
+- [x] Actualizar a v48 (main.tsx, index.html, sw.js, DashboardLayout)
