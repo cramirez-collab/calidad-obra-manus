@@ -11,36 +11,57 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 ACTUALIZACIÓN NUCLEAR v39 🔴
+// 🔴 VERSIÓN v39 - ObjetivaQC 🔴
 // ============================================
-// MANDATORIO Y OBLIGATORIO:
-// - Dominio: objetivaqc.com (PERMANENTE)
-// - Notificaciones push: SIEMPRE ACTIVADAS
-// - Modo offline: SIEMPRE ACTIVADO
-// - TODOS los dispositivos DEBEN tener v39
-// - NO HAY OPCIÓN de quedarse en versión antigua
+// MANDATORIO: objetivaqc.com (PERMANENTE)
+// CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
 // ============================================
 const CURRENT_VERSION = 39;
 
-// ============================================
-// FUNCIÓN PARA INICIALIZAR LA APP
-// ============================================
-function initializeApp() {
+// Verificar versión al cargar (síncrono, antes de React)
+const storedVersion = parseInt(localStorage.getItem('oqc_installed_version') || '0');
+
+if (storedVersion !== CURRENT_VERSION) {
+  console.log(`🔴 Actualizando de v${storedVersion} a v${CURRENT_VERSION}...`);
+  
+  // Marcar nueva versión PRIMERO
+  localStorage.setItem('oqc_installed_version', CURRENT_VERSION.toString());
+  
+  // Limpiar caches y SW en background (no bloquea)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(reg => reg.unregister());
+    });
+  }
+  if ('caches' in window) {
+    caches.keys().then(names => {
+      names.forEach(name => caches.delete(name));
+    });
+  }
+  
+  // Recargar con parámetros únicos
+  window.location.replace(window.location.pathname + '?v=' + CURRENT_VERSION + '&t=' + Date.now());
+} else {
+  // Versión correcta - inicializar React
+  console.log(`✅ [OQC v${CURRENT_VERSION}] Iniciando...`);
+  
   // REACT QUERY CONFIG
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         staleTime: 0,
         gcTime: 60 * 1000,
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
         refetchOnReconnect: true,
         refetchOnMount: true,
-        retry: 0,
-        networkMode: 'online',
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        networkMode: 'always', // SIEMPRE intentar conectar
       },
       mutations: {
-        retry: 1,
-        networkMode: 'online',
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        networkMode: 'always', // SIEMPRE intentar conectar
       },
     },
   });
@@ -81,7 +102,74 @@ function initializeApp() {
     ],
   });
 
-  // RENDERIZAR APP
+  // ============================================
+  // CONEXIÓN 24/7 AL SERVIDOR (MANDATORIO)
+  // ============================================
+  let isOnline = navigator.onLine;
+  let reconnectAttempts = 0;
+  const MAX_RECONNECT_ATTEMPTS = 999999; // Infinito prácticamente
+  
+  // Ping al servidor cada 30 segundos para mantener conexión viva
+  const keepAlive = () => {
+    setInterval(async () => {
+      try {
+        const response = await fetch('/api/trpc/auth.me', {
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        if (response.ok) {
+          isOnline = true;
+          reconnectAttempts = 0;
+          console.log('[24/7] Conexión activa ✅');
+        }
+      } catch (e) {
+        console.log('[24/7] Intentando reconectar...');
+        reconnectAttempts++;
+      }
+    }, 30000); // Cada 30 segundos
+  };
+  
+  // Reconexión automática cuando se pierde conexión
+  window.addEventListener('online', () => {
+    console.log('[24/7] Conexión restaurada - Sincronizando...');
+    isOnline = true;
+    queryClient.invalidateQueries(); // Refrescar todos los datos
+  });
+  
+  window.addEventListener('offline', () => {
+    console.log('[24/7] Conexión perdida - Modo offline activado');
+    isOnline = false;
+  });
+  
+  // Mantener la app activa incluso en background (móvil)
+  if ('wakeLock' in navigator) {
+    let wakeLock: WakeLockSentinel | null = null;
+    
+    const requestWakeLock = async () => {
+      try {
+        wakeLock = await (navigator as any).wakeLock.request('screen');
+        console.log('[24/7] Wake lock activo');
+      } catch (e) {
+        console.log('[24/7] Wake lock no disponible');
+      }
+    };
+    
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        requestWakeLock();
+        // Refrescar datos al volver a la app
+        queryClient.invalidateQueries();
+      }
+    });
+    
+    requestWakeLock();
+  }
+  
+  // Iniciar keep-alive
+  keepAlive();
+
+  // Ocultar splash screen
   const hideSplashScreen = () => {
     const splash = document.getElementById('splash-screen');
     if (splash) {
@@ -90,6 +178,32 @@ function initializeApp() {
     }
   };
 
+  // Registrar Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+      try {
+        const reg = await navigator.serviceWorker.register('/sw.js', { 
+          updateViaCache: 'none' 
+        });
+        console.log('[SW v39] Registrado');
+        reg.update();
+        if (reg.waiting) {
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+      } catch (e) {
+        console.error('[SW] Error:', e);
+      }
+    });
+  }
+
+  // Solicitar notificaciones push (MANDATORIO)
+  if ('Notification' in window && Notification.permission === 'default') {
+    window.addEventListener('load', () => {
+      Notification.requestPermission();
+    });
+  }
+
+  // RENDERIZAR APP
   const root = createRoot(document.getElementById("root")!);
   root.render(
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
@@ -104,139 +218,3 @@ function initializeApp() {
 
   setTimeout(hideSplashScreen, 500);
 }
-
-// ============================================
-// FORZAR ACTUALIZACIÓN - SIN ESCAPE
-// ============================================
-async function checkAndForceUpdate(): Promise<boolean> {
-  const storedVersion = parseInt(localStorage.getItem('oqc_installed_version') || '0');
-  
-  console.log(`🔍 [OQC] Versión actual: ${storedVersion}, Requerida: ${CURRENT_VERSION}`);
-  
-  // Si la versión NO es exactamente la actual, FORZAR actualización
-  if (storedVersion !== CURRENT_VERSION) {
-    console.log('🔴🔴🔴 ACTUALIZACIÓN OBLIGATORIA 🔴🔴🔴');
-    console.log(`Actualizando de v${storedVersion} a v${CURRENT_VERSION}...`);
-    
-    // PASO 1: Marcar la nueva versión PRIMERO (evita ciclos)
-    localStorage.setItem('oqc_installed_version', CURRENT_VERSION.toString());
-    
-    // PASO 2: Eliminar TODOS los Service Workers
-    if ('serviceWorker' in navigator) {
-      try {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        console.log(`[SW] Eliminando ${registrations.length} service workers...`);
-        for (const reg of registrations) {
-          await reg.unregister();
-        }
-      } catch (e) {
-        console.error('[SW] Error al eliminar:', e);
-      }
-    }
-    
-    // PASO 3: Eliminar TODOS los caches
-    if ('caches' in window) {
-      try {
-        const cacheNames = await caches.keys();
-        console.log(`[CACHE] Eliminando ${cacheNames.length} caches...`);
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-      } catch (e) {
-        console.error('[CACHE] Error al eliminar:', e);
-      }
-    }
-    
-    // PASO 4: Limpiar TODOS los flags antiguos
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (key.includes('oqc_version') || key.includes('oqc_updated') || key.includes('oqc_force'))) {
-        if (key !== 'oqc_installed_version') {
-          keysToRemove.push(key);
-        }
-      }
-    }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-    
-    // PASO 5: RECARGAR - Forzar nueva carga desde servidor
-    console.log('🔄 Recargando aplicación...');
-    window.location.replace(window.location.pathname + '?v=' + CURRENT_VERSION + '&t=' + Date.now());
-    return false; // No inicializar app, se va a recargar
-  }
-  
-  console.log(`✅ [OQC v${CURRENT_VERSION}] Versión correcta instalada`);
-  return true; // Versión correcta, inicializar app
-}
-
-// ============================================
-// REGISTRAR SERVICE WORKER
-// ============================================
-function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', async () => {
-      try {
-        const reg = await navigator.serviceWorker.register('/sw.js', { 
-          updateViaCache: 'none' 
-        });
-        console.log('[SW v39] Registrado correctamente');
-        
-        // Forzar actualización del SW
-        reg.update();
-        
-        // Si hay uno esperando, activarlo inmediatamente
-        if (reg.waiting) {
-          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-        }
-        
-        // Escuchar actualizaciones
-        reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                newWorker.postMessage({ type: 'SKIP_WAITING' });
-              }
-            });
-          }
-        });
-      } catch (error) {
-        console.error('[SW] Error de registro:', error);
-      }
-    });
-    
-    // Recargar cuando el SW tome control
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('[SW] Nuevo controlador activo');
-    });
-  }
-}
-
-// ============================================
-// FORZAR NOTIFICACIONES PUSH (MANDATORIO)
-// ============================================
-function requestPushNotifications() {
-  window.addEventListener('load', async () => {
-    if (!('Notification' in window)) return;
-    
-    if (Notification.permission === 'default') {
-      console.log('[PUSH] Solicitando permiso de notificaciones...');
-      await Notification.requestPermission();
-    }
-    
-    console.log('[PUSH] Estado:', Notification.permission);
-  });
-}
-
-// ============================================
-// INICIAR APLICACIÓN
-// ============================================
-(async function main() {
-  // Primero verificar y forzar actualización si es necesario
-  const shouldInitialize = await checkAndForceUpdate();
-  
-  // Solo inicializar si la versión es correcta (no se va a recargar)
-  if (shouldInitialize) {
-    registerServiceWorker();
-    requestPushNotifications();
-    initializeApp();
-  }
-})();
