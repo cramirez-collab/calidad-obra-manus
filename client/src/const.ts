@@ -1,7 +1,12 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
-// Generate login URL at runtime so redirect URI reflects the current origin.
+// Siempre redirigir a la página de login local con usuario y contraseña
 export const getLoginUrl = () => {
+  return '/login';
+};
+
+// Función para obtener URL de OAuth de Manus (si se necesita en el futuro)
+export const getOAuthUrl = () => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;
   const redirectUri = `${window.location.origin}/api/oauth/callback`;

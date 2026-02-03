@@ -2457,3 +2457,10 @@
 - [x] Indicador visual de pendientes en header
 - [x] Toast de confirmación al sincronizar
 
+
+
+## BUG CRÍTICO: Login ciclado (2 Febrero 2026)
+- [x] Página de login se queda ciclada - CORREGIDO
+- [x] No permite ingresar email ni contraseña - CORREGIDO
+- [x] Redirige automáticamente a OAuth de Manus - CORREGIDO
+- [x] Corregir para mostrar formulario de login primero - getLoginUrl() ahora retorna '/login'
