@@ -151,6 +151,15 @@ export function QRScannerButton() {
       setStatus("error");
 
       const name = err?.name || "Error";
+      const message = err?.message || "";
+      
+      // Manejar timeout de video source (común en algunos dispositivos)
+      if (message.includes("Timeout") || message.includes("timeout")) {
+        setErrorMessage(
+          "La cámara tardó demasiado en responder. Usa el ingreso manual o reintenta."
+        );
+        return;
+      }
       
       if (name === "NotAllowedError") {
         setErrorMessage(
@@ -158,9 +167,9 @@ export function QRScannerButton() {
         );
       } else if (name === "NotFoundError") {
         setErrorMessage("No se detectó ninguna cámara en el dispositivo.");
-      } else if (name === "NotReadableError") {
+      } else if (name === "NotReadableError" || name === "AbortError") {
         setErrorMessage(
-          "La cámara está siendo usada por otra aplicación. Ciérrala y reintenta."
+          "La cámara está ocupada o no responde. Cierra otras apps y reintenta."
         );
       } else if (name === "OverconstrainedError") {
         // Intentar con cámara frontal si la trasera no está disponible

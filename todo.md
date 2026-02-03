@@ -2740,3 +2740,10 @@
 - [x] Verificado campo numeroInterno en la base de datos (funciona correctamente)
 - [x] Mostrar el numeroInterno real de cada ítem en las etiquetas QR
 - [x] En modo Rango: usar el índice i como consecutivo
+
+
+## Bug v51 - Timeout cámara QR
+
+- [x] Mejorar manejo de error "Timeout starting video source" en QRScanner
+- [x] No bloquear la aplicación si la cámara falla
+- [x] Mensaje amigable para usar ingreso manual
