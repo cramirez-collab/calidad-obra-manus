@@ -1,14 +1,17 @@
 // ============================================
-// SISTEMA OFFLINE COMPLETO 24/7 - v34
+// SISTEMA OFFLINE COMPLETO 24/7 - v35
 // ============================================
-// Este Service Worker permite que la app funcione
-// completamente sin conexión a internet
-// PROTEGE DATOS OFFLINE - No borra IndexedDB si hay pendientes
-// Sincronización cada 3 segundos para mayor velocidad
-// Carga instantánea de fotos (máx 80KB, 2 seg)
-// Notificaciones push navegan al item correcto
-// PDFs se descargan automáticamente para Acrobat Reader
-const APP_VERSION = 34;
+// ACTUALIZACIÓN FORZADA AGRESIVA
+// Elimina versiones anteriores automáticamente
+// Todos los usuarios DEBEN tener la misma versión
+// ============================================
+// Funcionalidades:
+// - Modo offline 24/7
+// - Sincronización cada 3 segundos
+// - Fotos instantáneas (máx 80KB)
+// - PDFs descarga automática para Acrobat
+// - Notificaciones push navegan al ítem
+const APP_VERSION = 35;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

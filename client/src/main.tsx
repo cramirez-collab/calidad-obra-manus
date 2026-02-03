@@ -11,100 +11,104 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// SISTEMA DE VERSIONADO AUTOMÁTICO v34
+// SISTEMA DE ACTUALIZACIÓN FORZADA AGRESIVA v35
 // ============================================
-const CURRENT_VERSION = 34;
+// OBLIGA a todos los usuarios a tener la misma versión.
+// Si detecta versión anterior, ELIMINA TODO y actualiza.
+// ============================================
+const CURRENT_VERSION = 35;
 const VERSION_KEY = 'oqc_app_version';
-const UPDATE_IN_PROGRESS_KEY = 'oqc_update_in_progress';
+const FORCE_UPDATE_KEY = 'oqc_force_update';
 
-// Función para forzar actualización completa (solo se ejecuta UNA vez)
-async function forceFullUpdate() {
-  // Verificar si ya estamos en proceso de actualización para evitar loops
-  const updateInProgress = sessionStorage.getItem(UPDATE_IN_PROGRESS_KEY);
-  if (updateInProgress === 'true') {
-    console.log('[App] Actualización ya en progreso, saltando...');
-    // Limpiar flag y continuar normalmente
-    sessionStorage.removeItem(UPDATE_IN_PROGRESS_KEY);
+// Función AGRESIVA para eliminar TODO y forzar actualización
+async function forceAggressiveUpdate() {
+  console.log('🔴 [ACTUALIZACIÓN FORZADA] Limpieza total iniciada...');
+  
+  const isUpdating = sessionStorage.getItem(FORCE_UPDATE_KEY);
+  if (isUpdating === 'updating') {
+    console.log('✅ [ACTUALIZACIÓN] Completada');
+    sessionStorage.removeItem(FORCE_UPDATE_KEY);
     localStorage.setItem(VERSION_KEY, CURRENT_VERSION.toString());
-    return false; // No recargar
+    return false;
   }
   
-  console.log('[App] Forzando actualización completa...');
+  sessionStorage.setItem(FORCE_UPDATE_KEY, 'updating');
   
-  // Marcar que estamos actualizando (en sessionStorage para que persista durante la recarga)
-  sessionStorage.setItem(UPDATE_IN_PROGRESS_KEY, 'true');
+  // 1. ELIMINAR TODOS LOS SERVICE WORKERS
+  if ('serviceWorker' in navigator) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const reg of registrations) {
+        await reg.unregister();
+      }
+      await new Promise(resolve => setTimeout(resolve, 300));
+    } catch (e) {
+      console.error('[SW] Error:', e);
+    }
+  }
   
-  // 1. Limpiar TODOS los caches del navegador
+  // 2. ELIMINAR TODOS LOS CACHES
   if ('caches' in window) {
     try {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map(name => caches.delete(name)));
-      console.log('[App] Todos los caches eliminados:', cacheNames);
     } catch (e) {
-      console.log('[App] Error limpiando caches:', e);
+      console.error('[CACHE] Error:', e);
     }
   }
   
-  // 2. Desregistrar TODOS los Service Workers
-  if ('serviceWorker' in navigator) {
-    try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (const registration of registrations) {
-        await registration.unregister();
-        console.log('[App] SW desregistrado');
-      }
-    } catch (e) {
-      console.log('[App] Error desregistrando SW:', e);
-    }
-  }
+  // 3. LIMPIAR LOCALSTORAGE (preservar datos offline críticos)
+  const keysToPreserve = ['oqc_offline_items', 'oqc_pending_sync'];
+  const preservedData: Record<string, string> = {};
+  keysToPreserve.forEach(key => {
+    const value = localStorage.getItem(key);
+    if (value) preservedData[key] = value;
+  });
+  localStorage.clear();
+  Object.entries(preservedData).forEach(([key, value]) => {
+    localStorage.setItem(key, value);
+  });
   
-  // 3. Guardar nueva versión ANTES de recargar
+  // 4. GUARDAR NUEVA VERSIÓN
   localStorage.setItem(VERSION_KEY, CURRENT_VERSION.toString());
   
-  // 4. Recargar página (sin parámetros extra para evitar problemas)
-  window.location.reload();
-  return true; // Indica que se recargará
+  // 5. FORZAR RECARGA COMPLETA
+  window.location.replace(window.location.pathname + '?v=' + CURRENT_VERSION + '&t=' + Date.now());
+  return true;
 }
 
-// Verificar versión al inicio (ejecutar de forma síncrona para evitar race conditions)
+// VERIFICACIÓN DE VERSIÓN AL INICIO
 const storedVersion = parseInt(localStorage.getItem(VERSION_KEY) || '0');
-console.log(`[App] Versión actual: ${CURRENT_VERSION}, Versión almacenada: ${storedVersion}`);
+const isUpdating = sessionStorage.getItem(FORCE_UPDATE_KEY);
 
-// Solo forzar actualización si la versión es diferente Y no estamos ya actualizando
-if (storedVersion !== CURRENT_VERSION) {
-  const updateInProgress = sessionStorage.getItem(UPDATE_IN_PROGRESS_KEY);
-  if (updateInProgress !== 'true') {
-    console.log('[App] Nueva versión detectada - Forzando actualización...');
-    forceFullUpdate();
-  } else {
-    // Ya estamos en proceso de actualización, solo actualizar la versión
-    console.log('[App] Completando actualización...');
-    sessionStorage.removeItem(UPDATE_IN_PROGRESS_KEY);
-    localStorage.setItem(VERSION_KEY, CURRENT_VERSION.toString());
-  }
+console.log(`📱 [OQC v${CURRENT_VERSION}] Instalada: v${storedVersion || 'ninguna'}`);
+
+if (storedVersion !== CURRENT_VERSION && isUpdating !== 'updating') {
+  console.log(`⚠️ [OBSOLETA] v${storedVersion} → v${CURRENT_VERSION}`);
+  forceAggressiveUpdate();
+} else if (isUpdating === 'updating') {
+  sessionStorage.removeItem(FORCE_UPDATE_KEY);
+  localStorage.setItem(VERSION_KEY, CURRENT_VERSION.toString());
 }
 
-// Registrar Service Worker (sin bloquear la app)
+// REGISTRO DE SERVICE WORKER
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', {
         updateViaCache: 'none'
       });
-      console.log('[PWA] Service Worker registered:', registration.scope);
-      
-      // Forzar actualización
       registration.update();
-      
       if (registration.waiting) {
         registration.waiting.postMessage({ type: 'SKIP_WAITING' });
       }
     } catch (error) {
-      console.error('[PWA] SW registration failed:', error);
+      console.error('[PWA] Error:', error);
     }
   });
 }
 
+// REACT QUERY CONFIG
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -126,11 +130,8 @@ const queryClient = new QueryClient({
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
-
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
-
   if (!isUnauthorized) return;
-
   window.location.href = getLoginUrl();
 };
 
@@ -166,18 +167,15 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-// Ocultar splash screen
+// RENDERIZAR APP
 const hideSplashScreen = () => {
   const splash = document.getElementById('splash-screen');
   if (splash) {
     splash.style.opacity = '0';
-    setTimeout(() => {
-      splash.style.display = 'none';
-    }, 300);
+    setTimeout(() => splash.style.display = 'none', 300);
   }
 };
 
-// Renderizar la app
 const root = createRoot(document.getElementById("root")!);
 root.render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
@@ -192,19 +190,17 @@ root.render(
 
 setTimeout(hideSplashScreen, 500);
 
-// Escuchar actualizaciones del SW
+// LISTENERS
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    console.log('[App] Service Worker actualizado');
-    // NO recargar automáticamente para evitar loops
-  });
-  
-  navigator.serviceWorker.addEventListener('message', (event) => {
-    if (event.data?.type === 'SW_UPDATED') {
-      console.log('[App] SW actualizado a v' + event.data.version);
-    }
-    if (event.data?.type === 'CACHE_CLEARED') {
-      console.log('[App] Caché limpiada por SW');
-    }
+    console.log('[SW] Controlador actualizado');
   });
 }
+
+// Verificar versión cada 30 segundos
+setInterval(() => {
+  const currentStored = parseInt(localStorage.getItem(VERSION_KEY) || '0');
+  if (currentStored !== CURRENT_VERSION) {
+    forceAggressiveUpdate();
+  }
+}, 30000);

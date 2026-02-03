@@ -2577,3 +2577,14 @@
 - [x] Usar downloadPDFBestMethod con detección de dispositivo
 - [x] Aplicar a todos los PDFs: Bitácora, Tiempos, Reporte Fotográfico
 
+
+## Mejoras v35 - Actualización Forzada Agresiva
+
+### Sistema de actualización obligatoria
+- [x] Eliminar completamente Service Workers de versiones anteriores
+- [x] Borrar todos los caches de versiones antiguas
+- [x] Forzar recarga inmediata si la versión no coincide
+- [x] No dar opción al usuario de quedarse en versión antigua
+- [x] Actualización automática sin intervención del usuario
+- [x] Verificación periódica cada 30 segundos
+
