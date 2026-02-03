@@ -1,172 +1,254 @@
 // ============================================
-// SISTEMA DE VERSIONADO AUTOMÁTICO v18
+// SISTEMA OFFLINE COMPLETO 24/7 - v19
 // ============================================
-// Este número DEBE incrementarse con cada deploy
-// El SW detectará cambios y forzará actualización en TODOS los dispositivos
-const APP_VERSION = 18;
+// Este Service Worker permite que la app funcione
+// completamente sin conexión a internet
+const APP_VERSION = 19;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
-// Solo recursos estáticos mínimos
+// Recursos que SIEMPRE deben estar disponibles offline
 const PRECACHE_ASSETS = [
+  '/',
+  '/index.html',
   '/offline.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
 ];
 
-// Intervalo de verificación de versión: 5 minutos
-const VERSION_CHECK_INTERVAL = 5 * 60 * 1000;
+// Patrones de URLs que deben cachearse para offline
+const CACHEABLE_PATTERNS = [
+  /\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico|webp)$/i,
+  /^\/assets\//,
+  /^\/src\//,
+];
 
-// Instalar Service Worker - Limpieza TOTAL de toda caché anterior
+// ==================== INSTALACIÓN ====================
 self.addEventListener('install', (event) => {
-  console.log(`[SW v${APP_VERSION}] Installing - CLEARING ALL CACHE...`);
+  console.log(`[SW v${APP_VERSION}] Instalando - Modo Offline 24/7`);
+  
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      console.log(`[SW v${APP_VERSION}] Found caches to delete:`, cacheNames);
-      return Promise.all(
-        cacheNames.map((name) => {
-          console.log(`[SW v${APP_VERSION}] Deleting cache:`, name);
-          return caches.delete(name);
-        })
-      );
-    }).then(() => {
-      console.log(`[SW v${APP_VERSION}] All old caches deleted, creating new cache...`);
-      return caches.open(CACHE_NAME).then((cache) => {
-        return cache.addAll(PRECACHE_ASSETS);
-      });
-    }).then(() => {
-      console.log(`[SW v${APP_VERSION}] Installation complete`);
-    })
-  );
-  // Forzar activación inmediata SIN esperar
-  self.skipWaiting();
-});
-
-// Activar - Tomar control inmediato y limpiar cualquier caché restante
-self.addEventListener('activate', (event) => {
-  console.log(`[SW v${APP_VERSION}] Activating - Taking control...`);
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
+    (async () => {
+      // Limpiar caches antiguas
+      const cacheNames = await caches.keys();
+      await Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => {
-            console.log(`[SW v${APP_VERSION}] Deleting old cache:`, name);
+          .filter(name => name !== CACHE_NAME)
+          .map(name => {
+            console.log(`[SW v${APP_VERSION}] Eliminando cache antigua:`, name);
             return caches.delete(name);
           })
       );
-    }).then(() => {
-      console.log(`[SW v${APP_VERSION}] Claiming all clients...`);
-      return self.clients.claim();
-    }).then(() => {
-      // Notificar a todos los clientes que recarguen
-      return self.clients.matchAll().then((clients) => {
-        clients.forEach((client) => {
-          client.postMessage({ 
-            type: 'SW_UPDATED', 
-            version: APP_VERSION,
-            forceReload: true 
-          });
+      
+      // Crear nueva cache con recursos esenciales
+      const cache = await caches.open(CACHE_NAME);
+      console.log(`[SW v${APP_VERSION}] Cacheando recursos esenciales...`);
+      
+      // Cachear recursos uno por uno para evitar fallos
+      for (const url of PRECACHE_ASSETS) {
+        try {
+          await cache.add(url);
+          console.log(`[SW v${APP_VERSION}] Cacheado:`, url);
+        } catch (err) {
+          console.warn(`[SW v${APP_VERSION}] No se pudo cachear:`, url, err);
+        }
+      }
+      
+      console.log(`[SW v${APP_VERSION}] Instalación completa`);
+    })()
+  );
+  
+  // Activar inmediatamente
+  self.skipWaiting();
+});
+
+// ==================== ACTIVACIÓN ====================
+self.addEventListener('activate', (event) => {
+  console.log(`[SW v${APP_VERSION}] Activando - Tomando control...`);
+  
+  event.waitUntil(
+    (async () => {
+      // Tomar control de todos los clientes
+      await self.clients.claim();
+      console.log(`[SW v${APP_VERSION}] Control tomado de todos los clientes`);
+      
+      // Notificar a los clientes de la nueva versión
+      const clients = await self.clients.matchAll();
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'SW_UPDATED',
+          version: APP_VERSION
         });
       });
-    }).then(() => {
-      // Iniciar verificación periódica de versión
-      startVersionCheck();
-    })
+    })()
   );
 });
 
-// Función para limpiar caché automáticamente
-async function clearAllCaches() {
-  console.log(`[SW v${APP_VERSION}] Clearing all caches...`);
-  const cacheNames = await caches.keys();
-  await Promise.all(cacheNames.map(name => caches.delete(name)));
-  
-  // Recrear caché con assets mínimos
-  const cache = await caches.open(CACHE_NAME);
-  await cache.addAll(PRECACHE_ASSETS);
-  
-  console.log(`[SW v${APP_VERSION}] Cache cleared at`, new Date().toISOString());
-  
-  // Notificar a los clientes
-  const clients = await self.clients.matchAll();
-  clients.forEach(client => {
-    client.postMessage({ type: 'CACHE_CLEARED', timestamp: Date.now() });
-  });
-}
-
-// Verificar si hay nueva versión del SW
-async function checkForUpdates() {
-  try {
-    // Forzar actualización del SW
-    await self.registration.update();
-    console.log(`[SW v${APP_VERSION}] Version check completed`);
-  } catch (err) {
-    console.log(`[SW v${APP_VERSION}] Version check failed:`, err);
-  }
-}
-
-// Iniciar verificación periódica de versión
-function startVersionCheck() {
-  console.log(`[SW v${APP_VERSION}] Starting version check interval (every 5 min)`);
-  setInterval(checkForUpdates, VERSION_CHECK_INTERVAL);
-}
-
-// Fetch - Network First para TODO (máxima frescura)
+// ==================== FETCH - ESTRATEGIA OFFLINE-FIRST ====================
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-
-  // Ignorar otros orígenes
-  if (url.origin !== location.origin) return;
-
-  // API - Network Only (nunca cachear)
+  
+  // Solo manejar requests del mismo origen
+  if (url.origin !== location.origin) {
+    return;
+  }
+  
+  // API calls - Network first con fallback offline
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request, { cache: 'no-store' }).catch(() => {
-        return new Response(
-          JSON.stringify({ error: 'offline' }),
-          { headers: { 'Content-Type': 'application/json' } }
-        );
-      })
-    );
+    event.respondWith(handleAPIRequest(request));
     return;
   }
-
-  // Navegación - Network con fallback
+  
+  // Navegación - Cache first para funcionamiento offline
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request, { cache: 'no-store' }).catch(() => caches.match(OFFLINE_URL))
-    );
+    event.respondWith(handleNavigationRequest(request));
     return;
   }
-
-  // Assets estáticos - Network First con caché como fallback
+  
+  // Assets estáticos - Cache first para velocidad
+  if (shouldCache(url.pathname)) {
+    event.respondWith(handleStaticAsset(request));
+    return;
+  }
+  
+  // Otros requests - Network first
   event.respondWith(
-    fetch(request, { cache: 'no-store' })
-      .then(response => {
-        // Clonar respuesta para guardar en caché
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(request, responseClone);
-        });
-        return response;
-      })
-      .catch(() => caches.match(request))
+    fetch(request).catch(() => caches.match(request))
   );
 });
 
-// Push notifications con badges
+// Manejar requests de API
+async function handleAPIRequest(request) {
+  try {
+    // Intentar red primero
+    const response = await fetch(request.clone());
+    return response;
+  } catch (error) {
+    console.log(`[SW v${APP_VERSION}] API offline:`, request.url);
+    
+    // Si es un GET, intentar cache
+    if (request.method === 'GET') {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+    }
+    
+    // Retornar respuesta de error offline
+    return new Response(
+      JSON.stringify({
+        error: 'offline',
+        message: 'Sin conexión. Los datos se sincronizarán cuando vuelva la conexión.',
+        offline: true
+      }),
+      {
+        status: 503,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Offline': 'true'
+        }
+      }
+    );
+  }
+}
+
+// Manejar navegación
+async function handleNavigationRequest(request) {
+  try {
+    // Intentar red primero
+    const response = await fetch(request);
+    
+    // Cachear la respuesta para uso offline
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, response.clone());
+    
+    return response;
+  } catch (error) {
+    console.log(`[SW v${APP_VERSION}] Navegación offline, sirviendo desde cache`);
+    
+    // Intentar servir desde cache
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    
+    // Fallback a index.html para SPA
+    const indexCached = await caches.match('/');
+    if (indexCached) return indexCached;
+    
+    // Último recurso: página offline
+    return caches.match(OFFLINE_URL);
+  }
+}
+
+// Manejar assets estáticos
+async function handleStaticAsset(request) {
+  // Cache first para velocidad
+  const cached = await caches.match(request);
+  if (cached) {
+    // Actualizar cache en background
+    updateCacheInBackground(request);
+    return cached;
+  }
+  
+  // Si no está en cache, obtener de red
+  try {
+    const response = await fetch(request);
+    
+    // Cachear para uso futuro
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, response.clone());
+    
+    return response;
+  } catch (error) {
+    console.log(`[SW v${APP_VERSION}] Asset no disponible offline:`, request.url);
+    return new Response('', { status: 404 });
+  }
+}
+
+// Actualizar cache en background
+function updateCacheInBackground(request) {
+  fetch(request)
+    .then(response => {
+      if (response.ok) {
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(request, response);
+        });
+      }
+    })
+    .catch(() => {});
+}
+
+// Verificar si una URL debe cachearse
+function shouldCache(pathname) {
+  return CACHEABLE_PATTERNS.some(pattern => pattern.test(pathname));
+}
+
+// ==================== SINCRONIZACIÓN EN BACKGROUND ====================
+self.addEventListener('sync', (event) => {
+  console.log(`[SW v${APP_VERSION}] Background sync:`, event.tag);
+  
+  if (event.tag === 'sync-items') {
+    event.waitUntil(syncPendingItems());
+  }
+});
+
+async function syncPendingItems() {
+  // Notificar a los clientes para que sincronicen
+  const clients = await self.clients.matchAll();
+  clients.forEach(client => {
+    client.postMessage({
+      type: 'SYNC_PENDING',
+      timestamp: Date.now()
+    });
+  });
+}
+
+// ==================== PUSH NOTIFICATIONS ====================
 self.addEventListener('push', (event) => {
   const data = event.data?.json() || {};
   
-  // Actualizar badge del icono de la app
+  // Actualizar badge
   if ('setAppBadge' in navigator) {
-    const badgeCount = data.badge || 1;
-    navigator.setAppBadge(badgeCount).catch(err => {
-      console.log('[SW] Error setting badge:', err);
-    });
+    navigator.setAppBadge(data.badge || 1).catch(() => {});
   }
   
   event.waitUntil(
@@ -178,7 +260,7 @@ self.addEventListener('push', (event) => {
       tag: data.tag || 'oqc-notification',
       renotify: true,
       requireInteraction: data.requireInteraction || false,
-      data: { 
+      data: {
         url: data.url || '/',
         itemId: data.itemId,
         tipo: data.tipo
@@ -194,7 +276,6 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   
-  // Limpiar badge al hacer click
   if ('clearAppBadge' in navigator) {
     navigator.clearAppBadge().catch(() => {});
   }
@@ -218,38 +299,73 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-self.addEventListener('notificationclose', (event) => {
-  self.registration.getNotifications().then(notifications => {
-    if (notifications.length === 0 && 'clearAppBadge' in navigator) {
-      navigator.clearAppBadge().catch(() => {});
-    }
-  });
+// ==================== MENSAJES DE CONTROL ====================
+self.addEventListener('message', (event) => {
+  const { type, data } = event.data || {};
+  
+  switch (type) {
+    case 'SKIP_WAITING':
+      self.skipWaiting();
+      break;
+      
+    case 'GET_VERSION':
+      event.source?.postMessage({ type: 'VERSION', version: APP_VERSION });
+      break;
+      
+    case 'CLEAR_CACHE':
+      clearAllCaches().then(() => {
+        event.source?.postMessage({ type: 'CACHE_CLEARED' });
+      });
+      break;
+      
+    case 'SET_BADGE':
+      if ('setAppBadge' in navigator) {
+        navigator.setAppBadge(data?.count || 0).catch(() => {});
+      }
+      break;
+      
+    case 'CLEAR_BADGE':
+      if ('clearAppBadge' in navigator) {
+        navigator.clearAppBadge().catch(() => {});
+      }
+      break;
+      
+    case 'CACHE_ASSETS':
+      cacheAdditionalAssets(data?.urls || []);
+      break;
+  }
 });
 
-// Mensajes de control
-self.addEventListener('message', (event) => {
-  if (event.data?.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-  if (event.data?.type === 'CLEAR_CACHE') {
-    clearAllCaches().then(() => {
-      event.source?.postMessage({ type: 'CACHE_CLEARED' });
-    });
-  }
-  if (event.data?.type === 'FORCE_CLEAR_NOW') {
-    clearAllCaches();
-  }
-  if (event.data?.type === 'GET_VERSION') {
-    event.source?.postMessage({ type: 'VERSION', version: APP_VERSION });
-  }
-  if (event.data?.type === 'SET_BADGE') {
-    if ('setAppBadge' in navigator) {
-      navigator.setAppBadge(event.data.count || 0).catch(() => {});
+// Limpiar todas las caches
+async function clearAllCaches() {
+  console.log(`[SW v${APP_VERSION}] Limpiando todas las caches...`);
+  const cacheNames = await caches.keys();
+  await Promise.all(cacheNames.map(name => caches.delete(name)));
+  
+  // Recrear cache con assets esenciales
+  const cache = await caches.open(CACHE_NAME);
+  for (const url of PRECACHE_ASSETS) {
+    try {
+      await cache.add(url);
+    } catch (err) {
+      console.warn(`[SW v${APP_VERSION}] No se pudo re-cachear:`, url);
     }
   }
-  if (event.data?.type === 'CLEAR_BADGE') {
-    if ('clearAppBadge' in navigator) {
-      navigator.clearAppBadge().catch(() => {});
+  
+  console.log(`[SW v${APP_VERSION}] Cache limpiada y recreada`);
+}
+
+// Cachear assets adicionales
+async function cacheAdditionalAssets(urls) {
+  const cache = await caches.open(CACHE_NAME);
+  for (const url of urls) {
+    try {
+      await cache.add(url);
+      console.log(`[SW v${APP_VERSION}] Asset adicional cacheado:`, url);
+    } catch (err) {
+      console.warn(`[SW v${APP_VERSION}] No se pudo cachear:`, url);
     }
   }
-});
+}
+
+console.log(`[SW v${APP_VERSION}] Service Worker cargado - Modo Offline 24/7 activado`);

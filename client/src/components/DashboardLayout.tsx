@@ -41,7 +41,9 @@ import {
   Link2,
   BookOpen,
   FileText,
-  RefreshCw
+  RefreshCw,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -55,6 +57,7 @@ import { useRealTimeItems } from "@/hooks/useRealTimeData";
 import { useProject } from "@/contexts/ProjectContext";
 import { trpc } from "@/lib/trpc";
 import { TermsModal } from "./TermsModal";
+import { useSyncManager } from "@/hooks/useSyncManager";
 
 // Tipo para items de menú
 type MenuItem = {
@@ -220,6 +223,9 @@ function DashboardLayoutContent({
   
   // Activar sincronización en tiempo real
   useRealTimeItems();
+  
+  // Sincronización offline
+  const { pendingCount, isSyncing, online } = useSyncManager();
   
   const menuItems = getMenuItems(user?.role || 'residente', proyectoActual);
 
@@ -428,10 +434,23 @@ function DashboardLayoutContent({
               </nav>
             )}
 
-            {/* OQC CENTRADO con versión */}
+            {/* OQC CENTRADO con versión e indicador de conexión */}
             <div className="flex-1 flex justify-center items-center gap-2">
               <span className="font-bold text-base sm:text-lg md:text-xl text-primary tracking-wide hidden sm:block">OQC</span>
-              <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded">v18</span>
+              <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded">v19</span>
+              {/* Indicador de conexión */}
+              <div className="flex items-center gap-1">
+                {online ? (
+                  <Wifi className="h-3.5 w-3.5 text-green-500" />
+                ) : (
+                  <WifiOff className="h-3.5 w-3.5 text-red-500" />
+                )}
+                {pendingCount > 0 && (
+                  <span className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded-full">
+                    {isSyncing ? '...' : pendingCount}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Separador */}

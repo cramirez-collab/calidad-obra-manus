@@ -228,3 +228,27 @@ export async function countPendingActions(): Promise<number> {
   const actions = await getPendingActions();
   return actions.length;
 }
+
+
+/**
+ * Verifica si hay conexión a internet
+ */
+export function isOnline(): boolean {
+  return typeof navigator !== 'undefined' ? navigator.onLine : true;
+}
+
+/**
+ * Escucha cambios en el estado de conexión
+ */
+export function onConnectionChange(callback: (isOnline: boolean) => void): () => void {
+  const handleOnline = () => callback(true);
+  const handleOffline = () => callback(false);
+  
+  window.addEventListener('online', handleOnline);
+  window.addEventListener('offline', handleOffline);
+  
+  return () => {
+    window.removeEventListener('online', handleOnline);
+    window.removeEventListener('offline', handleOffline);
+  };
+}
