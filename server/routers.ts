@@ -1252,6 +1252,23 @@ export const appRouter = router({
         await db.deleteItem(input.id);
         return { success: true };
       }),
+    
+    // Eliminar múltiples ítems (solo superadmin)
+    deleteMultiple: superadminProcedure
+      .input(z.object({ ids: z.array(z.number()) }))
+      .mutation(async ({ input }) => {
+        let deleted = 0;
+        for (const id of input.ids) {
+          try {
+            await db.deleteItem(id);
+            deleted++;
+          } catch (e) {
+            // Continuar con los demás si uno falla
+            console.error(`Error eliminando ítem ${id}:`, e);
+          }
+        }
+        return { success: true, deleted };
+      }),
   }),
 
   // ==================== ESTADÍSTICAS ====================

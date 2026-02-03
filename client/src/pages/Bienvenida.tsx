@@ -7,6 +7,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Clock, 
   Camera, 
@@ -20,7 +21,10 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
-  Trash2
+  Trash2,
+  CheckSquare,
+  Square,
+  X
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -51,6 +55,11 @@ export default function Bienvenida() {
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
+  // Estado para selección múltiple
+  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [showDeleteMultipleDialog, setShowDeleteMultipleDialog] = useState(false);
+  
   const utils = trpc.useUtils();
   const deleteItemMutation = trpc.items.delete.useMutation({
     onSuccess: () => {
@@ -60,6 +69,20 @@ export default function Bienvenida() {
     },
     onError: (error) => {
       toast.error(error.message || "Error al eliminar el ítem");
+    },
+  });
+  
+  // Mutación para eliminar múltiples ítems
+  const deleteMultipleMutation = trpc.items.deleteMultiple.useMutation({
+    onSuccess: (result) => {
+      toast.success(`${result.deleted} ítems eliminados correctamente`);
+      utils.pendientes.misPendientes.invalidate();
+      setSelectedItems(new Set());
+      setSelectionMode(false);
+      setShowDeleteMultipleDialog(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Error al eliminar los ítems");
     },
   });
   
@@ -76,6 +99,45 @@ export default function Bienvenida() {
     } finally {
       setIsDeleting(false);
     }
+  };
+  
+  // Funciones para selección múltiple
+  const toggleItemSelection = (itemId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(itemId)) {
+      newSelected.delete(itemId);
+    } else {
+      newSelected.add(itemId);
+    }
+    setSelectedItems(newSelected);
+  };
+  
+  const selectAllVisible = () => {
+    const newSelected = new Set(selectedItems);
+    paginatedItems.forEach((item: any) => newSelected.add(item.id));
+    setSelectedItems(newSelected);
+  };
+  
+  const deselectAll = () => {
+    setSelectedItems(new Set());
+  };
+  
+  const confirmDeleteMultiple = async () => {
+    if (selectedItems.size === 0) return;
+    setIsDeleting(true);
+    try {
+      await deleteMultipleMutation.mutateAsync({ ids: Array.from(selectedItems) });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
+  const toggleSelectionMode = () => {
+    if (selectionMode) {
+      setSelectedItems(new Set());
+    }
+    setSelectionMode(!selectionMode);
   };
   
   const isSuperadmin = user?.role === "superadmin" || user?.role === "admin";
@@ -192,7 +254,7 @@ export default function Bienvenida() {
         </div>
 
         {/* Filtros de estado - SOLO iconos con contador (sin texto) */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           {filterButtons.map(filter => (
             <Tooltip key={filter.key}>
               <TooltipTrigger asChild>
@@ -222,7 +284,72 @@ export default function Bienvenida() {
               <TooltipContent side="bottom">{filter.tooltip}</TooltipContent>
             </Tooltip>
           ))}
+          
+          {/* Botón de modo selección múltiple - Solo para superadmin */}
+          {isSuperadmin && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={selectionMode ? "default" : "outline"}
+                  size="icon"
+                  className={`h-10 w-10 ml-auto ${
+                    selectionMode 
+                      ? "bg-red-500 text-white border-0 shadow-md hover:bg-red-600" 
+                      : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                  }`}
+                  onClick={toggleSelectionMode}
+                >
+                  {selectionMode ? <X className="h-5 w-5" /> : <CheckSquare className="h-5 w-5" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {selectionMode ? "Cancelar selección" : "Selección múltiple"}
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
+
+        {/* Barra de acciones de selección múltiple */}
+        {selectionMode && isSuperadmin && (
+          <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg border border-red-200">
+            <span className="text-sm font-medium text-red-700">
+              {selectedItems.size} seleccionados
+            </span>
+            <div className="flex gap-2 ml-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={selectAllVisible}
+                className="text-xs"
+              >
+                <CheckSquare className="h-3 w-3 mr-1" />
+                Seleccionar página
+              </Button>
+              {selectedItems.size > 0 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={deselectAll}
+                    className="text-xs"
+                  >
+                    <Square className="h-3 w-3 mr-1" />
+                    Deseleccionar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setShowDeleteMultipleDialog(true)}
+                    className="text-xs"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Eliminar ({selectedItems.size})
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Lista de pendientes - compacta con paginación */}
         {isLoading ? (
@@ -234,14 +361,41 @@ export default function Bienvenida() {
             {paginatedItems.map((item: any) => {
               const config = getStatusConfig(item.status);
               const Icon = config.icon;
+              const isSelected = selectedItems.has(item.id);
               return (
                 <Card 
                   key={item.id}
-                  className="cursor-pointer hover:shadow-md transition-all active:scale-[0.99] border-0 shadow-sm"
-                  onClick={() => setLocation(`/items/${item.id}`)}
+                  className={`cursor-pointer hover:shadow-md transition-all active:scale-[0.99] border-0 shadow-sm ${
+                    isSelected ? "ring-2 ring-red-500 bg-red-50" : ""
+                  }`}
+                  onClick={() => {
+                    if (selectionMode) {
+                      toggleItemSelection(item.id, { stopPropagation: () => {} } as React.MouseEvent);
+                    } else {
+                      setLocation(`/items/${item.id}`);
+                    }
+                  }}
                 >
                   <CardContent className="p-3 sm:p-4">
                     <div className="flex items-center gap-3">
+                      {/* Checkbox para selección múltiple */}
+                      {selectionMode && isSuperadmin && (
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => {
+                            const newSelected = new Set(selectedItems);
+                            if (isSelected) {
+                              newSelected.delete(item.id);
+                            } else {
+                              newSelected.add(item.id);
+                            }
+                            setSelectedItems(newSelected);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-5 w-5 border-2 border-red-400 data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500"
+                        />
+                      )}
+                      
                       {/* Miniatura de foto antes */}
                       <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg overflow-hidden shrink-0 bg-slate-100">
                         {item.fotoAntes ? (
@@ -282,8 +436,8 @@ export default function Bienvenida() {
                         </div>
                       </div>
 
-                      {/* Botón eliminar para superadmin */}
-                      {isSuperadmin && (
+                      {/* Botón eliminar para superadmin (solo si no está en modo selección) */}
+                      {isSuperadmin && !selectionMode && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -299,8 +453,10 @@ export default function Bienvenida() {
                         </Tooltip>
                       )}
 
-                      {/* Flecha */}
-                      <ArrowRight className="h-5 w-5 text-[#6E6E6E] shrink-0" />
+                      {/* Flecha (solo si no está en modo selección) */}
+                      {!selectionMode && (
+                        <ArrowRight className="h-5 w-5 text-[#6E6E6E] shrink-0" />
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -351,7 +507,7 @@ export default function Bienvenida() {
         )}
       </div>
 
-      {/* Diálogo de confirmación para eliminar */}
+      {/* Diálogo de confirmación para eliminar un ítem */}
       <AlertDialog open={itemToDelete !== null} onOpenChange={(open) => !open && setItemToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -374,6 +530,37 @@ export default function Bienvenida() {
                 </>
               ) : (
                 "Eliminar"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Diálogo de confirmación para eliminar múltiples ítems */}
+      <AlertDialog open={showDeleteMultipleDialog} onOpenChange={setShowDeleteMultipleDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-600">
+              ¿Eliminar {selectedItems.size} ítems?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Los {selectedItems.size} ítems seleccionados y todas sus fotos serán eliminados permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteMultiple}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Eliminando {selectedItems.size}...
+                </>
+              ) : (
+                `Eliminar ${selectedItems.size} ítems`
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

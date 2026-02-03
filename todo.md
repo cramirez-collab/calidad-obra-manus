@@ -2588,3 +2588,14 @@
 - [x] Actualización automática sin intervención del usuario
 - [x] Verificación periódica cada 30 segundos
 
+
+
+## Mejoras v40 - Eliminación Múltiple
+
+### Casillas de verificación para superadmin
+- [x] Agregar casillas de verificación en cada ítem de la lista
+- [x] Mostrar botón "Eliminar seleccionados" cuando hay ítems seleccionados
+- [x] Solo visible para superadministrador
+- [x] Confirmación antes de eliminar múltiples ítems
+- [x] Endpoint deleteMultiple en backend
+

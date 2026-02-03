@@ -16,33 +16,43 @@ import "./index.css";
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
 // ============================================
-const CURRENT_VERSION = 39;
+const CURRENT_VERSION = 40;
 
-// Verificar versión al cargar (síncrono, antes de React)
-const storedVersion = parseInt(localStorage.getItem('oqc_installed_version') || '0');
+// Función para verificar y actualizar versión
+function checkAndUpdateVersion(): boolean {
+  const storedVersion = parseInt(localStorage.getItem('oqc_installed_version') || '0');
+  
+  if (storedVersion !== CURRENT_VERSION) {
+    console.log(`🔴 Actualizando de v${storedVersion} a v${CURRENT_VERSION}...`);
+    
+    // Marcar nueva versión PRIMERO
+    localStorage.setItem('oqc_installed_version', CURRENT_VERSION.toString());
+    
+    // Limpiar caches y SW en background (no bloquea)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(reg => reg.unregister());
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => caches.delete(name));
+      });
+    }
+    
+    // Recargar con parámetros únicos
+    window.location.replace(window.location.pathname + '?v=' + CURRENT_VERSION + '&t=' + Date.now());
+    return false; // Indica que se está actualizando
+  }
+  
+  return true; // Versión correcta
+}
 
-if (storedVersion !== CURRENT_VERSION) {
-  console.log(`🔴 Actualizando de v${storedVersion} a v${CURRENT_VERSION}...`);
-  
-  // Marcar nueva versión PRIMERO
-  localStorage.setItem('oqc_installed_version', CURRENT_VERSION.toString());
-  
-  // Limpiar caches y SW en background (no bloquea)
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(regs => {
-      regs.forEach(reg => reg.unregister());
-    });
-  }
-  if ('caches' in window) {
-    caches.keys().then(names => {
-      names.forEach(name => caches.delete(name));
-    });
-  }
-  
-  // Recargar con parámetros únicos
-  window.location.replace(window.location.pathname + '?v=' + CURRENT_VERSION + '&t=' + Date.now());
-} else {
-  // Versión correcta - inicializar React
+// Verificar versión ANTES de cualquier código React
+const versionOK = checkAndUpdateVersion();
+
+// SOLO continuar si la versión es correcta
+if (versionOK) {
   console.log(`✅ [OQC v${CURRENT_VERSION}] Iniciando...`);
   
   // REACT QUERY CONFIG
@@ -56,12 +66,12 @@ if (storedVersion !== CURRENT_VERSION) {
         refetchOnMount: true,
         retry: 3,
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-        networkMode: 'always', // SIEMPRE intentar conectar
+        networkMode: 'always',
       },
       mutations: {
         retry: 3,
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-        networkMode: 'always', // SIEMPRE intentar conectar
+        networkMode: 'always',
       },
     },
   });
@@ -105,69 +115,51 @@ if (storedVersion !== CURRENT_VERSION) {
   // ============================================
   // CONEXIÓN 24/7 AL SERVIDOR (MANDATORIO)
   // ============================================
-  let isOnline = navigator.onLine;
-  let reconnectAttempts = 0;
-  const MAX_RECONNECT_ATTEMPTS = 999999; // Infinito prácticamente
   
   // Ping al servidor cada 30 segundos para mantener conexión viva
-  const keepAlive = () => {
-    setInterval(async () => {
-      try {
-        const response = await fetch('/api/trpc/auth.me', {
-          method: 'GET',
-          credentials: 'include',
-          cache: 'no-store',
-        });
-        if (response.ok) {
-          isOnline = true;
-          reconnectAttempts = 0;
-          console.log('[24/7] Conexión activa ✅');
-        }
-      } catch (e) {
-        console.log('[24/7] Intentando reconectar...');
-        reconnectAttempts++;
-      }
-    }, 30000); // Cada 30 segundos
-  };
+  setInterval(async () => {
+    try {
+      await fetch('/api/trpc/auth.me', {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store',
+      });
+      console.log('[24/7] Conexión activa ✅');
+    } catch (e) {
+      console.log('[24/7] Intentando reconectar...');
+    }
+  }, 30000);
   
   // Reconexión automática cuando se pierde conexión
   window.addEventListener('online', () => {
     console.log('[24/7] Conexión restaurada - Sincronizando...');
-    isOnline = true;
-    queryClient.invalidateQueries(); // Refrescar todos los datos
+    queryClient.invalidateQueries();
   });
   
   window.addEventListener('offline', () => {
     console.log('[24/7] Conexión perdida - Modo offline activado');
-    isOnline = false;
   });
   
   // Mantener la app activa incluso en background (móvil)
   if ('wakeLock' in navigator) {
-    let wakeLock: WakeLockSentinel | null = null;
-    
     const requestWakeLock = async () => {
       try {
-        wakeLock = await (navigator as any).wakeLock.request('screen');
+        await (navigator as any).wakeLock.request('screen');
         console.log('[24/7] Wake lock activo');
       } catch (e) {
-        console.log('[24/7] Wake lock no disponible');
+        // Wake lock no disponible
       }
     };
     
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         requestWakeLock();
-        // Refrescar datos al volver a la app
         queryClient.invalidateQueries();
       }
     });
     
     requestWakeLock();
   }
-  
-  // Iniciar keep-alive
-  keepAlive();
 
   // Ocultar splash screen
   const hideSplashScreen = () => {
