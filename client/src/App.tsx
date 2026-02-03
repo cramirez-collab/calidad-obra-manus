@@ -24,7 +24,7 @@ const Bitacora = lazy(() => import("./pages/Bitacora"));
 const Usuarios = lazy(() => import("./pages/Usuarios"));
 const Estadisticas = lazy(() => import("./pages/Estadisticas"));
 const Seguimiento = lazy(() => import("./pages/Seguimiento"));
-const KPIs = lazy(() => import("./pages/KPIs"));
+// KPIs eliminado - duplicado con Estadísticas
 const GenerarQR = lazy(() => import("./pages/GenerarQR"));
 const Configuracion = lazy(() => import("./pages/Configuracion"));
 const Metas = lazy(() => import("./pages/Metas"));
@@ -113,7 +113,7 @@ function AppRoutes() {
       
       {/* Estadísticas */}
       <Route path="/estadisticas" component={Estadisticas} />
-      <Route path="/kpis" component={KPIs} />
+      {/* KPIs eliminado - usar Estadísticas */}
       
       {/* Flujo Rápido */}
       <Route path="/mis-tareas" component={DashboardResidente} />

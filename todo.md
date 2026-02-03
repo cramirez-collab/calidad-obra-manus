@@ -2483,3 +2483,10 @@
 - [x] Forzar actualización inmediata al publicar nueva versión - Sistema de versionado mejorado
 - [x] Proteger datos offline - Verifica IndexedDB antes de borrar caché
 - [x] Mantener formato oficial Objetiva en PDFs - Logo y colores corporativos
+
+
+## Mejoras v25 (2 Febrero 2026)
+- [ ] Flujo QR primero: escanear etiqueta → crear ítem (PENDIENTE - requiere más análisis)
+- [x] Eliminar módulo KPI (duplicado con Estadísticas) - Eliminado del menú y rutas
+- [x] Clarificar cómo activar notificaciones push - Panel con estado claro y instrucciones
+- [x] Optimizar velocidad de sincronización - Cada 10 segundos, inmediato al conectar

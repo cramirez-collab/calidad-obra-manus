@@ -128,10 +128,9 @@ export function useSyncManager() {
       setOnline(isOnlineNow);
       
       if (isOnlineNow) {
-        // Esperar un momento antes de sincronizar
-        setTimeout(() => {
-          syncAll();
-        }, 2000);
+        // Sincronizar INMEDIATAMENTE al detectar conexión
+        console.log('[SyncManager] Conexión detectada, sincronizando inmediatamente...');
+        syncAll();
       }
     });
     
@@ -143,23 +142,23 @@ export function useSyncManager() {
     updatePendingCount();
     
     if (isOnline()) {
-      // Esperar a que la app esté lista
+      // Sincronizar rápidamente al cargar (1 segundo)
       const timer = setTimeout(() => {
         syncAll();
-      }, 3000);
+      }, 1000);
       
       return () => clearTimeout(timer);
     }
   }, []);
   
-  // Sincronizar periódicamente cada 30 segundos si hay conexión
+  // Sincronizar periódicamente cada 10 segundos si hay conexión (más rápido)
   useEffect(() => {
     const interval = setInterval(() => {
       if (isOnline() && !isSyncing) {
         updatePendingCount();
         syncAll();
       }
-    }, 30000);
+    }, 10000); // Cada 10 segundos para sincronización más rápida
     
     return () => clearInterval(interval);
   }, [isSyncing, syncAll, updatePendingCount]);

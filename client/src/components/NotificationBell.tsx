@@ -205,16 +205,49 @@ export function NotificationBell() {
                 />
               </div>
               
+              {/* Estado actual de las notificaciones */}
+              {pushSubscribed ? (
+                <div className="p-2 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <p className="text-xs text-green-700 font-medium flex items-center gap-1">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    Notificaciones ACTIVADAS
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    Recibirás alertas cuando haya ítems urgentes o cambios de estado.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-xs text-red-700 font-medium flex items-center gap-1">
+                    <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                    Notificaciones DESACTIVADAS
+                  </p>
+                  <p className="text-xs text-red-600 mt-1">
+                    Activa el switch de arriba para recibir alertas en tu dispositivo.
+                  </p>
+                </div>
+              )}
+              
               {!pushSupported && (
-                <p className="text-xs text-muted-foreground">
-                  Tu navegador no soporta notificaciones push
-                </p>
+                <div className="p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                  <p className="text-xs text-yellow-700 font-medium">
+                    ⚠️ Navegador no compatible
+                  </p>
+                  <p className="text-xs text-yellow-600 mt-1">
+                    Usa Chrome o Safari para recibir notificaciones push.
+                  </p>
+                </div>
               )}
               
               {pushPermission === 'denied' && (
-                <p className="text-xs text-red-500">
-                  Permiso denegado. Habilita las notificaciones en la configuración del navegador.
-                </p>
+                <div className="p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-xs text-red-700 font-medium">
+                    🚫 Permiso denegado
+                  </p>
+                  <p className="text-xs text-red-600 mt-1">
+                    Ve a Configuración del navegador → Sitios → objetivaoqc.cc → Notificaciones → Permitir
+                  </p>
+                </div>
               )}
               
               {pushSubscribed && (
@@ -224,7 +257,7 @@ export function NotificationBell() {
                   className="w-full"
                   onClick={handleTestPush}
                 >
-                  Enviar notificación de prueba
+                  🔔 Enviar notificación de prueba
                 </Button>
               )}
             </div>
