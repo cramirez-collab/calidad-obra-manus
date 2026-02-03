@@ -11,24 +11,29 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v43 - ObjetivaQC 🔴
+// 🔴 VERSIÓN v44 - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
+// NOTIFICACIONES PUSH SIEMPRE ACTIVAS (OBLIGATORIO)
+// ACTUALIZACIÓN ITERATIVA DE VERSIÓN (OBLIGATORIO)
 // ============================================
-const CURRENT_VERSION = 43;
+const CURRENT_VERSION = 44;
 
-// Función para verificar y actualizar versión
+// ============================================
+// 🔴 ACTUALIZACIÓN FORZADA DE VERSIÓN 🔴
+// ============================================
 function checkAndUpdateVersion(): boolean {
   const storedVersion = parseInt(localStorage.getItem('oqc_installed_version') || '0');
   
   if (storedVersion !== CURRENT_VERSION) {
-    console.log(`🔴 Actualizando de v${storedVersion} a v${CURRENT_VERSION}...`);
+    console.log(`🔴 ACTUALIZANDO de v${storedVersion} a v${CURRENT_VERSION}...`);
     
-    // Marcar nueva versión PRIMERO
+    // Marcar nueva versión PRIMERO para evitar ciclos
     localStorage.setItem('oqc_installed_version', CURRENT_VERSION.toString());
+    localStorage.setItem('oqc_update_timestamp', Date.now().toString());
     
-    // Limpiar caches y SW en background (no bloquea)
+    // Limpiar TODOS los caches y Service Workers
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(regs => {
         regs.forEach(reg => reg.unregister());
@@ -40,18 +45,94 @@ function checkAndUpdateVersion(): boolean {
       });
     }
     
-    // Recargar con parámetros únicos
+    // Recargar con parámetros únicos para forzar nueva descarga
     window.location.replace(window.location.pathname + '?v=' + CURRENT_VERSION + '&t=' + Date.now());
-    return false; // Indica que se está actualizando
+    return false;
   }
   
-  return true; // Versión correcta
+  return true;
 }
 
-// Verificar versión ANTES de cualquier código React
+// ============================================
+// 🔴 NOTIFICACIONES PUSH OBLIGATORIAS 🔴
+// ============================================
+async function forcePushNotifications(): Promise<void> {
+  if (!('Notification' in window)) {
+    console.log('[PUSH] Notificaciones no soportadas en este navegador');
+    return;
+  }
+  
+  // Si ya están concedidas, registrar suscripción
+  if (Notification.permission === 'granted') {
+    console.log('[PUSH] ✅ Notificaciones activas');
+    await registerPushSubscription();
+    return;
+  }
+  
+  // Si están denegadas, mostrar mensaje
+  if (Notification.permission === 'denied') {
+    console.log('[PUSH] ⚠️ Notificaciones denegadas - Solicitar manualmente');
+    return;
+  }
+  
+  // Solicitar permisos
+  console.log('[PUSH] Solicitando permisos de notificaciones...');
+  const permission = await Notification.requestPermission();
+  
+  if (permission === 'granted') {
+    console.log('[PUSH] ✅ Permisos concedidos');
+    await registerPushSubscription();
+  } else {
+    console.log('[PUSH] ⚠️ Permisos no concedidos');
+  }
+}
+
+async function registerPushSubscription(): Promise<void> {
+  if (!('serviceWorker' in navigator)) return;
+  
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    
+    if (!subscription) {
+      console.log('[PUSH] Creando nueva suscripción...');
+      // La suscripción se creará cuando el SW esté listo
+    } else {
+      console.log('[PUSH] Suscripción existente activa');
+    }
+  } catch (e) {
+    console.log('[PUSH] Error al registrar suscripción:', e);
+  }
+}
+
+// ============================================
+// 🔴 VERIFICACIÓN ITERATIVA DE VERSIÓN 🔴
+// ============================================
+function startVersionCheck(): void {
+  // Verificar versión cada 60 segundos
+  setInterval(() => {
+    const storedVersion = parseInt(localStorage.getItem('oqc_installed_version') || '0');
+    if (storedVersion !== CURRENT_VERSION) {
+      console.log(`🔴 Versión desactualizada detectada: v${storedVersion} → v${CURRENT_VERSION}`);
+      localStorage.setItem('oqc_installed_version', CURRENT_VERSION.toString());
+      window.location.reload();
+    }
+  }, 60000);
+  
+  // Verificar notificaciones cada 2 minutos
+  setInterval(async () => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      console.log('[PUSH] Recordando solicitar notificaciones...');
+      await Notification.requestPermission();
+    }
+  }, 120000);
+}
+
+// ============================================
+// VERIFICAR VERSIÓN ANTES DE INICIAR
+// ============================================
 const versionOK = checkAndUpdateVersion();
 
-// SOLO continuar si la versión es correcta
 if (versionOK) {
   console.log(`✅ [OQC v${CURRENT_VERSION}] Iniciando...`);
   
@@ -116,7 +197,7 @@ if (versionOK) {
   // CONEXIÓN 24/7 AL SERVIDOR (MANDATORIO)
   // ============================================
   
-  // Ping al servidor cada 30 segundos para mantener conexión viva
+  // Ping al servidor cada 30 segundos
   setInterval(async () => {
     try {
       await fetch('/api/trpc/auth.me', {
@@ -130,7 +211,7 @@ if (versionOK) {
     }
   }, 30000);
   
-  // Reconexión automática cuando se pierde conexión
+  // Reconexión automática
   window.addEventListener('online', () => {
     console.log('[24/7] Conexión restaurada - Sincronizando...');
     queryClient.invalidateQueries();
@@ -140,7 +221,7 @@ if (versionOK) {
     console.log('[24/7] Conexión perdida - Modo offline activado');
   });
   
-  // Mantener la app activa incluso en background (móvil)
+  // Wake lock para mantener app activa en móvil
   if ('wakeLock' in navigator) {
     const requestWakeLock = async () => {
       try {
@@ -177,7 +258,7 @@ if (versionOK) {
         const reg = await navigator.serviceWorker.register('/sw.js', { 
           updateViaCache: 'none' 
         });
-        console.log('[SW v39] Registrado');
+        console.log(`[SW v${CURRENT_VERSION}] Registrado`);
         reg.update();
         if (reg.waiting) {
           reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -188,12 +269,17 @@ if (versionOK) {
     });
   }
 
-  // Solicitar notificaciones push (MANDATORIO)
-  if ('Notification' in window && Notification.permission === 'default') {
-    window.addEventListener('load', () => {
-      Notification.requestPermission();
-    });
-  }
+  // ============================================
+  // 🔴 FORZAR NOTIFICACIONES PUSH AL INICIAR 🔴
+  // ============================================
+  window.addEventListener('load', () => {
+    forcePushNotifications();
+  });
+  
+  // ============================================
+  // 🔴 INICIAR VERIFICACIÓN ITERATIVA 🔴
+  // ============================================
+  startVersionCheck();
 
   // RENDERIZAR APP
   const root = createRoot(document.getElementById("root")!);

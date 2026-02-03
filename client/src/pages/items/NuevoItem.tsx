@@ -610,7 +610,13 @@ export default function NuevoItem() {
                 <User className="h-3 w-3 mr-1 text-gray-400" />
                 <SelectValue placeholder="Seleccionar Residente *" />
               </SelectTrigger>
-              <SelectContent side="top" className="max-h-[300px] overflow-y-auto">
+              <SelectContent 
+                position="popper" 
+                side="top" 
+                sideOffset={5}
+                className="max-h-[300px] overflow-y-auto z-[9999]"
+                style={{ maxHeight: '300px' }}
+              >
                 {residentesConEmpresa.map((residente) => (
                   <SelectItem key={`${residente.id}-${residente.empresaId}`} value={residente.id.toString()}>
                     <div className="flex items-center gap-2">

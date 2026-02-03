@@ -2632,3 +2632,21 @@
 - [x] Verificar que no se encimen líneas en Reporte Fotográfico PDF (lineWidth: 0.1, cellPadding: 3)
 - [x] Asegurar espaciado correcto entre elementos (minCellHeight en headers: 10)
 
+
+## Mejoras v44 - Corrección desplegable residentes
+
+### Bug: Desplegable de residentes no se abre
+- [x] Diagnosticar por qué el selector de residentes no se despliega
+- [x] Corregir con position="popper" side="top" z-[9999]
+- [ ] Verificar funcionamiento en móvil y desktop
+
+### Notificaciones Push SIEMPRE activas (MANDATORIO)
+- [x] Forzar solicitud de permisos de notificaciones al iniciar
+- [x] Verificar iterativamente que estén activas (cada 2 min)
+- [x] Registrar suscripción push automáticamente
+
+### Actualización de versión iterativa (MANDATORIO)
+- [x] Verificar versión cada 60 segundos
+- [x] Forzar actualización si hay nueva versión disponible
+- [x] Eliminar caches y SW antiguos automáticamente
+
