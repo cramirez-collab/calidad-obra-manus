@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, codigo, numeroInterno, titulo FROM items ORDER BY numeroInterno ASC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, numeroInterno, titulo FROM items ORDER BY numeroInterno ASC;",
+  "rows": [
+    {
+      "id": "870001",
+      "codigo": "OQC-2RSQK6",
+      "numeroInterno": "1",
+      "titulo": "Test Item con Base64"
+    },
+    {
+      "id": "960073",
+      "codigo": "OQC-9AELTC",
+      "numeroInterno": "2",
+      "titulo": "Test Item con Base64"
+    },
+    {
+      "id": "960074",
+      "codigo": "OQC-27WC2F",
+      "numeroInterno": "3",
+      "titulo": "Test Duplicado"
+    },
+    {
+      "id": "960075",
+      "codigo": "OQC-HGLNCK",
+      "numeroInterno": "4",
+      "titulo": "Test Sin Foto"
+    },
+    {
+      "id": "960076",
+      "codigo": "OQC-3UP49P",
+      "numeroInterno": "5",
+      "titulo": "Test Residente"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\tnumeroInterno\ttitulo\n870001\tOQC-2RSQK6\t1\tTest Item con Base64\n960073\tOQC-9AELTC\t2\tTest Item con Base64\n960074\tOQC-27WC2F\t3\tTest Duplicado\n960075\tOQC-HGLNCK\t4\tTest Sin Foto\n960076\tOQC-3UP49P\t5\tTest Residente\n",
+  "stderr": "",
+  "execution_time_ms": 355
+}

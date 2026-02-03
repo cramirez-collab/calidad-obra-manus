@@ -2731,3 +2731,12 @@
 - [x] Hacer visible el botón de eliminar ítem en móvil (con texto "Eliminar")
 - [x] Consecutivo #N DEBAJO de OBJETIVA en QR (OBLIGATORIO)
 - [x] Actualizado a v50 (main.tsx, index.html, sw.js, DashboardLayout)
+
+
+## Bug CRÍTICO v51 - Consecutivo interno debe ser incremental
+
+- [x] El consecutivo debe ser 1, 2, 3, 4... incremental (verificado en DB: 1,2,3,4,5)
+- [x] Es un número de control interno independiente del código QR aleatorio
+- [x] Verificado campo numeroInterno en la base de datos (funciona correctamente)
+- [x] Mostrar el numeroInterno real de cada ítem en las etiquetas QR
+- [x] En modo Rango: usar el índice i como consecutivo

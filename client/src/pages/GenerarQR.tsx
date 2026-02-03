@@ -139,7 +139,7 @@ export default function GenerarQR() {
           }
         });
 
-        qrList.push({ codigo, url, qrDataUrl });
+        qrList.push({ codigo, url, qrDataUrl, consecutivo: i });
       }
 
       setQrItems(qrList);
