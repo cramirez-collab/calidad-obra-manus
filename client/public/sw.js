@@ -7,7 +7,7 @@
 // Sincronización cada 3 segundos para mayor velocidad
 // Flujo QR preasignado: escanear → crear ítem
 // Botón de notificaciones push en menú hamburguesa
-const APP_VERSION = 29;
+const APP_VERSION = 30;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

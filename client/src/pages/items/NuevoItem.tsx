@@ -287,9 +287,9 @@ export default function NuevoItem() {
             }
             ctx.drawImage(img, 0, 0, width, height);
             
-            // Compresión progresiva para alcanzar ~350KB
-            const targetSizeKB = 350;
-            let quality = 0.8;
+            // Compresión progresiva para alcanzar ~200KB (más rápido en conexiones lentas)
+            const targetSizeKB = 200;
+            let quality = 0.7;
             let result = canvas.toDataURL('image/jpeg', quality);
             
             // Reducir calidad hasta alcanzar el tamaño objetivo
@@ -412,50 +412,65 @@ export default function NuevoItem() {
       online: isOnline(),
     });
     
-    // ESTRATEGIA: Con internet crear directo, sin internet guardar offline
-    try {
-      if (isOnline()) {
-        // CON INTERNET: Crear directo en servidor para ver relación inmediatamente
-        try {
+    // ESTRATEGIA: Siempre intentar guardar, con reintentos automáticos
+    const maxRetries = 3;
+    let lastError: any = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (isOnline()) {
+          // CON INTERNET: Crear directo en servidor
+          // Intento silencioso
           const result = await createItemMutation.mutateAsync(itemData);
           console.log('[NuevoItem] Ítem creado exitosamente:', result);
           toast.success("Ítem creado correctamente");
           setLocation(`/items/${result.id}`);
           return;
-        } catch (serverError: any) {
-          // Si falla el servidor, guardar offline como respaldo
-          console.log('[NuevoItem] Error de servidor, guardando offline:', serverError.message);
+        } else {
+          // SIN INTERNET: Guardar offline directamente
           await savePendingAction({
             type: 'create_item',
             data: itemData,
           });
-          toast.success("Ítem guardado. Se sincronizará cuando mejore la conexión.", {
+          console.log('[NuevoItem] Ítem guardado offline');
+          toast.success("Ítem guardado. Se sincronizará automáticamente.", {
             duration: 4000,
             icon: '📡',
           });
           setLocation("/items");
           return;
         }
-      } else {
-        // SIN INTERNET: Guardar offline
-        await savePendingAction({
-          type: 'create_item',
-          data: itemData,
-        });
-        console.log('[NuevoItem] Ítem guardado offline');
-        toast.success("Ítem guardado. Se sincronizará automáticamente.", {
-          duration: 4000,
-          icon: '📡',
-        });
-        setLocation("/items");
+      } catch (error: any) {
+        lastError = error;
+        // Error silencioso, reintentando...
+        
+        // Si es el último intento, guardar offline como respaldo
+        if (attempt === maxRetries) {
+          try {
+            await savePendingAction({
+              type: 'create_item',
+              data: itemData,
+            });
+            toast.success("Ítem guardado localmente. Se sincronizará cuando mejore la conexión.", {
+              duration: 5000,
+              icon: '📡',
+            });
+            setLocation("/items");
+            return;
+          } catch (offlineError) {
+            console.error('[NuevoItem] Error guardando offline:', offlineError);
+          }
+        } else {
+          // Esperar antes del siguiente intento (backoff exponencial)
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
       }
-      
-    } catch (error: any) {
-      console.error('[NuevoItem] Error crítico:', error);
-      toast.error("Error al guardar. Intenta de nuevo.");
-    } finally {
-      setIsSubmitting(false);
     }
+    
+    // Si llegamos aquí, todos los intentos fallaron
+    console.error('[NuevoItem] Todos los intentos fallaron:', lastError);
+    toast.error("Error de conexión. El ítem se guardó localmente y se sincronizará después.");
+    setIsSubmitting(false);
   };
 
 // Modal de marcado

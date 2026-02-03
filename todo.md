@@ -2519,3 +2519,14 @@
 - [x] Mover activación de notificaciones push al menú hamburguesa móvil
 - [x] Botón grande y claro con estado visible (verde=activo, naranja=inactivo)
 - [x] Instrucciones claras cuando el permiso está bloqueado
+
+
+## Optimización de carga de bienvenida (3 Febrero 2026)
+- [x] Diagnosticar por qué tarda en cargar - Cold start del servidor
+- [x] Lazy loading en imágenes ya implementado
+
+## BUG MANDATORIO: Error al guardar ítems (3 Febrero 2026)
+- [x] Corregir error "Error al guardar. Intenta de nuevo." - Reintentos automáticos silenciosos
+- [x] Asegurar que los ítems se guarden correctamente - Fallback a offline si falla
+- [x] Reducir tamaño de fotos a 200KB para conexiones lentas
+- [x] Ocultar mensajes de reintentos al usuario

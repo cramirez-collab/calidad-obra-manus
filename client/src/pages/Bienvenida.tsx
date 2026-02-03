@@ -250,6 +250,8 @@ export default function Bienvenida() {
                             alt="Foto antes" 
                             className="h-full w-full object-cover"
                             loading="lazy"
+                            decoding="async"
+                            fetchPriority="low"
                           />
                         ) : (
                           <div className={`h-full w-full ${config.bg} flex items-center justify-center`}>
