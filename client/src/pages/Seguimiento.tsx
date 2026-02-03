@@ -287,7 +287,7 @@ export default function Seguimiento() {
               </div>
             </div>
             <Badge variant="outline" className="font-mono">
-              {item.codigo}
+              {item.codigo} <span className="text-[#02B381] font-bold">#{item.numeroInterno || '-'}</span>
             </Badge>
           </div>
         </div>
@@ -621,7 +621,7 @@ export default function Seguimiento() {
         {/* Footer */}
         <div className="text-center text-xs text-muted-foreground py-4">
           <p>Sistema de Control de Calidad de Obra</p>
-          <p className="mt-1">Código de seguimiento: {item.codigo}</p>
+          <p className="mt-1">Código de seguimiento: {item.codigo} <span className="text-[#02B381] font-semibold">#{item.numeroInterno || '-'}</span></p>
         </div>
       </main>
     </div>

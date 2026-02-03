@@ -2682,3 +2682,11 @@
 - [x] Verificación al volver a la app (visibilitychange)
 - [x] Actualizar a v46
 
+
+## Mejora v46 - Número consecutivo en código QR
+
+- [x] Agregar número consecutivo al código QR (ej: OQC-ABC123 #1)
+- [x] Mostrar consecutivo junto al código aleatorio en verde Objetiva
+- [x] El consecutivo ya crece de 1 en 1 (campo numeroInterno)
+- [x] Actualizado en: ItemDetail, ItemsList, Seguimiento
+

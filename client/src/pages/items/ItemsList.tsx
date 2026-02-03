@@ -437,7 +437,7 @@ export default function ItemsList() {
                           <div className="min-w-0 flex-1">
                             <h3 className="font-semibold truncate">{item.titulo}</h3>
                             <p className="text-sm text-muted-foreground font-mono">
-                              {item.codigo} <span className="text-xs">#{item.numeroInterno || '-'}</span>
+                              {item.codigo} <span className="text-xs text-[#02B381] font-bold">#{item.numeroInterno || '-'}</span>
                             </p>
                             <Badge className={`${statusColors[item.status]} mt-1 text-xs`}>
                               <StatusIcon className="h-3 w-3 mr-1" />

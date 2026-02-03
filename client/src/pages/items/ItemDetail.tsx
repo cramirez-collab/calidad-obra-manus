@@ -435,15 +435,13 @@ export default function ItemDetail() {
               Volver
             </Button>
             
-            {/* Clave OQC prominente */}
+            {/* Clave OQC prominente con consecutivo */}
             <div className="flex items-center gap-3 mb-2">
               <div className="flex items-center gap-1.5 bg-white border border-[#002C63]/20 text-[#002C63] px-2 py-1 rounded-md shadow-sm">
                 <QrCode className="h-3 w-3" />
-                <span className="font-mono font-semibold text-sm">{item.codigo}</span>
-              </div>
-              {/* Número interno consecutivo */}
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <span className="text-xs font-medium">#{item.numeroInterno || '-'}</span>
+                <span className="font-mono font-semibold text-sm">
+                  {item.codigo} <span className="text-[#02B381] font-bold">#{item.numeroInterno || '-'}</span>
+                </span>
               </div>
               <Badge className={statusColors[item.status] + " text-sm py-1 px-3"}>
                 {statusLabels[item.status]}
@@ -755,11 +753,8 @@ export default function ItemDetail() {
                 {qrCodeUrl && (
                   <img src={qrCodeUrl} alt="QR Code" className="w-40 h-40" />
                 )}
-                <p className="text-xs text-muted-foreground mt-2 font-mono">
-                  {item.codigo}
-                </p>
-                <p className="text-xs text-muted-foreground font-medium">
-                  Control interno: #{item.numeroInterno || '-'}
+                <p className="text-sm text-muted-foreground mt-2 font-mono font-semibold">
+                  {item.codigo} <span className="text-[#02B381]">#{item.numeroInterno || '-'}</span>
                 </p>
                 <Button
                   variant="outline"
