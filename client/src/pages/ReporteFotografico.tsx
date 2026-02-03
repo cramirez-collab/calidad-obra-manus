@@ -31,6 +31,9 @@ import {
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
 import { format } from "date-fns";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { forceDownloadPDF } from "@/lib/pdfDownload";
 
 const statusLabels: Record<string, string> = {
   pendiente_foto_despues: "Pendiente Foto",
@@ -117,148 +120,143 @@ export default function ReporteFotografico() {
     };
   }, [items]);
 
-  // Generar PDF
+  // Generar PDF nativo con jsPDF - se abre en Acrobat Reader
   const generatePDF = async () => {
     if (!items || items.length === 0) {
-      toast.error("No hay ítems para generar el reporte");
+      toast.error("No hay items para generar el reporte");
       return;
     }
 
     setIsGenerating(true);
     
     try {
-      // Crear contenido HTML para el PDF
-      const logoUrl = "https://objetiva.mx/wp-content/uploads/2023/03/logo-objetiva.png";
+      // Colores corporativos Objetiva
+      const AZUL_OBJETIVA: [number, number, number] = [0, 44, 99]; // #002C63
+      const VERDE_OBJETIVA: [number, number, number] = [2, 179, 129]; // #02B381
       
-      const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Reporte Fotográfico - ObjetivaQC</title>
-  <style>
-    @page { margin: 1cm; size: A4; }
-    body { font-family: Arial, sans-serif; font-size: 10pt; color: #333; }
-    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #002C63; padding-bottom: 10px; margin-bottom: 20px; }
-    .logo { height: 40px; }
-    .title { color: #002C63; font-size: 18pt; font-weight: bold; }
-    .subtitle { color: #666; font-size: 10pt; }
-    .stats { display: flex; gap: 20px; margin-bottom: 20px; padding: 10px; background: #f5f5f5; border-radius: 5px; }
-    .stat { text-align: center; }
-    .stat-value { font-size: 18pt; font-weight: bold; color: #002C63; }
-    .stat-label { font-size: 8pt; color: #666; }
-    .item { page-break-inside: avoid; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 15px; padding: 10px; }
-    .item-header { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
-    .item-code { font-weight: bold; color: #002C63; font-size: 12pt; }
-    .item-status { padding: 2px 8px; border-radius: 10px; font-size: 8pt; }
-    .status-aprobado { background: #d1fae5; color: #065f46; }
-    .status-rechazado { background: #fee2e2; color: #991b1b; }
-    .status-pendiente { background: #fef3c7; color: #92400e; }
-    .item-info { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 9pt; margin-bottom: 10px; }
-    .info-label { color: #666; }
-    .photos { display: flex; gap: 10px; }
-    .photo-container { flex: 1; text-align: center; }
-    .photo-label { font-size: 8pt; color: #666; margin-bottom: 5px; }
-    .photo { max-width: 100%; max-height: 200px; border: 1px solid #ddd; border-radius: 3px; }
-    .no-photo { width: 100%; height: 150px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; color: #999; border-radius: 3px; }
-    .footer { margin-top: 20px; text-align: center; font-size: 8pt; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
-    .green { color: #02B381; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <div class="title">Reporte Fotográfico${proyectoSeleccionado ? ` - ${proyectoSeleccionado.nombreReporte || proyectoSeleccionado.nombre}` : ''}</div>
-      <div class="subtitle">ObjetivaQC - Control de Calidad de Obra</div>
-      <div class="subtitle">Generado: ${formatDate(new Date())} | Total: ${items.length} ítems</div>
-    </div>
-    <img src="${logoUrl}" alt="Objetiva" class="logo" crossorigin="anonymous" />
-  </div>
-
-  <div class="stats">
-    <div class="stat">
-      <div class="stat-value">${stats.total}</div>
-      <div class="stat-label">Total</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value green">${stats.aprobados}</div>
-      <div class="stat-label">Aprobados</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value" style="color: #dc2626;">${stats.rechazados}</div>
-      <div class="stat-label">Rechazados</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value" style="color: #d97706;">${stats.pendientes}</div>
-      <div class="stat-label">Pendientes</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value">${stats.conFotos}</div>
-      <div class="stat-label">Con Fotos</div>
-    </div>
-  </div>
-
-  ${items.map(item => `
-    <div class="item">
-      <div class="item-header">
-        <span class="item-code">${item.codigo}</span>
-        <span class="item-status ${
-          item.status === 'aprobado' ? 'status-aprobado' : 
-          item.status === 'rechazado' ? 'status-rechazado' : 'status-pendiente'
-        }">${statusLabels[item.status]}</span>
-      </div>
-      <div class="item-info">
-        <div><span class="info-label">Título:</span> ${item.titulo}</div>
-        <div><span class="info-label">Fecha:</span> ${formatDate(item.fechaCreacion)}</div>
-        <div><span class="info-label">Empresa:</span> ${item.empresa?.nombre || '-'}</div>
-        <div><span class="info-label">Unidad:</span> ${item.unidad?.nombre || '-'}</div>
-        <div><span class="info-label">Especialidad:</span> ${item.especialidad?.nombre || '-'}</div>
-        <div><span class="info-label">Residente:</span> ${item.residente?.name || '-'}</div>
-      </div>
-      <div class="photos">
-        <div class="photo-container">
-          <div class="photo-label">ANTES</div>
-          ${item.fotoAntesMarcadaUrl || item.fotoAntesUrl 
-            ? `<img src="${getImageUrl(item.fotoAntesMarcadaUrl || item.fotoAntesUrl)}" class="photo" crossorigin="anonymous" />`
-            : '<div class="no-photo">Sin foto</div>'
-          }
-        </div>
-        <div class="photo-container">
-          <div class="photo-label">DESPUÉS</div>
-          ${item.fotoDespuesUrl 
-            ? `<img src="${getImageUrl(item.fotoDespuesUrl)}" class="photo" crossorigin="anonymous" />`
-            : '<div class="no-photo">Sin foto</div>'
-          }
-        </div>
-      </div>
-    </div>
-  `).join('')}
-
-  <div class="footer">
-    <p>ObjetivaQC - Sistema de Control de Calidad de Obra</p>
-    <p>© ${new Date().getFullYear()} Objetiva. Todos los derechos reservados.</p>
-  </div>
-</body>
-</html>
-      `;
-
-      // Forzar descarga del archivo HTML para abrir en navegador/lector
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
+      // Crear PDF en orientacion vertical
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      let yPos = margin;
       
-      // Siempre descargar como archivo
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `reporte_fotografico_${format(new Date(), "yyyy-MM-dd_HHmm")}.html`;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Funcion para agregar header en cada pagina
+      const addHeader = () => {
+        // Linea superior azul
+        doc.setFillColor(...AZUL_OBJETIVA);
+        doc.rect(0, 0, pageWidth, 3, 'F');
+        
+        // Titulo
+        doc.setFontSize(18);
+        doc.setTextColor(...AZUL_OBJETIVA);
+        const titulo = proyectoSeleccionado 
+          ? `Reporte Fotografico - ${proyectoSeleccionado.nombreReporte || proyectoSeleccionado.nombre}`
+          : 'Reporte Fotografico';
+        doc.text(titulo, margin, 15);
+        
+        // Subtitulo
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text('ObjetivaQC - Control de Calidad de Obra', margin, 22);
+        doc.text(`Generado: ${format(new Date(), 'dd/MM/yyyy HH:mm')} | Total: ${items.length} items`, margin, 28);
+        
+        // Linea separadora
+        doc.setDrawColor(...AZUL_OBJETIVA);
+        doc.setLineWidth(0.5);
+        doc.line(margin, 32, pageWidth - margin, 32);
+        
+        return 38;
+      };
       
-      // Limpiar URL
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      // Funcion para agregar footer en cada pagina
+      const addFooter = (pageNum: number, totalPages: number) => {
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`ObjetivaQC - objetivaqc.com`, margin, pageHeight - 10);
+        doc.text(`Pagina ${pageNum} de ${totalPages}`, pageWidth - margin - 25, pageHeight - 10);
+        
+        // Linea verde inferior
+        doc.setFillColor(...VERDE_OBJETIVA);
+        doc.rect(0, pageHeight - 3, pageWidth, 3, 'F');
+      };
       
-      toast.success("Reporte descargado. Ábrelo y usa 'Guardar como PDF' en tu navegador.");
+      // Primera pagina - Header
+      yPos = addHeader();
+      
+      // Estadisticas
+      doc.setFillColor(245, 245, 245);
+      doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 20, 3, 3, 'F');
+      
+      const statWidth = (pageWidth - 2 * margin) / 5;
+      const statsData = [
+        { value: stats.total.toString(), label: 'Total', color: AZUL_OBJETIVA },
+        { value: stats.aprobados.toString(), label: 'Aprobados', color: VERDE_OBJETIVA },
+        { value: stats.rechazados.toString(), label: 'Rechazados', color: [220, 38, 38] },
+        { value: stats.pendientes.toString(), label: 'Pendientes', color: [217, 119, 6] },
+        { value: stats.conFotos.toString(), label: 'Con Fotos', color: AZUL_OBJETIVA },
+      ];
+      
+      statsData.forEach((stat, i) => {
+        const x = margin + i * statWidth + statWidth / 2;
+        doc.setFontSize(16);
+        doc.setTextColor(...(stat.color as [number, number, number]));
+        doc.text(stat.value, x, yPos + 10, { align: 'center' });
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(stat.label, x, yPos + 16, { align: 'center' });
+      });
+      
+      yPos += 28;
+      
+      // Tabla de items
+      const tableData = items.map(item => [
+        item.codigo,
+        item.titulo?.substring(0, 30) || '-',
+        statusLabels[item.status] || item.status,
+        item.empresa?.nombre?.substring(0, 15) || '-',
+        item.unidad?.nombre?.substring(0, 15) || '-',
+        formatDate(item.fechaCreacion),
+      ]);
+      
+      autoTable(doc, {
+        head: [['Codigo', 'Titulo', 'Estado', 'Empresa', 'Unidad', 'Fecha']],
+        body: tableData,
+        startY: yPos,
+        margin: { left: margin, right: margin },
+        styles: { 
+          fontSize: 8, 
+          cellPadding: 2,
+          overflow: 'linebreak',
+        },
+        headStyles: { 
+          fillColor: AZUL_OBJETIVA as [number, number, number], 
+          textColor: 255,
+          fontStyle: 'bold',
+        },
+        alternateRowStyles: { fillColor: [250, 250, 250] },
+        columnStyles: {
+          0: { cellWidth: 22 },
+          1: { cellWidth: 45 },
+          2: { cellWidth: 28 },
+          3: { cellWidth: 30 },
+          4: { cellWidth: 30 },
+          5: { cellWidth: 20 },
+        },
+      });
+      
+      // Agregar footers a todas las paginas
+      const totalPages = doc.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        addFooter(i, totalPages);
+      }
+      
+      // Descargar PDF nativo - se abre en Acrobat Reader
+      const nombreProyecto = proyectoSeleccionado?.nombre?.replace(/[^a-zA-Z0-9]/g, '_') || 'reporte';
+      forceDownloadPDF(doc, `reporte_fotografico_${nombreProyecto}_${format(new Date(), 'yyyy-MM-dd_HHmm')}.pdf`);
+      
+      toast.success("PDF descargado - se abrira en Acrobat Reader");
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error("Error al generar el reporte");

@@ -2556,3 +2556,16 @@
 ### Descarga de PDFs
 - [x] Forzar descarga de PDFs para abrir en Acrobat Reader (Bitacora, Tiempos, Reporte Fotográfico)
 
+
+## Mejoras v33 - PDFs nativos y Notificaciones
+
+### PDFs nativos para Acrobat Reader
+- [x] Generar Reporte Fotografico como PDF nativo con jsPDF (no HTML)
+- [x] Aplicar estilo Objetiva corporativo a los PDFs (colores azul #002C63 y verde #02B381)
+
+### Notificaciones Push
+- [x] Verificar que al hacer clic en notificacion navegue al item correcto (SW actualizado)
+
+### Dominio
+- [x] Documentar proceso de configuracion de dominio objetivaqc.com (Settings > Domains en UI)
+

@@ -11,9 +11,9 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// SISTEMA DE VERSIONADO AUTOMÁTICO v32
+// SISTEMA DE VERSIONADO AUTOMÁTICO v33
 // ============================================
-const CURRENT_VERSION = 32;
+const CURRENT_VERSION = 33;
 const VERSION_KEY = 'oqc_app_version';
 const UPDATE_IN_PROGRESS_KEY = 'oqc_update_in_progress';
 

@@ -1,12 +1,13 @@
 // ============================================
-// SISTEMA OFFLINE COMPLETO 24/7 - v32
+// SISTEMA OFFLINE COMPLETO 24/7 - v33
 // ============================================
 // Este Service Worker permite que la app funcione
 // completamente sin conexión a internet
 // PROTEGE DATOS OFFLINE - No borra IndexedDB si hay pendientes
 // Sincronización cada 3 segundos para mayor velocidad
 // Carga instantánea de fotos (máx 80KB, 2 seg)
-const APP_VERSION = 32;
+// Notificaciones push navegan al item correcto
+const APP_VERSION = 33;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
@@ -284,20 +285,34 @@ self.addEventListener('notificationclick', (event) => {
   }
   
   const action = event.action;
-  const url = event.notification.data?.url || '/';
+  const notifData = event.notification.data || {};
   
+  // Si el usuario cierra, no hacer nada
   if (action === 'dismiss') return;
+  
+  // Determinar URL de destino - priorizar itemId para navegar al item
+  let targetUrl = '/';
+  if (notifData.itemId) {
+    targetUrl = `/items/${notifData.itemId}`;
+  } else if (notifData.url) {
+    targetUrl = notifData.url;
+  }
+  
+  console.log(`[SW v${APP_VERSION}] Notificacion click - navegando a:`, targetUrl);
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      // Buscar ventana existente de la app
       for (const client of windowClients) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.focus();
-          client.navigate(url);
-          return;
+          // Enfocar y navegar al item
+          return client.focus().then(() => {
+            return client.navigate(targetUrl);
+          });
         }
       }
-      return clients.openWindow(url);
+      // Si no hay ventana abierta, abrir una nueva
+      return clients.openWindow(targetUrl);
     })
   );
 });
