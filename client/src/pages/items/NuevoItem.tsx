@@ -376,7 +376,7 @@ export default function NuevoItem() {
       clientId,
     };
     
-    console.log('[NuevoItem] Iniciando creación de ítem (offline-first)...', {
+    console.log('[NuevoItem] Iniciando creación de ítem...', {
       proyectoId: itemData.proyectoId,
       empresaId: itemData.empresaId,
       unidadId: itemData.unidadId,
@@ -387,52 +387,46 @@ export default function NuevoItem() {
       online: isOnline(),
     });
     
-    // ESTRATEGIA OFFLINE-FIRST: Siempre guardar localmente primero
-    // Esto garantiza que el ítem nunca se pierde
+    // ESTRATEGIA: Con internet crear directo, sin internet guardar offline
     try {
-      // Paso 1: Guardar localmente SIEMPRE (instantáneo)
-      await savePendingAction({
-        type: 'create_item',
-        data: itemData,
-      });
-      console.log('[NuevoItem] Ítem guardado localmente');
-      
-      // Paso 2: Intentar sincronizar inmediatamente si hay conexión
       if (isOnline()) {
+        // CON INTERNET: Crear directo en servidor para ver relación inmediatamente
         try {
           const result = await createItemMutation.mutateAsync(itemData);
-          console.log('[NuevoItem] Ítem sincronizado exitosamente:', result);
+          console.log('[NuevoItem] Ítem creado exitosamente:', result);
           toast.success("Ítem creado correctamente");
           setLocation(`/items/${result.id}`);
           return;
-        } catch (syncError: any) {
-          console.log('[NuevoItem] Error de sincronización, se sincronizará después:', syncError.message);
-          // No mostrar error, el ítem ya está guardado localmente
+        } catch (serverError: any) {
+          // Si falla el servidor, guardar offline como respaldo
+          console.log('[NuevoItem] Error de servidor, guardando offline:', serverError.message);
+          await savePendingAction({
+            type: 'create_item',
+            data: itemData,
+          });
+          toast.success("Ítem guardado. Se sincronizará cuando mejore la conexión.", {
+            duration: 4000,
+            icon: '📡',
+          });
+          setLocation("/items");
+          return;
         }
+      } else {
+        // SIN INTERNET: Guardar offline
+        await savePendingAction({
+          type: 'create_item',
+          data: itemData,
+        });
+        console.log('[NuevoItem] Ítem guardado offline');
+        toast.success("Ítem guardado. Se sincronizará automáticamente.", {
+          duration: 4000,
+          icon: '📡',
+        });
+        setLocation("/items");
       }
       
-      // Si no hay conexión o falló la sincronización, mostrar mensaje de guardado local
-      toast.success("Ítem guardado. Se sincronizará automáticamente.", {
-        duration: 4000,
-        icon: '📡',
-      });
-      
-      // Limpiar formulario y volver
-      setFotoAntes(null);
-      setFotoAntesMarcada(null);
-      setFormData({
-        residenteId: "",
-        empresaId: "",
-        nivelId: "",
-        unidadId: "",
-        especialidadId: "",
-        defectoId: "",
-        espacioId: "",
-      });
-      setLocation("/items");
-      
     } catch (error: any) {
-      console.error('[NuevoItem] Error crítico guardando localmente:', error);
+      console.error('[NuevoItem] Error crítico:', error);
       toast.error("Error al guardar. Intenta de nuevo.");
     } finally {
       setIsSubmitting(false);

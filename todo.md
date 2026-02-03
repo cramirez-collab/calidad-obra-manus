@@ -2464,3 +2464,9 @@
 - [x] No permite ingresar email ni contraseña - CORREGIDO
 - [x] Redirige automáticamente a OAuth de Manus - CORREGIDO
 - [x] Corregir para mostrar formulario de login primero - getLoginUrl() ahora retorna '/login'
+
+
+## Optimización Creación de Ítems (2 Febrero 2026)
+- [x] Cuando hay internet: crear ítem directo en servidor (sin demora)
+- [x] Solo usar modo offline cuando realmente no hay conexión
+- [x] Usuario necesita ver relación del ítem inmediatamente en sitio
