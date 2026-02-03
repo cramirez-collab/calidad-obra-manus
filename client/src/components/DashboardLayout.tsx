@@ -441,7 +441,7 @@ function DashboardLayoutContent({
             {/* OQC CENTRADO con versión e indicador de conexión */}
             <div className="flex-1 flex justify-center items-center gap-2">
               <span className="font-bold text-xl sm:text-2xl md:text-3xl tracking-wide hidden sm:block" style={{ color: '#002C63' }}>OQC</span>
-              <span className="text-[10px] font-mono bg-blue-100 px-1.5 py-0.5 rounded" style={{ color: '#002C63' }}>v38</span>
+              <span className="text-[10px] font-mono bg-blue-100 px-1.5 py-0.5 rounded" style={{ color: '#002C63' }}>v39</span>
               {/* Indicador de conexión */}
               <div className="flex items-center gap-1">
                 {online ? (
@@ -500,6 +500,49 @@ function DashboardLayoutContent({
                         </p>
                       </div>
                     </div>
+                    <DropdownMenuSeparator />
+                    {/* BOTÓN ACTUALIZAR VERSIÓN - FORZAR ÚLTIMA VERSIÓN */}
+                    <DropdownMenuItem
+                      onClick={async () => {
+                        try {
+                          console.log('[ACTUALIZAR] Forzando actualización a última versión...');
+                          // 1. Eliminar TODOS los Service Workers
+                          if ('serviceWorker' in navigator) {
+                            const registrations = await navigator.serviceWorker.getRegistrations();
+                            for (const reg of registrations) {
+                              await reg.unregister();
+                            }
+                            console.log('[ACTUALIZAR] Service Workers eliminados');
+                          }
+                          // 2. Eliminar TODOS los caches
+                          if ('caches' in window) {
+                            const cacheNames = await caches.keys();
+                            await Promise.all(cacheNames.map(name => caches.delete(name)));
+                            console.log('[ACTUALIZAR] Caches eliminados');
+                          }
+                          // 3. Limpiar localStorage (preservar proyecto y datos offline)
+                          const proyectoGuardado = localStorage.getItem('selectedProjectId');
+                          const offlineData = localStorage.getItem('oqc_offline_queue');
+                          localStorage.clear();
+                          sessionStorage.clear();
+                          if (proyectoGuardado) localStorage.setItem('selectedProjectId', proyectoGuardado);
+                          if (offlineData) localStorage.setItem('oqc_offline_queue', offlineData);
+                          // 4. Marcar versión como 0 para forzar actualización
+                          localStorage.setItem('oqc_app_version', '0');
+                          localStorage.setItem('oqc_installed_version', '0');
+                          console.log('[ACTUALIZAR] Versión reseteada, recargando...');
+                          // 5. Recargar con cache-bust agresivo
+                          window.location.href = window.location.origin + '?force_update=' + Date.now();
+                        } catch (e) {
+                          console.error('[ACTUALIZAR] Error:', e);
+                          window.location.href = window.location.origin + '?force_update=' + Date.now();
+                        }
+                      }}
+                      className="cursor-pointer text-blue-600 focus:text-blue-600 font-semibold"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      🔄 Actualizar Versión
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={async () => {
@@ -687,6 +730,47 @@ function DashboardLayoutContent({
                 >
                   <FileText className="h-4 w-4" />
                   <span>Términos y Privacidad</span>
+                </button>
+              </div>
+              
+              {/* BOTÓN ACTUALIZAR VERSIÓN - MÓVIL */}
+              <div className="border-t p-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      console.log('[ACTUALIZAR] Forzando actualización a última versión...');
+                      // 1. Eliminar TODOS los Service Workers
+                      if ('serviceWorker' in navigator) {
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        for (const reg of registrations) {
+                          await reg.unregister();
+                        }
+                      }
+                      // 2. Eliminar TODOS los caches
+                      if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        await Promise.all(cacheNames.map(name => caches.delete(name)));
+                      }
+                      // 3. Limpiar localStorage (preservar proyecto y datos offline)
+                      const proyectoGuardado = localStorage.getItem('selectedProjectId');
+                      const offlineData = localStorage.getItem('oqc_offline_queue');
+                      localStorage.clear();
+                      sessionStorage.clear();
+                      if (proyectoGuardado) localStorage.setItem('selectedProjectId', proyectoGuardado);
+                      if (offlineData) localStorage.setItem('oqc_offline_queue', offlineData);
+                      // 4. Marcar versión como 0 para forzar actualización
+                      localStorage.setItem('oqc_app_version', '0');
+                      localStorage.setItem('oqc_installed_version', '0');
+                      // 5. Recargar con cache-bust agresivo
+                      window.location.href = window.location.origin + '?force_update=' + Date.now();
+                    } catch (e) {
+                      window.location.href = window.location.origin + '?force_update=' + Date.now();
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-500/10 text-blue-700 border border-blue-500/30 hover:bg-blue-500/20 transition-colors text-sm font-semibold"
+                >
+                  <RefreshCw className="h-5 w-5" />
+                  <span>🔄 Actualizar Versión</span>
                 </button>
               </div>
               

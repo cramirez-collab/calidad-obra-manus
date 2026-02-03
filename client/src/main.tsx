@@ -20,7 +20,7 @@ import "./index.css";
 // - TODOS los dispositivos DEBEN tener v38
 // - NO HAY OPCIÓN de quedarse en versión antigua
 // ============================================
-const CURRENT_VERSION = 38;
+const CURRENT_VERSION = 39;
 
 // ============================================
 // FORZAR ACTUALIZACIÓN - SIN ESCAPE

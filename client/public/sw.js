@@ -8,7 +8,7 @@
 // - Notificaciones push: SIEMPRE ACTIVADAS
 // - TODOS los dispositivos DEBEN tener v38
 // ============================================
-const APP_VERSION = 38;
+const APP_VERSION = 39;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
