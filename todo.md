@@ -2812,3 +2812,17 @@
 - [x] Toggle para activar/desactivar inclusión de fotos
 - [x] Indicador de progreso durante generación
 - [x] Índice de ítems con fotos al inicio del PDF
+
+
+## v56 - Corrección Botón Eliminar en Barra de Selección Móvil
+
+### Bug Reportado
+- [x] Botón de eliminar (papelera) no visible en la barra de selección múltiple en móvil
+- [x] La barra muestra "X seleccionados", "Seleccionar página", "Deseleccionar" pero falta el botón eliminar
+- [x] Solo afecta a Superadmin y Admin que tienen permisos de eliminar
+
+### Solución Implementada
+- [x] Rediseño de la barra de selección en dos filas para móvil
+- [x] Botón Eliminar grande y prominente en la primera fila
+- [x] Botones de selección/deselección en segunda fila con flex-wrap
+- [x] Tamaño aumentado del botón eliminar (h-10, icono h-5 w-5)

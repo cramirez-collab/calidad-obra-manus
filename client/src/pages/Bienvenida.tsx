@@ -309,43 +309,48 @@ export default function Bienvenida() {
           )}
         </div>
 
-        {/* Barra de acciones de selección múltiple */}
+        {/* Barra de acciones de selección múltiple - REDISEÑADA PARA MÓVIL */}
         {selectionMode && isSuperadmin && (
-          <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg border border-red-200">
-            <span className="text-sm font-medium text-red-700">
-              {selectedItems.size} seleccionados
-            </span>
-            <div className="flex gap-2 ml-auto">
+          <div className="bg-red-50 rounded-lg border border-red-200 p-2 sm:p-3">
+            {/* Fila 1: Contador y Botón Eliminar (SIEMPRE VISIBLE) */}
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-sm font-bold text-red-700 whitespace-nowrap">
+                {selectedItems.size} seleccionados
+              </span>
+              {/* BOTÓN ELIMINAR - GRANDE Y VISIBLE EN MÓVIL */}
+              {selectedItems.size > 0 && (
+                <Button
+                  variant="destructive"
+                  size="default"
+                  onClick={() => setShowDeleteMultipleDialog(true)}
+                  className="h-10 px-4 text-sm font-bold shadow-lg"
+                >
+                  <Trash2 className="h-5 w-5 mr-2" />
+                  Eliminar ({selectedItems.size})
+                </Button>
+              )}
+            </div>
+            {/* Fila 2: Botones de selección */}
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={selectAllVisible}
-                className="text-xs"
+                className="text-xs flex-1 min-w-[100px]"
               >
                 <CheckSquare className="h-3 w-3 mr-1" />
                 Seleccionar página
               </Button>
               {selectedItems.size > 0 && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={deselectAll}
-                    className="text-xs"
-                  >
-                    <Square className="h-3 w-3 mr-1" />
-                    Deseleccionar
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setShowDeleteMultipleDialog(true)}
-                    className="text-xs"
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Eliminar ({selectedItems.size})
-                  </Button>
-                </>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={deselectAll}
+                  className="text-xs flex-1 min-w-[100px]"
+                >
+                  <Square className="h-3 w-3 mr-1" />
+                  Deseleccionar todo
+                </Button>
               )}
             </div>
           </div>

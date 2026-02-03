@@ -11,7 +11,7 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v55 - ObjetivaQC 🔴
+// 🔴 VERSIÓN v56 - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
@@ -21,9 +21,9 @@ import "./index.css";
 // RESOLUCIÓN FOTOS: 275px (BALANCE CALIDAD/VELOCIDAD)
 // TAMAÑO LÁPIZ: 2 (FINO PARA PRECISIÓN)
 // ESTADÍSTICAS FILTRADAS POR PROYECTO (OBLIGATORIO)
-// REPORTE FOTOGRÁFICO CON FOTOS ANTES/DESPUÉS (NUEVO)
+// BOTÓN ELIMINAR VISIBLE EN BARRA SELECCIÓN MÓVIL (FIX)
 // ============================================
-const CURRENT_VERSION = 55;
+const CURRENT_VERSION = 56;
 
 // ============================================
 // 🔴 ACTUALIZACIÓN FORZADA DE VERSIÓN 🔴
