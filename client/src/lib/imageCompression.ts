@@ -1,6 +1,11 @@
 /**
  * Utilidad para comprimir imágenes antes de guardarlas
  * Reduce el tamaño de las fotos para carga rápida y uso offline
+ * 
+ * COMPRESIÓN ADAPTATIVA:
+ * - Detecta velocidad de conexión del dispositivo
+ * - Ajusta calidad automáticamente (3G: 150KB, 4G: 250KB, WiFi: 400KB)
+ * - Mantiene legibilidad para control de calidad
  */
 
 interface CompressionOptions {
@@ -10,12 +15,89 @@ interface CompressionOptions {
   mimeType?: 'image/jpeg' | 'image/webp';
 }
 
+// Tipos de conexión y sus límites de tamaño
+type ConnectionType = 'slow-2g' | '2g' | '3g' | '4g' | 'wifi' | 'unknown';
+
+interface AdaptiveSettings {
+  maxSizeKB: number;
+  maxWidth: number;
+  quality: number;
+  connectionLabel: string;
+}
+
+// Configuración adaptativa por tipo de conexión
+const ADAPTIVE_SETTINGS: Record<ConnectionType, AdaptiveSettings> = {
+  'slow-2g': { maxSizeKB: 100, maxWidth: 800, quality: 0.5, connectionLabel: '2G Lento' },
+  '2g': { maxSizeKB: 120, maxWidth: 900, quality: 0.55, connectionLabel: '2G' },
+  '3g': { maxSizeKB: 150, maxWidth: 1000, quality: 0.6, connectionLabel: '3G' },
+  '4g': { maxSizeKB: 250, maxWidth: 1200, quality: 0.7, connectionLabel: '4G' },
+  'wifi': { maxSizeKB: 400, maxWidth: 1400, quality: 0.8, connectionLabel: 'WiFi' },
+  'unknown': { maxSizeKB: 200, maxWidth: 1100, quality: 0.65, connectionLabel: 'Desconocida' }
+};
+
 const DEFAULT_OPTIONS: CompressionOptions = {
-  maxWidth: 800,
-  maxHeight: 800,
-  quality: 0.7,
+  maxWidth: 1100,
+  maxHeight: 1100,
+  quality: 0.65,
   mimeType: 'image/jpeg'
 };
+
+/**
+ * Detecta el tipo de conexión del dispositivo
+ * Usa Network Information API si está disponible
+ */
+export function detectConnectionType(): ConnectionType {
+  // @ts-ignore - Network Information API no está en todos los tipos
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  
+  if (!connection) {
+    // Si no hay API, intentar estimar por tiempo de respuesta
+    return 'unknown';
+  }
+  
+  const effectiveType = connection.effectiveType as string;
+  
+  if (effectiveType === 'slow-2g') return 'slow-2g';
+  if (effectiveType === '2g') return '2g';
+  if (effectiveType === '3g') return '3g';
+  if (effectiveType === '4g') {
+    // Distinguir entre 4G y WiFi
+    const type = connection.type as string;
+    if (type === 'wifi' || type === 'ethernet') {
+      return 'wifi';
+    }
+    return '4g';
+  }
+  
+  // Fallback: verificar si es WiFi por tipo de conexión
+  const type = connection.type as string;
+  if (type === 'wifi' || type === 'ethernet') {
+    return 'wifi';
+  }
+  
+  return 'unknown';
+}
+
+/**
+ * Obtiene la configuración adaptativa según la conexión actual
+ */
+export function getAdaptiveSettings(): AdaptiveSettings {
+  const connectionType = detectConnectionType();
+  return ADAPTIVE_SETTINGS[connectionType];
+}
+
+/**
+ * Obtiene información de la conexión actual para mostrar al usuario
+ */
+export function getConnectionInfo(): { type: ConnectionType; label: string; maxSizeKB: number } {
+  const connectionType = detectConnectionType();
+  const settings = ADAPTIVE_SETTINGS[connectionType];
+  return {
+    type: connectionType,
+    label: settings.connectionLabel,
+    maxSizeKB: settings.maxSizeKB
+  };
+}
 
 /**
  * Comprime una imagen base64 a un tamaño más pequeño
@@ -111,6 +193,7 @@ export function getBase64SizeKB(base64: string): number {
 
 /**
  * Comprime imagen solo si excede el tamaño máximo
+ * Usa compresión progresiva para alcanzar el tamaño objetivo
  */
 export async function compressIfNeeded(
   base64: string,
@@ -134,4 +217,86 @@ export async function compressIfNeeded(
   }
   
   return compressed;
+}
+
+/**
+ * COMPRESIÓN ADAPTATIVA - Función principal
+ * Comprime la imagen según la velocidad de conexión detectada
+ * 
+ * @param base64 - Imagen en formato base64
+ * @returns Objeto con imagen comprimida e información de conexión
+ */
+export async function compressAdaptive(base64: string): Promise<{
+  compressed: string;
+  originalSizeKB: number;
+  compressedSizeKB: number;
+  connectionType: ConnectionType;
+  connectionLabel: string;
+  targetSizeKB: number;
+}> {
+  const originalSizeKB = getBase64SizeKB(base64);
+  const connectionType = detectConnectionType();
+  const settings = ADAPTIVE_SETTINGS[connectionType];
+  
+  // Si la imagen ya es pequeña, no comprimir
+  if (originalSizeKB <= settings.maxSizeKB) {
+    return {
+      compressed: base64,
+      originalSizeKB,
+      compressedSizeKB: originalSizeKB,
+      connectionType,
+      connectionLabel: settings.connectionLabel,
+      targetSizeKB: settings.maxSizeKB
+    };
+  }
+  
+  // Comprimir con configuración adaptativa
+  const options: CompressionOptions = {
+    maxWidth: settings.maxWidth,
+    maxHeight: settings.maxWidth,
+    quality: settings.quality,
+    mimeType: 'image/jpeg'
+  };
+  
+  let compressed = await compressImage(base64, options);
+  let compressedSizeKB = getBase64SizeKB(compressed);
+  
+  // Si aún es muy grande, reducir calidad progresivamente
+  let quality = settings.quality;
+  while (compressedSizeKB > settings.maxSizeKB && quality > 0.25) {
+    quality -= 0.05;
+    compressed = await compressImage(base64, { ...options, quality });
+    compressedSizeKB = getBase64SizeKB(compressed);
+  }
+  
+  // Si sigue siendo muy grande, reducir dimensiones
+  let maxWidth = settings.maxWidth;
+  while (compressedSizeKB > settings.maxSizeKB && maxWidth > 600) {
+    maxWidth -= 100;
+    compressed = await compressImage(base64, { 
+      ...options, 
+      maxWidth, 
+      maxHeight: maxWidth,
+      quality: 0.25 
+    });
+    compressedSizeKB = getBase64SizeKB(compressed);
+  }
+  
+  return {
+    compressed,
+    originalSizeKB,
+    compressedSizeKB,
+    connectionType,
+    connectionLabel: settings.connectionLabel,
+    targetSizeKB: settings.maxSizeKB
+  };
+}
+
+/**
+ * Comprime imagen de forma adaptativa y retorna solo el base64
+ * Versión simplificada para uso directo
+ */
+export async function compressAdaptiveSimple(base64: string): Promise<string> {
+  const result = await compressAdaptive(base64);
+  return result.compressed;
 }

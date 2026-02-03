@@ -1,7 +1,8 @@
 {
-  "name": "OQC",
-  "short_name": "OQC",
-  "description": "OQC - Sistema de gestión de calidad de obra",
+  "name": "ObjetivaQC",
+  "short_name": "ObjetivaQC",
+  "description": "ObjetivaQC - Sistema de control de calidad de obra",
+  "id": "com.objetivaqc.app",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

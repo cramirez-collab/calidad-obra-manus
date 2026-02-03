@@ -22,6 +22,7 @@ import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { compressAdaptive } from "@/lib/imageCompression";
 
 const statusLabels: Record<string, string> = {
   pendiente_foto_despues: "En Proceso - Pendiente Corrección",
@@ -121,13 +122,23 @@ export default function Seguimiento() {
     return `${day}-${month}-${year} ${hours}:${mins}`;
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Usar compresión adaptativa según velocidad de conexión
     const reader = new FileReader();
-    reader.onload = (event) => {
-      setFotoDespues(event.target?.result as string);
+    reader.onload = async (event) => {
+      try {
+        const base64 = event.target?.result as string;
+        const result = await compressAdaptive(base64);
+        console.log(`[Foto Después] Conexión: ${result.connectionLabel}, ${result.originalSizeKB}KB → ${result.compressedSizeKB}KB`);
+        setFotoDespues(result.compressed);
+      } catch (error) {
+        console.error('Error comprimiendo imagen:', error);
+        // Fallback: usar imagen original
+        setFotoDespues(event.target?.result as string);
+      }
     };
     reader.readAsDataURL(file);
   };

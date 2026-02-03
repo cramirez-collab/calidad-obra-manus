@@ -2530,3 +2530,17 @@
 - [x] Asegurar que los ítems se guarden correctamente - Fallback a offline si falla
 - [x] Reducir tamaño de fotos a 200KB para conexiones lentas
 - [x] Ocultar mensajes de reintentos al usuario
+
+
+## Mejoras v31 - Compresión Adaptativa y Dominio
+
+### Compresión Adaptativa de Fotos
+- [x] Detectar velocidad de conexión del dispositivo (Network Information API)
+- [x] Ajustar calidad de compresión según velocidad (3G: 150KB, 4G: 250KB, WiFi: 400KB)
+- [x] Mostrar indicador de calidad de conexión al usuario (badge en header)
+
+### Dominio objetivaqc.com
+- [x] Verificar configuración del dominio en Chrome
+- [x] Actualizar manifest.json con nombre "ObjetivaQC" y id único
+- [x] Actualizar meta tags y título en index.html a "ObjetivaQC"
+

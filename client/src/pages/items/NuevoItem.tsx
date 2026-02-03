@@ -32,6 +32,7 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
 import { savePendingAction, isOnline } from "@/lib/offlineStorage";
+import { compressAdaptive, getConnectionInfo } from "@/lib/imageCompression";
 
 export default function NuevoItem() {
   const [location, setLocation] = useLocation();
@@ -257,55 +258,32 @@ export default function NuevoItem() {
     }
   }, [residenteSeleccionado]);
 
-  // Función para comprimir imagen estilo WhatsApp (~350KB máximo)
-  const compressImage = useCallback((file: File): Promise<string> => {
+  // Estado para mostrar información de conexión
+  const [connectionInfo, setConnectionInfo] = useState<{ label: string; maxSizeKB: number } | null>(null);
+
+  // Función para comprimir imagen ADAPTATIVAMENTE según velocidad de conexión
+  // 3G: 150KB, 4G: 250KB, WiFi: 400KB
+  const compressImage = useCallback(async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            // Resolución estilo WhatsApp: 1280px máximo (buen balance calidad/tamaño)
-            const maxWidth = 1280;
-            const maxHeight = 1280;
-            let { width, height } = img;
-            
-            // Escalar manteniendo proporción
-            if (width > maxWidth || height > maxHeight) {
-              const ratio = Math.min(maxWidth / width, maxHeight / height);
-              width = Math.round(width * ratio);
-              height = Math.round(height * ratio);
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-              reject(new Error('No canvas context'));
-              return;
-            }
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            // Compresión progresiva para alcanzar ~200KB (más rápido en conexiones lentas)
-            const targetSizeKB = 200;
-            let quality = 0.7;
-            let result = canvas.toDataURL('image/jpeg', quality);
-            
-            // Reducir calidad hasta alcanzar el tamaño objetivo
-            while (result.length > targetSizeKB * 1024 * 1.37 && quality > 0.3) {
-              quality -= 0.1;
-              result = canvas.toDataURL('image/jpeg', quality);
-            }
-            
-            console.log(`[Compresión] Tamaño final: ${Math.round(result.length / 1024)}KB, Calidad: ${quality.toFixed(1)}`);
-            resolve(result);
-          } catch (err) {
-            reject(err);
-          }
-        };
-        img.onerror = () => reject(new Error('Image load failed'));
-        img.src = e.target?.result as string;
+      reader.onload = async (e) => {
+        try {
+          const base64 = e.target?.result as string;
+          
+          // Usar compresión adaptativa según velocidad de conexión
+          const result = await compressAdaptive(base64);
+          
+          // Actualizar info de conexión para mostrar al usuario
+          setConnectionInfo({
+            label: result.connectionLabel,
+            maxSizeKB: result.targetSizeKB
+          });
+          
+          console.log(`[Compresión Adaptativa] Conexión: ${result.connectionLabel}, Original: ${result.originalSizeKB}KB → Final: ${result.compressedSizeKB}KB (objetivo: ${result.targetSizeKB}KB)`);
+          resolve(result.compressed);
+        } catch (err) {
+          reject(err);
+        }
       };
       reader.onerror = () => reject(new Error('File read failed'));
       reader.readAsDataURL(file);
@@ -505,6 +483,12 @@ export default function NuevoItem() {
             </Button>
             <h1 className="text-lg font-bold text-[#002C63]">Nuevo Ítem</h1>
           </div>
+          {/* Indicador de conexión */}
+          {connectionInfo && (
+            <Badge variant="outline" className="text-xs">
+              📶 {connectionInfo.label} ({connectionInfo.maxSizeKB}KB)
+            </Badge>
+          )}
         </div>
         
         {/* Indicador de QR preasignado */}
