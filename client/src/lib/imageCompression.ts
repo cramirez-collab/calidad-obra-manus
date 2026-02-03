@@ -35,55 +35,61 @@ interface AdaptiveSettings {
 // - WiFi: 10-100+ Mbps = 1.25MB-12MB/s
 // ============================================
 
+// ============================================
+// CONFIGURACIÓN ULTRA-RÁPIDA v49
+// ============================================
+// Resolución máxima: 180px para velocidad máxima
+// Prioridad: VELOCIDAD sobre calidad
+// ============================================
 const ADAPTIVE_SETTINGS: Record<ConnectionType, AdaptiveSettings> = {
   'slow-2g': { 
-    maxSizeKB: 80,    // ~8 segundos en 2G lento
-    maxWidth: 800, 
-    quality: 0.45, 
-    connectionLabel: '2G Lento (80KB)',
-    estimatedUploadTime: '~8s'
+    maxSizeKB: 30,    // Ultra pequeño para 2G lento
+    maxWidth: 180, 
+    quality: 0.40, 
+    connectionLabel: '2G Lento (30KB)',
+    estimatedUploadTime: '<3s'
   },
   '2g': { 
-    maxSizeKB: 100,   // ~10 segundos en 2G
-    maxWidth: 900, 
-    quality: 0.50, 
-    connectionLabel: '2G (100KB)',
-    estimatedUploadTime: '~10s'
+    maxSizeKB: 40,    // Muy pequeño para 2G
+    maxWidth: 180, 
+    quality: 0.45, 
+    connectionLabel: '2G (40KB)',
+    estimatedUploadTime: '<4s'
   },
   '3g': { 
-    maxSizeKB: 150,   // ~3 segundos en 3G típico
-    maxWidth: 1000, 
-    quality: 0.60, 
-    connectionLabel: '3G (150KB)',
-    estimatedUploadTime: '~3s'
-  },
-  '4g': { 
-    maxSizeKB: 250,   // <1 segundo en 4G
-    maxWidth: 1200, 
-    quality: 0.70, 
-    connectionLabel: '4G (250KB)',
+    maxSizeKB: 50,    // Pequeño para 3G
+    maxWidth: 180, 
+    quality: 0.50, 
+    connectionLabel: '3G (50KB)',
     estimatedUploadTime: '<1s'
   },
+  '4g': { 
+    maxSizeKB: 60,    // Instantáneo en 4G
+    maxWidth: 180, 
+    quality: 0.55, 
+    connectionLabel: '4G (60KB)',
+    estimatedUploadTime: 'Instantáneo'
+  },
   'wifi': { 
-    maxSizeKB: 400,   // Instantáneo en WiFi
-    maxWidth: 1400, 
-    quality: 0.80, 
-    connectionLabel: 'WiFi (400KB)',
+    maxSizeKB: 80,    // Instantáneo en WiFi
+    maxWidth: 180, 
+    quality: 0.60, 
+    connectionLabel: 'WiFi (80KB)',
     estimatedUploadTime: 'Instantáneo'
   },
   'unknown': { 
-    maxSizeKB: 150,   // Por defecto como 3G
-    maxWidth: 1000, 
-    quality: 0.60, 
-    connectionLabel: 'Auto (150KB)',
-    estimatedUploadTime: '~3s'
+    maxSizeKB: 50,    // Por defecto como 3G
+    maxWidth: 180, 
+    quality: 0.50, 
+    connectionLabel: 'Auto (50KB)',
+    estimatedUploadTime: '<1s'
   }
 };
 
 const DEFAULT_OPTIONS: CompressionOptions = {
-  maxWidth: 1000,
-  maxHeight: 1000,
-  quality: 0.60,
+  maxWidth: 180,
+  maxHeight: 180,
+  quality: 0.50,
   mimeType: 'image/jpeg'
 };
 

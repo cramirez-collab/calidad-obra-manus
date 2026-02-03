@@ -21,14 +21,39 @@ interface CachedImage {
 }
 
 let db: IDBDatabase | null = null;
+let dbInitAttempts = 0;
+const MAX_DB_INIT_ATTEMPTS = 3;
 
 /**
  * Inicializa la base de datos IndexedDB
+ * Si hay errores, intenta recrear la base de datos
  */
 export async function initOfflineDB(): Promise<IDBDatabase> {
-  if (db) return db;
+  if (db && db.objectStoreNames.contains('pendingActions')) {
+    return db;
+  }
+  
+  // Si ya hay una DB pero le faltan stores, cerrarla y recrear
+  if (db) {
+    db.close();
+    db = null;
+  }
   
   return new Promise((resolve, reject) => {
+    dbInitAttempts++;
+    
+    // Si hemos fallado muchas veces, eliminar la DB y empezar de nuevo
+    if (dbInitAttempts > MAX_DB_INIT_ATTEMPTS) {
+      console.warn('[OfflineStorage] Demasiados intentos, eliminando DB corrupta...');
+      const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+      deleteRequest.onsuccess = () => {
+        dbInitAttempts = 0;
+        initOfflineDB().then(resolve).catch(reject);
+      };
+      deleteRequest.onerror = () => reject(deleteRequest.error);
+      return;
+    }
+    
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     
     request.onerror = () => reject(request.error);

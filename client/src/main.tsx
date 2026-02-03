@@ -11,15 +11,16 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v48 - ObjetivaQC 🔴
+// 🔴 VERSIÓN v49 - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
 // NOTIFICACIONES PUSH SOLO EN PRODUCCIÓN
 // ACTUALIZACIÓN ITERATIVA DE VERSIÓN (OBLIGATORIO)
 // CONSECUTIVO #N EN ETIQUETAS QR
+// RESOLUCIÓN FOTOS: 180px (ULTRA-RÁPIDO)
 // ============================================
-const CURRENT_VERSION = 48;
+const CURRENT_VERSION = 49;
 
 // ============================================
 // 🔴 ACTUALIZACIÓN FORZADA DE VERSIÓN 🔴

@@ -567,6 +567,12 @@ export default function GenerarQR() {
                     <p className="text-xs font-bold text-[#002C63] mt-2 break-all">
                       {item.codigo}
                     </p>
+                    {/* CONSECUTIVO INTERNO - VISIBLE EN VERDE GRANDE */}
+                    {item.consecutivo && (
+                      <p className="text-sm font-bold text-[#02B381] mt-1">
+                        #{item.consecutivo}
+                      </p>
+                    )}
                     {item.titulo && (
                       <p className="text-[10px] text-gray-600 truncate mt-1">
                         {item.titulo}
