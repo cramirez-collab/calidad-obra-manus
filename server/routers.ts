@@ -1243,7 +1243,7 @@ export const appRouter = router({
         return await db.getItemHistorial(input.itemId);
       }),
     
-    delete: superadminProcedure
+    delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         const item = await db.getItemById(input.id);
@@ -1253,8 +1253,8 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    // Eliminar múltiples ítems (solo superadmin)
-    deleteMultiple: superadminProcedure
+    // Eliminar múltiples ítems (admin o superadmin)
+    deleteMultiple: adminProcedure
       .input(z.object({ ids: z.array(z.number()) }))
       .mutation(async ({ input }) => {
         let deleted = 0;

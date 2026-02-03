@@ -2716,3 +2716,18 @@
 - [x] Corregir error IndexedDB: object store not found (manejo de errores mejorado)
 - [x] Agregar consecutivo interno (#N) a las etiquetas QR impresas (en verde grande)
 - [x] Actualizar a v48 (main.tsx, index.html, sw.js, DashboardLayout)
+
+
+## OBLIGATORIO v50 - Consecutivo DEBAJO de OBJETIVA
+
+- [ ] Forzar consecutivo #N DEBAJO de OBJETIVA en vista previa QR
+- [ ] Forzar consecutivo #N DEBAJO de OBJETIVA en etiquetas impresas
+- [ ] SIEMPRE visible, no condicional
+
+
+## v50 - Admin eliminar ítems + Botón móvil
+
+- [x] Permitir que Admin (no solo Superadmin) pueda eliminar ítems
+- [x] Hacer visible el botón de eliminar ítem en móvil (con texto "Eliminar")
+- [x] Consecutivo #N DEBAJO de OBJETIVA en QR (OBLIGATORIO)
+- [x] Actualizado a v50 (main.tsx, index.html, sw.js, DashboardLayout)

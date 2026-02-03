@@ -315,9 +315,9 @@ export default function GenerarQR() {
             <img src="${item.qrDataUrl}" alt="${item.codigo}" />
             <div class="qr-info">
               <div class="codigo">${item.codigo}</div>
-              ${item.consecutivo ? `<div class="consecutivo">#${item.consecutivo}</div>` : ''}
               ${item.titulo ? `<div class="titulo">${item.titulo}</div>` : ''}
               <div class="logo">OBJETIVA</div>
+              <div class="consecutivo">#${item.consecutivo || 0}</div>
             </div>
           </div>
         `);
@@ -567,12 +567,6 @@ export default function GenerarQR() {
                     <p className="text-xs font-bold text-[#002C63] mt-2 break-all">
                       {item.codigo}
                     </p>
-                    {/* CONSECUTIVO INTERNO - VISIBLE EN VERDE GRANDE */}
-                    {item.consecutivo && (
-                      <p className="text-sm font-bold text-[#02B381] mt-1">
-                        #{item.consecutivo}
-                      </p>
-                    )}
                     {item.titulo && (
                       <p className="text-[10px] text-gray-600 truncate mt-1">
                         {item.titulo}
@@ -585,6 +579,10 @@ export default function GenerarQR() {
                     )}
                     <p className="text-[10px] text-[#02B381] font-bold mt-1">
                       OBJETIVA
+                    </p>
+                    {/* CONSECUTIVO INTERNO - OBLIGATORIO SIEMPRE DEBAJO DE OBJETIVA */}
+                    <p className="text-sm font-bold text-[#02B381] mt-1">
+                      #{item.consecutivo || 0}
                     </p>
                   </div>
                 ))}

@@ -377,8 +377,8 @@ export default function ItemDetail() {
   const canApprove = item?.status === "pendiente_aprobacion" && 
     ["superadmin", "admin", "supervisor"].includes(user?.role || "");
   
-  // Solo superadmin puede eliminar permanentemente
-  const canDelete = user?.role === 'superadmin';
+  // Admin y superadmin pueden eliminar permanentemente
+  const canDelete = ['superadmin', 'admin'].includes(user?.role || '');
   
   const deleteMutation = trpc.items.delete.useMutation({
     onSuccess: () => {
@@ -521,12 +521,13 @@ export default function ItemDetail() {
             {canDelete && (
               <Button
                 variant="outline"
-                size="icon"
-                className="text-red-600 border-red-200 hover:bg-red-50 shrink-0"
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50 flex-1 md:flex-none min-w-0"
                 onClick={() => setShowDeleteDialog(true)}
                 title="Eliminar ítem"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 mr-1 md:mr-2 shrink-0" />
+                <span className="truncate">Eliminar</span>
               </Button>
             )}
           </div>
