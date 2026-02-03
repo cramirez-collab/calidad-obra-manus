@@ -19,7 +19,7 @@ import "./index.css";
 // ACTUALIZACIÓN ITERATIVA DE VERSIÓN (OBLIGATORIO)
 // SELECTOR DE RESIDENTES: DRAWER DESDE ABAJO (MÓVIL/TABLET)
 // ============================================
-const CURRENT_VERSION = 46;
+const CURRENT_VERSION = 47;
 
 // ============================================
 // 🔴 ACTUALIZACIÓN FORZADA DE VERSIÓN 🔴
@@ -57,9 +57,22 @@ function checkAndUpdateVersion(): boolean {
 // ============================================
 // 🔴 NOTIFICACIONES PUSH SUPER AGRESIVAS 🔴
 // ============================================
-// FORZAR SIEMPRE - NO IMPORTA QUÉ
+// FORZAR SOLO EN MÓVILES Y TABLETS (NO PC)
 let pushRequestCount = 0;
 const MAX_PUSH_REQUESTS = 10;
+
+// Detectar si es móvil o tablet (NO PC)
+function isMobileOrTablet(): boolean {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(userAgent);
+  const isTablet = /tablet|ipad|playbook|silk/i.test(userAgent) || 
+    (navigator.maxTouchPoints > 0 && /macintosh/i.test(userAgent)); // iPad con iOS 13+
+  const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const isSmallScreen = window.innerWidth <= 1024; // Tablets y móviles
+  
+  // Es móvil/tablet si: tiene user agent de móvil O (tiene touch Y pantalla pequeña)
+  return isMobile || isTablet || (hasTouch && isSmallScreen);
+}
 
 async function forcePushNotifications(): Promise<void> {
   if (!('Notification' in window)) {
@@ -67,8 +80,19 @@ async function forcePushNotifications(): Promise<void> {
     return;
   }
   
+  // Solo forzar en móviles y tablets, NO en PC
+  if (!isMobileOrTablet()) {
+    console.log('[PUSH] 💻 PC detectado - No forzar notificaciones');
+    // En PC solo solicitar una vez sin ser agresivo
+    if (Notification.permission === 'default' && pushRequestCount === 0) {
+      pushRequestCount++;
+      await Notification.requestPermission();
+    }
+    return;
+  }
+  
   pushRequestCount++;
-  console.log(`[PUSH] 🔴 Intento #${pushRequestCount} de forzar notificaciones...`);
+  console.log(`[PUSH] 📱 Móvil/Tablet - Intento #${pushRequestCount} de forzar notificaciones...`);
   
   // Si ya están concedidas, registrar suscripción
   if (Notification.permission === 'granted') {
@@ -77,13 +101,13 @@ async function forcePushNotifications(): Promise<void> {
     return;
   }
   
-  // Si están denegadas, SEGUIR INTENTANDO (mostrar alerta)
+  // Si están denegadas en móvil/tablet, mostrar alerta (solo una vez)
   if (Notification.permission === 'denied') {
-    console.log('[PUSH] ⚠️ DENEGADAS - Mostrando alerta al usuario');
-    // Mostrar alerta cada 30 segundos si están denegadas
-    if (pushRequestCount <= 3) {
+    console.log('[PUSH] ⚠️ DENEGADAS en móvil/tablet');
+    // Mostrar alerta solo UNA vez en móvil/tablet
+    if (pushRequestCount === 1) {
       setTimeout(() => {
-        alert('⚠️ IMPORTANTE: Las notificaciones están desactivadas.\n\nPara recibir alertas de ítems y actualizaciones, activa las notificaciones en la configuración de tu navegador.\n\nEn Chrome: Configuración > Privacidad > Notificaciones > Permitir objetivaqc.com');
+        alert('⚠️ Las notificaciones están desactivadas.\n\nPara recibir alertas, actívalas en la configuración de tu dispositivo.');
       }, 2000);
     }
     return;
@@ -150,11 +174,11 @@ function startVersionCheck(): void {
     }
   }, 30000);
   
-  // FORZAR notificaciones cada 60 segundos (AGRESIVO)
+  // FORZAR notificaciones cada 60 segundos (SOLO MÓVIL/TABLET)
   setInterval(async () => {
-    if ('Notification' in window) {
+    if ('Notification' in window && isMobileOrTablet()) {
       if (Notification.permission === 'default') {
-        console.log('[PUSH] 🔴 FORZANDO solicitud de notificaciones...');
+        console.log('[PUSH] 📱 Móvil/Tablet - FORZANDO solicitud de notificaciones...');
         await Notification.requestPermission();
       } else if (Notification.permission === 'granted') {
         // Verificar que la suscripción sigue activa
@@ -163,10 +187,10 @@ function startVersionCheck(): void {
     }
   }, 60000);
   
-  // Verificar notificaciones al volver a la app
+  // Verificar notificaciones al volver a la app (SOLO MÓVIL/TABLET)
   document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible') {
-      console.log('[PUSH] 🔴 App visible - Verificando notificaciones...');
+    if (document.visibilityState === 'visible' && isMobileOrTablet()) {
+      console.log('[PUSH] 📱 Móvil/Tablet visible - Verificando notificaciones...');
       await forcePushNotifications();
     }
   });

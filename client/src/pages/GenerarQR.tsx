@@ -94,7 +94,7 @@ export default function GenerarQR() {
           itemId,
           titulo: item.titulo,
           unidad: '',
-          consecutivo: item.id // Usar el ID como consecutivo interno
+          consecutivo: item.numeroInterno // Usar numeroInterno como consecutivo
         });
       }
 

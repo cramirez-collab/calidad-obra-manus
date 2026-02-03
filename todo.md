@@ -2690,3 +2690,22 @@
 - [x] El consecutivo ya crece de 1 en 1 (campo numeroInterno)
 - [x] Actualizado en: ItemDetail, ItemsList, Seguimiento
 
+
+
+## Bug v46 - Invalid hook call en TRPCProvider (CORREGIDO)
+
+- [x] Diagnosticar error de React hooks (cache de Vite corrupto)
+- [x] Limpiar cache de node_modules/.vite
+- [x] Reiniciar servidor de desarrollo
+- [x] Verificar que la app carga correctamente
+- [x] Residentes, empresas, especialidades cargan correctamente
+
+
+## Bug v46 - Consecutivo no visible en QR + Push solo móvil
+
+- [x] Mostrar número consecutivo interno junto al código QR
+- [x] Formato: OQC-XXXXX #N (N = numeroInterno) en verde Objetiva
+- [x] Aplicar en: Bienvenida, ItemsList, ItemDetail, Seguimiento, GenerarQR
+- [x] Notificaciones push forzadas SOLO en móviles y tablets (NO PC)
+- [x] Eliminar alerta molesta en PC
+- [x] Actualizado a v47

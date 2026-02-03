@@ -418,7 +418,7 @@ export default function Bienvenida() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-sm font-bold text-[#002C63]">
-                            {item.codigo}
+                            {item.codigo} <span className="text-[#02B381]">#{item.numeroInterno || '-'}</span>
                           </span>
                           <span className={`text-xs px-1.5 py-0.5 rounded ${config.bg} ${config.color}`}>
                             {config.label}
