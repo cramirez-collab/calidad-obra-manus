@@ -601,8 +601,7 @@ export default function NuevoItem() {
               <User className="h-3 w-3" />
               Asignación *
             </div>
-            
-            {/* Selector de Residente (obligatorio) */}
+                        {/* Selector de Residente (obligatorio) - Despliega hacia arriba en móvil */}
             <Select
               value={formData.residenteId}
               onValueChange={(value) => setFormData({ ...formData, residenteId: value, defectoId: "" })}
@@ -611,7 +610,7 @@ export default function NuevoItem() {
                 <User className="h-3 w-3 mr-1 text-gray-400" />
                 <SelectValue placeholder="Seleccionar Residente *" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent side="top" className="max-h-[300px] overflow-y-auto">
                 {residentesConEmpresa.map((residente) => (
                   <SelectItem key={`${residente.id}-${residente.empresaId}`} value={residente.id.toString()}>
                     <div className="flex items-center gap-2">

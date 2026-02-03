@@ -2612,3 +2612,14 @@
 - [x] WiFi: 400KB máximo, 1400px resolución (instantáneo)
 - [x] Mostrar indicador de calidad de conexión al usuario (label con KB)
 
+
+## Mejoras v42 - Selector de Residentes
+
+### Corrección selector de residentes en móvil/tablet
+- [x] Hacer que el dropdown de residentes se despliegue hacia arriba (side="top")
+- [x] Asegurar visibilidad completa en pantallas pequeñas (max-h-[300px])
+
+
+### QR con consecutivo interno
+- [x] Agregar consecutivo interno (#ID) en la impresión del código QR
+

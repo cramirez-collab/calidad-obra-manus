@@ -18,6 +18,7 @@ interface QRItem {
   itemId?: number;
   titulo?: string;
   unidad?: string;
+  consecutivo?: number; // Consecutivo interno del ítem
 }
 
 export default function GenerarQR() {
@@ -92,7 +93,8 @@ export default function GenerarQR() {
           qrDataUrl, 
           itemId,
           titulo: item.titulo,
-          unidad: ''
+          unidad: '',
+          consecutivo: item.id // Usar el ID como consecutivo interno
         });
       }
 
@@ -306,7 +308,7 @@ export default function GenerarQR() {
             <img src="${item.qrDataUrl}" alt="${item.codigo}" />
             <div class="qr-info">
               <div class="codigo">${item.codigo}</div>
-              ${item.titulo ? `<div class="titulo">${item.titulo}</div>` : ''}
+              ${item.consecutivo ? `<div class="titulo">#${item.consecutivo}${item.titulo ? ` - ${item.titulo}` : ''}</div>` : (item.titulo ? `<div class="titulo">${item.titulo}</div>` : '')}
               <div class="logo">OBJETIVA</div>
             </div>
           </div>
