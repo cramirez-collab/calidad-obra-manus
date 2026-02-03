@@ -132,21 +132,22 @@ export function NotificationBell() {
   
   return (
     <div className="relative" ref={panelRef}>
-      {/* Botón de campana */}
+      {/* Botón de campana - MÁS VISIBLE EN MÓVIL */}
       <Button
-        variant="ghost"
+        variant="outline"
         size="icon"
-        className="relative"
+        className="relative h-9 w-9 sm:h-10 sm:w-10 border-2 border-primary/30 bg-primary/5 hover:bg-primary/10"
         onClick={() => setIsOpen(!isOpen)}
+        title="Notificaciones Push"
       >
         {unreadCount > 0 ? (
-          <BellRing className="h-5 w-5 text-primary animate-pulse" />
+          <BellRing className="h-5 w-5 sm:h-6 sm:w-6 text-primary animate-pulse" />
         ) : (
-          <Bell className="h-5 w-5" />
+          <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
         )}
         {unreadCount > 0 && (
           <Badge 
-            className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-500"
+            className="absolute -top-1.5 -right-1.5 h-5 min-w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-500 border-2 border-white"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </Badge>

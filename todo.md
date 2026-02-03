@@ -2502,3 +2502,9 @@
 
 ## Ajuste v27 (3 Febrero 2026)
 - [x] Reducir intervalo de sincronización de 5 a 3 segundos
+
+
+## BUG: Notificaciones push no aparecen (3 Febrero 2026)
+- [x] Diagnosticar por qué no aparece - La campana se confundía con otros elementos
+- [x] Hacer campana más visible: botón más grande, borde distintivo, fondo resaltado
+- [x] Mover campana al inicio de las acciones del header para mayor visibilidad
