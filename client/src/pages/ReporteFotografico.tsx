@@ -226,22 +226,25 @@ export default function ReporteFotografico() {
         margin: { left: margin, right: margin },
         styles: { 
           fontSize: 8, 
-          cellPadding: 2,
+          cellPadding: 3,
           overflow: 'linebreak',
+          lineWidth: 0.1,
+          minCellHeight: 8,
         },
         headStyles: { 
           fillColor: AZUL_OBJETIVA as [number, number, number], 
           textColor: 255,
           fontStyle: 'bold',
+          minCellHeight: 10,
         },
         alternateRowStyles: { fillColor: [250, 250, 250] },
         columnStyles: {
-          0: { cellWidth: 22 },
-          1: { cellWidth: 45 },
+          0: { cellWidth: 24 },
+          1: { cellWidth: 42 },
           2: { cellWidth: 28 },
-          3: { cellWidth: 30 },
-          4: { cellWidth: 30 },
-          5: { cellWidth: 20 },
+          3: { cellWidth: 28 },
+          4: { cellWidth: 28 },
+          5: { cellWidth: 22 },
         },
       });
       

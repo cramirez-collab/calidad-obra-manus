@@ -455,10 +455,30 @@ export default function Bitacora() {
     autoTable(doc, {
       head: [["Fecha/Hora", "Usuario", "Rol", "Acción", "Categoría", "Detalles"]],
       body: tableData,
-      startY: 45,
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [0, 44, 99], textColor: 255 },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
+      startY: 48,
+      styles: { 
+        fontSize: 8, 
+        cellPadding: 3,
+        overflow: 'linebreak',
+        lineWidth: 0.1,
+        minCellHeight: 8,
+      },
+      headStyles: { 
+        fillColor: [0, 44, 99], 
+        textColor: 255,
+        fontStyle: 'bold',
+        minCellHeight: 10,
+      },
+      alternateRowStyles: { fillColor: [248, 248, 248] },
+      columnStyles: {
+        0: { cellWidth: 35 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 35 },
+        5: { cellWidth: 'auto' },
+      },
+      margin: { left: 14, right: 14 },
     });
 
     downloadPDFBestMethod(doc, `bitacora_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
@@ -516,21 +536,33 @@ export default function Bitacora() {
     autoTable(doc, {
       head: [["Usuario", "Rol", "Capturas", "Mensajes", "Acciones", "Semana", "Registro", "Ultima Actividad", "Capturo"]],
       body: tableData,
-      startY: 60,
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [0, 44, 99], textColor: 255 },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-      columnStyles: {
-        0: { cellWidth: 40 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 20, halign: 'center' },
-        3: { cellWidth: 20, halign: 'center' },
-        4: { cellWidth: 20, halign: 'center' },
-        5: { cellWidth: 35 },
-        6: { cellWidth: 25 },
-        7: { cellWidth: 35 },
-        8: { cellWidth: 18, halign: 'center' },
+      startY: 62,
+      styles: { 
+        fontSize: 8, 
+        cellPadding: 3,
+        overflow: 'linebreak',
+        lineWidth: 0.1,
+        minCellHeight: 8,
       },
+      headStyles: { 
+        fillColor: [0, 44, 99], 
+        textColor: 255,
+        fontStyle: 'bold',
+        minCellHeight: 10,
+      },
+      alternateRowStyles: { fillColor: [248, 248, 248] },
+      columnStyles: {
+        0: { cellWidth: 38 },
+        1: { cellWidth: 24 },
+        2: { cellWidth: 18, halign: 'center' },
+        3: { cellWidth: 18, halign: 'center' },
+        4: { cellWidth: 18, halign: 'center' },
+        5: { cellWidth: 32 },
+        6: { cellWidth: 24 },
+        7: { cellWidth: 34 },
+        8: { cellWidth: 16, halign: 'center' },
+      },
+      margin: { left: 14, right: 14 },
     });
 
     downloadPDFBestMethod(doc, `tiempos_actividad_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);

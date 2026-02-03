@@ -11,12 +11,12 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v42 - ObjetivaQC 🔴
+// 🔴 VERSIÓN v43 - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
 // ============================================
-const CURRENT_VERSION = 42;
+const CURRENT_VERSION = 43;
 
 // Función para verificar y actualizar versión
 function checkAndUpdateVersion(): boolean {

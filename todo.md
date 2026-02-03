@@ -2623,3 +2623,12 @@
 ### QR con consecutivo interno
 - [x] Agregar consecutivo interno (#ID) en la impresión del código QR
 
+
+## Mejoras v43 - Verificación de PDFs
+
+### Corrección de formato de PDFs
+- [x] Verificar que no se encimen renglones en Bitácora PDF (cellPadding: 3, minCellHeight: 8)
+- [x] Verificar que no se encimen letras en Tiempos PDF (overflow: linebreak, anchos ajustados)
+- [x] Verificar que no se encimen líneas en Reporte Fotográfico PDF (lineWidth: 0.1, cellPadding: 3)
+- [x] Asegurar espaciado correcto entre elementos (minCellHeight en headers: 10)
+
