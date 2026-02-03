@@ -1,9 +1,9 @@
 // ============================================
-// SISTEMA OFFLINE COMPLETO 24/7 - v19
+// SISTEMA OFFLINE COMPLETO 24/7 - v21
 // ============================================
 // Este Service Worker permite que la app funcione
 // completamente sin conexión a internet
-const APP_VERSION = 19;
+const APP_VERSION = 21;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
