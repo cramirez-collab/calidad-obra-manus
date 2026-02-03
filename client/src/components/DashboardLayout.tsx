@@ -58,6 +58,8 @@ import { useProject } from "@/contexts/ProjectContext";
 import { trpc } from "@/lib/trpc";
 import { TermsModal } from "./TermsModal";
 import { useSyncManager } from "@/hooks/useSyncManager";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { Bell as BellIcon, BellRing } from "lucide-react";
 
 // Tipo para items de menú
 type MenuItem = {
@@ -225,6 +227,9 @@ function DashboardLayoutContent({
   
   // Sincronización offline
   const { pendingCount, isSyncing, online } = useSyncManager();
+  
+  // Notificaciones push
+  const { isSubscribed: pushSubscribed, isSupported: pushSupported, subscribe: subscribePush, permission: pushPermission } = usePushNotifications();
   
   const menuItems = getMenuItems(user?.role || 'residente', proyectoActual);
 
@@ -436,7 +441,7 @@ function DashboardLayoutContent({
             {/* OQC CENTRADO con versión e indicador de conexión */}
             <div className="flex-1 flex justify-center items-center gap-2">
               <span className="font-bold text-base sm:text-lg md:text-xl text-primary tracking-wide hidden sm:block">OQC</span>
-              <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded">v28</span>
+              <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded">v29</span>
               {/* Indicador de conexión */}
               <div className="flex items-center gap-1">
                 {online ? (
@@ -630,6 +635,49 @@ function DashboardLayoutContent({
                   );
                 })}
               </nav>
+
+              {/* Botón de Notificaciones Push */}
+              <div className="border-t p-2">
+                <button
+                  onClick={async () => {
+                    if (!pushSupported) {
+                      alert('Tu navegador no soporta notificaciones push. Usa Chrome o Safari.');
+                      return;
+                    }
+                    if (pushPermission === 'denied') {
+                      alert('Las notificaciones están bloqueadas. Ve a Configuración del navegador → Sitios → objetivaoqc.cc → Notificaciones → Permitir');
+                      return;
+                    }
+                    if (pushSubscribed) {
+                      alert('¡Las notificaciones push ya están activadas!');
+                      return;
+                    }
+                    const success = await subscribePush();
+                    if (success) {
+                      alert('¡Notificaciones push activadas! Recibirás alertas de ítems urgentes.');
+                    } else {
+                      alert('No se pudieron activar las notificaciones. Inténtalo de nuevo.');
+                    }
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
+                    pushSubscribed 
+                      ? 'bg-green-500/10 text-green-700 border border-green-500/30' 
+                      : 'bg-orange-500/10 text-orange-700 border border-orange-500/30 hover:bg-orange-500/20'
+                  }`}
+                >
+                  {pushSubscribed ? (
+                    <>
+                      <BellRing className="h-5 w-5" />
+                      <span>✅ Notificaciones Activadas</span>
+                    </>
+                  ) : (
+                    <>
+                      <BellIcon className="h-5 w-5" />
+                      <span>🔔 Activar Notificaciones Push</span>
+                    </>
+                  )}
+                </button>
+              </div>
 
               {/* Link a Términos y Privacidad */}
               <div className="border-t p-2">

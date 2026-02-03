@@ -2513,3 +2513,9 @@
 ## BUG CRÍTICO: App se queda ciclada al abrirse (3 Febrero 2026)
 - [x] Diagnosticar por qué la app se queda ciclada - Conflicto de versiones entre index.html (28) y main.tsx (18)
 - [x] Corregir el bug de ciclo infinito - Sincronizar CURRENT_VERSION a 28 en main.tsx
+
+
+## Mover activación de notificaciones push (3 Febrero 2026)
+- [x] Mover activación de notificaciones push al menú hamburguesa móvil
+- [x] Botón grande y claro con estado visible (verde=activo, naranja=inactivo)
+- [x] Instrucciones claras cuando el permiso está bloqueado

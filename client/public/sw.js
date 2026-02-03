@@ -1,13 +1,13 @@
 // ============================================
-// SISTEMA OFFLINE COMPLETO 24/7 - v28
+// SISTEMA OFFLINE COMPLETO 24/7 - v29
 // ============================================
 // Este Service Worker permite que la app funcione
 // completamente sin conexión a internet
 // PROTEGE DATOS OFFLINE - No borra IndexedDB si hay pendientes
 // Sincronización cada 3 segundos para mayor velocidad
 // Flujo QR preasignado: escanear → crear ítem
-// Campana de notificaciones más visible en móvil
-const APP_VERSION = 28;
+// Botón de notificaciones push en menú hamburguesa
+const APP_VERSION = 29;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
