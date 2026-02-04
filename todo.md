@@ -2896,3 +2896,19 @@
 - [x] Verificación al volver a la app (visibilitychange)
 - [x] Toast azul con botón "ACTUALIZAR AHORA" cuando hay nueva versión
 - [x] Botón ejecuta actualización nuclear automáticamente
+
+
+## v62 - Numeración de Versión Profesional y Badge Verde
+
+### Mejoras Solicitadas
+- [x] Cambiar numeración de versión: dividir entre 30 (v62 → v2.07)
+- [x] Badge verde Objetiva en menú hamburguesa cuando hay nueva versión
+- [x] Actualizar todos los lugares donde se muestra la versión
+
+### Implementación
+- [x] Función formatVersion() que divide entre 30 y muestra 2 decimales
+- [x] Toasts actualizados con versión profesional (v2.07 en lugar de v62)
+- [x] Badge verde animado con ping en botón hamburguesa
+- [x] Botón de actualizar cambia a verde esmeralda cuando hay nueva versión
+- [x] Muestra versión actual en menú móvil con indicador de nueva versión
+- [x] Detección automática cada 30 segundos y al cambiar localStorage

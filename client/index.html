@@ -86,7 +86,7 @@
       data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
     
     <!-- ============================================ -->
-    <!-- SISTEMA DE ACTUALIZACIÓN NUCLEAR v61 -->
+    <!-- SISTEMA DE ACTUALIZACIÓN NUCLEAR v62 (v2.07) -->
     <!-- MANDATORIO: objetivaqc.com -->
     <!-- TODOS los dispositivos DEBEN tener v54 -->
     <!-- RESOLUCIÓN FOTOS: 275px BALANCE CALIDAD/VELOCIDAD -->
@@ -96,7 +96,9 @@
     <!-- ============================================ -->
     <script>
       (function() {
-        const REQUIRED_VERSION = 61;
+        const REQUIRED_VERSION = 62;
+        // Formato de versión profesional (dividir entre 30)
+        const formatVersion = (v) => `v${(v / 30).toFixed(2)}`;
         const VERSION_KEY = 'oqc_app_version';
         const FORCE_UPDATE_KEY = 'oqc_force_update';
         const PENDING_DATA_KEY = 'oqc_has_pending';

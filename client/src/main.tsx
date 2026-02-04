@@ -11,7 +11,7 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v61 - ObjetivaQC 🔴
+// 🔴 VERSIÓN v62 (v2.07) - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
@@ -21,9 +21,25 @@ import "./index.css";
 // RESOLUCIÓN FOTOS: 275px (BALANCE CALIDAD/VELOCIDAD)
 // TAMAÑO LÁPIZ: 2 (FINO PARA PRECISIÓN)
 // ESTADÍSTICAS FILTRADAS POR PROYECTO (OBLIGATORIO)
-// TOAST DE VERSIÓN ACTUALIZADA + AUTO-DETECCIÓN
+// NUMERACIÓN PROFESIONAL: DIVIDIR ENTRE 30 (v62 → v2.07)
+// BADGE VERDE OBJETIVA EN MENÚ HAMBURGUESA
 // ============================================
-const CURRENT_VERSION = 61;
+const CURRENT_VERSION = 62;
+
+// ============================================
+// 🎯 FORMATO DE VERSIÓN PROFESIONAL 🎯
+// ============================================
+// Dividir entre 30 para mostrar versión más profesional
+// v62 interno → v2.07 mostrado al usuario
+function formatVersion(internalVersion: number): string {
+  const divided = internalVersion / 30;
+  return `v${divided.toFixed(2)}`;
+}
+
+// Exponer globalmente para uso en otros componentes
+(window as any).OQC_VERSION = CURRENT_VERSION;
+(window as any).OQC_FORMAT_VERSION = formatVersion;
+(window as any).OQC_DISPLAY_VERSION = formatVersion(CURRENT_VERSION);
 
 // ============================================
 // 🔔 SISTEMA DE NOTIFICACIÓN DE VERSIÓN 🔔
@@ -67,7 +83,7 @@ function showVersionUpdatedToast(): void {
           ">
             <span style="font-size: 28px;">🚀</span>
             <div>
-              <div style="font-weight: 700; font-size: 16px;">¡Actualizado a v${CURRENT_VERSION}!</div>
+              <div style="font-weight: 700; font-size: 16px;">¡Actualizado a ${formatVersion(CURRENT_VERSION)}!</div>
               <div style="font-size: 13px; opacity: 0.9;">Disfrutas de las últimas mejoras</div>
             </div>
           </div>
@@ -154,8 +170,8 @@ function showNewVersionAvailableToast(newVersion: number): void {
       <div style="display: flex; align-items: center; gap: 12px;">
         <span style="font-size: 28px;">🆕</span>
         <div>
-          <div style="font-weight: 700; font-size: 16px;">¡Nueva versión v${newVersion} disponible!</div>
-          <div style="font-size: 13px; opacity: 0.9;">Tienes v${CURRENT_VERSION} instalada</div>
+          <div style="font-weight: 700; font-size: 16px;">¡Nueva versión ${formatVersion(newVersion)} disponible!</div>
+          <div style="font-size: 13px; opacity: 0.9;">Tienes ${formatVersion(CURRENT_VERSION)} instalada</div>
         </div>
       </div>
       <button id="update-now-btn" style="
