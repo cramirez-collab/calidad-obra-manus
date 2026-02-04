@@ -90,6 +90,9 @@ export default function Bitacora() {
   
   // Queries
   const { data: usuarios } = trpc.users.list.useQuery();
+  const { data: proyectos } = trpc.proyectos.list.useQuery();
+  // Bitacora es global, no tiene proyecto específico, pero mostramos el contexto
+  const proyectoNombre = 'Sistema OQC';
   
   // Queries para sección Tiempos
   const { data: estadisticasTiempos, isLoading: loadingTiempos } = trpc.bitacora.estadisticasTiempos.useQuery(
@@ -422,7 +425,7 @@ export default function Bitacora() {
     // Header
     doc.setFontSize(18);
     doc.setTextColor(0, 44, 99); // #002C63
-    doc.text("Bitácora de Auditoría", 14, 20);
+    doc.text(`Bitacora de Auditoria - ${proyectoNombre}`, 14, 20);
     
     doc.setFontSize(10);
     doc.setTextColor(100);

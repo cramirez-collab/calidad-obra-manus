@@ -33,6 +33,8 @@ export default function DashboardResidente() {
     selectedProjectId ? { proyectoId: selectedProjectId } : {},
     { enabled: !!selectedProjectId }
   );
+  const { data: proyectos } = trpc.proyectos.list.useQuery();
+  const proyectoNombre = proyectos?.find(p => p.id === selectedProjectId)?.nombre || 'Proyecto';
 
   const formatFecha = (fecha: Date | string) => {
     const d = new Date(fecha);
@@ -96,7 +98,7 @@ export default function DashboardResidente() {
                 doc.text('OBJETIVA', 15, 16);
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
-                doc.text('Dashboard Residente', pageWidth - 15, 12, { align: 'right' });
+                doc.text(`Residente - ${proyectoNombre}`, pageWidth - 15, 12, { align: 'right' });
                 doc.text(new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }), pageWidth - 15, 18, { align: 'right' });
                 
                 let yPos = 35;
@@ -127,7 +129,7 @@ export default function DashboardResidente() {
                 doc.setTextColor(128, 128, 128);
                 doc.text('OQC - Control de Calidad de Obra | Pagina 1 de 1', pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
                 
-                downloadPDFBestMethod(doc, `dashboard_residente_${new Date().toISOString().split('T')[0]}.pdf`);
+                downloadPDFBestMethod(doc, `residente_${proyectoNombre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
               }}
               title="Exportar PDF"
             >

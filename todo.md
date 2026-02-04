@@ -3065,3 +3065,13 @@
 - [x] Asegurar que todos los PDFs se descarguen como archivos .pdf reales
 - [x] Probar descargas en móvil y escritorio (downloadPDFBestMethod detecta dispositivo)
 
+
+## v72 - Nombre del proyecto en todos los reportes PDF
+
+- [x] Estadísticas: Agregar nombre del proyecto en encabezado y nombre de archivo
+- [x] KPIs: Agregar nombre del proyecto en encabezado y nombre de archivo
+- [x] Dashboard Residente: Agregar nombre del proyecto en encabezado y nombre de archivo
+- [x] Bitácora: Actualizado con "Sistema OQC" (es global, no por proyecto)
+- [x] Reporte Fotográfico: Ya incluía nombre del proyecto (verificado)
+- [x] Stacking: Ya incluía nombre del proyecto (verificado)
+

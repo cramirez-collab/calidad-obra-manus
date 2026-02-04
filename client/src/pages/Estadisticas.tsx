@@ -115,6 +115,8 @@ export default function Estadisticas() {
   );
   const { data: defectos } = trpc.defectos.list.useQuery();
   const { data: usuarios } = trpc.users.list.useQuery();
+  const { data: proyectos } = trpc.proyectos.list.useQuery();
+  const proyectoNombre = proyectos?.find(p => p.id === selectedProjectId)?.nombre || 'Proyecto';
 
   // Obtener niveles únicos de las unidades
   const niveles = useMemo(() => {
@@ -293,7 +295,7 @@ export default function Estadisticas() {
                 doc.text('OBJETIVA', 15, 16);
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
-                doc.text('Reporte de Estadisticas', pageWidth - 15, 12, { align: 'right' });
+                doc.text(`Estadisticas - ${proyectoNombre}`, pageWidth - 15, 12, { align: 'right' });
                 doc.text(new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }), pageWidth - 15, 18, { align: 'right' });
                 
                 let yPos = 35;
@@ -357,7 +359,7 @@ export default function Estadisticas() {
                 }
                 
                 // Descargar como archivo PDF real
-                downloadPDFBestMethod(doc, `estadisticas_${new Date().toISOString().split('T')[0]}.pdf`);
+                downloadPDFBestMethod(doc, `estadisticas_${proyectoNombre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
               }}
               className="text-red-600 border-red-200 hover:bg-red-50"
             >
