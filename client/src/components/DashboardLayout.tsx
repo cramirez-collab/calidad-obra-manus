@@ -252,28 +252,22 @@ function DashboardLayoutContent({
     // Si tiene hijos (submenú como Configuración)
     if (item.children) {
       return (
-        <DropdownMenu open={configOpen} onOpenChange={setConfigOpen}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={`
-                    flex items-center justify-center h-10 w-10 rounded-lg transition-all
-                    ${isActive 
-                      ? "bg-primary text-white shadow-md" 
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                    }
-                  `}
-                >
-                  <item.icon className="h-5 w-5" />
-                </button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="font-medium">
-              {item.label}
-            </TooltipContent>
-          </Tooltip>
-          <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenu open={configOpen} onOpenChange={setConfigOpen} modal={false}>
+          <DropdownMenuTrigger asChild>
+            <button
+              className={`
+                flex items-center justify-center h-10 w-10 rounded-lg transition-all
+                ${isActive 
+                  ? "bg-primary text-white shadow-md" 
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                }
+              `}
+              title={item.label}
+            >
+              <item.icon className="h-5 w-5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48" onInteractOutside={(e) => e.preventDefault()}>
             {item.children.map(subItem => {
               const isSubActive = location.startsWith(subItem.path);
               return (

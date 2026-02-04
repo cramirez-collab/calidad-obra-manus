@@ -2837,3 +2837,18 @@
 ### Solución Implementada
 - [x] Agregado enlace "Ajustes" (/configuracion) como primer ítem del submenú de Configuración
 - [x] Ahora accesible desde el menú hamburguesa → Configuración → Ajustes
+
+
+## v58 - Submenú Configuración se Cierra Inmediatamente
+
+### Bug Reportado
+- [x] El submenú de Configuración se abre y cierra en menos de 1 segundo
+- [x] No da tiempo para seleccionar Empresas, Unidades, Especialidades, Usuarios
+- [x] Debe permanecer abierto hasta que el usuario lo cierre o seleccione una opción
+- [x] Afecta móvil, tablet y PC
+
+### Solución Implementada
+- [x] Eliminado conflicto entre Tooltip y DropdownMenu
+- [x] Agregado modal={false} para evitar cierre automático
+- [x] Agregado onInteractOutside para prevenir cierre al hacer clic fuera
+- [x] El submenú ahora permanece abierto hasta seleccionar una opción
