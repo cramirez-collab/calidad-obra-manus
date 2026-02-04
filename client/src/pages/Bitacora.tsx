@@ -54,9 +54,13 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { downloadPDFBestMethod } from "@/lib/pdfDownload";
+import { 
+  crearPDFUnificado, 
+  agregarSeccion, 
+  agregarTablaUnificada, 
+  descargarPDFUnificado,
+  COLORES 
+} from "@/lib/pdfUnificado";
 
 const ITEMS_PER_PAGE = 50;
 
@@ -420,32 +424,18 @@ export default function Bitacora() {
       return;
     }
 
-    const doc = new jsPDF({ orientation: 'landscape' });
+    const doc = crearPDFUnificado({
+      titulo: 'Bitacora de Auditoria',
+      proyectoNombre,
+      orientation: 'landscape'
+    });
     
-    // Header
-    doc.setFontSize(18);
-    doc.setTextColor(0, 44, 99); // #002C63
-    doc.text(`Bitacora de Auditoria - ${proyectoNombre}`, 14, 20);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generado: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, 28);
-    doc.text(`Total de registros: ${auditoria.length}`, 14, 34);
+    let yPos = 35;
+    doc.setFontSize(9);
+    doc.setTextColor(...COLORES.GRIS);
+    doc.text(`Total de registros: ${auditoria.length}`, 15, yPos);
+    yPos += 8;
 
-    // Filtros aplicados
-    let filtrosTexto = "Filtros: ";
-    if (filtroUsuario) {
-      const usuario = usuarios?.find((u: any) => u.id === parseInt(filtroUsuario));
-      filtrosTexto += `Usuario: ${usuario?.name || filtroUsuario}, `;
-    }
-    if (filtroCategoria) filtrosTexto += `Categoría: ${getCategoriaLabel(filtroCategoria)}, `;
-    if (fechaDesde) filtrosTexto += `Desde: ${fechaDesde}, `;
-    if (fechaHasta) filtrosTexto += `Hasta: ${fechaHasta}, `;
-    if (filtrosTexto !== "Filtros: ") {
-      doc.text(filtrosTexto.slice(0, -2), 14, 40);
-    }
-
-    // Tabla
     const tableData = auditoria.map((a: any) => [
       format(new Date(a.createdAt), "dd/MM/yyyy HH:mm"),
       a.usuario?.name || "-",
@@ -455,24 +445,7 @@ export default function Bitacora() {
       a.detalles?.substring(0, 50) || "-",
     ]);
 
-    autoTable(doc, {
-      head: [["Fecha/Hora", "Usuario", "Rol", "Acción", "Categoría", "Detalles"]],
-      body: tableData,
-      startY: 48,
-      styles: { 
-        fontSize: 8, 
-        cellPadding: 3,
-        overflow: 'linebreak',
-        lineWidth: 0.1,
-        minCellHeight: 8,
-      },
-      headStyles: { 
-        fillColor: [0, 44, 99], 
-        textColor: 255,
-        fontStyle: 'bold',
-        minCellHeight: 10,
-      },
-      alternateRowStyles: { fillColor: [248, 248, 248] },
+    agregarTablaUnificada(doc, ["Fecha/Hora", "Usuario", "Rol", "Accion", "Categoria", "Detalles"], tableData, yPos, {
       columnStyles: {
         0: { cellWidth: 35 },
         1: { cellWidth: 40 },
@@ -480,12 +453,11 @@ export default function Bitacora() {
         3: { cellWidth: 30 },
         4: { cellWidth: 35 },
         5: { cellWidth: 'auto' },
-      },
-      margin: { left: 14, right: 14 },
+      }
     });
 
-    downloadPDFBestMethod(doc, `bitacora_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
-    toast.success("PDF descargado - ábrelo con Acrobat Reader");
+    descargarPDFUnificado(doc, 'bitacora', proyectoNombre);
+    toast.success("PDF descargado - abrelo con Acrobat Reader");
   };
 
   // Exportar Tiempos a PDF
@@ -495,81 +467,52 @@ export default function Bitacora() {
       return;
     }
 
-    const doc = new jsPDF({ orientation: 'landscape' });
+    const doc = crearPDFUnificado({
+      titulo: 'Tiempos y Actividad',
+      proyectoNombre,
+      orientation: 'landscape'
+    });
     
-    // Header con logo
-    doc.setFontSize(18);
-    doc.setTextColor(0, 44, 99); // #002C63
-    doc.text("Reporte de Tiempos y Actividad", 14, 20);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generado: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, 28);
+    let yPos = 35;
     
     // Resumen semanal
     if (resumenSemanal?.resumen) {
-      doc.setFontSize(12);
-      doc.setTextColor(0, 44, 99);
-      doc.text("Resumen Semanal", 14, 38);
-      
+      yPos = agregarSeccion(doc, 'Resumen Semanal', yPos);
       doc.setFontSize(9);
-      doc.setTextColor(60);
+      doc.setTextColor(...COLORES.GRIS);
       const resumen = resumenSemanal.resumen;
-      doc.text(`Acciones Totales: ${resumen.totalAcciones || 0}`, 14, 46);
-      doc.text(`Items Creados: ${resumen.itemsCreados || 0}`, 80, 46);
-      doc.text(`Mensajes: ${resumen.mensajesEnviados || 0}`, 140, 46);
-      doc.text(`Usuarios Activos: ${resumen.usuariosActivos || 0}`, 14, 52);
-      doc.text(`Usuarios que Capturaron: ${resumen.usuariosQueCapturaron || 0}`, 80, 52);
-      doc.text(`Usuarios que Enviaron Mensajes: ${resumen.usuariosQueEnviaronMensajes || 0}`, 160, 52);
+      doc.text(`Acciones: ${resumen.totalAcciones || 0} | Items: ${resumen.itemsCreados || 0} | Mensajes: ${resumen.mensajesEnviados || 0} | Usuarios Activos: ${resumen.usuariosActivos || 0}`, 15, yPos);
+      yPos += 10;
     }
 
-    // Tabla de actividad por usuario
     const tableData = estadisticasTiempos.map((est: any) => [
       est.usuarioNombre || "-",
       est.usuarioRol || "-",
       est.totalCapturas?.toString() || "0",
       est.totalMensajesEnviados?.toString() || "0",
       est.totalAcciones?.toString() || "0",
-      `${est.capturasSemana || 0} cap / ${est.lecturasSemana || 0} lec`,
+      `${est.capturasSemana || 0}/${est.lecturasSemana || 0}`,
       est.fechaRegistro ? format(new Date(est.fechaRegistro), "dd/MM/yy") : "-",
       est.ultimaActividad ? format(new Date(est.ultimaActividad), "dd/MM/yy HH:mm") : "-",
       est.haCapturado ? "Si" : "No",
     ]);
 
-    autoTable(doc, {
-      head: [["Usuario", "Rol", "Capturas", "Mensajes", "Acciones", "Semana", "Registro", "Ultima Actividad", "Capturo"]],
-      body: tableData,
-      startY: 62,
-      styles: { 
-        fontSize: 8, 
-        cellPadding: 3,
-        overflow: 'linebreak',
-        lineWidth: 0.1,
-        minCellHeight: 8,
-      },
-      headStyles: { 
-        fillColor: [0, 44, 99], 
-        textColor: 255,
-        fontStyle: 'bold',
-        minCellHeight: 10,
-      },
-      alternateRowStyles: { fillColor: [248, 248, 248] },
+    agregarTablaUnificada(doc, ["Usuario", "Rol", "Capturas", "Mensajes", "Acciones", "Semana", "Registro", "Ultima Act.", "Capturo"], tableData, yPos, {
       columnStyles: {
         0: { cellWidth: 38 },
         1: { cellWidth: 24 },
-        2: { cellWidth: 18, halign: 'center' },
-        3: { cellWidth: 18, halign: 'center' },
-        4: { cellWidth: 18, halign: 'center' },
-        5: { cellWidth: 32 },
+        2: { cellWidth: 18 },
+        3: { cellWidth: 18 },
+        4: { cellWidth: 18 },
+        5: { cellWidth: 28 },
         6: { cellWidth: 24 },
         7: { cellWidth: 34 },
-        8: { cellWidth: 16, halign: 'center' },
-      },
-      margin: { left: 14, right: 14 },
+        8: { cellWidth: 16 },
+      }
     });
 
-    downloadPDFBestMethod(doc, `tiempos_actividad_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`);
-    toast.success("PDF descargado - ábrelo con Acrobat Reader");
+    descargarPDFUnificado(doc, 'tiempos_actividad', proyectoNombre);
+    toast.success("PDF descargado - abrelo con Acrobat Reader");
   };
 
   // Limpiar filtros

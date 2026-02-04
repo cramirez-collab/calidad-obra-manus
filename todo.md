@@ -3075,3 +3075,17 @@
 - [x] Reporte Fotográfico: Ya incluía nombre del proyecto (verificado)
 - [x] Stacking: Ya incluía nombre del proyecto (verificado)
 
+
+## v73 - Unificación de Reportes PDF e Iconos
+
+### Formato Unificado de PDFs
+- [x] Crear plantilla única con header profesional (pdfUnificado.ts)
+- [x] Aplicar mismo formato a Estadísticas
+- [x] Aplicar mismo formato a KPIs
+- [x] Aplicar mismo formato a Dashboard Residente
+- [x] Aplicar mismo formato a Bitácora
+- [x] Reporte Fotográfico y Stacking ya usan formato consistente
+
+### Iconos Unificados
+- [x] Estandarizar icono de descarga PDF (FileDown) en todas las pantallas
+

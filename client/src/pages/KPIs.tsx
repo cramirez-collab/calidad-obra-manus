@@ -22,9 +22,13 @@ import {
   FileDown
 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { downloadPDFBestMethod } from "@/lib/pdfDownload";
+import { 
+  crearPDFUnificado, 
+  agregarSeccion, 
+  agregarTablaUnificada, 
+  agregarResumen,
+  descargarPDFUnificado 
+} from "@/lib/pdfUnificado";
 import {
   LineChart,
   Line,
@@ -125,29 +129,13 @@ export default function KPIs() {
               variant="outline" 
               size="icon" 
               onClick={() => {
-                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
-                const pageWidth = doc.internal.pageSize.getWidth();
-                const VERDE_OBJETIVA: [number, number, number] = [2, 179, 129];
-                const AZUL_OBJETIVA: [number, number, number] = [0, 44, 99];
+                const doc = crearPDFUnificado({
+                  titulo: 'KPIs',
+                  proyectoNombre,
+                  orientation: 'portrait'
+                });
                 
-                // Header
-                doc.setFillColor(...AZUL_OBJETIVA);
-                doc.rect(0, 0, pageWidth, 25, 'F');
-                doc.setTextColor(255, 255, 255);
-                doc.setFontSize(20);
-                doc.setFont('helvetica', 'bold');
-                doc.text('OBJETIVA', 15, 16);
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                doc.text(`KPIs - ${proyectoNombre}`, pageWidth - 15, 12, { align: 'right' });
-                doc.text(new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }), pageWidth - 15, 18, { align: 'right' });
-                
-                let yPos = 35;
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(14);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Metricas de Rendimiento', 15, yPos);
-                yPos += 10;
+                let yPos = agregarSeccion(doc, 'Metricas de Rendimiento', 35);
                 
                 const kpiData = [
                   ['Total Items', String(kpis?.resumen?.total || 0)],
@@ -156,21 +144,8 @@ export default function KPIs() {
                   ['Tiempo Promedio Resolucion', `${kpis?.resumen?.tiempoPromedioHoras?.toFixed(1) || 0}h`]
                 ];
                 
-                autoTable(doc, {
-                  startY: yPos,
-                  head: [['Metrica', 'Valor']],
-                  body: kpiData,
-                  theme: 'striped',
-                  headStyles: { fillColor: VERDE_OBJETIVA, textColor: [255, 255, 255] },
-                  margin: { left: 15, right: 15 }
-                });
-                
-                // Footer
-                doc.setFontSize(8);
-                doc.setTextColor(128, 128, 128);
-                doc.text('OQC - Control de Calidad de Obra | Pagina 1 de 1', pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
-                
-                downloadPDFBestMethod(doc, `kpis_${proyectoNombre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+                agregarTablaUnificada(doc, ['Metrica', 'Valor'], kpiData, yPos);
+                descargarPDFUnificado(doc, 'kpis', proyectoNombre);
               }} 
               title="Exportar PDF"
             >

@@ -11,14 +11,14 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v72 (v2.37) - ObjetivaQC 🔴
+// 🔴 VERSIÓN v73 (v2.40) - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // ACTUALIZACIÓN FORZADA OBLIGATORIA
-// NOMBRE DEL PROYECTO EN TODOS LOS REPORTES PDF
-// NOTIFICACIONES PUSH ULTRA-AGRESIVAS
+// PDFs UNIFICADOS CON FORMATO PROFESIONAL
+// ICONOS ESTANDARIZADOS EN TODA LA APP
 // ============================================
-const CURRENT_VERSION = 72;
+const CURRENT_VERSION = 73;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN PROFESIONAL 🎯

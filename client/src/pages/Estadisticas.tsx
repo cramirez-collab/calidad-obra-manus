@@ -44,9 +44,13 @@ import {
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useProject } from "@/contexts/ProjectContext";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { downloadPDFBestMethod } from "@/lib/pdfDownload";
+import { 
+  crearPDFUnificado, 
+  agregarSeccion, 
+  agregarTablaUnificada, 
+  descargarPDFUnificado,
+  COLORES 
+} from "@/lib/pdfUnificado";
 import KPIsMejoresPeores from "@/components/KPIsMejoresPeores";
 import {
   BarChart,
@@ -275,39 +279,19 @@ export default function Estadisticas() {
             </p>
           </div>
           <div className="flex gap-2">
-            {/* Botón Descargar PDF - Descarga real como archivo .pdf */}
+            {/* Botón Descargar PDF - Formato unificado */}
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => {
-                // Generar PDF real con jsPDF
-                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
-                const pageWidth = doc.internal.pageSize.getWidth();
-                const VERDE_OBJETIVA: [number, number, number] = [2, 179, 129];
-                const AZUL_OBJETIVA: [number, number, number] = [0, 44, 99];
+                const doc = crearPDFUnificado({
+                  titulo: 'Estadisticas',
+                  proyectoNombre,
+                  orientation: 'portrait'
+                });
                 
-                // Header
-                doc.setFillColor(...AZUL_OBJETIVA);
-                doc.rect(0, 0, pageWidth, 25, 'F');
-                doc.setTextColor(255, 255, 255);
-                doc.setFontSize(20);
-                doc.setFont('helvetica', 'bold');
-                doc.text('OBJETIVA', 15, 16);
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                doc.text(`Estadisticas - ${proyectoNombre}`, pageWidth - 15, 12, { align: 'right' });
-                doc.text(new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }), pageWidth - 15, 18, { align: 'right' });
+                let yPos = agregarSeccion(doc, 'Resumen General', 35);
                 
-                let yPos = 35;
-                
-                // Resumen de estadísticas
-                doc.setTextColor(0, 0, 0);
-                doc.setFontSize(14);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Resumen General', 15, yPos);
-                yPos += 10;
-                
-                // Tabla de resumen
                 const resumenData = [
                   ['Total Items', String(stats?.total || 0)],
                   ['Pendientes', String(stats?.porStatus?.filter(s => s.status.includes('pendiente')).reduce((a, b) => a + b.count, 0) || 0)],
@@ -315,56 +299,24 @@ export default function Estadisticas() {
                   ['Rechazados', String(stats?.porStatus?.find(s => s.status === 'rechazado')?.count || 0)]
                 ];
                 
-                autoTable(doc, {
-                  startY: yPos,
-                  head: [['Metrica', 'Cantidad']],
-                  body: resumenData,
-                  theme: 'striped',
-                  headStyles: { fillColor: VERDE_OBJETIVA, textColor: [255, 255, 255] },
-                  margin: { left: 15, right: 15 },
-                  tableWidth: 'auto'
-                });
+                yPos = agregarTablaUnificada(doc, ['Metrica', 'Cantidad'], resumenData, yPos);
+                yPos += 10;
                 
-                yPos = (doc as any).lastAutoTable.finalY + 15;
-                
-                // Items por empresa
                 if (stats?.porEmpresa && stats.porEmpresa.length > 0) {
-                  doc.setFontSize(14);
-                  doc.setFont('helvetica', 'bold');
-                  doc.text('Items por Empresa', 15, yPos);
-                  yPos += 10;
-                  
+                  yPos = agregarSeccion(doc, 'Items por Empresa', yPos);
                   const empresaData = stats.porEmpresa.slice(0, 10).map(e => {
                     const empresaNombre = empresas?.find(emp => emp.id === e.empresaId)?.nombre || 'Empresa ' + e.empresaId;
                     return [empresaNombre, String(e.count)];
                   });
-                  
-                  autoTable(doc, {
-                    startY: yPos,
-                    head: [['Empresa', 'Items']],
-                    body: empresaData,
-                    theme: 'striped',
-                    headStyles: { fillColor: VERDE_OBJETIVA, textColor: [255, 255, 255] },
-                    margin: { left: 15, right: 15 }
-                  });
+                  yPos = agregarTablaUnificada(doc, ['Empresa', 'Items'], empresaData, yPos);
                 }
                 
-                // Footer
-                const pageCount = doc.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                  doc.setPage(i);
-                  doc.setFontSize(8);
-                  doc.setTextColor(128, 128, 128);
-                  doc.text(`OQC - Control de Calidad de Obra | Pagina ${i} de ${pageCount}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
-                }
-                
-                // Descargar como archivo PDF real
-                downloadPDFBestMethod(doc, `estadisticas_${proyectoNombre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+                descargarPDFUnificado(doc, 'estadisticas', proyectoNombre);
               }}
               className="text-red-600 border-red-200 hover:bg-red-50"
             >
               <FileDown className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">Descargar PDF</span>
+              <span className="hidden sm:inline">PDF</span>
             </Button>
             {/* Menú de exportación Excel/CSV */}
             <DropdownMenu>
