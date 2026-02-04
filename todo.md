@@ -2881,3 +2881,18 @@
 - [x] Fuerza versión 0 para detectar actualización
 - [x] Recarga con múltiples parámetros anti-cache
 - [x] Actualizado tanto en móvil como en desktop
+
+
+## v61 - Notificación de Versión y Auto-Detección
+
+### Mejoras Solicitadas
+- [x] Toast de confirmación cuando se actualiza la versión exitosamente
+- [x] Auto-detección periódica de nueva versión disponible
+- [x] Notificación al usuario cuando hay nueva versión
+
+### Implementación
+- [x] Toast verde "¡Actualizado a vXX!" al completar actualización
+- [x] Verificación de versión del servidor cada 5 minutos
+- [x] Verificación al volver a la app (visibilitychange)
+- [x] Toast azul con botón "ACTUALIZAR AHORA" cuando hay nueva versión
+- [x] Botón ejecuta actualización nuclear automáticamente

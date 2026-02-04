@@ -11,7 +11,7 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v60 - ObjetivaQC 🔴
+// 🔴 VERSIÓN v61 - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
@@ -21,9 +21,209 @@ import "./index.css";
 // RESOLUCIÓN FOTOS: 275px (BALANCE CALIDAD/VELOCIDAD)
 // TAMAÑO LÁPIZ: 2 (FINO PARA PRECISIÓN)
 // ESTADÍSTICAS FILTRADAS POR PROYECTO (OBLIGATORIO)
-// BOTÓN ACTUALIZAR NUCLEAR (FORZAR ÚLTIMA VERSIÓN)
+// TOAST DE VERSIÓN ACTUALIZADA + AUTO-DETECCIÓN
 // ============================================
-const CURRENT_VERSION = 60;
+const CURRENT_VERSION = 61;
+
+// ============================================
+// 🔔 SISTEMA DE NOTIFICACIÓN DE VERSIÓN 🔔
+// ============================================
+const VERSION_TOAST_KEY = 'oqc_version_toast_shown';
+const LAST_CHECK_KEY = 'oqc_last_version_check';
+const SERVER_VERSION_KEY = 'oqc_server_version';
+
+// Mostrar toast de versión actualizada
+function showVersionUpdatedToast(): void {
+  const lastToastVersion = localStorage.getItem(VERSION_TOAST_KEY);
+  const updateTimestamp = localStorage.getItem('oqc_update_timestamp');
+  
+  // Solo mostrar si hubo una actualización reciente (en los últimos 30 segundos)
+  if (updateTimestamp) {
+    const timeSinceUpdate = Date.now() - parseInt(updateTimestamp);
+    if (timeSinceUpdate < 30000 && lastToastVersion !== CURRENT_VERSION.toString()) {
+      // Esperar a que React cargue para mostrar el toast
+      setTimeout(() => {
+        // Crear toast nativo si sonner no está disponible aún
+        const toastContainer = document.createElement('div');
+        toastContainer.id = 'version-toast';
+        toastContainer.innerHTML = `
+          <div style="
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideUp 0.5s ease-out;
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 90vw;
+          ">
+            <span style="font-size: 28px;">🚀</span>
+            <div>
+              <div style="font-weight: 700; font-size: 16px;">¡Actualizado a v${CURRENT_VERSION}!</div>
+              <div style="font-size: 13px; opacity: 0.9;">Disfrutas de las últimas mejoras</div>
+            </div>
+          </div>
+          <style>
+            @keyframes slideUp {
+              from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+              to { transform: translateX(-50%) translateY(0); opacity: 1; }
+            }
+          </style>
+        `;
+        document.body.appendChild(toastContainer);
+        
+        // Remover después de 5 segundos
+        setTimeout(() => {
+          toastContainer.style.opacity = '0';
+          toastContainer.style.transition = 'opacity 0.3s';
+          setTimeout(() => toastContainer.remove(), 300);
+        }, 5000);
+        
+        localStorage.setItem(VERSION_TOAST_KEY, CURRENT_VERSION.toString());
+        localStorage.removeItem('oqc_update_timestamp');
+      }, 1500);
+    }
+  }
+}
+
+// Auto-detección de nueva versión disponible
+async function checkForNewVersion(): Promise<void> {
+  try {
+    // Hacer fetch al index.html para obtener la versión del servidor
+    const response = await fetch('/?check_version=' + Date.now(), {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' }
+    });
+    const html = await response.text();
+    
+    // Buscar REQUIRED_VERSION en el HTML
+    const match = html.match(/REQUIRED_VERSION\s*=\s*(\d+)/);
+    if (match) {
+      const serverVersion = parseInt(match[1]);
+      const lastKnownServerVersion = parseInt(localStorage.getItem(SERVER_VERSION_KEY) || '0');
+      
+      console.log(`[VERSION CHECK] Local: v${CURRENT_VERSION}, Servidor: v${serverVersion}`);
+      
+      if (serverVersion > CURRENT_VERSION) {
+        // Hay nueva versión disponible - mostrar notificación
+        showNewVersionAvailableToast(serverVersion);
+        localStorage.setItem(SERVER_VERSION_KEY, serverVersion.toString());
+      }
+    }
+  } catch (e) {
+    console.log('[VERSION CHECK] Error al verificar:', e);
+  }
+}
+
+// Mostrar toast de nueva versión disponible
+function showNewVersionAvailableToast(newVersion: number): void {
+  // Evitar mostrar múltiples veces
+  const alreadyNotified = localStorage.getItem('oqc_new_version_notified');
+  if (alreadyNotified === newVersion.toString()) return;
+  
+  const toastContainer = document.createElement('div');
+  toastContainer.id = 'new-version-toast';
+  toastContainer.innerHTML = `
+    <div style="
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: white;
+      padding: 16px 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4);
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      animation: slideDown 0.5s ease-out;
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 90vw;
+      min-width: 280px;
+    ">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 28px;">🆕</span>
+        <div>
+          <div style="font-weight: 700; font-size: 16px;">¡Nueva versión v${newVersion} disponible!</div>
+          <div style="font-size: 13px; opacity: 0.9;">Tienes v${CURRENT_VERSION} instalada</div>
+        </div>
+      </div>
+      <button id="update-now-btn" style="
+        background: white;
+        color: #1d4ed8;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: transform 0.2s;
+      ">
+        🚀 ACTUALIZAR AHORA
+      </button>
+    </div>
+    <style>
+      @keyframes slideDown {
+        from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+      }
+      #update-now-btn:hover { transform: scale(1.02); }
+      #update-now-btn:active { transform: scale(0.98); }
+    </style>
+  `;
+  document.body.appendChild(toastContainer);
+  
+  // Agregar evento al botón
+  document.getElementById('update-now-btn')?.addEventListener('click', async () => {
+    // Ejecutar actualización nuclear
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) await reg.unregister();
+      }
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      const proyectoGuardado = localStorage.getItem('selectedProjectId');
+      const offlineData = localStorage.getItem('oqc_offline_queue');
+      localStorage.clear();
+      sessionStorage.clear();
+      if (proyectoGuardado) localStorage.setItem('selectedProjectId', proyectoGuardado);
+      if (offlineData) localStorage.setItem('oqc_offline_queue', offlineData);
+      localStorage.setItem('oqc_app_version', '0');
+      localStorage.setItem('oqc_installed_version', '0');
+      window.location.href = `${window.location.origin}/?nuclear=${Date.now()}`;
+    } catch (e) {
+      window.location.href = `${window.location.origin}/?force=${Date.now()}`;
+    }
+  });
+  
+  localStorage.setItem('oqc_new_version_notified', newVersion.toString());
+  
+  // Auto-cerrar después de 30 segundos si no hace clic
+  setTimeout(() => {
+    if (document.getElementById('new-version-toast')) {
+      toastContainer.style.opacity = '0';
+      toastContainer.style.transition = 'opacity 0.3s';
+      setTimeout(() => toastContainer.remove(), 300);
+    }
+  }, 30000);
+}
 
 // ============================================
 // 🔴 ACTUALIZACIÓN FORZADA DE VERSIÓN 🔴
@@ -177,22 +377,44 @@ async function registerPushSubscription(): Promise<void> {
 }
 
 // ============================================
-// 🔴 VERIFICACIÓN ITERATIVA DE VERSIÓN 🔴
+// VERIFICACIÓN PERIÓDICA DE VERSIÓN
 // ============================================
 function startVersionCheck(): void {
-  // Verificar versión cada 30 segundos (más agresivo)
+  // Mostrar toast si acabamos de actualizar
+  showVersionUpdatedToast();
+  
+  // Verificar versión local cada 30 segundos
   setInterval(() => {
     const storedVersion = parseInt(localStorage.getItem('oqc_installed_version') || '0');
     if (storedVersion !== CURRENT_VERSION) {
       console.log(`🔴 Versión desactualizada: v${storedVersion} → v${CURRENT_VERSION}`);
       localStorage.setItem('oqc_installed_version', CURRENT_VERSION.toString());
-      // Limpiar caches y recargar
+      localStorage.setItem('oqc_update_timestamp', Date.now().toString());
       if ('caches' in window) {
         caches.keys().then(names => names.forEach(n => caches.delete(n)));
       }
       window.location.reload();
     }
   }, 30000);
+  
+  // Auto-detección de nueva versión en servidor cada 5 minutos
+  checkForNewVersion(); // Verificar al inicio
+  setInterval(() => {
+    checkForNewVersion();
+  }, 5 * 60 * 1000); // Cada 5 minutos
+  
+  // También verificar cuando la app vuelve a estar visible
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      const lastCheck = parseInt(localStorage.getItem(LAST_CHECK_KEY) || '0');
+      const timeSinceLastCheck = Date.now() - lastCheck;
+      // Si pasó más de 1 minuto desde la última verificación
+      if (timeSinceLastCheck > 60000) {
+        checkForNewVersion();
+        localStorage.setItem(LAST_CHECK_KEY, Date.now().toString());
+      }
+    }
+  });
   
   // FORZAR notificaciones cada 60 segundos (SOLO MÓVIL/TABLET en objetivaqc.com)
   setInterval(async () => {
