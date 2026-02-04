@@ -11,20 +11,13 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v63 (v2.10) - ObjetivaQC 🔴
+// 🔴 VERSIÓN v64 (v2.13) - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
-// CONEXIÓN 24/7 AL SERVIDOR (OBLIGATORIO)
-// NOTIFICACIONES PUSH SOLO EN PRODUCCIÓN
-// ACTUALIZACIÓN SILENCIOSA Y AGRESIVA (OBLIGATORIO)
-// CONSECUTIVO #N INCREMENTAL DEBAJO DE OBJETIVA (OBLIGATORIO)
-// RESOLUCIÓN FOTOS: 275px (BALANCE CALIDAD/VELOCIDAD)
-// TAMAÑO LÁPIZ: 2 (FINO PARA PRECISIÓN)
-// ESTADÍSTICAS FILTRADAS POR PROYECTO (OBLIGATORIO)
-// NUMERACIÓN PROFESIONAL: DIVIDIR ENTRE 30 (v63 → v2.10)
-// SUBMENÚ CONFIGURACIÓN PERMANECE ABIERTO
+// ACTUALIZACIÓN FORZADA OBLIGATORIA
+// NUMERACIÓN PROFESIONAL: DIVIDIR ENTRE 30
 // ============================================
-const CURRENT_VERSION = 63;
+const CURRENT_VERSION = 64;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN PROFESIONAL 🎯

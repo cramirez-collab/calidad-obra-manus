@@ -86,147 +86,104 @@
       data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
     
     <!-- ============================================ -->
-    <!-- SISTEMA DE ACTUALIZACIÓN NUCLEAR v63 (v2.10) -->
+    <!-- SISTEMA DE ACTUALIZACIÓN OBLIGATORIA v64 (v2.13) -->
     <!-- MANDATORIO: objetivaqc.com -->
-    <!-- TODOS los dispositivos DEBEN tener v54 -->
-    <!-- RESOLUCIÓN FOTOS: 275px BALANCE CALIDAD/VELOCIDAD -->
-    <!-- TAMAÑO LÁPIZ: 2 FINO PARA PRECISIÓN -->
-    <!-- CONSECUTIVO #N INCREMENTAL DEBAJO DE OBJETIVA -->
-    <!-- ESTADÍSTICAS FILTRADAS POR PROYECTO -->
+    <!-- FORZAR SIEMPRE LA ÚLTIMA VERSIÓN -->
+    <!-- NO PERMITIR VERSIONES ANTIGUAS -->
     <!-- ============================================ -->
     <script>
       (function() {
-        const REQUIRED_VERSION = 63;
-        // Formato de versión profesional (dividir entre 30)
-        const formatVersion = (v) => `v${(v / 30).toFixed(2)}`;
+        const REQUIRED_VERSION = 64;
         const VERSION_KEY = 'oqc_app_version';
-        const FORCE_UPDATE_KEY = 'oqc_force_update';
-        const PENDING_DATA_KEY = 'oqc_has_pending';
+        const UPDATING_KEY = 'oqc_updating';
         
-        // Verificar versión inmediatamente (antes de cargar React)
+        // Formato de versión profesional (dividir entre 30)
+        window.OQC_VERSION = REQUIRED_VERSION;
+        window.OQC_DISPLAY_VERSION = 'v' + (REQUIRED_VERSION / 30).toFixed(2);
+        
+        // Obtener versión almacenada
         const storedVersion = parseInt(localStorage.getItem(VERSION_KEY) || '0');
-        const forceUpdate = sessionStorage.getItem(FORCE_UPDATE_KEY);
+        const isUpdating = sessionStorage.getItem(UPDATING_KEY) === 'true';
         
-        console.log('[VersionCheck] Versión requerida:', REQUIRED_VERSION, 'Versión almacenada:', storedVersion);
+        console.log('[ACTUALIZACIÓN OBLIGATORIA] Versión requerida:', REQUIRED_VERSION, '| Versión local:', storedVersion);
         
-        // Función para verificar si hay datos pendientes en IndexedDB
-        async function hasPendingData() {
-          return new Promise((resolve) => {
-            try {
-              const request = indexedDB.open('objetiva-qc-offline', 1);
-              request.onerror = () => resolve(false);
-              request.onsuccess = () => {
-                const db = request.result;
-                if (!db.objectStoreNames.contains('pendingActions')) {
-                  db.close();
-                  resolve(false);
-                  return;
-                }
-                const tx = db.transaction('pendingActions', 'readonly');
-                const store = tx.objectStore('pendingActions');
-                const countReq = store.count();
-                countReq.onsuccess = () => {
-                  const count = countReq.result;
-                  db.close();
-                  console.log('[VersionCheck] Acciones pendientes:', count);
-                  resolve(count > 0);
-                };
-                countReq.onerror = () => {
-                  db.close();
-                  resolve(false);
-                };
-              };
-            } catch (e) {
-              resolve(false);
-            }
-          });
-        }
-        
-        // Si la versión es antigua Y no estamos ya en proceso de actualización
-        if (storedVersion < REQUIRED_VERSION && forceUpdate !== 'done') {
-          console.log('[VersionCheck] Versión antigua detectada. Verificando datos pendientes...');
+        // FORZAR ACTUALIZACIÓN SI LA VERSIÓN ES DIFERENTE
+        if (storedVersion !== REQUIRED_VERSION && !isUpdating) {
+          console.log('[ACTUALIZACIÓN OBLIGATORIA] ⚠️ VERSIÓN INCORRECTA - FORZANDO ACTUALIZACIÓN...');
           
-          // Marcar que estamos actualizando
-          sessionStorage.setItem(FORCE_UPDATE_KEY, 'in_progress');
+          // Marcar que estamos actualizando para evitar loop
+          sessionStorage.setItem(UPDATING_KEY, 'true');
           
-          // Verificar datos pendientes antes de limpiar
-          (async function() {
+          // Función de limpieza nuclear
+          (async function nuclearUpdate() {
             try {
-              const hasPending = await hasPendingData();
-              
-              if (hasPending) {
-                // HAY DATOS PENDIENTES - NO BORRAR IndexedDB
-                console.log('[VersionCheck] ¡DATOS PENDIENTES DETECTADOS! Actualizando sin borrar datos offline...');
-                
-                // 1. Solo desregistrar Service Workers viejos
-                if ('serviceWorker' in navigator) {
-                  const regs = await navigator.serviceWorker.getRegistrations();
-                  for (const reg of regs) {
-                    await reg.unregister();
-                    console.log('[VersionCheck] SW desregistrado');
-                  }
+              // 1. ELIMINAR TODOS LOS SERVICE WORKERS
+              if ('serviceWorker' in navigator) {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                console.log('[NUCLEAR] Eliminando', regs.length, 'Service Workers...');
+                for (const reg of regs) {
+                  await reg.unregister();
                 }
-                
-                // 2. Limpiar solo caches del SW (NO IndexedDB)
-                if ('caches' in window) {
-                  const names = await caches.keys();
-                  await Promise.all(names.map(n => caches.delete(n)));
-                  console.log('[VersionCheck] Caches SW eliminados (IndexedDB preservado)');
-                }
-                
-                // 3. Actualizar versión pero preservar todo localStorage
-                localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
-                localStorage.setItem(PENDING_DATA_KEY, 'true');
-                
-              } else {
-                // NO HAY DATOS PENDIENTES - Limpieza completa segura
-                console.log('[VersionCheck] Sin datos pendientes. Limpieza completa...');
-                
-                // 1. Desregistrar todos los Service Workers
-                if ('serviceWorker' in navigator) {
-                  const regs = await navigator.serviceWorker.getRegistrations();
-                  for (const reg of regs) {
-                    await reg.unregister();
-                  }
-                }
-                
-                // 2. Limpiar todos los caches
-                if ('caches' in window) {
-                  const names = await caches.keys();
-                  await Promise.all(names.map(n => caches.delete(n)));
-                }
-                
-                // 3. Limpiar localStorage (preservar proyecto)
-                const proyecto = localStorage.getItem('selectedProjectId');
-                localStorage.clear();
-                if (proyecto) localStorage.setItem('selectedProjectId', proyecto);
-                localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
               }
               
-              // 4. Marcar como completado
-              sessionStorage.setItem(FORCE_UPDATE_KEY, 'done');
+              // 2. ELIMINAR TODOS LOS CACHES
+              if ('caches' in window) {
+                const names = await caches.keys();
+                console.log('[NUCLEAR] Eliminando', names.length, 'caches...');
+                await Promise.all(names.map(n => caches.delete(n)));
+              }
               
-              // 5. Recargar con cache-bust
-              console.log('[VersionCheck] Recargando con versión v' + REQUIRED_VERSION + '...');
-              window.location.href = window.location.origin + '?_v=' + Date.now();
-            } catch (e) {
-              console.error('[VersionCheck] Error:', e);
+              // 3. PRESERVAR SOLO DATOS CRÍTICOS
+              const proyectoId = localStorage.getItem('selectedProjectId');
+              const offlineQueue = localStorage.getItem('oqc_offline_queue');
+              
+              // 4. LIMPIAR TODO EL STORAGE
+              localStorage.clear();
+              sessionStorage.clear();
+              
+              // 5. RESTAURAR DATOS CRÍTICOS
+              if (proyectoId) localStorage.setItem('selectedProjectId', proyectoId);
+              if (offlineQueue) localStorage.setItem('oqc_offline_queue', offlineQueue);
+              
+              // 6. ESTABLECER NUEVA VERSIÓN
               localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
-              sessionStorage.setItem(FORCE_UPDATE_KEY, 'done');
-              window.location.reload();
+              sessionStorage.setItem(UPDATING_KEY, 'done');
+              
+              // 7. FORZAR RECARGA DESDE SERVIDOR
+              console.log('[NUCLEAR] Recargando desde servidor...');
+              const timestamp = Date.now();
+              const random = Math.random().toString(36).substring(7);
+              window.location.replace(window.location.origin + '/?_nuclear=' + timestamp + '&_r=' + random);
+              
+            } catch (e) {
+              console.error('[NUCLEAR] Error:', e);
+              // Forzar recarga de todos modos
+              localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
+              window.location.replace(window.location.origin + '/?_force=' + Date.now());
             }
           })();
-        } else if (forceUpdate === 'in_progress') {
-          // Actualización en progreso, completar
-          console.log('[VersionCheck] Completando actualización...');
-          localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
-          sessionStorage.setItem(FORCE_UPDATE_KEY, 'done');
-        } else {
-          // Versión correcta
-          console.log('[VersionCheck] Versión correcta v' + REQUIRED_VERSION);
-          localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
-          sessionStorage.removeItem(FORCE_UPDATE_KEY);
+          
+          // Detener ejecución mientras se actualiza
+          return;
         }
+        
+        // Limpiar flag de actualización si ya terminó
+        if (isUpdating || sessionStorage.getItem(UPDATING_KEY) === 'done') {
+          sessionStorage.removeItem(UPDATING_KEY);
+          localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
+          console.log('[ACTUALIZACIÓN OBLIGATORIA] ✅ Actualización completada a v' + REQUIRED_VERSION);
+        }
+        
+        // Verificar periódicamente que la versión sea correcta
+        setInterval(function() {
+          const currentStored = parseInt(localStorage.getItem(VERSION_KEY) || '0');
+          if (currentStored !== REQUIRED_VERSION) {
+            console.log('[VERIFICACIÓN] Versión incorrecta detectada, forzando actualización...');
+            localStorage.setItem(VERSION_KEY, '0');
+            window.location.reload();
+          }
+        }, 30000); // Verificar cada 30 segundos
+        
       })();
     </script>
     

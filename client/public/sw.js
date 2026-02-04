@@ -1,19 +1,14 @@
 // ============================================
 // ============================================
-// SISTEMA OFFLINE v63 (v2.10) - NUCLEAR
+// SISTEMA OFFLINE v64 (v2.13) - ACTUALIZACIÓN OBLIGATORIA
 // ============================================
 // MANDATORIO Y OBLIGATORIO:
 // - Dominio: objetivaqc.com (PERMANENTE)
 // - Modo offline: SIEMPRE ACTIVADO
-// - Resolución fotos: 275px BALANCE CALIDAD/VELOCIDAD
-// - Tamaño lápiz: 2 FINO PARA PRECISIÓN
-// - CONSECUTIVO #N INCREMENTAL DEBAJO DE OBJETIVA
-// - ESTADÍSTICAS FILTRADAS POR PROYECTO
-// - ACTUALIZACIÓN SILENCIOSA Y AGRESIVA
-// - SUBMENÚ CONFIGURACIÓN PERMANECE ABIERTO
-// - TODOS los dispositivos DEBEN tener v63
+// - ACTUALIZACIÓN FORZADA OBLIGATORIA
+// - TODOS los dispositivos DEBEN tener v64
 // ============================================
-const APP_VERSION = 63;
+const APP_VERSION = 64;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

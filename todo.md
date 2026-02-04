@@ -2933,3 +2933,15 @@
 - [x] Menú móvil NO se cierra al navegar - usuario decide cuándo cerrarlo
 - [x] Submenú de Configuración permanece abierto al seleccionar opciones
 - [x] Forzar actualización agresiva a todos los dispositivos
+
+
+## v64 - Actualización Forzada Obligatoria
+
+### Requisito
+- [x] Forzar SIEMPRE la última versión publicada en todos los dispositivos
+- [x] No permitir versiones antiguas cacheadas
+- [x] Actualización automática sin intervención del usuario
+- [x] Eliminar cualquier posibilidad de quedarse en versión antigua
+- [x] Eliminar mensaje azul de versión - solo mostrar número
+- [x] Versión dinámica en header (v2.13)
+- [x] Verificación periódica cada 30 segundos
