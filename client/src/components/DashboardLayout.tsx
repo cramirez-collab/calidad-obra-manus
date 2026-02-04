@@ -8,6 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 // getLoginUrl se usa en Login.tsx
@@ -126,20 +128,24 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     analysisItems.push({ icon: FileText, label: proyecto.tituloEspecificaciones || "Especificaciones", path: proyecto.linkEspecificaciones, external: true });
   }
 
-  // Submenú de Configuración
-  const configSubItems: MenuItem[] = [
-    { icon: Settings, label: "Ajustes", path: "/configuracion" },
-    { icon: FolderKanban, label: "Proyectos", path: "/proyectos" },
-    { icon: Link2, label: "Enlaces Externos", path: "/enlaces-externos" },
-    { icon: QrCode, label: "QR", path: "/generar-qr" },
-    { icon: Building2, label: "Empresas", path: "/empresas" },
-    { icon: MapPin, label: "Unidades", path: "/unidades" },
-    { icon: Layers, label: "Espacios", path: "/espacios" },
-    { icon: Wrench, label: "Especialidades", path: "/especialidades" },
-    { icon: ListOrdered, label: "Lista Especialidades", path: "/lista-especialidades" },
-    { icon: AlertTriangle, label: "Defectos", path: "/defectos" },
-    { icon: Users, label: "Usuarios", path: "/usuarios" },
-    { icon: History, label: "Bitácora", path: "/bitacora" },
+  // Submenú de Configuración - Agrupado por secciones
+  type MenuItemWithGroup = MenuItem & { group?: string };
+  const configSubItems: MenuItemWithGroup[] = [
+    // Sistema
+    { icon: Settings, label: "Ajustes", path: "/configuracion", group: "Sistema" },
+    { icon: FolderKanban, label: "Proyectos", path: "/proyectos", group: "Sistema" },
+    { icon: Link2, label: "Enlaces", path: "/enlaces-externos", group: "Sistema" },
+    { icon: QrCode, label: "QR", path: "/generar-qr", group: "Sistema" },
+    // Catálogos
+    { icon: Building2, label: "Empresas", path: "/empresas", group: "Catálogos" },
+    { icon: MapPin, label: "Unidades", path: "/unidades", group: "Catálogos" },
+    { icon: Layers, label: "Espacios", path: "/espacios", group: "Catálogos" },
+    { icon: Wrench, label: "Especialidades", path: "/especialidades", group: "Catálogos" },
+    { icon: ListOrdered, label: "Lista Espec.", path: "/lista-especialidades", group: "Catálogos" },
+    { icon: AlertTriangle, label: "Defectos", path: "/defectos", group: "Catálogos" },
+    // Usuarios
+    { icon: Users, label: "Usuarios", path: "/usuarios", group: "Usuarios" },
+    { icon: History, label: "Bitácora", path: "/bitacora", group: "Usuarios" },
   ];
 
   // Todos los usuarios ven los items base y de análisis
@@ -267,20 +273,39 @@ function DashboardLayoutContent({
               <item.icon className="h-5 w-5" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48" onInteractOutside={(e) => e.preventDefault()}>
-            {item.children.map(subItem => {
-              const isSubActive = location.startsWith(subItem.path);
-              return (
-                <DropdownMenuItem
-                  key={subItem.path}
-                  onClick={() => setLocation(subItem.path)}
-                  className={`cursor-pointer ${isSubActive ? "bg-primary/10 text-primary" : ""}`}
-                >
-                  <subItem.icon className="mr-2 h-4 w-4" />
-                  {subItem.label}
-                </DropdownMenuItem>
-              );
-            })}
+          <DropdownMenuContent align="end" className="w-52" onInteractOutside={(e) => e.preventDefault()}>
+            {/* Agrupar items por sección */}
+            {(() => {
+              const groups = ['Sistema', 'Catálogos', 'Usuarios'];
+              const itemsWithGroup = item.children as (MenuItem & { group?: string })[];
+              return groups.map((groupName, groupIndex) => {
+                const groupItems = itemsWithGroup.filter(i => i.group === groupName);
+                if (groupItems.length === 0) return null;
+                return (
+                  <div key={groupName}>
+                    {groupIndex > 0 && <DropdownMenuSeparator />}
+                    <DropdownMenuLabel className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                      {groupName}
+                    </DropdownMenuLabel>
+                    <DropdownMenuGroup>
+                      {groupItems.map(subItem => {
+                        const isSubActive = location.startsWith(subItem.path);
+                        return (
+                          <DropdownMenuItem
+                            key={subItem.path}
+                            onClick={() => setLocation(subItem.path)}
+                            className={`cursor-pointer ${isSubActive ? "bg-primary/10 text-primary" : ""}`}
+                          >
+                            <subItem.icon className="mr-2 h-4 w-4" />
+                            {subItem.label}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuGroup>
+                  </div>
+                );
+              });
+            })()}
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -342,28 +367,45 @@ function DashboardLayoutContent({
           </button>
           {subMenuOpen && (
             <div className="bg-muted/50">
-              {item.children.map(subItem => {
-                const isSubActive = location.startsWith(subItem.path);
-                return (
-                  <button
-                    key={subItem.path}
-                    onClick={() => {
-                      setLocation(subItem.path);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`
-                      w-full flex items-center gap-3 px-4 py-3 pl-12 text-left transition-colors
-                      ${isSubActive 
-                        ? "bg-primary/10 text-primary" 
-                        : "hover:bg-accent"
-                      }
-                    `}
-                  >
-                    <subItem.icon className="h-4 w-4 shrink-0" />
-                    <span className="text-sm">{subItem.label}</span>
-                  </button>
-                );
-              })}
+              {/* Agrupar items por sección en móvil */}
+              {(() => {
+                const groups = ['Sistema', 'Catálogos', 'Usuarios'];
+                const itemsWithGroup = item.children as (MenuItem & { group?: string })[];
+                return groups.map((groupName, groupIndex) => {
+                  const groupItems = itemsWithGroup.filter(i => i.group === groupName);
+                  if (groupItems.length === 0) return null;
+                  return (
+                    <div key={groupName}>
+                      {groupIndex > 0 && <div className="border-t border-border my-1" />}
+                      <div className="px-4 py-2 pl-12 text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                        {groupName}
+                      </div>
+                      {groupItems.map(subItem => {
+                        const isSubActive = location.startsWith(subItem.path);
+                        return (
+                          <button
+                            key={subItem.path}
+                            onClick={() => {
+                              setLocation(subItem.path);
+                              setMobileMenuOpen(false);
+                            }}
+                            className={`
+                              w-full flex items-center gap-3 px-4 py-2.5 pl-14 text-left transition-colors
+                              ${isSubActive 
+                                ? "bg-primary/10 text-primary" 
+                                : "hover:bg-accent"
+                              }
+                            `}
+                          >
+                            <subItem.icon className="h-4 w-4 shrink-0" />
+                            <span className="text-sm">{subItem.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           )}
         </div>

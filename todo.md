@@ -2852,3 +2852,17 @@
 - [x] Agregado modal={false} para evitar cierre automático
 - [x] Agregado onInteractOutside para prevenir cierre al hacer clic fuera
 - [x] El submenú ahora permanece abierto hasta seleccionar una opción
+
+
+## v59 - Agrupación del Submenú de Configuración
+
+### Mejora Solicitada
+- [x] Agrupar opciones del submenú en secciones organizadas
+- [x] Secciones: Sistema, Catálogos, Usuarios
+- [x] Agregar separadores visuales entre secciones
+
+### Implementación
+- [x] Sistema: Ajustes, Proyectos, Enlaces, QR
+- [x] Catálogos: Empresas, Unidades, Espacios, Especialidades, Lista Espec., Defectos
+- [x] Usuarios: Usuarios, Bitácora
+- [x] Separadores y etiquetas de grupo en desktop y móvil
