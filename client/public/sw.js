@@ -18,7 +18,7 @@ const PRECACHE_ASSETS = [
   '/offline.html',
   '/manifest.json',
   '/icon-192.png',
-  '/icon-512.png',
+  'https://files.manuscdn.com/user_upload_by_module/session_file/310519663201051818/XafbgGaUxbtStcxB.png',
 ];
 
 // Patrones de URLs que deben cachearse para offline
