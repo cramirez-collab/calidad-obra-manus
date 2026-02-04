@@ -1,14 +1,13 @@
 // ============================================
-// ============================================
-// SISTEMA OFFLINE v66 (v2.20) - USUARIOS POR PROYECTO
+// SISTEMA OFFLINE v67 (v2.23) - ESPECIALIDADES POR PROYECTO
 // ============================================
 // MANDATORIO Y OBLIGATORIO:
 // - Dominio: objetivaqc.com (PERMANENTE)
 // - Modo offline: SIEMPRE ACTIVADO
 // - ACTUALIZACIÓN FORZADA OBLIGATORIA
-// - USUARIOS INDEPENDIENTES POR PROYECTO
+// - ESPECIALIDADES INDEPENDIENTES POR PROYECTO
 // ============================================
-const APP_VERSION = 66;
+const APP_VERSION = 67;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

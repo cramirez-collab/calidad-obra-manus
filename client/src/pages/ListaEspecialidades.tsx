@@ -1,9 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useProject } from "@/contexts/ProjectContext";
 import { trpc } from "@/lib/trpc";
 import { ListOrdered, Loader2 } from "lucide-react";
 
 export default function ListaEspecialidades() {
-  const { data: especialidades, isLoading } = trpc.especialidades.list.useQuery();
+  const { selectedProjectId } = useProject();
+  const { data: especialidades, isLoading } = trpc.especialidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
 
   // Ordenar por número
   const especialidadesOrdenadas = especialidades

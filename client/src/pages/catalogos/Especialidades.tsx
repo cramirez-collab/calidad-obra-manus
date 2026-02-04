@@ -63,7 +63,10 @@ export default function Especialidades() {
   });
 
   // Obtener usuarios del proyecto para asignar como residente
-  const { data: usuarios } = trpc.users.list.useQuery();
+  const { data: usuarios } = trpc.users.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
 
   const utils = trpc.useUtils();
   // Obtener especialidades filtradas por proyecto desde el backend

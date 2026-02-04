@@ -2983,3 +2983,16 @@
 - [x] users.sinProyecto devuelve usuarios disponibles para asignar
 - [x] Página Usuarios filtra directamente desde backend
 - [x] Página Proyectos solo muestra usuarios sin proyecto para asignar
+
+
+## v67 - Especialidades Independientes por Proyecto
+
+### Requisito
+- [x] Especialidades de Hidalma solo aparecen en Hidalma
+- [x] Especialidades de Mayas solo aparecen en Mayas
+- [x] Cada proyecto es completamente independiente
+
+### Implementación
+- [x] ListaEspecialidades.tsx ahora filtra por proyecto
+- [x] Especialidades.tsx (gestión) filtra usuarios y especialidades por proyecto
+- [x] Todas las páginas ya tenían filtro por proyecto implementado
