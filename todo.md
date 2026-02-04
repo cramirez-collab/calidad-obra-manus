@@ -2912,3 +2912,24 @@
 - [x] Botón de actualizar cambia a verde esmeralda cuando hay nueva versión
 - [x] Muestra versión actual en menú móvil con indicador de nueva versión
 - [x] Detección automática cada 30 segundos y al cambiar localStorage
+
+
+## v63 - Correcciones Críticas de Versión y UI
+
+### Bugs Reportados
+- [ ] Header muestra v54 en lugar de la versión actual (no actualiza)
+- [ ] Toast "disfruta las mejoras" no deseado - eliminar
+- [ ] Botón verde grande en menú hamburguesa - cambiar a formato normal como otros textos
+- [ ] Forzar actualización agresiva para que TODOS tengan la última versión
+- [ ] Submenú de Configuración se sigue cerrando solo - debe permanecer abierto
+
+
+## v63 - Correcciones Críticas de UI
+
+### Bugs Corregidos
+- [x] Eliminar toast "disfruta las mejoras" - actualización silenciosa
+- [x] Botón "Actualizar Versión" con formato normal como otros textos
+- [x] Eliminar badge verde del menú hamburguesa
+- [x] Menú móvil NO se cierra al navegar - usuario decide cuándo cerrarlo
+- [x] Submenú de Configuración permanece abierto al seleccionar opciones
+- [x] Forzar actualización agresiva a todos los dispositivos

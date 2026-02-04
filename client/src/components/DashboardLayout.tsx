@@ -211,40 +211,7 @@ function DashboardLayoutContent({
   const [location, setLocation] = useLocation();
   const [configOpen, setConfigOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [hasNewVersion, setHasNewVersion] = useState(false);
   const isMobile = useIsMobile();
-  
-  // Detectar si hay nueva versión disponible
-  useEffect(() => {
-    const checkNewVersion = () => {
-      const serverVersion = localStorage.getItem('oqc_server_version');
-      const currentVersion = (window as any).OQC_VERSION || 62;
-      if (serverVersion && parseInt(serverVersion) > currentVersion) {
-        setHasNewVersion(true);
-      } else {
-        setHasNewVersion(false);
-      }
-    };
-    
-    // Verificar al inicio
-    checkNewVersion();
-    
-    // Verificar cada 30 segundos
-    const interval = setInterval(checkNewVersion, 30000);
-    
-    // Escuchar cambios en localStorage
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'oqc_server_version') {
-        checkNewVersion();
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-    
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('storage', handleStorage);
-    };
-  }, []);
   
   // Obtener proyecto actual para los enlaces dinámicos
   const { selectedProjectId } = useProject();
@@ -273,10 +240,10 @@ function DashboardLayoutContent({
   
   const menuItems = getMenuItems(user?.role || 'residente', proyectoActual);
 
-  // Cerrar dropdown de config al navegar
+  // Cerrar dropdown de config al navegar (pero NO el menú móvil - el usuario decide cuándo cerrarlo)
   useEffect(() => {
     setConfigOpen(false);
-    setMobileMenuOpen(false);
+    // NO cerrar mobileMenuOpen - el usuario decide cuándo cerrar el menú
   }, [location]);
 
   // Cerrar menú móvil al cambiar de tamaño de pantalla
@@ -420,7 +387,7 @@ function DashboardLayoutContent({
                             key={subItem.path}
                             onClick={() => {
                               setLocation(subItem.path);
-                              setMobileMenuOpen(false);
+                              // NO cerrar el menú móvil - el usuario decide cuándo cerrarlo
                             }}
                             className={`
                               w-full flex items-center gap-3 px-4 py-2.5 pl-14 text-left transition-colors
@@ -701,21 +668,12 @@ function DashboardLayoutContent({
               {isMobile && (
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="relative flex items-center justify-center h-10 w-10 rounded-lg hover:bg-accent transition-colors"
+                  className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-accent transition-colors"
                 >
                   {mobileMenuOpen ? (
                     <X className="h-6 w-6" />
                   ) : (
                     <Menu className="h-6 w-6" />
-                  )}
-                  {/* Badge verde Objetiva cuando hay nueva versión */}
-                  {hasNewVersion && !mobileMenuOpen && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 items-center justify-center">
-                        <span className="text-[8px] font-bold text-white">↑</span>
-                      </span>
-                    </span>
                   )}
                 </button>
               )}
@@ -844,15 +802,6 @@ function DashboardLayoutContent({
               
               {/* BOTÓN ACTUALIZAR VERSIÓN - MÓVIL - FORZAR ÚLTIMA VERSIÓN PUBLICADA */}
               <div className="border-t p-2">
-                {/* Mostrar versión actual con formato profesional */}
-                <div className="text-center text-xs text-muted-foreground mb-2">
-                  Versión actual: {(window as any).OQC_DISPLAY_VERSION || 'v2.07'}
-                  {hasNewVersion && (
-                    <span className="ml-2 text-emerald-600 font-semibold animate-pulse">
-                      • Nueva versión disponible
-                    </span>
-                  )}
-                </div>
                 <button
                   onClick={async () => {
                     try {
@@ -919,14 +868,10 @@ function DashboardLayoutContent({
                       window.location.href = `${window.location.origin}/?force=${Date.now()}`;
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-4 rounded-lg text-white transition-colors text-base font-bold shadow-lg ${
-                    hasNewVersion 
-                      ? 'bg-emerald-500 hover:bg-emerald-600 animate-pulse' 
-                      : 'bg-green-500 hover:bg-green-600'
-                  }`}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors text-sm"
                 >
-                  <RefreshCw className={`h-6 w-6 ${hasNewVersion ? 'animate-spin' : ''}`} />
-                  <span>{hasNewVersion ? '🆕 NUEVA VERSIÓN DISPONIBLE' : '🚀 ACTUALIZAR A ÚLTIMA VERSIÓN'}</span>
+                  <RefreshCw className="h-4 w-4" />
+                  <span>Actualizar Versión</span>
                 </button>
               </div>
               

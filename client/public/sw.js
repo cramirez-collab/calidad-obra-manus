@@ -1,6 +1,6 @@
 // ============================================
 // ============================================
-// SISTEMA OFFLINE v62 (v2.07) - NUCLEAR
+// SISTEMA OFFLINE v63 (v2.10) - NUCLEAR
 // ============================================
 // MANDATORIO Y OBLIGATORIO:
 // - Dominio: objetivaqc.com (PERMANENTE)
@@ -9,11 +9,11 @@
 // - Tamaño lápiz: 2 FINO PARA PRECISIÓN
 // - CONSECUTIVO #N INCREMENTAL DEBAJO DE OBJETIVA
 // - ESTADÍSTICAS FILTRADAS POR PROYECTO
-// - NUMERACIÓN PROFESIONAL: DIVIDIR ENTRE 30
-// - BADGE VERDE OBJETIVA EN MENÚ HAMBURGUESA
-// - TODOS los dispositivos DEBEN tener v62
+// - ACTUALIZACIÓN SILENCIOSA Y AGRESIVA
+// - SUBMENÚ CONFIGURACIÓN PERMANECE ABIERTO
+// - TODOS los dispositivos DEBEN tener v63
 // ============================================
-const APP_VERSION = 62;
+const APP_VERSION = 63;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
