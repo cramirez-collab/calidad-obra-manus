@@ -1,0 +1,75 @@
+{
+  "query": "SELECT id, nombre, proyectoId FROM especialidades ORDER BY nombre;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, proyectoId FROM especialidades ORDER BY nombre;",
+  "rows": [
+    {
+      "id": "90001",
+      "nombre": "Albañileria ",
+      "proyectoId": "1"
+    },
+    {
+      "id": "150001",
+      "nombre": "Aluminio y Vidrio",
+      "proyectoId": "1"
+    },
+    {
+      "id": "90002",
+      "nombre": "Ceramicos",
+      "proyectoId": "1"
+    },
+    {
+      "id": "60001",
+      "nombre": "Desarrollador",
+      "proyectoId": "1"
+    },
+    {
+      "id": "30005",
+      "nombre": "Electrica",
+      "proyectoId": "1"
+    },
+    {
+      "id": "30004",
+      "nombre": "Estructura ",
+      "proyectoId": "1"
+    },
+    {
+      "id": "30006",
+      "nombre": "Gas",
+      "proyectoId": "1"
+    },
+    {
+      "id": "30007",
+      "nombre": "Hidráulica ",
+      "proyectoId": "1"
+    },
+    {
+      "id": "30008",
+      "nombre": "Hvac",
+      "proyectoId": "1"
+    },
+    {
+      "id": "90003",
+      "nombre": "Sanitaria y Pluvial",
+      "proyectoId": "1"
+    },
+    {
+      "id": "30003",
+      "nombre": "Supervision",
+      "proyectoId": "1"
+    },
+    {
+      "id": "120001",
+      "nombre": "Tablaroca y Pintura",
+      "proyectoId": "1"
+    },
+    {
+      "id": "90005",
+      "nombre": "Waller ",
+      "proyectoId": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tproyectoId\n90001\tAlbañileria \t1\n150001\tAluminio y Vidrio\t1\n90002\tCeramicos\t1\n60001\tDesarrollador\t1\n30005\tElectrica\t1\n30004\tEstructura \t1\n30006\tGas\t1\n30007\tHidráulica \t1\n30008\tHvac\t1\n90003\tSanitaria y Pluvial\t1\n30003\tSupervision\t1\n120001\tTablaroca y Pintura\t1\n90005\tWaller \t1\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

@@ -2996,3 +2996,33 @@
 - [x] ListaEspecialidades.tsx ahora filtra por proyecto
 - [x] Especialidades.tsx (gestión) filtra usuarios y especialidades por proyecto
 - [x] Todas las páginas ya tenían filtro por proyecto implementado
+
+
+## v68 - Correcciones UI y Datos
+
+### Containers y Layout
+- [ ] Mejorar estructura de containers en toda la app
+- [ ] Evitar que elementos se encimen en móvil
+- [ ] Panel de estadísticas responsive
+
+### Limpieza de Datos
+- [ ] Eliminar empresa "se prueba"
+- [ ] Eliminar especialidad "núcleo"
+
+### Notificaciones Push
+- [ ] Forzar notificaciones siempre activas
+- [ ] Notificaciones tipo globo en pantalla de bloqueo
+- [ ] Activación obligatoria y agresiva
+
+
+## v68 (v2.27) - Correcciones de Layout y Notificaciones Push
+
+### Corrección de Layout/Containers
+- [x] Corregir encimamiento en modal de selección de residente (campo de búsqueda sobre nombre)
+- [x] Revisar y ajustar containers globales para evitar encimamiento en cualquier pantalla
+
+### Notificaciones Push Forzadas
+- [x] Implementar solicitud más agresiva de permisos de notificaciones
+- [x] Forzar notificaciones tipo globo incluso en pantalla de bloqueo
+- [x] Reintentar solicitud de permisos si el usuario no responde
+

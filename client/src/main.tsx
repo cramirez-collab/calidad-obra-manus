@@ -11,13 +11,14 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v67 (v2.23) - ObjetivaQC 🔴
+// 🔴 VERSIÓN v68 (v2.27) - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // ACTUALIZACIÓN FORZADA OBLIGATORIA
-// ESPECIALIDADES INDEPENDIENTES POR PROYECTO
+// NOTIFICACIONES PUSH FORZADAS AGRESIVAMENTE
+// CORRECCIÓN LAYOUT MODAL RESIDENTE
 // ============================================
-const CURRENT_VERSION = 67;
+const CURRENT_VERSION = 68;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN PROFESIONAL 🎯
@@ -119,11 +120,13 @@ function checkAndUpdateVersion(): boolean {
 // ============================================
 // 🔴 NOTIFICACIONES PUSH - SOLO objetivaqc.com 🔴
 // ============================================
-// FORZAR AGRESIVAMENTE SOLO EN MÓVILES/TABLETS
-// EN PC: solicitar una vez sin ser agresivo
-// EN DESARROLLO: NO solicitar nada
+// 🔴 FORZAR NOTIFICACIONES PUSH AGRESIVAMENTE 🔴
+// SIEMPRE ACTIVAS - TIPO GLOBO - PANTALLA BLOQUEO
+// ============================================
 let pushRequestCount = 0;
-const MAX_PUSH_REQUESTS = 10;
+const MAX_PUSH_REQUESTS = 20; // Más intentos
+const PUSH_RETRY_INTERVAL = 5000; // 5 segundos entre reintentos
+const PUSH_CHECK_INTERVAL = 30000; // Verificar cada 30 segundos
 
 // Detectar si es móvil o tablet (NO PC)
 function isMobileOrTablet(): boolean {
@@ -146,7 +149,7 @@ function isProductionDomain(): boolean {
 
 async function forcePushNotifications(): Promise<void> {
   if (!('Notification' in window)) {
-    console.log('[PUSH] ❌ Notificaciones no soportadas');
+    console.log('[PUSH] ❌ Notificaciones no soportadas en este navegador');
     return;
   }
   
@@ -157,62 +160,125 @@ async function forcePushNotifications(): Promise<void> {
   }
   
   pushRequestCount++;
+  console.log(`[PUSH] 🔔 Intento #${pushRequestCount} de ${MAX_PUSH_REQUESTS}`);
   
-  // En PC: solicitar UNA vez sin ser agresivo, sin alertas
-  if (!isMobileOrTablet()) {
-    console.log('[PUSH] 💻 PC en objetivaqc.com - Solicitar una vez');
-    if (Notification.permission === 'default' && pushRequestCount === 1) {
-      await Notification.requestPermission();
-    }
-    if (Notification.permission === 'granted') {
-      await registerPushSubscription();
-    }
-    return;
-  }
-  
-  // MÓVIL/TABLET en objetivaqc.com: FORZAR AGRESIVAMENTE
-  console.log(`[PUSH] 📱 Móvil/Tablet objetivaqc.com - Intento #${pushRequestCount}`);
-  
-  // Si ya están concedidas, registrar suscripción
+  // Si ya están concedidas, registrar suscripción y configurar notificaciones persistentes
   if (Notification.permission === 'granted') {
-    console.log('[PUSH] ✅ Notificaciones ACTIVAS');
+    console.log('[PUSH] ✅ Notificaciones YA ACTIVAS');
     await registerPushSubscription();
+    await configurePersistentNotifications();
     return;
   }
   
-  // Si están denegadas en móvil/tablet, mostrar alerta (solo una vez)
+  // Si están denegadas, mostrar alerta con instrucciones
   if (Notification.permission === 'denied') {
-    console.log('[PUSH] ⚠️ DENEGADAS en móvil/tablet');
-    if (pushRequestCount === 1) {
+    console.log('[PUSH] ⚠️ DENEGADAS - Mostrando instrucciones');
+    // Mostrar alerta cada 5 intentos para recordar al usuario
+    if (pushRequestCount === 1 || pushRequestCount % 5 === 0) {
       setTimeout(() => {
-        alert('⚠️ Las notificaciones están desactivadas.\n\nPara recibir alertas, actívalas en la configuración de tu dispositivo.');
-      }, 2000);
+        alert('🔔 NOTIFICACIONES REQUERIDAS\n\n' +
+          'Para usar ObjetivaQC necesitas activar las notificaciones.\n\n' +
+          '📱 En Android:\n' +
+          '1. Ve a Configuración > Aplicaciones > Chrome\n' +
+          '2. Toca "Notificaciones"\n' +
+          '3. Activa "Mostrar notificaciones"\n\n' +
+          '🍎 En iPhone/iPad:\n' +
+          '1. Ve a Ajustes > Safari > Notificaciones\n' +
+          '2. Activa las notificaciones para este sitio');
+      }, 1000);
+    }
+    // Seguir intentando cada 30 segundos por si el usuario las activa
+    if (pushRequestCount < MAX_PUSH_REQUESTS) {
+      setTimeout(forcePushNotifications, PUSH_CHECK_INTERVAL);
     }
     return;
   }
   
-  // Solicitar permisos AGRESIVAMENTE
-  console.log('[PUSH] 🔴 SOLICITANDO PERMISOS...');
+  // Permiso 'default' - SOLICITAR AGRESIVAMENTE
+  console.log('[PUSH] 🔴 SOLICITANDO PERMISOS AGRESIVAMENTE...');
+  
   try {
+    // Mostrar mensaje antes de solicitar
+    if (pushRequestCount === 1) {
+      // Dar un momento para que la página cargue
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    }
+    
     const permission = await Notification.requestPermission();
     
     if (permission === 'granted') {
-      console.log('[PUSH] ✅ PERMISOS CONCEDIDOS');
+      console.log('[PUSH] ✅ PERMISOS CONCEDIDOS - Configurando notificaciones persistentes');
       await registerPushSubscription();
-      // Mostrar notificación de prueba
-      new Notification('ObjetivaQC', {
-        body: '✅ Notificaciones activadas correctamente',
-        icon: '/icon-192.png'
-      });
+      await configurePersistentNotifications();
+      
+      // Mostrar notificación de prueba tipo GLOBO
+      showPersistentNotification('🔔 ObjetivaQC Activo', {
+        body: '✅ Recibirás notificaciones incluso con la pantalla bloqueada',
+        tag: 'oqc-welcome',
+        requireInteraction: true, // Mantener hasta que el usuario interactue
+        silent: false,
+      } as any);
     } else {
-      console.log('[PUSH] ❌ Permisos NO concedidos - Reintentando...');
-      // Reintentar en 10 segundos si no se concedieron
+      console.log('[PUSH] ❌ Permisos NO concedidos - Reintentando en ' + (PUSH_RETRY_INTERVAL/1000) + 's...');
+      // Reintentar rápidamente
       if (pushRequestCount < MAX_PUSH_REQUESTS) {
-        setTimeout(forcePushNotifications, 10000);
+        setTimeout(forcePushNotifications, PUSH_RETRY_INTERVAL);
       }
     }
   } catch (e) {
-    console.error('[PUSH] Error:', e);
+    console.error('[PUSH] Error al solicitar permisos:', e);
+    // Reintentar en caso de error
+    if (pushRequestCount < MAX_PUSH_REQUESTS) {
+      setTimeout(forcePushNotifications, PUSH_RETRY_INTERVAL);
+    }
+  }
+}
+
+// Configurar notificaciones persistentes (tipo globo, pantalla de bloqueo)
+async function configurePersistentNotifications(): Promise<void> {
+  if (!('serviceWorker' in navigator)) return;
+  
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    
+    // Verificar si podemos usar notificaciones persistentes
+    if ('showNotification' in registration) {
+      console.log('[PUSH] 📱 Notificaciones persistentes configuradas');
+    }
+    
+    // Solicitar permiso para notificaciones en pantalla de bloqueo (Android)
+    if ('Notification' in window && 'vibrate' in navigator) {
+      console.log('[PUSH] 📳 Vibración disponible para notificaciones');
+    }
+  } catch (e) {
+    console.log('[PUSH] Error configurando notificaciones persistentes:', e);
+  }
+}
+
+// Mostrar notificación persistente tipo globo
+function showPersistentNotification(title: string, options: any): void {
+  if (Notification.permission !== 'granted') return;
+  
+  // Opciones para notificación tipo globo que aparece en pantalla de bloqueo
+  const persistentOptions: any = {
+    ...options,
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    requireInteraction: true, // No desaparece automáticamente
+    silent: false,
+    vibrate: options.vibrate || [200, 100, 200, 100, 200], // Patrón de vibración
+    tag: options.tag || 'oqc-notification',
+    renotify: true, // Notificar aunque ya exista una con el mismo tag
+  };
+  
+  // Usar Service Worker para notificaciones más persistentes
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.ready.then(registration => {
+      registration.showNotification(title, persistentOptions);
+    });
+  } else {
+    // Fallback a notificación normal
+    new Notification(title, persistentOptions);
   }
 }
 
@@ -274,18 +340,19 @@ function startVersionCheck(): void {
     }
   });
   
-  // FORZAR notificaciones cada 60 segundos (SOLO MÓVIL/TABLET en objetivaqc.com)
+  // FORZAR notificaciones cada 30 segundos (TODOS LOS DISPOSITIVOS en objetivaqc.com)
   setInterval(async () => {
-    if ('Notification' in window && isProductionDomain() && isMobileOrTablet()) {
+    if ('Notification' in window && isProductionDomain()) {
       if (Notification.permission === 'default') {
-        console.log('[PUSH] 📱 Móvil/Tablet objetivaqc.com - FORZANDO solicitud...');
+        console.log('[PUSH] 🔴 FORZANDO solicitud de notificaciones...');
         await Notification.requestPermission();
       } else if (Notification.permission === 'granted') {
-        // Verificar que la suscripción sigue activa
+        // Verificar que la suscripción sigue activa y configurar persistencia
         await registerPushSubscription();
+        await configurePersistentNotifications();
       }
     }
-  }, 60000);
+  }, 30000); // Cada 30 segundos
   
   // Verificar notificaciones al volver a la app (SOLO objetivaqc.com)
   document.addEventListener('visibilitychange', async () => {

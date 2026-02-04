@@ -24,8 +24,18 @@ describe('Flujo Rápido - Prellenado y Priorización', () => {
       const userConEmpresa = users.find(u => u.empresaId);
       if (!userConEmpresa) return; // Skip si no hay usuario con empresa
       
+      // Verificar que la empresa del usuario existe en la BD
+      const empresas = await db.getAllEmpresas();
+      const empresaExiste = empresas.find(e => e.id === userConEmpresa.empresaId);
+      if (!empresaExiste) return; // Skip si la empresa no existe (datos inconsistentes)
+      
       const result = await db.getDatosPrellenaUsuario(userConEmpresa.id);
-      expect(result?.empresa).not.toBeNull();
+      // Si la empresa existe, debería incluirla en el resultado
+      expect(result).not.toBeNull();
+      // La empresa puede ser null si hay inconsistencia de datos, pero el resultado debe existir
+      if (empresaExiste) {
+        expect(result?.empresa?.id).toBe(userConEmpresa.empresaId);
+      }
     });
 
     it('debe incluir unidades del proyecto si se especifica', async () => {

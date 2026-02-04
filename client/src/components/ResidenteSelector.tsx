@@ -95,8 +95,8 @@ export default function ResidenteSelector({
       {/* Drawer que se abre desde abajo - funciona perfecto en móvil */}
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
         <DrawerContent className="max-h-[85vh]">
-          <DrawerHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
+          <DrawerHeader className="border-b pb-4 space-y-0">
+            <div className="flex items-center justify-between mb-3">
               <DrawerTitle className="text-lg font-semibold text-[#002C63]">
                 Seleccionar Residente
               </DrawerTitle>
@@ -106,22 +106,22 @@ export default function ResidenteSelector({
                 </Button>
               </DrawerClose>
             </div>
-            {/* Barra de búsqueda */}
-            <div className="relative mt-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            {/* Barra de búsqueda - con z-index alto y fondo sólido */}
+            <div className="relative z-50 bg-white">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
               <Input
                 placeholder="Buscar por nombre o empresa..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 h-10"
+                className="pl-9 h-10 relative z-20 bg-white border-[#02B381] focus:border-[#02B381] focus:ring-[#02B381]"
                 autoFocus
               />
             </div>
           </DrawerHeader>
 
-          {/* Lista de residentes */}
-          <ScrollArea className="flex-1 px-4 py-2" style={{ maxHeight: 'calc(85vh - 140px)' }}>
-            <div className="space-y-1">
+          {/* Lista de residentes - con margen superior para evitar encimamiento */}
+          <ScrollArea className="flex-1 px-4 pt-4 pb-2" style={{ maxHeight: 'calc(85vh - 160px)' }}>
+            <div className="space-y-1 mt-2">
               {filteredResidentes.length === 0 ? (
                 <div className="py-8 text-center text-gray-500">
                   <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
