@@ -11,14 +11,14 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v70 (v2.33) - ObjetivaQC 🔴
+// 🔴 VERSIÓN v71 (v2.35) - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // ACTUALIZACIÓN FORZADA OBLIGATORIA
-// BADGES DE FILTROS REUBICADOS
+// TODOS LOS PDF COMO DESCARGA REAL (ACROBAT)
 // NOTIFICACIONES PUSH ULTRA-AGRESIVAS
 // ============================================
-const CURRENT_VERSION = 70;
+const CURRENT_VERSION = 71;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN PROFESIONAL 🎯

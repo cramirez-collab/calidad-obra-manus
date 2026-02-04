@@ -19,6 +19,9 @@ import {
 import { generatePDFHeader, generatePDFFooter } from "@/lib/pdfTemplate";
 import { useLocation } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { downloadPDFBestMethod } from "@/lib/pdfDownload";
 
 export default function DashboardResidente() {
   const { user } = useAuth();
@@ -78,7 +81,54 @@ export default function DashboardResidente() {
               variant="outline"
               size="icon"
               className="h-10 w-10"
-              onClick={() => window.print()}
+              onClick={() => {
+                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const VERDE_OBJETIVA: [number, number, number] = [2, 179, 129];
+                const AZUL_OBJETIVA: [number, number, number] = [0, 44, 99];
+                
+                // Header
+                doc.setFillColor(...AZUL_OBJETIVA);
+                doc.rect(0, 0, pageWidth, 25, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('OBJETIVA', 15, 16);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Dashboard Residente', pageWidth - 15, 12, { align: 'right' });
+                doc.text(new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }), pageWidth - 15, 18, { align: 'right' });
+                
+                let yPos = 35;
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Residente: ${user?.name || 'N/A'}`, 15, yPos);
+                yPos += 10;
+                
+                const statsData = [
+                  ['Pendientes Foto', String(dashboard?.estadisticas?.pendientesFoto || 0)],
+                  ['Pendientes Aprobacion', String(dashboard?.estadisticas?.pendientesAprobacion || 0)],
+                  ['Aprobados', String(dashboard?.estadisticas?.aprobados || 0)],
+                  ['Rechazados', String(dashboard?.estadisticas?.rechazados || 0)]
+                ];
+                
+                autoTable(doc, {
+                  startY: yPos,
+                  head: [['Metrica', 'Cantidad']],
+                  body: statsData,
+                  theme: 'striped',
+                  headStyles: { fillColor: VERDE_OBJETIVA, textColor: [255, 255, 255] },
+                  margin: { left: 15, right: 15 }
+                });
+                
+                // Footer
+                doc.setFontSize(8);
+                doc.setTextColor(128, 128, 128);
+                doc.text('OQC - Control de Calidad de Obra | Pagina 1 de 1', pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+                
+                downloadPDFBestMethod(doc, `dashboard_residente_${new Date().toISOString().split('T')[0]}.pdf`);
+              }}
               title="Exportar PDF"
             >
               <FileDown className="h-4 w-4" />

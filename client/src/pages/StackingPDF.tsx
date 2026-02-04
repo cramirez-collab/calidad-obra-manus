@@ -8,6 +8,9 @@ import {
   Building2
 } from "lucide-react";
 import { useMemo, useRef, useState, useEffect } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { downloadPDFBestMethod } from "@/lib/pdfDownload";
 
 type UnidadPanoramica = {
   id: number;
@@ -153,7 +156,93 @@ export default function StackingPDF() {
   });
 
   const handlePrint = () => {
-    window.print();
+    // Generar PDF real con jsPDF
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const VERDE_OBJETIVA: [number, number, number] = [2, 179, 129];
+    const AZUL_OBJETIVA: [number, number, number] = [0, 44, 99];
+    
+    // Header
+    doc.setFillColor(...AZUL_OBJETIVA);
+    doc.rect(0, 0, pageWidth, 20, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('OBJETIVA', 10, 13);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Stacking - ${proyectoNombre}`, pageWidth - 10, 10, { align: 'right' });
+    doc.text(fechaActual, pageWidth - 10, 16, { align: 'right' });
+    
+    let yPos = 30;
+    
+    // Resumen estadistico
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Resumen de Unidades', 10, yPos);
+    yPos += 8;
+    
+    const resumenData = [
+      ['Total', String(estadisticas.total)],
+      ['Completadas', String(estadisticas.completadas)],
+      ['Pendientes', String(estadisticas.pendientes)],
+      ['Rechazadas', String(estadisticas.rechazadas)],
+      ['Sin Items', String(estadisticas.sinItems)]
+    ];
+    
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Estado', 'Cantidad']],
+      body: resumenData,
+      theme: 'striped',
+      headStyles: { fillColor: VERDE_OBJETIVA, textColor: [255, 255, 255] },
+      margin: { left: 10, right: pageWidth - 100 },
+      tableWidth: 80
+    });
+    
+    yPos = (doc as any).lastAutoTable.finalY + 10;
+    
+    // Tabla de unidades
+    if (unidades && unidades.length > 0) {
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Detalle por Unidad', 10, yPos);
+      yPos += 8;
+      
+      const unidadesData = (unidades as UnidadPanoramica[]).map(u => [
+        String(u.nivel),
+        u.codigo || u.nombre,
+        u.estado,
+        String(u.items.total),
+        String(u.items.aprobados),
+        String(u.items.pendientes),
+        String(u.items.rechazados),
+        `${u.porcentaje}%`
+      ]);
+      
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Nivel', 'Unidad', 'Estado', 'Total', 'Aprobados', 'Pendientes', 'Rechazados', '%']],
+        body: unidadesData,
+        theme: 'striped',
+        headStyles: { fillColor: AZUL_OBJETIVA, textColor: [255, 255, 255] },
+        margin: { left: 10, right: 10 },
+        styles: { fontSize: 8 }
+      });
+    }
+    
+    // Footer en todas las paginas
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(128, 128, 128);
+      doc.text(`OQC - ${proyectoNombre} | Pagina ${i} de ${pageCount}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
+    }
+    
+    downloadPDFBestMethod(doc, `stacking_${proyectoNombre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   if (!selectedProjectId) {
@@ -193,7 +282,7 @@ export default function StackingPDF() {
           </div>
           <Button onClick={handlePrint} className="bg-[#02B381] hover:bg-[#02B381]/90">
             <Printer className="h-4 w-4 mr-2" />
-            Imprimir / Descargar PDF
+            Descargar PDF
           </Button>
         </div>
       </div>

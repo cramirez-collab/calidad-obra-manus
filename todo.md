@@ -3057,3 +3057,11 @@
 - [x] Reubicar badges de filtros para que no se encimen con el avatar (badges debajo de cada botón)
 - [x] Separar mejor la sección de filtros del header (card blanca con padding)
 
+
+## v71 - PDFs como descarga directa (Acrobat Reader)
+
+- [x] Identificar todos los lugares donde se generan PDFs (Bitacora, ReporteFotografico, Estadisticas, KPIs, DashboardResidente, StackingPDF)
+- [x] Modificar generación de PDFs para descarga directa con jsPDF (no formato web)
+- [x] Asegurar que todos los PDFs se descarguen como archivos .pdf reales
+- [x] Probar descargas en móvil y escritorio (downloadPDFBestMethod detecta dispositivo)
+

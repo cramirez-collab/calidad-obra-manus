@@ -44,6 +44,9 @@ import {
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useProject } from "@/contexts/ProjectContext";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { downloadPDFBestMethod } from "@/lib/pdfDownload";
 import KPIsMejoresPeores from "@/components/KPIsMejoresPeores";
 import {
   BarChart,
@@ -270,94 +273,91 @@ export default function Estadisticas() {
             </p>
           </div>
           <div className="flex gap-2">
-            {/* Botón Descargar PDF */}
+            {/* Botón Descargar PDF - Descarga real como archivo .pdf */}
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => {
-                // Crear contenido HTML para el PDF
-                const htmlContent = `
-                  <html>
-                    <head>
-                      <title>Estadísticas - OQC</title>
-                      <style>
-                        @page { size: letter; margin: 15mm; }
-                        body { font-family: Arial, sans-serif; padding: 20px; }
-                        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #002C63; padding-bottom: 10px; margin-bottom: 20px; }
-                        .logo { font-size: 24px; font-weight: bold; color: #002C63; }
-                        .date { font-size: 12px; color: #666; }
-                        .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px; }
-                        .stat-card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center; background: #f9fafb; }
-                        .stat-value { font-size: 32px; font-weight: bold; margin-bottom: 5px; }
-                        .stat-label { color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-                        .section { margin-top: 30px; }
-                        .section-title { font-size: 18px; font-weight: bold; color: #002C63; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 15px; }
-                        .empresa-list { margin: 0; padding: 0; list-style: none; }
-                        .empresa-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-                        .footer { text-align: center; color: #999; font-size: 11px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; }
-                      </style>
-                    </head>
-                    <body>
-                      <div class="header">
-                        <div class="logo">OBJETIVA</div>
-                        <div class="date">Reporte de Estadísticas<br/>${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
-                      </div>
-                      
-                      <div class="stats">
-                        <div class="stat-card">
-                          <div class="stat-value">${stats?.total || 0}</div>
-                          <div class="stat-label">Total Ítems</div>
-                        </div>
-                        <div class="stat-card">
-                          <div class="stat-value" style="color: #F59E0B;">${stats?.porStatus?.filter(s => s.status.includes('pendiente')).reduce((a, b) => a + b.count, 0) || 0}</div>
-                          <div class="stat-label">Pendientes</div>
-                        </div>
-                        <div class="stat-card">
-                          <div class="stat-value" style="color: #10B981;">${stats?.porStatus?.find(s => s.status === 'aprobado')?.count || 0}</div>
-                          <div class="stat-label">Aprobados</div>
-                        </div>
-                        <div class="stat-card">
-                          <div class="stat-value" style="color: #EF4444;">${stats?.porStatus?.find(s => s.status === 'rechazado')?.count || 0}</div>
-                          <div class="stat-label">Rechazados</div>
-                        </div>
-                      </div>
-                      
-                      ${stats?.porEmpresa && stats.porEmpresa.length > 0 ? `
-                        <div class="section">
-                          <div class="section-title">Ítems por Empresa</div>
-                          <ul class="empresa-list">
-                            ${stats.porEmpresa.slice(0, 10).map(e => {
-                              const empresaNombre = empresas?.find(emp => emp.id === e.empresaId)?.nombre || 'Empresa ' + e.empresaId;
-                              return `
-                              <li class="empresa-item">
-                                <span>${empresaNombre}</span>
-                                <strong>${e.count}</strong>
-                              </li>
-                            `;
-                            }).join('')}
-                          </ul>
-                        </div>
-                      ` : ''}
-                      
-                      <div class="footer">
-                        Generado por OQC - Control de Calidad de Obra<br/>
-                        Página 1 de 1
-                      </div>
-                    </body>
-                  </html>
-                `;
+                // Generar PDF real con jsPDF
+                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const VERDE_OBJETIVA: [number, number, number] = [2, 179, 129];
+                const AZUL_OBJETIVA: [number, number, number] = [0, 44, 99];
                 
-                // Crear blob y abrir directo (sin forzar impresión)
-                const blob = new Blob([htmlContent], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
+                // Header
+                doc.setFillColor(...AZUL_OBJETIVA);
+                doc.rect(0, 0, pageWidth, 25, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('OBJETIVA', 15, 16);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Reporte de Estadisticas', pageWidth - 15, 12, { align: 'right' });
+                doc.text(new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }), pageWidth - 15, 18, { align: 'right' });
                 
-                // Abrir en nueva ventana - el usuario decide si imprime o guarda
-                const reportWindow = window.open('', '_blank');
-                if (reportWindow) {
-                  reportWindow.document.write(htmlContent);
-                  reportWindow.document.close();
-                  // No forzar impresión - el usuario decide
+                let yPos = 35;
+                
+                // Resumen de estadísticas
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Resumen General', 15, yPos);
+                yPos += 10;
+                
+                // Tabla de resumen
+                const resumenData = [
+                  ['Total Items', String(stats?.total || 0)],
+                  ['Pendientes', String(stats?.porStatus?.filter(s => s.status.includes('pendiente')).reduce((a, b) => a + b.count, 0) || 0)],
+                  ['Aprobados', String(stats?.porStatus?.find(s => s.status === 'aprobado')?.count || 0)],
+                  ['Rechazados', String(stats?.porStatus?.find(s => s.status === 'rechazado')?.count || 0)]
+                ];
+                
+                autoTable(doc, {
+                  startY: yPos,
+                  head: [['Metrica', 'Cantidad']],
+                  body: resumenData,
+                  theme: 'striped',
+                  headStyles: { fillColor: VERDE_OBJETIVA, textColor: [255, 255, 255] },
+                  margin: { left: 15, right: 15 },
+                  tableWidth: 'auto'
+                });
+                
+                yPos = (doc as any).lastAutoTable.finalY + 15;
+                
+                // Items por empresa
+                if (stats?.porEmpresa && stats.porEmpresa.length > 0) {
+                  doc.setFontSize(14);
+                  doc.setFont('helvetica', 'bold');
+                  doc.text('Items por Empresa', 15, yPos);
+                  yPos += 10;
+                  
+                  const empresaData = stats.porEmpresa.slice(0, 10).map(e => {
+                    const empresaNombre = empresas?.find(emp => emp.id === e.empresaId)?.nombre || 'Empresa ' + e.empresaId;
+                    return [empresaNombre, String(e.count)];
+                  });
+                  
+                  autoTable(doc, {
+                    startY: yPos,
+                    head: [['Empresa', 'Items']],
+                    body: empresaData,
+                    theme: 'striped',
+                    headStyles: { fillColor: VERDE_OBJETIVA, textColor: [255, 255, 255] },
+                    margin: { left: 15, right: 15 }
+                  });
                 }
+                
+                // Footer
+                const pageCount = doc.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                  doc.setPage(i);
+                  doc.setFontSize(8);
+                  doc.setTextColor(128, 128, 128);
+                  doc.text(`OQC - Control de Calidad de Obra | Pagina ${i} de ${pageCount}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+                }
+                
+                // Descargar como archivo PDF real
+                downloadPDFBestMethod(doc, `estadisticas_${new Date().toISOString().split('T')[0]}.pdf`);
               }}
               className="text-red-600 border-red-200 hover:bg-red-50"
             >
