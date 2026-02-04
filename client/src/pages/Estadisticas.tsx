@@ -807,10 +807,16 @@ export default function Estadisticas() {
             <CardContent>
               {empresaData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={empresaData} layout="vertical">
+                  <BarChart data={empresaData} layout="vertical" margin={{ left: 20, right: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
+                    <XAxis type="number" tick={{ fontSize: 11 }} />
+                    <YAxis 
+                      dataKey="name" 
+                      type="category" 
+                      width={100} 
+                      tick={{ fontSize: 10 }} 
+                      tickFormatter={(value) => value.length > 12 ? value.substring(0, 12) + '...' : value}
+                    />
                     <Tooltip />
                     <Bar dataKey="total" fill="#3B82F6" radius={[0, 4, 4, 0]} />
                   </BarChart>
@@ -834,10 +840,18 @@ export default function Estadisticas() {
             <CardContent>
               {especialidadData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={especialidadData}>
+                  <BarChart data={especialidadData} margin={{ bottom: 60 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 10 }} 
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      interval={0}
+                      tickFormatter={(value) => value && value.length > 10 ? value.substring(0, 10) + '...' : (value || 'Sin nombre')}
+                    />
+                    <YAxis tick={{ fontSize: 11 }} />
                     <Tooltip />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                       {especialidadData.map((entry, index) => (
@@ -964,23 +978,46 @@ export default function Estadisticas() {
               </CardHeader>
               <CardContent>
                 {severidadData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={350}>
                     <RechartsPie>
                       <Pie
                         data={severidadData}
                         cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={2}
+                        cy="45%"
+                        innerRadius={50}
+                        outerRadius={85}
+                        paddingAngle={3}
                         dataKey="value"
-                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                        labelLine={{ strokeWidth: 1 }}
+                        label={({ name, percent, cx, cy, midAngle, outerRadius }) => {
+                          const RADIAN = Math.PI / 180;
+                          const radius = outerRadius + 25;
+                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                          return (
+                            <text 
+                              x={x} 
+                              y={y} 
+                              fill="#333" 
+                              textAnchor={x > cx ? 'start' : 'end'} 
+                              dominantBaseline="central"
+                              fontSize={11}
+                            >
+                              {`${name} (${(percent * 100).toFixed(0)}%)`}
+                            </text>
+                          );
+                        }}
                       >
                         {severidadData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
                       <Tooltip />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36}
+                        wrapperStyle={{ fontSize: '11px' }}
+                      />
                     </RechartsPie>
                   </ResponsiveContainer>
                 ) : (
@@ -1194,18 +1231,18 @@ function RendimientoUsuarios() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full text-xs sm:text-sm min-w-[600px]">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left p-2 font-medium">Usuario</th>
-                  <th className="text-left p-2 font-medium">Rol</th>
-                  <th className="text-center p-2 font-medium">Total Ítems</th>
-                  <th className="text-center p-2 font-medium">Aprobados</th>
-                  <th className="text-center p-2 font-medium">Rechazados</th>
-                  <th className="text-center p-2 font-medium">OK Supervisor</th>
-                  <th className="text-center p-2 font-medium">Tiempo Prom.</th>
-                  <th className="text-center p-2 font-medium">Eficiencia</th>
+                  <th className="text-left p-2 font-medium whitespace-nowrap min-w-[120px]">Usuario</th>
+                  <th className="text-left p-2 font-medium whitespace-nowrap min-w-[80px]">Rol</th>
+                  <th className="text-center p-2 font-medium whitespace-nowrap">Total</th>
+                  <th className="text-center p-2 font-medium whitespace-nowrap">✅</th>
+                  <th className="text-center p-2 font-medium whitespace-nowrap">❌</th>
+                  <th className="text-center p-2 font-medium whitespace-nowrap">OK</th>
+                  <th className="text-center p-2 font-medium whitespace-nowrap">Tiempo</th>
+                  <th className="text-center p-2 font-medium whitespace-nowrap">Efic.</th>
                 </tr>
               </thead>
               <tbody>
@@ -1213,24 +1250,35 @@ function RendimientoUsuarios() {
                   const eficiencia = usuario.itemsCompletados > 0 
                     ? ((usuario.aprobados / usuario.itemsCompletados) * 100).toFixed(0)
                     : 0;
+                  // Formatear nombre para móvil
+                  const nombreCorto = usuario.usuarioNombre?.length > 15 
+                    ? usuario.usuarioNombre.substring(0, 15) + '...' 
+                    : usuario.usuarioNombre;
+                  // Formatear rol para móvil
+                  const rolCorto = usuario.usuarioRol === 'supervisor' ? 'super' :
+                    usuario.usuarioRol === 'jefe_residente' ? 'jefe' :
+                    usuario.usuarioRol === 'residente' ? 'resi' :
+                    usuario.usuarioRol === 'admin' ? 'admin' :
+                    usuario.usuarioRol?.substring(0, 5) || '-';
                   return (
                     <tr key={index} className="border-b hover:bg-muted/30">
-                      <td className="p-2 font-medium">{usuario.usuarioNombre}</td>
-                      <td className="p-2">
-                        <span className={`px-2 py-0.5 rounded text-xs ${
+                      <td className="p-2 font-medium whitespace-nowrap" title={usuario.usuarioNombre}>{nombreCorto}</td>
+                      <td className="p-2 whitespace-nowrap">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] sm:text-xs ${
                           usuario.usuarioRol === 'supervisor' ? 'bg-emerald-100 text-emerald-800' :
                           usuario.usuarioRol === 'jefe_residente' ? 'bg-amber-100 text-amber-800' :
+                          usuario.usuarioRol === 'admin' ? 'bg-blue-100 text-blue-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {usuario.usuarioRol}
+                          {rolCorto}
                         </span>
                       </td>
-                      <td className="p-2 text-center">{usuario.itemsCompletados}</td>
-                      <td className="p-2 text-center text-emerald-600 font-medium">{usuario.aprobados}</td>
-                      <td className="p-2 text-center text-red-600 font-medium">{usuario.rechazados}</td>
-                      <td className="p-2 text-center text-blue-600 font-medium">{usuario.okSupervisor}</td>
-                      <td className="p-2 text-center">{usuario.tiempoPromedioHoras?.toFixed(1) || 0}h</td>
-                      <td className="p-2 text-center">
+                      <td className="p-2 text-center whitespace-nowrap">{usuario.itemsCompletados}</td>
+                      <td className="p-2 text-center text-emerald-600 font-medium whitespace-nowrap">{usuario.aprobados}</td>
+                      <td className="p-2 text-center text-red-600 font-medium whitespace-nowrap">{usuario.rechazados}</td>
+                      <td className="p-2 text-center text-blue-600 font-medium whitespace-nowrap">{usuario.okSupervisor}</td>
+                      <td className="p-2 text-center whitespace-nowrap">{usuario.tiempoPromedioHoras?.toFixed(1) || 0}h</td>
+                      <td className="p-2 text-center whitespace-nowrap">
                         <span className={`font-medium ${
                           Number(eficiencia) >= 80 ? 'text-emerald-600' :
                           Number(eficiencia) >= 60 ? 'text-amber-600' :

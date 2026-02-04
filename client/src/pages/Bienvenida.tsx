@@ -254,14 +254,14 @@ export default function Bienvenida() {
         </div>
 
         {/* Filtros de estado - SOLO iconos con contador (sin texto) */}
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-3 items-center flex-wrap">
           {filterButtons.map(filter => (
             <Tooltip key={filter.key}>
               <TooltipTrigger asChild>
                 <Button
                   variant={activeFilter === filter.key ? "default" : "outline"}
                   size="icon"
-                  className={`h-10 w-10 relative ${
+                  className={`h-12 w-12 relative ${
                     activeFilter === filter.key 
                       ? `${filter.color} text-white border-0 shadow-md` 
                       : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
@@ -269,11 +269,11 @@ export default function Bienvenida() {
                   onClick={() => handleFilterChange(filter.key)}
                 >
                   <filter.icon className="h-5 w-5" />
-                  {/* Badge con contador */}
+                  {/* Badge con contador - MÁS GRANDE Y VISIBLE */}
                   {counts[filter.key] > 0 && (
-                    <span className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full text-[10px] font-bold flex items-center justify-center px-1 ${
+                    <span className={`absolute -top-2 -right-2 min-w-[22px] h-[22px] rounded-full text-[11px] font-bold flex items-center justify-center px-1.5 shadow-lg border-2 border-white ${
                       activeFilter === filter.key 
-                        ? "bg-white text-slate-700" 
+                        ? "bg-[#002C63] text-white" 
                         : `${filter.color} text-white`
                     }`}>
                       {counts[filter.key]}

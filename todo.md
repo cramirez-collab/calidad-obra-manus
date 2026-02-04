@@ -3026,3 +3026,28 @@
 - [x] Forzar notificaciones tipo globo incluso en pantalla de bloqueo
 - [x] Reintentar solicitud de permisos si el usuario no responde
 
+
+## v69 (v2.30) - Correcciones de UI y Limpieza de Datos
+
+### Limpieza de Base de Datos
+- [x] Eliminar empresas simuladas (Empresa 660002, Empresa Test UX)
+- [x] Limpiar especialidades sin nombre (Esp null) - items de prueba eliminados
+
+### Corrección de Gráficas
+- [x] Evitar encimamiento de etiquetas en gráfico de empresas (truncar nombres largos)
+- [x] Evitar encimamiento de etiquetas en gráfico de especialidades (rotar -45°)
+- [x] Corregir etiqueta "Critico" cortada en gráfico de severidad (labels con posición calculada + Legend)
+
+### Corrección de Tabla de Usuarios
+- [x] Evitar que nombres se corten en múltiples líneas (whitespace-nowrap + truncar)
+- [x] Evitar que roles se corten en múltiples líneas (abreviaturas: super, jefe, resi, admin)
+- [x] Ajustar anchos de columnas para móvil (min-w, text-xs, scroll horizontal)
+
+### Notificaciones Push
+- [x] Reforzar solicitud agresiva de permisos (50 intentos, cada 3s)
+- [x] Asegurar notificaciones tipo globo en pantalla de bloqueo (requireInteraction + vibrate)
+
+
+### Corrección de Badges de Filtros
+- [x] Hacer badges de filtros más visibles (botones más grandes 12x12, badges 22px con borde blanco y sombra)
+

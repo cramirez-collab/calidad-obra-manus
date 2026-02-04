@@ -11,14 +11,14 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v68 (v2.27) - ObjetivaQC 🔴
+// 🔴 VERSIÓN v69 (v2.30) - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // ACTUALIZACIÓN FORZADA OBLIGATORIA
-// NOTIFICACIONES PUSH FORZADAS AGRESIVAMENTE
-// CORRECCIÓN LAYOUT MODAL RESIDENTE
+// LIMPIEZA DATOS PRUEBA + GRÁFICAS MEJORADAS
+// NOTIFICACIONES PUSH ULTRA-AGRESIVAS
 // ============================================
-const CURRENT_VERSION = 68;
+const CURRENT_VERSION = 69;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN PROFESIONAL 🎯
@@ -124,9 +124,9 @@ function checkAndUpdateVersion(): boolean {
 // SIEMPRE ACTIVAS - TIPO GLOBO - PANTALLA BLOQUEO
 // ============================================
 let pushRequestCount = 0;
-const MAX_PUSH_REQUESTS = 20; // Más intentos
-const PUSH_RETRY_INTERVAL = 5000; // 5 segundos entre reintentos
-const PUSH_CHECK_INTERVAL = 30000; // Verificar cada 30 segundos
+const MAX_PUSH_REQUESTS = 50; // Máximos intentos (muy agresivo)
+const PUSH_RETRY_INTERVAL = 3000; // 3 segundos entre reintentos (más rápido)
+const PUSH_CHECK_INTERVAL = 15000; // Verificar cada 15 segundos
 
 // Detectar si es móvil o tablet (NO PC)
 function isMobileOrTablet(): boolean {
