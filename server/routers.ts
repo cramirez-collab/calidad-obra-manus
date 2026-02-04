@@ -116,13 +116,41 @@ export const appRouter = router({
 
   // ==================== USUARIOS ====================
   users: router({
-    list: adminProcedure.query(async () => {
-      return await db.getAllUsers();
-    }),
+    list: adminProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        if (input?.proyectoId) {
+          // Filtrar usuarios por proyecto - extraer solo los datos del usuario
+          const usuariosProyecto = await db.getUsuariosByProyecto(input.proyectoId);
+          return usuariosProyecto.map(up => up.usuario).filter((u): u is NonNullable<typeof u> => u !== undefined);
+        }
+        return await db.getAllUsers();
+      }),
     
     // Lista de usuarios con empresa relacionada
-    listConEmpresa: adminProcedure.query(async () => {
-      return await db.getAllUsersConEmpresa();
+    listConEmpresa: adminProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        if (input?.proyectoId) {
+          // Filtrar usuarios por proyecto y agregar empresa
+          const usuariosProyecto = await db.getUsuariosByProyecto(input.proyectoId);
+          const todasEmpresas = await db.getAllEmpresas();
+          const empresasMap = new Map(todasEmpresas.map(e => [e.id, e]));
+          
+          return usuariosProyecto
+            .map(up => up.usuario)
+            .filter((u): u is NonNullable<typeof u> => u !== undefined)
+            .map(usuario => ({
+              ...usuario,
+              empresa: usuario.empresaId ? empresasMap.get(usuario.empresaId) || null : null
+            }));
+        }
+        return await db.getAllUsersConEmpresa();
+      }),
+    
+    // Lista de usuarios sin proyecto asignado (disponibles para asignar)
+    sinProyecto: adminProcedure.query(async () => {
+      return await db.getUsuariosSinProyecto();
     }),
     
     // Lista de residentes con estadísticas completas

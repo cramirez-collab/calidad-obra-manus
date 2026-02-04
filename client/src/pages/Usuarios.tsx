@@ -68,7 +68,10 @@ export default function Usuarios() {
   const { selectedProjectId } = useProject();
   const utils = trpc.useUtils();
   const { user } = useAuth();
-  const { data: allUsuarios, isLoading } = trpc.users.listConEmpresa.useQuery();
+  // Obtener usuarios filtrados por proyecto directamente desde el backend
+  const { data: usuarios, isLoading, refetch: refetchUsuarios } = trpc.users.listConEmpresa.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
   const { data: todosProyectos } = trpc.proyectos.list.useQuery();
   // Obtener empresas filtradas por proyecto desde el backend
   const { data: empresas } = trpc.empresas.list.useQuery(
@@ -79,14 +82,6 @@ export default function Usuarios() {
     { proyectoId: selectedProjectId! },
     { enabled: !!selectedProjectId }
   );
-  
-  // Filtrar usuarios por proyecto seleccionado (solo mostrar usuarios asignados al proyecto)
-  const usuariosDelProyecto = selectedProjectId && proyectoUsuarios
-    ? proyectoUsuarios.map(pu => pu.usuarioId)
-    : null;
-  const usuarios = usuariosDelProyecto
-    ? allUsuarios?.filter(u => usuariosDelProyecto.includes(u.id))
-    : allUsuarios;
   
   // Solo admin y superadmin pueden crear/editar usuarios
   const canManageUsers = user?.role === 'superadmin' || user?.role === 'admin';

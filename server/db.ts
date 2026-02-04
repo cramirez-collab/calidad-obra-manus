@@ -1,4 +1,4 @@
-import { eq, and, or, gte, lte, like, desc, asc, sql, inArray } from "drizzle-orm";
+import { eq, and, or, gte, lte, like, desc, asc, sql, inArray, notInArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import bcrypt from 'bcryptjs';
 import { 
@@ -2403,6 +2403,31 @@ export async function getAllProyectosConEstadisticas() {
 }
 
 // ==================== PROYECTO-USUARIOS ====================
+
+// Obtener usuarios que no están asignados a ningún proyecto (disponibles para asignar)
+export async function getUsuariosSinProyecto() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Obtener todos los usuarios que tienen al menos una asignación activa
+  const usuariosConProyecto = await db.select({ usuarioId: proyectoUsuarios.usuarioId })
+    .from(proyectoUsuarios)
+    .where(eq(proyectoUsuarios.activo, true));
+  
+  const idsConProyecto = usuariosConProyecto.map(u => u.usuarioId);
+  
+  // Obtener usuarios que NO están en esa lista
+  if (idsConProyecto.length === 0) {
+    return await db.select().from(users).where(eq(users.activo, true)).orderBy(users.name);
+  }
+  
+  return await db.select().from(users)
+    .where(and(
+      eq(users.activo, true),
+      notInArray(users.id, idsConProyecto)
+    ))
+    .orderBy(users.name);
+}
 
 export async function getUsuariosByProyecto(proyectoId: number) {
   const db = await getDb();

@@ -52,7 +52,8 @@ export default function Proyectos() {
   });
 
   const { data: proyectos, refetch } = trpc.proyectos.listConEstadisticas.useQuery();
-  const { data: usuarios } = trpc.users.list.useQuery();
+  // Obtener usuarios sin proyecto asignado (disponibles para asignar a cualquier proyecto)
+  const { data: usuariosSinProyecto } = trpc.users.sinProyecto.useQuery();
   const { data: usuariosProyecto, refetch: refetchUsuarios } = trpc.proyectos.usuarios.useQuery(
     { proyectoId: selectedProyecto?.id || 0 },
     { enabled: !!selectedProyecto }
@@ -237,10 +238,8 @@ export default function Proyectos() {
     }
   };
 
-  // Usuarios disponibles para asignar (no están en el proyecto)
-  const usuariosDisponibles = usuarios?.filter(
-    (u) => !usuariosProyecto?.some((up) => up.usuarioId === u.id)
-  ) || [];
+  // Usuarios disponibles para asignar (usuarios sin proyecto asignado)
+  const usuariosDisponibles = usuariosSinProyecto || [];
 
   return (
     <div className="space-y-4 sm:space-y-6">

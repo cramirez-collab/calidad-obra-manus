@@ -2960,3 +2960,26 @@
 - [x] Submenú usa estado del padre en lugar de estado local
 - [x] Solo se cierra al hacer clic en el botón de Configuración nuevamente
 - [x] Permite navegar entre opciones sin cerrar el submenú
+
+
+## v66 - Usuarios Independientes por Proyecto
+
+### Bug Reportado
+- [ ] Usuarios de Hidalma aparecen en proyecto Mayas
+- [ ] Cada proyecto debe tener su propia lista de usuarios autónoma
+- [ ] Los usuarios deben estar asociados solo a su proyecto específico
+
+
+## v66 - Usuarios Independientes por Proyecto
+
+### Bug Reportado
+- [x] Usuarios de Hidalma aparecen en proyecto Mayas
+- [x] Cada proyecto debe ser independiente
+- [x] Los usuarios de un proyecto solo deben aparecer en ese proyecto
+
+### Solución Implementada
+- [x] users.list ahora acepta proyectoId para filtrar
+- [x] users.listConEmpresa filtra por proyecto y agrega empresa
+- [x] users.sinProyecto devuelve usuarios disponibles para asignar
+- [x] Página Usuarios filtra directamente desde backend
+- [x] Página Proyectos solo muestra usuarios sin proyecto para asignar
