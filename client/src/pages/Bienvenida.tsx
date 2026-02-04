@@ -253,60 +253,62 @@ export default function Bienvenida() {
           </div>
         </div>
 
-        {/* Filtros de estado - SOLO iconos con contador (sin texto) */}
-        <div className="flex gap-3 items-center flex-wrap">
-          {filterButtons.map(filter => (
-            <Tooltip key={filter.key}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={activeFilter === filter.key ? "default" : "outline"}
-                  size="icon"
-                  className={`h-12 w-12 relative ${
-                    activeFilter === filter.key 
-                      ? `${filter.color} text-white border-0 shadow-md` 
-                      : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
-                  }`}
-                  onClick={() => handleFilterChange(filter.key)}
-                >
-                  <filter.icon className="h-5 w-5" />
-                  {/* Badge con contador - MÁS GRANDE Y VISIBLE */}
-                  {counts[filter.key] > 0 && (
-                    <span className={`absolute -top-2 -right-2 min-w-[22px] h-[22px] rounded-full text-[11px] font-bold flex items-center justify-center px-1.5 shadow-lg border-2 border-white ${
+        {/* Filtros de estado - Card con botones bien espaciados */}
+        <div className="bg-white rounded-xl p-3 shadow-sm border border-slate-100">
+          <div className="flex gap-4 items-center justify-start overflow-x-auto pb-1">
+            {filterButtons.map(filter => (
+              <Tooltip key={filter.key}>
+                <TooltipTrigger asChild>
+                  <div className="flex flex-col items-center gap-1 min-w-[60px]">
+                    <Button
+                      variant={activeFilter === filter.key ? "default" : "outline"}
+                      size="icon"
+                      className={`h-11 w-11 relative ${
+                        activeFilter === filter.key 
+                          ? `${filter.color} text-white border-0 shadow-md` 
+                          : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                      }`}
+                      onClick={() => handleFilterChange(filter.key)}
+                    >
+                      <filter.icon className="h-5 w-5" />
+                    </Button>
+                    {/* Badge DEBAJO del botón - siempre visible */}
+                    <span className={`min-w-[28px] h-[20px] rounded-full text-[11px] font-bold flex items-center justify-center px-2 ${
                       activeFilter === filter.key 
                         ? "bg-[#002C63] text-white" 
-                        : `${filter.color} text-white`
+                        : counts[filter.key] > 0 
+                          ? `${filter.color} text-white`
+                          : "bg-slate-200 text-slate-500"
                     }`}>
                       {counts[filter.key]}
                     </span>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">{filter.tooltip}</TooltipContent>
-            </Tooltip>
-          ))}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">{filter.tooltip}</TooltipContent>
+              </Tooltip>
+            ))}
           
-          {/* Botón de modo selección múltiple - Solo para superadmin */}
-          {isSuperadmin && (
-            <Tooltip>
-              <TooltipTrigger asChild>
+            {/* Botón de modo selección múltiple - Solo para superadmin */}
+            {isSuperadmin && (
+              <div className="flex flex-col items-center gap-1 min-w-[60px] ml-auto">
                 <Button
                   variant={selectionMode ? "default" : "outline"}
                   size="icon"
-                  className={`h-10 w-10 ml-auto ${
+                  className={`h-11 w-11 ${
                     selectionMode 
                       ? "bg-red-500 text-white border-0 shadow-md hover:bg-red-600" 
-                      : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                      : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
                   }`}
                   onClick={toggleSelectionMode}
                 >
                   {selectionMode ? <X className="h-5 w-5" /> : <CheckSquare className="h-5 w-5" />}
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                {selectionMode ? "Cancelar selección" : "Selección múltiple"}
-              </TooltipContent>
-            </Tooltip>
-          )}
+                <span className="text-[9px] text-slate-400 whitespace-nowrap">
+                  {selectionMode ? "Cancelar" : "Seleccionar"}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Barra de acciones de selección múltiple - REDISEÑADA PARA MÓVIL */}

@@ -3051,3 +3051,9 @@
 ### Corrección de Badges de Filtros
 - [x] Hacer badges de filtros más visibles (botones más grandes 12x12, badges 22px con borde blanco y sombra)
 
+
+## v70 - Corrección de ubicación de badges
+
+- [x] Reubicar badges de filtros para que no se encimen con el avatar (badges debajo de cada botón)
+- [x] Separar mejor la sección de filtros del header (card blanca con padding)
+

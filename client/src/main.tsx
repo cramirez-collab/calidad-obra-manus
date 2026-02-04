@@ -11,14 +11,14 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v69 (v2.30) - ObjetivaQC 🔴
+// 🔴 VERSIÓN v70 (v2.33) - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // ACTUALIZACIÓN FORZADA OBLIGATORIA
-// LIMPIEZA DATOS PRUEBA + GRÁFICAS MEJORADAS
+// BADGES DE FILTROS REUBICADOS
 // NOTIFICACIONES PUSH ULTRA-AGRESIVAS
 // ============================================
-const CURRENT_VERSION = 69;
+const CURRENT_VERSION = 70;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN PROFESIONAL 🎯
