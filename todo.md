@@ -2866,3 +2866,18 @@
 - [x] Catálogos: Empresas, Unidades, Espacios, Especialidades, Lista Espec., Defectos
 - [x] Usuarios: Usuarios, Bitácora
 - [x] Separadores y etiquetas de grupo en desktop y móvil
+
+
+## v60 - Corregir Botón Actualizar Versión
+
+### Bug Reportado
+- [x] El botón de actualizar versión en móvil no funciona
+- [x] No actualiza a la versión más reciente
+
+### Solución Implementada
+- [x] Botón "ACTUALIZAR A ÚLTIMA VERSIÓN" con diseño verde prominente
+- [x] Limpieza nuclear: Service Workers, Caches, LocalStorage, IndexedDB
+- [x] Preserva solo proyecto seleccionado y datos offline pendientes
+- [x] Fuerza versión 0 para detectar actualización
+- [x] Recarga con múltiples parámetros anti-cache
+- [x] Actualizado tanto en móvil como en desktop

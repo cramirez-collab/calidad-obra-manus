@@ -538,47 +538,77 @@ function DashboardLayoutContent({
                       </div>
                     </div>
                     <DropdownMenuSeparator />
-                    {/* BOTÓN ACTUALIZAR VERSIÓN - FORZAR ÚLTIMA VERSIÓN */}
+                    {/* BOTÓN ACTUALIZAR VERSIÓN - FORZAR ÚLTIMA VERSIÓN PUBLICADA */}
                     <DropdownMenuItem
                       onClick={async () => {
                         try {
-                          console.log('[ACTUALIZAR] Forzando actualización a última versión...');
-                          // 1. Eliminar TODOS los Service Workers
+                          console.log('[ACTUALIZAR NUCLEAR] Forzando descarga de última versión publicada...');
+                          
+                          // 1. Eliminar TODOS los Service Workers de forma agresiva
                           if ('serviceWorker' in navigator) {
                             const registrations = await navigator.serviceWorker.getRegistrations();
+                            console.log('[ACTUALIZAR] Service Workers encontrados:', registrations.length);
                             for (const reg of registrations) {
                               await reg.unregister();
+                              console.log('[ACTUALIZAR] SW eliminado:', reg.scope);
                             }
-                            console.log('[ACTUALIZAR] Service Workers eliminados');
                           }
-                          // 2. Eliminar TODOS los caches
+                          
+                          // 2. Eliminar TODOS los caches sin excepción
                           if ('caches' in window) {
                             const cacheNames = await caches.keys();
-                            await Promise.all(cacheNames.map(name => caches.delete(name)));
-                            console.log('[ACTUALIZAR] Caches eliminados');
+                            console.log('[ACTUALIZAR] Caches encontrados:', cacheNames);
+                            await Promise.all(cacheNames.map(async (name) => {
+                              await caches.delete(name);
+                              console.log('[ACTUALIZAR] Cache eliminado:', name);
+                            }));
                           }
-                          // 3. Limpiar localStorage (preservar proyecto y datos offline)
+                          
+                          // 3. Preservar SOLO datos críticos
                           const proyectoGuardado = localStorage.getItem('selectedProjectId');
                           const offlineData = localStorage.getItem('oqc_offline_queue');
+                          
+                          // 4. Limpiar TODO el almacenamiento
                           localStorage.clear();
                           sessionStorage.clear();
+                          
+                          // 5. Restaurar datos críticos
                           if (proyectoGuardado) localStorage.setItem('selectedProjectId', proyectoGuardado);
                           if (offlineData) localStorage.setItem('oqc_offline_queue', offlineData);
-                          // 4. Marcar versión como 0 para forzar actualización
+                          
+                          // 6. FORZAR versión 0 para que el sistema detecte actualización
                           localStorage.setItem('oqc_app_version', '0');
                           localStorage.setItem('oqc_installed_version', '0');
-                          console.log('[ACTUALIZAR] Versión reseteada, recargando...');
-                          // 5. Recargar con cache-bust agresivo
-                          window.location.href = window.location.origin + '?force_update=' + Date.now();
+                          localStorage.setItem('oqc_force_nuclear_update', 'true');
+                          
+                          // 7. Limpiar IndexedDB completamente
+                          try {
+                            const databases = await indexedDB.databases();
+                            for (const db of databases) {
+                              if (db.name && db.name !== 'objetiva-qc-offline') {
+                                indexedDB.deleteDatabase(db.name);
+                              }
+                            }
+                          } catch (e) {
+                            console.log('[ACTUALIZAR] IndexedDB limpieza parcial');
+                          }
+                          
+                          console.log('[ACTUALIZAR NUCLEAR] Todo limpio. Recargando desde servidor...');
+                          
+                          // 8. Recargar con múltiples parámetros anti-cache
+                          const timestamp = Date.now();
+                          const random = Math.random().toString(36).substring(7);
+                          window.location.href = `${window.location.origin}/?nuclear=${timestamp}&bust=${random}&v=0`;
                         } catch (e) {
                           console.error('[ACTUALIZAR] Error:', e);
-                          window.location.href = window.location.origin + '?force_update=' + Date.now();
+                          // Forzar recarga incluso si hay error
+                          window.location.href = `${window.location.origin}/?force=${Date.now()}`;
                         }
                       }}
-                      className="cursor-pointer text-blue-600 focus:text-blue-600 font-semibold"
+                      className="cursor-pointer text-green-600 focus:text-green-600 font-bold"
                     >
                       <RefreshCw className="mr-2 h-4 w-4" />
-                      🔄 Actualizar Versión
+                      🚀 ACTUALIZAR A ÚLTIMA VERSIÓN
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
@@ -770,44 +800,78 @@ function DashboardLayoutContent({
                 </button>
               </div>
               
-              {/* BOTÓN ACTUALIZAR VERSIÓN - MÓVIL */}
+              {/* BOTÓN ACTUALIZAR VERSIÓN - MÓVIL - FORZAR ÚLTIMA VERSIÓN PUBLICADA */}
               <div className="border-t p-2">
                 <button
                   onClick={async () => {
                     try {
-                      console.log('[ACTUALIZAR] Forzando actualización a última versión...');
-                      // 1. Eliminar TODOS los Service Workers
+                      console.log('[ACTUALIZAR NUCLEAR] Forzando descarga de última versión publicada...');
+                      
+                      // 1. Eliminar TODOS los Service Workers de forma agresiva
                       if ('serviceWorker' in navigator) {
                         const registrations = await navigator.serviceWorker.getRegistrations();
+                        console.log('[ACTUALIZAR] Service Workers encontrados:', registrations.length);
                         for (const reg of registrations) {
                           await reg.unregister();
+                          console.log('[ACTUALIZAR] SW eliminado:', reg.scope);
                         }
                       }
-                      // 2. Eliminar TODOS los caches
+                      
+                      // 2. Eliminar TODOS los caches sin excepción
                       if ('caches' in window) {
                         const cacheNames = await caches.keys();
-                        await Promise.all(cacheNames.map(name => caches.delete(name)));
+                        console.log('[ACTUALIZAR] Caches encontrados:', cacheNames);
+                        await Promise.all(cacheNames.map(async (name) => {
+                          await caches.delete(name);
+                          console.log('[ACTUALIZAR] Cache eliminado:', name);
+                        }));
                       }
-                      // 3. Limpiar localStorage (preservar proyecto y datos offline)
+                      
+                      // 3. Preservar SOLO datos críticos
                       const proyectoGuardado = localStorage.getItem('selectedProjectId');
                       const offlineData = localStorage.getItem('oqc_offline_queue');
+                      
+                      // 4. Limpiar TODO el almacenamiento
                       localStorage.clear();
                       sessionStorage.clear();
+                      
+                      // 5. Restaurar datos críticos
                       if (proyectoGuardado) localStorage.setItem('selectedProjectId', proyectoGuardado);
                       if (offlineData) localStorage.setItem('oqc_offline_queue', offlineData);
-                      // 4. Marcar versión como 0 para forzar actualización
+                      
+                      // 6. FORZAR versión 0 para que el sistema detecte actualización
                       localStorage.setItem('oqc_app_version', '0');
                       localStorage.setItem('oqc_installed_version', '0');
-                      // 5. Recargar con cache-bust agresivo
-                      window.location.href = window.location.origin + '?force_update=' + Date.now();
+                      localStorage.setItem('oqc_force_nuclear_update', 'true');
+                      
+                      // 7. Limpiar IndexedDB completamente
+                      try {
+                        const databases = await indexedDB.databases();
+                        for (const db of databases) {
+                          if (db.name && db.name !== 'objetiva-qc-offline') {
+                            indexedDB.deleteDatabase(db.name);
+                          }
+                        }
+                      } catch (e) {
+                        console.log('[ACTUALIZAR] IndexedDB limpieza parcial');
+                      }
+                      
+                      console.log('[ACTUALIZAR NUCLEAR] Todo limpio. Recargando desde servidor...');
+                      
+                      // 8. Recargar con múltiples parámetros anti-cache
+                      const timestamp = Date.now();
+                      const random = Math.random().toString(36).substring(7);
+                      window.location.href = `${window.location.origin}/?nuclear=${timestamp}&bust=${random}&v=0`;
                     } catch (e) {
-                      window.location.href = window.location.origin + '?force_update=' + Date.now();
+                      console.error('[ACTUALIZAR] Error:', e);
+                      // Forzar recarga incluso si hay error
+                      window.location.href = `${window.location.origin}/?force=${Date.now()}`;
                     }
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-500/10 text-blue-700 border border-blue-500/30 hover:bg-blue-500/20 transition-colors text-sm font-semibold"
+                  className="w-full flex items-center gap-3 px-4 py-4 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors text-base font-bold shadow-lg"
                 >
-                  <RefreshCw className="h-5 w-5" />
-                  <span>🔄 Actualizar Versión</span>
+                  <RefreshCw className="h-6 w-6" />
+                  <span>🚀 ACTUALIZAR A ÚLTIMA VERSIÓN</span>
                 </button>
               </div>
               

@@ -1,6 +1,6 @@
 // ============================================
 // ============================================
-// SISTEMA OFFLINE v59 - NUCLEAR
+// SISTEMA OFFLINE v60 - NUCLEAR
 // ============================================
 // MANDATORIO Y OBLIGATORIO:
 // - Dominio: objetivaqc.com (PERMANENTE)
@@ -9,10 +9,10 @@
 // - Tamaño lápiz: 2 FINO PARA PRECISIÓN
 // - CONSECUTIVO #N INCREMENTAL DEBAJO DE OBJETIVA
 // - ESTADÍSTICAS FILTRADAS POR PROYECTO
-// - SUBMENÚ CONFIG AGRUPADO (SISTEMA/CATÁLOGOS/USUARIOS)
-// - TODOS los dispositivos DEBEN tener v59
+// - BOTÓN ACTUALIZAR NUCLEAR (FORZAR ÚLTIMA VERSIÓN)
+// - TODOS los dispositivos DEBEN tener v60
 // ============================================
-const APP_VERSION = 59;
+const APP_VERSION = 60;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
