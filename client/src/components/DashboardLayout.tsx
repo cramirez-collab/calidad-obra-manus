@@ -211,6 +211,7 @@ function DashboardLayoutContent({
   const [location, setLocation] = useLocation();
   const [configOpen, setConfigOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileConfigSubMenuOpen, setMobileConfigSubMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   
   // Obtener proyecto actual para los enlaces dinámicos
@@ -346,13 +347,21 @@ function DashboardLayoutContent({
 
   // Componente de item de menú móvil
   const MobileMenuItem = ({ item, isActive, depth = 0 }: { item: MenuItem; isActive: boolean; depth?: number }) => {
-    const [subMenuOpen, setSubMenuOpen] = useState(false);
+    // Usar estado persistente del padre para el submenú de Configuración
+    const isConfigMenu = item.label === 'Configuración';
+    const subMenuOpen = isConfigMenu ? mobileConfigSubMenuOpen : false;
+    const setSubMenuOpen = isConfigMenu ? setMobileConfigSubMenuOpen : () => {};
     
     if (item.children) {
       return (
         <div>
           <button
-            onClick={() => setSubMenuOpen(!subMenuOpen)}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isConfigMenu) {
+                setMobileConfigSubMenuOpen(!mobileConfigSubMenuOpen);
+              }
+            }}
             className={`
               w-full flex items-center gap-3 px-4 py-3 text-left transition-colors
               ${isActive 

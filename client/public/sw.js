@@ -1,14 +1,14 @@
 // ============================================
 // ============================================
-// SISTEMA OFFLINE v64 (v2.13) - ACTUALIZACIÓN OBLIGATORIA
+// SISTEMA OFFLINE v65 (v2.17) - SUBMENÚ PERSISTENTE
 // ============================================
 // MANDATORIO Y OBLIGATORIO:
 // - Dominio: objetivaqc.com (PERMANENTE)
 // - Modo offline: SIEMPRE ACTIVADO
 // - ACTUALIZACIÓN FORZADA OBLIGATORIA
-// - TODOS los dispositivos DEBEN tener v64
+// - SUBMENÚ CONFIGURACIÓN PERSISTENTE
 // ============================================
-const APP_VERSION = 64;
+const APP_VERSION = 65;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

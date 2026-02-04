@@ -2945,3 +2945,18 @@
 - [x] Eliminar mensaje azul de versión - solo mostrar número
 - [x] Versión dinámica en header (v2.13)
 - [x] Verificación periódica cada 30 segundos
+
+
+## v65 - Submenú Configuración Persistente
+
+### Bug Reportado
+- [x] Submenú de Configuración se cierra inmediatamente al hacer clic
+- [x] No permite editar usuarios, empresas, especialidades
+- [x] Debe permanecer abierto hasta que el usuario lo cierre manualmente
+- [x] No debe cerrarse al hacer scroll o mover el menú
+
+### Solución Implementada
+- [x] Estado persistente a nivel del DashboardLayout (mobileConfigSubMenuOpen)
+- [x] Submenú usa estado del padre en lugar de estado local
+- [x] Solo se cierra al hacer clic en el botón de Configuración nuevamente
+- [x] Permite navegar entre opciones sin cerrar el submenú
