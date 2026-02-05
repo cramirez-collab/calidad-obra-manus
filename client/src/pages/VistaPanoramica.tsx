@@ -135,8 +135,7 @@ function SortableUnidadCard({
   selectedId,
   isMobile,
   isOverlay = false,
-  modoOrganizacion = false,
-  canEditFechas = false
+  modoOrganizacion = false
 }: { 
   celda: CeldaStacking; 
   onTap: (unidad: UnidadPanoramica) => void;
@@ -146,7 +145,6 @@ function SortableUnidadCard({
   isMobile: boolean;
   isOverlay?: boolean;
   modoOrganizacion?: boolean;
-  canEditFechas?: boolean;
 }) {
   const {
     attributes,
@@ -280,18 +278,16 @@ function SortableUnidadCard({
         </div>
       )}
 
-      {/* Botón de editar fechas - solo para superadmin/admin */}
-      {canEditFechas && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEditFechas(unidad);
-          }}
-          className="absolute -right-1 top-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded p-0.5 shadow hover:bg-white"
-        >
-          <Calendar className="h-3 w-3 text-gray-500" />
-        </button>
-      )}
+      {/* Botón de editar fechas */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onEditFechas(unidad);
+        }}
+        className="absolute -right-1 top-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded p-0.5 shadow hover:bg-white"
+      >
+        <Calendar className="h-3 w-3 text-gray-500" />
+      </button>
 
       <TooltipProvider>
         <Tooltip>
@@ -361,15 +357,13 @@ function ModalEstadisticas({
   open, 
   onClose, 
   onVerItems,
-  onEditFechas,
-  canEditFechas = false
+  onEditFechas
 }: { 
   unidad: UnidadPanoramica | null; 
   open: boolean; 
   onClose: () => void;
   onVerItems: () => void;
   onEditFechas: () => void;
-  canEditFechas?: boolean;
 }) {
   if (!unidad) return null;
 
@@ -439,16 +433,14 @@ function ModalEstadisticas({
             <Button onClick={onVerItems} className="flex-1">
               Ver Ítems
             </Button>
-            {canEditFechas && (
-              <Button 
-                variant="outline" 
-                onClick={onEditFechas}
-                className="flex-1"
-              >
-                <Calendar className="h-4 w-4 mr-1" />
-                Fechas
-              </Button>
-            )}
+            <Button 
+              variant="outline" 
+              onClick={onEditFechas}
+              className="flex-1"
+            >
+              <Calendar className="h-4 w-4 mr-1" />
+              Fechas
+            </Button>
           </div>
           <Button 
             variant="outline" 
@@ -1161,7 +1153,6 @@ export default function VistaPanoramica() {
                               selectedId={selectedUnidad?.id || null}
                               isMobile={isMobile}
                               modoOrganizacion={modoOrganizacion}
-                              canEditFechas={user?.role === 'superadmin' || user?.role === 'admin'}
                             />
                           ))}
                           {/* Celda vacía al final para insertar - solo en modo organización */}
@@ -1223,7 +1214,6 @@ export default function VistaPanoramica() {
           setShowStatsModal(false);
           setShowEditFechasModal(true);
         }}
-        canEditFechas={user?.role === 'superadmin' || user?.role === 'admin'}
       />
 
       {/* Modal para crear nueva unidad */}
