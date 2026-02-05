@@ -1,5 +1,5 @@
 // ============================================
-// SISTEMA OFFLINE v208 (v3.47) - VERSIONADO UNIFICADO
+// SISTEMA OFFLINE v209 (v3.48) - VERSIONADO UNIFICADO
 // ============================================
 // MANDATORIO Y OBLIGATORIO:
 // - Dominio: objetivaqc.com (PERMANENTE)
@@ -8,7 +8,7 @@
 // - TODOS LOS USUARIOS SIEMPRE EN ÚLTIMA VERSIÓN
 // - Factor de división: 60 (ej: 208/60 = 3.47)
 // ============================================
-const APP_VERSION = 208;
+const APP_VERSION = 209;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

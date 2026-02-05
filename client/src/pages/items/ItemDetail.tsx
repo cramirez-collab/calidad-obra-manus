@@ -379,8 +379,12 @@ export default function ItemDetail() {
   const canAddFotoDespues = item?.status === "pendiente_foto_despues" && 
     ["superadmin", "admin", "supervisor", "jefe_residente"].includes(user?.role || "");
   
-  const canApprove = item?.status === "pendiente_aprobacion" && 
-    ["superadmin", "admin", "supervisor"].includes(user?.role || "");
+  // RESTRICCIÓN DE APROBACIÓN:
+  // Solo pueden aprobar: superadmin, admin, supervisor, o el residente asignado (misma especialidad)
+  const canApprove = item?.status === "pendiente_aprobacion" && (
+    ["superadmin", "admin", "supervisor"].includes(user?.role || "") ||
+    (user?.role === "residente" && item?.asignadoAId === user?.id)
+  );
   
   // Admin y superadmin pueden eliminar permanentemente
   const canDelete = ['superadmin', 'admin'].includes(user?.role || '');

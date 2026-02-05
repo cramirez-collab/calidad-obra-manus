@@ -3303,3 +3303,15 @@
 - [x] Módulo Items - mostrar quién aprobó (Aprobó: nombre)
 - [x] Módulo Items - mostrar quién aceptó finalmente (Cerró: nombre)
 - [x] Filtro de usuario cambiado a "Asignado a" (filtra por asignadoAId)
+
+
+## Correcciones v3.48 (Febrero 2026)
+- [x] Badge de notificaciones - hacerlo completamente visible encima de la campana
+- [x] PDF Ficha de Ítem - las fotos se muestran correctamente cuando el ítem tiene fotos guardadas
+
+
+## Restricción de Aprobación v3.48 (Febrero 2026)
+- [x] Solo pueden aprobar: residente asignado (misma especialidad), supervisor, admin, superadmin
+- [x] Residentes de especialidad diferente NO pueden aprobar
+- [x] Validación en backend (endpoint de aprobación y rechazo)
+- [x] Validación en frontend (ocultar botón aprobar si no tiene permiso)

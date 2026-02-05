@@ -1171,7 +1171,7 @@ export const appRouter = router({
         return { success: true, fotoUrl: 'base64-saved' };
       }),
     
-    aprobar: supervisorProcedure
+    aprobar: protectedProcedure
       .input(z.object({
         itemId: z.number(),
         comentario: z.string().optional(),
@@ -1181,6 +1181,22 @@ export const appRouter = router({
         if (!item) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ítem no encontrado' });
         if (item.status !== 'pendiente_aprobacion') {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'El ítem no está pendiente de aprobación' });
+        }
+        
+        // RESTRICCIÓN DE APROBACIÓN:
+        // Solo pueden aprobar: superadmin, admin, supervisor, o el residente asignado (misma especialidad)
+        const userRole = ctx.user.role;
+        const canApprove = 
+          userRole === 'superadmin' ||
+          userRole === 'admin' ||
+          userRole === 'supervisor' ||
+          (userRole === 'residente' && item.asignadoAId === ctx.user.id);
+        
+        if (!canApprove) {
+          throw new TRPCError({ 
+            code: 'FORBIDDEN', 
+            message: 'No tienes permiso para aprobar este ítem. Solo puede aprobar el residente asignado, supervisor, admin o superadmin.' 
+          });
         }
         
         // OPTIMIZACIÓN: Actualizar status inmediatamente (< 300ms)
@@ -1255,7 +1271,7 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    rechazar: supervisorProcedure
+    rechazar: protectedProcedure
       .input(z.object({
         itemId: z.number(),
         comentario: z.string().min(1, 'Se requiere un comentario para rechazar'),
@@ -1265,6 +1281,22 @@ export const appRouter = router({
         if (!item) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ítem no encontrado' });
         if (item.status !== 'pendiente_aprobacion') {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'El ítem no está pendiente de aprobación' });
+        }
+        
+        // RESTRICCIÓN DE RECHAZO:
+        // Solo pueden rechazar: superadmin, admin, supervisor, o el residente asignado (misma especialidad)
+        const userRole = ctx.user.role;
+        const canReject = 
+          userRole === 'superadmin' ||
+          userRole === 'admin' ||
+          userRole === 'supervisor' ||
+          (userRole === 'residente' && item.asignadoAId === ctx.user.id);
+        
+        if (!canReject) {
+          throw new TRPCError({ 
+            code: 'FORBIDDEN', 
+            message: 'No tienes permiso para rechazar este ítem. Solo puede rechazar el residente asignado, supervisor, admin o superadmin.' 
+          });
         }
         
         // OPTIMIZACIÓN: Actualizar status inmediatamente (< 300ms)

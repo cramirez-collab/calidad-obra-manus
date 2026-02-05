@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, codigo, fotoAntesUrl, fotoDespuesUrl, fotoAntesBase64 IS NOT NULL as tieneFotoAntesBase64, fotoDespuesBase64 IS NOT NULL as tieneFotoDespuesBase64 FROM items WHERE codigo LIKE 'Hidalma-F8XTCG%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, fotoAntesUrl, fotoDespuesUrl, fotoAntesBase64 IS NOT NULL as tieneFotoAntesBase64, fotoDespuesBase64 IS NOT NULL as tieneFotoDespuesBase64 FROM items WHERE codigo LIKE 'Hidalma-F8XTCG%' LIMIT 5;",
+  "rows": [
+    {
+      "id": "1290001",
+      "codigo": "Hidalma-F8XTCG",
+      "fotoAntesUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/Hidalma-F8XTCG/antes-USxKy22W.jpg",
+      "fotoDespuesUrl": "NULL",
+      "tieneFotoAntesBase64": "1",
+      "tieneFotoDespuesBase64": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\tfotoAntesUrl\tfotoDespuesUrl\ttieneFotoAntesBase64\ttieneFotoDespuesBase64\n1290001\tHidalma-F8XTCG\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/Hidalma-F8XTCG/antes-USxKy22W.jpg\tNULL\t1\t0\n",
+  "stderr": "",
+  "execution_time_ms": 413
+}
