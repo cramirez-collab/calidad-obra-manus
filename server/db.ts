@@ -1231,7 +1231,6 @@ export interface ItemFilters {
   residenteId?: number;
   jefeResidenteId?: number;
   supervisorId?: number;
-  creadoPorId?: number;
   status?: string;
   fechaDesde?: Date;
   fechaHasta?: Date;
@@ -1254,7 +1253,6 @@ export async function getItems(filters: ItemFilters = {}, limit = 100, offset = 
   if (filters.residenteId) conditions.push(eq(items.residenteId, filters.residenteId));
   if (filters.jefeResidenteId) conditions.push(eq(items.jefeResidenteId, filters.jefeResidenteId));
   if (filters.supervisorId) conditions.push(eq(items.supervisorId, filters.supervisorId));
-  if (filters.creadoPorId) conditions.push(eq(items.creadoPorId, filters.creadoPorId));
   if (filters.status) conditions.push(eq(items.status, filters.status as any));
   if (filters.fechaDesde) conditions.push(gte(items.fechaCreacion, filters.fechaDesde));
   if (filters.fechaHasta) conditions.push(lte(items.fechaCreacion, filters.fechaHasta));

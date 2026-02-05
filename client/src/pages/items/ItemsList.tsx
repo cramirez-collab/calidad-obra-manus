@@ -105,7 +105,6 @@ export default function ItemsList() {
     status: "",
     busqueda: "",
     numeroInterno: "",
-    residenteId: "",
   });
   const [showFilters, setShowFilters] = useState(false);
   
@@ -159,7 +158,6 @@ export default function ItemsList() {
     status: filters.status || undefined,
     busqueda: filters.busqueda || undefined,
     numeroInterno: filters.numeroInterno ? parseInt(filters.numeroInterno) : undefined,
-    creadoPorId: filters.residenteId ? parseInt(filters.residenteId) : undefined,
     limit: 100,
     offset: 0,
   }), [filters, selectedProjectId]);
@@ -190,17 +188,8 @@ export default function ItemsList() {
       status: "",
       busqueda: "",
       numeroInterno: "",
-      residenteId: "",
     });
   };
-  
-  // Obtener lista de residentes para el filtro
-  const { data: usuarios } = trpc.users.list.useQuery();
-  
-  // Mostrar todos los usuarios en el filtro (no solo residentes)
-  const usuariosFiltro = useMemo(() => {
-    return usuarios || [];
-  }, [usuarios]);
 
   const hasActiveFilters = Object.values(filters).some(v => v !== "");
 
@@ -301,8 +290,8 @@ export default function ItemsList() {
 
               {showFilters && (
                 <div className="pt-3 border-t space-y-3">
-                  {/* Grid de filtros en cajas - 2 columnas en móvil, 3 en tablet, 6 en desktop */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                  {/* Grid de filtros en cajas - 2 columnas en móvil, 3 en tablet, 5 en desktop */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                     <Select
                       value={filters.status}
                       onValueChange={(value) => setFilters({ ...filters, status: value })}
@@ -388,23 +377,6 @@ export default function ItemsList() {
                         {atributosFiltrados.map((attr: any) => (
                           <SelectItem key={attr.id} value={attr.id.toString()}>
                             {attr.nombre}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={filters.residenteId}
-                      onValueChange={(value) => setFilters({ ...filters, residenteId: value })}
-                    >
-                      <SelectTrigger className="h-9 text-xs sm:text-sm truncate">
-                        <SelectValue placeholder="Usuario" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        {usuariosFiltro.map((u: any) => (
-                          <SelectItem key={u.id} value={u.id.toString()}>
-                            {u.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
