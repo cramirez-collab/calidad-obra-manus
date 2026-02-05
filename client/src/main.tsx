@@ -11,13 +11,13 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v85 (v2.85) - ObjetivaQC 🔴
+// 🔴 VERSIÓN v86 (v2.86) - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
-// VERSIONADO UNIFICADO Y FORZADO
-// ACTUALIZACIÓN AGRESIVA OBLIGATORIA
+// TODOS LOS ÍTEMS VISIBLES PARA TODOS
+// QR PROTEGIDO SOLO USUARIOS REGISTRADOS
 // ============================================
-const CURRENT_VERSION = 85;
+const CURRENT_VERSION = 86;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN UNIFICADO 🎯

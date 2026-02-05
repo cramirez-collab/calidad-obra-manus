@@ -3238,3 +3238,9 @@
 - [x] Implementar actualización agresiva forzada en todos los dispositivos
 - [x] Endpoint /api/version para verificación periódica cada 30 segundos
 - [x] Verificar que todos los usuarios siempre tengan la última versión
+
+
+## Mejoras v86 - Ítems Visibles para Todos (Febrero 2026)
+- [x] Mostrar TODOS los ítems en módulo de ítems (sin filtrar por usuario)
+- [x] Filtros opcionales para quien quiera usarlos
+- [x] Proteger lectura de QR solo para usuarios registrados (protectedProcedure)
