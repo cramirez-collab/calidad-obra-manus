@@ -3089,3 +3089,9 @@
 ### Iconos Unificados
 - [x] Estandarizar icono de descarga PDF (FileDown) en todas las pantallas
 
+
+## v74 - Preview de comentario en lista de ítems
+
+- [x] Agregar preview de 3 palabras del comentario debajo de la fecha en cada ítem
+- [x] Aplicar en Bienvenida (lista principal de ítems)
+

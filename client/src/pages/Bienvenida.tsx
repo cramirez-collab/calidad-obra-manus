@@ -441,6 +441,12 @@ export default function Bienvenida() {
                           )}
                           <span className="shrink-0">{formatDate(item.fechaCreacion)}</span>
                         </div>
+                        {/* Preview de 3 palabras del comentario */}
+                        {item.comentarioResidente && (
+                          <p className="text-[10px] sm:text-xs text-[#02B381] mt-0.5 truncate italic">
+                            "{item.comentarioResidente.split(' ').slice(0, 3).join(' ')}{item.comentarioResidente.split(' ').length > 3 ? '...' : ''}"
+                          </p>
+                        )}
                       </div>
 
                       {/* Botón eliminar para superadmin/admin (solo si no está en modo selección) */}
