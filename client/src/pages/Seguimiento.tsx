@@ -436,26 +436,26 @@ export default function Seguimiento() {
             )}
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Empresa:</span>
-                <span className="font-medium">{item.empresa?.nombre || "-"}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div className="flex items-center gap-2 min-w-0">
+                <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-muted-foreground flex-shrink-0">Empresa:</span>
+                <span className="font-medium truncate">{item.empresa?.nombre || "-"}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Unidad:</span>
-                <span className="font-medium">{item.unidad?.nombre || "-"}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-muted-foreground flex-shrink-0">Unidad:</span>
+                <span className="font-medium truncate">{item.unidad?.nombre || "-"}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Wrench className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Especialidad:</span>
-                <span className="font-medium">{item.especialidad?.nombre || "-"}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <Wrench className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-muted-foreground flex-shrink-0">Especialidad:</span>
+                <span className="font-medium truncate">{item.especialidad?.nombre || "-"}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Fecha:</span>
-                <span className="font-medium">{formatDate(item.fechaCreacion)}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-muted-foreground flex-shrink-0">Fecha:</span>
+                <span className="font-medium truncate">{formatDate(item.fechaCreacion)}</span>
               </div>
             </div>
 

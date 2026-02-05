@@ -3238,3 +3238,36 @@
 - [x] Implementar actualización agresiva forzada en todos los dispositivos
 - [x] Endpoint /api/version para verificación periódica cada 30 segundos
 - [x] Verificar que todos los usuarios siempre tengan la última versión
+
+
+## Mejoras v86 - Ítems Visibles para Todos (Febrero 2026)
+- [x] Mostrar TODOS los ítems en módulo de ítems (sin filtrar por usuario)
+- [x] Filtros opcionales para quien quiera usarlos
+- [x] Proteger lectura de QR solo para usuarios registrados (protectedProcedure)
+
+
+## Mejoras UI v87 - Filtros en Grid y Texto Cortado (Febrero 2026)
+- [ ] Rediseñar filtros de Ítems en grid de 2-3 columnas (cajas)
+- [ ] Corregir palabras cortadas en todos los módulos
+- [ ] Revisar contenedores con texto que baja a segundo renglón
+
+
+## Mejoras UI v87 - Filtros y Stacking (Febrero 2026)
+- [x] Rediseñar filtros de Ítems en grid de 2-3 columnas (cajas compactas)
+- [x] Revisar y corregir contenedores con texto cortado en todos los módulos
+- [x] Restringir edición de fechas en Stacking solo a superadmin/admin
+- [x] Otros usuarios al clic en unidad van a ítems filtrados por esa unidad
+
+
+## Correcciones v88 (Febrero 2026)
+- [ ] Corregir palabras cortadas en detalle de ítem (Empresa, Especialidad, Fecha)
+- [ ] Agregar filtro por Residente en lista de ítems
+
+
+## Correcciones v88 (Febrero 2026)
+- [x] Corregir palabras cortadas en detalle de ítem (Empresa, Especialidad, Fecha) - grid responsive
+- [x] Agregar filtro por Residente en lista de ítems (6 filtros en total)
+
+
+## Correcciones v90 (Febrero 2026)
+- [x] Filtro de usuarios debe mostrar SOLO usuarios del proyecto actual, no todos los del sistema
