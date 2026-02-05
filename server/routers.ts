@@ -857,6 +857,7 @@ export const appRouter = router({
         jefeResidenteId: z.number().optional(),
         supervisorId: z.number().optional(),
         creadoPorId: z.number().optional(),
+        asignadoAId: z.number().optional(),
         status: z.string().optional(),
         fechaDesde: z.date().optional(),
         fechaHasta: z.date().optional(),

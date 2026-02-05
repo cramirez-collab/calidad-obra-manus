@@ -159,7 +159,7 @@ export default function ItemsList() {
     status: filters.status || undefined,
     busqueda: filters.busqueda || undefined,
     numeroInterno: filters.numeroInterno ? parseInt(filters.numeroInterno) : undefined,
-    creadoPorId: filters.residenteId ? parseInt(filters.residenteId) : undefined,
+    asignadoAId: filters.residenteId ? parseInt(filters.residenteId) : undefined, // Filtrar por usuario ASIGNADO
     limit: 100,
     offset: 0,
   }), [filters, selectedProjectId]);
@@ -180,6 +180,10 @@ export default function ItemsList() {
   const getEmpresaNombre = (id: number) => empresas?.find(e => e.id === id)?.nombre || "-";
   const getUnidadNombre = (id: number) => unidades?.find(u => u.id === id)?.nombre || "-";
   const getEspecialidadInfo = (id: number) => especialidades?.find(e => e.id === id);
+  const getUsuarioNombre = (id: number | null | undefined) => {
+    if (!id) return null;
+    return usuarios?.find((u: any) => u.id === id)?.name || null;
+  };
 
   const clearFilters = () => {
     setFilters({
@@ -398,7 +402,7 @@ export default function ItemsList() {
                       onValueChange={(value) => setFilters({ ...filters, residenteId: value })}
                     >
                       <SelectTrigger className="h-9 text-xs sm:text-sm truncate">
-                        <SelectValue placeholder="Usuario" />
+                        <SelectValue placeholder="Asignado a" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Todos</SelectItem>
@@ -518,6 +522,38 @@ export default function ItemsList() {
                               </span>
                             </>
                           )}
+                        </div>
+
+                        {/* Información de usuarios */}
+                        <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-1 text-xs">
+                          {/* Creado por */}
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">Creó:</span>
+                            <span className="font-medium text-blue-600 truncate">
+                              {getUsuarioNombre((item as any).creadoPorId) || '-'}
+                            </span>
+                          </div>
+                          {/* Asignado a */}
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">Asignado:</span>
+                            <span className="font-medium text-amber-600 truncate">
+                              {getUsuarioNombre((item as any).asignadoAId) || '-'}
+                            </span>
+                          </div>
+                          {/* Aprobado por */}
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">Aprobó:</span>
+                            <span className="font-medium text-emerald-600 truncate">
+                              {getUsuarioNombre((item as any).aprobadoPorId) || '-'}
+                            </span>
+                          </div>
+                          {/* Cerrado por */}
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">Cerró:</span>
+                            <span className="font-medium text-purple-600 truncate">
+                              {getUsuarioNombre((item as any).cerradoPorId) || '-'}
+                            </span>
+                          </div>
                         </div>
 
                         <p className="mt-1 text-xs text-muted-foreground">

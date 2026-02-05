@@ -1232,6 +1232,7 @@ export interface ItemFilters {
   jefeResidenteId?: number;
   supervisorId?: number;
   creadoPorId?: number;
+  asignadoAId?: number; // Filtro por usuario asignado
   status?: string;
   fechaDesde?: Date;
   fechaHasta?: Date;
@@ -1255,6 +1256,7 @@ export async function getItems(filters: ItemFilters = {}, limit = 100, offset = 
   if (filters.jefeResidenteId) conditions.push(eq(items.jefeResidenteId, filters.jefeResidenteId));
   if (filters.supervisorId) conditions.push(eq(items.supervisorId, filters.supervisorId));
   if (filters.creadoPorId) conditions.push(eq(items.creadoPorId, filters.creadoPorId));
+  if (filters.asignadoAId) conditions.push(eq(items.asignadoAId, filters.asignadoAId));
   if (filters.status) conditions.push(eq(items.status, filters.status as any));
   if (filters.fechaDesde) conditions.push(gte(items.fechaCreacion, filters.fechaDesde));
   if (filters.fechaHasta) conditions.push(lte(items.fechaCreacion, filters.fechaHasta));
@@ -1300,6 +1302,12 @@ export async function getItems(filters: ItemFilters = {}, limit = 100, offset = 
     comentarioSupervisor: items.comentarioSupervisor,
     clientId: items.clientId,
     numeroInterno: items.numeroInterno,
+    // Campos de trazabilidad de usuarios
+    creadoPorId: items.creadoPorId,
+    asignadoAId: items.asignadoAId,
+    aprobadoPorId: items.aprobadoPorId,
+    cerradoPorId: items.cerradoPorId,
+    fechaCierre: items.fechaCierre,
     createdAt: items.createdAt,
     updatedAt: items.updatedAt,
   };

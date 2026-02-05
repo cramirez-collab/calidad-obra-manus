@@ -3285,3 +3285,21 @@
 ## Corrección de UI - Badge de Notificaciones (v2.92)
 - [x] Corregir badge de notificaciones en la campana - no se ve el círculo completo
 - [x] Diseño profesional del badge
+
+
+## Mejoras UI y Módulo Items (v2.93)
+- [x] Badge de notificaciones - posicionarlo ENCIMA de la campana (no al lado)
+- [x] Módulo Items - mostrar quién creó el ítem
+- [x] Módulo Items - mostrar usuario asignado
+- [x] Módulo Items - mostrar quién aprobó
+- [x] Módulo Items - mostrar quién aceptó finalmente
+- [x] Filtro de usuario debe corresponder al usuario ASIGNADO
+
+
+## Mejoras UI y Módulo Items (v2.93 - Febrero 2026)
+- [x] Badge de notificaciones - posicionarlo ENCIMA de la campana (esquina superior derecha: -top-3 -right-2)
+- [x] Módulo Items - mostrar quién creó el ítem (Creó: nombre)
+- [x] Módulo Items - mostrar usuario asignado (Asignado: nombre)
+- [x] Módulo Items - mostrar quién aprobó (Aprobó: nombre)
+- [x] Módulo Items - mostrar quién aceptó finalmente (Cerró: nombre)
+- [x] Filtro de usuario cambiado a "Asignado a" (filtra por asignadoAId)
