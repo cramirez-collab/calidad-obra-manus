@@ -51,7 +51,10 @@ export default function Bienvenida() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { selectedProjectId, isLoadingProjects } = useProject();
-  const { data: pendientes, isLoading } = trpc.pendientes.misPendientes.useQuery();
+  const { data: pendientes, isLoading } = trpc.pendientes.misPendientes.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
   const [activeFilter, setActiveFilter] = useState<FilterType>("todos");
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_BATCH);
   const listRef = useRef<HTMLDivElement>(null);

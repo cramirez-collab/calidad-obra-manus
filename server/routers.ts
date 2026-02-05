@@ -1688,9 +1688,11 @@ export const appRouter = router({
 
   // ==================== PENDIENTES POR USUARIO ====================
   pendientes: router({
-    misPendientes: protectedProcedure.query(async ({ ctx }) => {
-      return await db.getPendientesByUsuario(ctx.user.id, ctx.user.role);
-    }),
+    misPendientes: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }).optional())
+      .query(async ({ ctx, input }) => {
+        return await db.getPendientesByUsuario(ctx.user.id, ctx.user.role, input?.proyectoId);
+      }),
   }),
 
   // ==================== CONFIGURACIÓN ====================

@@ -1836,28 +1836,33 @@ export async function getNextOQCCode(proyectoId?: number): Promise<string> {
 }
 // ==================== PENDIENTES POR USUARIO ====================
 
-export async function getPendientesByUsuario(userId: number, role: string) {
+export async function getPendientesByUsuario(userId: number, role: string, proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
   
-  let whereCondition;
+  let baseCondition;
   
   if (role === 'superadmin' || role === 'admin') {
     // Admin ve todos los pendientes
-    whereCondition = inArray(items.status, ['pendiente_foto_despues', 'pendiente_aprobacion']);
+    baseCondition = inArray(items.status, ['pendiente_foto_despues', 'pendiente_aprobacion']);
   } else if (role === 'supervisor') {
     // Supervisor ve pendientes de aprobación
-    whereCondition = eq(items.status, 'pendiente_aprobacion');
+    baseCondition = eq(items.status, 'pendiente_aprobacion');
   } else if (role === 'jefe_residente') {
     // Jefe de residente ve pendientes de foto después
-    whereCondition = eq(items.status, 'pendiente_foto_despues');
+    baseCondition = eq(items.status, 'pendiente_foto_despues');
   } else {
     // Residente ve sus propios ítems pendientes
-    whereCondition = and(
+    baseCondition = and(
       eq(items.residenteId, userId),
       inArray(items.status, ['pendiente_foto_despues', 'pendiente_aprobacion', 'rechazado'])
     );
   }
+  
+  // CRÍTICO: Filtrar por proyecto si se especifica - NUNCA mezclar proyectos
+  const whereCondition = proyectoId 
+    ? and(baseCondition, eq(items.proyectoId, proyectoId))
+    : baseCondition;
   
   // Ordenar del más antiguo al más nuevo (ASC)
   // Incluir fotoAntes para mostrar miniatura en la lista

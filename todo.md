@@ -3271,3 +3271,12 @@
 
 ## Correcciones v90 (Febrero 2026)
 - [x] Filtro de usuarios debe mostrar SOLO usuarios del proyecto actual, no todos los del sistema
+
+
+## Corrección Crítica de Aislamiento de Proyectos (v2.91)
+- [x] Corregido: La página de Bienvenida ahora filtra ítems por proyecto seleccionado
+- [x] Corregido: Endpoint misPendientes ahora acepta proyectoId para filtrar
+- [x] Corregido: Función getPendientesByUsuario ahora filtra por proyectoId
+- [x] Verificado: Mayas Habitat muestra 0 pendientes (antes mostraba 49+ de Hidalma)
+- [x] Verificado: Hidalma muestra solo sus 21 ítems propios
+- [x] NUNCA MEZCLAR DATOS ENTRE PROYECTOS - Cada proyecto es independiente
