@@ -441,10 +441,14 @@ export default function Bienvenida() {
                           )}
                           <span className="shrink-0">{formatDate(item.fechaCreacion)}</span>
                         </div>
-                        {/* Preview de 3 palabras del comentario */}
-                        {item.comentarioResidente && (
+                        {/* Preview de 3 palabras del comentario (residente o supervisor) */}
+                        {(item.comentarioResidente || item.comentarioSupervisor) && (
                           <p className="text-[10px] sm:text-xs text-[#02B381] mt-0.5 truncate italic">
-                            "{item.comentarioResidente.split(' ').slice(0, 3).join(' ')}{item.comentarioResidente.split(' ').length > 3 ? '...' : ''}"
+                            "{(() => {
+                              const comentario = item.comentarioResidente || item.comentarioSupervisor || '';
+                              const palabras = comentario.split(' ');
+                              return palabras.slice(0, 3).join(' ') + (palabras.length > 3 ? '...' : '');
+                            })()}"
                           </p>
                         )}
                       </div>

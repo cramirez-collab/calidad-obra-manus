@@ -3095,3 +3095,9 @@
 - [x] Agregar preview de 3 palabras del comentario debajo de la fecha en cada ítem
 - [x] Aplicar en Bienvenida (lista principal de ítems)
 
+
+## v75 - Preview de comentario de cualquier rol
+
+- [x] Agregar comentarioSupervisor a la query de pendientes
+- [x] Mostrar el comentario disponible (residente o supervisor) en el preview
+

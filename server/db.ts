@@ -1811,6 +1811,7 @@ export async function getPendientesByUsuario(userId: number, role: string) {
       fechaCreacion: items.fechaCreacion,
       fotoAntes: items.fotoAntesUrl,
       comentarioResidente: items.comentarioResidente,
+      comentarioSupervisor: items.comentarioSupervisor,
     })
     .from(items)
     .where(whereCondition)
