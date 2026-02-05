@@ -3280,3 +3280,8 @@
 - [x] Verificado: Mayas Habitat muestra 0 pendientes (antes mostraba 49+ de Hidalma)
 - [x] Verificado: Hidalma muestra solo sus 21 ítems propios
 - [x] NUNCA MEZCLAR DATOS ENTRE PROYECTOS - Cada proyecto es independiente
+
+
+## Corrección de UI - Badge de Notificaciones (v2.92)
+- [x] Corregir badge de notificaciones en la campana - no se ve el círculo completo
+- [x] Diseño profesional del badge

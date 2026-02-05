@@ -153,11 +153,11 @@ export function NotificationBell() {
           <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
         )}
         {unreadCount > 0 && (
-          <Badge 
-            className="absolute -top-1.5 -right-1.5 h-5 min-w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-500 border-2 border-white"
+          <span 
+            className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 flex items-center justify-center text-[10px] font-bold text-white bg-red-500 rounded-full shadow-md ring-2 ring-white"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
-          </Badge>
+          </span>
         )}
       </Button>
       

@@ -56,7 +56,7 @@ export function BadgeNotifications() {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {totalBadges > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-medium">
+            <span className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 flex items-center justify-center text-[10px] font-bold text-white bg-red-500 rounded-full shadow-md ring-2 ring-white">
               {totalBadges > 99 ? "99+" : totalBadges}
             </span>
           )}
