@@ -194,8 +194,8 @@ export default function ItemsList() {
     });
   };
   
-  // Obtener lista de usuarios del proyecto actual para el filtro
-  const { data: usuarios } = trpc.users.list.useQuery({ proyectoId: selectedProjectId || undefined });
+  // Obtener lista de residentes para el filtro
+  const { data: usuarios } = trpc.users.list.useQuery();
   
   // Mostrar todos los usuarios en el filtro (no solo residentes)
   const usuariosFiltro = useMemo(() => {
