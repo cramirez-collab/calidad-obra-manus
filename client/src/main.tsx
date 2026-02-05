@@ -11,14 +11,14 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v78 (v2.60) - ObjetivaQC 🔴
+// 🔴 VERSIÓN v79 (v2.63) - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
-// SWIPE PARA APROBAR/RECHAZAR ÍTEMS
+// ESCÁNER QR CORREGIDO Y FUNCIONAL
 // NOTIFICACIONES PUSH OBLIGATORIAS
 // BADGES EN ICONO DE LA APP
 // ============================================
-const CURRENT_VERSION = 78;
+const CURRENT_VERSION = 79;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN PROFESIONAL 🎯

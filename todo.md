@@ -3150,3 +3150,10 @@
 - [x] Optimizar frecuencia de escaneo (50ms entre intentos = 20 escaneos/seg)
 - [x] Mejorar detección en condiciones de poca luz (exposureMode: continuous)
 
+
+## v79 - Corrección Escáner QR
+
+- [x] Corregir error de TypeScript en QRScanner (eliminadas propiedades no estándar)
+- [x] Asegurar acceso obligatorio a la cámara (configuración compatible)
+- [x] Eliminar configuraciones no soportadas que causan error (focusMode, exposureMode, etc.)
+

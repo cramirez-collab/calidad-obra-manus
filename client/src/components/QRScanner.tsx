@@ -100,21 +100,14 @@ export function QRScannerButton() {
     }
 
     try {
-      // Solicitar acceso a la cámara con configuración ULTRA SENSIBLE
+      // Solicitar acceso a la cámara - configuración compatible con todos los navegadores
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
-          facingMode: "environment",
-          // Máxima resolución para mejor detección
-          width: { ideal: 1920, min: 640 },
-          height: { ideal: 1080, min: 480 },
-          // Desactivar autofocus para escaneo rápido
-          focusMode: "continuous",
-          // Máxima tasa de frames para detección rápida
-          frameRate: { ideal: 60, min: 30 },
-          // Ajustes para poca luz
-          exposureMode: "continuous",
-          whiteBalanceMode: "continuous"
-        } as MediaTrackConstraints,
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 }
+        },
         audio: false,
       });
 
@@ -133,16 +126,8 @@ export function QRScannerButton() {
 
       setStatus("ready");
 
-      // Iniciar escaneo continuo con ZXing - CONFIGURACIÓN ULTRA SENSIBLE
-      const hints = new Map();
-      // Habilitar todos los formatos de código para máxima detección
-      hints.set(2, true); // TRY_HARDER - más intentos de detección
-      hints.set(3, true); // PURE_BARCODE - detección más rápida
-      
-      const codeReader = new BrowserMultiFormatReader(hints, {
-        delayBetweenScanAttempts: 50, // Escanear cada 50ms (20 veces por segundo)
-        delayBetweenScanSuccess: 100 // Esperar 100ms después de éxito
-      });
+      // Iniciar escaneo continuo con ZXing - configuración rápida
+      const codeReader = new BrowserMultiFormatReader();
       codeReaderRef.current = codeReader;
 
       setStatus("scanning");
@@ -196,15 +181,15 @@ export function QRScannerButton() {
           "La cámara está ocupada o no responde. Cierra otras apps y reintenta."
         );
       } else if (name === "OverconstrainedError") {
-        // Intentar con cámara frontal si la trasera no está disponible - ULTRA SENSIBLE
+        // Intentar con cámara frontal si la trasera no está disponible
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
             video: { 
               facingMode: "user",
-              width: { ideal: 1920, min: 640 },
-              height: { ideal: 1080, min: 480 },
-              frameRate: { ideal: 60, min: 30 }
-            } as MediaTrackConstraints,
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              frameRate: { ideal: 30 }
+            },
             audio: false,
           });
           
@@ -215,14 +200,7 @@ export function QRScannerButton() {
             video.srcObject = stream;
             await video.play();
             
-            const hints = new Map();
-            hints.set(2, true); // TRY_HARDER
-            hints.set(3, true); // PURE_BARCODE
-            
-            const codeReader = new BrowserMultiFormatReader(hints, {
-              delayBetweenScanAttempts: 50,
-              delayBetweenScanSuccess: 100
-            });
+            const codeReader = new BrowserMultiFormatReader();
             codeReaderRef.current = codeReader;
             
             setStatus("scanning");
