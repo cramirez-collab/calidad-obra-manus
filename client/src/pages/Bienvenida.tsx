@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { getImageUrl } from "@/lib/imageUrl";
@@ -141,6 +141,13 @@ export default function Bienvenida() {
   };
   
   const isSuperadmin = user?.role === "superadmin" || user?.role === "admin";
+
+  // Actualizar badge del icono de la app con el número de pendientes
+  useEffect(() => {
+    if (pendientes && typeof (window as any).updateAppBadge === 'function') {
+      (window as any).updateAppBadge(pendientes.length);
+    }
+  }, [pendientes]);
 
   // Redirigir a selección de proyecto si no hay proyecto seleccionado
   if (!isLoadingProjects && !selectedProjectId) {
@@ -441,9 +448,12 @@ export default function Bienvenida() {
                           )}
                           <span className="shrink-0">{formatDate(item.fechaCreacion)}</span>
                         </div>
-                        {/* Preview de 3 palabras del comentario (residente o supervisor) */}
+                        {/* Preview de 3 palabras del comentario con indicador de quién comentó */}
                         {(item.comentarioResidente || item.comentarioSupervisor) && (
-                          <p className="text-[10px] sm:text-xs text-[#02B381] mt-0.5 truncate italic">
+                          <p className="text-[10px] sm:text-xs text-[#02B381] mt-0.5 truncate italic flex items-center gap-1">
+                            <span className="font-bold not-italic text-slate-500">
+                              {item.comentarioResidente ? 'R:' : 'S:'}
+                            </span>
                             "{(() => {
                               const comentario = item.comentarioResidente || item.comentarioSupervisor || '';
                               const palabras = comentario.split(' ');

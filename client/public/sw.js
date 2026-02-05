@@ -255,9 +255,15 @@ self.addEventListener('push', (event) => {
     navigator.setAppBadge(data.badge || 1).catch(() => {});
   }
   
+  // Construir body con preview del comentario si existe
+  let notificationBody = data.body || 'Nueva notificación';
+  if (data.comentarioPreview) {
+    notificationBody += '\n\ud83d\udcac ' + data.comentarioPreview;
+  }
+  
   event.waitUntil(
     self.registration.showNotification(data.title || 'OQC', {
-      body: data.body || 'Nueva notificación',
+      body: notificationBody,
       icon: '/icon-192.png',
       badge: '/icon-72.png',
       vibrate: [200, 100, 200],

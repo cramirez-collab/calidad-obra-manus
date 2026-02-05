@@ -24,6 +24,8 @@ export interface PushPayload {
   unidadNombre?: string;
   defectoNombre?: string;
   itemId?: number;
+  // Preview del comentario (3 palabras)
+  comentarioPreview?: string;
 }
 
 /**
@@ -58,7 +60,8 @@ export async function sendPushNotification(
       itemCodigo: payload.itemCodigo,
       unidadNombre: payload.unidadNombre,
       defectoNombre: payload.defectoNombre,
-      itemId: payload.itemId
+      itemId: payload.itemId,
+      comentarioPreview: payload.comentarioPreview
     });
 
     await webpush.sendNotification(pushSubscription, notificationPayload);
@@ -115,6 +118,8 @@ export async function sendItemPushNotification(
     defectoNombre: string;
     titulo?: string;
     tipo: 'nuevo' | 'aprobado' | 'rechazado' | 'mensaje' | 'mencion' | 'foto_despues';
+    comentarioResidente?: string | null;
+    comentarioSupervisor?: string | null;
   }
 ): Promise<boolean> {
   const tipoTitulos: Record<string, string> = {
@@ -126,6 +131,14 @@ export async function sendItemPushNotification(
     foto_despues: '📸 Foto Después Agregada'
   };
 
+  // Generar preview del comentario (3 palabras)
+  const comentario = itemInfo.comentarioResidente || itemInfo.comentarioSupervisor || '';
+  const palabras = comentario.split(' ');
+  const comentarioPreview = comentario ? 
+    (itemInfo.comentarioResidente ? 'R: ' : 'S: ') + 
+    palabras.slice(0, 3).join(' ') + (palabras.length > 3 ? '...' : '') 
+    : undefined;
+
   const payload: PushPayload = {
     title: tipoTitulos[itemInfo.tipo] || 'OQC - Notificación',
     body: itemInfo.titulo || 'Tienes una actualización en un ítem',
@@ -133,6 +146,7 @@ export async function sendItemPushNotification(
     unidadNombre: itemInfo.unidadNombre,
     defectoNombre: itemInfo.defectoNombre,
     itemId: itemInfo.itemId,
+    comentarioPreview,
     tag: `oqc-item-${itemInfo.itemId}-${itemInfo.tipo}`,
     data: {
       itemId: itemInfo.itemId,

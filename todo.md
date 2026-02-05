@@ -3101,3 +3101,13 @@
 - [x] Agregar comentarioSupervisor a la query de pendientes
 - [x] Mostrar el comentario disponible (residente o supervisor) en el preview
 
+
+## v76 - Notificaciones Push OBLIGATORIAS y Badges
+
+- [x] Sistema de notificaciones push OBLIGATORIO y FORZOSO (100 intentos, cada 2s)
+- [x] Badges visibles en icono de la app (contador de pendientes con setAppBadge API)
+- [x] Bloquear uso de la app sin permisos de notificaciones (overlay negro con instrucciones)
+- [x] Notificaciones tipo globo en pantalla de bloqueo (requireInteraction + vibrate)
+- [x] Indicador de quién comentó (R: o S:) en preview
+- [x] Preview de comentario en notificaciones push
+
