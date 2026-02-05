@@ -1812,8 +1812,11 @@ export async function getPendientesByUsuario(userId: number, role: string) {
       fotoAntes: items.fotoAntesUrl,
       comentarioResidente: items.comentarioResidente,
       comentarioSupervisor: items.comentarioSupervisor,
+      residenteId: items.residenteId,
+      residenteNombre: users.name,
     })
     .from(items)
+    .leftJoin(users, eq(items.residenteId, users.id))
     .where(whereCondition)
     .orderBy(items.fechaCreacion); // ASC = más antiguo primero
 }

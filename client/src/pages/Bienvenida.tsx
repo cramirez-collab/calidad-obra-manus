@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { getImageUrl } from "@/lib/imageUrl";
@@ -43,7 +43,7 @@ import { useProject } from "@/contexts/ProjectContext";
 
 type FilterType = "todos" | "foto" | "aprobar" | "corregir";
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_BATCH = 20; // Para scroll infinito
 
 export default function Bienvenida() {
   const { user } = useAuth();
@@ -51,7 +51,8 @@ export default function Bienvenida() {
   const { selectedProjectId, isLoadingProjects } = useProject();
   const { data: pendientes, isLoading } = trpc.pendientes.misPendientes.useQuery();
   const [activeFilter, setActiveFilter] = useState<FilterType>("todos");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_BATCH);
+  const listRef = useRef<HTMLDivElement>(null);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -115,7 +116,7 @@ export default function Bienvenida() {
   
   const selectAllVisible = () => {
     const newSelected = new Set(selectedItems);
-    paginatedItems.forEach((item: any) => newSelected.add(item.id));
+    visibleItems.forEach((item: any) => newSelected.add(item.id));
     setSelectedItems(newSelected);
   };
   
@@ -183,16 +184,35 @@ export default function Bienvenida() {
     return config.filter === activeFilter;
   }) || [];
 
-  // Paginación
-  const totalPages = Math.ceil(filteredPendientes.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedItems = filteredPendientes.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  // Scroll infinito - mostrar solo los primeros N ítems
+  const visibleItems = filteredPendientes.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredPendientes.length;
 
-  // Resetear página cuando cambia el filtro
+  // Resetear contador cuando cambia el filtro
   const handleFilterChange = (filter: FilterType) => {
     setActiveFilter(filter);
-    setCurrentPage(1);
+    setVisibleCount(ITEMS_PER_BATCH);
   };
+
+  // Cargar más ítems al hacer scroll
+  const loadMore = useCallback(() => {
+    if (hasMore) {
+      setVisibleCount(prev => prev + ITEMS_PER_BATCH);
+    }
+  }, [hasMore]);
+
+  // Detectar scroll cerca del final
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!listRef.current) return;
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      if (scrollTop + clientHeight >= scrollHeight - 200) {
+        loadMore();
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loadMore]);
 
   // Contar por tipo
   const counts = {
@@ -365,14 +385,14 @@ export default function Bienvenida() {
           </div>
         )}
 
-        {/* Lista de pendientes - compacta con paginación */}
+        {/* Lista de pendientes - scroll infinito */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#02B381]" />
           </div>
-        ) : paginatedItems.length > 0 ? (
-          <div className="space-y-2">
-            {paginatedItems.map((item: any) => {
+        ) : visibleItems.length > 0 ? (
+          <div className="space-y-2" ref={listRef}>
+            {visibleItems.map((item: any) => {
               const config = getStatusConfig(item.status);
               const Icon = config.icon;
               const isSelected = selectedItems.has(item.id);
@@ -439,9 +459,14 @@ export default function Bienvenida() {
                           </span>
                         </div>
                         <p className="text-xs sm:text-sm truncate mt-0.5 text-[#2E2E2E]">{item.titulo}</p>
-                        <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-[#6E6E6E] mt-1">
+                        <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-[#6E6E6E] mt-1 flex-wrap">
+                          {item.residenteNombre && (
+                            <span className="font-semibold text-[#002C63] bg-[#002C63]/10 px-1.5 py-0.5 rounded">
+                              {item.residenteNombre.split(' ').slice(0, 2).join(' ')}
+                            </span>
+                          )}
                           {item.ubicacion && (
-                            <span className="flex items-center gap-1 truncate max-w-[100px] sm:max-w-none">
+                            <span className="flex items-center gap-1 truncate max-w-[80px] sm:max-w-none">
                               <MapPin className="h-3 w-3 shrink-0" />
                               <span className="truncate">{item.ubicacion}</span>
                             </span>
@@ -485,30 +510,18 @@ export default function Bienvenida() {
               );
             })}
 
-            {/* Controles de paginación */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm text-[#6E6E6E] px-3">
-                  {currentPage} / {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+            {/* Indicador de scroll infinito */}
+            {hasMore && (
+              <div className="flex items-center justify-center py-4">
+                <div className="flex items-center gap-2 text-sm text-[#6E6E6E]">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Cargando más... ({visibleItems.length} de {filteredPendientes.length})</span>
+                </div>
+              </div>
+            )}
+            {!hasMore && filteredPendientes.length > ITEMS_PER_BATCH && (
+              <div className="text-center py-4 text-sm text-[#6E6E6E]">
+                Mostrando todos los {filteredPendientes.length} ítems
               </div>
             )}
           </div>

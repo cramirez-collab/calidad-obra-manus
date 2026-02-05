@@ -11,13 +11,14 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v76 (v2.53) - ObjetivaQC 🔴
+// 🔴 VERSIÓN v77 (v2.57) - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // NOTIFICACIONES PUSH OBLIGATORIAS
 // BADGES EN ICONO DE LA APP
+// SCROLL INFINITO + NOMBRE RESIDENTE
 // ============================================
-const CURRENT_VERSION = 76;
+const CURRENT_VERSION = 77;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN PROFESIONAL 🎯

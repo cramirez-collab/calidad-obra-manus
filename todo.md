@@ -3111,3 +3111,26 @@
 - [x] Indicador de quién comentó (R: o S:) en preview
 - [x] Preview de comentario en notificaciones push
 
+
+## v77 - Mejoras de UI y Scroll Infinito
+
+### Nombre del Residente en Ítems
+- [ ] Agregar nombre del residente asignado en lista de ítems (Bienvenida)
+- [ ] Agregar nombre del residente en todos los módulos donde aparecen ítems
+
+### Scroll Infinito
+- [ ] Eliminar paginación en página de bienvenida
+- [ ] Implementar scroll infinito con carga progresiva
+
+### Estadísticas de Pendientes
+- [ ] Revisar cuantificación de pendientes
+- [ ] Verificar estadísticas de pendientes en dashboard
+
+
+
+## v77 - Mejoras de UI y Scroll Infinito
+
+- [x] Agregar nombre del residente asignado en todos los ítems (badge azul con nombre)
+- [x] Implementar scroll infinito en página de bienvenida (eliminar paginación)
+- [x] Revisar cuantificación y estadísticas de pendientes (funcionando correctamente)
+
