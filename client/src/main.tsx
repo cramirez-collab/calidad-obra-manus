@@ -11,13 +11,13 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v3.50 - ObjetivaQC 🔴
+// 🔴 VERSIÓN v3.52 - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // SIEMPRE LA ÚLTIMA VERSIÓN - OBLIGATORIO
-// Selector residentes + Términos y condiciones + Restricción aprobación
+// Scroll en usuarios + @mentions en selector de residentes
 // ============================================
-const CURRENT_VERSION = 210;
+const CURRENT_VERSION = 211;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN UNIFICADO 🎯

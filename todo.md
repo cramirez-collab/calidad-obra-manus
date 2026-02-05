@@ -3331,3 +3331,7 @@
 - [x] Cargar todos los residentes del proyecto Hidalma (empresa_residentes + empresas.residenteId/jefeResidenteId + usuarios con rol residente)
 - [x] Botón de aceptar términos y condiciones - movido dentro del scroll
 - [x] Checkboxes y botón ahora están dentro del ScrollArea para que no los tape el footer
+
+## Correcciones v3.51 (Febrero 2026)
+- [x] Corregir scroll en lista de usuarios (no permite scroll)
+- [x] Implementar @mentions en selector de residentes

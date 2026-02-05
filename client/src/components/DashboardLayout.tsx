@@ -967,8 +967,8 @@ function DashboardLayoutContent({
         )}
         
         {/* Contenido principal */}
-        <main className="flex-1 p-2 sm:p-3 md:p-4 lg:p-6 overflow-x-hidden max-w-full">
-          <div className="max-w-full overflow-hidden">
+        <main className="flex-1 p-2 sm:p-3 md:p-4 lg:p-6 overflow-x-hidden overflow-y-auto max-w-full">
+          <div className="max-w-full overflow-x-hidden">
             {children}
           </div>
         </main>
