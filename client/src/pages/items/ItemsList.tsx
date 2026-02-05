@@ -159,6 +159,7 @@ export default function ItemsList() {
     status: filters.status || undefined,
     busqueda: filters.busqueda || undefined,
     numeroInterno: filters.numeroInterno ? parseInt(filters.numeroInterno) : undefined,
+    creadoPorId: filters.residenteId ? parseInt(filters.residenteId) : undefined,
     limit: 100,
     offset: 0,
   }), [filters, selectedProjectId]);
@@ -196,11 +197,9 @@ export default function ItemsList() {
   // Obtener lista de residentes para el filtro
   const { data: usuarios } = trpc.users.list.useQuery();
   
-  // Filtrar solo residentes y jefes de residente para el filtro
-  const residentes = useMemo(() => {
-    return usuarios?.filter((u: any) => 
-      u.role === 'residente' || u.role === 'jefe_residente'
-    ) || [];
+  // Mostrar todos los usuarios en el filtro (no solo residentes)
+  const usuariosFiltro = useMemo(() => {
+    return usuarios || [];
   }, [usuarios]);
 
   const hasActiveFilters = Object.values(filters).some(v => v !== "");
@@ -399,13 +398,13 @@ export default function ItemsList() {
                       onValueChange={(value) => setFilters({ ...filters, residenteId: value })}
                     >
                       <SelectTrigger className="h-9 text-xs sm:text-sm truncate">
-                        <SelectValue placeholder="Residente" />
+                        <SelectValue placeholder="Usuario" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Todos</SelectItem>
-                        {residentes.map((res: any) => (
-                          <SelectItem key={res.id} value={res.id.toString()}>
-                            {res.name}
+                        {usuariosFiltro.map((u: any) => (
+                          <SelectItem key={u.id} value={u.id.toString()}>
+                            {u.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
