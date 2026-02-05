@@ -868,9 +868,16 @@ export const appRouter = router({
         const filters: db.ItemFilters = { ...input };
         const limit = input.limit;
         const offset = input.offset;
-        // TODOS los usuarios registrados pueden ver TODOS los ítems del proyecto
-        // Los filtros son opcionales para quien quiera usarlos
-        // Ya no se filtra por rol - todos ven todo para estar enterados
+        // Si no es admin ni supervisor, solo ver sus propios items
+        if (!['admin', 'supervisor'].includes(ctx.user.role)) {
+          if (ctx.user.role === 'jefe_residente') {
+            // Jefe de residente ve items pendientes de foto después
+            filters.status = filters.status || 'pendiente_foto_despues';
+          } else {
+            // Residente solo ve sus items
+            filters.residenteId = ctx.user.id;
+          }
+        }
         return await db.getItems(filters, limit, offset);
       }),
     
@@ -880,8 +887,7 @@ export const appRouter = router({
         return await db.getItemById(input.id);
       }),
     
-    // PROTEGIDO: Solo usuarios registrados pueden leer QR de ítems
-    getByCodigo: protectedProcedure
+    getByCodigo: publicProcedure
       .input(z.object({ codigo: z.string() }))
       .query(async ({ input }) => {
         return await db.getItemByCodigo(input.codigo);
