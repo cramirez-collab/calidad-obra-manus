@@ -54,8 +54,8 @@ export function TermsModal({ open, onAccept }: TermsModalProps) {
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="h-[400px] pr-4">
-          <div className="space-y-6 text-sm">
+        <ScrollArea className="h-[60vh] max-h-[500px] pr-4">
+          <div className="space-y-6 text-sm pb-6">
             {/* Términos y Condiciones */}
             <section>
               <h3 className="font-semibold text-base flex items-center gap-2 mb-3">
@@ -154,42 +154,42 @@ export function TermsModal({ open, onAccept }: TermsModalProps) {
                 </p>
               </div>
             </section>
+
+            {/* Checkboxes y botón dentro del scroll */}
+            <div className="space-y-4 pt-6 border-t mt-6 bg-background sticky bottom-0 pb-4">
+              <div className="flex items-start space-x-3">
+                <Checkbox 
+                  id="terms" 
+                  checked={accepted}
+                  onCheckedChange={(checked) => setAccepted(checked === true)}
+                />
+                <label htmlFor="terms" className="text-sm leading-tight cursor-pointer">
+                  He leído y acepto los <strong>Términos y Condiciones de Uso</strong> de la plataforma OQC
+                </label>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <Checkbox 
+                  id="privacy" 
+                  checked={privacyAccepted}
+                  onCheckedChange={(checked) => setPrivacyAccepted(checked === true)}
+                />
+                <label htmlFor="privacy" className="text-sm leading-tight cursor-pointer">
+                  He leído y acepto el <strong>Aviso de Privacidad</strong> conforme a la LFPDPPP
+                </label>
+              </div>
+
+              <Button 
+                onClick={handleAccept}
+                disabled={!accepted || !privacyAccepted || aceptarTerminosMutation.isPending}
+                className="w-full mt-4"
+                size="lg"
+              >
+                {aceptarTerminosMutation.isPending ? "Guardando..." : "Aceptar y Continuar"}
+              </Button>
+            </div>
           </div>
         </ScrollArea>
-
-        <div className="space-y-4 pt-4 border-t">
-          <div className="flex items-start space-x-3">
-            <Checkbox 
-              id="terms" 
-              checked={accepted}
-              onCheckedChange={(checked) => setAccepted(checked === true)}
-            />
-            <label htmlFor="terms" className="text-sm leading-tight cursor-pointer">
-              He leído y acepto los <strong>Términos y Condiciones de Uso</strong> de la plataforma OQC
-            </label>
-          </div>
-          
-          <div className="flex items-start space-x-3">
-            <Checkbox 
-              id="privacy" 
-              checked={privacyAccepted}
-              onCheckedChange={(checked) => setPrivacyAccepted(checked === true)}
-            />
-            <label htmlFor="privacy" className="text-sm leading-tight cursor-pointer">
-              He leído y acepto el <strong>Aviso de Privacidad</strong> conforme a la LFPDPPP
-            </label>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button 
-            onClick={handleAccept}
-            disabled={!accepted || !privacyAccepted || aceptarTerminosMutation.isPending}
-            className="w-full sm:w-auto"
-          >
-            {aceptarTerminosMutation.isPending ? "Guardando..." : "Aceptar y Continuar"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -4447,52 +4447,152 @@ export async function getAllResidentesConEmpresas(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
   
-  // Obtener todas las relaciones activas
-  const todasRelaciones = await db.select()
-    .from(empresaResidentes)
-    .where(eq(empresaResidentes.activo, true));
-  
   // Obtener todas las empresas del proyecto
   const todasEmpresas = proyectoId
     ? await db.select().from(empresas).where(and(eq(empresas.activo, true), eq(empresas.proyectoId, proyectoId)))
     : await db.select().from(empresas).where(eq(empresas.activo, true));
   
-  // Filtrar relaciones solo de empresas del proyecto
   const empresaIds = todasEmpresas.map(e => e.id);
+  if (empresaIds.length === 0) return [];
+  
+  // Mapa para construir residentes con sus empresas
+  const residentesMap = new Map<number, {
+    id: number;
+    name: string;
+    email: string | null;
+    role: string;
+    empresas: Array<{
+      empresaId: number;
+      empresaNombre: string;
+      especialidadId: number | null;
+      tipoResidente: string;
+    }>;
+  }>();
+  
+  // 1. Obtener relaciones de la tabla empresa_residentes
+  const todasRelaciones = await db.select()
+    .from(empresaResidentes)
+    .where(eq(empresaResidentes.activo, true));
+  
   const relacionesFiltradas = todasRelaciones.filter(r => empresaIds.includes(r.empresaId));
   
-  // Obtener usuarios únicos
-  const usuarioIds = Array.from(new Set(relacionesFiltradas.map(r => r.usuarioId)));
-  if (usuarioIds.length === 0) return [];
+  // 2. Obtener usuarios referenciados en empresas.residenteId y empresas.jefeResidenteId
+  const residenteIdsDeEmpresas: number[] = [];
+  todasEmpresas.forEach(emp => {
+    if (emp.residenteId) residenteIdsDeEmpresas.push(emp.residenteId);
+    if (emp.jefeResidenteId) residenteIdsDeEmpresas.push(emp.jefeResidenteId);
+  });
   
-  const usuariosResult = await db.select()
+  // 3. Obtener usuarios con rol residente/jefe_residente que tengan empresaId del proyecto
+  const usuariosConRolResidente = await db.select()
     .from(users)
     .where(and(
-      inArray(users.id, usuarioIds),
+      eq(users.activo, true),
+      inArray(users.role, ['residente', 'jefe_residente'])
+    ));
+  
+  const usuariosConEmpresaDelProyecto = usuariosConRolResidente.filter(
+    u => u.empresaId && empresaIds.includes(u.empresaId)
+  );
+  
+  // Combinar todos los IDs de usuarios
+  const todosUsuarioIds = new Set<number>([
+    ...relacionesFiltradas.map(r => r.usuarioId),
+    ...residenteIdsDeEmpresas,
+    ...usuariosConEmpresaDelProyecto.map(u => u.id)
+  ]);
+  
+  if (todosUsuarioIds.size === 0) return [];
+  
+  // Obtener todos los usuarios
+  const todosUsuarios = await db.select()
+    .from(users)
+    .where(and(
+      inArray(users.id, Array.from(todosUsuarioIds)),
       eq(users.activo, true)
     ));
   
-  // Construir resultado con residentes y sus empresas
-  return usuariosResult.map(usuario => {
-    const relacionesUsuario = relacionesFiltradas.filter(r => r.usuarioId === usuario.id);
-    const empresasUsuario = relacionesUsuario.map(rel => {
-      const empresa = todasEmpresas.find(e => e.id === rel.empresaId);
-      return {
-        empresaId: rel.empresaId,
-        empresaNombre: empresa?.nombre || '',
-        especialidadId: empresa?.especialidadId || null,
-        tipoResidente: rel.tipoResidente
-      };
-    });
-    
-    return {
-      id: usuario.id,
-      name: usuario.name || 'Sin nombre',
-      email: usuario.email,
-      role: usuario.role,
-      empresas: empresasUsuario
-    };
+  // Construir el mapa de residentes
+  todosUsuarios.forEach(usuario => {
+    if (!residentesMap.has(usuario.id)) {
+      residentesMap.set(usuario.id, {
+        id: usuario.id,
+        name: usuario.name || 'Sin nombre',
+        email: usuario.email,
+        role: usuario.role,
+        empresas: []
+      });
+    }
   });
+  
+  // Agregar empresas desde empresa_residentes
+  relacionesFiltradas.forEach(rel => {
+    const residente = residentesMap.get(rel.usuarioId);
+    const empresa = todasEmpresas.find(e => e.id === rel.empresaId);
+    if (residente && empresa) {
+      const yaExiste = residente.empresas.some(e => e.empresaId === rel.empresaId);
+      if (!yaExiste) {
+        residente.empresas.push({
+          empresaId: rel.empresaId,
+          empresaNombre: empresa.nombre,
+          especialidadId: empresa.especialidadId || null,
+          tipoResidente: rel.tipoResidente
+        });
+      }
+    }
+  });
+  
+  // Agregar empresas desde empresas.residenteId y empresas.jefeResidenteId
+  todasEmpresas.forEach(empresa => {
+    if (empresa.residenteId) {
+      const residente = residentesMap.get(empresa.residenteId);
+      if (residente) {
+        const yaExiste = residente.empresas.some(e => e.empresaId === empresa.id);
+        if (!yaExiste) {
+          residente.empresas.push({
+            empresaId: empresa.id,
+            empresaNombre: empresa.nombre,
+            especialidadId: empresa.especialidadId || null,
+            tipoResidente: 'residente'
+          });
+        }
+      }
+    }
+    if (empresa.jefeResidenteId) {
+      const residente = residentesMap.get(empresa.jefeResidenteId);
+      if (residente) {
+        const yaExiste = residente.empresas.some(e => e.empresaId === empresa.id);
+        if (!yaExiste) {
+          residente.empresas.push({
+            empresaId: empresa.id,
+            empresaNombre: empresa.nombre,
+            especialidadId: empresa.especialidadId || null,
+            tipoResidente: 'jefe_residente'
+          });
+        }
+      }
+    }
+  });
+  
+  // Agregar empresas desde usuarios con empresaId
+  usuariosConEmpresaDelProyecto.forEach(usuario => {
+    const residente = residentesMap.get(usuario.id);
+    const empresa = todasEmpresas.find(e => e.id === usuario.empresaId);
+    if (residente && empresa) {
+      const yaExiste = residente.empresas.some(e => e.empresaId === empresa.id);
+      if (!yaExiste) {
+        residente.empresas.push({
+          empresaId: empresa.id,
+          empresaNombre: empresa.nombre,
+          especialidadId: empresa.especialidadId || null,
+          tipoResidente: usuario.role
+        });
+      }
+    }
+  });
+  
+  // Retornar solo residentes que tienen al menos una empresa
+  return Array.from(residentesMap.values()).filter(r => r.empresas.length > 0);
 }
 
 // Migrar datos existentes de residenteId y jefeResidenteId a la nueva tabla

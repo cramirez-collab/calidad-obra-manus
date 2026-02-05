@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, nombre, residenteId, jefeResidenteId, proyectoId FROM empresas WHERE proyectoId = 1 AND activo = 1 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, residenteId, jefeResidenteId, proyectoId FROM empresas WHERE proyectoId = 1 AND activo = 1 LIMIT 10;",
+  "rows": [
+    {
+      "id": "330003",
+      "nombre": "GBPO",
+      "residenteId": "NULL",
+      "jefeResidenteId": "NULL",
+      "proyectoId": "1"
+    },
+    {
+      "id": "360001",
+      "nombre": "Objetiva",
+      "residenteId": "781800",
+      "jefeResidenteId": "NULL",
+      "proyectoId": "1"
+    },
+    {
+      "id": "480001",
+      "nombre": "Ennco",
+      "residenteId": "NULL",
+      "jefeResidenteId": "NULL",
+      "proyectoId": "1"
+    },
+    {
+      "id": "480002",
+      "nombre": "Garcab Albañil",
+      "residenteId": "NULL",
+      "jefeResidenteId": "NULL",
+      "proyectoId": "1"
+    },
+    {
+      "id": "480003",
+      "nombre": "Waller ",
+      "residenteId": "NULL",
+      "jefeResidenteId": "NULL",
+      "proyectoId": "1"
+    },
+    {
+      "id": "510001",
+      "nombre": "Garcab TYP",
+      "residenteId": "NULL",
+      "jefeResidenteId": "NULL",
+      "proyectoId": "1"
+    },
+    {
+      "id": "510002",
+      "nombre": "iimsa",
+      "residenteId": "NULL",
+      "jefeResidenteId": "NULL",
+      "proyectoId": "1"
+    },
+    {
+      "id": "510003",
+      "nombre": "Riepsa",
+      "residenteId": "NULL",
+      "jefeResidenteId": "NULL",
+      "proyectoId": "1"
+    },
+    {
+      "id": "510004",
+      "nombre": "Dcon",
+      "residenteId": "NULL",
+      "jefeResidenteId": "NULL",
+      "proyectoId": "1"
+    },
+    {
+      "id": "510005",
+      "nombre": "Gumik",
+      "residenteId": "NULL",
+      "jefeResidenteId": "NULL",
+      "proyectoId": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tresidenteId\tjefeResidenteId\tproyectoId\n330003\tGBPO\tNULL\tNULL\t1\n360001\tObjetiva\t781800\tNULL\t1\n480001\tEnnco\tNULL\tNULL\t1\n480002\tGarcab Albañil\tNULL\tNULL\t1\n480003\tWaller \tNULL\tNULL\t1\n510001\tGarcab TYP\tNULL\tNULL\t1\n510002\tiimsa\tNULL\tNULL\t1\n510003\tRiepsa\tNULL\tNULL\t1\n510004\tDcon\tNULL\tNULL\t1\n510005\tGumik\tNULL\tNULL\t1\n",
+  "stderr": "",
+  "execution_time_ms": 356
+}

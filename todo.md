@@ -3315,3 +3315,19 @@
 - [x] Residentes de especialidad diferente NO pueden aprobar
 - [x] Validación en backend (endpoint de aprobación y rechazo)
 - [x] Validación en frontend (ocultar botón aprobar si no tiene permiso)
+
+
+## Corrección Selector de Residentes v3.49 (Febrero 2026)
+- [ ] Selector de residentes en Nuevo Ítem muestra "No se encontraron residentes"
+- [ ] Cargar residentes desde la base de datos de usuarios
+- [ ] Filtrar por proyecto seleccionado
+
+- [ ] Botón de aceptar términos y condiciones - subirlo para que no lo tape el footer
+- [ ] Poner el botón dentro del scroll
+
+
+## Correcciones v3.49 (Febrero 2026)
+- [x] Selector de residentes en Nuevo Ítem - ahora carga residentes de múltiples fuentes
+- [x] Cargar todos los residentes del proyecto Hidalma (empresa_residentes + empresas.residenteId/jefeResidenteId + usuarios con rol residente)
+- [x] Botón de aceptar términos y condiciones - movido dentro del scroll
+- [x] Checkboxes y botón ahora están dentro del ScrollArea para que no los tape el footer

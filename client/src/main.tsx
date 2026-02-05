@@ -11,13 +11,13 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v3.48 - ObjetivaQC 🔴
+// 🔴 VERSIÓN v3.50 - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
 // SIEMPRE LA ÚLTIMA VERSIÓN - OBLIGATORIO
-// Badge notificaciones + Restricción aprobación + Trazabilidad
+// Selector residentes + Términos y condiciones + Restricción aprobación
 // ============================================
-const CURRENT_VERSION = 209;
+const CURRENT_VERSION = 210;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN UNIFICADO 🎯

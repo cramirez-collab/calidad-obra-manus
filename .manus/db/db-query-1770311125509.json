@@ -1,0 +1,142 @@
+{
+  "query": "SELECT id, name, role, empresaId FROM users WHERE role IN ('residente', 'jefe_residente') AND activo = 1 LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, name, role, empresaId FROM users WHERE role IN ('residente', 'jefe_residente') AND activo = 1 LIMIT 30;",
+  "rows": [
+    {
+      "id": "1410108",
+      "name": "Karen Navith",
+      "role": "residente",
+      "empresaId": "480001"
+    },
+    {
+      "id": "1410178",
+      "name": "Natalia Diaz",
+      "role": "residente",
+      "empresaId": "480003"
+    },
+    {
+      "id": "1470049",
+      "name": "Esteban Guerrero ",
+      "role": "residente",
+      "empresaId": "510001"
+    },
+    {
+      "id": "1470059",
+      "name": "Jairo Briseño",
+      "role": "residente",
+      "empresaId": "510002"
+    },
+    {
+      "id": "1470083",
+      "name": "Saul Tovar",
+      "role": "residente",
+      "empresaId": "510004"
+    },
+    {
+      "id": "1470095",
+      "name": "Eduardo Rodriguez ",
+      "role": "residente",
+      "empresaId": "510003"
+    },
+    {
+      "id": "1470115",
+      "name": "Katy Orozco ",
+      "role": "residente",
+      "empresaId": "510005"
+    },
+    {
+      "id": "1530070",
+      "name": "Xitlali Reyes",
+      "role": "residente",
+      "empresaId": "510001"
+    },
+    {
+      "id": "1530085",
+      "name": "Pablo Mercado",
+      "role": "residente",
+      "empresaId": "540001"
+    },
+    {
+      "id": "1530090",
+      "name": "Genaro Solis",
+      "role": "residente",
+      "empresaId": "480003"
+    },
+    {
+      "id": "1530106",
+      "name": "Jesús Contreras",
+      "role": "residente",
+      "empresaId": "360001"
+    },
+    {
+      "id": "2160064",
+      "name": "Nayibe Cardenas",
+      "role": "residente",
+      "empresaId": "660002"
+    },
+    {
+      "id": "4200419",
+      "name": "Rafael Manriquez",
+      "role": "residente",
+      "empresaId": "1950001"
+    },
+    {
+      "id": "4201178",
+      "name": "Esteban Guerrero ",
+      "role": "residente",
+      "empresaId": "1950002"
+    },
+    {
+      "id": "4291011",
+      "name": "CR",
+      "role": "residente",
+      "empresaId": "360001"
+    },
+    {
+      "id": "4351934",
+      "name": "Jesus Ferrer",
+      "role": "residente",
+      "empresaId": "510002"
+    },
+    {
+      "id": "4351962",
+      "name": "Juan Ruiz",
+      "role": "residente",
+      "empresaId": "480003"
+    },
+    {
+      "id": "4352044",
+      "name": "Mayra Perez",
+      "role": "residente",
+      "empresaId": "2010006"
+    },
+    {
+      "id": "4352184",
+      "name": "Juan Javier Morales",
+      "role": "residente",
+      "empresaId": "2010007"
+    },
+    {
+      "id": "4357159",
+      "name": "Eduardo Rubicel ",
+      "role": "residente",
+      "empresaId": "510003"
+    },
+    {
+      "id": "4357176",
+      "name": "Gustavo Orozco",
+      "role": "residente",
+      "empresaId": "510005"
+    },
+    {
+      "id": "4357204",
+      "name": "Gerardo Rojas",
+      "role": "residente",
+      "empresaId": "510005"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trole\tempresaId\n1410108\tKaren Navith\tresidente\t480001\n1410178\tNatalia Diaz\tresidente\t480003\n1470049\tEsteban Guerrero \tresidente\t510001\n1470059\tJairo Briseño\tresidente\t510002\n1470083\tSaul Tovar\tresidente\t510004\n1470095\tEduardo Rodriguez \tresidente\t510003\n1470115\tKaty Orozco \tresidente\t510005\n1530070\tXitlali Reyes\tresidente\t510001\n1530085\tPablo Mercado\tresidente\t540001\n1530090\tGenaro Solis\tresidente\t480003\n1530106\tJesús Contreras\tresidente\t360001\n2160064\tNayibe Cardenas\tresidente\t660002\n4200419\tRafael Manriquez\tresidente\t1950001\n4201178\tEsteban Guerrero \tresidente\t1950002\n4291011\tCR\tresidente\t360001\n4351934\tJesus Ferrer\tresidente\t510002\n4351962\tJuan Ruiz\tresidente\t480003\n4352044\tMayra Perez\tresidente\t2010006\n4352184\tJuan Javier Morales\tresidente\t2010007\n4357159\tEduardo Rubicel \tresidente\t510003\n4357176\tGustavo Orozco\tresidente\t510005\n4357204\tGerardo Rojas\tresidente\t510005\n",
+  "stderr": "",
+  "execution_time_ms": 362
+}
