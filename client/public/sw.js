@@ -1,5 +1,5 @@
 // ============================================
-// SISTEMA OFFLINE v89 (v2.89) - VERSIONADO UNIFICADO
+// SISTEMA OFFLINE v90 (v2.90) - VERSIONADO UNIFICADO
 // ============================================
 // MANDATORIO Y OBLIGATORIO:
 // - Dominio: objetivaqc.com (PERMANENTE)
@@ -7,7 +7,7 @@
 // - ACTUALIZACIÓN FORZADA AGRESIVA OBLIGATORIA
 // - TODOS LOS USUARIOS SIEMPRE EN ÚLTIMA VERSIÓN
 // ============================================
-const APP_VERSION = 89;
+const APP_VERSION = 90;
 const CACHE_NAME = `oqc-v${APP_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

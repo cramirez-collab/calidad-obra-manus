@@ -50,7 +50,7 @@ async function startServer() {
   
   // Endpoint de versión para actualización forzada
   // MANDATORIO: Todos los usuarios siempre en la última versión
-  const CURRENT_APP_VERSION = 89;
+  const CURRENT_APP_VERSION = 90;
   app.get('/api/version', (req, res) => {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.set('Pragma', 'no-cache');

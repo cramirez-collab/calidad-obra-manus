@@ -3267,3 +3267,7 @@
 ## Correcciones v88 (Febrero 2026)
 - [x] Corregir palabras cortadas en detalle de ítem (Empresa, Especialidad, Fecha) - grid responsive
 - [x] Agregar filtro por Residente en lista de ítems (6 filtros en total)
+
+
+## Correcciones v90 (Febrero 2026)
+- [x] Filtro de usuarios debe mostrar SOLO usuarios del proyecto actual, no todos los del sistema
