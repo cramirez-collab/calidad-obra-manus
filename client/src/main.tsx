@@ -11,20 +11,20 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v90 (v2.90) - ObjetivaQC 🔴
+// 🔴 VERSIÓN v3.47 - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
-// FILTRO USUARIOS POR PROYECTO ACTUAL
-// UI MEJORADA Y RESPONSIVA
+// SIEMPRE LA ÚLTIMA VERSIÓN - OBLIGATORIO
+// Badge notificaciones + Info usuarios en Ítems
 // ============================================
-const CURRENT_VERSION = 90;
+const CURRENT_VERSION = 208;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN UNIFICADO 🎯
 // ============================================
-// La versión ahora es directa: v2.XX donde XX = CURRENT_VERSION
+// Factor de división: 60 (ej: 208/60 = 3.47)
 function formatVersion(internalVersion: number): string {
-  return `v2.${internalVersion}`;
+  return 'v' + (internalVersion / 60).toFixed(2);
 }
 
 // Exponer globalmente para uso en otros componentes

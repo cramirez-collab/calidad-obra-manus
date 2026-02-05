@@ -93,13 +93,13 @@
     <!-- ============================================ -->
     <script>
       (function() {
-        const REQUIRED_VERSION = 67;
+        const REQUIRED_VERSION = 208;
         const VERSION_KEY = 'oqc_app_version';
         const UPDATING_KEY = 'oqc_updating';
         
-        // Formato de versión profesional (dividir entre 30)
+        // Formato de versión profesional: Factor 60 (ej: 208/60 = 3.47)
         window.OQC_VERSION = REQUIRED_VERSION;
-        window.OQC_DISPLAY_VERSION = 'v' + (REQUIRED_VERSION / 30).toFixed(2);
+        window.OQC_DISPLAY_VERSION = 'v' + (REQUIRED_VERSION / 60).toFixed(2);
         
         // Obtener versión almacenada
         const storedVersion = parseInt(localStorage.getItem(VERSION_KEY) || '0');

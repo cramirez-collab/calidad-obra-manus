@@ -50,14 +50,16 @@ async function startServer() {
   
   // Endpoint de versión para actualización forzada
   // MANDATORIO: Todos los usuarios siempre en la última versión
-  const CURRENT_APP_VERSION = 90;
+  // Factor de división: 60 (ej: 148/60 = 2.47, 208/60 = 3.47)
+  const CURRENT_APP_VERSION = 208;
   app.get('/api/version', (req, res) => {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
+    const displayVersion = 'v' + (CURRENT_APP_VERSION / 60).toFixed(2);
     res.json({
       version: CURRENT_APP_VERSION,
-      displayVersion: `v2.${CURRENT_APP_VERSION}`,
+      displayVersion: displayVersion,
       timestamp: Date.now(),
       forceUpdate: true
     });
