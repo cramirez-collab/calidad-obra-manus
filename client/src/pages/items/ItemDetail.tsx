@@ -405,8 +405,44 @@ export default function ItemDetail() {
 
   // Función para cargar imagen como base64 desde URL
   const loadImageAsBase64 = async (url: string): Promise<string | null> => {
+    if (!url) return null;
+    
     try {
-      const response = await fetch(url);
+      // Si ya es base64, devolverlo directamente
+      if (url.startsWith('data:image')) {
+        return url;
+      }
+      
+      // Si es un blob URL, cargarlo directamente
+      if (url.startsWith('blob:')) {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(blob);
+        });
+      }
+      
+      // Para URLs externas, usar el proxy de imágenes para evitar CORS
+      let fetchUrl = url;
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        // Usar el proxy de imágenes del servidor
+        const encodedUrl = encodeURIComponent(url);
+        fetchUrl = `/api/image-proxy?url=${encodedUrl}`;
+      }
+      
+      const response = await fetch(fetchUrl, {
+        mode: 'cors',
+        credentials: 'same-origin',
+      });
+      
+      if (!response.ok) {
+        console.error('Error cargando imagen:', response.status, response.statusText);
+        return null;
+      }
+      
       const blob = await response.blob();
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -414,7 +450,8 @@ export default function ItemDetail() {
         reader.onerror = () => resolve(null);
         reader.readAsDataURL(blob);
       });
-    } catch {
+    } catch (error) {
+      console.error('Error cargando imagen para PDF:', error);
       return null;
     }
   };
@@ -541,15 +578,26 @@ export default function ItemDetail() {
       const fotoWidth = (pageWidth - 2 * margin - 10) / 2;
       const fotoHeight = 70;
       
-      // Cargar fotos
-      let fotoAntesBase64: string | null = null;
-      let fotoDespuesBase64: string | null = null;
+      // Cargar fotos - priorizar Base64 guardado en DB, luego URL de S3
+      let fotoAntesData: string | null = null;
+      let fotoDespuesData: string | null = null;
       
-      if (item.fotoAntesUrl) {
-        fotoAntesBase64 = await loadImageAsBase64(getImageUrl(item.fotoAntesUrl));
+      // Foto ANTES: priorizar Base64 si existe
+      if ((item as any).fotoAntesBase64) {
+        fotoAntesData = (item as any).fotoAntesBase64.startsWith('data:') 
+          ? (item as any).fotoAntesBase64 
+          : `data:image/jpeg;base64,${(item as any).fotoAntesBase64}`;
+      } else if (item.fotoAntesUrl) {
+        fotoAntesData = await loadImageAsBase64(getImageUrl(item.fotoAntesUrl));
       }
-      if (item.fotoDespuesUrl) {
-        fotoDespuesBase64 = await loadImageAsBase64(getImageUrl(item.fotoDespuesUrl));
+      
+      // Foto DESPUÉS: priorizar Base64 si existe
+      if ((item as any).fotoDespuesBase64) {
+        fotoDespuesData = (item as any).fotoDespuesBase64.startsWith('data:') 
+          ? (item as any).fotoDespuesBase64 
+          : `data:image/jpeg;base64,${(item as any).fotoDespuesBase64}`;
+      } else if (item.fotoDespuesUrl) {
+        fotoDespuesData = await loadImageAsBase64(getImageUrl(item.fotoDespuesUrl));
       }
       
       // Foto ANTES
@@ -563,9 +611,9 @@ export default function ItemDetail() {
       doc.setTextColor(0, 0, 0);
       doc.text('FOTO ANTES', margin + fotoWidth / 2, yPos + 5.5, { align: 'center' });
       
-      if (fotoAntesBase64) {
+      if (fotoAntesData) {
         try {
-          doc.addImage(fotoAntesBase64, 'JPEG', margin + 2, yPos + 10, fotoWidth - 4, fotoHeight - 2, undefined, 'MEDIUM');
+          doc.addImage(fotoAntesData, 'JPEG', margin + 2, yPos + 10, fotoWidth - 4, fotoHeight - 2, undefined, 'MEDIUM');
         } catch {
           doc.setFontSize(8);
           doc.setTextColor(150, 150, 150);
@@ -588,9 +636,9 @@ export default function ItemDetail() {
       doc.setTextColor(255, 255, 255);
       doc.text('FOTO DESPUÉS', fotoDespuesX + fotoWidth / 2, yPos + 5.5, { align: 'center' });
       
-      if (fotoDespuesBase64) {
+      if (fotoDespuesData) {
         try {
-          doc.addImage(fotoDespuesBase64, 'JPEG', fotoDespuesX + 2, yPos + 10, fotoWidth - 4, fotoHeight - 2, undefined, 'MEDIUM');
+          doc.addImage(fotoDespuesData, 'JPEG', fotoDespuesX + 2, yPos + 10, fotoWidth - 4, fotoHeight - 2, undefined, 'MEDIUM');
         } catch {
           doc.setFontSize(8);
           doc.setTextColor(150, 150, 150);

@@ -1475,17 +1475,23 @@ export async function contarNotificacionesNoLeidas(usuarioId: number) {
   return result[0]?.count || 0;
 }
 
-// Función para notificar a supervisores sobre ítems pendientes
+// Función para notificar a supervisores, admins y superadmins sobre ítems pendientes
+// Incluye notificaciones in-app Y push notifications
 export async function notificarSupervisores(itemId: number, titulo: string, mensaje: string) {
   const db = await getDb();
   if (!db) return;
   
+  // Incluir superadmin, admin y supervisor
   const supervisores = await db
     .select()
     .from(users)
-    .where(inArray(users.role, ['admin', 'supervisor']));
+    .where(inArray(users.role, ['superadmin', 'admin', 'supervisor']));
+  
+  // Obtener info del ítem para push
+  const itemInfo = await getItemInfoForPush(itemId);
   
   for (const supervisor of supervisores) {
+    // Notificación in-app
     await createNotificacion({
       usuarioId: supervisor.id,
       itemId,
@@ -1493,10 +1499,26 @@ export async function notificarSupervisores(itemId: number, titulo: string, mens
       titulo,
       mensaje,
     });
+    
+    // Push notification
+    const pushSubs = await getPushSubscriptionsByUsuario(supervisor.id);
+    if (pushSubs.length > 0 && itemInfo) {
+      const pushService = (await import('./pushService')).default;
+      await pushService.sendPushToMultiple(pushSubs, {
+        title: titulo,
+        body: mensaje,
+        itemCodigo: itemInfo.codigo,
+        unidadNombre: itemInfo.unidadNombre,
+        defectoNombre: itemInfo.defectoNombre,
+        itemId,
+        data: { url: `/items/${itemId}`, itemId, tipo: 'pendiente_aprobacion' }
+      });
+    }
   }
 }
 
 // Función para notificar a jefes de residente sobre ítems pendientes de foto
+// Incluye notificaciones in-app Y push notifications
 export async function notificarJefesResidente(itemId: number, empresaId: number | null, titulo: string, mensaje: string) {
   const db = await getDb();
   if (!db) return;
@@ -1511,7 +1533,11 @@ export async function notificarJefesResidente(itemId: number, empresaId: number 
     .from(users)
     .where(and(...conditions));
   
+  // Obtener info del ítem para push
+  const itemInfo = await getItemInfoForPush(itemId);
+  
   for (const jefe of jefes) {
+    // Notificación in-app
     await createNotificacion({
       usuarioId: jefe.id,
       itemId,
@@ -1519,6 +1545,21 @@ export async function notificarJefesResidente(itemId: number, empresaId: number 
       titulo,
       mensaje,
     });
+    
+    // Push notification
+    const pushSubs = await getPushSubscriptionsByUsuario(jefe.id);
+    if (pushSubs.length > 0 && itemInfo) {
+      const pushService = (await import('./pushService')).default;
+      await pushService.sendPushToMultiple(pushSubs, {
+        title: titulo,
+        body: mensaje,
+        itemCodigo: itemInfo.codigo,
+        unidadNombre: itemInfo.unidadNombre,
+        defectoNombre: itemInfo.defectoNombre,
+        itemId,
+        data: { url: `/items/${itemId}`, itemId, tipo: 'pendiente_foto' }
+      });
+    }
   }
 }
 

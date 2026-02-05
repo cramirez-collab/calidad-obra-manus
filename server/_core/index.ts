@@ -48,6 +48,31 @@ async function startServer() {
   // Export routes
   app.use(exportRoutes);
   
+  // Proxy de imágenes para evitar CORS al generar PDFs
+  app.get('/api/image-proxy', async (req, res) => {
+    try {
+      const imageUrl = req.query.url as string;
+      if (!imageUrl) {
+        return res.status(400).send('URL requerida');
+      }
+      
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        return res.status(response.status).send('Error al obtener imagen');
+      }
+      
+      const contentType = response.headers.get('content-type') || 'image/jpeg';
+      const buffer = await response.arrayBuffer();
+      
+      res.set('Content-Type', contentType);
+      res.set('Cache-Control', 'public, max-age=3600');
+      res.send(Buffer.from(buffer));
+    } catch (error) {
+      console.error('Error en proxy de imagen:', error);
+      res.status(500).send('Error interno');
+    }
+  });
+  
   // tRPC API
   app.use(
     "/api/trpc",

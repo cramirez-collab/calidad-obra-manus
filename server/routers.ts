@@ -1004,6 +1004,13 @@ export const appRouter = router({
             
             // Emitir evento de tiempo real
             socketEvents.itemCreated(itemResult);
+            
+            // Notificar a superadmin, admin y supervisor sobre nuevo ítem
+            await db.notificarSupervisores(
+              itemResult.id,
+              '📷 Nuevo Ítem Creado',
+              `Se creó el ítem "${input.titulo}" (${itemResult.codigo})`
+            );
           } catch (e) {
             console.error('Error en operaciones secundarias de item:', e);
           }

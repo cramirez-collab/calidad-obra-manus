@@ -3213,3 +3213,19 @@
 - [x] Mejorar visual de filtros en Bitácora - diseño más ordenado y compacto
 - [x] Corregir registro de acciones en primera sección de Bitácora (crear/aprobar/rechazar/subir foto)
 
+
+
+## Correcciones v84 (Febrero 2026)
+- [ ] Corregir fotos que no aparecen en PDF de fichas de ítem
+- [ ] Diagnosticar y corregir sistema de notificaciones push
+- [ ] Implementar badges en icono de aplicación (contador de notificaciones)
+- [ ] Asegurar notificaciones a superadmin, admin y supervisor (todas las notificaciones)
+
+
+## Correcciones v84 (Febrero 2026)
+- [x] Corregir fotos en PDF de ficha de ítem (usar Base64 o proxy de imágenes)
+- [x] Agregar endpoint /api/image-proxy para evitar CORS al cargar imágenes
+- [x] Mejorar notificaciones push para superadmin, admin y supervisor
+- [x] Actualizar badge del icono de la app con contador de notificaciones
+- [x] Notificar a admins cuando se crea un nuevo ítem
+- [x] Incluir push notifications en notificarSupervisores y notificarJefesResidente

@@ -44,6 +44,13 @@ export function NotificationBell() {
   
   const unreadCount = typeof countData === 'number' ? countData : 0;
   
+  // Actualizar badge del icono de la app cuando cambia el contador
+  useEffect(() => {
+    if (typeof (window as any).updateAppBadge === 'function') {
+      (window as any).updateAppBadge(unreadCount);
+    }
+  }, [unreadCount]);
+  
   // Cerrar panel al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
