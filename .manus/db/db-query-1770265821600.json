@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `items` ADD `fechaCierre` timestamp;\nALTER TABLE `items` ADD `creadoPorId` int;\nALTER TABLE `items` ADD `asignadoAId` int;\nALTER TABLE `items` ADD `aprobadoPorId` int;\nALTER TABLE `items` ADD `cerradoPorId` int;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute ALTER TABLE `items` ADD `fechaCierre` timestamp;\nALTER TABLE `items` ADD `creadoPorId` int;\nALTER TABLE `items` ADD `asignadoAId` int;\nALTER TABLE `items` ADD `aprobadoPorId` int;\nALTER TABLE `items` ADD `cerradoPorId` int;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2845
+}

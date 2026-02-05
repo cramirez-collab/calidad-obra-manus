@@ -233,6 +233,13 @@ export const items = mysqlTable("items", {
   fechaCreacion: timestamp("fechaCreacion").defaultNow().notNull(),
   fechaFotoDespues: timestamp("fechaFotoDespues"),
   fechaAprobacion: timestamp("fechaAprobacion"),
+  fechaCierre: timestamp("fechaCierre"), // Fecha de cierre definitivo del ítem
+  
+  // Trazabilidad completa - IDs de usuarios en cada etapa
+  creadoPorId: int("creadoPorId"), // Usuario que tomó la foto inicial
+  asignadoAId: int("asignadoAId"), // Usuario residente asignado para corregir
+  aprobadoPorId: int("aprobadoPorId"), // Usuario que aprobó/rechazó
+  cerradoPorId: int("cerradoPorId"), // Usuario que cerró el ítem
   
   // Comentarios
   comentarioResidente: text("comentarioResidente"),

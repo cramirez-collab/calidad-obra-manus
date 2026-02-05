@@ -352,7 +352,19 @@ export default function ReporteFotografico() {
             ];
             doc.text(detalles.join('  |  '), margin + 5, yPos + 23);
             
-            if (item.ubicacionDetalle) {
+            // Trazabilidad completa
+            const trazabilidad = [];
+            if (item.creadoPorNombre) trazabilidad.push(`Creado: ${item.creadoPorNombre.split(' ')[0]}`);
+            if (item.asignadoANombre) trazabilidad.push(`Asignado: ${item.asignadoANombre.split(' ')[0]}`);
+            if (item.aprobadoPorNombre && (item.status === 'aprobado' || item.status === 'rechazado')) {
+              trazabilidad.push(`${item.status === 'aprobado' ? 'Aprobado' : 'Rechazado'}: ${item.aprobadoPorNombre.split(' ')[0]}`);
+            }
+            if (item.cerradoPorNombre && item.fechaCierre) trazabilidad.push(`Cerrado: ${item.cerradoPorNombre.split(' ')[0]}`);
+            
+            if (trazabilidad.length > 0) {
+              doc.setTextColor(2, 179, 129); // Verde Objetiva
+              doc.text(`Trazabilidad: ${trazabilidad.join(' > ')}`, margin + 5, yPos + 30);
+            } else if (item.ubicacionDetalle) {
               doc.text(`Ubicacion: ${item.ubicacionDetalle}`, margin + 5, yPos + 30);
             }
             

@@ -905,9 +905,28 @@ export default function Bitacora() {
                             </Badge>
                           </td>
                           <td className="p-2">
-                            <span className="text-muted-foreground truncate block max-w-[200px]" title={actividad.detalles || ""}>
-                              {actividad.detalles || "-"}
-                            </span>
+                            <div className="max-w-[250px]">
+                              <span className="text-muted-foreground truncate block" title={actividad.detalles || ""}>
+                                {actividad.detalles || "-"}
+                              </span>
+                              {/* Mostrar trazabilidad si es acción de ítem */}
+                              {actividad.entidad === 'item' && actividad.detalles && (
+                                <div className="text-xs text-slate-500 mt-1">
+                                  {actividad.accion === 'crear_item' && (
+                                    <span className="text-blue-600">✍️ Creado por: {actividad.usuario?.name?.split(' ')[0]}</span>
+                                  )}
+                                  {actividad.accion === 'aprobar_item' && (
+                                    <span className="text-green-600">✓ Aprobado por: {actividad.usuario?.name?.split(' ')[0]}</span>
+                                  )}
+                                  {actividad.accion === 'rechazar_item' && (
+                                    <span className="text-red-600">✗ Rechazado por: {actividad.usuario?.name?.split(' ')[0]}</span>
+                                  )}
+                                  {actividad.accion === 'subir_foto' && (
+                                    <span className="text-purple-600">📷 Foto por: {actividad.usuario?.name?.split(' ')[0]}</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </td>
                           {isSuperadmin && (
                             <td className="p-2 text-center">

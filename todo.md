@@ -3182,3 +3182,27 @@
 - [x] Etiquetas de valores en gráfica de Defectos por Usuario en KPIs (centro)
 - [x] Etiquetas de valores en gráfica de Tiempos de Respuesta (posición derecha con formato horas)
 - [x] Distribución por Severidad ya tenía etiquetas con nombre y porcentaje
+
+
+## Trazabilidad Completa v82 (Iteración 28)
+
+### Datos de Trazabilidad por Ítem
+- [ ] Quién tomó la foto inicial (creador) con nombre y fecha
+- [ ] A quién se asignó (residente de especialidad) con nombre y fecha
+- [ ] Quién aprobó/rechazó con nombre y fecha
+- [ ] Quién cerró el ítem con nombre y fecha
+
+### Mostrar Trazabilidad en Vistas
+- [ ] Trazabilidad en página de Bienvenida (Mis Tareas)
+- [ ] Trazabilidad en detalle de ítems
+- [ ] Trazabilidad en Bitácora
+- [ ] Trazabilidad en reportes PDF (Estadísticas, KPIs, Dashboard, Bitácora)
+
+
+## Trazabilidad Completa v82 (Febrero 2026)
+- [x] Agregar campos de trazabilidad en base de datos (creadoPorId, asignadoAId, aprobadoPorId, cerradoPorId, fechaCierre)
+- [x] Actualizar queries del backend para incluir nombres de trazabilidad
+- [x] Mostrar trazabilidad en página de Bienvenida (Mis Tareas) con iconos
+- [x] Mostrar trazabilidad en detalle de ítems (sección con 4 pasos numerados)
+- [x] Mostrar trazabilidad en Bitácora (acciones de ítems con nombres)
+- [x] Agregar trazabilidad en reportes PDF fotográficos (Creado > Asignado > Aprobado > Cerrado)

@@ -934,12 +934,24 @@ export const appRouter = router({
           fotoData.fotoAntesMarcadaBase64 = input.fotoAntesMarcadaBase64;
         }
         
+        // Obtener el residente asignado a la especialidad (si existe)
+        let asignadoAId: number | null = null;
+        if (input.especialidadId) {
+          const especialidad = await db.getEspecialidadById(input.especialidadId);
+          if (especialidad?.residenteId) {
+            asignadoAId = especialidad.residenteId;
+          }
+        }
+        
         const result = await db.createItem({
           ...input,
           ...fotoData,
           residenteId: ctx.user.id,
           status: 'pendiente_foto_despues',
           clientId: input.clientId, // Guardar para evitar duplicados
+          // Trazabilidad
+          creadoPorId: ctx.user.id, // Quien tomó la foto inicial
+          asignadoAId: asignadoAId, // Residente de la especialidad que debe corregir
         });
         
         // Devolver resultado inmediatamente para mayor velocidad
@@ -1148,8 +1160,12 @@ export const appRouter = router({
         await db.updateItem(input.itemId, {
           supervisorId: ctx.user.id,
           fechaAprobacion: new Date(),
+          fechaCierre: new Date(), // El ítem se cierra al ser aprobado
           status: 'aprobado',
           comentarioSupervisor: input.comentario,
+          // Trazabilidad
+          aprobadoPorId: ctx.user.id,
+          cerradoPorId: ctx.user.id, // Quien cierra es quien aprueba
         });
         
         // Operaciones secundarias en segundo plano
@@ -1214,8 +1230,11 @@ export const appRouter = router({
         // OPTIMIZACIÓN: Actualizar status inmediatamente (< 300ms)
         await db.updateItem(input.itemId, {
           supervisorId: ctx.user.id,
+          fechaAprobacion: new Date(), // Fecha de la decisión (aprobación o rechazo)
           status: 'rechazado',
           comentarioSupervisor: input.comentario,
+          // Trazabilidad - quien rechazó
+          aprobadoPorId: ctx.user.id,
         });
         
         // Operaciones secundarias en segundo plano

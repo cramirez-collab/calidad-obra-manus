@@ -59,6 +59,12 @@ const itemFieldsWithoutBase64 = {
   fechaCreacion: items.fechaCreacion,
   fechaFotoDespues: items.fechaFotoDespues,
   fechaAprobacion: items.fechaAprobacion,
+  fechaCierre: items.fechaCierre,
+  // Campos de trazabilidad
+  creadoPorId: items.creadoPorId,
+  asignadoAId: items.asignadoAId,
+  aprobadoPorId: items.aprobadoPorId,
+  cerradoPorId: items.cerradoPorId,
   comentarioResidente: items.comentarioResidente,
   comentarioJefeResidente: items.comentarioJefeResidente,
   comentarioSupervisor: items.comentarioSupervisor,
@@ -1102,6 +1108,12 @@ export async function getItemById(id: number) {
     fechaCreacion: items.fechaCreacion,
     fechaFotoDespues: items.fechaFotoDespues,
     fechaAprobacion: items.fechaAprobacion,
+    fechaCierre: items.fechaCierre,
+    // Campos de trazabilidad
+    creadoPorId: items.creadoPorId,
+    asignadoAId: items.asignadoAId,
+    aprobadoPorId: items.aprobadoPorId,
+    cerradoPorId: items.cerradoPorId,
     comentarioResidente: items.comentarioResidente,
     comentarioJefeResidente: items.comentarioJefeResidente,
     comentarioSupervisor: items.comentarioSupervisor,
@@ -1175,6 +1187,12 @@ export async function getItemByCodigo(codigo: string) {
       fechaCreacion: items.fechaCreacion,
       fechaFotoDespues: items.fechaFotoDespues,
       fechaAprobacion: items.fechaAprobacion,
+      fechaCierre: items.fechaCierre,
+      // Campos de trazabilidad
+      creadoPorId: items.creadoPorId,
+      asignadoAId: items.asignadoAId,
+      aprobadoPorId: items.aprobadoPorId,
+      cerradoPorId: items.cerradoPorId,
       comentarioResidente: items.comentarioResidente,
       comentarioJefeResidente: items.comentarioJefeResidente,
       comentarioSupervisor: items.comentarioSupervisor,
@@ -1822,6 +1840,12 @@ export async function getPendientesByUsuario(userId: number, role: string) {
       // Fechas de trazabilidad
       fechaFotoDespues: items.fechaFotoDespues,
       fechaAprobacion: items.fechaAprobacion,
+      fechaCierre: items.fechaCierre,
+      // IDs de trazabilidad
+      creadoPorId: items.creadoPorId,
+      asignadoAId: items.asignadoAId,
+      aprobadoPorId: items.aprobadoPorId,
+      cerradoPorId: items.cerradoPorId,
     })
     .from(items)
     .leftJoin(users, eq(items.residenteId, users.id))
@@ -1829,25 +1853,39 @@ export async function getPendientesByUsuario(userId: number, role: string) {
     .where(whereCondition)
     .orderBy(items.fechaCreacion); // ASC = más antiguo primero
   
-  // Obtener nombres de residentes de especialidades en una segunda consulta
+  // Obtener nombres de residentes de especialidades y usuarios de trazabilidad en una segunda consulta
   const especialidadResidenteIds = Array.from(new Set(results.map(r => r.especialidadResidenteId).filter((id): id is number => id !== null)));
-  let residentesEspecialidad: Record<number, string> = {};
   
-  if (especialidadResidenteIds.length > 0) {
-    const residentesData = await db
+  // Recopilar todos los IDs de usuarios de trazabilidad
+  const trazabilidadIds = Array.from(new Set([
+    ...results.map(r => r.creadoPorId).filter((id): id is number => id !== null),
+    ...results.map(r => r.asignadoAId).filter((id): id is number => id !== null),
+    ...results.map(r => r.aprobadoPorId).filter((id): id is number => id !== null),
+    ...results.map(r => r.cerradoPorId).filter((id): id is number => id !== null),
+    ...especialidadResidenteIds,
+  ]));
+  
+  let usuariosMap: Record<number, string> = {};
+  
+  if (trazabilidadIds.length > 0) {
+    const usuariosData = await db
       .select({ id: users.id, name: users.name })
       .from(users)
-      .where(inArray(users.id, especialidadResidenteIds as number[]));
+      .where(inArray(users.id, trazabilidadIds as number[]));
     
-    residentesData.forEach(r => {
-      if (r.id && r.name) residentesEspecialidad[r.id] = r.name;
+    usuariosData.forEach(r => {
+      if (r.id && r.name) usuariosMap[r.id] = r.name;
     });
   }
   
-  // Agregar nombre del residente de especialidad a cada resultado
+  // Agregar nombres de trazabilidad a cada resultado
   return results.map(r => ({
     ...r,
-    especialidadResidenteNombre: r.especialidadResidenteId ? residentesEspecialidad[r.especialidadResidenteId] || null : null,
+    especialidadResidenteNombre: r.especialidadResidenteId ? usuariosMap[r.especialidadResidenteId] || null : null,
+    creadoPorNombre: r.creadoPorId ? usuariosMap[r.creadoPorId] || null : null,
+    asignadoANombre: r.asignadoAId ? usuariosMap[r.asignadoAId] || null : null,
+    aprobadoPorNombre: r.aprobadoPorId ? usuariosMap[r.aprobadoPorId] || null : null,
+    cerradoPorNombre: r.cerradoPorId ? usuariosMap[r.cerradoPorId] || null : null,
   }));
 }
 
@@ -2296,17 +2334,30 @@ export async function getItemsParaReporte(filters: ItemFilters = {}) {
   const defectosMap = new Map(todosDefectos.map(d => [d.id, d]));
   const usuariosMap = new Map(todosUsuarios.map(u => [u.id, u]));
   
-  return itemsResult.map(item => ({
-    ...item,
-    empresa: empresasMap.get(item.empresaId),
-    unidad: unidadesMap.get(item.unidadId),
-    especialidad: item.especialidadId ? especialidadesMap.get(item.especialidadId) : null,
-    atributo: item.atributoId ? atributosMap.get(item.atributoId) : null,
-    defecto: item.defectoId ? defectosMap.get(item.defectoId) : null,
-    residente: usuariosMap.get(item.residenteId),
-    jefeResidente: item.jefeResidenteId ? usuariosMap.get(item.jefeResidenteId) : null,
-    supervisor: item.supervisorId ? usuariosMap.get(item.supervisorId) : null
-  }));
+  return itemsResult.map(item => {
+    // Obtener nombres de trazabilidad
+    const creadoPor = item.creadoPorId ? usuariosMap.get(item.creadoPorId) : null;
+    const asignadoA = item.asignadoAId ? usuariosMap.get(item.asignadoAId) : null;
+    const aprobadoPor = item.aprobadoPorId ? usuariosMap.get(item.aprobadoPorId) : null;
+    const cerradoPor = item.cerradoPorId ? usuariosMap.get(item.cerradoPorId) : null;
+    
+    return {
+      ...item,
+      empresa: empresasMap.get(item.empresaId),
+      unidad: unidadesMap.get(item.unidadId),
+      especialidad: item.especialidadId ? especialidadesMap.get(item.especialidadId) : null,
+      atributo: item.atributoId ? atributosMap.get(item.atributoId) : null,
+      defecto: item.defectoId ? defectosMap.get(item.defectoId) : null,
+      residente: usuariosMap.get(item.residenteId),
+      jefeResidente: item.jefeResidenteId ? usuariosMap.get(item.jefeResidenteId) : null,
+      supervisor: item.supervisorId ? usuariosMap.get(item.supervisorId) : null,
+      // Campos de trazabilidad con nombres
+      creadoPorNombre: creadoPor?.name || null,
+      asignadoANombre: asignadoA?.name || null,
+      aprobadoPorNombre: aprobadoPor?.name || null,
+      cerradoPorNombre: cerradoPor?.name || null,
+    };
+  });
 }
 
 

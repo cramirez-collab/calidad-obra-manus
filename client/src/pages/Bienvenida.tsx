@@ -593,15 +593,28 @@ export default function Bienvenida() {
                               <span className="truncate">{item.ubicacion}</span>
                             </span>
                           )}
-                          <span className="shrink-0">{formatDate(item.fechaCreacion)}</span>
+                          {/* Creado por */}
+                          {item.creadoPorNombre && (
+                            <span className="shrink-0 text-slate-500" title="Creado por">
+                              ✍️ {item.creadoPorNombre.split(' ')[0]} {formatDate(item.fechaCreacion)}
+                            </span>
+                          )}
+                          {!item.creadoPorNombre && (
+                            <span className="shrink-0">{formatDate(item.fechaCreacion)}</span>
+                          )}
                           {/* Fecha de foto después si existe */}
                           {item.fechaFotoDespues && (
                             <span className="text-blue-600 shrink-0" title="Foto después">
                               📷 {formatDate(item.fechaFotoDespues)}
                             </span>
                           )}
-                          {/* Fecha de aprobación si existe */}
-                          {item.fechaAprobacion && (
+                          {/* Aprobado/Rechazado por */}
+                          {item.aprobadoPorNombre && item.fechaAprobacion && (
+                            <span className={`shrink-0 ${item.status === 'aprobado' ? 'text-green-600' : 'text-red-600'}`} title={item.status === 'aprobado' ? 'Aprobado por' : 'Rechazado por'}>
+                              {item.status === 'aprobado' ? '✓' : '✗'} {item.aprobadoPorNombre.split(' ')[0]} {formatDate(item.fechaAprobacion)}
+                            </span>
+                          )}
+                          {!item.aprobadoPorNombre && item.fechaAprobacion && (
                             <span className="text-green-600 shrink-0" title="Aprobado">
                               ✓ {formatDate(item.fechaAprobacion)}
                             </span>

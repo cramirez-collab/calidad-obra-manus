@@ -715,12 +715,71 @@ export default function ItemDetail() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Fecha de creación</p>
-                    <p className="font-medium">{formatDate(item.fechaCreacion)}</p>
+                {/* Sección de Trazabilidad Completa */}
+                <div className="pt-3 border-t space-y-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Trazabilidad</p>
+                  
+                  {/* Creado por */}
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span className="text-blue-600 text-xs font-bold">1</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Creado por</p>
+                      <p className="font-medium text-sm">
+                        {item.creadoPorId ? getUserName(item.creadoPorId) : getUserName(item.residenteId)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{formatDate(item.fechaCreacion)}</p>
+                    </div>
                   </div>
+                  
+                  {/* Asignado a */}
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
+                      <span className="text-amber-600 text-xs font-bold">2</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Asignado a</p>
+                      <p className="font-medium text-sm">
+                        {item.asignadoAId ? getUserName(item.asignadoAId) : (especialidad?.residenteId ? getUserName(especialidad.residenteId) : '-')}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Residente de especialidad</p>
+                    </div>
+                  </div>
+                  
+                  {/* Aprobado/Rechazado por */}
+                  {(item.status === 'aprobado' || item.status === 'rechazado') && (
+                    <div className="flex items-center gap-3">
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center ${item.status === 'aprobado' ? 'bg-emerald-100' : 'bg-red-100'}`}>
+                        <span className={`text-xs font-bold ${item.status === 'aprobado' ? 'text-emerald-600' : 'text-red-600'}`}>3</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">{item.status === 'aprobado' ? 'Aprobado por' : 'Rechazado por'}</p>
+                        <p className="font-medium text-sm">
+                          {item.aprobadoPorId ? getUserName(item.aprobadoPorId) : (item.supervisorId ? getUserName(item.supervisorId) : '-')}
+                        </p>
+                        {item.fechaAprobacion && (
+                          <p className="text-xs text-muted-foreground">{formatDate(item.fechaAprobacion)}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Cerrado por */}
+                  {item.status === 'aprobado' && item.fechaCierre && (
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
+                        <span className="text-slate-600 text-xs font-bold">4</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">Cerrado por</p>
+                        <p className="font-medium text-sm">
+                          {item.cerradoPorId ? getUserName(item.cerradoPorId) : (item.aprobadoPorId ? getUserName(item.aprobadoPorId) : '-')}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{formatDate(item.fechaCierre)}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {item.descripcion && (
