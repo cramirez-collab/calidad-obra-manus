@@ -3244,3 +3244,16 @@
 - [x] Mostrar TODOS los ítems en módulo de ítems (sin filtrar por usuario)
 - [x] Filtros opcionales para quien quiera usarlos
 - [x] Proteger lectura de QR solo para usuarios registrados (protectedProcedure)
+
+
+## Mejoras UI v87 - Filtros en Grid y Texto Cortado (Febrero 2026)
+- [ ] Rediseñar filtros de Ítems en grid de 2-3 columnas (cajas)
+- [ ] Corregir palabras cortadas en todos los módulos
+- [ ] Revisar contenedores con texto que baja a segundo renglón
+
+
+## Mejoras UI v87 - Filtros y Stacking (Febrero 2026)
+- [x] Rediseñar filtros de Ítems en grid de 2-3 columnas (cajas compactas)
+- [x] Revisar y corregir contenedores con texto cortado en todos los módulos
+- [x] Restringir edición de fechas en Stacking solo a superadmin/admin
+- [x] Otros usuarios al clic en unidad van a ítems filtrados por esa unidad

@@ -289,100 +289,107 @@ export default function ItemsList() {
               </div>
 
               {showFilters && (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 pt-2 border-t">
-                  <Select
-                    value={filters.status}
-                    onValueChange={(value) => setFilters({ ...filters, status: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos los estados</SelectItem>
-                      <SelectItem value="pendiente_foto_despues">Pendiente Foto</SelectItem>
-                      <SelectItem value="pendiente_aprobacion">Pendiente Aprobación</SelectItem>
-                      <SelectItem value="aprobado">Aprobado</SelectItem>
-                      <SelectItem value="rechazado">Rechazado</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="pt-3 border-t space-y-3">
+                  {/* Grid de filtros en cajas - 2 columnas en móvil, 3 en tablet, 5 en desktop */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                    <Select
+                      value={filters.status}
+                      onValueChange={(value) => setFilters({ ...filters, status: value })}
+                    >
+                      <SelectTrigger className="h-9 text-xs sm:text-sm">
+                        <SelectValue placeholder="Estado" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="pendiente_foto_despues">Pend. Foto</SelectItem>
+                        <SelectItem value="pendiente_aprobacion">Pend. Aprob.</SelectItem>
+                        <SelectItem value="aprobado">Aprobado</SelectItem>
+                        <SelectItem value="rechazado">Rechazado</SelectItem>
+                      </SelectContent>
+                    </Select>
 
-                  <Select
-                    value={filters.empresaId}
-                    onValueChange={(value) => setFilters({ ...filters, empresaId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Empresa" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las empresas</SelectItem>
-                      {empresas?.map((empresa) => (
-                        <SelectItem key={empresa.id} value={empresa.id.toString()}>
-                          {empresa.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <Select
+                      value={filters.empresaId}
+                      onValueChange={(value) => setFilters({ ...filters, empresaId: value })}
+                    >
+                      <SelectTrigger className="h-9 text-xs sm:text-sm truncate">
+                        <SelectValue placeholder="Empresa" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas</SelectItem>
+                        {empresas?.map((empresa) => (
+                          <SelectItem key={empresa.id} value={empresa.id.toString()}>
+                            {empresa.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                  <Select
-                    value={filters.unidadId}
-                    onValueChange={(value) => setFilters({ ...filters, unidadId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Unidad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las unidades</SelectItem>
-                      {unidades?.map((unidad) => (
-                        <SelectItem key={unidad.id} value={unidad.id.toString()}>
-                          {unidad.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <Select
+                      value={filters.unidadId}
+                      onValueChange={(value) => setFilters({ ...filters, unidadId: value })}
+                    >
+                      <SelectTrigger className="h-9 text-xs sm:text-sm truncate">
+                        <SelectValue placeholder="Unidad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas</SelectItem>
+                        {unidades?.map((unidad) => (
+                          <SelectItem key={unidad.id} value={unidad.id.toString()}>
+                            {unidad.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                  <Select
-                    value={filters.especialidadId}
-                    onValueChange={(value) => setFilters({ ...filters, especialidadId: value, atributoId: "" })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Especialidad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las especialidades</SelectItem>
-                      {especialidades?.map((esp) => (
-                        <SelectItem key={esp.id} value={esp.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="h-3 w-3 rounded-full"
-                              style={{ backgroundColor: esp.color || "#3B82F6" }}
-                            />
-                            {esp.nombre}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <Select
+                      value={filters.especialidadId}
+                      onValueChange={(value) => setFilters({ ...filters, especialidadId: value, atributoId: "" })}
+                    >
+                      <SelectTrigger className="h-9 text-xs sm:text-sm truncate">
+                        <SelectValue placeholder="Especialidad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas</SelectItem>
+                        {especialidades?.map((esp) => (
+                          <SelectItem key={esp.id} value={esp.id.toString()}>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: esp.color || "#3B82F6" }}
+                              />
+                              <span className="truncate">{esp.nombre}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                  <Select
-                    value={filters.atributoId}
-                    onValueChange={(value) => setFilters({ ...filters, atributoId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Atributo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos los atributos</SelectItem>
-                      {atributosFiltrados.map((attr: any) => (
-                        <SelectItem key={attr.id} value={attr.id.toString()}>
-                          {attr.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <Select
+                      value={filters.atributoId}
+                      onValueChange={(value) => setFilters({ ...filters, atributoId: value })}
+                    >
+                      <SelectTrigger className="h-9 text-xs sm:text-sm truncate">
+                        <SelectValue placeholder="Atributo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        {atributosFiltrados.map((attr: any) => (
+                          <SelectItem key={attr.id} value={attr.id.toString()}>
+                            {attr.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Botón limpiar filtros centrado */}
                   {hasActiveFilters && (
-                    <Button variant="ghost" onClick={clearFilters} className="col-span-full md:col-span-1">
-                      Limpiar filtros
-                    </Button>
+                    <div className="flex justify-center">
+                      <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs">
+                        Limpiar filtros
+                      </Button>
+                    </div>
                   )}
                 </div>
               )}
