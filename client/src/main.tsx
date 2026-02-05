@@ -11,14 +11,14 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v77 (v2.57) - ObjetivaQC 🔴
+// 🔴 VERSIÓN v78 (v2.60) - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
+// SWIPE PARA APROBAR/RECHAZAR ÍTEMS
 // NOTIFICACIONES PUSH OBLIGATORIAS
 // BADGES EN ICONO DE LA APP
-// SCROLL INFINITO + NOMBRE RESIDENTE
 // ============================================
-const CURRENT_VERSION = 77;
+const CURRENT_VERSION = 78;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN PROFESIONAL 🎯

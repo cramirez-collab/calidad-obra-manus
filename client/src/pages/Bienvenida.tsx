@@ -24,7 +24,9 @@ import {
   Trash2,
   CheckSquare,
   Square,
-  X
+  X,
+  Check,
+  XCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -86,6 +88,94 @@ export default function Bienvenida() {
       toast.error(error.message || "Error al eliminar los ítems");
     },
   });
+  
+  // Estado para swipe
+  const [swipingItemId, setSwipingItemId] = useState<number | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isHorizontalSwipe = useRef(false);
+  
+  // Mutación para aprobar ítem (swipe derecha)
+  const aprobarMutation = trpc.items.aprobar.useMutation({
+    onSuccess: () => {
+      toast.success("✅ Ítem aprobado");
+      utils.pendientes.misPendientes.invalidate();
+      resetSwipe();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Error al aprobar");
+      resetSwipe();
+    },
+  });
+  
+  // Mutación para rechazar ítem (swipe izquierda)
+  const rechazarMutation = trpc.items.rechazar.useMutation({
+    onSuccess: () => {
+      toast.success("❌ Ítem rechazado");
+      utils.pendientes.misPendientes.invalidate();
+      resetSwipe();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Error al rechazar");
+      resetSwipe();
+    },
+  });
+  
+  const resetSwipe = () => {
+    setSwipingItemId(null);
+    setSwipeOffset(0);
+    setSwipeDirection(null);
+    isHorizontalSwipe.current = false;
+  };
+  
+  const handleTouchStart = (e: React.TouchEvent, itemId: number) => {
+    if (selectionMode) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    setSwipingItemId(itemId);
+    isHorizontalSwipe.current = false;
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!swipingItemId || selectionMode) return;
+    const deltaX = e.touches[0].clientX - touchStartX.current;
+    const deltaY = e.touches[0].clientY - touchStartY.current;
+    
+    // Determinar si es swipe horizontal o vertical
+    if (!isHorizontalSwipe.current && Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) return;
+    
+    if (!isHorizontalSwipe.current) {
+      isHorizontalSwipe.current = Math.abs(deltaX) > Math.abs(deltaY);
+      if (!isHorizontalSwipe.current) {
+        resetSwipe();
+        return;
+      }
+    }
+    
+    // Limitar el swipe
+    const maxSwipe = 120;
+    const clampedOffset = Math.max(-maxSwipe, Math.min(maxSwipe, deltaX));
+    setSwipeOffset(clampedOffset);
+    setSwipeDirection(clampedOffset > 30 ? 'right' : clampedOffset < -30 ? 'left' : null);
+  };
+  
+  const handleTouchEnd = (itemId: number, itemStatus: string) => {
+    if (!swipingItemId || selectionMode) return;
+    
+    const threshold = 80;
+    
+    if (swipeOffset > threshold && itemStatus === 'pendiente_aprobacion') {
+      // Swipe derecha = Aprobar
+      aprobarMutation.mutate({ itemId });
+    } else if (swipeOffset < -threshold && itemStatus === 'pendiente_aprobacion') {
+      // Swipe izquierda = Rechazar
+      rechazarMutation.mutate({ itemId, comentario: 'Rechazado por swipe' });
+    } else {
+      resetSwipe();
+    }
+  };
   
   const handleDeleteItem = async (itemId: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -396,20 +486,51 @@ export default function Bienvenida() {
               const config = getStatusConfig(item.status);
               const Icon = config.icon;
               const isSelected = selectedItems.has(item.id);
+              const isSwipeable = item.status === 'pendiente_aprobacion' && !selectionMode;
+              const isCurrentlySwipingThis = swipingItemId === item.id;
+              
               return (
-                <Card 
-                  key={item.id}
-                  className={`cursor-pointer hover:shadow-md transition-all active:scale-[0.99] border-0 shadow-sm ${
-                    isSelected ? "ring-2 ring-red-500 bg-red-50" : ""
-                  }`}
-                  onClick={() => {
-                    if (selectionMode) {
-                      toggleItemSelection(item.id, { stopPropagation: () => {} } as React.MouseEvent);
-                    } else {
-                      setLocation(`/items/${item.id}`);
-                    }
-                  }}
-                >
+                <div key={item.id} className="relative overflow-hidden rounded-xl">
+                  {/* Fondo de swipe - Aprobar (verde) */}
+                  {isSwipeable && isCurrentlySwipingThis && swipeOffset > 0 && (
+                    <div 
+                      className="absolute inset-y-0 left-0 bg-[#02B381] flex items-center justify-start pl-4 rounded-l-xl"
+                      style={{ width: Math.abs(swipeOffset) }}
+                    >
+                      <Check className="h-6 w-6 text-white" />
+                      {swipeOffset > 50 && <span className="text-white text-xs ml-1 font-bold">Aprobar</span>}
+                    </div>
+                  )}
+                  {/* Fondo de swipe - Rechazar (rojo) */}
+                  {isSwipeable && isCurrentlySwipingThis && swipeOffset < 0 && (
+                    <div 
+                      className="absolute inset-y-0 right-0 bg-red-500 flex items-center justify-end pr-4 rounded-r-xl"
+                      style={{ width: Math.abs(swipeOffset) }}
+                    >
+                      {swipeOffset < -50 && <span className="text-white text-xs mr-1 font-bold">Rechazar</span>}
+                      <XCircle className="h-6 w-6 text-white" />
+                    </div>
+                  )}
+                  
+                  <Card 
+                    className={`cursor-pointer hover:shadow-md transition-all border-0 shadow-sm relative ${
+                      isSelected ? "ring-2 ring-red-500 bg-red-50" : ""
+                    } ${isSwipeable ? 'touch-pan-y' : ''}`}
+                    style={{
+                      transform: isCurrentlySwipingThis ? `translateX(${swipeOffset}px)` : 'translateX(0)',
+                      transition: isCurrentlySwipingThis ? 'none' : 'transform 0.3s ease-out'
+                    }}
+                    onClick={() => {
+                      if (selectionMode) {
+                        toggleItemSelection(item.id, { stopPropagation: () => {} } as React.MouseEvent);
+                      } else if (!isCurrentlySwipingThis || Math.abs(swipeOffset) < 10) {
+                        setLocation(`/items/${item.id}`);
+                      }
+                    }}
+                    onTouchStart={(e) => isSwipeable && handleTouchStart(e, item.id)}
+                    onTouchMove={(e) => isSwipeable && handleTouchMove(e)}
+                    onTouchEnd={() => isSwipeable && handleTouchEnd(item.id, item.status)}
+                  >
                   <CardContent className="p-2 sm:p-4">
                     <div className="flex items-center gap-2 sm:gap-3">
                       {/* Checkbox para selección múltiple */}
@@ -507,6 +628,7 @@ export default function Bienvenida() {
                     </div>
                   </CardContent>
                 </Card>
+                </div>
               );
             })}
 

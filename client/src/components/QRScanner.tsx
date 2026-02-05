@@ -100,9 +100,21 @@ export function QRScannerButton() {
     }
 
     try {
-      // Solicitar acceso a la cámara
+      // Solicitar acceso a la cámara con configuración ULTRA SENSIBLE
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { 
+          facingMode: "environment",
+          // Máxima resolución para mejor detección
+          width: { ideal: 1920, min: 640 },
+          height: { ideal: 1080, min: 480 },
+          // Desactivar autofocus para escaneo rápido
+          focusMode: "continuous",
+          // Máxima tasa de frames para detección rápida
+          frameRate: { ideal: 60, min: 30 },
+          // Ajustes para poca luz
+          exposureMode: "continuous",
+          whiteBalanceMode: "continuous"
+        } as MediaTrackConstraints,
         audio: false,
       });
 
@@ -121,20 +133,32 @@ export function QRScannerButton() {
 
       setStatus("ready");
 
-      // Iniciar escaneo continuo con ZXing
-      const codeReader = new BrowserMultiFormatReader();
+      // Iniciar escaneo continuo con ZXing - CONFIGURACIÓN ULTRA SENSIBLE
+      const hints = new Map();
+      // Habilitar todos los formatos de código para máxima detección
+      hints.set(2, true); // TRY_HARDER - más intentos de detección
+      hints.set(3, true); // PURE_BARCODE - detección más rápida
+      
+      const codeReader = new BrowserMultiFormatReader(hints, {
+        delayBetweenScanAttempts: 50, // Escanear cada 50ms (20 veces por segundo)
+        delayBetweenScanSuccess: 100 // Esperar 100ms después de éxito
+      });
       codeReaderRef.current = codeReader;
 
       setStatus("scanning");
 
-      // Escaneo continuo
+      // Escaneo continuo ULTRA RÁPIDO
       const controls = await codeReader.decodeFromVideoElement(
         video,
         (result, error) => {
           if (result) {
             const text = result.getText().trim();
             if (text) {
-              toast.success("¡Código QR detectado!");
+              // Vibración de confirmación
+              if ('vibrate' in navigator) {
+                (navigator as any).vibrate(100);
+              }
+              toast.success("✅ ¡QR DETECTADO!");
               stopScanner();
               setIsOpen(false);
               navigateToItem(text);
@@ -172,10 +196,15 @@ export function QRScannerButton() {
           "La cámara está ocupada o no responde. Cierra otras apps y reintenta."
         );
       } else if (name === "OverconstrainedError") {
-        // Intentar con cámara frontal si la trasera no está disponible
+        // Intentar con cámara frontal si la trasera no está disponible - ULTRA SENSIBLE
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "user" },
+            video: { 
+              facingMode: "user",
+              width: { ideal: 1920, min: 640 },
+              height: { ideal: 1080, min: 480 },
+              frameRate: { ideal: 60, min: 30 }
+            } as MediaTrackConstraints,
             audio: false,
           });
           
@@ -186,7 +215,14 @@ export function QRScannerButton() {
             video.srcObject = stream;
             await video.play();
             
-            const codeReader = new BrowserMultiFormatReader();
+            const hints = new Map();
+            hints.set(2, true); // TRY_HARDER
+            hints.set(3, true); // PURE_BARCODE
+            
+            const codeReader = new BrowserMultiFormatReader(hints, {
+              delayBetweenScanAttempts: 50,
+              delayBetweenScanSuccess: 100
+            });
             codeReaderRef.current = codeReader;
             
             setStatus("scanning");
@@ -197,7 +233,10 @@ export function QRScannerButton() {
                 if (result) {
                   const text = result.getText().trim();
                   if (text) {
-                    toast.success("¡Código QR detectado!");
+                    if ('vibrate' in navigator) {
+                      (navigator as any).vibrate(100);
+                    }
+                    toast.success("✅ ¡QR DETECTADO!");
                     stopScanner();
                     setIsOpen(false);
                     navigateToItem(text);

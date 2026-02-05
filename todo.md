@@ -3134,3 +3134,19 @@
 - [x] Implementar scroll infinito en página de bienvenida (eliminar paginación)
 - [x] Revisar cuantificación y estadísticas de pendientes (funcionando correctamente)
 
+
+## v78 - Swipe para acciones rápidas
+
+- [x] Implementar swipe derecha para aprobar ítem (solo ítems pendiente_aprobacion)
+- [x] Implementar swipe izquierda para rechazar ítem (solo ítems pendiente_aprobacion)
+- [x] Animaciones suaves de deslizamiento (transform + transition)
+- [x] Feedback visual con colores (verde aprobar, rojo rechazar) + iconos
+
+
+## v78 - Escáner QR Ultra Sensible
+
+- [x] Aumentar sensibilidad del escáner QR (TRY_HARDER + PURE_BARCODE hints)
+- [x] Reducir tiempo de enfoque necesario (focusMode: continuous)
+- [x] Optimizar frecuencia de escaneo (50ms entre intentos = 20 escaneos/seg)
+- [x] Mejorar detección en condiciones de poca luz (exposureMode: continuous)
+
