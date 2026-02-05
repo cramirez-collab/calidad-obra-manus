@@ -48,6 +48,21 @@ async function startServer() {
   // Export routes
   app.use(exportRoutes);
   
+  // Endpoint de versión para actualización forzada
+  // MANDATORIO: Todos los usuarios siempre en la última versión
+  const CURRENT_APP_VERSION = 85;
+  app.get('/api/version', (req, res) => {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.json({
+      version: CURRENT_APP_VERSION,
+      displayVersion: `v2.${CURRENT_APP_VERSION}`,
+      timestamp: Date.now(),
+      forceUpdate: true
+    });
+  });
+  
   // Proxy de imágenes para evitar CORS al generar PDFs
   app.get('/api/image-proxy', async (req, res) => {
     try {

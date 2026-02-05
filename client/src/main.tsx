@@ -11,21 +11,20 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v80 (v2.67) - ObjetivaQC 🔴
+// 🔴 VERSIÓN v85 (v2.85) - ObjetivaQC 🔴
 // ============================================
 // MANDATORIO: objetivaqc.com (PERMANENTE)
-// RESIDENTE DE ESPECIALIDAD EN ÍTEMS
-// TRAZABILIDAD COMPLETA (FECHAS)
-// SCROLL INFINITO + SWIPE
+// VERSIONADO UNIFICADO Y FORZADO
+// ACTUALIZACIÓN AGRESIVA OBLIGATORIA
 // ============================================
-const CURRENT_VERSION = 80;
+const CURRENT_VERSION = 85;
 
 // ============================================
-// 🎯 FORMATO DE VERSIÓN PROFESIONAL 🎯
+// 🎯 FORMATO DE VERSIÓN UNIFICADO 🎯
 // ============================================
+// La versión ahora es directa: v2.XX donde XX = CURRENT_VERSION
 function formatVersion(internalVersion: number): string {
-  const divided = internalVersion / 30;
-  return `v${divided.toFixed(2)}`;
+  return `v2.${internalVersion}`;
 }
 
 // Exponer globalmente para uso en otros componentes
@@ -69,32 +68,84 @@ function showNewVersionAvailableToast(newVersion: number): void {
 }
 
 // ============================================
-// 🔴 ACTUALIZACIÓN FORZADA DE VERSIÓN 🔴
+// 🔴 ACTUALIZACIÓN FORZADA AGRESIVA DE VERSIÓN 🔴
+// ============================================
+// MANDATORIO: Todos los usuarios SIEMPRE en la última versión
+// Sin excepciones, sin posibilidad de versiones antiguas
 // ============================================
 function checkAndUpdateVersion(): boolean {
   const storedVersion = parseInt(localStorage.getItem('oqc_installed_version') || '0');
   
+  // Si la versión almacenada es diferente a la actual, FORZAR actualización
   if (storedVersion !== CURRENT_VERSION) {
-    console.log(`🔴 ACTUALIZANDO de v${storedVersion} a v${CURRENT_VERSION}...`);
+    console.log(`🔴🔴🔴 ACTUALIZACIÓN FORZADA: v${storedVersion} → v${CURRENT_VERSION}`);
+    console.log(`🔴 Limpiando cachés y Service Workers...`);
+    
+    // Guardar nueva versión ANTES de limpiar
     localStorage.setItem('oqc_installed_version', CURRENT_VERSION.toString());
     localStorage.setItem('oqc_update_timestamp', Date.now().toString());
+    localStorage.setItem('oqc_force_update', 'true');
     
+    // Desregistrar TODOS los Service Workers
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(reg => reg.unregister());
-      });
-    }
-    if ('caches' in window) {
-      caches.keys().then(names => {
-        names.forEach(name => caches.delete(name));
+        console.log(`🔴 Desregistrando ${regs.length} Service Workers...`);
+        regs.forEach(reg => {
+          reg.unregister();
+          console.log(`🔴 SW desregistrado:`, reg.scope);
+        });
       });
     }
     
-    window.location.replace(window.location.pathname + '?v=' + CURRENT_VERSION + '&t=' + Date.now());
+    // Eliminar TODAS las cachés
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        console.log(`🔴 Eliminando ${names.length} cachés...`);
+        names.forEach(name => {
+          caches.delete(name);
+          console.log(`🔴 Caché eliminada:`, name);
+        });
+      });
+    }
+    
+    // Forzar recarga completa con parámetros anti-caché
+    const newUrl = window.location.pathname + '?v=' + CURRENT_VERSION + '&t=' + Date.now() + '&force=1';
+    console.log(`🔴 Redirigiendo a:`, newUrl);
+    window.location.replace(newUrl);
     return false;
   }
   
+  // Limpiar flag de actualización forzada
+  localStorage.removeItem('oqc_force_update');
   return true;
+}
+
+// ============================================
+// 🔴 VERIFICACIÓN PERIÓDICA DE VERSIÓN 🔴
+// ============================================
+// Verificar cada 30 segundos si hay nueva versión
+function startVersionChecker(): void {
+  setInterval(async () => {
+    try {
+      // Hacer fetch al servidor para obtener la versión actual
+      const response = await fetch('/api/version?t=' + Date.now(), {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.version && data.version > CURRENT_VERSION) {
+          console.log(`🔴 Nueva versión detectada: v${data.version}`);
+          // Forzar actualización
+          localStorage.setItem('oqc_installed_version', '0');
+          window.location.reload();
+        }
+      }
+    } catch (e) {
+      // Silenciar errores de red
+    }
+  }, 30000); // Cada 30 segundos
 }
 
 // ============================================
@@ -638,9 +689,10 @@ if (versionOK) {
   });
   
   // ============================================
-  // 🔴 INICIAR VERIFICACIÓN 🔴
+  // 🔴 INICIAR VERIFICACIÓN DE VERSIÓN 🔴
   // ============================================
   startVersionCheck();
+  startVersionChecker(); // Verificar nueva versión cada 30 segundos
 
   // RENDERIZAR APP
   const root = createRoot(document.getElementById("root")!);

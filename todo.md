@@ -3229,3 +3229,12 @@
 - [x] Actualizar badge del icono de la app con contador de notificaciones
 - [x] Notificar a admins cuando se crea un nuevo ítem
 - [x] Incluir push notifications en notificarSupervisores y notificarJefesResidente
+
+
+## Versionado Unificado y Forzado v85 (Febrero 2026)
+- [x] Crear archivo de versión centralizado compartido (shared/version.ts)
+- [x] Actualizar header para usar versión centralizada (v2.85)
+- [x] Actualizar Service Worker para usar versión centralizada (v85)
+- [x] Implementar actualización agresiva forzada en todos los dispositivos
+- [x] Endpoint /api/version para verificación periódica cada 30 segundos
+- [x] Verificar que todos los usuarios siempre tengan la última versión
