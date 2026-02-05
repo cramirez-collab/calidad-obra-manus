@@ -1804,11 +1804,13 @@ export async function getPendientesByUsuario(userId: number, role: string) {
     .select({
       id: items.id,
       codigo: items.codigo,
+      numeroInterno: items.numeroInterno,
       titulo: items.titulo,
       status: items.status,
       ubicacion: items.ubicacionDetalle,
       fechaCreacion: items.fechaCreacion,
       fotoAntes: items.fotoAntesUrl,
+      comentarioResidente: items.comentarioResidente,
     })
     .from(items)
     .where(whereCondition)
