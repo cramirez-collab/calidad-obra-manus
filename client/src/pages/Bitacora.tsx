@@ -609,119 +609,111 @@ export default function Bitacora() {
         {/* Tab: Bitácora */}
         {activeTab === "bitacora" && (
         <>
-        {/* Filtros */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Filtros
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
-              {/* Búsqueda */}
-              <div className="sm:col-span-2 lg:col-span-1">
-                <Label className="text-xs">Buscar</Label>
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar..."
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                    className="pl-8 h-9"
-                  />
-                </div>
+        {/* Filtros - Diseño compacto y ordenado */}
+        <Card className="border-[#002C63]/10">
+          <CardContent className="pt-4 pb-3">
+            {/* Fila 1: Búsqueda y botón limpiar */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar en bitácora..."
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                  className="pl-9 h-10 bg-slate-50 border-slate-200"
+                />
               </div>
-
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={limpiarFiltros} 
+                className="h-10 px-4 text-muted-foreground hover:text-foreground"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Limpiar filtros
+              </Button>
+            </div>
+            
+            {/* Fila 2: Filtros en grid compacto */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
               {/* Usuario */}
-              <div>
-                <Label className="text-xs">Usuario</Label>
-                <Select value={filtroUsuario} onValueChange={setFiltroUsuario}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {usuarios?.map((u: any) => (
-                      <SelectItem key={u.id} value={u.id.toString()}>
-                        {u.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={filtroUsuario} onValueChange={setFiltroUsuario}>
+                <SelectTrigger className="h-9 text-xs bg-white">
+                  <User className="h-3 w-3 mr-1.5 text-muted-foreground shrink-0" />
+                  <SelectValue placeholder="Usuario" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los usuarios</SelectItem>
+                  {usuarios?.map((u: any) => (
+                    <SelectItem key={u.id} value={u.id.toString()}>
+                      {u.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
               {/* Categoría */}
-              <div>
-                <Label className="text-xs">Categoría</Label>
-                <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Todas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    <SelectItem value="item">Ítems</SelectItem>
-                    <SelectItem value="empresa">Empresas</SelectItem>
-                    <SelectItem value="unidad">Unidades</SelectItem>
-                    <SelectItem value="nivel">Niveles</SelectItem>
-                    <SelectItem value="espacio">Espacios</SelectItem>
-                    <SelectItem value="defecto">Defectos</SelectItem>
-                    <SelectItem value="especialidad">Especialidades</SelectItem>
-                    <SelectItem value="usuario">Usuarios</SelectItem>
-                    <SelectItem value="mensaje">Mensajes</SelectItem>
-                    <SelectItem value="proyecto">Proyectos</SelectItem>
-                    <SelectItem value="auth">Autenticación</SelectItem>
-                    <SelectItem value="stacking">Stacking</SelectItem>
-                    <SelectItem value="reporte">Reportes</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
+                <SelectTrigger className="h-9 text-xs bg-white">
+                  <Layers className="h-3 w-3 mr-1.5 text-muted-foreground shrink-0" />
+                  <SelectValue placeholder="Categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las categorías</SelectItem>
+                  <SelectItem value="item">Ítems</SelectItem>
+                  <SelectItem value="empresa">Empresas</SelectItem>
+                  <SelectItem value="unidad">Unidades</SelectItem>
+                  <SelectItem value="nivel">Niveles</SelectItem>
+                  <SelectItem value="espacio">Espacios</SelectItem>
+                  <SelectItem value="defecto">Defectos</SelectItem>
+                  <SelectItem value="especialidad">Especialidades</SelectItem>
+                  <SelectItem value="usuario">Usuarios</SelectItem>
+                  <SelectItem value="mensaje">Mensajes</SelectItem>
+                  <SelectItem value="proyecto">Proyectos</SelectItem>
+                  <SelectItem value="auth">Autenticación</SelectItem>
+                  <SelectItem value="stacking">Stacking</SelectItem>
+                  <SelectItem value="reporte">Reportes</SelectItem>
+                </SelectContent>
+              </Select>
 
               {/* Acción */}
-              <div>
-                <Label className="text-xs">Acción</Label>
-                <Select value={filtroAccion} onValueChange={setFiltroAccion}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Todas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {accionesUnicas.map((accion: string) => (
-                      <SelectItem key={accion} value={accion}>
-                        {getAccionLabel(accion)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={filtroAccion} onValueChange={setFiltroAccion}>
+                <SelectTrigger className="h-9 text-xs bg-white">
+                  <Activity className="h-3 w-3 mr-1.5 text-muted-foreground shrink-0" />
+                  <SelectValue placeholder="Acción" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las acciones</SelectItem>
+                  {accionesUnicas.map((accion: string) => (
+                    <SelectItem key={accion} value={accion}>
+                      {getAccionLabel(accion)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
               {/* Fecha desde */}
-              <div>
-                <Label className="text-xs">Desde</Label>
+              <div className="relative">
+                <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
                 <Input
                   type="date"
                   value={fechaDesde}
                   onChange={(e) => setFechaDesde(e.target.value)}
-                  className="h-9"
+                  className="h-9 pl-8 text-xs bg-white"
+                  title="Desde"
                 />
               </div>
 
               {/* Fecha hasta */}
-              <div>
-                <Label className="text-xs">Hasta</Label>
+              <div className="relative">
+                <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
                 <Input
                   type="date"
                   value={fechaHasta}
                   onChange={(e) => setFechaHasta(e.target.value)}
-                  className="h-9"
+                  className="h-9 pl-8 text-xs bg-white"
+                  title="Hasta"
                 />
-              </div>
-
-              {/* Limpiar */}
-              <div className="flex items-end">
-                <Button variant="ghost" size="sm" onClick={limpiarFiltros} className="h-9 w-full">
-                  Limpiar
-                </Button>
               </div>
             </div>
           </CardContent>

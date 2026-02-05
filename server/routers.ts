@@ -990,6 +990,18 @@ export const appRouter = router({
               comentario: 'Ítem creado',
             });
             
+            // Registrar en auditoría
+            await db.createAuditoria({
+              usuarioId: ctx.user.id,
+              usuarioNombre: ctx.user.name || 'Usuario',
+              usuarioRol: ctx.user.role,
+              accion: 'crear_item',
+              categoria: 'item',
+              entidadTipo: 'item',
+              entidadId: itemResult.id,
+              detalles: `Creó ítem ${itemResult.codigo} #${itemResult.numeroInterno || '-'}`,
+            });
+            
             // Emitir evento de tiempo real
             socketEvents.itemCreated(itemResult);
           } catch (e) {
@@ -1115,6 +1127,18 @@ export const appRouter = router({
               detalles: `Subió fotografía "después" para ítem ${item.codigo}`,
             });
             
+            // Registrar en auditoría
+            await db.createAuditoria({
+              usuarioId: ctx.user.id,
+              usuarioNombre: ctx.user.name || 'Usuario',
+              usuarioRol: ctx.user.role,
+              accion: 'subir_foto',
+              categoria: 'item',
+              entidadTipo: 'item',
+              entidadId: input.itemId,
+              detalles: `Subió foto después para ítem ${item.codigo} #${item.numeroInterno || '-'}`,
+            });
+            
             // Eventos y notificaciones
             socketEvents.itemPhotoUploaded({ ...item, status: 'pendiente_aprobacion' });
             await db.notificarSupervisores(
@@ -1178,6 +1202,19 @@ export const appRouter = router({
               statusNuevo: 'aprobado',
               comentario: input.comentario || 'Ítem aprobado',
             });
+            
+            // Registrar en auditoría
+            await db.createAuditoria({
+              usuarioId: ctx.user.id,
+              usuarioNombre: ctx.user.name || 'Usuario',
+              usuarioRol: ctx.user.role,
+              accion: 'aprobar_item',
+              categoria: 'item',
+              entidadTipo: 'item',
+              entidadId: input.itemId,
+              detalles: `Aprobó ítem ${item.codigo} #${item.numeroInterno || '-'}`,
+            });
+            
             socketEvents.itemApproved({ ...item, status: 'aprobado' });
             await db.createNotificacion({
               usuarioId: item.residenteId,
@@ -1247,6 +1284,19 @@ export const appRouter = router({
               statusNuevo: 'rechazado',
               comentario: input.comentario,
             });
+            
+            // Registrar en auditoría
+            await db.createAuditoria({
+              usuarioId: ctx.user.id,
+              usuarioNombre: ctx.user.name || 'Usuario',
+              usuarioRol: ctx.user.role,
+              accion: 'rechazar_item',
+              categoria: 'item',
+              entidadTipo: 'item',
+              entidadId: input.itemId,
+              detalles: `Rechazó ítem ${item.codigo} #${item.numeroInterno || '-'}: ${input.comentario}`,
+            });
+            
             socketEvents.itemRejected({ ...item, status: 'rechazado' });
             await db.createNotificacion({
               usuarioId: item.residenteId,

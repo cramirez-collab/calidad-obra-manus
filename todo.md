@@ -3206,3 +3206,10 @@
 - [x] Mostrar trazabilidad en detalle de ítems (sección con 4 pasos numerados)
 - [x] Mostrar trazabilidad en Bitácora (acciones de ítems con nombres)
 - [x] Agregar trazabilidad en reportes PDF fotográficos (Creado > Asignado > Aprobado > Cerrado)
+
+
+## Mejoras v83 (Febrero 2026)
+- [x] Agregar botón de descarga PDF en ficha/detalle de cada ítem (con fotos antes/después)
+- [x] Mejorar visual de filtros en Bitácora - diseño más ordenado y compacto
+- [x] Corregir registro de acciones en primera sección de Bitácora (crear/aprobar/rechazar/subir foto)
+

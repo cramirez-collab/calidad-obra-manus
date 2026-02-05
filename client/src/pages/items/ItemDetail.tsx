@@ -30,7 +30,9 @@ import {
   Calendar,
   MessageSquare,
   Upload,
-  Trash2
+  Trash2,
+  Download,
+  FileText
 } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import {
@@ -49,6 +51,9 @@ import { useProject } from "@/contexts/ProjectContext";
 import { toast } from "sonner";
 import QRCode from "qrcode";
 import { useEffect } from "react";
+import jsPDF from "jspdf";
+import { format } from "date-fns";
+import { downloadPDFBestMethod } from "@/lib/pdfDownload";
 
 const statusLabels: Record<string, string> = {
   pendiente_foto_despues: "Pendiente Foto Después",
@@ -398,6 +403,243 @@ export default function ItemDetail() {
     deleteMutation.mutate({ id: itemId });
   };
 
+  // Función para cargar imagen como base64 desde URL
+  const loadImageAsBase64 = async (url: string): Promise<string | null> => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return null;
+    }
+  };
+
+  // Generar y descargar PDF del ítem
+  const handleDownloadPDF = async () => {
+    if (!item) return;
+    
+    toast.info("Generando PDF...");
+    
+    try {
+      const doc = new jsPDF('p', 'mm', 'letter');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 15;
+      let yPos = 20;
+      
+      // Colores corporativos
+      const VERDE_OBJETIVA: [number, number, number] = [2, 179, 129];
+      const AZUL_OBJETIVA: [number, number, number] = [0, 44, 99];
+      
+      // Header
+      doc.setFillColor(...AZUL_OBJETIVA);
+      doc.rect(0, 0, pageWidth, 25, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('FICHA DE ITEM DE CALIDAD', pageWidth / 2, 12, { align: 'center' });
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Generado: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, pageWidth / 2, 20, { align: 'center' });
+      
+      yPos = 35;
+      
+      // Código y estado prominentes
+      doc.setFillColor(245, 245, 245);
+      doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 20, 3, 3, 'F');
+      
+      doc.setFontSize(14);
+      doc.setTextColor(...AZUL_OBJETIVA);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${item.codigo} #${item.numeroInterno || '-'}`, margin + 5, yPos + 8);
+      
+      // Estado con color
+      const statusColor = item.status === 'aprobado' ? VERDE_OBJETIVA 
+        : item.status === 'rechazado' ? [220, 38, 38] as [number, number, number]
+        : AZUL_OBJETIVA;
+      doc.setFillColor(...statusColor);
+      doc.roundedRect(pageWidth - margin - 45, yPos + 3, 40, 8, 2, 2, 'F');
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      doc.text(statusLabels[item.status] || item.status, pageWidth - margin - 25, yPos + 8, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.setTextColor(80, 80, 80);
+      doc.text(item.titulo || 'Sin descripción', margin + 5, yPos + 16);
+      
+      yPos += 28;
+      
+      // Información del ítem en tabla
+      doc.setFontSize(11);
+      doc.setTextColor(...AZUL_OBJETIVA);
+      doc.setFont('helvetica', 'bold');
+      doc.text('INFORMACIÓN DEL ÍTEM', margin, yPos);
+      yPos += 6;
+      
+      doc.setFontSize(9);
+      doc.setTextColor(60, 60, 60);
+      doc.setFont('helvetica', 'normal');
+      
+      const infoItems = [
+        ['Empresa:', getEmpresaNombre(item.empresaId)],
+        ['Unidad:', getUnidadNombre(item.unidadId)],
+        ['Especialidad:', especialidad?.nombre || '-'],
+        ['Defecto:', defectos?.find(d => d.id === item.defectoId)?.nombre || '-'],
+        ['Ubicación:', item.ubicacionDetalle || '-'],
+        ['Fecha Creación:', formatDate(item.fechaCreacion)],
+      ];
+      
+      infoItems.forEach(([label, value]) => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(label, margin, yPos);
+        doc.setFont('helvetica', 'normal');
+        doc.text(value, margin + 35, yPos);
+        yPos += 5;
+      });
+      
+      yPos += 5;
+      
+      // Trazabilidad
+      doc.setFontSize(11);
+      doc.setTextColor(...VERDE_OBJETIVA);
+      doc.setFont('helvetica', 'bold');
+      doc.text('TRAZABILIDAD', margin, yPos);
+      yPos += 6;
+      
+      doc.setFontSize(9);
+      doc.setTextColor(60, 60, 60);
+      doc.setFont('helvetica', 'normal');
+      
+      const trazabilidadItems = [
+        ['1. Creado por:', getUserName(item.creadoPorId), formatDate(item.fechaCreacion)],
+        ['2. Asignado a:', getUserName(item.asignadoAId || item.residenteId), '-'],
+        ['3. Aprobado por:', getUserName(item.aprobadoPorId), item.fechaAprobacion ? formatDate(item.fechaAprobacion) : '-'],
+        ['4. Cerrado por:', getUserName(item.cerradoPorId), item.fechaCierre ? formatDate(item.fechaCierre) : '-'],
+      ];
+      
+      trazabilidadItems.forEach(([step, name, fecha]) => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(step, margin, yPos);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${name} - ${fecha}`, margin + 35, yPos);
+        yPos += 5;
+      });
+      
+      yPos += 10;
+      
+      // Fotos
+      doc.setFontSize(11);
+      doc.setTextColor(...AZUL_OBJETIVA);
+      doc.setFont('helvetica', 'bold');
+      doc.text('EVIDENCIA FOTOGRÁFICA', margin, yPos);
+      yPos += 8;
+      
+      const fotoWidth = (pageWidth - 2 * margin - 10) / 2;
+      const fotoHeight = 70;
+      
+      // Cargar fotos
+      let fotoAntesBase64: string | null = null;
+      let fotoDespuesBase64: string | null = null;
+      
+      if (item.fotoAntesUrl) {
+        fotoAntesBase64 = await loadImageAsBase64(getImageUrl(item.fotoAntesUrl));
+      }
+      if (item.fotoDespuesUrl) {
+        fotoDespuesBase64 = await loadImageAsBase64(getImageUrl(item.fotoDespuesUrl));
+      }
+      
+      // Foto ANTES
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(margin, yPos, fotoWidth, fotoHeight + 12, 3, 3, 'S');
+      
+      doc.setFillColor(255, 193, 7); // Amarillo
+      doc.roundedRect(margin, yPos, fotoWidth, 8, 3, 3, 'F');
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      doc.text('FOTO ANTES', margin + fotoWidth / 2, yPos + 5.5, { align: 'center' });
+      
+      if (fotoAntesBase64) {
+        try {
+          doc.addImage(fotoAntesBase64, 'JPEG', margin + 2, yPos + 10, fotoWidth - 4, fotoHeight - 2, undefined, 'MEDIUM');
+        } catch {
+          doc.setFontSize(8);
+          doc.setTextColor(150, 150, 150);
+          doc.text('Error al cargar imagen', margin + fotoWidth / 2, yPos + fotoHeight / 2 + 8, { align: 'center' });
+        }
+      } else {
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text('Sin foto', margin + fotoWidth / 2, yPos + fotoHeight / 2 + 8, { align: 'center' });
+      }
+      
+      // Foto DESPUÉS
+      const fotoDespuesX = margin + fotoWidth + 10;
+      doc.setDrawColor(200, 200, 200);
+      doc.roundedRect(fotoDespuesX, yPos, fotoWidth, fotoHeight + 12, 3, 3, 'S');
+      
+      doc.setFillColor(...VERDE_OBJETIVA);
+      doc.roundedRect(fotoDespuesX, yPos, fotoWidth, 8, 3, 3, 'F');
+      doc.setFontSize(9);
+      doc.setTextColor(255, 255, 255);
+      doc.text('FOTO DESPUÉS', fotoDespuesX + fotoWidth / 2, yPos + 5.5, { align: 'center' });
+      
+      if (fotoDespuesBase64) {
+        try {
+          doc.addImage(fotoDespuesBase64, 'JPEG', fotoDespuesX + 2, yPos + 10, fotoWidth - 4, fotoHeight - 2, undefined, 'MEDIUM');
+        } catch {
+          doc.setFontSize(8);
+          doc.setTextColor(150, 150, 150);
+          doc.text('Error al cargar imagen', fotoDespuesX + fotoWidth / 2, yPos + fotoHeight / 2 + 8, { align: 'center' });
+        }
+      } else {
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text('Sin foto', fotoDespuesX + fotoWidth / 2, yPos + fotoHeight / 2 + 8, { align: 'center' });
+      }
+      
+      yPos += fotoHeight + 20;
+      
+      // QR Code si está disponible
+      if (qrCodeUrl) {
+        doc.setFontSize(11);
+        doc.setTextColor(...AZUL_OBJETIVA);
+        doc.setFont('helvetica', 'bold');
+        doc.text('CÓDIGO QR', margin, yPos);
+        yPos += 5;
+        
+        try {
+          doc.addImage(qrCodeUrl, 'PNG', margin, yPos, 30, 30);
+          doc.setFontSize(8);
+          doc.setTextColor(100, 100, 100);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Escanear para ver seguimiento en línea', margin + 35, yPos + 15);
+        } catch {
+          // Ignorar error de QR
+        }
+      }
+      
+      // Footer
+      const footerY = doc.internal.pageSize.getHeight() - 10;
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text('ObjetivaQC - Control de Calidad de Obra', pageWidth / 2, footerY, { align: 'center' });
+      
+      // Descargar
+      const filename = `Ficha_${item.codigo}_${item.numeroInterno || 'item'}.pdf`;
+      downloadPDFBestMethod(doc, filename);
+      
+      toast.success('PDF descargado correctamente');
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+      toast.error('Error al generar el PDF');
+    }
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -530,6 +772,17 @@ export default function ItemDetail() {
                 <span className="truncate">Eliminar</span>
               </Button>
             )}
+            {/* Botón de descarga PDF - siempre visible */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-[#002C63] border-[#002C63]/30 hover:bg-[#002C63]/10 flex-1 md:flex-none min-w-0"
+              onClick={handleDownloadPDF}
+              title="Descargar ficha PDF"
+            >
+              <Download className="h-4 w-4 mr-1 md:mr-2 shrink-0" />
+              <span className="truncate">PDF</span>
+            </Button>
           </div>
         </div>
 
