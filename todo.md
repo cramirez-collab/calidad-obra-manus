@@ -3164,3 +3164,21 @@
 - [x] Mostrar fecha de foto después si existe (📷)
 - [x] Mostrar fecha de aprobación si existe (✓)
 
+
+## v81 - Etiquetas en Gráficas
+
+- [ ] Agregar etiquetas de valores en gráficas de barras
+- [ ] Agregar etiquetas de porcentajes en gráficas de pastel/dona
+- [ ] Mejorar legibilidad de todas las gráficas
+
+
+
+## Mejoras de Visualización v81 (Iteración 27)
+
+### Etiquetas Claras en Gráficas
+- [x] Etiquetas de valores en gráfica de Ítems por Empresa (posición derecha)
+- [x] Etiquetas de valores en gráfica de Ítems por Especialidad (posición arriba)
+- [x] Etiquetas de valores en gráfica Top 10 Defectos (centro de barras apiladas)
+- [x] Etiquetas de valores en gráfica de Defectos por Usuario en KPIs (centro)
+- [x] Etiquetas de valores en gráfica de Tiempos de Respuesta (posición derecha con formato horas)
+- [x] Distribución por Severidad ya tenía etiquetas con nombre y porcentaje

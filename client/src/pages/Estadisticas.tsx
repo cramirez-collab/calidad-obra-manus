@@ -64,6 +64,7 @@ import {
   Pie,
   Cell,
   Legend,
+  LabelList,
 } from "recharts";
 
 const statusColors: Record<string, string> = {
@@ -772,7 +773,9 @@ export default function Estadisticas() {
                       tickFormatter={(value) => value.length > 12 ? value.substring(0, 12) + '...' : value}
                     />
                     <Tooltip />
-                    <Bar dataKey="total" fill="#3B82F6" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="total" fill="#3B82F6" radius={[0, 4, 4, 0]}>
+                      <LabelList dataKey="total" position="right" fill="#333" fontSize={11} fontWeight="bold" />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -811,6 +814,7 @@ export default function Estadisticas() {
                       {especialidadData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
+                      <LabelList dataKey="value" position="top" fill="#333" fontSize={11} fontWeight="bold" />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -910,8 +914,12 @@ export default function Estadisticas() {
                       <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="aprobados" stackId="a" fill="#10B981" name="Aprobados" />
-                      <Bar dataKey="rechazados" stackId="a" fill="#EF4444" name="Rechazados" />
+                      <Bar dataKey="aprobados" stackId="a" fill="#10B981" name="Aprobados">
+                        <LabelList dataKey="aprobados" position="center" fill="#fff" fontSize={10} fontWeight="bold" />
+                      </Bar>
+                      <Bar dataKey="rechazados" stackId="a" fill="#EF4444" name="Rechazados">
+                        <LabelList dataKey="rechazados" position="center" fill="#fff" fontSize={10} fontWeight="bold" />
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -1133,8 +1141,12 @@ function RendimientoUsuarios() {
                   <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 10 }} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="aprobados" stackId="a" fill="#10B981" name="Aprobados" />
-                  <Bar dataKey="rechazados" stackId="a" fill="#EF4444" name="Rechazados" />
+                  <Bar dataKey="aprobados" stackId="a" fill="#10B981" name="Aprobados">
+                    <LabelList dataKey="aprobados" position="center" fill="#fff" fontSize={10} fontWeight="bold" />
+                  </Bar>
+                  <Bar dataKey="rechazados" stackId="a" fill="#EF4444" name="Rechazados">
+                    <LabelList dataKey="rechazados" position="center" fill="#fff" fontSize={10} fontWeight="bold" />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -1164,7 +1176,9 @@ function RendimientoUsuarios() {
                   <XAxis type="number" unit="h" />
                   <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 10 }} />
                   <Tooltip formatter={(value: number) => [`${value.toFixed(1)}h`, 'Tiempo Promedio']} />
-                  <Bar dataKey="tiempoPromedio" fill="#3B82F6" name="Tiempo (horas)" />
+                  <Bar dataKey="tiempoPromedio" fill="#3B82F6" name="Tiempo (horas)">
+                    <LabelList dataKey="tiempoPromedio" position="right" fill="#333" fontSize={10} fontWeight="bold" formatter={(value: number) => `${value.toFixed(1)}h`} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
