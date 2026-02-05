@@ -3157,3 +3157,10 @@
 - [x] Asegurar acceso obligatorio a la cámara (configuración compatible)
 - [x] Eliminar configuraciones no soportadas que causan error (focusMode, exposureMode, etc.)
 
+
+## v80 - Residente de Especialidad en Ítems
+
+- [x] Mostrar nombre del residente asignado a la especialidad (quien debe corregir) - badge verde
+- [x] Mostrar fecha de foto después si existe (📷)
+- [x] Mostrar fecha de aprobación si existe (✓)
+

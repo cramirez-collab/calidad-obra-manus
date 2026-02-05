@@ -1800,7 +1800,9 @@ export async function getPendientesByUsuario(userId: number, role: string) {
   
   // Ordenar del más antiguo al más nuevo (ASC)
   // Incluir fotoAntes para mostrar miniatura en la lista
-  return await db
+  // Obtener el residente de la ESPECIALIDAD (quien debe corregir), no quien creó el ítem
+  
+  const results = await db
     .select({
       id: items.id,
       codigo: items.codigo,
@@ -1814,11 +1816,39 @@ export async function getPendientesByUsuario(userId: number, role: string) {
       comentarioSupervisor: items.comentarioSupervisor,
       residenteId: items.residenteId,
       residenteNombre: users.name,
+      // Datos de la especialidad
+      especialidadId: items.especialidadId,
+      especialidadResidenteId: especialidades.residenteId,
+      // Fechas de trazabilidad
+      fechaFotoDespues: items.fechaFotoDespues,
+      fechaAprobacion: items.fechaAprobacion,
     })
     .from(items)
     .leftJoin(users, eq(items.residenteId, users.id))
+    .leftJoin(especialidades, eq(items.especialidadId, especialidades.id))
     .where(whereCondition)
     .orderBy(items.fechaCreacion); // ASC = más antiguo primero
+  
+  // Obtener nombres de residentes de especialidades en una segunda consulta
+  const especialidadResidenteIds = Array.from(new Set(results.map(r => r.especialidadResidenteId).filter((id): id is number => id !== null)));
+  let residentesEspecialidad: Record<number, string> = {};
+  
+  if (especialidadResidenteIds.length > 0) {
+    const residentesData = await db
+      .select({ id: users.id, name: users.name })
+      .from(users)
+      .where(inArray(users.id, especialidadResidenteIds as number[]));
+    
+    residentesData.forEach(r => {
+      if (r.id && r.name) residentesEspecialidad[r.id] = r.name;
+    });
+  }
+  
+  // Agregar nombre del residente de especialidad a cada resultado
+  return results.map(r => ({
+    ...r,
+    especialidadResidenteNombre: r.especialidadResidenteId ? residentesEspecialidad[r.especialidadResidenteId] || null : null,
+  }));
 }
 
 // ==================== CONFIGURACIÓN ====================
