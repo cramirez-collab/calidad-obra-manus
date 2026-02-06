@@ -62,7 +62,7 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
 
   // Queries
   const { data: mensajes, isLoading } = trpc.mensajes.byItem.useQuery({ itemId });
-  const { data: usuarios } = trpc.users.list.useQuery();
+  const { data: usuarios } = trpc.users.listForMentions.useQuery();
 
   // Mutations
   const createMensaje = trpc.mensajes.create.useMutation({

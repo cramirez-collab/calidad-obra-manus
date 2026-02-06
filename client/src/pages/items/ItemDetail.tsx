@@ -132,7 +132,7 @@ export default function ItemDetail() {
   const { data: especialidades } = trpc.especialidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined
   );
-  const { data: users } = trpc.users.list.useQuery();
+  const { data: users } = trpc.users.listForMentions.useQuery();
   const { data: defectos } = trpc.defectos.list.useQuery();
   const { data: espacios } = trpc.espacios.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined
@@ -412,10 +412,9 @@ export default function ItemDetail() {
     return users?.find(u => u.id === id) || null;
   };
 
-  // Solo superadmin, admin, supervisor y jefe_residente pueden subir foto después
-  // Residente NO puede subir foto después
+  // Todos los roles pueden subir foto después (incluyendo residente)
   const canAddFotoDespues = item?.status === "pendiente_foto_despues" && 
-    ["superadmin", "admin", "supervisor", "jefe_residente"].includes(user?.role || "");
+    ["superadmin", "admin", "supervisor", "jefe_residente", "residente"].includes(user?.role || "");
   
   // RESTRICCIÓN DE APROBACIÓN:
   // Solo pueden aprobar: superadmin, admin, supervisor, o el residente asignado (misma especialidad)

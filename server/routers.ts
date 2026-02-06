@@ -45,6 +45,14 @@ const jefeResidenteProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+// Middleware para roles que pueden subir foto después (incluye residente)
+const canUploadFotoProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (!['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente'].includes(ctx.user.role)) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Acceso denegado. No tienes permiso para subir fotos.' });
+  }
+  return next({ ctx });
+});
+
 // Middleware para excluir desarrollador de operaciones de escritura (solo puede ver y comentar)
 const noDesarrolladorProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role === 'desarrollador') {
@@ -325,6 +333,19 @@ export const appRouter = router({
     // Obtener mi perfil completo
     getMiPerfil: protectedProcedure.query(async ({ ctx }) => {
       return await db.getUserById(ctx.user.id);
+    }),
+
+    // Lista básica de usuarios para @mentions (accesible por cualquier rol autenticado)
+    listForMentions: protectedProcedure.query(async () => {
+      const users = await db.getAllUsers();
+      // Retornar solo datos básicos necesarios para menciones
+      return users.map(u => ({
+        id: u.id,
+        name: u.name,
+        role: u.role,
+        fotoUrl: u.fotoUrl || null,
+        fotoBase64: (u as any).fotoBase64 || null,
+      }));
     }),
   }),
 
@@ -1067,7 +1088,7 @@ export const appRouter = router({
         return { success: true, fotoUrl: 'base64-saved' };
       }),
     
-    uploadFotoDespues: jefeResidenteProcedure
+    uploadFotoDespues: canUploadFotoProcedure
       .input(z.object({
         itemId: z.number(),
         fotoBase64: z.string(),

@@ -3340,5 +3340,7 @@
 - [x] Superadmin y admin pueden editar ítems ya capturados con anterioridad
 - [x] Agregar campo 'Asignado a' (residente) en el diálogo de edición de ítems
 - [x] Concatenar nombre + especialidad en selectores de residente/asignado
-- [ ] Edición de ítem por admin/superadmin debe reflejarse inmediatamente en la página de bienvenida
+- [x] Edición de ítem por admin/superadmin debe reflejarse inmediatamente en la página de bienvenida
 - [x] Edición de ítem desde lista de ítems debe reflejar cambios en bienvenida y campo asignado
+- [x] BUG: Residente no puede subir fotos después (botones bloqueados) - CORREGIDO: canAddFotoDespues incluye 'residente', backend usa canUploadFotoProcedure
+- [x] BUG: Residente no puede usar @mentions en comentarios - CORREGIDO: Nuevo endpoint users.listForMentions (protectedProcedure) reemplaza users.list (adminProcedure) en ItemChat y ItemDetail
