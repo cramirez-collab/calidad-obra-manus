@@ -436,6 +436,7 @@ export default function ItemDetail() {
       utils.items.list.invalidate();
       utils.items.historial.invalidate({ itemId });
       utils.estadisticas.general.invalidate();
+      utils.pendientes.misPendientes.invalidate();
       toast.success('Ítem actualizado correctamente');
       setShowEditDialog(false);
     },

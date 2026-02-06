@@ -3341,3 +3341,4 @@
 - [x] Agregar campo 'Asignado a' (residente) en el diálogo de edición de ítems
 - [x] Concatenar nombre + especialidad en selectores de residente/asignado
 - [ ] Edición de ítem por admin/superadmin debe reflejarse inmediatamente en la página de bienvenida
+- [x] Edición de ítem desde lista de ítems debe reflejar cambios en bienvenida y campo asignado
