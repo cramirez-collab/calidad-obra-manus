@@ -435,6 +435,7 @@ export default function ItemDetail() {
       utils.items.get.invalidate({ id: itemId });
       utils.items.list.invalidate();
       utils.items.historial.invalidate({ itemId });
+      utils.estadisticas.general.invalidate();
       toast.success('Ítem actualizado correctamente');
       setShowEditDialog(false);
     },
@@ -1553,11 +1554,17 @@ export default function ItemDetail() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Sin asignar</SelectItem>
-                  {editResidentes?.map((r: any) => (
-                    <SelectItem key={r.id} value={r.id.toString()}>
-                      {r.name} {r.empresaNombre ? `(${r.empresaNombre})` : ''}
-                    </SelectItem>
-                  ))}
+                  {editResidentes?.flatMap((r: any) => 
+                    r.empresas?.map((emp: any, idx: number) => (
+                      <SelectItem key={`${r.id}-${emp.empresaId}-${idx}`} value={r.id.toString()}>
+                        {r.name}{emp.especialidadNombre ? ` - ${emp.especialidadNombre}` : ''} ({emp.empresaNombre})
+                      </SelectItem>
+                    )) || [
+                      <SelectItem key={r.id} value={r.id.toString()}>
+                        {r.name}
+                      </SelectItem>
+                    ]
+                  )}
                 </SelectContent>
               </Select>
             </div>

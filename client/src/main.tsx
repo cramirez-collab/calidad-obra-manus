@@ -17,7 +17,7 @@ import "./index.css";
 // SIEMPRE LA ÚLTIMA VERSIÓN - OBLIGATORIO
 // Fix: Términos y Condiciones visibles en móvil
 // ============================================
-const CURRENT_VERSION = 215;
+const CURRENT_VERSION = 216;
 
 // ============================================
 // 🎯 FORMATO DE VERSIÓN UNIFICADO 🎯

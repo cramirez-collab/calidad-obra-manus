@@ -3339,3 +3339,5 @@
 - [x] MANDATORIO: Incluir fotos reales (antes/después) de la BD en los PDF de ficha de ítem
 - [x] Superadmin y admin pueden editar ítems ya capturados con anterioridad
 - [x] Agregar campo 'Asignado a' (residente) en el diálogo de edición de ítems
+- [x] Concatenar nombre + especialidad en selectores de residente/asignado
+- [ ] Edición de ítem por admin/superadmin debe reflejarse inmediatamente en la página de bienvenida

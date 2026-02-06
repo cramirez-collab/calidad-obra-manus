@@ -78,11 +78,17 @@ export default function NuevoItem() {
     { enabled: !!selectedProjectId }
   );
   
+  // Obtener especialidades del proyecto (movido arriba para usar en residentesConEmpresa)
+  const { data: especialidades } = trpc.especialidades.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  
   // Crear lista de residentes únicos que tienen empresa asignada
   const residentesConEmpresa = useMemo(() => {
     if (!todasEmpresas || !usuarios) return [];
     
-    const residentesMap = new Map<number, { id: number; name: string; empresaId: number; empresaNombre: string; especialidadId: number | null; tipoResidente?: string }>();
+    const residentesMap = new Map<number, { id: number; name: string; empresaId: number; empresaNombre: string; especialidadId: number | null; especialidadNombre?: string | null; tipoResidente?: string }>();
     
     // Primero agregar residentes de la nueva estructura (empresa_residentes)
     if (residentesConEmpresasNuevo && residentesConEmpresasNuevo.length > 0) {
@@ -96,6 +102,7 @@ export default function NuevoItem() {
               empresaId: emp.empresaId,
               empresaNombre: emp.empresaNombre,
               especialidadId: emp.especialidadId || null,
+              especialidadNombre: emp.especialidadNombre || null,
               tipoResidente: emp.tipoResidente
             });
           }
@@ -117,6 +124,7 @@ export default function NuevoItem() {
               empresaId: empresa.id,
               empresaNombre: empresa.nombre,
               especialidadId: empresa.especialidadId || null,
+              especialidadNombre: especialidades?.find(e => e.id === empresa.especialidadId)?.nombre || null,
               tipoResidente: 'residente'
             });
           }
@@ -134,6 +142,7 @@ export default function NuevoItem() {
               empresaId: empresa.id,
               empresaNombre: empresa.nombre,
               especialidadId: empresa.especialidadId || null,
+              especialidadNombre: especialidades?.find(e => e.id === empresa.especialidadId)?.nombre || null,
               tipoResidente: 'jefe_residente'
             });
           }
@@ -154,6 +163,7 @@ export default function NuevoItem() {
               empresaId: empresa.id,
               empresaNombre: empresa.nombre,
               especialidadId: empresa.especialidadId || null,
+              especialidadNombre: especialidades?.find(e => e.id === empresa.especialidadId)?.nombre || null,
               tipoResidente: user.role
             });
           }
@@ -162,7 +172,7 @@ export default function NuevoItem() {
     });
     
     return Array.from(residentesMap.values());
-  }, [todasEmpresas, usuarios, residentesConEmpresasNuevo]);
+  }, [todasEmpresas, usuarios, residentesConEmpresasNuevo, especialidades]);
   
   // Obtener datos del residente seleccionado
   const residenteSeleccionado = useMemo(() => {
@@ -170,12 +180,7 @@ export default function NuevoItem() {
     return residentesConEmpresa.find(r => r.id.toString() === formData.residenteId);
   }, [formData.residenteId, residentesConEmpresa]);
   
-  // Obtener especialidad del residente
-  const { data: especialidades } = trpc.especialidades.list.useQuery(
-    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
-  );
-  
+  // Obtener especialidad del residente seleccionado
   const especialidadDelResidente = useMemo(() => {
     if (!residenteSeleccionado?.especialidadId || !especialidades) return null;
     return especialidades.find(e => e.id === residenteSeleccionado.especialidadId);

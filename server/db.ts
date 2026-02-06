@@ -4512,6 +4512,10 @@ export async function getAllResidentesConEmpresas(proyectoId?: number) {
       eq(users.activo, true)
     ));
   
+  // Obtener todas las especialidades para mapear nombres
+  const todasEspecialidades = await db.select().from(especialidades).where(eq(especialidades.activo, true));
+  const especialidadMap = new Map(todasEspecialidades.map(e => [e.id, e.nombre]));
+  
   // Construir el mapa de residentes
   todosUsuarios.forEach(usuario => {
     if (!residentesMap.has(usuario.id)) {
@@ -4591,8 +4595,16 @@ export async function getAllResidentesConEmpresas(proyectoId?: number) {
     }
   });
   
-  // Retornar solo residentes que tienen al menos una empresa
-  return Array.from(residentesMap.values()).filter(r => r.empresas.length > 0);
+  // Retornar solo residentes que tienen al menos una empresa, con nombre de especialidad
+  return Array.from(residentesMap.values())
+    .filter(r => r.empresas.length > 0)
+    .map(r => ({
+      ...r,
+      empresas: r.empresas.map(e => ({
+        ...e,
+        especialidadNombre: e.especialidadId ? (especialidadMap.get(e.especialidadId) || null) : null
+      }))
+    }));
 }
 
 // Migrar datos existentes de residenteId y jefeResidenteId a la nueva tabla

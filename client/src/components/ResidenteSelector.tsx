@@ -18,6 +18,7 @@ interface Residente {
   empresaId: number;
   empresaNombre: string;
   especialidadId: number | null;
+  especialidadNombre?: string | null;
   tipoResidente?: string;
 }
 
@@ -50,9 +51,12 @@ export default function ResidenteSelector({
   // Filtrar residentes por búsqueda
   const filteredResidentes = residentes.filter(r => {
     const searchLower = processedSearchTerm.toLowerCase();
+    const displayName = r.especialidadNombre ? `${r.name} - ${r.especialidadNombre}` : r.name;
     return (
+      displayName.toLowerCase().includes(searchLower) ||
       r.name.toLowerCase().includes(searchLower) ||
-      r.empresaNombre.toLowerCase().includes(searchLower)
+      r.empresaNombre.toLowerCase().includes(searchLower) ||
+      (r.especialidadNombre?.toLowerCase().includes(searchLower) ?? false)
     );
   });
 
@@ -103,7 +107,7 @@ export default function ResidenteSelector({
           <User className="h-3 w-3 text-gray-400 shrink-0" />
           {selectedResidente ? (
             <span className="truncate">
-              {selectedResidente.name}{" "}
+              {selectedResidente.name}{selectedResidente.especialidadNombre ? ` - ${selectedResidente.especialidadNombre}` : ""}{" "}
               <span className="text-gray-400">({selectedResidente.empresaNombre})</span>
             </span>
           ) : (
@@ -222,7 +226,7 @@ export default function ResidenteSelector({
                               highlightName && !isSelected && "text-blue-700"
                             )}>
                               {highlightName && <span className="text-blue-500">@</span>}
-                              {residente.name}
+                              {residente.name}{residente.especialidadNombre ? ` - ${residente.especialidadNombre}` : ""}
                             </p>
                             <p className="text-xs text-gray-500">
                               {residente.empresaNombre}
