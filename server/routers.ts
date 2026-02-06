@@ -1385,6 +1385,68 @@ export const appRouter = router({
         return { success: true };
       }),
     
+    // Editar ítem existente (solo superadmin y admin)
+    editItem: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        empresaId: z.number().optional(),
+        unidadId: z.number().optional(),
+        especialidadId: z.number().nullable().optional(),
+        defectoId: z.number().nullable().optional(),
+        espacioId: z.number().nullable().optional(),
+        titulo: z.string().min(1).optional(),
+        descripcion: z.string().nullable().optional(),
+        ubicacionDetalle: z.string().nullable().optional(),
+        residenteId: z.number().optional(),
+        asignadoAId: z.number().nullable().optional(),
+        status: z.enum(['pendiente_foto_despues', 'pendiente_aprobacion', 'aprobado', 'rechazado']).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { id, ...updateData } = input;
+        const item = await db.getItemById(id);
+        if (!item) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ítem no encontrado' });
+        
+        // Construir objeto de actualización limpio (solo campos proporcionados)
+        const cleanUpdate: Record<string, any> = {};
+        for (const [key, value] of Object.entries(updateData)) {
+          if (value !== undefined) {
+            cleanUpdate[key] = value;
+          }
+        }
+        
+        if (Object.keys(cleanUpdate).length === 0) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No hay campos para actualizar' });
+        }
+        
+        await db.updateItem(id, cleanUpdate);
+        
+        // Registrar en auditoría
+        const cambios = Object.keys(cleanUpdate).join(', ');
+        await db.createAuditoria({
+          usuarioId: ctx.user.id,
+          usuarioNombre: ctx.user.name || 'Usuario',
+          usuarioRol: ctx.user.role,
+          accion: 'editar_item',
+          categoria: 'item',
+          entidadTipo: 'item',
+          entidadId: id,
+          detalles: `Editó ítem ${item.codigo}: campos [${cambios}]`,
+        });
+        
+        // Registrar en historial si cambió el status
+        if (cleanUpdate.status && cleanUpdate.status !== item.status) {
+          await db.addItemHistorial({
+            itemId: id,
+            usuarioId: ctx.user.id,
+            statusAnterior: item.status,
+            statusNuevo: cleanUpdate.status,
+            comentario: `Estado cambiado por ${ctx.user.name} (edición manual)`,
+          });
+        }
+        
+        return await db.getItemById(id);
+      }),
+    
     // Eliminar múltiples ítems (admin o superadmin)
     deleteMultiple: adminProcedure
       .input(z.object({ ids: z.array(z.number()) }))

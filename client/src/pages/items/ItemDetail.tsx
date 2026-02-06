@@ -32,7 +32,8 @@ import {
   Upload,
   Trash2,
   Download,
-  FileText
+  FileText,
+  Pencil
 } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import {
@@ -45,15 +46,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation, useParams } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
 import { toast } from "sonner";
 import QRCode from "qrcode";
-import { useEffect } from "react";
 import jsPDF from "jspdf";
 import { format } from "date-fns";
 import { downloadPDFBestMethod } from "@/lib/pdfDownload";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const statusLabels: Record<string, string> = {
   pendiente_foto_despues: "Pendiente Foto Después",
@@ -79,6 +87,28 @@ export default function ItemDetail() {
   const [showFotoDespuesDialog, setShowFotoDespuesDialog] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editForm, setEditForm] = useState<{
+    empresaId: string;
+    unidadId: string;
+    especialidadId: string;
+    defectoId: string;
+    espacioId: string;
+    titulo: string;
+    descripcion: string;
+    ubicacionDetalle: string;
+    status: string;
+  }>({
+    empresaId: "",
+    unidadId: "",
+    especialidadId: "",
+    defectoId: "",
+    espacioId: "",
+    titulo: "",
+    descripcion: "",
+    ubicacionDetalle: "",
+    status: "",
+  });
   const [approvalAction, setApprovalAction] = useState<"aprobar" | "rechazar">("aprobar");
   const [comentario, setComentario] = useState("");
   const [fotoDespues, setFotoDespues] = useState<string | null>(null);
@@ -102,6 +132,9 @@ export default function ItemDetail() {
   );
   const { data: users } = trpc.users.list.useQuery();
   const { data: defectos } = trpc.defectos.list.useQuery();
+  const { data: espacios } = trpc.espacios.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
 
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [enviandoComentario, setEnviandoComentario] = useState(false);
@@ -388,6 +421,79 @@ export default function ItemDetail() {
   
   // Admin y superadmin pueden eliminar permanentemente
   const canDelete = ['superadmin', 'admin'].includes(user?.role || '');
+  
+  // Admin y superadmin pueden editar ítems
+  const canEdit = ['superadmin', 'admin'].includes(user?.role || '');
+  
+  const editItemMutation = trpc.items.editItem.useMutation({
+    onSuccess: () => {
+      utils.items.get.invalidate({ id: itemId });
+      utils.items.list.invalidate();
+      utils.items.historial.invalidate({ itemId });
+      toast.success('Ítem actualizado correctamente');
+      setShowEditDialog(false);
+    },
+    onError: (error) => {
+      const msg = error.message?.length > 100 ? 'Error al editar. Intenta de nuevo.' : error.message;
+      toast.error(msg);
+    },
+  });
+  
+  const handleOpenEditDialog = () => {
+    if (!item) return;
+    setEditForm({
+      empresaId: item.empresaId?.toString() || "",
+      unidadId: item.unidadId?.toString() || "",
+      especialidadId: item.especialidadId?.toString() || "",
+      defectoId: item.defectoId?.toString() || "",
+      espacioId: item.espacioId?.toString() || "",
+      titulo: item.titulo || "",
+      descripcion: item.descripcion || "",
+      ubicacionDetalle: item.ubicacionDetalle || "",
+      status: item.status || "",
+    });
+    setShowEditDialog(true);
+  };
+  
+  const handleSaveEdit = () => {
+    if (!item) return;
+    const updates: Record<string, any> = { id: itemId };
+    
+    if (editForm.empresaId && editForm.empresaId !== item.empresaId?.toString()) {
+      updates.empresaId = parseInt(editForm.empresaId);
+    }
+    if (editForm.unidadId && editForm.unidadId !== item.unidadId?.toString()) {
+      updates.unidadId = parseInt(editForm.unidadId);
+    }
+    if (editForm.especialidadId !== (item.especialidadId?.toString() || "")) {
+      updates.especialidadId = editForm.especialidadId ? parseInt(editForm.especialidadId) : null;
+    }
+    if (editForm.defectoId !== (item.defectoId?.toString() || "")) {
+      updates.defectoId = editForm.defectoId ? parseInt(editForm.defectoId) : null;
+    }
+    if (editForm.espacioId !== (item.espacioId?.toString() || "")) {
+      updates.espacioId = editForm.espacioId ? parseInt(editForm.espacioId) : null;
+    }
+    if (editForm.titulo && editForm.titulo !== item.titulo) {
+      updates.titulo = editForm.titulo;
+    }
+    if (editForm.descripcion !== (item.descripcion || "")) {
+      updates.descripcion = editForm.descripcion || null;
+    }
+    if (editForm.ubicacionDetalle !== (item.ubicacionDetalle || "")) {
+      updates.ubicacionDetalle = editForm.ubicacionDetalle || null;
+    }
+    if (editForm.status && editForm.status !== item.status) {
+      updates.status = editForm.status;
+    }
+    
+    if (Object.keys(updates).length <= 1) {
+      toast.info('No hay cambios para guardar');
+      return;
+    }
+    
+    editItemMutation.mutate(updates as any);
+  };
   
   const deleteMutation = trpc.items.delete.useMutation({
     onSuccess: () => {
@@ -822,6 +928,18 @@ export default function ItemDetail() {
                   <span className="truncate">Aprobar</span>
                 </Button>
               </>
+            )}
+            {canEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-blue-600 border-blue-200 hover:bg-blue-50 flex-1 md:flex-none min-w-0"
+                onClick={handleOpenEditDialog}
+                title="Editar ítem"
+              >
+                <Pencil className="h-4 w-4 mr-1 md:mr-2 shrink-0" />
+                <span className="truncate">Editar</span>
+              </Button>
             )}
             {canDelete && (
               <Button
@@ -1258,6 +1376,192 @@ export default function ItemDetail() {
               className={approvalAction === "aprobar" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-600 hover:bg-red-700"}
             >
               {isSubmitting ? "Procesando..." : approvalAction === "aprobar" ? "Aprobar" : "Rechazar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Editar Ítem */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              Editar Ítem
+            </DialogTitle>
+            <DialogDescription>
+              Modifica los campos del ítem. Solo superadmin y admin pueden editar.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Título / Defecto */}
+            <div className="space-y-2">
+              <Label>Título / Defecto</Label>
+              <Input
+                value={editForm.titulo}
+                onChange={(e) => setEditForm({ ...editForm, titulo: e.target.value })}
+                placeholder="Título del ítem"
+              />
+            </div>
+            
+            {/* Empresa */}
+            <div className="space-y-2">
+              <Label>Empresa</Label>
+              <Select
+                value={editForm.empresaId}
+                onValueChange={(value) => setEditForm({ ...editForm, empresaId: value })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccionar empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {empresas?.map((e) => (
+                    <SelectItem key={e.id} value={e.id.toString()}>
+                      {e.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Unidad */}
+            <div className="space-y-2">
+              <Label>Unidad</Label>
+              <Select
+                value={editForm.unidadId}
+                onValueChange={(value) => setEditForm({ ...editForm, unidadId: value })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccionar unidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  {unidades?.map((u) => (
+                    <SelectItem key={u.id} value={u.id.toString()}>
+                      {u.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Especialidad */}
+            <div className="space-y-2">
+              <Label>Especialidad</Label>
+              <Select
+                value={editForm.especialidadId || "none"}
+                onValueChange={(value) => setEditForm({ ...editForm, especialidadId: value === "none" ? "" : value })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccionar especialidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin especialidad</SelectItem>
+                  {especialidades?.map((e) => (
+                    <SelectItem key={e.id} value={e.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: e.color || '#3B82F6' }} />
+                        {e.nombre}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Defecto (catálogo) */}
+            <div className="space-y-2">
+              <Label>Defecto (catálogo)</Label>
+              <Select
+                value={editForm.defectoId || "none"}
+                onValueChange={(value) => setEditForm({ ...editForm, defectoId: value === "none" ? "" : value })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccionar defecto" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin defecto</SelectItem>
+                  {defectos?.map((d) => (
+                    <SelectItem key={d.id} value={d.id.toString()}>
+                      {d.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Espacio */}
+            <div className="space-y-2">
+              <Label>Espacio</Label>
+              <Select
+                value={editForm.espacioId || "none"}
+                onValueChange={(value) => setEditForm({ ...editForm, espacioId: value === "none" ? "" : value })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccionar espacio" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin espacio</SelectItem>
+                  {espacios?.map((e) => (
+                    <SelectItem key={e.id} value={e.id.toString()}>
+                      {e.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Ubicación detalle */}
+            <div className="space-y-2">
+              <Label>Ubicación (detalle)</Label>
+              <Input
+                value={editForm.ubicacionDetalle}
+                onChange={(e) => setEditForm({ ...editForm, ubicacionDetalle: e.target.value })}
+                placeholder="Ej: Pared norte, segundo piso"
+              />
+            </div>
+            
+            {/* Descripción */}
+            <div className="space-y-2">
+              <Label>Descripción</Label>
+              <Textarea
+                value={editForm.descripcion}
+                onChange={(e) => setEditForm({ ...editForm, descripcion: e.target.value })}
+                placeholder="Descripción del problema"
+                rows={3}
+              />
+            </div>
+            
+            {/* Estado */}
+            <div className="space-y-2">
+              <Label>Estado</Label>
+              <Select
+                value={editForm.status}
+                onValueChange={(value) => setEditForm({ ...editForm, status: value })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccionar estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pendiente_foto_despues">Pendiente Foto Después</SelectItem>
+                  <SelectItem value="pendiente_aprobacion">Pendiente Aprobación</SelectItem>
+                  <SelectItem value="aprobado">Aprobado</SelectItem>
+                  <SelectItem value="rechazado">Rechazado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSaveEdit} 
+              disabled={editItemMutation.isPending}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {editItemMutation.isPending ? "Guardando..." : "Guardar Cambios"}
             </Button>
           </DialogFooter>
         </DialogContent>
