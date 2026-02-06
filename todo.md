@@ -3335,3 +3335,4 @@
 ## Correcciones v3.51 (Febrero 2026)
 - [x] Corregir scroll en lista de usuarios (no permite scroll)
 - [x] Implementar @mentions en selector de residentes
+- [x] Corregir Términos y Condiciones: botones de check y aceptar no visibles en móvil

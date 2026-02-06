@@ -3,13 +3,11 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { FileText, Shield, Lock } from "lucide-react";
@@ -43,19 +41,27 @@ export function TermsModal({ open, onAccept }: TermsModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh]" onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <Shield className="h-6 w-6 text-primary" />
-            Términos y Condiciones de Uso
-          </DialogTitle>
-          <DialogDescription>
-            Por favor lee y acepta los siguientes términos para continuar usando OQC
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent 
+        className="sm:max-w-2xl p-0 flex flex-col"
+        style={{ maxHeight: 'calc(100dvh - 2rem)', height: 'auto' }}
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
+        {/* Header fijo */}
+        <div className="px-6 pt-6 pb-3 shrink-0">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Shield className="h-6 w-6 text-primary" />
+              Términos y Condiciones de Uso
+            </DialogTitle>
+            <DialogDescription>
+              Por favor lee y acepta los siguientes términos para continuar usando OQC
+            </DialogDescription>
+          </DialogHeader>
+        </div>
         
-        <ScrollArea className="h-[60vh] max-h-[500px] pr-4">
-          <div className="space-y-6 text-sm pb-6">
+        {/* Contenido scrolleable - ocupa el espacio disponible */}
+        <div className="flex-1 overflow-y-auto px-6 min-h-0">
+          <div className="space-y-6 text-sm pb-4">
             {/* Términos y Condiciones */}
             <section>
               <h3 className="font-semibold text-base flex items-center gap-2 mb-3">
@@ -154,42 +160,42 @@ export function TermsModal({ open, onAccept }: TermsModalProps) {
                 </p>
               </div>
             </section>
-
-            {/* Checkboxes y botón dentro del scroll */}
-            <div className="space-y-4 pt-6 border-t mt-6 bg-background sticky bottom-0 pb-4">
-              <div className="flex items-start space-x-3">
-                <Checkbox 
-                  id="terms" 
-                  checked={accepted}
-                  onCheckedChange={(checked) => setAccepted(checked === true)}
-                />
-                <label htmlFor="terms" className="text-sm leading-tight cursor-pointer">
-                  He leído y acepto los <strong>Términos y Condiciones de Uso</strong> de la plataforma OQC
-                </label>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <Checkbox 
-                  id="privacy" 
-                  checked={privacyAccepted}
-                  onCheckedChange={(checked) => setPrivacyAccepted(checked === true)}
-                />
-                <label htmlFor="privacy" className="text-sm leading-tight cursor-pointer">
-                  He leído y acepto el <strong>Aviso de Privacidad</strong> conforme a la LFPDPPP
-                </label>
-              </div>
-
-              <Button 
-                onClick={handleAccept}
-                disabled={!accepted || !privacyAccepted || aceptarTerminosMutation.isPending}
-                className="w-full mt-4"
-                size="lg"
-              >
-                {aceptarTerminosMutation.isPending ? "Guardando..." : "Aceptar y Continuar"}
-              </Button>
-            </div>
           </div>
-        </ScrollArea>
+        </div>
+
+        {/* Footer FIJO - Siempre visible, FUERA del scroll */}
+        <div className="shrink-0 border-t bg-background px-6 py-4 space-y-3">
+          <div className="flex items-start space-x-3">
+            <Checkbox 
+              id="terms" 
+              checked={accepted}
+              onCheckedChange={(checked) => setAccepted(checked === true)}
+            />
+            <label htmlFor="terms" className="text-sm leading-tight cursor-pointer">
+              He leído y acepto los <strong>Términos y Condiciones de Uso</strong>
+            </label>
+          </div>
+          
+          <div className="flex items-start space-x-3">
+            <Checkbox 
+              id="privacy" 
+              checked={privacyAccepted}
+              onCheckedChange={(checked) => setPrivacyAccepted(checked === true)}
+            />
+            <label htmlFor="privacy" className="text-sm leading-tight cursor-pointer">
+              He leído y acepto el <strong>Aviso de Privacidad</strong> (LFPDPPP)
+            </label>
+          </div>
+
+          <Button 
+            onClick={handleAccept}
+            disabled={!accepted || !privacyAccepted || aceptarTerminosMutation.isPending}
+            className="w-full"
+            size="lg"
+          >
+            {aceptarTerminosMutation.isPending ? "Guardando..." : "Aceptar y Continuar"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
