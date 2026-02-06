@@ -374,15 +374,24 @@ export default function ReporteFotografico() {
             const fotoWidth = (pageWidth - 2 * margin - 10) / 2; // Dos fotos lado a lado
             const fotoHeight = 90; // Altura fija para las fotos
             
-            // Cargar fotos
+            // Cargar fotos desde el servidor (BD base64 o S3 firmado)
             let fotoAntesBase64: string | null = null;
             let fotoDespuesBase64: string | null = null;
             
-            if (item.fotoAntesUrl) {
-              fotoAntesBase64 = await loadImageAsBase64(item.fotoAntesUrl);
-            }
-            if (item.fotoDespuesUrl) {
-              fotoDespuesBase64 = await loadImageAsBase64(item.fotoDespuesUrl);
+            try {
+              const fotosResponse = await fetch(`/api/items/${item.id}/fotos-pdf`);
+              if (fotosResponse.ok) {
+                const fotosData = await fotosResponse.json();
+                fotoAntesBase64 = fotosData.fotoAntesMarcada || fotosData.fotoAntes;
+                fotoDespuesBase64 = fotosData.fotoDespues;
+              } else {
+                // Fallback
+                if (item.fotoAntesUrl) fotoAntesBase64 = await loadImageAsBase64(item.fotoAntesUrl);
+                if (item.fotoDespuesUrl) fotoDespuesBase64 = await loadImageAsBase64(item.fotoDespuesUrl);
+              }
+            } catch {
+              if (item.fotoAntesUrl) fotoAntesBase64 = await loadImageAsBase64(item.fotoAntesUrl);
+              if (item.fotoDespuesUrl) fotoDespuesBase64 = await loadImageAsBase64(item.fotoDespuesUrl);
             }
             
             // Dibujar contenedores de fotos

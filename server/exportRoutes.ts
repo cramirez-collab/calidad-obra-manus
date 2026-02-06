@@ -326,4 +326,108 @@ router.get("/api/export/estadisticas/csv", async (req, res) => {
   }
 });
 
+// Endpoint para obtener fotos de un ítem como base64 para PDF
+router.get("/api/items/:id/fotos-pdf", async (req, res) => {
+  try {
+    const itemId = parseInt(req.params.id);
+    if (isNaN(itemId)) {
+      return res.status(400).json({ error: "ID de ítem inválido" });
+    }
+
+    const dbInstance = await db.getDb();
+    if (!dbInstance) {
+      return res.status(500).json({ error: "Error de base de datos" });
+    }
+
+    // Obtener fotos del ítem - primero intentar base64 de la BD, luego S3
+    const { items } = await import("../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    
+    const result = await dbInstance.select({
+      fotoAntesBase64: items.fotoAntesBase64,
+      fotoAntesMarcadaBase64: items.fotoAntesMarcadaBase64,
+      fotoDespuesBase64: items.fotoDespuesBase64,
+      fotoAntesUrl: items.fotoAntesUrl,
+      fotoAntesKey: items.fotoAntesKey,
+      fotoAntesMarcadaUrl: items.fotoAntesMarcadaUrl,
+      fotoAntesMarcadaKey: items.fotoAntesMarcadaKey,
+      fotoDespuesUrl: items.fotoDespuesUrl,
+      fotoDespuesKey: items.fotoDespuesKey,
+    }).from(items).where(eq(items.id, itemId)).limit(1);
+
+    if (!result[0]) {
+      return res.status(404).json({ error: "Ítem no encontrado" });
+    }
+
+    const item = result[0];
+    const fotos: { fotoAntes: string | null; fotoAntesMarcada: string | null; fotoDespues: string | null } = {
+      fotoAntes: null,
+      fotoAntesMarcada: null,
+      fotoDespues: null,
+    };
+
+    // Helper: descargar imagen de S3 y convertir a base64
+    const downloadAsBase64 = async (key: string | null, url: string | null): Promise<string | null> => {
+      try {
+        // Intentar con key de S3 primero (URL firmada)
+        if (key) {
+          const { url: signedUrl } = await storageGet(key);
+          const response = await fetch(signedUrl);
+          if (response.ok) {
+            const buffer = await response.arrayBuffer();
+            const base64 = Buffer.from(buffer).toString('base64');
+            const contentType = response.headers.get('content-type') || 'image/jpeg';
+            return `data:${contentType};base64,${base64}`;
+          }
+        }
+        // Fallback: intentar con URL directa
+        if (url) {
+          const response = await fetch(url);
+          if (response.ok) {
+            const buffer = await response.arrayBuffer();
+            const base64 = Buffer.from(buffer).toString('base64');
+            const contentType = response.headers.get('content-type') || 'image/jpeg';
+            return `data:${contentType};base64,${base64}`;
+          }
+        }
+      } catch (e) {
+        console.error('Error descargando imagen:', e);
+      }
+      return null;
+    };
+
+    // Foto ANTES: priorizar base64 de BD
+    if (item.fotoAntesBase64 && item.fotoAntesBase64.length > 10) {
+      fotos.fotoAntes = item.fotoAntesBase64.startsWith('data:')
+        ? item.fotoAntesBase64
+        : `data:image/jpeg;base64,${item.fotoAntesBase64}`;
+    } else {
+      fotos.fotoAntes = await downloadAsBase64(item.fotoAntesKey, item.fotoAntesUrl);
+    }
+
+    // Foto ANTES MARCADA: priorizar base64 de BD
+    if (item.fotoAntesMarcadaBase64 && item.fotoAntesMarcadaBase64.length > 10) {
+      fotos.fotoAntesMarcada = item.fotoAntesMarcadaBase64.startsWith('data:')
+        ? item.fotoAntesMarcadaBase64
+        : `data:image/jpeg;base64,${item.fotoAntesMarcadaBase64}`;
+    } else {
+      fotos.fotoAntesMarcada = await downloadAsBase64(item.fotoAntesMarcadaKey, item.fotoAntesMarcadaUrl);
+    }
+
+    // Foto DESPUÉS: priorizar base64 de BD
+    if (item.fotoDespuesBase64 && item.fotoDespuesBase64.length > 10) {
+      fotos.fotoDespues = item.fotoDespuesBase64.startsWith('data:')
+        ? item.fotoDespuesBase64
+        : `data:image/jpeg;base64,${item.fotoDespuesBase64}`;
+    } else {
+      fotos.fotoDespues = await downloadAsBase64(item.fotoDespuesKey, item.fotoDespuesUrl);
+    }
+
+    res.json(fotos);
+  } catch (error) {
+    console.error("Error obteniendo fotos para PDF:", error);
+    res.status(500).json({ error: "Error al obtener fotos" });
+  }
+});
+
 export default router;

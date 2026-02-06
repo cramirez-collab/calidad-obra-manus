@@ -3336,3 +3336,4 @@
 - [x] Corregir scroll en lista de usuarios (no permite scroll)
 - [x] Implementar @mentions en selector de residentes
 - [x] Corregir Términos y Condiciones: botones de check y aceptar no visibles en móvil
+- [x] MANDATORIO: Incluir fotos reales (antes/después) de la BD en los PDF de ficha de ítem

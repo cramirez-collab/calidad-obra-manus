@@ -582,26 +582,37 @@ export default function ItemDetail() {
       const fotoWidth = (pageWidth - 2 * margin - 10) / 2;
       const fotoHeight = 70;
       
-      // Cargar fotos - priorizar Base64 guardado en DB, luego URL de S3
+      // Cargar fotos desde el servidor (BD base64 o S3 firmado)
       let fotoAntesData: string | null = null;
       let fotoDespuesData: string | null = null;
       
-      // Foto ANTES: priorizar Base64 si existe
-      if ((item as any).fotoAntesBase64) {
-        fotoAntesData = (item as any).fotoAntesBase64.startsWith('data:') 
-          ? (item as any).fotoAntesBase64 
-          : `data:image/jpeg;base64,${(item as any).fotoAntesBase64}`;
-      } else if (item.fotoAntesUrl) {
-        fotoAntesData = await loadImageAsBase64(getImageUrl(item.fotoAntesUrl));
-      }
-      
-      // Foto DESPUÉS: priorizar Base64 si existe
-      if ((item as any).fotoDespuesBase64) {
-        fotoDespuesData = (item as any).fotoDespuesBase64.startsWith('data:') 
-          ? (item as any).fotoDespuesBase64 
-          : `data:image/jpeg;base64,${(item as any).fotoDespuesBase64}`;
-      } else if (item.fotoDespuesUrl) {
-        fotoDespuesData = await loadImageAsBase64(getImageUrl(item.fotoDespuesUrl));
+      try {
+        toast.info('Cargando fotografias...');
+        const fotosResponse = await fetch(`/api/items/${item.id}/fotos-pdf`);
+        if (fotosResponse.ok) {
+          const fotosData = await fotosResponse.json();
+          // Usar foto marcada si existe, sino la original
+          fotoAntesData = fotosData.fotoAntesMarcada || fotosData.fotoAntes;
+          fotoDespuesData = fotosData.fotoDespues;
+        } else {
+          console.warn('Endpoint fotos-pdf fallo, intentando metodo alternativo...');
+          // Fallback: intentar cargar desde URLs del item
+          if (item.fotoAntesUrl) {
+            fotoAntesData = await loadImageAsBase64(getImageUrl(item.fotoAntesUrl));
+          }
+          if (item.fotoDespuesUrl) {
+            fotoDespuesData = await loadImageAsBase64(getImageUrl(item.fotoDespuesUrl));
+          }
+        }
+      } catch (e) {
+        console.warn('Error cargando fotos del servidor, intentando alternativo...', e);
+        // Fallback: intentar cargar desde URLs del item
+        if (item.fotoAntesUrl) {
+          fotoAntesData = await loadImageAsBase64(getImageUrl(item.fotoAntesUrl));
+        }
+        if (item.fotoDespuesUrl) {
+          fotoDespuesData = await loadImageAsBase64(getImageUrl(item.fotoDespuesUrl));
+        }
       }
       
       // Foto ANTES

@@ -1,0 +1,130 @@
+{
+  "query": "SELECT id, codigo, \n  CASE WHEN fotoAntesUrl IS NOT NULL AND fotoAntesUrl != '' THEN 'SI' ELSE 'NO' END as tiene_url_antes,\n  CASE WHEN fotoAntesKey IS NOT NULL AND fotoAntesKey != '' THEN 'SI' ELSE 'NO' END as tiene_key_antes,\n  CASE WHEN fotoAntesBase64 IS NOT NULL AND LENGTH(fotoAntesBase64) > 10 THEN 'SI' ELSE 'NO' END as tiene_base64_antes,\n  CASE WHEN fotoDespuesUrl IS NOT NULL AND fotoDespuesUrl != '' THEN 'SI' ELSE 'NO' END as tiene_url_despues,\n  CASE WHEN fotoDespuesKey IS NOT NULL AND fotoDespuesKey != '' THEN 'SI' ELSE 'NO' END as tiene_key_despues,\n  CASE WHEN fotoDespuesBase64 IS NOT NULL AND LENGTH(fotoDespuesBase64) > 10 THEN 'SI' ELSE 'NO' END as tiene_base64_despues,\n  LEFT(fotoAntesUrl, 80) as url_antes_preview,\n  LEFT(fotoDespuesUrl, 80) as url_despues_preview\nFROM items LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, \n  CASE WHEN fotoAntesUrl IS NOT NULL AND fotoAntesUrl != '' THEN 'SI' ELSE 'NO' END as tiene_url_antes,\n  CASE WHEN fotoAntesKey IS NOT NULL AND fotoAntesKey != '' THEN 'SI' ELSE 'NO' END as tiene_key_antes,\n  CASE WHEN fotoAntesBase64 IS NOT NULL AND LENGTH(fotoAntesBase64) > 10 THEN 'SI' ELSE 'NO' END as tiene_base64_antes,\n  CASE WHEN fotoDespuesUrl IS NOT NULL AND fotoDespuesUrl != '' THEN 'SI' ELSE 'NO' END as tiene_url_despues,\n  CASE WHEN fotoDespuesKey IS NOT NULL AND fotoDespuesKey != '' THEN 'SI' ELSE 'NO' END as tiene_key_despues,\n  CASE WHEN fotoDespuesBase64 IS NOT NULL AND LENGTH(fotoDespuesBase64) > 10 THEN 'SI' ELSE 'NO' END as tiene_base64_despues,\n  LEFT(fotoAntesUrl, 80) as url_antes_preview,\n  LEFT(fotoDespuesUrl, 80) as url_despues_preview\nFROM items LIMIT 10;",
+  "rows": [
+    {
+      "id": "1290001",
+      "codigo": "Hidalma-F8XTCG",
+      "tiene_url_antes": "SI",
+      "tiene_key_antes": "SI",
+      "tiene_base64_antes": "SI",
+      "tiene_url_despues": "NO",
+      "tiene_key_despues": "NO",
+      "tiene_base64_despues": "NO",
+      "url_antes_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "url_despues_preview": "NULL"
+    },
+    {
+      "id": "1290002",
+      "codigo": "Hidalma-RFTFJA",
+      "tiene_url_antes": "SI",
+      "tiene_key_antes": "SI",
+      "tiene_base64_antes": "SI",
+      "tiene_url_despues": "NO",
+      "tiene_key_despues": "NO",
+      "tiene_base64_despues": "NO",
+      "url_antes_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "url_despues_preview": "NULL"
+    },
+    {
+      "id": "1290003",
+      "codigo": "Hidalma-F5DUKF",
+      "tiene_url_antes": "SI",
+      "tiene_key_antes": "SI",
+      "tiene_base64_antes": "SI",
+      "tiene_url_despues": "NO",
+      "tiene_key_despues": "NO",
+      "tiene_base64_despues": "NO",
+      "url_antes_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "url_despues_preview": "NULL"
+    },
+    {
+      "id": "1290004",
+      "codigo": "Hidalma-DFRNLX",
+      "tiene_url_antes": "SI",
+      "tiene_key_antes": "SI",
+      "tiene_base64_antes": "SI",
+      "tiene_url_despues": "NO",
+      "tiene_key_despues": "NO",
+      "tiene_base64_despues": "NO",
+      "url_antes_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "url_despues_preview": "NULL"
+    },
+    {
+      "id": "1290005",
+      "codigo": "Hidalma-GQLS7A",
+      "tiene_url_antes": "SI",
+      "tiene_key_antes": "SI",
+      "tiene_base64_antes": "SI",
+      "tiene_url_despues": "NO",
+      "tiene_key_despues": "NO",
+      "tiene_base64_despues": "NO",
+      "url_antes_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "url_despues_preview": "NULL"
+    },
+    {
+      "id": "1290006",
+      "codigo": "Hidalma-VNRBBB",
+      "tiene_url_antes": "SI",
+      "tiene_key_antes": "SI",
+      "tiene_base64_antes": "SI",
+      "tiene_url_despues": "NO",
+      "tiene_key_despues": "NO",
+      "tiene_base64_despues": "NO",
+      "url_antes_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "url_despues_preview": "NULL"
+    },
+    {
+      "id": "1290007",
+      "codigo": "Hidalma-4YKAYL",
+      "tiene_url_antes": "SI",
+      "tiene_key_antes": "SI",
+      "tiene_base64_antes": "SI",
+      "tiene_url_despues": "NO",
+      "tiene_key_despues": "NO",
+      "tiene_base64_despues": "NO",
+      "url_antes_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "url_despues_preview": "NULL"
+    },
+    {
+      "id": "1290008",
+      "codigo": "Hidalma-L4ZLGK",
+      "tiene_url_antes": "SI",
+      "tiene_key_antes": "SI",
+      "tiene_base64_antes": "SI",
+      "tiene_url_despues": "NO",
+      "tiene_key_despues": "NO",
+      "tiene_base64_despues": "NO",
+      "url_antes_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "url_despues_preview": "NULL"
+    },
+    {
+      "id": "1290009",
+      "codigo": "Hidalma-Z4GJN8",
+      "tiene_url_antes": "SI",
+      "tiene_key_antes": "SI",
+      "tiene_base64_antes": "SI",
+      "tiene_url_despues": "NO",
+      "tiene_key_despues": "NO",
+      "tiene_base64_despues": "NO",
+      "url_antes_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "url_despues_preview": "NULL"
+    },
+    {
+      "id": "1290010",
+      "codigo": "Hidalma-6MTE5R",
+      "tiene_url_antes": "SI",
+      "tiene_key_antes": "SI",
+      "tiene_base64_antes": "SI",
+      "tiene_url_despues": "NO",
+      "tiene_key_despues": "NO",
+      "tiene_base64_despues": "NO",
+      "url_antes_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "url_despues_preview": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\ttiene_url_antes\ttiene_key_antes\ttiene_base64_antes\ttiene_url_despues\ttiene_key_despues\ttiene_base64_despues\turl_antes_preview\turl_despues_preview\n1290001\tHidalma-F8XTCG\tSI\tSI\tSI\tNO\tNO\tNO\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\tNULL\n1290002\tHidalma-RFTFJA\tSI\tSI\tSI\tNO\tNO\tNO\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\tNULL\n1290003\tHidalma-F5DUKF\tSI\tSI\tSI\tNO\tNO\tNO\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\tNULL\n1290004\tHidalma-DFRNLX\tSI\tSI\tSI\tNO\tNO\tNO\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\tNULL\n1290005\tHidalma-GQLS7A\tSI\tSI\tSI\tNO\tNO\tNO\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\tNULL\n1290006\tHidalma-VNRBBB\tSI\tSI\tSI\tNO\tNO\tNO\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\tNULL\n1290007\tHidalma-4YKAYL\tSI\tSI\tSI\tNO\tNO\tNO\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\tNULL\n1290008\tHidalma-L4ZLGK\tSI\tSI\tSI\tNO\tNO\tNO\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\tNULL\n1290009\tHidalma-Z4GJN8\tSI\tSI\tSI\tNO\tNO\tNO\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\tNULL\n1290010\tHidalma-6MTE5R\tSI\tSI\tSI\tNO\tNO\tNO\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 119
+}
