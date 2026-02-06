@@ -94,6 +94,7 @@ export default function ItemDetail() {
     especialidadId: string;
     defectoId: string;
     espacioId: string;
+    asignadoAId: string;
     titulo: string;
     descripcion: string;
     ubicacionDetalle: string;
@@ -104,6 +105,7 @@ export default function ItemDetail() {
     especialidadId: "",
     defectoId: "",
     espacioId: "",
+    asignadoAId: "",
     titulo: "",
     descripcion: "",
     ubicacionDetalle: "",
@@ -133,6 +135,9 @@ export default function ItemDetail() {
   const { data: users } = trpc.users.list.useQuery();
   const { data: defectos } = trpc.defectos.list.useQuery();
   const { data: espacios } = trpc.espacios.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
+  const { data: editResidentes } = trpc.empresas.getAllResidentesConEmpresas.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined
   );
 
@@ -447,6 +452,7 @@ export default function ItemDetail() {
       especialidadId: item.especialidadId?.toString() || "",
       defectoId: item.defectoId?.toString() || "",
       espacioId: item.espacioId?.toString() || "",
+      asignadoAId: item.asignadoAId?.toString() || "",
       titulo: item.titulo || "",
       descripcion: item.descripcion || "",
       ubicacionDetalle: item.ubicacionDetalle || "",
@@ -482,6 +488,9 @@ export default function ItemDetail() {
     }
     if (editForm.ubicacionDetalle !== (item.ubicacionDetalle || "")) {
       updates.ubicacionDetalle = editForm.ubicacionDetalle || null;
+    }
+    if (editForm.asignadoAId !== (item.asignadoAId?.toString() || "")) {
+      updates.asignadoAId = editForm.asignadoAId ? parseInt(editForm.asignadoAId) : null;
     }
     if (editForm.status && editForm.status !== item.status) {
       updates.status = editForm.status;
@@ -1530,6 +1539,27 @@ export default function ItemDetail() {
                 placeholder="Descripción del problema"
                 rows={3}
               />
+            </div>
+            
+            {/* Asignado a */}
+            <div className="space-y-2">
+              <Label>Asignado a (Residente)</Label>
+              <Select
+                value={editForm.asignadoAId || "none"}
+                onValueChange={(value) => setEditForm({ ...editForm, asignadoAId: value === "none" ? "" : value })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccionar residente" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin asignar</SelectItem>
+                  {editResidentes?.map((r: any) => (
+                    <SelectItem key={r.id} value={r.id.toString()}>
+                      {r.name} {r.empresaNombre ? `(${r.empresaNombre})` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             {/* Estado */}
