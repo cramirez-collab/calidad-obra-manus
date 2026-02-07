@@ -27,11 +27,42 @@ import {
   XCircle,
   Trash2,
   RefreshCw,
-  Loader2
+  Loader2,
+  Megaphone,
+  Plus,
+  Pencil,
+  Users,
+  AlertTriangle
 } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ConfigItem {
   clave: string;
@@ -454,8 +485,362 @@ export default function Configuracion() {
         </Card>
 
 
+        {/* Sección Gestión de Avisos - Solo admin/superadmin */}
+        {isAdmin && (
+          <AvisosManager proyectoId={selectedProjectId} />
+        )}
 
       </div>
     </DashboardLayout>
+  );
+}
+
+// ==================== COMPONENTE AVISOS MANAGER ====================
+function AvisosManager({ proyectoId }: { proyectoId: number | null }) {
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingAviso, setEditingAviso] = useState<any>(null);
+  const [deleteAvisoId, setDeleteAvisoId] = useState<number | null>(null);
+  const [viewLecturasId, setViewLecturasId] = useState<number | null>(null);
+  const [titulo, setTitulo] = useState('');
+  const [contenido, setContenido] = useState('');
+  const [prioridad, setPrioridad] = useState<'normal' | 'urgente'>('normal');
+
+  const { data: avisosList, refetch } = trpc.avisos.list.useQuery(
+    proyectoId ? { proyectoId } : undefined
+  );
+  const utils = trpc.useUtils();
+
+  const createMutation = trpc.avisos.create.useMutation({
+    onSuccess: () => {
+      toast.success('Aviso creado');
+      refetch();
+      utils.avisos.noLeidos.invalidate();
+      resetForm();
+      setShowCreateDialog(false);
+    },
+    onError: (e) => toast.error(e.message || 'Error al crear aviso'),
+  });
+
+  const updateMutation = trpc.avisos.update.useMutation({
+    onSuccess: () => {
+      toast.success('Aviso actualizado');
+      refetch();
+      setEditingAviso(null);
+      resetForm();
+    },
+    onError: (e) => toast.error(e.message || 'Error al actualizar'),
+  });
+
+  const deleteMutation = trpc.avisos.delete.useMutation({
+    onSuccess: () => {
+      toast.success('Aviso eliminado');
+      refetch();
+      utils.avisos.noLeidos.invalidate();
+      setDeleteAvisoId(null);
+    },
+    onError: (e) => toast.error(e.message || 'Error al eliminar'),
+  });
+
+  const { data: lecturas } = trpc.avisos.lecturas.useQuery(
+    { avisoId: viewLecturasId! },
+    { enabled: !!viewLecturasId }
+  );
+
+  const resetForm = () => {
+    setTitulo('');
+    setContenido('');
+    setPrioridad('normal');
+  };
+
+  const handleCreate = () => {
+    createMutation.mutate({
+      proyectoId: proyectoId || undefined,
+      titulo,
+      contenido,
+      prioridad,
+    });
+  };
+
+  const handleUpdate = () => {
+    if (!editingAviso) return;
+    updateMutation.mutate({
+      id: editingAviso.id,
+      titulo,
+      contenido,
+      prioridad,
+    });
+  };
+
+  const openEdit = (aviso: any) => {
+    setEditingAviso(aviso);
+    setTitulo(aviso.titulo);
+    setContenido(aviso.contenido);
+    setPrioridad(aviso.prioridad);
+  };
+
+  const formatFecha = (date: string | Date) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('es-MX', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  };
+
+  const avisos = avisosList || [];
+
+  return (
+    <>
+      <Card className="mt-6">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Megaphone className="h-5 w-5 text-[#002C63]" />
+              Gestión de Avisos
+            </CardTitle>
+            <Button
+              size="sm"
+              className="gap-1 bg-[#02B381] hover:bg-[#02B381]/90"
+              onClick={() => { resetForm(); setShowCreateDialog(true); }}
+            >
+              <Plus className="h-4 w-4" />
+              Nuevo Aviso
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {avisos.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">No hay avisos creados</p>
+          ) : (
+            <div className="space-y-3">
+              {avisos.map((aviso) => (
+                <div
+                  key={aviso.id}
+                  className={`p-3 rounded-lg border ${
+                    aviso.prioridad === 'urgente' ? 'border-orange-200 bg-orange-50/50' : 'border-slate-200 bg-slate-50/50'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        {aviso.prioridad === 'urgente' && (
+                          <AlertTriangle className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                        )}
+                        <span className="font-semibold text-sm text-[#002C63] truncate">
+                          {aviso.titulo}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 line-clamp-2">{aviso.contenido}</p>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                        <span>{aviso.creadoPorNombre}</span>
+                        <span>{formatFecha(aviso.createdAt)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setViewLecturasId(aviso.id)}
+                          >
+                            <Users className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Ver quién lo leyó</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => openEdit(aviso)}
+                          >
+                            <Pencil className="h-4 w-4 text-slate-600" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Editar</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setDeleteAvisoId(aviso.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Eliminar</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Diálogo Crear Aviso */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Megaphone className="h-5 w-5 text-[#002C63]" />
+              Nuevo Aviso
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Título</Label>
+              <Input
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
+                placeholder="Título del aviso"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Contenido</Label>
+              <Textarea
+                value={contenido}
+                onChange={(e) => setContenido(e.target.value)}
+                placeholder="Escribe el contenido del aviso..."
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Prioridad</Label>
+              <Select value={prioridad} onValueChange={(v: 'normal' | 'urgente') => setPrioridad(v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="urgente">Urgente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancelar</Button>
+            <Button
+              onClick={handleCreate}
+              disabled={!titulo.trim() || !contenido.trim() || createMutation.isPending}
+              className="bg-[#02B381] hover:bg-[#02B381]/90"
+            >
+              {createMutation.isPending ? 'Creando...' : 'Crear Aviso'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo Editar Aviso */}
+      <Dialog open={!!editingAviso} onOpenChange={(open) => { if (!open) setEditingAviso(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5 text-[#002C63]" />
+              Editar Aviso
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Título</Label>
+              <Input
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
+                placeholder="Título del aviso"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Contenido</Label>
+              <Textarea
+                value={contenido}
+                onChange={(e) => setContenido(e.target.value)}
+                placeholder="Escribe el contenido del aviso..."
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Prioridad</Label>
+              <Select value={prioridad} onValueChange={(v: 'normal' | 'urgente') => setPrioridad(v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="urgente">Urgente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingAviso(null)}>Cancelar</Button>
+            <Button
+              onClick={handleUpdate}
+              disabled={!titulo.trim() || !contenido.trim() || updateMutation.isPending}
+              className="bg-[#002C63] hover:bg-[#002C63]/90"
+            >
+              {updateMutation.isPending ? 'Guardando...' : 'Guardar Cambios'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo Confirmar Eliminar */}
+      <AlertDialog open={!!deleteAvisoId} onOpenChange={(open) => { if (!open) setDeleteAvisoId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar aviso?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El aviso será desactivado y ya no será visible para los usuarios.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600"
+              onClick={() => deleteAvisoId && deleteMutation.mutate({ id: deleteAvisoId })}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Diálogo Ver Lecturas (Bitácora) */}
+      <Dialog open={!!viewLecturasId} onOpenChange={(open) => { if (!open) setViewLecturasId(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              Bitácora de Lecturas
+            </DialogTitle>
+          </DialogHeader>
+          <div className="max-h-80 overflow-y-auto">
+            {!lecturas || lecturas.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Nadie ha leído este aviso aún</p>
+            ) : (
+              <div className="space-y-2">
+                {lecturas.map((l) => (
+                  <div key={l.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <div>
+                      <p className="text-sm font-medium text-[#002C63]">{l.usuarioNombre}</p>
+                      <p className="text-xs text-slate-500 capitalize">{l.usuarioRole?.replace('_', ' ')}</p>
+                    </div>
+                    <span className="text-xs text-slate-500">
+                      {formatFecha(l.leidoAt)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

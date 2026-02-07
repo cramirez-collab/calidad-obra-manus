@@ -50,6 +50,7 @@ const Especialidades = lazy(() => import("./pages/catalogos/Especialidades"));
 const ListaEspecialidades = lazy(() => import("./pages/ListaEspecialidades"));
 const Defectos = lazy(() => import("./pages/Defectos"));
 const EnlacesExternos = lazy(() => import("./pages/EnlacesExternos"));
+const Avisos = lazy(() => import("./pages/Avisos"));
 const Terminos = lazy(() => import("./pages/Terminos"));
 const AltaRapidaEmpresa = lazy(() => import("./pages/catalogos/AltaRapidaEmpresa"));
 
@@ -124,6 +125,9 @@ function AppRoutes() {
       
       {/* Términos y Condiciones */}
       <Route path="/terminos" component={Terminos} />
+      
+      {/* Avisos */}
+      <Route path="/avisos" component={Avisos} />
       
       {/* Configuración y Metas */}
       <Route path="/configuracion" component={Configuracion} />

@@ -2441,7 +2441,7 @@ export const appRouter = router({
         return await db.getDashboardResidente(ctx.user.id, input?.proyectoId);
       }),
     
-    // Top 5 peores (empresas, residentes, especialidades)
+      // Top 5 peores (empresas, residentes, especialidades)
     top5Peores: protectedProcedure
       .input(z.object({ proyectoId: z.number().optional() }).optional())
       .query(async ({ input }) => {
@@ -2449,6 +2449,90 @@ export const appRouter = router({
       }),
   }),
 
-});
+  // ==================== AVISOS ====================
+  avisos: router({
+    // Listar avisos (todos los usuarios autenticados)
+    list: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAvisos(input?.proyectoId);
+      }),
 
+    // Obtener un aviso por ID
+    get: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getAvisoById(input.id);
+      }),
+
+    // Contar avisos no leídos
+    noLeidos: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        return await db.getAvisosNoLeidos(ctx.user.id, input?.proyectoId);
+      }),
+
+    // IDs de avisos leídos por el usuario actual
+    leidosPorUsuario: protectedProcedure
+      .query(async ({ ctx }) => {
+        return await db.getAvisosLeidosPorUsuario(ctx.user.id);
+      }),
+
+    // Marcar aviso como leído
+    marcarLeido: protectedProcedure
+      .input(z.object({ avisoId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.marcarAvisoLeido(input.avisoId, ctx.user.id);
+        return { success: true };
+      }),
+
+    // Crear aviso (solo admin/superadmin)
+    create: adminProcedure
+      .input(z.object({
+        proyectoId: z.number().optional(),
+        titulo: z.string().min(1),
+        contenido: z.string().min(1),
+        prioridad: z.enum(['normal', 'urgente']).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await db.createAviso({
+          creadoPorId: ctx.user.id,
+          proyectoId: input.proyectoId,
+          titulo: input.titulo,
+          contenido: input.contenido,
+          prioridad: input.prioridad,
+        });
+        return result;
+      }),
+
+    // Editar aviso (solo admin/superadmin)
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        titulo: z.string().min(1).optional(),
+        contenido: z.string().min(1).optional(),
+        prioridad: z.enum(['normal', 'urgente']).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateAviso(id, data);
+        return { success: true };
+      }),
+
+    // Eliminar aviso (soft delete, solo admin/superadmin)
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteAviso(input.id);
+        return { success: true };
+      }),
+
+    // Obtener lecturas de un aviso (bitácora - solo admin/superadmin)
+    lecturas: adminProcedure
+      .input(z.object({ avisoId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getLecturasAviso(input.avisoId);
+      }),
+  }),
+});
 export type AppRouter = typeof appRouter;

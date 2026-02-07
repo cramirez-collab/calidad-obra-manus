@@ -26,7 +26,8 @@ import {
   Square,
   X,
   Check,
-  XCircle
+  XCircle,
+  Megaphone
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -51,6 +52,13 @@ export default function Bienvenida() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { selectedProjectId, isLoadingProjects } = useProject();
+  
+  // Avisos no leídos
+  const { data: avisosNoLeidos } = trpc.avisos.noLeidos.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId, refetchInterval: 30000 }
+  );
+  
   const { data: pendientes, isLoading } = trpc.pendientes.misPendientes.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
@@ -370,6 +378,25 @@ export default function Bienvenida() {
                 <TooltipContent>{action.label}</TooltipContent>
               </Tooltip>
             ))}
+            {/* Botón Avisos con badge rojo */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-10 w-10 relative border-slate-300 hover:bg-slate-50"
+                  onClick={() => setLocation('/avisos')}
+                >
+                  <Megaphone className="h-5 w-5 text-[#002C63]" />
+                  {(avisosNoLeidos ?? 0) > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm animate-pulse">
+                      {avisosNoLeidos}
+                    </span>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Avisos</TooltipContent>
+            </Tooltip>
           </div>
         </div>
 

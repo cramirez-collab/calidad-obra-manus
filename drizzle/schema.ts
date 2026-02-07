@@ -549,3 +549,34 @@ export type ActividadUsuario = typeof actividadUsuarios.$inferSelect;
 export type InsertActividadUsuario = typeof actividadUsuarios.$inferInsert;
 
 
+
+/**
+ * Tabla de avisos - mensajes/comunicados del admin/superadmin para todos los usuarios
+ */
+export const avisos = mysqlTable("avisos", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId"), // null = aviso global, con valor = aviso por proyecto
+  creadoPorId: int("creadoPorId").notNull(), // Admin o superadmin que creó el aviso
+  titulo: varchar("titulo", { length: 255 }).notNull(),
+  contenido: text("contenido").notNull(),
+  prioridad: mysqlEnum("prioridad", ["normal", "urgente"]).default("normal").notNull(),
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Aviso = typeof avisos.$inferSelect;
+export type InsertAviso = typeof avisos.$inferInsert;
+
+/**
+ * Tabla de lecturas de avisos - registra quién leyó cada aviso y cuándo
+ */
+export const avisosLecturas = mysqlTable("avisos_lecturas", {
+  id: int("id").autoincrement().primaryKey(),
+  avisoId: int("avisoId").notNull(),
+  usuarioId: int("usuarioId").notNull(),
+  leidoAt: timestamp("leidoAt").defaultNow().notNull(),
+});
+
+export type AvisoLectura = typeof avisosLecturas.$inferSelect;
+export type InsertAvisoLectura = typeof avisosLecturas.$inferInsert;

@@ -24,7 +24,9 @@ import {
   pushSubscriptions, InsertPushSubscription,
   empresaEspecialidades, InsertEmpresaEspecialidad,
   empresaResidentes, InsertEmpresaResidente,
-  empresaHistorial, InsertEmpresaHistorial
+  empresaHistorial, InsertEmpresaHistorial,
+  avisos, InsertAviso,
+  avisosLecturas, InsertAvisoLectura
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -5014,4 +5016,137 @@ export async function getEmpresaHistorial(empresaId: number): Promise<any[]> {
     .orderBy(desc(empresaHistorial.createdAt));
   
   return historial;
+}
+
+
+// ==================== AVISOS ====================
+
+export async function createAviso(data: { proyectoId?: number | null; creadoPorId: number; titulo: string; contenido: string; prioridad?: 'normal' | 'urgente' }) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(avisos).values({
+    proyectoId: data.proyectoId || null,
+    creadoPorId: data.creadoPorId,
+    titulo: data.titulo,
+    contenido: data.contenido,
+    prioridad: data.prioridad || 'normal',
+  });
+  return { id: result[0].insertId };
+}
+
+export async function getAvisos(proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const conditions = [eq(avisos.activo, true)];
+  if (proyectoId) {
+    // Avisos globales (proyectoId = null) + avisos del proyecto
+    conditions.push(or(sql`${avisos.proyectoId} IS NULL`, eq(avisos.proyectoId, proyectoId))!);
+  }
+  
+  const result = await db.select().from(avisos)
+    .where(and(...conditions))
+    .orderBy(desc(avisos.createdAt));
+  
+  // Obtener nombres de creadores
+  const creadorIds = Array.from(new Set(result.map(a => a.creadoPorId)));
+  let creadoresMap: Record<number, string> = {};
+  if (creadorIds.length > 0) {
+    const creadoresData = await db.select({ id: users.id, name: users.name }).from(users)
+      .where(inArray(users.id, creadorIds));
+    creadoresData.forEach(c => { if (c.id && c.name) creadoresMap[c.id] = c.name; });
+  }
+  
+  return result.map(a => ({
+    ...a,
+    creadoPorNombre: creadoresMap[a.creadoPorId] || 'Desconocido',
+  }));
+}
+
+export async function getAvisoById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(avisos).where(eq(avisos.id, id)).limit(1);
+  return result[0] || null;
+}
+
+export async function updateAviso(id: number, data: { titulo?: string; contenido?: string; prioridad?: 'normal' | 'urgente'; activo?: boolean }) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(avisos).set(data).where(eq(avisos.id, id));
+}
+
+export async function deleteAviso(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(avisos).set({ activo: false }).where(eq(avisos.id, id));
+}
+
+// Marcar aviso como leído por un usuario
+export async function marcarAvisoLeido(avisoId: number, usuarioId: number) {
+  const db = await getDb();
+  if (!db) return;
+  
+  // Verificar si ya fue leído
+  const existing = await db.select().from(avisosLecturas)
+    .where(and(eq(avisosLecturas.avisoId, avisoId), eq(avisosLecturas.usuarioId, usuarioId)))
+    .limit(1);
+  
+  if (existing.length === 0) {
+    await db.insert(avisosLecturas).values({ avisoId, usuarioId });
+  }
+}
+
+// Obtener avisos no leídos por un usuario
+export async function getAvisosNoLeidos(usuarioId: number, proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const conditions = [eq(avisos.activo, true)];
+  if (proyectoId) {
+    conditions.push(or(sql`${avisos.proyectoId} IS NULL`, eq(avisos.proyectoId, proyectoId))!);
+  }
+  
+  const todosAvisos = await db.select({ id: avisos.id }).from(avisos).where(and(...conditions));
+  if (todosAvisos.length === 0) return 0;
+  
+  const avisoIds = todosAvisos.map(a => a.id);
+  const leidos = await db.select({ avisoId: avisosLecturas.avisoId }).from(avisosLecturas)
+    .where(and(eq(avisosLecturas.usuarioId, usuarioId), inArray(avisosLecturas.avisoId, avisoIds)));
+  
+  const leidosSet = new Set(leidos.map(l => l.avisoId));
+  return avisoIds.filter(id => !leidosSet.has(id)).length;
+}
+
+// Obtener lecturas de un aviso (quién lo leyó y cuándo)
+export async function getLecturasAviso(avisoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const lecturas = await db.select().from(avisosLecturas)
+    .where(eq(avisosLecturas.avisoId, avisoId))
+    .orderBy(desc(avisosLecturas.leidoAt));
+  
+  const usuarioIds = Array.from(new Set(lecturas.map(l => l.usuarioId)));
+  let usuariosMap: Record<number, { name: string; role: string }> = {};
+  if (usuarioIds.length > 0) {
+    const usuariosData = await db.select({ id: users.id, name: users.name, role: users.role }).from(users)
+      .where(inArray(users.id, usuarioIds));
+    usuariosData.forEach(u => { if (u.id) usuariosMap[u.id] = { name: u.name || 'Sin nombre', role: u.role }; });
+  }
+  
+  return lecturas.map(l => ({
+    ...l,
+    usuarioNombre: usuariosMap[l.usuarioId]?.name || 'Desconocido',
+    usuarioRole: usuariosMap[l.usuarioId]?.role || 'residente',
+  }));
+}
+
+// Obtener IDs de avisos leídos por un usuario
+export async function getAvisosLeidosPorUsuario(usuarioId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.select({ avisoId: avisosLecturas.avisoId }).from(avisosLecturas)
+    .where(eq(avisosLecturas.usuarioId, usuarioId));
+  return result.map(r => r.avisoId);
 }

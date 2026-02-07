@@ -3352,3 +3352,14 @@
 
 ## Bug Edición Asignado v3.59 (Febrero 2026)
 - [x] BUG: Al editar un ítem y cambiar el "Asignado a", el cambio no se refleja en Bienvenida - CORREGIDO: Bienvenida.tsx ahora prioriza asignadoANombre > especialidadResidenteNombre > residenteNombre
+
+## Sistema de Avisos v3.61 (Febrero 2026)
+- [x] Crear tablas BD: avisos + avisos_lecturas
+- [x] Crear helpers de BD para avisos (CRUD + lecturas)
+- [x] Crear endpoints tRPC para avisos (admin crea, todos leen, registro de lecturas)
+- [x] Botón Avisos con badge rojo en header de Bienvenida
+- [x] Página de avisos para todos los usuarios
+- [x] Gestión de avisos en menú Configuración (solo admin/superadmin)
+- [x] Historial de avisos del más reciente al más antiguo
+- [x] Registro de quién leyó cada aviso con bitácora
+- [x] Incrementar versión a 3.61
