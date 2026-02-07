@@ -3384,3 +3384,11 @@
 - [x] Quitar ícono engrane de Configuración, reemplazar por Megaphone + botón Avisos
 - [x] Corregir badges de notificación: z-50, shadow-lg, border-2 border-white al frente
 - [x] Incrementar versión a 3.64
+
+## Avisos: Lectores + Personas Activas + Reportes v3.65 (Febrero 2026)
+- [x] Mostrar lista de quién leyó cada aviso (nombre + fecha/hora) en la página de Avisos
+- [x] Mostrar número de personas activas del proyecto en header de Avisos
+- [x] Endpoint backend para reporte de lecturas de avisos (CSV)
+- [x] Endpoint backend para reporte de personas activas (CSV)
+- [x] Botón descargar reporte de lecturas y actividad (CSV por aviso + personas activas)
+- [x] Incrementar versión a 3.65

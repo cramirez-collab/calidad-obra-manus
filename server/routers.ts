@@ -2528,11 +2528,56 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Obtener lecturas de un aviso (bitácora - solo admin/superadmin)
-    lecturas: adminProcedure
+    // Obtener lecturas de un aviso (visible para todos)
+    lecturas: protectedProcedure
       .input(z.object({ avisoId: z.number() }))
       .query(async ({ input }) => {
         return await db.getLecturasAviso(input.avisoId);
+      }),
+
+    // Personas activas del proyecto (usuarios asignados)
+    personasActivas: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        const usuariosProyecto = await db.getUsuariosByProyecto(input.proyectoId);
+        return {
+          total: usuariosProyecto.length,
+          usuarios: usuariosProyecto.map(up => ({
+            id: up.usuario?.id,
+            name: up.usuario?.name || 'Sin nombre',
+            role: up.usuario?.role || 'residente',
+            rolEnProyecto: up.rolEnProyecto,
+          })),
+        };
+      }),
+
+    // Reporte CSV de lecturas de un aviso
+    reporteLecturas: adminProcedure
+      .input(z.object({ avisoId: z.number() }))
+      .query(async ({ input }) => {
+        const aviso = await db.getAvisoById(input.avisoId);
+        const lecturas = await db.getLecturasAviso(input.avisoId);
+        return {
+          aviso: aviso ? { titulo: aviso.titulo, createdAt: aviso.createdAt } : null,
+          lecturas: lecturas.map(l => ({
+            nombre: l.usuarioNombre,
+            rol: l.usuarioRole,
+            leidoAt: l.leidoAt,
+          })),
+        };
+      }),
+
+    // Reporte CSV de personas activas del proyecto
+    reportePersonasActivas: adminProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        const usuariosProyecto = await db.getUsuariosByProyecto(input.proyectoId);
+        return usuariosProyecto.map(up => ({
+          nombre: up.usuario?.name || 'Sin nombre',
+          rol: up.usuario?.role || 'residente',
+          rolEnProyecto: up.rolEnProyecto || 'residente',
+          email: up.usuario?.email || '',
+        }));
       }),
   }),
 });
