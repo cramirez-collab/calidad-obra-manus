@@ -3470,3 +3470,7 @@
 - [x] OBJETIVA más grande y visible (4.5pt → 7pt con letter-spacing)
 - [x] Redistribuir con space-between vertical: código arriba, OBJETIVA centro, consecutivo 13pt abajo
 - [x] Todo legible y funcional dentro del recuadro 25.4mm x 66.675mm
+
+## OBJETIVA estilo logo en etiquetas v3.75
+- [x] OBJETIVA más grande (7pt → 9.5pt bold 900)
+- [x] Estilo logo corporativo: OBJETIV en azul #002C63 + A en verde #02B381

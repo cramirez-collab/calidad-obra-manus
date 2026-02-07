@@ -362,13 +362,19 @@ export default function GenerarQR() {
               max-width: 100% !important;
             }
             
-            /* OBJETIVA - centro, visible y claro */
+            /* OBJETIVA - estilo logo corporativo */
             .logo {
-              font-size: 7pt !important;
-              color: #02B381 !important;
-              font-weight: bold !important;
-              letter-spacing: 0.8px !important;
+              font-size: 9.5pt !important;
+              font-weight: 900 !important;
+              letter-spacing: 1px !important;
               text-transform: uppercase !important;
+              line-height: 1.0 !important;
+            }
+            .logo .objetiv {
+              color: #002C63 !important;
+            }
+            .logo .logo-a {
+              color: #02B381 !important;
             }
             
             /* Consecutivo - abajo, grande y destacado */
@@ -452,7 +458,7 @@ export default function GenerarQR() {
             <div class="qr-info">
               <div class="codigo">${item.codigo}</div>
               ${item.titulo ? `<div class="titulo">${item.titulo}</div>` : ''}
-              <div class="logo">OBJETIVA</div>
+              <div class="logo"><span class="objetiv">OBJETIV</span><span class="logo-a">A</span></div>
               <div class="consecutivo">#${item.consecutivo || 0}</div>
             </div>
           </div>
