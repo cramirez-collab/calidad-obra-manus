@@ -3400,3 +3400,10 @@
 - [x] Frontend: click en número (admin/superadmin) descarga PDF con lista de usuarios en línea
 - [x] Frontend: en cada aviso, badge azul clickable con ojo + conteo de lecturas
 - [x] Incrementar versión a 3.66
+
+## Visibilidad Personas Activas v3.67 (Febrero 2026)
+- [x] Mover indicador de personas activas a barra separada visible en Bienvenida
+- [x] Usar query tRPC personasActivas en vez de socket para mayor confiabilidad
+- [x] Barra verde claro con punto animado y texto "X personas activas (tap para PDF)"
+- [x] Click genera PDF con lista de personas activas (solo admin/superadmin)
+- [x] Versión actualizada a 3.67
