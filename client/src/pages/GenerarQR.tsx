@@ -167,8 +167,8 @@ export default function GenerarQR() {
     // Etiqueta: 6.7cm x 2.5cm (2-5/8" x 1") = 66.675mm x 25.4mm
     // 30 etiquetas por hoja (3 columnas x 10 filas)
     // Márgenes originales: Superior 14.7mm, Izquierdo 4.76mm
-    // Ajuste calibrado: Subir 13mm, Izquierda 5mm
-    // Márgenes ajustados: Superior 1.7mm, Izquierdo 0mm (con -0.24mm extra)
+    // Ajuste calibrado: Subir 13mm, Izquierda 5mm, luego bajar 9mm, derecha 3mm
+    // Márgenes ajustados: Superior 10.7mm, Izquierdo 3mm
     // Espacio horizontal entre etiquetas: 3.175mm (1/8")
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -193,7 +193,7 @@ export default function GenerarQR() {
             .page {
               width: 215.9mm;
               height: 279.4mm;
-              padding: 1.7mm 4.76mm 12.7mm 0mm;
+              padding: 10.7mm 4.76mm 12.7mm 3mm;
               display: flex;
               flex-wrap: wrap;
               align-content: flex-start;

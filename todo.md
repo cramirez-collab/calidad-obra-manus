@@ -3436,3 +3436,8 @@
 - [x] Subir etiquetas 1.3 cm hacia arriba (padding-top: 14.7mm → 1.7mm)
 - [x] Mover etiquetas 5 mm a la izquierda (padding-left: 4.76mm → 0mm)
 - [x] Incrementar versión a 3.69
+
+## Ajuste fino etiquetas QR v3.70
+- [x] Bajar etiquetas 9mm (padding-top: 1.7mm → 10.7mm)
+- [x] Mover etiquetas 3mm a la derecha (padding-left: 0mm → 3mm)
+- [x] Incrementar versión a 3.70
