@@ -3371,3 +3371,11 @@
 - [x] Auditar y corregir: avisos.leidosPorUsuario filtra por proyecto
 - [x] Frontend: proyectoId obligatorio en Bienvenida, Avisos y Configuración
 - [x] Incrementar versión a 3.62
+
+## UX Configuración v3.63 (Febrero 2026)
+- [ ] Mover sección Gestión de Avisos más arriba en Configuración (después del título)
+- [ ] Incrementar versión a 3.63
+
+## UX Configuración v3.63 (Febrero 2026)
+- [x] Agregar botón de acceso rápido a "Gestión de Avisos" en la parte superior de Configuración
+- [x] Incrementar versión a 3.63

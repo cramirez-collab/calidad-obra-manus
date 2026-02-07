@@ -298,6 +298,20 @@ export default function Configuracion() {
           </div>
         </div>
 
+        {/* Botón acceso rápido a Avisos - Solo admin/superadmin */}
+        {isAdmin && (
+          <Button
+            variant="outline"
+            className="w-full border-[#002C63] text-[#002C63] hover:bg-[#002C63]/10 font-medium"
+            onClick={() => {
+              document.getElementById('gestion-avisos')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            <Megaphone className="h-4 w-4 mr-2" />
+            Ir a Gestión de Avisos
+          </Button>
+        )}
+
         {/* Grid de configuraciones */}
         <div className="grid gap-3 sm:gap-4">
           {visibleConfigs.map(config => {
@@ -487,7 +501,9 @@ export default function Configuracion() {
 
         {/* Sección Gestión de Avisos - Solo admin/superadmin */}
         {isAdmin && (
-          <AvisosManager proyectoId={selectedProjectId} />
+          <div id="gestion-avisos">
+            <AvisosManager proyectoId={selectedProjectId} />
+          </div>
         )}
 
       </div>
