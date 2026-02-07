@@ -3349,3 +3349,6 @@
 - [x] Corregir número de versión para que muestre v3.59 correctamente
 - [x] Eliminar fórmula confusa (÷60) y usar versión directa como string
 - [x] Unificar versión en shared/version.ts como única fuente de verdad (main.tsx, index.ts, sw.js)
+
+## Bug Edición Asignado v3.59 (Febrero 2026)
+- [x] BUG: Al editar un ítem y cambiar el "Asignado a", el cambio no se refleja en Bienvenida - CORREGIDO: Bienvenida.tsx ahora prioriza asignadoANombre > especialidadResidenteNombre > residenteNombre

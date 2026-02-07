@@ -584,10 +584,10 @@ export default function Bienvenida() {
                         </div>
                         <p className="text-xs sm:text-sm truncate mt-0.5 text-[#2E2E2E]">{item.titulo}</p>
                         <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-[#6E6E6E] mt-1 flex-wrap">
-                          {/* Residente de la especialidad (quien debe corregir) */}
-                          {(item.especialidadResidenteNombre || item.residenteNombre) && (
-                            <span className="font-semibold text-[#02B381] bg-[#02B381]/10 px-1.5 py-0.5 rounded" title="Residente responsable">
-                              {(item.especialidadResidenteNombre || item.residenteNombre || '').split(' ').slice(0, 2).join(' ')}
+                          {/* Residente asignado (prioridad: asignadoA > especialidadResidente > residente) */}
+                          {(item.asignadoANombre || item.especialidadResidenteNombre || item.residenteNombre) && (
+                            <span className="font-semibold text-[#02B381] bg-[#02B381]/10 px-1.5 py-0.5 rounded" title="Residente asignado">
+                              {(item.asignadoANombre || item.especialidadResidenteNombre || item.residenteNombre || '').split(' ').slice(0, 2).join(' ')}
                             </span>
                           )}
                           {item.ubicacion && (

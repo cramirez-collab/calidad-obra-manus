@@ -1,0 +1,80 @@
+{
+  "query": "SELECT i.id, i.codigo, i.titulo, i.asignadoAId, u1.name as asignadoNombre, i.residenteId, u2.name as residenteNombre, i.especialidadId FROM items i LEFT JOIN users u1 ON i.asignadoAId = u1.id LEFT JOIN users u2 ON i.residenteId = u2.id WHERE i.numeroInterno IN (19, 20, 21, 22, 23) ORDER BY i.numeroInterno;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT i.id, i.codigo, i.titulo, i.asignadoAId, u1.name as asignadoNombre, i.residenteId, u2.name as residenteNombre, i.especialidadId FROM items i LEFT JOIN users u1 ON i.asignadoAId = u1.id LEFT JOIN users u2 ON i.residenteId = u2.id WHERE i.numeroInterno IN (19, 20, 21, 22, 23) ORDER BY i.numeroInterno;",
+  "rows": [
+    {
+      "id": "1290019",
+      "codigo": "Hidalma-VNQ86J",
+      "titulo": "Entrecalle",
+      "asignadoAId": "NULL",
+      "asignadoNombre": "NULL",
+      "residenteId": "721649",
+      "residenteNombre": "Estefany Sanchez",
+      "especialidadId": "120001"
+    },
+    {
+      "id": "1290020",
+      "codigo": "Hidalma-HGSXEQ",
+      "titulo": "Pasta descuadre",
+      "asignadoAId": "NULL",
+      "asignadoNombre": "NULL",
+      "residenteId": "721649",
+      "residenteNombre": "Estefany Sanchez",
+      "especialidadId": "210001"
+    },
+    {
+      "id": "1290021",
+      "codigo": "Hidalma-BQ4ZWP",
+      "titulo": "Remate de pasta",
+      "asignadoAId": "NULL",
+      "asignadoNombre": "NULL",
+      "residenteId": "721649",
+      "residenteNombre": "Estefany Sanchez",
+      "especialidadId": "210001"
+    },
+    {
+      "id": "1350030",
+      "codigo": "Hidalma-24QRJV",
+      "titulo": "Desnivel en piso",
+      "asignadoAId": "1470049",
+      "asignadoNombre": "Esteban Guerrero ",
+      "residenteId": "1",
+      "residenteNombre": "Carlos Ramirez",
+      "especialidadId": "90002"
+    },
+    {
+      "id": "1350001",
+      "codigo": "OQC-KFJVFT",
+      "titulo": "Test Item con Base64",
+      "asignadoAId": "NULL",
+      "asignadoNombre": "NULL",
+      "residenteId": "1",
+      "residenteNombre": "Carlos Ramirez",
+      "especialidadId": "NULL"
+    },
+    {
+      "id": "1350031",
+      "codigo": "Hidalma-JGTM79",
+      "titulo": "Cancel desalineado",
+      "asignadoAId": "1530085",
+      "asignadoNombre": "Pablo Mercado",
+      "residenteId": "1",
+      "residenteNombre": "Carlos Ramirez",
+      "especialidadId": "150001"
+    },
+    {
+      "id": "1350002",
+      "codigo": "OQC-4JHBEL",
+      "titulo": "Test Duplicado",
+      "asignadoAId": "NULL",
+      "asignadoNombre": "NULL",
+      "residenteId": "1",
+      "residenteNombre": "Carlos Ramirez",
+      "especialidadId": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\ttitulo\tasignadoAId\tasignadoNombre\tresidenteId\tresidenteNombre\tespecialidadId\n1290019\tHidalma-VNQ86J\tEntrecalle\tNULL\tNULL\t721649\tEstefany Sanchez\t120001\n1290020\tHidalma-HGSXEQ\tPasta descuadre\tNULL\tNULL\t721649\tEstefany Sanchez\t210001\n1290021\tHidalma-BQ4ZWP\tRemate de pasta\tNULL\tNULL\t721649\tEstefany Sanchez\t210001\n1350030\tHidalma-24QRJV\tDesnivel en piso\t1470049\tEsteban Guerrero \t1\tCarlos Ramirez\t90002\n1350001\tOQC-KFJVFT\tTest Item con Base64\tNULL\tNULL\t1\tCarlos Ramirez\tNULL\n1350031\tHidalma-JGTM79\tCancel desalineado\t1530085\tPablo Mercado\t1\tCarlos Ramirez\t150001\n1350002\tOQC-4JHBEL\tTest Duplicado\tNULL\tNULL\t1\tCarlos Ramirez\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}
