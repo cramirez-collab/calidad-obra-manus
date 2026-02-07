@@ -389,7 +389,7 @@ export default function Bienvenida() {
                 >
                   <Megaphone className="h-5 w-5 text-[#002C63]" />
                   {(avisosNoLeidos ?? 0) > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-sm animate-pulse">
+                    <span className="absolute -top-1 -right-1 z-50 h-5 min-w-[20px] px-1 flex items-center justify-center text-[11px] font-bold text-white bg-red-600 rounded-full shadow-lg border-2 border-white animate-pulse">
                       {avisosNoLeidos}
                     </span>
                   )}

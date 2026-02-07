@@ -287,30 +287,29 @@ export default function Configuracion() {
   return (
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
-        {/* Header compacto */}
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Settings className="h-5 w-5 text-primary" />
+        {/* Header - Avisos como acceso principal */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-[#002C63]/10 flex items-center justify-center">
+              <Megaphone className="h-5 w-5 text-[#002C63]" />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-semibold">Configuración</h1>
+              <p className="text-xs text-muted-foreground">Ajustes del sistema</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg sm:text-xl font-semibold">Configuración</h1>
-            <p className="text-xs text-muted-foreground">Ajustes del sistema</p>
-          </div>
+          {isAdmin && (
+            <Button
+              className="bg-[#002C63] hover:bg-[#002C63]/90 text-white font-medium"
+              onClick={() => {
+                document.getElementById('gestion-avisos')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              <Megaphone className="h-4 w-4 mr-2" />
+              Avisos
+            </Button>
+          )}
         </div>
-
-        {/* Botón acceso rápido a Avisos - Solo admin/superadmin */}
-        {isAdmin && (
-          <Button
-            variant="outline"
-            className="w-full border-[#002C63] text-[#002C63] hover:bg-[#002C63]/10 font-medium"
-            onClick={() => {
-              document.getElementById('gestion-avisos')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-          >
-            <Megaphone className="h-4 w-4 mr-2" />
-            Ir a Gestión de Avisos
-          </Button>
-        )}
 
         {/* Grid de configuraciones */}
         <div className="grid gap-3 sm:gap-4">

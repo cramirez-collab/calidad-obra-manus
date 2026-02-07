@@ -3379,3 +3379,8 @@
 ## UX Configuración v3.63 (Febrero 2026)
 - [x] Agregar botón de acceso rápido a "Gestión de Avisos" en la parte superior de Configuración
 - [x] Incrementar versión a 3.63
+
+## UX Simplificación v3.64 (Febrero 2026)
+- [x] Quitar ícono engrane de Configuración, reemplazar por Megaphone + botón Avisos
+- [x] Corregir badges de notificación: z-50, shadow-lg, border-2 border-white al frente
+- [x] Incrementar versión a 3.64
