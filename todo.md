@@ -3474,3 +3474,8 @@
 ## OBJETIVA estilo logo en etiquetas v3.75
 - [x] OBJETIVA más grande (7pt → 9.5pt bold 900)
 - [x] Estilo logo corporativo: OBJETIV en azul #002C63 + A en verde #02B381
+
+## Tooltip usuarios en línea v3.76
+- [x] Al pasar mouse sobre banner "X en línea" mostrar lista de usuarios conectados
+- [x] Mostrar nombre + especialidad de cada usuario en línea
+- [x] Incluir empresa del usuario (nombre — empresa, especialidad debajo)

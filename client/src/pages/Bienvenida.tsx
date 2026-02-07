@@ -466,25 +466,47 @@ export default function Bienvenida() {
 
         {/* Indicador de Usuarios EN LÍNEA - Heartbeat BD */}
         {usersCount > 0 && (
-          <button
-            className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 hover:from-emerald-100 hover:to-teal-100 transition-all cursor-pointer shadow-sm"
-            onClick={() => {
-              if (isAdmin) {
-                handleDownloadEnLineaPDF();
-              } else {
-                toast.info(`${usersCount} usuarios en línea ahora`);
-              }
-            }}
-          >
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-            </span>
-            <span className="text-sm font-bold text-emerald-700">{usersCount} en línea</span>
-            {isAdmin && (
-              <span className="text-[10px] text-emerald-500 ml-1">(tap para PDF)</span>
-            )}
-          </button>
+          <div className="relative group">
+            <button
+              className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 hover:from-emerald-100 hover:to-teal-100 transition-all cursor-pointer shadow-sm"
+              onClick={() => {
+                if (isAdmin) {
+                  handleDownloadEnLineaPDF();
+                } else {
+                  toast.info(`${usersCount} usuarios en línea ahora`);
+                }
+              }}
+            >
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              <span className="text-sm font-bold text-emerald-700">{usersCount} en línea</span>
+              {isAdmin && (
+                <span className="text-[10px] text-emerald-500 ml-1">(tap para PDF)</span>
+              )}
+            </button>
+            {/* Tooltip con lista de usuarios al hover */}
+            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 z-50 hidden group-hover:block w-72 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-lg shadow-xl p-2">
+              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-2 pb-1.5 border-b border-slate-100 mb-1">Usuarios en línea</div>
+              {connectedUsers.map((u: any) => (
+                <div key={u.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-50 text-xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-semibold text-slate-700 truncate">
+                      {u.name}{u.empresaNombre ? ` — ${u.empresaNombre}` : ''}
+                    </span>
+                    {u.especialidadNombre && (
+                      <span className="text-[10px] text-slate-400 truncate">{u.especialidadNombre}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {connectedUsers.length === 0 && (
+                <div className="text-xs text-slate-400 px-2 py-1">Cargando...</div>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Filtros de estado - Card con botones bien espaciados */}

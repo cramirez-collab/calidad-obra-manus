@@ -2622,6 +2622,8 @@ export const appRouter = router({
             role: u.role,
             rolEnProyecto: u.rolEnProyecto,
             lastActiveAt: u.lastActiveAt,
+            empresaNombre: u.empresaNombre || null,
+            especialidadNombre: u.especialidadNombre || null,
           })),
         };
       }),

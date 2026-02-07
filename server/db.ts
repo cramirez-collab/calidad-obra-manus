@@ -5186,12 +5186,16 @@ export async function getUsuariosEnLinea(proyectoId: number, minutosUmbral: numb
       fotoUrl: users.fotoUrl,
       lastActiveAt: users.lastActiveAt,
       rolEnProyecto: proyectoUsuarios.rolEnProyecto,
+      empresaNombre: empresas.nombre,
+      especialidadNombre: especialidades.nombre,
     })
     .from(users)
     .innerJoin(proyectoUsuarios, and(
       eq(proyectoUsuarios.usuarioId, users.id),
       eq(proyectoUsuarios.proyectoId, proyectoId)
     ))
+    .leftJoin(empresas, eq(empresas.id, users.empresaId))
+    .leftJoin(especialidades, eq(especialidades.id, empresas.especialidadId))
     .where(and(
       eq(users.activo, true),
       sql`${users.lastActiveAt} >= ${umbral}`
