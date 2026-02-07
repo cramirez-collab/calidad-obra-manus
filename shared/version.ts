@@ -1,23 +1,23 @@
 /**
- * VERSIÓN CENTRALIZADA DE LA APLICACIÓN
+ * VERSIÓN CENTRALIZADA DE LA APLICACIÓN - ÚNICA FUENTE DE VERDAD
  * 
- * Este archivo es la ÚNICA fuente de verdad para la versión de la app.
- * Se usa en: Header, Service Worker, PWA, y verificación de actualizaciones.
+ * ⚠️ ESTE ES EL ÚNICO LUGAR DONDE SE DEFINE LA VERSIÓN.
+ * NO definir versiones en main.tsx, index.ts, ni ningún otro archivo.
  * 
- * IMPORTANTE: Incrementar este número con cada cambio significativo.
+ * IMPORTANTE: Incrementar APP_VERSION con cada cambio significativo.
  */
 
-// Versión principal de la aplicación (formato: MAJOR.MINOR)
-export const APP_VERSION = "2.85";
+// Versión de la aplicación (formato directo, sin fórmulas)
+export const APP_VERSION = "3.59";
 
-// Número de build para el Service Worker (incrementar con cada deploy)
-export const SW_BUILD = 85;
+// Número interno para comparación y forzar actualizaciones (incrementar con cada deploy)
+export const VERSION_NUMBER = 359;
 
-// Timestamp de la última actualización (se actualiza automáticamente)
-export const BUILD_TIMESTAMP = Date.now();
-
-// Versión completa para mostrar en UI
+// Versión para mostrar en UI
 export const FULL_VERSION = `v${APP_VERSION}`;
 
-// Versión para comparación numérica
-export const VERSION_NUMBER = parseFloat(APP_VERSION);
+// Número de build para el Service Worker (incrementar con cada deploy)
+export const SW_BUILD = VERSION_NUMBER;
+
+// Timestamp de la última actualización
+export const BUILD_TIMESTAMP = Date.now();

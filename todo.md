@@ -3344,3 +3344,8 @@
 - [x] Edición de ítem desde lista de ítems debe reflejar cambios en bienvenida y campo asignado
 - [x] BUG: Residente no puede subir fotos después (botones bloqueados) - CORREGIDO: canAddFotoDespues incluye 'residente', backend usa canUploadFotoProcedure
 - [x] BUG: Residente no puede usar @mentions en comentarios - CORREGIDO: Nuevo endpoint users.listForMentions (protectedProcedure) reemplaza users.list (adminProcedure) en ItemChat y ItemDetail
+
+## Corrección Sistema de Versiones v3.59 (Febrero 2026)
+- [x] Corregir número de versión para que muestre v3.59 correctamente
+- [x] Eliminar fórmula confusa (÷60) y usar versión directa como string
+- [x] Unificar versión en shared/version.ts como única fuente de verdad (main.tsx, index.ts, sw.js)

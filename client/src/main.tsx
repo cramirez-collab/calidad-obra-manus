@@ -1,5 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
+import { VERSION_NUMBER, FULL_VERSION } from '@shared/version';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
@@ -11,26 +12,17 @@ import { SyncManager } from "./components/SyncManager";
 import "./index.css";
 
 // ============================================
-// 🔴 VERSIÓN v3.53 - ObjetivaQC 🔴
+// 🔴 VERSIÓN - ObjetivaQC 🔴
 // ============================================
-// MANDATORIO: objetivaqc.com (PERMANENTE)
-// SIEMPRE LA ÚLTIMA VERSIÓN - OBLIGATORIO
-// Fix: Términos y Condiciones visibles en móvil
+// ÚNICA FUENTE DE VERDAD: shared/version.ts
+// NO definir versiones aquí, usar VERSION_NUMBER y FULL_VERSION
 // ============================================
-const CURRENT_VERSION = 217;
-
-// ============================================
-// 🎯 FORMATO DE VERSIÓN UNIFICADO 🎯
-// ============================================
-// Factor de división: 60 (ej: 208/60 = 3.47)
-function formatVersion(internalVersion: number): string {
-  return 'v' + (internalVersion / 60).toFixed(2);
-}
+const CURRENT_VERSION = VERSION_NUMBER;
 
 // Exponer globalmente para uso en otros componentes
 (window as any).OQC_VERSION = CURRENT_VERSION;
-(window as any).OQC_FORMAT_VERSION = formatVersion;
-(window as any).OQC_DISPLAY_VERSION = formatVersion(CURRENT_VERSION);
+(window as any).OQC_FORMAT_VERSION = () => FULL_VERSION;
+(window as any).OQC_DISPLAY_VERSION = FULL_VERSION;
 
 // ============================================
 // 🔔 SISTEMA DE NOTIFICACIÓN DE VERSIÓN 🔔

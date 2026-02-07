@@ -10,6 +10,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { initializeSocket } from "../socket";
 import { initializeCronJobs } from "../cronJobs";
+import { VERSION_NUMBER, FULL_VERSION } from "../../shared/version";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -49,17 +50,14 @@ async function startServer() {
   app.use(exportRoutes);
   
   // Endpoint de versión para actualización forzada
-  // MANDATORIO: Todos los usuarios siempre en la última versión
-  // Factor de división: 60 (ej: 148/60 = 2.47, 208/60 = 3.47)
-  const CURRENT_APP_VERSION = 208;
+  // ÚNICA FUENTE DE VERDAD: shared/version.ts
   app.get('/api/version', (req, res) => {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
-    const displayVersion = 'v' + (CURRENT_APP_VERSION / 60).toFixed(2);
     res.json({
-      version: CURRENT_APP_VERSION,
-      displayVersion: displayVersion,
+      version: VERSION_NUMBER,
+      displayVersion: FULL_VERSION,
       timestamp: Date.now(),
       forceUpdate: true
     });
