@@ -370,10 +370,10 @@ export default function GenerarQR() {
               text-transform: uppercase !important;
               line-height: 1.0 !important;
             }
-            .logo .objetiv {
+            .logo .objeti {
               color: #002C63 !important;
             }
-            .logo .logo-a {
+            .logo .logo-va {
               color: #02B381 !important;
             }
             
@@ -458,7 +458,7 @@ export default function GenerarQR() {
             <div class="qr-info">
               <div class="codigo">${item.codigo}</div>
               ${item.titulo ? `<div class="titulo">${item.titulo}</div>` : ''}
-              <div class="logo"><span class="objetiv">OBJETIV</span><span class="logo-a">A</span></div>
+              <div class="logo"><span class="objeti">OBJETI</span><span class="logo-va">VA</span></div>
               <div class="consecutivo">#${item.consecutivo || 0}</div>
             </div>
           </div>
