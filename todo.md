@@ -3441,3 +3441,8 @@
 - [x] Bajar etiquetas 9mm (padding-top: 1.7mm → 10.7mm)
 - [x] Mover etiquetas 3mm a la derecha (padding-left: 0mm → 3mm)
 - [x] Incrementar versión a 3.70
+
+## Recalibración completa etiquetas Office Depot 64413 v3.71
+- [x] Investigar especificaciones exactas del fabricante (SKU 64413 = Avery 5160)
+- [x] Reescribir cuadrícula con CSS Grid y posicionamiento absoluto preciso
+- [x] Incrementar versión a 3.71

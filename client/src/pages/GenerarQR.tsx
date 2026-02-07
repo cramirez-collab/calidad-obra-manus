@@ -162,14 +162,23 @@ export default function GenerarQR() {
       return;
     }
 
-    // Diseño para etiquetas Office Depot 64413 (compatible Avery 5160)
-    // Hoja carta: 8.5" x 11" = 215.9mm x 279.4mm
-    // Etiqueta: 6.7cm x 2.5cm (2-5/8" x 1") = 66.675mm x 25.4mm
-    // 30 etiquetas por hoja (3 columnas x 10 filas)
-    // Márgenes originales: Superior 14.7mm, Izquierdo 4.76mm
-    // Ajuste calibrado: Subir 13mm, Izquierda 5mm, luego bajar 9mm, derecha 3mm
-    // Márgenes ajustados: Superior 10.7mm, Izquierdo 3mm
-    // Espacio horizontal entre etiquetas: 3.175mm (1/8")
+    // ============================================
+    // ESPECIFICACIONES EXACTAS: Office Depot 64413 = Avery 5160
+    // ============================================
+    // Hoja:     8.5" x 11" (Letter) = 215.9mm x 279.4mm
+    // Etiqueta: 2-5/8" x 1" = 66.675mm x 25.4mm
+    // Layout:   3 columnas x 10 filas = 30 etiquetas/hoja
+    // Margen superior:  0.5"   = 12.7mm
+    // Margen inferior:  0.5"   = 12.7mm
+    // Margen izquierdo: 3/16"  = 4.7625mm
+    // Margen derecho:   3/16"  = 4.7625mm
+    // Gap horizontal:   1/8"   = 3.175mm
+    // Gap vertical:     0"     = 0mm (se tocan)
+    // ============================================
+    // Verificación:
+    //   Ancho: 4.7625 + 66.675 + 3.175 + 66.675 + 3.175 + 66.675 + 4.7625 = 215.9mm ✓
+    //   Alto:  12.7 + (25.4 * 10) + 12.7 = 279.4mm ✓
+    // ============================================
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -185,7 +194,10 @@ export default function GenerarQR() {
               margin: 0;
               padding: 0;
             }
-            body {
+            html, body {
+              width: 215.9mm;
+              margin: 0;
+              padding: 0;
               font-family: Arial, sans-serif;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
@@ -193,14 +205,24 @@ export default function GenerarQR() {
             .page {
               width: 215.9mm;
               height: 279.4mm;
-              padding: 10.7mm 4.76mm 12.7mm 3mm;
-              display: flex;
-              flex-wrap: wrap;
-              align-content: flex-start;
+              position: relative;
               page-break-after: always;
+              overflow: hidden;
             }
             .page:last-child {
               page-break-after: auto;
+            }
+            /* Grid de etiquetas con posicionamiento absoluto preciso */
+            .label-grid {
+              position: absolute;
+              top: 12.7mm;
+              left: 4.7625mm;
+              width: calc(215.9mm - 4.7625mm - 4.7625mm);
+              display: grid;
+              grid-template-columns: 66.675mm 66.675mm 66.675mm;
+              grid-template-rows: repeat(10, 25.4mm);
+              column-gap: 3.175mm;
+              row-gap: 0mm;
             }
             .qr-card {
               width: 66.675mm;
@@ -211,16 +233,8 @@ export default function GenerarQR() {
               justify-content: flex-start;
               background: white;
               overflow: hidden;
-              padding: 1mm 2mm;
-              gap: 2mm;
-            }
-            /* Espacio horizontal entre columnas */
-            .qr-card:nth-child(3n+1),
-            .qr-card:nth-child(3n+2) {
-              margin-right: 3.175mm;
-            }
-            .qr-card:nth-child(3n) {
-              margin-right: 0;
+              padding: 1mm 1.5mm;
+              gap: 1.5mm;
             }
             .qr-card img {
               width: 21mm;
@@ -270,15 +284,9 @@ export default function GenerarQR() {
               width: 66.675mm;
               height: 25.4mm;
             }
-            .empty-cell:nth-child(3n+1),
-            .empty-cell:nth-child(3n+2) {
-              margin-right: 3.175mm;
-            }
-            .empty-cell:nth-child(3n) {
-              margin-right: 0;
-            }
             @media print {
-              body {
+              html, body {
+                width: 215.9mm;
                 margin: 0;
                 padding: 0;
               }
@@ -330,7 +338,7 @@ export default function GenerarQR() {
         cells.push('<div class="empty-cell"></div>');
       }
       
-      pages.push(`<div class="page">${cells.join('')}</div>`);
+      pages.push(`<div class="page"><div class="label-grid">${cells.join('')}</div></div>`);
     }
     
     return pages.join('');
