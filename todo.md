@@ -3465,3 +3465,8 @@
 - [x] Separar código, OBJETIVA y consecutivo con más espacio (margin-bottom/top entre elementos)
 - [x] Consecutivo más grande (9.5pt → 12pt)
 - [x] Todo dentro del mismo recuadro de etiqueta 25.4mm
+
+## Rediseño estético texto etiquetas QR v3.74
+- [x] OBJETIVA más grande y visible (4.5pt → 7pt con letter-spacing)
+- [x] Redistribuir con space-between vertical: código arriba, OBJETIVA centro, consecutivo 13pt abajo
+- [x] Todo legible y funcional dentro del recuadro 25.4mm x 66.675mm

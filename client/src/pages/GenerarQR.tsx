@@ -293,6 +293,10 @@ export default function GenerarQR() {
             /* ========================================== */
             /* CELDA DE ETIQUETA - TAMAÑO FIJO ABSOLUTO   */
             /* ========================================== */
+            /* ========================================== */
+            /* ETIQUETA: QR izquierda + info derecha       */
+            /* Altura total: 25.4mm, ancho: 66.675mm       */
+            /* ========================================== */
             .qr-card {
               width: 66.675mm !important;
               height: 25.4mm !important;
@@ -305,66 +309,74 @@ export default function GenerarQR() {
               align-items: center !important;
               justify-content: flex-start !important;
               overflow: hidden !important;
-              padding: 0.8mm 1.2mm !important;
-              gap: 1.2mm !important;
+              padding: 0.5mm 1mm !important;
+              gap: 1.5mm !important;
               background: transparent !important;
             }
             
             .qr-card img {
-              width: 21mm !important;
-              height: 21mm !important;
-              min-width: 21mm !important;
-              max-width: 21mm !important;
-              min-height: 21mm !important;
-              max-height: 21mm !important;
+              width: 22mm !important;
+              height: 22mm !important;
+              min-width: 22mm !important;
+              max-width: 22mm !important;
+              min-height: 22mm !important;
+              max-height: 22mm !important;
               object-fit: contain !important;
               flex-shrink: 0 !important;
               margin: 0 !important;
               padding: 0 !important;
             }
             
+            /* Columna derecha: distribuye verticalmente */
             .qr-info {
               display: flex !important;
               flex-direction: column !important;
-              justify-content: center !important;
+              justify-content: space-between !important;
+              align-items: flex-start !important;
               overflow: hidden !important;
               flex: 1 !important;
               min-width: 0 !important;
-              padding: 0 !important;
+              height: 22mm !important;
+              padding: 0.3mm 0 !important;
               margin: 0 !important;
             }
             
+            /* Código aleatorio - arriba */
             .codigo {
               font-size: 7pt !important;
               font-weight: bold !important;
               color: #002C63 !important;
-              letter-spacing: 0.3px !important;
+              letter-spacing: 0.2px !important;
               word-break: break-all !important;
-              line-height: 1.1 !important;
-              margin-bottom: 1mm !important;
+              line-height: 1.15 !important;
             }
-            .consecutivo {
-              font-size: 12pt !important;
-              font-weight: bold !important;
-              color: #02B381 !important;
-              line-height: 1.0 !important;
-              margin-top: 0.5mm !important;
-            }
+            
+            /* Título del ítem (opcional) */
             .titulo {
               font-size: 5pt !important;
-              color: #333 !important;
+              color: #555 !important;
               overflow: hidden !important;
               text-overflow: ellipsis !important;
               white-space: nowrap !important;
-              line-height: 1.15 !important;
-              margin-top: 0.3mm !important;
-              margin-bottom: 0.3mm !important;
+              line-height: 1.1 !important;
+              max-width: 100% !important;
             }
+            
+            /* OBJETIVA - centro, visible y claro */
             .logo {
-              font-size: 4.5pt !important;
+              font-size: 7pt !important;
               color: #02B381 !important;
               font-weight: bold !important;
-              margin-top: 0.8mm !important;
+              letter-spacing: 0.8px !important;
+              text-transform: uppercase !important;
+            }
+            
+            /* Consecutivo - abajo, grande y destacado */
+            .consecutivo {
+              font-size: 13pt !important;
+              font-weight: 900 !important;
+              color: #02B381 !important;
+              line-height: 1.0 !important;
             }
             
             .empty-cell {
