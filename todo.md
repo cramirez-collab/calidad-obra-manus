@@ -3413,3 +3413,12 @@
 - [x] Mostrar solo usuarios con la app abierta en este momento (useSocket)
 - [x] Tap para PDF con lista de quién está conectado ahora
 - [x] Incrementar versión a 3.68
+
+## Usuarios En Línea via Heartbeat BD v3.69 (Febrero 2026)
+- [x] Crear columna lastActiveAt en tabla users
+- [x] Endpoint tRPC heartbeat que actualiza lastActiveAt del usuario
+- [x] Endpoint tRPC enLinea que devuelve usuarios con lastActiveAt < 5 min
+- [x] Frontend: enviar heartbeat cada 2 min automáticamente
+- [x] Frontend: mostrar barra "X en línea" usando query tRPC (no socket)
+- [x] Tap genera PDF con lista de conectados (admin/superadmin)
+- [x] Implementado en v3.68 (sin incremento adicional)

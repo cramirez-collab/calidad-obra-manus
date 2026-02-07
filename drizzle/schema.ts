@@ -28,6 +28,7 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  lastActiveAt: timestamp("lastActiveAt"), // Heartbeat: última actividad en la app
 });
 
 export type User = typeof users.$inferSelect;

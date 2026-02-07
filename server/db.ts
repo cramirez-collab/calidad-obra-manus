@@ -5160,3 +5160,42 @@ export async function getAvisosLeidosPorUsuario(usuarioId: number, proyectoId: n
     .where(and(eq(avisosLecturas.usuarioId, usuarioId), inArray(avisosLecturas.avisoId, avisoIds)));
   return result.map(r => r.avisoId);
 }
+
+
+// ============================================
+// HEARTBEAT - Usuarios En Línea
+// ============================================
+
+export async function updateHeartbeat(userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users)
+    .set({ lastActiveAt: new Date() })
+    .where(eq(users.id, userId));
+}
+
+export async function getUsuariosEnLinea(proyectoId: number, minutosUmbral: number = 5) {
+  const db = await getDb();
+  if (!db) return [];
+  const umbral = new Date(Date.now() - minutosUmbral * 60 * 1000);
+  const result = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      role: users.role,
+      fotoUrl: users.fotoUrl,
+      lastActiveAt: users.lastActiveAt,
+      rolEnProyecto: proyectoUsuarios.rolEnProyecto,
+    })
+    .from(users)
+    .innerJoin(proyectoUsuarios, and(
+      eq(proyectoUsuarios.usuarioId, users.id),
+      eq(proyectoUsuarios.proyectoId, proyectoId)
+    ))
+    .where(and(
+      eq(users.activo, true),
+      sql`${users.lastActiveAt} >= ${umbral}`
+    ))
+    .orderBy(desc(users.lastActiveAt));
+  return result;
+}

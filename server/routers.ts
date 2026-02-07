@@ -2579,6 +2579,31 @@ export const appRouter = router({
           email: up.usuario?.email || '',
         }));
       }),
+
+    // Heartbeat: registra actividad del usuario
+    heartbeat: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateHeartbeat(ctx.user.id);
+        return { ok: true };
+      }),
+
+    // Usuarios en línea (activos en los últimos 5 min via heartbeat)
+    enLinea: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        const enLinea = await db.getUsuariosEnLinea(input.proyectoId, 5);
+        return {
+          total: enLinea.length,
+          usuarios: enLinea.map(u => ({
+            id: u.id,
+            name: u.name || 'Sin nombre',
+            role: u.role,
+            rolEnProyecto: u.rolEnProyecto,
+            lastActiveAt: u.lastActiveAt,
+          })),
+        };
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

@@ -43,8 +43,8 @@ import {
 import { useLocation, Redirect } from "wouter";
 import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
-import { useSocket } from '@/hooks/useSocket';
 // jsPDF se importa dinámicamente para evitar conflicto con React context
+// Heartbeat via tRPC en vez de socket para usuarios en línea
 
 type FilterType = "todos" | "foto" | "aprobar" | "corregir";
 
@@ -56,8 +56,25 @@ export default function Bienvenida() {
   const { selectedProjectId, isLoadingProjects } = useProject();
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
-  // Usuarios EN LÍNEA en tiempo real (socket)
-  const { isConnected, usersCount, connectedUsers } = useSocket();
+  // Heartbeat: registra actividad cada 2 min
+  const heartbeatMut = trpc.avisos.heartbeat.useMutation();
+  useEffect(() => {
+    if (!selectedProjectId) return;
+    // Enviar heartbeat inmediato al entrar
+    heartbeatMut.mutate({ proyectoId: selectedProjectId });
+    const interval = setInterval(() => {
+      heartbeatMut.mutate({ proyectoId: selectedProjectId });
+    }, 2 * 60 * 1000); // cada 2 min
+    return () => clearInterval(interval);
+  }, [selectedProjectId]);
+
+  // Usuarios en línea (heartbeat BD, últimos 5 min)
+  const enLineaQuery = trpc.avisos.enLinea.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId, refetchInterval: 30_000 }
+  );
+  const usersCount = enLineaQuery.data?.total ?? 0;
+  const connectedUsers = enLineaQuery.data?.usuarios ?? [];
 
   const handleDownloadEnLineaPDF = async () => {
     if (!connectedUsers.length) return;
@@ -447,8 +464,8 @@ export default function Bienvenida() {
           </div>
         </div>
 
-        {/* Indicador de Usuarios EN LÍNEA - Socket en tiempo real */}
-        {isConnected && usersCount > 0 && (
+        {/* Indicador de Usuarios EN LÍNEA - Heartbeat BD */}
+        {usersCount > 0 && (
           <button
             className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 hover:from-emerald-100 hover:to-teal-100 transition-all cursor-pointer shadow-sm"
             onClick={() => {
