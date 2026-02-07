@@ -86,120 +86,143 @@
       data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
     
     <!-- ============================================ -->
-    <!-- SISTEMA DE ACTUALIZACIÓN OBLIGATORIA v67 (v2.23) -->
-    <!-- MANDATORIO: objetivaqc.com -->
-    <!-- FORZAR SIEMPRE LA ÚLTIMA VERSIÓN -->
-    <!-- NO PERMITIR VERSIONES ANTIGUAS -->
+    <!-- SISTEMA DE ACTUALIZACIÓN OBLIGATORIA v3.69   -->
+    <!-- VERSIÓN UNIFICADA: Debe coincidir con        -->
+    <!-- shared/version.ts VERSION_NUMBER = 369       -->
     <!-- ============================================ -->
     <script>
       (function() {
-        const REQUIRED_VERSION = 210;
+        // ⚠️ MANTENER SINCRONIZADO CON shared/version.ts
+        const REQUIRED_VERSION = 369;
+        const DISPLAY_VERSION = 'v3.69';
         const VERSION_KEY = 'oqc_app_version';
         const UPDATING_KEY = 'oqc_updating';
         
-        // Formato de versión profesional: Factor 60 (ej: 208/60 = 3.47)
         window.OQC_VERSION = REQUIRED_VERSION;
-        window.OQC_DISPLAY_VERSION = 'v' + (REQUIRED_VERSION / 60).toFixed(2);
+        window.OQC_DISPLAY_VERSION = DISPLAY_VERSION;
         
-        // Obtener versión almacenada
         const storedVersion = parseInt(localStorage.getItem(VERSION_KEY) || '0');
         const isUpdating = sessionStorage.getItem(UPDATING_KEY) === 'true';
         
-        console.log('[ACTUALIZACIÓN OBLIGATORIA] Versión requerida:', REQUIRED_VERSION, '| Versión local:', storedVersion);
+        console.log('[VERSION] Requerida:', REQUIRED_VERSION, '(' + DISPLAY_VERSION + ') | Local:', storedVersion);
         
         // FORZAR ACTUALIZACIÓN SI LA VERSIÓN ES DIFERENTE
         if (storedVersion !== REQUIRED_VERSION && !isUpdating) {
-          console.log('[ACTUALIZACIÓN OBLIGATORIA] ⚠️ VERSIÓN INCORRECTA - FORZANDO ACTUALIZACIÓN...');
+          console.log('[VERSION] Versión incorrecta - forzando actualización...');
           
-          // Marcar que estamos actualizando para evitar loop
           sessionStorage.setItem(UPDATING_KEY, 'true');
           
-          // Función de limpieza nuclear
-          (async function nuclearUpdate() {
+          (async function cleanUpdate() {
             try {
-              // 1. ELIMINAR TODOS LOS SERVICE WORKERS
+              // 1. Desregistrar Service Workers
               if ('serviceWorker' in navigator) {
                 const regs = await navigator.serviceWorker.getRegistrations();
-                console.log('[NUCLEAR] Eliminando', regs.length, 'Service Workers...');
                 for (const reg of regs) {
                   await reg.unregister();
                 }
+                console.log('[VERSION] ' + regs.length + ' SW desregistrados');
               }
               
-              // 2. ELIMINAR TODOS LOS CACHES
+              // 2. Limpiar caches
               if ('caches' in window) {
                 const names = await caches.keys();
-                console.log('[NUCLEAR] Eliminando', names.length, 'caches...');
-                await Promise.all(names.map(n => caches.delete(n)));
+                await Promise.all(names.map(function(n) { return caches.delete(n); }));
+                console.log('[VERSION] ' + names.length + ' caches eliminadas');
               }
               
-              // 3. PRESERVAR SOLO DATOS CRÍTICOS
-              const proyectoId = localStorage.getItem('selectedProjectId');
-              const offlineQueue = localStorage.getItem('oqc_offline_queue');
+              // 3. Preservar datos críticos
+              var proyectoId = localStorage.getItem('selectedProjectId');
+              var offlineQueue = localStorage.getItem('oqc_offline_queue');
               
-              // 4. LIMPIAR TODO EL STORAGE
+              // 4. Limpiar storage
               localStorage.clear();
               sessionStorage.clear();
               
-              // 5. RESTAURAR DATOS CRÍTICOS
+              // 5. Restaurar datos críticos
               if (proyectoId) localStorage.setItem('selectedProjectId', proyectoId);
               if (offlineQueue) localStorage.setItem('oqc_offline_queue', offlineQueue);
               
-              // 6. ESTABLECER NUEVA VERSIÓN
+              // 6. Establecer nueva versión
               localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
+              localStorage.setItem('oqc_installed_version', REQUIRED_VERSION.toString());
               sessionStorage.setItem(UPDATING_KEY, 'done');
               
-              // 7. FORZAR RECARGA DESDE SERVIDOR
-              console.log('[NUCLEAR] Recargando desde servidor...');
-              const timestamp = Date.now();
-              const random = Math.random().toString(36).substring(7);
-              window.location.replace(window.location.origin + '/?_nuclear=' + timestamp + '&_r=' + random);
+              // 7. Recargar limpio
+              console.log('[VERSION] Recargando...');
+              window.location.replace(window.location.origin + '/?_v=' + REQUIRED_VERSION + '&_t=' + Date.now());
               
             } catch (e) {
-              console.error('[NUCLEAR] Error:', e);
-              // Forzar recarga de todos modos
+              console.error('[VERSION] Error:', e);
               localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
+              localStorage.setItem('oqc_installed_version', REQUIRED_VERSION.toString());
               window.location.replace(window.location.origin + '/?_force=' + Date.now());
             }
           })();
           
-          // Detener ejecución mientras se actualiza
           return;
         }
         
-        // Limpiar flag de actualización si ya terminó
+        // Limpiar flag de actualización
         if (isUpdating || sessionStorage.getItem(UPDATING_KEY) === 'done') {
           sessionStorage.removeItem(UPDATING_KEY);
           localStorage.setItem(VERSION_KEY, REQUIRED_VERSION.toString());
-          console.log('[ACTUALIZACIÓN OBLIGATORIA] ✅ Actualización completada a v' + REQUIRED_VERSION);
+          localStorage.setItem('oqc_installed_version', REQUIRED_VERSION.toString());
+          console.log('[VERSION] Actualización completada: ' + DISPLAY_VERSION);
         }
         
-        // Verificar periódicamente que la versión sea correcta
+        // Verificar periódicamente contra el servidor
         setInterval(function() {
-          const currentStored = parseInt(localStorage.getItem(VERSION_KEY) || '0');
-          if (currentStored !== REQUIRED_VERSION) {
-            console.log('[VERIFICACIÓN] Versión incorrecta detectada, forzando actualización...');
-            localStorage.setItem(VERSION_KEY, '0');
-            window.location.reload();
-          }
-        }, 30000); // Verificar cada 30 segundos
+          fetch('/api/version?t=' + Date.now(), { cache: 'no-store' })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              if (data.version && data.version > REQUIRED_VERSION) {
+                console.log('[VERSION] Nueva versión en servidor: v' + data.version);
+                localStorage.setItem(VERSION_KEY, '0');
+                localStorage.setItem('oqc_installed_version', '0');
+                window.location.reload();
+              }
+            })
+            .catch(function() {});
+        }, 60000); // Verificar cada 60 segundos
         
       })();
     </script>
     
-    <!-- Register Service Worker (después de verificación de versión) -->
+    <!-- Register Service Worker -->
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
+        window.addEventListener('load', function() {
           navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
-            .then((registration) => {
-              console.log('[PWA] Service Worker registered:', registration.scope);
-              // Forzar actualización del SW
+            .then(function(registration) {
+              console.log('[SW] Registrado');
               registration.update();
+              // Si hay un SW esperando, activarlo inmediatamente
+              if (registration.waiting) {
+                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+              }
+              // Escuchar nuevos SW que se instalen
+              registration.addEventListener('updatefound', function() {
+                var newWorker = registration.installing;
+                if (newWorker) {
+                  newWorker.addEventListener('statechange', function() {
+                    if (newWorker.state === 'activated') {
+                      console.log('[SW] Nuevo SW activado, recargando...');
+                      window.location.reload();
+                    }
+                  });
+                }
+              });
             })
-            .catch((error) => {
-              console.log('[PWA] Service Worker registration failed:', error);
+            .catch(function(error) {
+              console.log('[SW] Error de registro:', error);
             });
+        });
+        
+        // Escuchar mensajes del SW
+        navigator.serviceWorker.addEventListener('message', function(event) {
+          if (event.data && event.data.type === 'SW_UPDATED') {
+            console.log('[SW] Actualizado a v' + event.data.version);
+          }
         });
       }
     </script>

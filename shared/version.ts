@@ -2,16 +2,17 @@
  * VERSIÓN CENTRALIZADA DE LA APLICACIÓN - ÚNICA FUENTE DE VERDAD
  * 
  * ⚠️ ESTE ES EL ÚNICO LUGAR DONDE SE DEFINE LA VERSIÓN.
- * NO definir versiones en main.tsx, index.ts, ni ningún otro archivo.
+ * NO definir versiones en main.tsx, index.ts, sw.js, ni ningún otro archivo.
  * 
  * IMPORTANTE: Incrementar APP_VERSION con cada cambio significativo.
+ * IMPORTANTE: Actualizar también sw.js y index.html con el mismo VERSION_NUMBER.
  */
 
 // Versión de la aplicación (formato directo, sin fórmulas)
-export const APP_VERSION = "3.68";
+export const APP_VERSION = "3.69";
 
 // Número interno para comparación y forzar actualizaciones (incrementar con cada deploy)
-export const VERSION_NUMBER = 368;
+export const VERSION_NUMBER = 369;
 
 // Versión para mostrar en UI
 export const FULL_VERSION = `v${APP_VERSION}`;

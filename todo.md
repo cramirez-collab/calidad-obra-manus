@@ -3422,3 +3422,17 @@
 - [x] Frontend: mostrar barra "X en línea" usando query tRPC (no socket)
 - [x] Tap genera PDF con lista de conectados (admin/superadmin)
 - [x] Implementado en v3.68 (sin incremento adicional)
+
+## Fix "Failed to Fetch" al iniciar sesión v3.69
+- [x] Diagnosticar causa del "failed to fetch" en login
+- [x] Corregir service worker para forzar actualización automática
+- [x] Eliminar caché obsoleto que causa módulos faltantes
+- [x] Asegurar que /api/trpc y /api/oauth no sean cacheados por SW
+- [x] Forzar skipWaiting + clients.claim para activación inmediata
+- [x] Verificar flujo completo de login sin errores
+- [x] Incrementar versión a 3.69
+
+## Ajuste posición de etiquetas QR v3.69
+- [x] Subir etiquetas 1.3 cm hacia arriba (padding-top: 14.7mm → 1.7mm)
+- [x] Mover etiquetas 5 mm a la izquierda (padding-left: 4.76mm → 0mm)
+- [x] Incrementar versión a 3.69
