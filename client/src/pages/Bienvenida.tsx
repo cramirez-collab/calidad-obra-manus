@@ -55,7 +55,7 @@ export default function Bienvenida() {
   
   // Avisos no leídos
   const { data: avisosNoLeidos } = trpc.avisos.noLeidos.useQuery(
-    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { proyectoId: selectedProjectId! },
     { enabled: !!selectedProjectId, refetchInterval: 30000 }
   );
   

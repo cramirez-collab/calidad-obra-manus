@@ -48,8 +48,9 @@ describe('Avisos DB helpers', () => {
     vi.clearAllMocks();
   });
 
-  it('createAviso debe retornar un id', async () => {
+  it('createAviso debe retornar un id y requiere proyectoId', async () => {
     const result = await db.createAviso({
+      proyectoId: 1,
       creadoPorId: 100,
       titulo: 'Nuevo aviso',
       contenido: 'Contenido',
@@ -57,6 +58,7 @@ describe('Avisos DB helpers', () => {
     });
     expect(result).toEqual({ id: 1 });
     expect(db.createAviso).toHaveBeenCalledWith({
+      proyectoId: 1,
       creadoPorId: 100,
       titulo: 'Nuevo aviso',
       contenido: 'Contenido',
@@ -64,7 +66,7 @@ describe('Avisos DB helpers', () => {
     });
   });
 
-  it('getAvisos debe retornar lista con creadoPorNombre', async () => {
+  it('getAvisos debe retornar lista filtrada por proyecto con creadoPorNombre', async () => {
     const avisos = await db.getAvisos(1);
     expect(avisos).toHaveLength(1);
     expect(avisos[0]).toHaveProperty('creadoPorNombre', 'Admin Test');
@@ -92,7 +94,7 @@ describe('Avisos DB helpers', () => {
     expect(db.marcarAvisoLeido).toHaveBeenCalledWith(1, 200);
   });
 
-  it('getAvisosNoLeidos debe retornar un número', async () => {
+  it('getAvisosNoLeidos debe retornar un número filtrado por proyecto', async () => {
     const count = await db.getAvisosNoLeidos(200, 1);
     expect(count).toBe(3);
   });
@@ -104,9 +106,10 @@ describe('Avisos DB helpers', () => {
     expect(lecturas[0]).toHaveProperty('usuarioRole', 'residente');
   });
 
-  it('getAvisosLeidosPorUsuario debe retornar array de IDs', async () => {
-    const ids = await db.getAvisosLeidosPorUsuario(200);
+  it('getAvisosLeidosPorUsuario debe retornar array de IDs filtrado por proyecto', async () => {
+    const ids = await db.getAvisosLeidosPorUsuario(200, 1);
     expect(ids).toEqual([1, 2]);
+    expect(db.getAvisosLeidosPorUsuario).toHaveBeenCalledWith(200, 1);
   });
 });
 

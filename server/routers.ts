@@ -2451,11 +2451,11 @@ export const appRouter = router({
 
   // ==================== AVISOS ====================
   avisos: router({
-    // Listar avisos (todos los usuarios autenticados)
+    // Listar avisos (todos los usuarios autenticados) - SIEMPRE por proyecto
     list: protectedProcedure
-      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .input(z.object({ proyectoId: z.number() }))
       .query(async ({ input }) => {
-        return await db.getAvisos(input?.proyectoId);
+        return await db.getAvisos(input.proyectoId);
       }),
 
     // Obtener un aviso por ID
@@ -2465,17 +2465,18 @@ export const appRouter = router({
         return await db.getAvisoById(input.id);
       }),
 
-    // Contar avisos no leídos
+    // Contar avisos no leídos - SIEMPRE por proyecto
     noLeidos: protectedProcedure
-      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .input(z.object({ proyectoId: z.number() }))
       .query(async ({ ctx, input }) => {
-        return await db.getAvisosNoLeidos(ctx.user.id, input?.proyectoId);
+        return await db.getAvisosNoLeidos(ctx.user.id, input.proyectoId);
       }),
 
-    // IDs de avisos leídos por el usuario actual
+    // IDs de avisos leídos por el usuario actual - por proyecto
     leidosPorUsuario: protectedProcedure
-      .query(async ({ ctx }) => {
-        return await db.getAvisosLeidosPorUsuario(ctx.user.id);
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return await db.getAvisosLeidosPorUsuario(ctx.user.id, input.proyectoId);
       }),
 
     // Marcar aviso como leído
@@ -2489,7 +2490,7 @@ export const appRouter = router({
     // Crear aviso (solo admin/superadmin)
     create: adminProcedure
       .input(z.object({
-        proyectoId: z.number().optional(),
+        proyectoId: z.number(),
         titulo: z.string().min(1),
         contenido: z.string().min(1),
         prioridad: z.enum(['normal', 'urgente']).optional(),

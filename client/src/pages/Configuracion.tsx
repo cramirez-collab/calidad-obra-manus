@@ -506,7 +506,8 @@ function AvisosManager({ proyectoId }: { proyectoId: number | null }) {
   const [prioridad, setPrioridad] = useState<'normal' | 'urgente'>('normal');
 
   const { data: avisosList, refetch } = trpc.avisos.list.useQuery(
-    proyectoId ? { proyectoId } : undefined
+    { proyectoId: proyectoId! },
+    { enabled: !!proyectoId }
   );
   const utils = trpc.useUtils();
 
@@ -554,7 +555,7 @@ function AvisosManager({ proyectoId }: { proyectoId: number | null }) {
 
   const handleCreate = () => {
     createMutation.mutate({
-      proyectoId: proyectoId || undefined,
+      proyectoId: proyectoId!,
       titulo,
       contenido,
       prioridad,

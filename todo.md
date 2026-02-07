@@ -3363,3 +3363,11 @@
 - [x] Historial de avisos del más reciente al más antiguo
 - [x] Registro de quién leyó cada aviso con bitácora
 - [x] Incrementar versión a 3.61
+
+## Aislamiento por Proyecto - Avisos v3.62 (Febrero 2026)
+- [x] Auditar y corregir: avisos.create requiere proyectoId obligatorio
+- [x] Auditar y corregir: avisos.list filtra siempre por proyectoId (sin avisos globales)
+- [x] Auditar y corregir: avisos.noLeidos filtra por proyectoId del proyecto activo
+- [x] Auditar y corregir: avisos.leidosPorUsuario filtra por proyecto
+- [x] Frontend: proyectoId obligatorio en Bienvenida, Avisos y Configuración
+- [x] Incrementar versión a 3.62

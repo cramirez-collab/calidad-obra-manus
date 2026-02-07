@@ -27,11 +27,14 @@ export default function Avisos() {
   const [expandedAviso, setExpandedAviso] = useState<number | null>(null);
 
   const { data: avisosList, isLoading } = trpc.avisos.list.useQuery(
-    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { proyectoId: selectedProjectId! },
     { enabled: !!selectedProjectId }
   );
 
-  const { data: leidosIds, refetch: refetchLeidos } = trpc.avisos.leidosPorUsuario.useQuery();
+  const { data: leidosIds, refetch: refetchLeidos } = trpc.avisos.leidosPorUsuario.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId }
+  );
 
   const utils = trpc.useUtils();
   const marcarLeidoMutation = trpc.avisos.marcarLeido.useMutation({
