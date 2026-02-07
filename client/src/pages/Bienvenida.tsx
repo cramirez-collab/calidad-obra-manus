@@ -43,6 +43,7 @@ import {
 import { useLocation, Redirect } from "wouter";
 import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
+import { useSocket } from '@/hooks/useSocket';
 // jsPDF se importa dinámicamente para evitar conflicto con React context
 
 type FilterType = "todos" | "foto" | "aprobar" | "corregir";
@@ -55,24 +56,20 @@ export default function Bienvenida() {
   const { selectedProjectId, isLoadingProjects } = useProject();
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
-  // Personas activas del proyecto (siempre disponible via tRPC)
-  const { data: personasActivas } = trpc.avisos.personasActivas.useQuery(
-    { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId }
-  );
-  const totalPersonasActivas = personasActivas?.total || 0;
+  // Usuarios EN LÍNEA en tiempo real (socket)
+  const { isConnected, usersCount, connectedUsers } = useSocket();
 
-  const handleDownloadPersonasPDF = async () => {
-    if (!personasActivas) return;
+  const handleDownloadEnLineaPDF = async () => {
+    if (!connectedUsers.length) return;
     const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.setTextColor(0, 44, 99);
-    doc.text('Personas del Proyecto', 20, 20);
+    doc.text('Usuarios En Linea', 20, 20);
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
     doc.text(`Generado: ${new Date().toLocaleString('es-MX')}`, 20, 28);
-    doc.text(`Total: ${personasActivas.total} personas`, 20, 34);
+    doc.text(`Total: ${connectedUsers.length} usuarios conectados ahora`, 20, 34);
     
     let y = 45;
     doc.setFontSize(10);
@@ -82,11 +79,10 @@ export default function Bienvenida() {
     doc.text('#', 25, y);
     doc.text('Nombre', 35, y);
     doc.text('Rol', 120, y);
-    doc.text('Rol Proyecto', 155, y);
     y += 10;
     
     doc.setTextColor(50, 50, 50);
-    personasActivas.usuarios.forEach((u: any, i: number) => {
+    connectedUsers.forEach((u: any, i: number) => {
       if (y > 270) {
         doc.addPage();
         y = 20;
@@ -98,11 +94,10 @@ export default function Bienvenida() {
       doc.text(`${i + 1}`, 25, y);
       doc.text(u.name || '', 35, y);
       doc.text(u.role || '', 120, y);
-      doc.text(u.rolEnProyecto || 'residente', 155, y);
       y += 8;
     });
     
-    doc.save(`personas_proyecto_${new Date().toISOString().slice(0, 10)}.pdf`);
+    doc.save(`usuarios_en_linea_${new Date().toISOString().slice(0, 10)}.pdf`);
   };
   
   // Avisos no leídos
@@ -452,15 +447,15 @@ export default function Bienvenida() {
           </div>
         </div>
 
-        {/* Indicador de Personas Activas del Proyecto - Barra separada visible */}
-        {totalPersonasActivas > 0 && (
+        {/* Indicador de Usuarios EN LÍNEA - Socket en tiempo real */}
+        {isConnected && usersCount > 0 && (
           <button
             className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 hover:from-emerald-100 hover:to-teal-100 transition-all cursor-pointer shadow-sm"
             onClick={() => {
               if (isAdmin) {
-                handleDownloadPersonasPDF();
+                handleDownloadEnLineaPDF();
               } else {
-                toast.info(`${totalPersonasActivas} personas en el proyecto`);
+                toast.info(`${usersCount} usuarios en línea ahora`);
               }
             }}
           >
@@ -468,7 +463,7 @@ export default function Bienvenida() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
             </span>
-            <span className="text-sm font-bold text-emerald-700">{totalPersonasActivas} personas activas</span>
+            <span className="text-sm font-bold text-emerald-700">{usersCount} en línea</span>
             {isAdmin && (
               <span className="text-[10px] text-emerald-500 ml-1">(tap para PDF)</span>
             )}

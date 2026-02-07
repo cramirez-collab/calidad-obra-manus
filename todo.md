@@ -3407,3 +3407,9 @@
 - [x] Barra verde claro con punto animado y texto "X personas activas (tap para PDF)"
 - [x] Click genera PDF con lista de personas activas (solo admin/superadmin)
 - [x] Versión actualizada a 3.67
+
+## Usuarios En Línea Real-Time v3.68 (Febrero 2026)
+- [x] Cambiar barra de Bienvenida de "personas activas" (registradas) a "en línea" (socket real-time)
+- [x] Mostrar solo usuarios con la app abierta en este momento (useSocket)
+- [x] Tap para PDF con lista de quién está conectado ahora
+- [x] Incrementar versión a 3.68
