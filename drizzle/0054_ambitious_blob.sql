@@ -1,0 +1,1 @@
+ALTER TABLE `proyectos` ADD `ultimoConsecutivoQR` int DEFAULT 0 NOT NULL;

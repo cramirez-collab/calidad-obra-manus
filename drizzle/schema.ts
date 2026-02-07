@@ -64,6 +64,8 @@ export const proyectos = mysqlTable("proyectos", {
   tituloPlanos: varchar("tituloPlanos", { length: 100 }),
   tituloManuales: varchar("tituloManuales", { length: 100 }),
   tituloEspecificaciones: varchar("tituloEspecificaciones", { length: 100 }),
+  // Último consecutivo QR impreso (para recordar al generar por rango)
+  ultimoConsecutivoQR: int("ultimoConsecutivoQR").default(0).notNull(),
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

@@ -2219,6 +2219,27 @@ export const appRouter = router({
         
         return { success: true, url: imageUrl };
       }),
+    
+    // Obtener último consecutivo QR impreso del proyecto
+    getUltimoConsecutivoQR: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        const proyecto = await db.getProyectoById(input.proyectoId);
+        return { ultimoConsecutivoQR: proyecto?.ultimoConsecutivoQR ?? 0 };
+      }),
+    
+    // Actualizar último consecutivo QR impreso del proyecto
+    updateUltimoConsecutivoQR: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        ultimoConsecutivoQR: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateProyecto(input.proyectoId, {
+          ultimoConsecutivoQR: input.ultimoConsecutivoQR,
+        });
+        return { success: true };
+      }),
   }),
 
   // ==================== MENSAJES (CHAT POR ÍTEM) ====================

@@ -25,8 +25,8 @@ export default function GenerarQR() {
   const { selectedProjectId } = useProject();
   
   const [modo, setModo] = useState<"items" | "rango">("items");
-  const [rangoInicio, setRangoInicio] = useState(1);
-  const [rangoFin, setRangoFin] = useState(6);
+  const [rangoInicio, setRangoInicio] = useState<string>("");
+  const [rangoFin, setRangoFin] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [qrItems, setQrItems] = useState<QRItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -35,6 +35,20 @@ export default function GenerarQR() {
   // Obtener datos del proyecto seleccionado
   const { data: proyectos } = trpc.proyectos.list.useQuery();
   const proyectoActual = proyectos?.find(p => p.id === selectedProjectId);
+  
+  // Obtener último consecutivo QR impreso del proyecto
+  const { data: ultimoConsecutivoData } = trpc.proyectos.getUltimoConsecutivoQR.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId }
+  );
+  const ultimoConsecutivoQR = ultimoConsecutivoData?.ultimoConsecutivoQR ?? 0;
+  
+  // Mutación para actualizar último consecutivo
+  const updateUltimoConsecutivo = trpc.proyectos.updateUltimoConsecutivoQR.useMutation({
+    onSuccess: () => {
+      trpc.useUtils().proyectos.getUltimoConsecutivoQR.invalidate();
+    },
+  });
   
   // Obtener ítems del proyecto
   const { data: itemsData } = trpc.items.list.useQuery(
@@ -113,11 +127,17 @@ export default function GenerarQR() {
       toast.error("Selecciona un proyecto primero");
       return;
     }
-    if (rangoInicio > rangoFin) {
+    const inicio = parseInt(rangoInicio) || 0;
+    const fin = parseInt(rangoFin) || 0;
+    if (!inicio || !fin) {
+      toast.error("Ingresa el rango de consecutivos");
+      return;
+    }
+    if (inicio > fin) {
       toast.error("El rango inicial debe ser menor al final");
       return;
     }
-    if (rangoFin - rangoInicio >= 100) {
+    if (fin - inicio >= 100) {
       toast.error("Máximo 100 QR por generación");
       return;
     }
@@ -126,7 +146,7 @@ export default function GenerarQR() {
     const qrList: QRItem[] = [];
 
     try {
-      for (let i = rangoInicio; i <= rangoFin; i++) {
+      for (let i = inicio; i <= fin; i++) {
         const codigo = generateRandomCode();
         const url = `${baseUrl}/seguimiento/${codigo}`;
         
@@ -143,6 +163,15 @@ export default function GenerarQR() {
       }
 
       setQrItems(qrList);
+      
+      // Persistir el último consecutivo impreso
+      if (fin > ultimoConsecutivoQR) {
+        updateUltimoConsecutivo.mutate({
+          proyectoId: selectedProjectId,
+          ultimoConsecutivoQR: fin,
+        });
+      }
+      
       toast.success(`${qrList.length} códigos QR generados`);
     } catch (error) {
       toast.error("Error al generar QR");
@@ -163,8 +192,12 @@ export default function GenerarQR() {
     }
 
     // ============================================
-    // ESPECIFICACIONES EXACTAS: Office Depot 64413 = Avery 5160
+    // AVERY 5160 / OFFICE DEPOT 64413 - AUTO-AJUSTE AGRESIVO
     // ============================================
+    // Todas las medidas en pulgadas convertidas a mm con !important
+    // para forzar que SIEMPRE se respete la plantilla sin importar
+    // la configuración del navegador o la impresora.
+    //
     // Hoja:     8.5" x 11" (Letter) = 215.9mm x 279.4mm
     // Etiqueta: 2-5/8" x 1" = 66.675mm x 25.4mm
     // Layout:   3 columnas x 10 filas = 30 etiquetas/hoja
@@ -175,120 +208,195 @@ export default function GenerarQR() {
     // Gap horizontal:   1/8"   = 3.175mm
     // Gap vertical:     0"     = 0mm (se tocan)
     // ============================================
-    // Verificación:
-    //   Ancho: 4.7625 + 66.675 + 3.175 + 66.675 + 3.175 + 66.675 + 4.7625 = 215.9mm ✓
-    //   Alto:  12.7 + (25.4 * 10) + 12.7 = 279.4mm ✓
-    // ============================================
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
           <title>QR Codes - ${proyectoActual?.nombre || 'Objetiva'}</title>
           <style>
+            /* ========================================== */
+            /* FORZAR TAMAÑO DE PÁGINA - AGRESIVO       */
+            /* ========================================== */
             @page {
-              size: letter portrait;
-              margin: 0;
+              size: 215.9mm 279.4mm !important;
+              margin: 0mm !important;
+              padding: 0mm !important;
             }
-            * {
-              box-sizing: border-box;
-              margin: 0;
-              padding: 0;
+            
+            /* Reset total - nada puede agregar espacio */
+            *, *::before, *::after {
+              box-sizing: border-box !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              border: 0 !important;
             }
-            html, body {
-              width: 215.9mm;
-              margin: 0;
-              padding: 0;
-              font-family: Arial, sans-serif;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
+            
+            html {
+              width: 215.9mm !important;
+              height: 279.4mm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              overflow: hidden !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              color-adjust: exact !important;
             }
+            
+            body {
+              width: 215.9mm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              font-family: Arial, Helvetica, sans-serif !important;
+              font-size: 0 !important;
+              line-height: 0 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            
+            /* ========================================== */
+            /* PÁGINA - CONTENEDOR EXACTO                */
+            /* ========================================== */
             .page {
-              width: 215.9mm;
-              height: 279.4mm;
-              position: relative;
-              page-break-after: always;
-              overflow: hidden;
+              width: 215.9mm !important;
+              height: 279.4mm !important;
+              min-height: 279.4mm !important;
+              max-height: 279.4mm !important;
+              position: relative !important;
+              overflow: hidden !important;
+              page-break-after: always !important;
+              page-break-inside: avoid !important;
             }
             .page:last-child {
-              page-break-after: auto;
+              page-break-after: auto !important;
             }
-            /* Grid de etiquetas con posicionamiento absoluto preciso */
+            
+            /* ========================================== */
+            /* GRID - POSICIONAMIENTO ABSOLUTO EXACTO     */
+            /* No depende de margin/padding del body      */
+            /* ========================================== */
             .label-grid {
-              position: absolute;
-              top: 12.7mm;
-              left: 4.7625mm;
-              width: calc(215.9mm - 4.7625mm - 4.7625mm);
-              display: grid;
-              grid-template-columns: 66.675mm 66.675mm 66.675mm;
-              grid-template-rows: repeat(10, 25.4mm);
-              column-gap: 3.175mm;
-              row-gap: 0mm;
+              position: absolute !important;
+              top: 12.7mm !important;
+              left: 4.7625mm !important;
+              right: 4.7625mm !important;
+              width: 206.375mm !important;
+              display: grid !important;
+              grid-template-columns: 66.675mm 66.675mm 66.675mm !important;
+              grid-template-rows: repeat(10, 25.4mm) !important;
+              column-gap: 3.175mm !important;
+              row-gap: 0mm !important;
+              /* Seguro anti-desborde */
+              max-width: 206.375mm !important;
+              max-height: 254mm !important;
             }
+            
+            /* ========================================== */
+            /* CELDA DE ETIQUETA - TAMAÑO FIJO ABSOLUTO   */
+            /* ========================================== */
             .qr-card {
-              width: 66.675mm;
-              height: 25.4mm;
-              display: flex;
-              flex-direction: row;
-              align-items: center;
-              justify-content: flex-start;
-              background: white;
-              overflow: hidden;
-              padding: 1mm 1.5mm;
-              gap: 1.5mm;
+              width: 66.675mm !important;
+              height: 25.4mm !important;
+              min-width: 66.675mm !important;
+              max-width: 66.675mm !important;
+              min-height: 25.4mm !important;
+              max-height: 25.4mm !important;
+              display: flex !important;
+              flex-direction: row !important;
+              align-items: center !important;
+              justify-content: flex-start !important;
+              overflow: hidden !important;
+              padding: 0.8mm 1.2mm !important;
+              gap: 1.2mm !important;
+              background: transparent !important;
             }
+            
             .qr-card img {
-              width: 21mm;
-              height: 21mm;
-              object-fit: contain;
-              flex-shrink: 0;
+              width: 21mm !important;
+              height: 21mm !important;
+              min-width: 21mm !important;
+              max-width: 21mm !important;
+              min-height: 21mm !important;
+              max-height: 21mm !important;
+              object-fit: contain !important;
+              flex-shrink: 0 !important;
+              margin: 0 !important;
+              padding: 0 !important;
             }
+            
             .qr-info {
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              overflow: hidden;
-              flex: 1;
-              min-width: 0;
+              display: flex !important;
+              flex-direction: column !important;
+              justify-content: center !important;
+              overflow: hidden !important;
+              flex: 1 !important;
+              min-width: 0 !important;
+              padding: 0 !important;
+              margin: 0 !important;
             }
+            
             .codigo {
-              font-size: 8pt;
-              font-weight: bold;
-              color: #002C63;
-              letter-spacing: 0.3px;
-              word-break: break-all;
-              line-height: 1.1;
+              font-size: 7.5pt !important;
+              font-weight: bold !important;
+              color: #002C63 !important;
+              letter-spacing: 0.3px !important;
+              word-break: break-all !important;
+              line-height: 1.1 !important;
             }
             .consecutivo {
-              font-size: 10pt;
-              font-weight: bold;
-              color: #02B381;
-              line-height: 1.1;
-              margin-top: 0.5mm;
+              font-size: 9.5pt !important;
+              font-weight: bold !important;
+              color: #02B381 !important;
+              line-height: 1.1 !important;
+              margin-top: 0.3mm !important;
             }
             .titulo {
-              font-size: 5pt;
-              color: #333;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-              line-height: 1.2;
-              margin-top: 0.3mm;
+              font-size: 5pt !important;
+              color: #333 !important;
+              overflow: hidden !important;
+              text-overflow: ellipsis !important;
+              white-space: nowrap !important;
+              line-height: 1.15 !important;
+              margin-top: 0.2mm !important;
             }
             .logo {
-              font-size: 5pt;
-              color: #02B381;
-              font-weight: bold;
-              margin-top: 0.3mm;
+              font-size: 4.5pt !important;
+              color: #02B381 !important;
+              font-weight: bold !important;
+              margin-top: 0.2mm !important;
             }
+            
             .empty-cell {
-              width: 66.675mm;
-              height: 25.4mm;
+              width: 66.675mm !important;
+              height: 25.4mm !important;
             }
+            
+            /* ========================================== */
+            /* @MEDIA PRINT - DOBLE FORZADO              */
+            /* ========================================== */
             @media print {
+              @page {
+                size: 215.9mm 279.4mm !important;
+                margin: 0mm !important;
+              }
               html, body {
-                width: 215.9mm;
-                margin: 0;
-                padding: 0;
+                width: 215.9mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              .page {
+                width: 215.9mm !important;
+                height: 279.4mm !important;
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+              }
+              .page:last-child {
+                page-break-after: auto !important;
+              }
+              /* Eliminar headers/footers del navegador */
+              header, footer, nav {
+                display: none !important;
               }
             }
           </style>
@@ -296,11 +404,15 @@ export default function GenerarQR() {
         <body>
           ${generatePrintPages(qrItems, proyectoActual?.nombre || '')}
           <script>
+            // Auto-imprimir al cargar
             window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              };
+              // Pequeño delay para asegurar renderizado completo
+              setTimeout(function() {
+                window.print();
+                window.onafterprint = function() {
+                  window.close();
+                };
+              }, 300);
             };
           </script>
         </body>
@@ -482,6 +594,15 @@ export default function GenerarQR() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Badge informativo del último consecutivo impreso */}
+              {selectedProjectId && ultimoConsecutivoQR > 0 && (
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2.5 rounded-lg">
+                  <QrCode className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm font-medium">
+                    Último consecutivo impreso: <span className="text-blue-900 font-bold text-base">#{ultimoConsecutivoQR}</span>
+                  </span>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="inicio">Desde (número)</Label>
@@ -490,8 +611,8 @@ export default function GenerarQR() {
                     type="number"
                     min={1}
                     value={rangoInicio}
-                    onChange={(e) => setRangoInicio(parseInt(e.target.value) || 1)}
-                    placeholder="1"
+                    onChange={(e) => setRangoInicio(e.target.value)}
+                    placeholder={ultimoConsecutivoQR > 0 ? `${ultimoConsecutivoQR + 1}` : "1"}
                   />
                   <p className="text-xs text-muted-foreground">Ej: {codigoProyecto}-XXXXXX (aleatorio)</p>
                 </div>
@@ -502,10 +623,14 @@ export default function GenerarQR() {
                     type="number"
                     min={1}
                     value={rangoFin}
-                    onChange={(e) => setRangoFin(parseInt(e.target.value) || 1)}
-                    placeholder="6"
+                    onChange={(e) => setRangoFin(e.target.value)}
+                    placeholder=""
                   />
-                  <p className="text-xs text-muted-foreground">Se generarán {rangoFin - rangoInicio + 1} códigos</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(parseInt(rangoInicio) || 0) > 0 && (parseInt(rangoFin) || 0) > 0
+                      ? `Se generarán ${(parseInt(rangoFin) || 0) - (parseInt(rangoInicio) || 0) + 1} códigos`
+                      : "Ingresa el rango"}
+                  </p>
                 </div>
                 <div className="flex items-end">
                   <Button 
@@ -535,7 +660,7 @@ export default function GenerarQR() {
                 </div>
               )}
 
-              {rangoFin - rangoInicio >= 100 && (
+              {(parseInt(rangoFin) || 0) - (parseInt(rangoInicio) || 0) >= 100 && (
                 <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
                   <AlertCircle className="h-4 w-4" />
                   <span className="text-sm">Máximo 100 códigos por generación</span>

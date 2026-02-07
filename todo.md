@@ -3446,3 +3446,17 @@
 - [x] Investigar especificaciones exactas del fabricante (SKU 64413 = Avery 5160)
 - [x] Reescribir cuadrícula con CSS Grid y posicionamiento absoluto preciso
 - [x] Incrementar versión a 3.71
+
+## Mejora generación QR por rango v3.72
+- [ ] Campos Desde/Hasta vacíos por defecto (sin valor inicial)
+- [ ] Mostrar último consecutivo impreso por proyecto
+- [ ] Persistir último consecutivo en BD al generar QR
+- [ ] Incrementar versión a 3.72
+
+## Auto-ajuste agresivo etiquetas + mejoras rango QR v3.72
+- [x] Forzar auto-ajuste agresivo a plantilla Avery 5160/Office Depot 64413
+- [x] CSS @page con márgenes exactos y !important en todo
+- [x] Campos Desde/Hasta vacíos por defecto (string, no number)
+- [x] Mostrar último consecutivo impreso por proyecto (badge)
+- [x] Persistir último consecutivo en BD al generar QR
+- [x] Incrementar versión a 3.72
