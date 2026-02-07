@@ -3479,3 +3479,8 @@
 - [x] Al pasar mouse sobre banner "X en línea" mostrar lista de usuarios conectados
 - [x] Mostrar nombre + especialidad de cada usuario en línea
 - [x] Incluir empresa del usuario (nombre — empresa, especialidad debajo)
+
+## Tooltip en línea para todos los usuarios v3.77
+- [x] Tooltip funcione con tap en móvil (toggle), no solo hover
+- [x] Todos los usuarios ven la lista de quién está en línea (no solo admin)
+- [x] Mantener descarga PDF solo para admin (botón PDF dentro del panel)
