@@ -3392,3 +3392,11 @@
 - [x] Endpoint backend para reporte de personas activas (CSV)
 - [x] Botón descargar reporte de lecturas y actividad (CSV por aviso + personas activas)
 - [x] Incrementar versión a 3.65
+
+## Usuarios En Línea + Lectores Avisos v3.66 (Febrero 2026)
+- [x] Backend: tracking de usuarios en línea via socket (ya existía connectedUsers)
+- [x] Backend: getAvisos ahora incluye lecturasCount por aviso
+- [x] Frontend: número de usuarios en línea en header de Bienvenida (punto verde + número)
+- [x] Frontend: click en número (admin/superadmin) descarga PDF con lista de usuarios en línea
+- [x] Frontend: en cada aviso, badge azul clickable con ojo + conteo de lecturas
+- [x] Incrementar versión a 3.66

@@ -262,7 +262,19 @@ export default function Avisos() {
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
+                          {/* Indicador de lecturas clickable */}
+                          <button
+                            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleExpandAviso(aviso.id);
+                            }}
+                            title="Ver quién leyó"
+                          >
+                            <Eye className="h-3 w-3 text-blue-600" />
+                            <span className="font-semibold text-blue-700">{aviso.lecturasCount || 0}</span>
+                          </button>
                           {isLeido && (
                             <Check className="h-4 w-4 text-green-500" />
                           )}

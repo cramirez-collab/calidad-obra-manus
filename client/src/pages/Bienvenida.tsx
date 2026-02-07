@@ -43,6 +43,8 @@ import {
 import { useLocation, Redirect } from "wouter";
 import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
+import { useSocket } from "@/hooks/useSocket";
+import { jsPDF } from "jspdf";
 
 type FilterType = "todos" | "foto" | "aprobar" | "corregir";
 
@@ -52,6 +54,50 @@ export default function Bienvenida() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { selectedProjectId, isLoadingProjects } = useProject();
+  const { isConnected, usersCount, connectedUsers } = useSocket();
+  const [showOnlineList, setShowOnlineList] = useState(false);
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+
+  const handleDownloadOnlinePDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.setTextColor(0, 44, 99);
+    doc.text('Usuarios En Linea', 20, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generado: ${new Date().toLocaleString('es-MX')}`, 20, 28);
+    doc.text(`Total: ${usersCount} usuarios`, 20, 34);
+    
+    // Tabla
+    let y = 45;
+    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.setFillColor(0, 44, 99);
+    doc.rect(20, y - 5, 170, 8, 'F');
+    doc.text('#', 25, y);
+    doc.text('Nombre', 35, y);
+    doc.text('Rol', 130, y);
+    y += 10;
+    
+    doc.setTextColor(50, 50, 50);
+    connectedUsers.forEach((u, i) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      if (i % 2 === 0) {
+        doc.setFillColor(245, 245, 245);
+        doc.rect(20, y - 5, 170, 8, 'F');
+      }
+      doc.text(`${i + 1}`, 25, y);
+      doc.text(u.name, 35, y);
+      doc.text(u.role, 130, y);
+      y += 8;
+    });
+    
+    doc.save(`usuarios_en_linea_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
   
   // Avisos no leídos
   const { data: avisosNoLeidos } = trpc.avisos.noLeidos.useQuery(
@@ -378,6 +424,30 @@ export default function Bienvenida() {
                 <TooltipContent>{action.label}</TooltipContent>
               </Tooltip>
             ))}
+            {/* Indicador En Línea */}
+            {isConnected && usersCount > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="relative flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer"
+                    onClick={() => {
+                      if (isAdmin) {
+                        handleDownloadOnlinePDF();
+                      } else {
+                        toast.info(`${usersCount} usuarios en línea`);
+                      }
+                    }}
+                  >
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-sm font-bold text-emerald-700">{usersCount}</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{isAdmin ? 'Click para descargar PDF de usuarios en línea' : `${usersCount} usuarios en línea`}</TooltipContent>
+              </Tooltip>
+            )}
             {/* Botón Avisos con badge rojo */}
             <Tooltip>
               <TooltipTrigger asChild>

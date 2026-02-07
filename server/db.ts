@@ -5053,8 +5053,20 @@ export async function getAvisos(proyectoId: number) {
     creadoresData.forEach(c => { if (c.id && c.name) creadoresMap[c.id] = c.name; });
   }
   
+  // Obtener conteo de lecturas por aviso
+  const avisoIds = result.map(a => a.id);
+  let lecturasCountMap: Record<number, number> = {};
+  if (avisoIds.length > 0) {
+    const lecturasData = await db.select({ avisoId: avisosLecturas.avisoId }).from(avisosLecturas)
+      .where(inArray(avisosLecturas.avisoId, avisoIds));
+    lecturasData.forEach(l => {
+      if (l.avisoId) lecturasCountMap[l.avisoId] = (lecturasCountMap[l.avisoId] || 0) + 1;
+    });
+  }
+  
   return result.map(a => ({
     ...a,
+    lecturasCount: lecturasCountMap[a.id] || 0,
     creadoPorNombre: creadoresMap[a.creadoPorId] || 'Desconocido',
   }));
 }
