@@ -335,19 +335,20 @@ export default function GenerarQR() {
             }
             
             .codigo {
-              font-size: 7.5pt !important;
+              font-size: 7pt !important;
               font-weight: bold !important;
               color: #002C63 !important;
               letter-spacing: 0.3px !important;
               word-break: break-all !important;
               line-height: 1.1 !important;
+              margin-bottom: 1mm !important;
             }
             .consecutivo {
-              font-size: 9.5pt !important;
+              font-size: 12pt !important;
               font-weight: bold !important;
               color: #02B381 !important;
-              line-height: 1.1 !important;
-              margin-top: 0.3mm !important;
+              line-height: 1.0 !important;
+              margin-top: 0.5mm !important;
             }
             .titulo {
               font-size: 5pt !important;
@@ -356,13 +357,14 @@ export default function GenerarQR() {
               text-overflow: ellipsis !important;
               white-space: nowrap !important;
               line-height: 1.15 !important;
-              margin-top: 0.2mm !important;
+              margin-top: 0.3mm !important;
+              margin-bottom: 0.3mm !important;
             }
             .logo {
               font-size: 4.5pt !important;
               color: #02B381 !important;
               font-weight: bold !important;
-              margin-top: 0.2mm !important;
+              margin-top: 0.8mm !important;
             }
             
             .empty-cell {

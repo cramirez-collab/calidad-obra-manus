@@ -3460,3 +3460,8 @@
 - [x] Mostrar último consecutivo impreso por proyecto (badge)
 - [x] Persistir último consecutivo en BD al generar QR
 - [x] Incrementar versión a 3.72
+
+## Espaciado texto etiquetas QR v3.73
+- [x] Separar código, OBJETIVA y consecutivo con más espacio (margin-bottom/top entre elementos)
+- [x] Consecutivo más grande (9.5pt → 12pt)
+- [x] Todo dentro del mismo recuadro de etiqueta 25.4mm
