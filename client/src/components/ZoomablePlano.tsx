@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { ZoomIn, ZoomOut, Maximize2, Minimize2, ExternalLink } from "lucide-react";
+import { ZoomIn, ZoomOut, Maximize2, Minimize2, ExternalLink, Filter, Download } from "lucide-react";
 
 export interface PlanoPin {
   id: number;
@@ -27,6 +27,13 @@ interface ZoomablePlanoProps {
   currentItemId?: number;
   onPinClick?: (itemId: number) => void;
 }
+
+const STATUS_OPTIONS = [
+  { key: "pendiente_foto_despues", label: "Pend. Foto", color: "#3b82f6" },
+  { key: "pendiente_aprobacion", label: "Pend. Aprob.", color: "#f59e0b" },
+  { key: "rechazado", label: "Rechazado", color: "#ef4444" },
+  { key: "aprobado", label: "Aprobado", color: "#22c55e" },
+] as const;
 
 function getStatusColor(status?: string | null) {
   switch (status) {
@@ -81,6 +88,9 @@ export default function ZoomablePlano({
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hoveredPin, setHoveredPin] = useState<number | null>(null);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [hiddenStatuses, setHiddenStatuses] = useState<Set<string>>(new Set());
+  const [exportingPdf, setExportingPdf] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const imgWrapperRef = useRef<HTMLDivElement>(null);
   const internalImgRef = useRef<HTMLImageElement>(null);
@@ -93,9 +103,13 @@ export default function ZoomablePlano({
   const lastTapTime = useRef(0);
   const lastTapPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const touchMoved = useRef(false);
+  // Long press refs
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggered = useRef(false);
 
   const MIN_SCALE = 1;
   const MAX_SCALE = 8;
+  const LONG_PRESS_DURATION = 500; // ms
 
   const clampScale = useCallback((s: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, s)), []);
 
@@ -169,21 +183,34 @@ export default function ZoomablePlano({
     [editingPin, onPinPlace, scale, calcPinPos]
   );
 
+  // Clear long press timer
+  const clearLongPress = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchMoved.current = false;
+    longPressTriggered.current = false;
+    clearLongPress();
     if (e.touches.length === 2) {
       lastTouchDistance.current = getTouchDistance(e.touches[0], e.touches[1]);
       lastTouchCenter.current = getTouchCenter(e.touches[0], e.touches[1]);
       e.preventDefault();
-    } else if (e.touches.length === 1 && scale > 1) {
-      isPanning.current = true;
-      lastPanPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 1) {
+      if (scale > 1) {
+        isPanning.current = true;
+        lastPanPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
     }
-  }, [scale]);
+  }, [scale, clearLongPress]);
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
       touchMoved.current = true;
+      clearLongPress();
       if (e.touches.length === 2 && lastTouchDistance.current !== null) {
         e.preventDefault();
         const newDist = getTouchDistance(e.touches[0], e.touches[1]);
@@ -208,17 +235,23 @@ export default function ZoomablePlano({
         e.preventDefault();
       }
     },
-    [scale, translate, clampScale, clampTranslate]
+    [scale, translate, clampScale, clampTranslate, clearLongPress]
   );
 
   const handleTouchEnd = useCallback(
     (e: React.TouchEvent) => {
+      clearLongPress();
       const wasPanning = isPanning.current;
       const wasPinching = lastTouchDistance.current !== null;
       lastTouchDistance.current = null;
       lastTouchCenter.current = null;
       isPanning.current = false;
       lastPanPos.current = null;
+
+      if (longPressTriggered.current) {
+        longPressTriggered.current = false;
+        return;
+      }
 
       if (e.touches.length > 0) return;
       if (touchMoved.current && (wasPanning || wasPinching)) return;
@@ -280,7 +313,7 @@ export default function ZoomablePlano({
       lastTapTime.current = now;
       lastTapPos.current = tapPos;
     },
-    [scale, editingPin, isFullscreen, resetZoom, clampTranslate, onPinPlace, calcPinPos]
+    [scale, editingPin, isFullscreen, resetZoom, clampTranslate, onPinPlace, calcPinPos, clearLongPress]
   );
 
   useEffect(() => {
@@ -320,8 +353,28 @@ export default function ZoomablePlano({
     return () => window.removeEventListener("keydown", handleKey);
   }, [isFullscreen, resetZoom]);
 
+  // Cleanup long press on unmount
+  useEffect(() => {
+    return () => clearLongPress();
+  }, [clearLongPress]);
+
   const pinFill = pinColor === "yellow" ? "#f59e0b" : "#ef4444";
-  const otherPins = allPins.filter((p) => p.id !== currentItemId && p.pinPosX && p.pinPosY);
+
+  // Filter pins by hidden statuses
+  const filteredOtherPins = allPins.filter((p) => {
+    if (p.id === currentItemId) return false;
+    if (!p.pinPosX || !p.pinPosY) return false;
+    const st = p.status || "pendiente_foto_despues";
+    return !hiddenStatuses.has(st);
+  });
+
+  // Count pins by status for filter UI
+  const statusCounts = allPins.reduce((acc, p) => {
+    if (p.id === currentItemId || !p.pinPosX || !p.pinPosY) return acc;
+    const st = p.status || "pendiente_foto_despues";
+    acc[st] = (acc[st] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   // Pin sizes - REDUCED 50% from previous
   const basePinW = Math.max(10, 14 / scale);
@@ -332,6 +385,208 @@ export default function ZoomablePlano({
 
   // Check if pin is "aprobado" - render as small green dot only
   const isAprobado = (status?: string | null) => status === "aprobado";
+
+  // Toggle status filter
+  const toggleStatus = (statusKey: string) => {
+    setHiddenStatuses(prev => {
+      const next = new Set(prev);
+      if (next.has(statusKey)) {
+        next.delete(statusKey);
+      } else {
+        next.add(statusKey);
+      }
+      return next;
+    });
+  };
+
+  // Long press handler for pin (mobile tooltip)
+  const handlePinTouchStart = useCallback((pinId: number) => {
+    clearLongPress();
+    longPressTriggered.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      setHoveredPin(pinId);
+    }, LONG_PRESS_DURATION);
+  }, [clearLongPress]);
+
+  const handlePinTouchEnd = useCallback(() => {
+    clearLongPress();
+    // Don't clear hoveredPin immediately if long press was triggered - let user see it
+    if (longPressTriggered.current) {
+      // Auto-dismiss after 3 seconds
+      setTimeout(() => setHoveredPin(null), 3000);
+    }
+  }, [clearLongPress]);
+
+  const handlePinTouchMove = useCallback(() => {
+    clearLongPress();
+  }, [clearLongPress]);
+
+  // Export plano with pins to PDF
+  const exportPlanoPdf = useCallback(async () => {
+    if (exportingPdf) return;
+    setExportingPdf(true);
+    try {
+      const { jsPDF } = await import("jspdf");
+
+      const img = imgRef.current;
+      if (!img) throw new Error("Imagen no disponible");
+
+      // Create canvas with plano image + pins drawn on it
+      const canvas = document.createElement("canvas");
+      const naturalW = img.naturalWidth;
+      const naturalH = img.naturalHeight;
+      canvas.width = naturalW;
+      canvas.height = naturalH;
+      const ctx = canvas.getContext("2d")!;
+
+      // Draw the floor plan image
+      ctx.drawImage(img, 0, 0, naturalW, naturalH);
+
+      // Draw all visible pins on the canvas
+      const visiblePins = allPins.filter(p => {
+        if (!p.pinPosX || !p.pinPosY) return false;
+        const st = p.status || "pendiente_foto_despues";
+        return !hiddenStatuses.has(st);
+      });
+
+      for (const pin of visiblePins) {
+        const px = (parseFloat(pin.pinPosX!) / 100) * naturalW;
+        const py = (parseFloat(pin.pinPosY!) / 100) * naturalH;
+        const colors = getStatusColor(pin.status);
+        const aprobado = isAprobado(pin.status);
+        const isCurrent = pin.id === currentItemId;
+
+        if (aprobado && !isCurrent) {
+          // Small green dot
+          const r = Math.max(4, naturalW * 0.004);
+          ctx.beginPath();
+          ctx.arc(px, py, r, 0, Math.PI * 2);
+          ctx.fillStyle = "#22c55e";
+          ctx.fill();
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = Math.max(1, r * 0.4);
+          ctx.stroke();
+        } else {
+          // Pin marker
+          const pinSize = isCurrent ? Math.max(16, naturalW * 0.018) : Math.max(12, naturalW * 0.012);
+          const pinH = pinSize * 1.4;
+
+          // Draw pin shape (teardrop)
+          ctx.save();
+          ctx.translate(px, py);
+          ctx.beginPath();
+          ctx.arc(0, -pinH + pinSize * 0.6, pinSize * 0.5, Math.PI, 0);
+          ctx.lineTo(0, 0);
+          ctx.closePath();
+          ctx.fillStyle = isCurrent ? pinFill : colors.bg;
+          ctx.fill();
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = Math.max(1, pinSize * 0.1);
+          ctx.stroke();
+
+          // White circle inside
+          ctx.beginPath();
+          ctx.arc(0, -pinH + pinSize * 0.6, pinSize * 0.22, 0, Math.PI * 2);
+          ctx.fillStyle = "white";
+          ctx.fill();
+          ctx.restore();
+
+          // Number label below
+          const num = getItemNumber(pin);
+          const fontSize = Math.max(8, naturalW * 0.008);
+          ctx.font = `bold ${fontSize}px Arial`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+
+          // Badge background
+          const textW = ctx.measureText(num).width;
+          const badgeW = textW + fontSize * 0.8;
+          const badgeH = fontSize * 1.4;
+          const badgeY = py + 2;
+          ctx.fillStyle = isCurrent ? pinFill : colors.bg;
+          ctx.beginPath();
+          ctx.roundRect(px - badgeW / 2, badgeY, badgeW, badgeH, badgeH / 2);
+          ctx.fill();
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = Math.max(1, fontSize * 0.15);
+          ctx.stroke();
+
+          // Number text
+          ctx.fillStyle = "white";
+          ctx.fillText(num, px, badgeY + fontSize * 0.2);
+        }
+      }
+
+      // Create PDF
+      const isLandscape = naturalW > naturalH;
+      const pdf = new jsPDF({
+        orientation: isLandscape ? "landscape" : "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+
+      // Title
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(nombre, margin, margin + 5);
+
+      // Date
+      pdf.setFontSize(8);
+      pdf.setFont("helvetica", "normal");
+      const dateStr = new Date().toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+      pdf.text(dateStr, pageW - margin, margin + 5, { align: "right" });
+
+      // Pin count
+      pdf.setFontSize(9);
+      pdf.text(`${visiblePins.length} pin${visiblePins.length !== 1 ? "es" : ""} marcados`, margin, margin + 11);
+
+      // Image
+      const imgY = margin + 15;
+      const availW = pageW - margin * 2;
+      const availH = pageH - imgY - margin - 20; // leave space for legend
+      const imgRatio = naturalW / naturalH;
+      let drawW = availW;
+      let drawH = drawW / imgRatio;
+      if (drawH > availH) {
+        drawH = availH;
+        drawW = drawH * imgRatio;
+      }
+      const imgX = margin + (availW - drawW) / 2;
+
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+      pdf.addImage(dataUrl, "JPEG", imgX, imgY, drawW, drawH);
+
+      // Legend at bottom
+      const legendY = imgY + drawH + 4;
+      pdf.setFontSize(7);
+      let legendX = margin;
+      for (const opt of STATUS_OPTIONS) {
+        const count = statusCounts[opt.key] || 0;
+        if (count === 0 && hiddenStatuses.has(opt.key)) continue;
+        // Color dot
+        pdf.setFillColor(opt.color);
+        pdf.circle(legendX + 1.5, legendY + 1, 1.5, "F");
+        legendX += 4;
+        // Label
+        const hidden = hiddenStatuses.has(opt.key);
+        pdf.setFont("helvetica", "normal");
+        const label = `${opt.label}: ${count}${hidden ? " (ocultos)" : ""}`;
+        pdf.text(label, legendX, legendY + 1.8);
+        legendX += pdf.getTextWidth(label) + 6;
+      }
+
+      pdf.save(`plano-${nombre.replace(/\s+/g, "-").toLowerCase()}.pdf`);
+    } catch (err) {
+      console.error("Error exportando PDF:", err);
+    } finally {
+      setExportingPdf(false);
+    }
+  }, [exportingPdf, imgRef, allPins, hiddenStatuses, nombre, pinFill, currentItemId, statusCounts]);
 
   const renderPlanoContent = () => (
     <div
@@ -364,10 +619,11 @@ export default function ZoomablePlano({
             className={isFullscreen ? "max-w-full max-h-full object-contain" : "max-w-full max-h-[80vh] object-contain"}
             draggable={false}
             style={{ display: "block" }}
+            crossOrigin="anonymous"
           />
 
-          {/* Other pins */}
-          {!editingPin && otherPins.map((pin) => {
+          {/* Other pins (filtered) */}
+          {!editingPin && filteredOtherPins.map((pin) => {
             const colors = getStatusColor(pin.status);
             const px = parseFloat(pin.pinPosX!);
             const py = parseFloat(pin.pinPosY!);
@@ -399,12 +655,15 @@ export default function ZoomablePlano({
                     }}
                     onMouseEnter={() => setHoveredPin(pin.id)}
                     onMouseLeave={() => setHoveredPin(null)}
+                    onTouchStart={(e) => { e.stopPropagation(); handlePinTouchStart(pin.id); }}
+                    onTouchEnd={(e) => { e.stopPropagation(); handlePinTouchEnd(); }}
+                    onTouchMove={() => handlePinTouchMove()}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onPinClick?.(pin.id);
+                      if (!longPressTriggered.current) onPinClick?.(pin.id);
                     }}
                   />
-                  {/* Hover tooltip */}
+                  {/* Hover/longpress tooltip */}
                   {isHovered && (
                     <div
                       className="absolute rounded-lg shadow-lg border overflow-hidden pointer-events-none"
@@ -465,9 +724,12 @@ export default function ZoomablePlano({
                   }}
                   onMouseEnter={() => setHoveredPin(pin.id)}
                   onMouseLeave={() => setHoveredPin(null)}
+                  onTouchStart={(e) => { e.stopPropagation(); handlePinTouchStart(pin.id); }}
+                  onTouchEnd={(e) => { e.stopPropagation(); handlePinTouchEnd(); }}
+                  onTouchMove={() => handlePinTouchMove()}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onPinClick?.(pin.id);
+                    if (!longPressTriggered.current) onPinClick?.(pin.id);
                   }}
                 >
                   <path
@@ -503,7 +765,7 @@ export default function ZoomablePlano({
                   </span>
                 </div>
 
-                {/* Hover tooltip with defecto info */}
+                {/* Hover/longpress tooltip with defecto info */}
                 {isHovered && (
                   <div
                     className="absolute rounded-lg shadow-lg border overflow-hidden pointer-events-none"
@@ -585,7 +847,7 @@ export default function ZoomablePlano({
                 />
                 <circle cx="12" cy="11" r="4.5" fill="white" />
               </svg>
-              {/* Main pin label - just number and code */}
+              {/* Main pin label - just number */}
               {itemCodigo && (
                 <div
                   className="absolute whitespace-nowrap flex flex-col items-center"
@@ -628,26 +890,79 @@ export default function ZoomablePlano({
     </div>
   );
 
-  // Legend component
-  const renderLegend = () => (
+  // Legend component with interactive filter toggles
+  const renderLegend = (interactive: boolean = false) => (
     <div className="flex flex-wrap items-center gap-2 px-2 py-1">
-      {[
-        { label: "Pend. Foto", color: "#3b82f6" },
-        { label: "Pend. Aprob.", color: "#f59e0b" },
-        { label: "Rechazado", color: "#ef4444" },
-        { label: "Aprobado", color: "#22c55e", dot: true },
-      ].map((s) => (
-        <div key={s.label} className="flex items-center gap-1">
-          {s.dot ? (
-            <div className="w-2 h-2 rounded-full border border-white/50" style={{ backgroundColor: s.color }} />
-          ) : (
-            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-          )}
-          <span className="text-[9px] text-white/70">{s.label}</span>
-        </div>
-      ))}
+      {STATUS_OPTIONS.map((s) => {
+        const count = statusCounts[s.key] || 0;
+        const hidden = hiddenStatuses.has(s.key);
+        return (
+          <button
+            key={s.key}
+            type="button"
+            className={`flex items-center gap-1 transition-opacity ${interactive ? "cursor-pointer" : ""} ${hidden ? "opacity-30" : "opacity-100"}`}
+            onClick={interactive ? () => toggleStatus(s.key) : undefined}
+            title={interactive ? (hidden ? `Mostrar ${s.label}` : `Ocultar ${s.label}`) : undefined}
+          >
+            {s.key === "aprobado" ? (
+              <div className="w-2 h-2 rounded-full border border-white/50" style={{ backgroundColor: s.color }} />
+            ) : (
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+            )}
+            <span className="text-[9px] text-white/70">
+              {s.label}{count > 0 ? ` (${count})` : ""}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
+
+  // Filter menu dropdown
+  const renderFilterMenu = () => {
+    if (!showFilterMenu) return null;
+    return (
+      <div className="absolute top-12 right-2 z-30 bg-black/90 rounded-lg shadow-xl border border-white/20 p-2 min-w-[160px] backdrop-blur-sm">
+        <div className="text-[10px] text-white/50 uppercase tracking-wider px-2 pb-1 mb-1 border-b border-white/10">
+          Filtrar por status
+        </div>
+        {STATUS_OPTIONS.map((s) => {
+          const count = statusCounts[s.key] || 0;
+          const hidden = hiddenStatuses.has(s.key);
+          return (
+            <button
+              key={s.key}
+              type="button"
+              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-all ${hidden ? "opacity-40" : "opacity-100"} hover:bg-white/10`}
+              onClick={() => toggleStatus(s.key)}
+            >
+              <div
+                className="w-3 h-3 rounded-sm border-2 flex items-center justify-center"
+                style={{ borderColor: s.color, backgroundColor: hidden ? "transparent" : s.color }}
+              >
+                {!hidden && (
+                  <svg className="w-2 h-2 text-white" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </div>
+              <span className="text-[10px] text-white flex-1">{s.label}</span>
+              <span className="text-[9px] text-white/50">{count}</span>
+            </button>
+          );
+        })}
+        {hiddenStatuses.size > 0 && (
+          <button
+            type="button"
+            className="w-full text-[9px] text-blue-300 hover:text-blue-200 mt-1 pt-1 border-t border-white/10 text-center"
+            onClick={() => setHiddenStatuses(new Set())}
+          >
+            Mostrar todos
+          </button>
+        )}
+      </div>
+    );
+  };
 
   if (isFullscreen) {
     return (
@@ -661,6 +976,26 @@ export default function ZoomablePlano({
           <div className="flex items-center justify-between px-3 py-2 bg-black/80 text-white shrink-0">
             <div className="text-sm font-medium truncate">{nombre}</div>
             <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setShowFilterMenu(f => !f)}
+                className={`p-2 rounded-lg transition-colors ${showFilterMenu || hiddenStatuses.size > 0 ? "bg-blue-500/30 text-blue-300" : "bg-white/10 hover:bg-white/20"}`}
+                title="Filtrar pines"
+              >
+                <Filter className="w-4 h-4" />
+                {hiddenStatuses.size > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-blue-400 rounded-full" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={exportPlanoPdf}
+                className={`p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors ${exportingPdf ? "opacity-50" : ""}`}
+                title="Exportar PDF"
+                disabled={exportingPdf}
+              >
+                <Download className="w-4 h-4" />
+              </button>
               <button type="button" onClick={() => zoomIn()} className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors" title="Acercar">
                 <ZoomIn className="w-4 h-4" />
               </button>
@@ -672,18 +1007,23 @@ export default function ZoomablePlano({
                   <Maximize2 className="w-4 h-4" />
                 </button>
               )}
-              <button type="button" onClick={() => { setIsFullscreen(false); resetZoom(); setHoveredPin(null); }} className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors" title="Salir">
+              <button type="button" onClick={() => { setIsFullscreen(false); resetZoom(); setHoveredPin(null); setShowFilterMenu(false); }} className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors" title="Salir">
                 <Minimize2 className="w-4 h-4" />
               </button>
             </div>
+          </div>
+          {/* Filter dropdown */}
+          <div className="relative">
+            {renderFilterMenu()}
           </div>
           <div className="flex-1 overflow-hidden flex items-center justify-center">
             {renderPlanoContent()}
           </div>
           <div className="flex items-center justify-between px-3 py-1 bg-black/80 text-white/70 shrink-0">
-            {renderLegend()}
+            {renderLegend(true)}
             <div className="flex items-center gap-3 text-[10px]">
-              <span>{allPins.length} pin{allPins.length !== 1 ? "es" : ""}</span>
+              <span>{filteredOtherPins.length + (pinX != null ? 1 : 0)} pin{(filteredOtherPins.length + (pinX != null ? 1 : 0)) !== 1 ? "es" : ""}</span>
+              {hiddenStatuses.size > 0 && <span className="text-yellow-400">filtrado</span>}
               {scale > 1 && <span>{scale.toFixed(1)}x</span>}
             </div>
           </div>
@@ -714,7 +1054,7 @@ export default function ZoomablePlano({
       <div className="absolute bottom-2 left-2 z-20 flex items-center gap-2">
         {allPins.length > 0 && (
           <div className="bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
-            {allPins.length} pin{allPins.length !== 1 ? "es" : ""}
+            {filteredOtherPins.length + (pinX != null ? 1 : 0)} pin{(filteredOtherPins.length + (pinX != null ? 1 : 0)) !== 1 ? "es" : ""}
           </div>
         )}
         {scale > 1 && (

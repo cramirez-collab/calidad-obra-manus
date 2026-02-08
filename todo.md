@@ -3632,3 +3632,8 @@
 - [x] Selector de nivel muestra cantidad de pines por nivel
 - [x] Pins aceptados: solo puntito verde pequeño (sin número ni etiqueta)
 - [x] Reducir tamaño del pin al 50%
+
+## Mejoras visor de plano v3.97
+- [x] Filtro de pines por status en visor de plano (mostrar/ocultar aprobados, rechazados, pendientes)
+- [x] Tap largo (long press) en móvil como equivalente al hover para ver tooltip del defecto
+- [x] Exportar plano con pines a PDF desde visor fullscreen
