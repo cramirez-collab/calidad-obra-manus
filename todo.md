@@ -3597,3 +3597,13 @@
 - [x] Tooltip con descripción al hover sobre pin
 - [x] Contador de pins totales en el plano
 - [x] Ocultar otros pins cuando se está editando pin (modo edición limpio)
+
+## Afinación de pins y modal de plano v3.92
+- [x] Pins como círculos compactos con número de ítem visible, coloreados por status
+- [x] Pin principal más grande con pulse, muestra código del ítem
+- [x] Tamaño dinámico de pins según nivel de zoom (se ajustan al hacer zoom)
+- [x] Botones del modal de plano: iconos (Move, Save, Trash, X, MapPinPlus, Check) con tooltip
+- [x] Double-tap abre modal fullscreen con plano completo y controles de zoom
+- [x] Fullscreen con header (nombre plano, zoom +/-, reset, minimizar) y footer (conteo pins, zoom level)
+- [x] Escape cierra fullscreen
+- [x] En NuevoItem: botones también como iconos con tooltip

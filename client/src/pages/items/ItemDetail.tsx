@@ -33,7 +33,12 @@ import {
   Trash2,
   Download,
   FileText,
-  Pencil
+  Pencil,
+  Move,
+  Save,
+  Trash,
+  X,
+  MapPinPlus
 } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import {
@@ -1869,10 +1874,17 @@ export default function ItemDetail() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {!editingPin && (
-                  <button onClick={() => { setEditingPin(true); if (hasPin) setTempPinPos({ x: String(itemAny.pinPosX), y: String(itemAny.pinPosY) }); }} className="text-xs bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded font-medium">
-                    {hasPin ? 'Mover Pin' : 'Colocar Pin'}
+                  <button
+                    onClick={() => { setEditingPin(true); if (hasPin) setTempPinPos({ x: String(itemAny.pinPosX), y: String(itemAny.pinPosY) }); }}
+                    className="p-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors group relative"
+                    title={hasPin ? 'Mover pin' : 'Colocar pin'}
+                  >
+                    {hasPin ? <Move className="w-4 h-4" /> : <MapPinPlus className="w-4 h-4" />}
+                    <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      {hasPin ? 'Mover' : 'Colocar'}
+                    </span>
                   </button>
                 )}
                 {editingPin && tempPinPos && (
@@ -1886,9 +1898,11 @@ export default function ItemDetail() {
                       });
                     }}
                     disabled={updatePinMutation.isPending}
-                    className="text-xs bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded font-medium disabled:opacity-50"
+                    className="p-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50 group relative"
+                    title="Guardar pin"
                   >
-                    {updatePinMutation.isPending ? 'Guardando...' : 'Guardar Pin'}
+                    <Save className="w-4 h-4" />
+                    <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Guardar</span>
                   </button>
                 )}
                 {editingPin && hasPin && (
@@ -1901,18 +1915,30 @@ export default function ItemDetail() {
                         pinPosY: null,
                       });
                     }}
-                    className="text-xs bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded font-medium"
+                    className="p-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors group relative"
+                    title="Eliminar pin"
                   >
-                    Eliminar Pin
+                    <Trash className="w-4 h-4" />
+                    <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Eliminar</span>
                   </button>
                 )}
                 {editingPin && (
-                  <button onClick={() => { setEditingPin(false); setTempPinPos(null); }} className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded font-medium">
-                    Cancelar
+                  <button
+                    onClick={() => { setEditingPin(false); setTempPinPos(null); }}
+                    className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors group relative"
+                    title="Cancelar"
+                  >
+                    <X className="w-4 h-4" />
+                    <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Cancelar</span>
                   </button>
                 )}
-                <button onClick={() => { setShowPlanoModal(false); setEditingPin(false); setTempPinPos(null); }} className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded font-medium">
-                  Cerrar
+                <button
+                  onClick={() => { setShowPlanoModal(false); setEditingPin(false); setTempPinPos(null); }}
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors group relative"
+                  title="Cerrar"
+                >
+                  <X className="w-4 h-4" />
+                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Cerrar</span>
                 </button>
               </div>
             </div>

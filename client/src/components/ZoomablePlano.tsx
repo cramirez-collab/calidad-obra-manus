@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { ZoomIn, ZoomOut, Maximize2, Minimize2 } from "lucide-react";
 
 export interface PlanoPin {
   id: number;
@@ -14,38 +14,36 @@ export interface PlanoPin {
 interface ZoomablePlanoProps {
   imagenUrl: string;
   nombre: string;
-  /** Si true, click coloca pin en vez de hacer zoom */
   editingPin?: boolean;
-  /** Posición del pin principal en % (0-100) */
   pinX?: number | string | null;
   pinY?: number | string | null;
-  /** Código del ítem para mostrar en el label del pin */
   itemCodigo?: string;
-  /** Color del pin: 'red' | 'yellow' */
   pinColor?: "red" | "yellow";
-  /** Callback cuando se hace click para colocar pin */
   onPinPlace?: (x: number, y: number) => void;
-  /** Ref para la imagen (usado en NuevoItem) */
   imgRef?: React.RefObject<HTMLImageElement | null>;
-  /** Clase CSS adicional para el contenedor */
   className?: string;
-  /** Todos los pins del plano (otros ítems) */
   allPins?: PlanoPin[];
-  /** ID del ítem actual (para resaltarlo entre allPins) */
   currentItemId?: number;
-  /** Callback cuando se hace click en un pin de otro ítem */
   onPinClick?: (itemId: number) => void;
 }
 
-// Color del pin según status
 function getStatusColor(status?: string | null) {
   switch (status) {
-    case "aprobado": return { fill: "#22c55e", stroke: "#16a34a" }; // verde
-    case "rechazado": return { fill: "#ef4444", stroke: "#dc2626" }; // rojo
-    case "pendiente_aprobacion": return { fill: "#f59e0b", stroke: "#d97706" }; // amarillo
-    case "pendiente_foto_despues": return { fill: "#3b82f6", stroke: "#2563eb" }; // azul
-    default: return { fill: "#6b7280", stroke: "#4b5563" }; // gris
+    case "aprobado": return { fill: "#22c55e", stroke: "#16a34a", bg: "bg-green-500" };
+    case "rechazado": return { fill: "#ef4444", stroke: "#dc2626", bg: "bg-red-500" };
+    case "pendiente_aprobacion": return { fill: "#f59e0b", stroke: "#d97706", bg: "bg-amber-500" };
+    case "pendiente_foto_despues": return { fill: "#3b82f6", stroke: "#2563eb", bg: "bg-blue-500" };
+    default: return { fill: "#6b7280", stroke: "#4b5563", bg: "bg-gray-500" };
   }
+}
+
+function getShortCode(pin: PlanoPin): string {
+  if (pin.numeroInterno) return String(pin.numeroInterno);
+  if (pin.codigo) {
+    const parts = pin.codigo.split("-");
+    return parts[parts.length - 1] || String(pin.id);
+  }
+  return String(pin.id);
 }
 
 export default function ZoomablePlano({
@@ -65,11 +63,11 @@ export default function ZoomablePlano({
 }: ZoomablePlanoProps) {
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const internalImgRef = useRef<HTMLImageElement>(null);
   const imgRef = externalImgRef || internalImgRef;
 
-  // Touch state
   const lastTouchDistance = useRef<number | null>(null);
   const lastTouchCenter = useRef<{ x: number; y: number } | null>(null);
   const isPanning = useRef(false);
@@ -78,7 +76,7 @@ export default function ZoomablePlano({
   const lastTapPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const MIN_SCALE = 1;
-  const MAX_SCALE = 5;
+  const MAX_SCALE = 8;
 
   const clampScale = useCallback((s: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, s)), []);
 
@@ -152,27 +150,46 @@ export default function ZoomablePlano({
       const tapPos = { x: touch.clientX, y: touch.clientY };
       const timeDiff = now - lastTapTime.current;
       const posDiff = Math.abs(tapPos.x - lastTapPos.current.x) + Math.abs(tapPos.y - lastTapPos.current.y);
+
+      // Double-tap: toggle fullscreen modal
       if (timeDiff < 350 && posDiff < 50 && !editingPin) {
         e.preventDefault();
-        if (scale > 1.5) {
+        if (!isFullscreen) {
+          setIsFullscreen(true);
           resetZoom();
         } else {
-          const container = containerRef.current;
-          if (container) {
-            const rect = container.getBoundingClientRect();
-            const cx = tapPos.x - rect.left - rect.width / 2;
-            const cy = tapPos.y - rect.top - rect.height / 2;
-            const newScale = 3;
-            const newTranslate = clampTranslate(-cx * (newScale - 1), -cy * (newScale - 1), newScale);
-            setScale(newScale);
-            setTranslate(newTranslate);
+          // In fullscreen, double-tap zooms
+          if (scale > 1.5) {
+            resetZoom();
+          } else {
+            const container = containerRef.current;
+            if (container) {
+              const rect = container.getBoundingClientRect();
+              const cx = tapPos.x - rect.left - rect.width / 2;
+              const cy = tapPos.y - rect.top - rect.height / 2;
+              const newScale = 3;
+              const newTranslate = clampTranslate(-cx * (newScale - 1), -cy * (newScale - 1), newScale);
+              setScale(newScale);
+              setTranslate(newTranslate);
+            }
           }
         }
       }
+
+      // Single tap in editing mode
+      if (editingPin && timeDiff >= 350 && onPinPlace && imgRef.current) {
+        const rect = imgRef.current.getBoundingClientRect();
+        const x = ((tapPos.x - rect.left) / rect.width) * 100;
+        const y = ((tapPos.y - rect.top) / rect.height) * 100;
+        if (x >= 0 && x <= 100 && y >= 0 && y <= 100) {
+          onPinPlace(x, y);
+        }
+      }
+
       lastTapTime.current = now;
       lastTapPos.current = tapPos;
     },
-    [scale, editingPin, resetZoom, clampTranslate]
+    [scale, editingPin, isFullscreen, resetZoom, clampTranslate, onPinPlace, imgRef]
   );
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -240,12 +257,239 @@ export default function ZoomablePlano({
     return () => container.removeEventListener("wheel", handleWheel);
   }, [scale, translate, clampScale, clampTranslate]);
 
+  // Close fullscreen on Escape
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsFullscreen(false);
+        resetZoom();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [isFullscreen, resetZoom]);
+
   const pinFill = pinColor === "yellow" ? "#f59e0b" : "#ef4444";
   const pinStroke = pinColor === "yellow" ? "#d97706" : "#dc2626";
 
-  // Filter allPins to exclude current item (we render it separately as the main pin)
   const otherPins = allPins.filter((p) => p.id !== currentItemId && p.pinPosX && p.pinPosY);
 
+  // Dynamic pin size based on scale
+  const pinSize = Math.max(12, 18 / scale);
+  const mainPinSize = Math.max(16, 24 / scale);
+  const fontSize = Math.max(7, 9 / scale);
+  const mainFontSize = Math.max(8, 10 / scale);
+
+  const renderPlanoContent = () => (
+    <div
+      ref={containerRef}
+      className={`overflow-hidden ${editingPin ? "cursor-crosshair" : scale > 1 ? "cursor-grab active:cursor-grabbing" : ""}`}
+      style={{ touchAction: "none", width: "100%", height: "100%" }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onClick={handleClick}
+    >
+      <div
+        className="relative w-full h-full flex items-center justify-center"
+        style={{
+          transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
+          transformOrigin: "center center",
+          transition: isPanning.current || lastTouchDistance.current ? "none" : "transform 0.2s ease-out",
+        }}
+      >
+        <img
+          ref={imgRef as React.RefObject<HTMLImageElement>}
+          src={imagenUrl}
+          alt={nombre}
+          className={isFullscreen ? "max-w-full max-h-full object-contain" : "max-w-full max-h-[80vh] object-contain"}
+          draggable={false}
+        />
+
+        {/* Other pins - compact dots with number */}
+        {otherPins.map((pin) => {
+          const colors = getStatusColor(pin.status);
+          const shortCode = getShortCode(pin);
+          return (
+            <div
+              key={pin.id}
+              className="absolute cursor-pointer group"
+              style={{
+                left: `${pin.pinPosX}%`,
+                top: `${pin.pinPosY}%`,
+                transform: "translate(-50%, -50%)",
+                zIndex: 5,
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPinClick?.(pin.id);
+              }}
+            >
+              {/* Dot with number inside */}
+              <div
+                className="rounded-full flex items-center justify-center text-white font-bold shadow-md border border-white/50 hover:scale-125 transition-transform"
+                style={{
+                  width: `${pinSize}px`,
+                  height: `${pinSize}px`,
+                  backgroundColor: colors.fill,
+                  fontSize: `${fontSize}px`,
+                  lineHeight: 1,
+                }}
+              >
+                {shortCode.length <= 3 ? shortCode : ""}
+              </div>
+              {/* Label below */}
+              {shortCode.length > 3 && (
+                <div
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5 bg-black/70 text-white rounded whitespace-nowrap"
+                  style={{ fontSize: `${fontSize}px`, padding: "1px 3px" }}
+                >
+                  {shortCode}
+                </div>
+              )}
+              {/* Tooltip on hover */}
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-black/90 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none max-w-[200px] truncate z-30">
+                #{shortCode} - {pin.descripcion || pin.codigo}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Main pin (current item - larger, highlighted) */}
+        {pinX != null && pinY != null && (
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              left: `${pinX}%`,
+              top: `${pinY}%`,
+              transform: "translate(-50%, -50%)",
+              zIndex: 10,
+            }}
+          >
+            {/* Pulse ring */}
+            <div
+              className="absolute animate-ping rounded-full"
+              style={{
+                width: `${mainPinSize + 8}px`,
+                height: `${mainPinSize + 8}px`,
+                top: `${-(mainPinSize + 8) / 2}px`,
+                left: `${-(mainPinSize + 8) / 2}px`,
+                backgroundColor: pinFill,
+                opacity: 0.3,
+              }}
+            />
+            {/* Main dot */}
+            <div
+              className="rounded-full flex items-center justify-center text-white font-bold shadow-lg border-2 border-white"
+              style={{
+                width: `${mainPinSize}px`,
+                height: `${mainPinSize}px`,
+                backgroundColor: pinFill,
+                fontSize: `${mainFontSize}px`,
+                lineHeight: 1,
+                marginTop: `${-mainPinSize / 2}px`,
+                marginLeft: `${-mainPinSize / 2}px`,
+              }}
+            >
+              {itemCodigo ? getShortCode({ id: 0, codigo: itemCodigo, pinPosX: null, pinPosY: null, numeroInterno: null }).slice(0, 4) : ""}
+            </div>
+            {/* Label */}
+            {itemCodigo && (
+              <div
+                className="absolute left-1/2 -translate-x-1/2 bg-black/80 text-white rounded whitespace-nowrap font-bold"
+                style={{
+                  top: `${mainPinSize / 2 + 2}px`,
+                  fontSize: `${mainFontSize}px`,
+                  padding: "1px 4px",
+                }}
+              >
+                {itemCodigo}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Placeholder when editing and no pin */}
+        {editingPin && pinX == null && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="bg-black/60 text-white px-4 py-2 rounded-lg text-sm">
+              Toca el plano para colocar el pin
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Fullscreen modal
+  if (isFullscreen) {
+    return (
+      <>
+        {/* Placeholder in original position */}
+        <div className={`relative ${className}`}>
+          <div className="flex items-center justify-center h-32 bg-black/10 rounded-lg text-sm text-muted-foreground">
+            Plano en pantalla completa
+          </div>
+        </div>
+        {/* Fullscreen overlay */}
+        <div className="fixed inset-0 z-[200] bg-black flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between px-3 py-2 bg-black/80 text-white shrink-0">
+            <div className="text-sm font-medium truncate">{nombre}</div>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => zoomIn()}
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                title="Acercar"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => zoomOut()}
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                title="Alejar"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+              {scale > 1 && (
+                <button
+                  type="button"
+                  onClick={() => resetZoom()}
+                  className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                  title="Restablecer"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => { setIsFullscreen(false); resetZoom(); }}
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                title="Salir de pantalla completa"
+              >
+                <Minimize2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          {/* Plano content */}
+          <div className="flex-1 overflow-hidden flex items-center justify-center">
+            {renderPlanoContent()}
+          </div>
+          {/* Footer info */}
+          <div className="flex items-center justify-between px-3 py-1.5 bg-black/80 text-white/70 text-[10px] shrink-0">
+            <span>{allPins.length} pin{allPins.length !== 1 ? "es" : ""} en este plano</span>
+            {scale > 1 && <span>{scale.toFixed(1)}x</span>}
+            <span>Doble tap para zoom</span>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Normal (inline) view
   return (
     <div className={`relative ${className}`}>
       {/* Zoom controls */}
@@ -271,11 +515,19 @@ export default function ZoomablePlano({
             type="button"
             onClick={(e) => { e.stopPropagation(); resetZoom(); }}
             className="p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-sm"
-            title="Restablecer zoom"
+            title="Restablecer"
           >
             <Maximize2 className="w-4 h-4" />
           </button>
         )}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setIsFullscreen(true); resetZoom(); }}
+          className="p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-sm"
+          title="Pantalla completa"
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {/* Pin count + Scale indicator */}
@@ -292,115 +544,7 @@ export default function ZoomablePlano({
         )}
       </div>
 
-      {/* Zoomable container */}
-      <div
-        ref={containerRef}
-        className={`overflow-hidden ${editingPin ? "cursor-crosshair" : scale > 1 ? "cursor-grab active:cursor-grabbing" : ""}`}
-        style={{ touchAction: "none" }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onClick={handleClick}
-      >
-        <div
-          className="relative"
-          style={{
-            transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
-            transformOrigin: "center center",
-            transition: isPanning.current || lastTouchDistance.current ? "none" : "transform 0.2s ease-out",
-          }}
-        >
-          <img
-            ref={imgRef as React.RefObject<HTMLImageElement>}
-            src={imagenUrl}
-            alt={nombre}
-            className="max-w-full max-h-[80vh] object-contain"
-            draggable={false}
-          />
-
-          {/* Other pins from allPins (smaller, clickable) */}
-          {otherPins.map((pin) => {
-            const colors = getStatusColor(pin.status);
-            const label = pin.codigo ? `#${pin.codigo.split("-").pop() || pin.codigo}` : `#${pin.numeroInterno || pin.id}`;
-            return (
-              <div
-                key={pin.id}
-                className="absolute cursor-pointer group"
-                style={{
-                  left: `${pin.pinPosX}%`,
-                  top: `${pin.pinPosY}%`,
-                  transform: "translate(-50%, -100%)",
-                  zIndex: 5,
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPinClick?.(pin.id);
-                }}
-              >
-                <svg width="20" height="26" viewBox="0 0 28 36" fill="none">
-                  <path
-                    d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z"
-                    fill={colors.fill}
-                    stroke={colors.stroke}
-                    strokeWidth="2"
-                    opacity="0.85"
-                  />
-                  <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9" />
-                </svg>
-                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-[8px] px-1.5 py-0.5 rounded whitespace-nowrap opacity-80 group-hover:opacity-100 transition-opacity">
-                  {label}
-                </div>
-                {/* Tooltip on hover */}
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-black/90 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none max-w-[200px] truncate">
-                  {pin.descripcion || pin.codigo}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Main pin (current item - larger, highlighted) */}
-          {pinX != null && pinY != null && (
-            <div
-              className="absolute pointer-events-none"
-              style={{
-                left: `${pinX}%`,
-                top: `${pinY}%`,
-                transform: "translate(-50%, -100%)",
-                zIndex: 10,
-              }}
-            >
-              {/* Pulse animation ring */}
-              <div
-                className="absolute animate-ping"
-                style={{ top: "2px", left: "4px", width: "20px", height: "20px", borderRadius: "50%", backgroundColor: pinFill, opacity: 0.3 }}
-              />
-              <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
-                <path
-                  d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z"
-                  fill={pinFill}
-                  stroke={pinStroke}
-                  strokeWidth="2"
-                />
-                <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9" />
-              </svg>
-              {itemCodigo && (
-                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap font-bold">
-                  {itemCodigo}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Placeholder when editing and no pin */}
-          {editingPin && pinX == null && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="bg-black/60 text-white px-4 py-2 rounded-lg text-sm">
-                Toca el plano para colocar el pin
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {renderPlanoContent()}
     </div>
   );
 }

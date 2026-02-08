@@ -26,7 +26,8 @@ import {
   AlertTriangle,
   Layers,
   User,
-  Loader2
+  Loader2,
+  Trash
 } from "lucide-react";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
@@ -796,14 +797,24 @@ export default function NuevoItem() {
                   <span className="text-xs text-white/60 block">Toca para colocar el pin de ubicación</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {pinPos && (
-                  <button onClick={() => setPinPos(null)} className="text-xs bg-red-500/80 hover:bg-red-500 px-2 py-1 rounded">
-                    Quitar pin
+                  <button
+                    onClick={() => setPinPos(null)}
+                    className="p-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors group relative"
+                    title="Quitar pin"
+                  >
+                    <Trash className="w-4 h-4" />
+                    <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Quitar</span>
                   </button>
                 )}
-                <button onClick={() => setShowPinModal(false)} className="text-xs bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded font-medium">
-                  {pinPos ? 'Confirmar' : 'Cerrar'}
+                <button
+                  onClick={() => setShowPinModal(false)}
+                  className="p-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors group relative"
+                  title={pinPos ? 'Confirmar' : 'Cerrar'}
+                >
+                  {pinPos ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">{pinPos ? 'Confirmar' : 'Cerrar'}</span>
                 </button>
               </div>
             </div>
