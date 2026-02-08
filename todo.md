@@ -3502,3 +3502,8 @@
 - [x] Visualizar pines con color según estado del ítem (pendiente/aprobado/rechazado)
 - [x] Tooltip al tocar pin: código, estado, foto miniatura
 - [x] Navegar al detalle del ítem desde el pin
+
+## Sección Planos en Configuración v3.80
+- [x] Agregar sección "Planos por Nivel" en la página de Configuración del Proyecto
+- [x] Permitir subir, editar y eliminar planos desde Configuración
+- [x] Los planos subidos aquí son los que se visualizan en /planos con pines

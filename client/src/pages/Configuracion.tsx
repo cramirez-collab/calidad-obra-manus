@@ -32,7 +32,12 @@ import {
   Plus,
   Pencil,
   Users,
-  AlertTriangle
+  AlertTriangle,
+  Layers,
+  Upload,
+  Image as ImageIcon,
+  X as XIcon,
+  GripVertical
 } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
@@ -498,6 +503,13 @@ export default function Configuracion() {
         </Card>
 
 
+        {/* Sección Planos por Nivel - Solo admin/superadmin */}
+        {isAdmin && selectedProjectId && (
+          <div id="gestion-planos">
+            <PlanosManager proyectoId={selectedProjectId} />
+          </div>
+        )}
+
         {/* Sección Gestión de Avisos - Solo admin/superadmin */}
         {isAdmin && (
           <div id="gestion-avisos">
@@ -857,6 +869,324 @@ function AvisosManager({ proyectoId }: { proyectoId: number | null }) {
           </div>
         </DialogContent>
       </Dialog>
+    </>
+  );
+}
+
+// ==================== COMPONENTE PLANOS MANAGER ====================
+function PlanosManager({ proyectoId }: { proyectoId: number }) {
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editingPlano, setEditingPlano] = useState<any>(null);
+  const [nombre, setNombre] = useState('');
+  const [nivel, setNivel] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [imagenBase64, setImagenBase64] = useState('');
+  const [imagenNombre, setImagenNombre] = useState('');
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [deletePlanoId, setDeletePlanoId] = useState<number | null>(null);
+
+  const { data: planos, isLoading, refetch } = trpc.planos.listar.useQuery(
+    { proyectoId },
+    { enabled: !!proyectoId }
+  );
+
+  const crearPlano = trpc.planos.crear.useMutation({
+    onSuccess: () => {
+      toast.success('Plano subido correctamente');
+      refetch();
+      resetForm();
+      setShowAddDialog(false);
+    },
+    onError: (e: any) => toast.error(e.message || 'Error al subir plano'),
+  });
+
+  const actualizarPlano = trpc.planos.actualizar.useMutation({
+    onSuccess: () => {
+      toast.success('Plano actualizado');
+      refetch();
+      setEditingPlano(null);
+      resetForm();
+    },
+    onError: (e: any) => toast.error(e.message || 'Error al actualizar'),
+  });
+
+  const eliminarPlano = trpc.planos.eliminar.useMutation({
+    onSuccess: () => {
+      toast.success('Plano eliminado');
+      refetch();
+      setDeletePlanoId(null);
+    },
+    onError: (e: any) => toast.error(e.message || 'Error al eliminar'),
+  });
+
+  const resetForm = () => {
+    setNombre('');
+    setNivel('');
+    setDescripcion('');
+    setImagenBase64('');
+    setImagenNombre('');
+    setPreviewUrl('');
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Solo imágenes'); return; }
+    if (file.size > 15 * 1024 * 1024) { toast.error('Máximo 15MB'); return; }
+    setImagenNombre(file.name);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const base64 = ev.target?.result as string;
+      setImagenBase64(base64);
+      setPreviewUrl(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCreate = () => {
+    if (!nombre.trim()) { toast.error('Ingresa un nombre'); return; }
+    if (!imagenBase64) { toast.error('Selecciona una imagen'); return; }
+    crearPlano.mutate({
+      proyectoId,
+      nombre: nombre.trim(),
+      nivel: nivel ? parseInt(nivel) : 0,
+      descripcion: descripcion.trim() || undefined,
+      imagenBase64,
+      imagenNombre,
+    });
+  };
+
+  const handleUpdate = () => {
+    if (!editingPlano || !nombre.trim()) return;
+    actualizarPlano.mutate({
+      id: editingPlano.id,
+      nombre: nombre.trim(),
+      nivel: nivel ? parseInt(nivel) : 0,
+      descripcion: descripcion.trim() || undefined,
+    });
+  };
+
+  const openEdit = (plano: any) => {
+    setEditingPlano(plano);
+    setNombre(plano.nombre);
+    setNivel(plano.nivel?.toString() || '');
+    setDescripcion(plano.descripcion || '');
+    setPreviewUrl(plano.imagenUrl || '');
+  };
+
+  const planosList = planos || [];
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Layers className="h-5 w-5 text-emerald-600" />
+              Planos por Nivel
+            </CardTitle>
+            <Button
+              size="sm"
+              onClick={() => { resetForm(); setShowAddDialog(true); }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+            >
+              <Plus className="h-4 w-4" /> Subir Plano
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Sube imágenes de los planos arquitectónicos de cada nivel. Luego podrás colocar pines sobre ellos desde la sección Planos.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {isLoading && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
+            </div>
+          )}
+
+          {!isLoading && planosList.length === 0 && (
+            <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">
+              <ImageIcon className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm text-slate-500 font-medium">Sin planos cargados</p>
+              <p className="text-xs text-slate-400 mt-1">Sube el primer plano para comenzar a marcar ubicaciones</p>
+            </div>
+          )}
+
+          {!isLoading && planosList.length > 0 && (
+            <div className="space-y-2">
+              {planosList.map((plano: any) => (
+                <div
+                  key={plano.id}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition-colors"
+                >
+                  {/* Thumbnail */}
+                  <div className="w-16 h-12 rounded-md overflow-hidden bg-slate-100 flex-shrink-0 border">
+                    <img
+                      src={plano.imagenUrl}
+                      alt={plano.nombre}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm text-slate-800 truncate">{plano.nombre}</span>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-300 text-emerald-700">
+                        Nivel {plano.nivel ?? 0}
+                      </Badge>
+                    </div>
+                    {plano.descripcion && (
+                      <p className="text-xs text-slate-500 truncate mt-0.5">{plano.descripcion}</p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEdit(plano)}
+                      className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeletePlanoId(plano.id)}
+                      className="h-8 w-8 p-0 text-slate-400 hover:text-red-600"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Dialog: Subir Plano */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5 text-emerald-600" />
+              Subir Plano
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Nombre del plano *</Label>
+              <Input value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Planta Baja, Nivel 1, Azotea" />
+            </div>
+            <div>
+              <Label className="text-xs">Número de nivel</Label>
+              <Input type="number" value={nivel} onChange={e => setNivel(e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <Label className="text-xs">Descripción (opcional)</Label>
+              <Input value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Descripción del plano" />
+            </div>
+            <div>
+              <Label className="text-xs">Imagen del plano *</Label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="plano-file-input"
+              />
+              {previewUrl ? (
+                <div className="relative mt-1">
+                  <img src={previewUrl} alt="Preview" className="w-full h-40 object-contain bg-slate-50 rounded-lg border" />
+                  <button
+                    onClick={() => { setPreviewUrl(''); setImagenBase64(''); setImagenNombre(''); }}
+                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                  >
+                    <XIcon className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => document.getElementById('plano-file-input')?.click()}
+                  className="mt-1 w-full h-32 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-emerald-400 hover:bg-emerald-50/50 transition-colors"
+                >
+                  <ImageIcon className="w-8 h-8 text-slate-400" />
+                  <span className="text-sm text-slate-500">Toca para seleccionar imagen</span>
+                  <span className="text-xs text-slate-400">JPG, PNG, WebP — máx 15MB</span>
+                </button>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancelar</Button>
+            <Button onClick={handleCreate} disabled={crearPlano.isPending} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              {crearPlano.isPending ? 'Subiendo...' : 'Subir Plano'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Editar Plano */}
+      <Dialog open={!!editingPlano} onOpenChange={(open) => { if (!open) setEditingPlano(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5 text-blue-600" />
+              Editar Plano
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {previewUrl && (
+              <div className="w-full h-32 rounded-lg overflow-hidden bg-slate-50 border">
+                <img src={previewUrl} alt="Plano" className="w-full h-full object-contain" />
+              </div>
+            )}
+            <div>
+              <Label className="text-xs">Nombre del plano *</Label>
+              <Input value={nombre} onChange={e => setNombre(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Número de nivel</Label>
+              <Input type="number" value={nivel} onChange={e => setNivel(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Descripción</Label>
+              <Input value={descripcion} onChange={e => setDescripcion(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingPlano(null)}>Cancelar</Button>
+            <Button onClick={handleUpdate} disabled={actualizarPlano.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
+              {actualizarPlano.isPending ? 'Guardando...' : 'Guardar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmar eliminación */}
+      <AlertDialog open={!!deletePlanoId} onOpenChange={(open) => { if (!open) setDeletePlanoId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar este plano?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará el plano y todos los pines asociados. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { if (deletePlanoId) eliminarPlano.mutate({ id: deletePlanoId }); }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {eliminarPlano.isPending ? 'Eliminando...' : 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
