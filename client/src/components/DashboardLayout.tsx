@@ -106,7 +106,6 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: Layers, label: "Stacking", path: "/panoramica" },
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
     { icon: ListOrdered, label: "Especialidades", path: "/lista-especialidades" },
-    { icon: MapPin, label: "Pines", path: "/planos" },
   ];
   
   // Agregar enlaces externos solo si están configurados en el proyecto (con títulos personalizados)
@@ -137,6 +136,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: FolderKanban, label: "Proyectos", path: "/proyectos", group: "Sistema" },
     { icon: Link2, label: "Enlaces", path: "/enlaces-externos", group: "Sistema" },
     { icon: QrCode, label: "QR", path: "/generar-qr", group: "Sistema" },
+    { icon: MapPin, label: "Pines", path: "/planos", group: "Sistema" },
     // Catálogos
     { icon: Building2, label: "Empresas", path: "/empresas", group: "Catálogos" },
     { icon: MapPin, label: "Unidades", path: "/unidades", group: "Catálogos" },
