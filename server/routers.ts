@@ -930,6 +930,10 @@ export const appRouter = router({
         clientId: z.string().optional(),
         // Código QR preasignado (cuando se escanea etiqueta nueva en campo)
         codigoQrPreasignado: z.string().optional(),
+        // Pin de ubicación en plano
+        pinPlanoId: z.number().optional(),
+        pinPosX: z.string().optional(),
+        pinPosY: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         // Verificar duplicados por clientId (evita duplicados por reintentos)
@@ -969,6 +973,9 @@ export const appRouter = router({
           // Trazabilidad
           creadoPorId: ctx.user.id, // Quien tomó la foto inicial
           asignadoAId: asignadoAId, // Residente de la especialidad que debe corregir
+          pinPlanoId: input.pinPlanoId || null,
+          pinPosX: input.pinPosX || null,
+          pinPosY: input.pinPosY || null,
         });
         
         // Devolver resultado inmediatamente para mayor velocidad

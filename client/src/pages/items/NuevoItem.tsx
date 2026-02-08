@@ -59,6 +59,10 @@ export default function NuevoItem() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMarker, setShowMarker] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
+  // Pin sobre plano
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinPos, setPinPos] = useState<{ x: number; y: number } | null>(null);
+  const pinImgRef = useRef<HTMLImageElement>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -221,6 +225,19 @@ export default function NuevoItem() {
 
   const createItemMutation = trpc.items.create.useMutation();
 
+  // Planos del proyecto para mostrar thumbnail al seleccionar nivel
+  const { data: planosData } = trpc.planos.listar.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId }
+  );
+
+  // Plano que corresponde al nivel seleccionado
+  const planoDelNivel = useMemo(() => {
+    if (!planosData || !formData.nivelId) return null;
+    const nivelNum = parseInt(formData.nivelId);
+    return (planosData as any[]).find((p: any) => p.nivel === nivelNum) || null;
+  }, [planosData, formData.nivelId]);
+
   // Función para guardar ítem offline
   const saveItemOffline = useCallback(async (itemData: any) => {
     try {
@@ -370,7 +387,7 @@ export default function NuevoItem() {
     // Generar ID de cliente único para evitar duplicados
     const clientId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    const itemData = {
+      const itemData = {
       proyectoId: selectedProjectId || 0,
       empresaId: residenteSeleccionado.empresaId,
       unidadId: parseInt(formData.unidadId),
@@ -383,6 +400,10 @@ export default function NuevoItem() {
       clientId,
       // Código QR preasignado (si viene de escanear etiqueta nueva)
       codigoQrPreasignado: qrPreasignado || undefined,
+      // Pin de ubicación en plano
+      pinPlanoId: planoDelNivel?.id || undefined,
+      pinPosX: pinPos?.x?.toFixed(4) || undefined,
+      pinPosY: pinPos?.y?.toFixed(4) || undefined,
     };
     
     console.log('[NuevoItem] Iniciando creación de ítem...', {
@@ -721,8 +742,97 @@ export default function NuevoItem() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Thumbnail de plano del nivel seleccionado */}
+            {planoDelNivel && (
+              <div className="mt-3 pt-3 border-t border-slate-100">
+                <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                  <MapPin className="h-3 w-3" />
+                  Ubicar en plano
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowPinModal(true)}
+                    className="relative w-20 h-20 rounded-lg overflow-hidden bg-slate-100 border-2 border-dashed border-slate-300 hover:border-emerald-500 transition-colors flex-shrink-0 group"
+                  >
+                    <img src={planoDelNivel.imagenUrl} alt={planoDelNivel.nombre} className="w-full h-full object-cover" />
+                    {pinPos && (
+                      <div className="absolute" style={{ left: `${pinPos.x}%`, top: `${pinPos.y}%`, transform: 'translate(-50%, -100%)' }}>
+                        <svg width="12" height="16" viewBox="0 0 28 36" fill="none">
+                          <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill="#ef4444" stroke="#dc2626" strokeWidth="2"/>
+                          <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9"/>
+                        </svg>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <MapPin className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity" />
+                    </div>
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-700">{planoDelNivel.nombre}</p>
+                    <p className="text-[10px] text-slate-500">Nivel {planoDelNivel.nivel}</p>
+                    {pinPos ? (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-emerald-300">Pin colocado</Badge>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); setPinPos(null); }} className="text-[10px] text-red-500 hover:text-red-700 underline">Quitar</button>
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-emerald-600 mt-1 font-medium">Toca para marcar ubicación</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
+
+        {/* Modal para colocar pin sobre plano */}
+        {showPinModal && planoDelNivel && (
+          <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col">
+            <div className="flex items-center justify-between px-3 py-2 bg-black/80 text-white">
+              <div className="flex items-center gap-2">
+                <button onClick={() => setShowPinModal(false)} className="p-2 hover:bg-white/10 rounded-lg">
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <div>
+                  <span className="font-semibold text-sm">{planoDelNivel.nombre}</span>
+                  <span className="text-xs text-white/60 block">Toca para colocar el pin de ubicación</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {pinPos && (
+                  <button onClick={() => setPinPos(null)} className="text-xs bg-red-500/80 hover:bg-red-500 px-2 py-1 rounded">
+                    Quitar pin
+                  </button>
+                )}
+                <button onClick={() => setShowPinModal(false)} className="text-xs bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded font-medium">
+                  {pinPos ? 'Confirmar' : 'Cerrar'}
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto flex items-center justify-center p-4">
+              <div className="relative cursor-crosshair" onClick={(e) => {
+                const img = pinImgRef.current;
+                if (!img) return;
+                const rect = img.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                if (x >= 0 && x <= 100 && y >= 0 && y <= 100) setPinPos({ x, y });
+              }}>
+                <img ref={pinImgRef} src={planoDelNivel.imagenUrl} alt={planoDelNivel.nombre} className="max-w-full max-h-[80vh] object-contain" draggable={false} />
+                {pinPos && (
+                  <div className="absolute" style={{ left: `${pinPos.x}%`, top: `${pinPos.y}%`, transform: 'translate(-50%, -100%)', zIndex: 10 }}>
+                    <svg width="24" height="32" viewBox="0 0 28 36" fill="none">
+                      <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill="#ef4444" stroke="#dc2626" strokeWidth="2"/>
+                      <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9"/>
+                    </svg>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Botón de crear - Siempre visible */}
         <Button 

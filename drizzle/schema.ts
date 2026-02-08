@@ -255,6 +255,11 @@ export const items = mysqlTable("items", {
   // Número consecutivo interno (solo control, no participa en QR)
   numeroInterno: int("numeroInterno").default(0).notNull(),
   
+  // Pin de ubicación en plano
+  pinPlanoId: int("pinPlanoId"),
+  pinPosX: varchar("pinPosX", { length: 20 }),
+  pinPosY: varchar("pinPosY", { length: 20 }),
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

@@ -46,7 +46,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useLocation, useParams } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
 import { toast } from "sonner";
@@ -137,6 +137,13 @@ export default function ItemDetail() {
   const { data: espacios } = trpc.espacios.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined
   );
+  // Planos del proyecto para mostrar pin de ubicación
+  const { data: planosData } = trpc.planos.listar.useQuery(
+    { proyectoId: selectedProjectId || 0 },
+    { enabled: !!selectedProjectId }
+  );
+  const [showPlanoModal, setShowPlanoModal] = useState(false);
+
   const { data: editResidentes } = trpc.empresas.getAllResidentesConEmpresas.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined
   );
@@ -1107,13 +1114,34 @@ export default function ItemDetail() {
 
                 <div className="flex items-center gap-3">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div>
+                  <div className="flex-1">
                     <p className="text-xs text-muted-foreground">Unidad</p>
                     <p className="font-medium">{getUnidadNombre(item.unidadId)}</p>
                     {item.ubicacionDetalle && (
                       <p className="text-sm text-muted-foreground">{item.ubicacionDetalle}</p>
                     )}
                   </div>
+                  {/* Thumbnail de plano con pin */}
+                  {(item as any).pinPlanoId && (item as any).pinPosX && (() => {
+                    const plano = (planosData as any[])?.find((p: any) => p.id === (item as any).pinPlanoId);
+                    if (!plano) return null;
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => setShowPlanoModal(true)}
+                        className="relative w-16 h-16 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 hover:border-emerald-500 transition-colors flex-shrink-0 group"
+                      >
+                        <img src={plano.imagenUrl} alt={plano.nombre} className="w-full h-full object-cover" />
+                        <div className="absolute" style={{ left: `${(item as any).pinPosX}%`, top: `${(item as any).pinPosY}%`, transform: 'translate(-50%, -100%)' }}>
+                          <svg width="8" height="11" viewBox="0 0 28 36" fill="none">
+                            <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill="#ef4444" stroke="#dc2626" strokeWidth="2"/>
+                            <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9"/>
+                          </svg>
+                        </div>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                      </button>
+                    );
+                  })()}
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -1625,6 +1653,44 @@ export default function ItemDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal fullscreen de plano con pin de ubicación */}
+      {showPlanoModal && (item as any).pinPlanoId && (() => {
+        const plano = (planosData as any[])?.find((p: any) => p.id === (item as any).pinPlanoId);
+        if (!plano) return null;
+        return (
+          <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col">
+            <div className="flex items-center justify-between px-3 py-2 bg-black/80 text-white">
+              <div className="flex items-center gap-2">
+                <button onClick={() => setShowPlanoModal(false)} className="p-2 hover:bg-white/10 rounded-lg">
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <div>
+                  <span className="font-semibold text-sm">{plano.nombre}</span>
+                  <span className="text-xs text-white/60 block">Ubicación del ítem {item?.codigo}</span>
+                </div>
+              </div>
+              <button onClick={() => setShowPlanoModal(false)} className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded font-medium">
+                Cerrar
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto flex items-center justify-center p-4">
+              <div className="relative">
+                <img src={plano.imagenUrl} alt={plano.nombre} className="max-w-full max-h-[80vh] object-contain" draggable={false} />
+                <div className="absolute" style={{ left: `${(item as any).pinPosX}%`, top: `${(item as any).pinPosY}%`, transform: 'translate(-50%, -100%)', zIndex: 10 }}>
+                  <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
+                    <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill="#ef4444" stroke="#dc2626" strokeWidth="2"/>
+                    <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9"/>
+                  </svg>
+                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap">
+                    {item?.codigo}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </DashboardLayout>
   );
 }

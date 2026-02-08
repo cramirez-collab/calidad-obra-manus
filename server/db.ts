@@ -1123,6 +1123,9 @@ export async function getItemById(id: number) {
     comentarioSupervisor: items.comentarioSupervisor,
     clientId: items.clientId,
     numeroInterno: items.numeroInterno,
+    pinPlanoId: items.pinPlanoId,
+    pinPosX: items.pinPosX,
+    pinPosY: items.pinPosY,
     createdAt: items.createdAt,
     updatedAt: items.updatedAt,
   }).from(items).where(eq(items.id, id)).limit(1);

@@ -3516,3 +3516,10 @@
 - [x] Modal fullscreen para abrir plano y colocar pines
 - [x] Pines SVG 18x24px proporcionales pequeños pero visibles
 - [x] Menú lateral actualizado: Planos→Pines
+
+## Integrar pines en flujo de ítems v3.83
+- [x] En Nuevo Ítem: al seleccionar nivel, mostrar thumbnail del plano a un lado
+- [x] Click en thumbnail abre modal para colocar pin de ubicación sobre el plano
+- [x] Guardar coordenadas del pin junto con el ítem (pinPlanoId, pinPosX, pinPosY en tabla items)
+- [x] En ficha del ítem (DetalleItem): mostrar plano con pin de ubicación marcado
+- [x] getItemById devuelve campos de pin para visualización
