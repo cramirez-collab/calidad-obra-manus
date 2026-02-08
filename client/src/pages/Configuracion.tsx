@@ -37,10 +37,18 @@ import {
   Upload,
   Image as ImageIcon,
   X as XIcon,
-  GripVertical
+  GripVertical,
+  MapPin,
+  MapPinOff,
+  Search,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
-import { Link } from "wouter";
-import { useState, useEffect } from "react";
+import { Link, useLocation } from "wouter";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -386,36 +394,9 @@ export default function Configuracion() {
           })}
         </div>
 
-        {/* Sección Limpiar Caché - ARRIBA para fácil acceso */}
-        <Card className="border-orange-200 bg-orange-50">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
-                  <Trash2 className="h-5 w-5 text-orange-600" />
-                </div>
-                <div>
-                  <span className="font-medium text-sm">Limpiar Caché</span>
-                  <p className="text-xs text-muted-foreground">
-                    Resuelve problemas de datos desactualizados
-                  </p>
-                </div>
-              </div>
-              <ClearCacheButton />
-            </div>
-          </CardContent>
-        </Card>
+        {/* === SECCIONES ORDENADAS ALFABÉTICAMENTE === */}
 
-        {/* Info y Versión */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground bg-accent/50 rounded-lg p-3">
-          <div className="flex items-center gap-2">
-            <Info className="h-4 w-4 shrink-0" />
-            <span>Los cambios se aplican inmediatamente</span>
-          </div>
-          <span className="font-mono bg-primary/10 text-primary px-2 py-0.5 rounded">v18</span>
-        </div>
-
-        {/* Sección Alta Rápida de Empresa */}
+        {/* A - Alta Rápida de Empresa */}
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -437,8 +418,15 @@ export default function Configuracion() {
           </CardContent>
         </Card>
 
-        {/* Sección Cambiar Contraseña */}
-        <Card className="mt-6">
+        {/* A - Avisos */}
+        {isAdmin && (
+          <div id="gestion-avisos">
+            <AvisosManager proyectoId={selectedProjectId} />
+          </div>
+        )}
+
+        {/* C - Cambiar Contraseña */}
+        <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Key className="h-5 w-5 text-primary" />
@@ -502,20 +490,41 @@ export default function Configuracion() {
           </CardContent>
         </Card>
 
+        {/* L - Limpiar Caché */}
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+                  <Trash2 className="h-5 w-5 text-orange-600" />
+                </div>
+                <div>
+                  <span className="font-medium text-sm">Limpiar Caché</span>
+                  <p className="text-xs text-muted-foreground">
+                    Resuelve problemas de datos desactualizados
+                  </p>
+                </div>
+              </div>
+              <ClearCacheButton />
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Sección Planos por Nivel - Solo admin/superadmin */}
+        {/* P - Pines (antes Planos por Nivel) */}
         {isAdmin && selectedProjectId && (
-          <div id="gestion-planos">
-            <PlanosManager proyectoId={selectedProjectId} />
+          <div id="gestion-pines">
+            <PinesManager proyectoId={selectedProjectId} />
           </div>
         )}
 
-        {/* Sección Gestión de Avisos - Solo admin/superadmin */}
-        {isAdmin && (
-          <div id="gestion-avisos">
-            <AvisosManager proyectoId={selectedProjectId} />
+        {/* Info y Versión */}
+        <div className="flex items-center justify-between text-xs text-muted-foreground bg-accent/50 rounded-lg p-3">
+          <div className="flex items-center gap-2">
+            <Info className="h-4 w-4 shrink-0" />
+            <span>Los cambios se aplican inmediatamente</span>
           </div>
-        )}
+          <span className="font-mono bg-primary/10 text-primary px-2 py-0.5 rounded">v18</span>
+        </div>
 
       </div>
     </DashboardLayout>
@@ -873,8 +882,18 @@ function AvisosManager({ proyectoId }: { proyectoId: number | null }) {
   );
 }
 
-// ==================== COMPONENTE PLANOS MANAGER ====================
-function PlanosManager({ proyectoId }: { proyectoId: number }) {
+// ==================== COMPONENTE PINES MANAGER ====================
+const PIN_COLORS: Record<string, { bg: string; border: string }> = {
+  pendiente_foto_despues: { bg: "#f59e0b", border: "#d97706" },
+  pendiente_aprobacion: { bg: "#3b82f6", border: "#2563eb" },
+  aprobado: { bg: "#10b981", border: "#059669" },
+  rechazado: { bg: "#ef4444", border: "#dc2626" },
+  sin_item: { bg: "#6b7280", border: "#4b5563" },
+};
+
+function PinesManager({ proyectoId }: { proyectoId: number }) {
+  const [, navigate] = useLocation();
+  // Form state
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingPlano, setEditingPlano] = useState<any>(null);
   const [nombre, setNombre] = useState('');
@@ -885,47 +904,79 @@ function PlanosManager({ proyectoId }: { proyectoId: number }) {
   const [previewUrl, setPreviewUrl] = useState('');
   const [deletePlanoId, setDeletePlanoId] = useState<number | null>(null);
 
+  // Viewer/pin state
+  const [viewerPlano, setViewerPlano] = useState<any>(null);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [pinMode, setPinMode] = useState(false);
+  const [showPins, setShowPins] = useState(true);
+  const [selectedPin, setSelectedPin] = useState<any>(null);
+  const [showItemSelector, setShowItemSelector] = useState(false);
+  const [pendingPinPos, setPendingPinPos] = useState<{ x: number; y: number } | null>(null);
+  const [itemSearch, setItemSearch] = useState('');
+  const [pinNota, setPinNota] = useState('');
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Queries
   const { data: planos, isLoading, refetch } = trpc.planos.listar.useQuery(
     { proyectoId },
     { enabled: !!proyectoId }
   );
+  const { data: pinesData, refetch: refetchPines } = trpc.planos.pines.listar.useQuery(
+    { planoId: viewerPlano?.id! },
+    { enabled: !!viewerPlano?.id }
+  );
+  const { data: itemsData } = trpc.items.list.useQuery(
+    { proyectoId, limit: 500, offset: 0 },
+    { enabled: !!proyectoId && !!viewerPlano }
+  );
 
+  // Mutations planos
   const crearPlano = trpc.planos.crear.useMutation({
-    onSuccess: () => {
-      toast.success('Plano subido correctamente');
-      refetch();
-      resetForm();
-      setShowAddDialog(false);
-    },
-    onError: (e: any) => toast.error(e.message || 'Error al subir plano'),
+    onSuccess: () => { toast.success('Nivel añadido'); refetch(); resetForm(); setShowAddDialog(false); },
+    onError: (e: any) => toast.error(e.message || 'Error'),
   });
-
   const actualizarPlano = trpc.planos.actualizar.useMutation({
-    onSuccess: () => {
-      toast.success('Plano actualizado');
-      refetch();
-      setEditingPlano(null);
-      resetForm();
-    },
-    onError: (e: any) => toast.error(e.message || 'Error al actualizar'),
+    onSuccess: () => { toast.success('Nivel actualizado'); refetch(); setEditingPlano(null); resetForm(); },
+    onError: (e: any) => toast.error(e.message || 'Error'),
+  });
+  const eliminarPlano = trpc.planos.eliminar.useMutation({
+    onSuccess: () => { toast.success('Nivel eliminado'); refetch(); setDeletePlanoId(null); },
+    onError: (e: any) => toast.error(e.message || 'Error'),
   });
 
-  const eliminarPlano = trpc.planos.eliminar.useMutation({
-    onSuccess: () => {
-      toast.success('Plano eliminado');
-      refetch();
-      setDeletePlanoId(null);
-    },
-    onError: (e: any) => toast.error(e.message || 'Error al eliminar'),
+  // Mutations pines
+  const crearPin = trpc.planos.pines.crear.useMutation({
+    onSuccess: () => { refetchPines(); toast.success('Pin agregado'); setShowItemSelector(false); setPendingPinPos(null); setPinNota(''); },
+    onError: (e: any) => toast.error(e.message),
   });
+  const eliminarPin = trpc.planos.pines.eliminar.useMutation({
+    onSuccess: () => { refetchPines(); toast.success('Pin eliminado'); setSelectedPin(null); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const pines = pinesData || [];
+  const planosList = planos || [];
+
+  const allItems = useMemo(() => {
+    const list = (itemsData as any)?.items || itemsData || [];
+    return Array.isArray(list) ? list : [];
+  }, [itemsData]);
+
+  const filteredItems = useMemo(() => {
+    if (!itemSearch.trim()) return allItems.slice(0, 30);
+    const q = itemSearch.toLowerCase();
+    return allItems.filter((it: any) =>
+      it.codigo?.toLowerCase().includes(q) ||
+      it.titulo?.toLowerCase().includes(q) ||
+      String(it.numeroInterno || '').includes(q)
+    ).slice(0, 30);
+  }, [allItems, itemSearch]);
 
   const resetForm = () => {
-    setNombre('');
-    setNivel('');
-    setDescripcion('');
-    setImagenBase64('');
-    setImagenNombre('');
-    setPreviewUrl('');
+    setNombre(''); setNivel(''); setDescripcion(''); setImagenBase64(''); setImagenNombre(''); setPreviewUrl('');
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -935,46 +986,56 @@ function PlanosManager({ proyectoId }: { proyectoId: number }) {
     if (file.size > 15 * 1024 * 1024) { toast.error('Máximo 15MB'); return; }
     setImagenNombre(file.name);
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      const base64 = ev.target?.result as string;
-      setImagenBase64(base64);
-      setPreviewUrl(base64);
-    };
+    reader.onload = (ev) => { const b = ev.target?.result as string; setImagenBase64(b); setPreviewUrl(b); };
     reader.readAsDataURL(file);
   };
 
   const handleCreate = () => {
-    if (!nombre.trim()) { toast.error('Ingresa un nombre'); return; }
-    if (!imagenBase64) { toast.error('Selecciona una imagen'); return; }
-    crearPlano.mutate({
-      proyectoId,
-      nombre: nombre.trim(),
-      nivel: nivel ? parseInt(nivel) : 0,
-      descripcion: descripcion.trim() || undefined,
-      imagenBase64,
-      imagenNombre,
-    });
+    if (!nombre.trim()) { toast.error('Ingresa nombre del nivel'); return; }
+    if (!imagenBase64) { toast.error('Selecciona imagen del plano'); return; }
+    crearPlano.mutate({ proyectoId, nombre: nombre.trim(), nivel: nivel ? parseInt(nivel) : 0, descripcion: descripcion.trim() || undefined, imagenBase64, imagenNombre });
   };
 
   const handleUpdate = () => {
     if (!editingPlano || !nombre.trim()) return;
-    actualizarPlano.mutate({
-      id: editingPlano.id,
-      nombre: nombre.trim(),
-      nivel: nivel ? parseInt(nivel) : 0,
-      descripcion: descripcion.trim() || undefined,
-    });
+    actualizarPlano.mutate({ id: editingPlano.id, nombre: nombre.trim(), nivel: nivel ? parseInt(nivel) : 0, descripcion: descripcion.trim() || undefined });
   };
 
   const openEdit = (plano: any) => {
-    setEditingPlano(plano);
-    setNombre(plano.nombre);
-    setNivel(plano.nivel?.toString() || '');
-    setDescripcion(plano.descripcion || '');
-    setPreviewUrl(plano.imagenUrl || '');
+    setEditingPlano(plano); setNombre(plano.nombre); setNivel(plano.nivel?.toString() || ''); setDescripcion(plano.descripcion || ''); setPreviewUrl(plano.imagenUrl || '');
   };
 
-  const planosList = planos || [];
+  const openViewer = (plano: any) => {
+    setViewerPlano(plano); setZoom(1); setPan({ x: 0, y: 0 }); setPinMode(false); setSelectedPin(null); setShowPins(true);
+  };
+
+  const closeViewer = () => { setViewerPlano(null); setPinMode(false); setSelectedPin(null); };
+
+  // Pin click on plano
+  const handlePlanoClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!pinMode || isDragging) return;
+    const img = imgRef.current;
+    if (!img) return;
+    const rect = img.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    if (x < 0 || x > 100 || y < 0 || y > 100) return;
+    setPendingPinPos({ x, y }); setItemSearch(''); setPinNota(''); setShowItemSelector(true);
+  }, [pinMode, isDragging]);
+
+  const confirmPin = (itemId?: number) => {
+    if (!pendingPinPos || !viewerPlano) return;
+    crearPin.mutate({ planoId: viewerPlano.id, itemId, posX: pendingPinPos.x.toFixed(4), posY: pendingPinPos.y.toFixed(4), nota: pinNota.trim() || undefined });
+  };
+
+  // Pan handlers
+  const handleMouseDown = (e: React.MouseEvent) => { if (pinMode) return; setIsDragging(true); setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y }); };
+  const handleMouseMove = (e: React.MouseEvent) => { if (!isDragging || pinMode) return; setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y }); };
+  const handleMouseUp = () => setIsDragging(false);
+  const handleTouchStart = (e: React.TouchEvent) => { if (pinMode || e.touches.length !== 1) return; setIsDragging(true); setDragStart({ x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y }); };
+  const handleTouchMove = (e: React.TouchEvent) => { if (!isDragging || e.touches.length !== 1 || pinMode) return; setPan({ x: e.touches[0].clientX - dragStart.x, y: e.touches[0].clientY - dragStart.y }); };
+  const handleTouchEnd = () => setIsDragging(false);
+  const handleWheel = (e: React.WheelEvent) => { e.preventDefault(); setZoom(prev => Math.max(0.2, Math.min(5, prev + (e.deltaY > 0 ? -0.1 : 0.1)))); };
 
   return (
     <>
@@ -982,19 +1043,19 @@ function PlanosManager({ proyectoId }: { proyectoId: number }) {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Layers className="h-5 w-5 text-emerald-600" />
-              Planos por Nivel
+              <MapPin className="h-5 w-5 text-emerald-600" />
+              Pines
             </CardTitle>
             <Button
               size="sm"
               onClick={() => { resetForm(); setShowAddDialog(true); }}
               className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
             >
-              <Plus className="h-4 w-4" /> Subir Plano
+              <Plus className="h-4 w-4" /> Añadir Nivel
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Sube imágenes de los planos arquitectónicos de cada nivel. Luego podrás colocar pines sobre ellos desde la sección Planos.
+            Sube la imagen del plano de cada nivel. Toca la miniatura para abrir el plano y colocar pines sobre él.
           </p>
         </CardHeader>
         <CardContent>
@@ -1006,33 +1067,34 @@ function PlanosManager({ proyectoId }: { proyectoId: number }) {
 
           {!isLoading && planosList.length === 0 && (
             <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">
-              <ImageIcon className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-              <p className="text-sm text-slate-500 font-medium">Sin planos cargados</p>
-              <p className="text-xs text-slate-400 mt-1">Sube el primer plano para comenzar a marcar ubicaciones</p>
+              <MapPin className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm text-slate-500 font-medium">Sin niveles cargados</p>
+              <p className="text-xs text-slate-400 mt-1">Añade el primer nivel con su plano para comenzar a marcar ubicaciones</p>
             </div>
           )}
 
           {!isLoading && planosList.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {planosList.map((plano: any) => (
                 <div
                   key={plano.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition-colors"
+                  className="flex items-start gap-3 p-3 rounded-lg border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition-colors"
                 >
-                  {/* Thumbnail */}
-                  <div className="w-16 h-12 rounded-md overflow-hidden bg-slate-100 flex-shrink-0 border">
-                    <img
-                      src={plano.imagenUrl}
-                      alt={plano.nombre}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
+                  {/* Thumbnail - tamaño foto de ítem, clickeable para abrir modal */}
+                  <button
+                    onClick={() => openViewer(plano)}
+                    className="w-20 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0 border-2 border-slate-200 hover:border-emerald-500 transition-colors relative group"
+                  >
+                    <img src={plano.imagenUrl} alt={plano.nombre} className="w-full h-full object-cover" loading="lazy" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <MapPin className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity" />
+                    </div>
+                  </button>
 
                   {/* Info */}
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 py-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm text-slate-800 truncate">{plano.nombre}</span>
+                      <span className="font-semibold text-sm text-slate-800 truncate">{plano.nombre}</span>
                       <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-300 text-emerald-700">
                         Nivel {plano.nivel ?? 0}
                       </Badge>
@@ -1040,24 +1102,20 @@ function PlanosManager({ proyectoId }: { proyectoId: number }) {
                     {plano.descripcion && (
                       <p className="text-xs text-slate-500 truncate mt-0.5">{plano.descripcion}</p>
                     )}
+                    <button
+                      onClick={() => openViewer(plano)}
+                      className="mt-1.5 text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
+                    >
+                      <MapPin className="w-3 h-3" /> Abrir plano y colocar pines
+                    </button>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(plano)}
-                      className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600"
-                    >
+                  <div className="flex items-center gap-1 flex-shrink-0 pt-1">
+                    <Button variant="ghost" size="sm" onClick={() => openEdit(plano)} className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600">
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeletePlanoId(plano.id)}
-                      className="h-8 w-8 p-0 text-slate-400 hover:text-red-600"
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => setDeletePlanoId(plano.id)} className="h-8 w-8 p-0 text-slate-400 hover:text-red-600">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -1068,18 +1126,187 @@ function PlanosManager({ proyectoId }: { proyectoId: number }) {
         </CardContent>
       </Card>
 
-      {/* Dialog: Subir Plano */}
+      {/* ========== MODAL VISOR DE PLANO CON PINES ========== */}
+      {viewerPlano && (
+        <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col">
+          {/* Toolbar */}
+          <div className="flex items-center justify-between px-3 py-2 bg-black/80 text-white gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <button onClick={closeViewer} className="p-2 hover:bg-white/10 rounded-lg flex-shrink-0">
+                <XIcon className="w-5 h-5" />
+              </button>
+              <div className="min-w-0">
+                <span className="font-semibold text-sm truncate block">{viewerPlano.nombre}</span>
+                <span className="text-xs text-white/60">Nivel {viewerPlano.nivel ?? 0} — {pines.length} pin{pines.length !== 1 ? 'es' : ''}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button onClick={() => setShowPins(p => !p)} className={`p-2 rounded-lg transition-colors ${showPins ? 'bg-emerald-600' : 'hover:bg-white/10'}`} title={showPins ? 'Ocultar pines' : 'Mostrar pines'}>
+                {showPins ? <MapPin className="w-4 h-4" /> : <MapPinOff className="w-4 h-4" />}
+              </button>
+              <button onClick={() => { setPinMode(p => !p); setSelectedPin(null); }} className={`p-2 rounded-lg transition-colors ${pinMode ? 'bg-red-500 animate-pulse' : 'hover:bg-white/10'}`} title={pinMode ? 'Cancelar' : 'Agregar pin'}>
+                <Plus className="w-4 h-4" />
+              </button>
+              <div className="w-px h-5 bg-white/20 mx-1" />
+              <button onClick={() => setZoom(z => Math.max(0.2, z - 0.2))} className="p-2 hover:bg-white/10 rounded-lg"><ZoomOut className="w-4 h-4" /></button>
+              <span className="text-xs w-10 text-center">{Math.round(zoom * 100)}%</span>
+              <button onClick={() => setZoom(z => Math.min(5, z + 0.2))} className="p-2 hover:bg-white/10 rounded-lg"><ZoomIn className="w-4 h-4" /></button>
+              <button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} className="p-2 hover:bg-white/10 rounded-lg"><RotateCcw className="w-4 h-4" /></button>
+            </div>
+          </div>
+
+          {pinMode && (
+            <div className="bg-red-500 text-white text-center py-1.5 text-sm font-medium animate-pulse">
+              Toca sobre el plano para colocar un pin
+            </div>
+          )}
+
+          {/* Image area con pines */}
+          <div
+            className={`flex-1 overflow-hidden select-none ${pinMode ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'}`}
+            onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}
+            onWheel={handleWheel}
+          >
+            <div className="w-full h-full flex items-center justify-center relative" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transition: isDragging ? 'none' : 'transform 0.1s' }}>
+              <div className="relative" onClick={handlePlanoClick}>
+                <img ref={imgRef} src={viewerPlano.imagenUrl} alt={viewerPlano.nombre} className="max-w-none" style={{ maxHeight: '85vh', maxWidth: '95vw', objectFit: 'contain' }} draggable={false} />
+
+                {/* Pines pequeños proporcionales */}
+                {showPins && pines.map((pin: any) => {
+                  const estado = pin.itemEstado || 'sin_item';
+                  const colors = PIN_COLORS[estado] || PIN_COLORS.sin_item;
+                  const isSelected = selectedPin?.id === pin.id;
+                  return (
+                    <div
+                      key={pin.id}
+                      className="absolute"
+                      style={{ left: `${parseFloat(pin.posX)}%`, top: `${parseFloat(pin.posY)}%`, transform: 'translate(-50%, -100%)', zIndex: isSelected ? 50 : 10 }}
+                      onClick={(e) => { e.stopPropagation(); setSelectedPin(isSelected ? null : pin); }}
+                    >
+                      <div style={{ filter: isSelected ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
+                        <svg width="18" height="24" viewBox="0 0 28 36" fill="none">
+                          <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill={colors.bg} stroke={colors.border} strokeWidth="2"/>
+                          <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9"/>
+                          <text x="14" y="16" textAnchor="middle" fontSize="8" fontWeight="bold" fill={colors.bg}>
+                            {pin.itemConsecutivo || '#'}
+                          </text>
+                        </svg>
+                      </div>
+
+                      {/* Tooltip */}
+                      {isSelected && (
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-white rounded-lg shadow-xl border border-slate-200 p-2.5 min-w-[200px] max-w-[280px] z-50" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-start gap-2">
+                            {pin.itemFotoAntes && <img src={pin.itemFotoAntes} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />}
+                            <div className="min-w-0 flex-1">
+                              {pin.itemCodigo && <p className="text-xs font-bold text-slate-800 truncate">{pin.itemCodigo}</p>}
+                              {pin.itemConsecutivo && <p className="text-xs text-slate-500">#{pin.itemConsecutivo}</p>}
+                              {pin.itemDescripcion && <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">{pin.itemDescripcion}</p>}
+                              {pin.nota && !pin.itemId && <p className="text-xs text-slate-600 mt-0.5 italic">{pin.nota}</p>}
+                              {pin.itemEstado && (
+                                <span className="inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: colors.bg + '20', color: colors.bg }}>
+                                  {pin.itemEstado.replace(/_/g, ' ')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 mt-2 pt-2 border-t border-slate-100">
+                            {pin.itemId && (
+                              <button onClick={() => navigate(`/item/${pin.itemId}`)} className="flex-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 rounded px-2 py-1 font-medium flex items-center justify-center gap-1">
+                                <Eye className="w-3 h-3" /> Ver ítem
+                              </button>
+                            )}
+                            <button onClick={() => { if (confirm('¿Eliminar este pin?')) eliminarPin.mutate({ id: pin.id }); }} className="text-xs bg-red-50 hover:bg-red-100 text-red-600 rounded px-2 py-1 font-medium flex items-center justify-center gap-1">
+                              <Trash2 className="w-3 h-3" /> Quitar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom: thumbnails de niveles */}
+          {planosList.length > 1 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-black/80 overflow-x-auto">
+              {planosList.map((p: any) => (
+                <button
+                  key={p.id}
+                  onClick={() => { openViewer(p); }}
+                  className={`flex-shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 transition-all ${
+                    p.id === viewerPlano.id ? 'border-emerald-500 opacity-100' : 'border-transparent opacity-50 hover:opacity-80'
+                  }`}
+                >
+                  <img src={p.imagenUrl} alt={p.nombre} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Dialog: Seleccionar ítem para pin */}
+      <Dialog open={showItemSelector} onOpenChange={(open) => { if (!open) { setShowItemSelector(false); setPendingPinPos(null); } }}>
+        <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-emerald-600" />
+              Vincular Pin a Ítem
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
+            <div>
+              <label className="text-xs font-medium text-slate-600">Nota (opcional)</label>
+              <Input value={pinNota} onChange={e => setPinNota(e.target.value)} placeholder="Nota del pin..." />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-600">Buscar ítem para vincular</label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input value={itemSearch} onChange={e => setItemSearch(e.target.value)} placeholder="Código, título o #consecutivo..." className="pl-8" />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto border rounded-lg divide-y max-h-[300px]">
+              {filteredItems.map((item: any) => {
+                const estado = item.status || 'pendiente_foto_despues';
+                const colors = PIN_COLORS[estado] || PIN_COLORS.sin_item;
+                return (
+                  <button key={item.id} onClick={() => confirmPin(item.id)} className="w-full text-left px-3 py-2 hover:bg-emerald-50 transition-colors flex items-center gap-2">
+                    {item.fotoAntesUrl && <img src={item.fotoAntesUrl} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-slate-800 truncate">{item.codigo}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{item.titulo}</p>
+                    </div>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bg + '20', color: colors.bg }}>#{item.numeroInterno}</span>
+                  </button>
+                );
+              })}
+              {filteredItems.length === 0 && <div className="text-center py-6 text-sm text-slate-400">No se encontraron ítems</div>}
+            </div>
+          </div>
+          <DialogFooter className="flex-row gap-2">
+            <Button variant="outline" onClick={() => { setShowItemSelector(false); setPendingPinPos(null); }} className="flex-1">Cancelar</Button>
+            <Button onClick={() => confirmPin()} className="flex-1 bg-slate-600 hover:bg-slate-700 text-white">Pin sin ítem</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Añadir Nivel */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Upload className="h-5 w-5 text-emerald-600" />
-              Subir Plano
+              Añadir Nivel
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label className="text-xs">Nombre del plano *</Label>
+              <Label className="text-xs">Nombre del nivel *</Label>
               <Input value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Planta Baja, Nivel 1, Azotea" />
             </div>
             <div>
@@ -1088,32 +1315,20 @@ function PlanosManager({ proyectoId }: { proyectoId: number }) {
             </div>
             <div>
               <Label className="text-xs">Descripción (opcional)</Label>
-              <Input value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Descripción del plano" />
+              <Input value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Descripción del nivel" />
             </div>
             <div>
               <Label className="text-xs">Imagen del plano *</Label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-                id="plano-file-input"
-              />
+              <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" id="pines-file-input" />
               {previewUrl ? (
                 <div className="relative mt-1">
                   <img src={previewUrl} alt="Preview" className="w-full h-40 object-contain bg-slate-50 rounded-lg border" />
-                  <button
-                    onClick={() => { setPreviewUrl(''); setImagenBase64(''); setImagenNombre(''); }}
-                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                  >
+                  <button onClick={() => { setPreviewUrl(''); setImagenBase64(''); setImagenNombre(''); }} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600">
                     <XIcon className="w-3 h-3" />
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => document.getElementById('plano-file-input')?.click()}
-                  className="mt-1 w-full h-32 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-emerald-400 hover:bg-emerald-50/50 transition-colors"
-                >
+                <button onClick={() => document.getElementById('pines-file-input')?.click()} className="mt-1 w-full h-32 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-emerald-400 hover:bg-emerald-50/50 transition-colors">
                   <ImageIcon className="w-8 h-8 text-slate-400" />
                   <span className="text-sm text-slate-500">Toca para seleccionar imagen</span>
                   <span className="text-xs text-slate-400">JPG, PNG, WebP — máx 15MB</span>
@@ -1124,19 +1339,19 @@ function PlanosManager({ proyectoId }: { proyectoId: number }) {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancelar</Button>
             <Button onClick={handleCreate} disabled={crearPlano.isPending} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-              {crearPlano.isPending ? 'Subiendo...' : 'Subir Plano'}
+              {crearPlano.isPending ? 'Subiendo...' : 'Añadir Nivel'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: Editar Plano */}
+      {/* Dialog: Editar Nivel */}
       <Dialog open={!!editingPlano} onOpenChange={(open) => { if (!open) setEditingPlano(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Pencil className="h-5 w-5 text-blue-600" />
-              Editar Plano
+              Editar Nivel
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
@@ -1146,7 +1361,7 @@ function PlanosManager({ proyectoId }: { proyectoId: number }) {
               </div>
             )}
             <div>
-              <Label className="text-xs">Nombre del plano *</Label>
+              <Label className="text-xs">Nombre del nivel *</Label>
               <Input value={nombre} onChange={e => setNombre(e.target.value)} />
             </div>
             <div>
@@ -1171,17 +1386,14 @@ function PlanosManager({ proyectoId }: { proyectoId: number }) {
       <AlertDialog open={!!deletePlanoId} onOpenChange={(open) => { if (!open) setDeletePlanoId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar este plano?</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar este nivel?</AlertDialogTitle>
             <AlertDialogDescription>
               Se eliminará el plano y todos los pines asociados. Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => { if (deletePlanoId) eliminarPlano.mutate({ id: deletePlanoId }); }}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
+            <AlertDialogAction onClick={() => { if (deletePlanoId) eliminarPlano.mutate({ id: deletePlanoId }); }} className="bg-red-600 hover:bg-red-700 text-white">
               {eliminarPlano.isPending ? 'Eliminando...' : 'Eliminar'}
             </AlertDialogAction>
           </AlertDialogFooter>

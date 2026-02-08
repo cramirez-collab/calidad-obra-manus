@@ -3507,3 +3507,12 @@
 - [x] Agregar sección "Planos por Nivel" en la página de Configuración del Proyecto
 - [x] Permitir subir, editar y eliminar planos desde Configuración
 - [x] Los planos subidos aquí son los que se visualizan en /planos con pines
+
+## Reestructurar Planos→Pines en Configuración v3.81
+- [x] Renombrar sección "Planos por Nivel" a "Pines" en Configuración
+- [x] Ordenar secciones de Configuración alfabéticamente
+- [x] Rediseñar PinesManager: añadir nivel con nombre + imagen de plano
+- [x] Thumbnail del plano tamaño foto (80x80), click abre modal visor
+- [x] Modal fullscreen para abrir plano y colocar pines
+- [x] Pines SVG 18x24px proporcionales pequeños pero visibles
+- [x] Menú lateral actualizado: Planos→Pines

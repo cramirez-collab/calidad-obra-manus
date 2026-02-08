@@ -106,7 +106,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: Layers, label: "Stacking", path: "/panoramica" },
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
     { icon: ListOrdered, label: "Especialidades", path: "/lista-especialidades" },
-    { icon: FolderOpen, label: "Planos", path: "/planos" },
+    { icon: MapPin, label: "Pines", path: "/planos" },
   ];
   
   // Agregar enlaces externos solo si están configurados en el proyecto (con títulos personalizados)
