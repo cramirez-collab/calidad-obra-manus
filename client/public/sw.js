@@ -5,9 +5,9 @@
 // ESTRATEGIA: Network-first para todo, cache solo como fallback offline
 // REGLA: /api/ NUNCA se cachea
 // ============================================
-const APP_VERSION = 377;
-const DISPLAY_VERSION = 'v3.77';
-const CACHE_NAME = `oqc-v377`;
+const APP_VERSION = 378;
+const DISPLAY_VERSION = 'v3.78';
+const CACHE_NAME = `oqc-v378`;
 const OFFLINE_URL = '/offline.html';
 
 // Recursos esenciales para modo offline

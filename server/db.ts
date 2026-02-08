@@ -26,7 +26,8 @@ import {
   empresaResidentes, InsertEmpresaResidente,
   empresaHistorial, InsertEmpresaHistorial,
   avisos, InsertAviso,
-  avisosLecturas, InsertAvisoLectura
+  avisosLecturas, InsertAvisoLectura,
+  planos, InsertPlano
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -5202,4 +5203,45 @@ export async function getUsuariosEnLinea(proyectoId: number, minutosUmbral: numb
     ))
     .orderBy(desc(users.lastActiveAt));
   return result;
+}
+
+
+// ==========================================
+// PLANOS POR NIVEL
+// ==========================================
+
+export async function getPlanosByProyecto(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(planos)
+    .where(and(eq(planos.proyectoId, proyectoId), eq(planos.activo, true)))
+    .orderBy(asc(planos.nivel), asc(planos.orden));
+}
+
+export async function getPlanoById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [plano] = await db.select().from(planos).where(eq(planos.id, id));
+  return plano || null;
+}
+
+export async function createPlano(data: InsertPlano) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.insert(planos).values(data);
+  return result.insertId;
+}
+
+export async function updatePlano(id: number, data: Partial<InsertPlano>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(planos).set(data).where(eq(planos.id, id));
+}
+
+export async function deletePlano(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(planos).set({ activo: false }).where(eq(planos.id, id));
 }

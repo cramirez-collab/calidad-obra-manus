@@ -583,3 +583,25 @@ export const avisosLecturas = mysqlTable("avisos_lecturas", {
 
 export type AvisoLectura = typeof avisosLecturas.$inferSelect;
 export type InsertAvisoLectura = typeof avisosLecturas.$inferInsert;
+
+
+/**
+ * Tabla de planos - imágenes de planos arquitectónicos por nivel/piso del proyecto
+ */
+export const planos = mysqlTable("planos", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  nombre: varchar("nombre", { length: 255 }).notNull(), // Ej: "Nivel 1", "Planta Baja", "Azotea"
+  nivel: int("nivel").default(0), // Número de nivel/piso para ordenar
+  imagenUrl: text("imagenUrl").notNull(), // URL de la imagen en S3
+  imagenKey: varchar("imagenKey", { length: 500 }), // Key en S3
+  descripcion: text("descripcion"),
+  orden: int("orden").default(0),
+  activo: boolean("activo").default(true).notNull(),
+  creadoPorId: int("creadoPorId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Plano = typeof planos.$inferSelect;
+export type InsertPlano = typeof planos.$inferInsert;

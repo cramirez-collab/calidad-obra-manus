@@ -2628,5 +2628,96 @@ export const appRouter = router({
         };
       }),
   }),
+
+  // ==========================================
+  // PLANOS POR NIVEL
+  // ==========================================
+  planos: router({
+    listar: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getPlanosByProyecto(input.proyectoId);
+      }),
+
+    obtener: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getPlanoById(input.id);
+      }),
+
+    crear: adminProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        nombre: z.string().min(1),
+        nivel: z.number().optional(),
+        descripcion: z.string().optional(),
+        orden: z.number().optional(),
+        imagenBase64: z.string(), // base64 de la imagen
+        imagenNombre: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Decodificar base64 y subir a S3
+        const base64Data = input.imagenBase64.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        const ext = input.imagenNombre.split('.').pop() || 'png';
+        const key = `planos/${input.proyectoId}/${nanoid(10)}.${ext}`;
+        const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/png';
+        const { url } = await storagePut(key, buffer, mimeType);
+
+        const id = await db.createPlano({
+          proyectoId: input.proyectoId,
+          nombre: input.nombre,
+          nivel: input.nivel ?? 0,
+          imagenUrl: url,
+          imagenKey: key,
+          descripcion: input.descripcion || null,
+          orden: input.orden ?? 0,
+          creadoPorId: ctx.user.id,
+        });
+        return { id, url };
+      }),
+
+    actualizar: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        nombre: z.string().min(1).optional(),
+        nivel: z.number().optional(),
+        descripcion: z.string().optional(),
+        orden: z.number().optional(),
+        imagenBase64: z.string().optional(), // nueva imagen si se reemplaza
+        imagenNombre: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const updateData: any = {};
+        if (input.nombre !== undefined) updateData.nombre = input.nombre;
+        if (input.nivel !== undefined) updateData.nivel = input.nivel;
+        if (input.descripcion !== undefined) updateData.descripcion = input.descripcion;
+        if (input.orden !== undefined) updateData.orden = input.orden;
+
+        // Si se envía nueva imagen, subir a S3
+        if (input.imagenBase64 && input.imagenNombre) {
+          const plano = await db.getPlanoById(input.id);
+          if (!plano) throw new TRPCError({ code: 'NOT_FOUND' });
+          const base64Data = input.imagenBase64.replace(/^data:image\/\w+;base64,/, '');
+          const buffer = Buffer.from(base64Data, 'base64');
+          const ext = input.imagenNombre.split('.').pop() || 'png';
+          const key = `planos/${plano.proyectoId}/${nanoid(10)}.${ext}`;
+          const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'png' ? 'image/png' : 'image/png';
+          const { url } = await storagePut(key, buffer, mimeType);
+          updateData.imagenUrl = url;
+          updateData.imagenKey = key;
+        }
+
+        await db.updatePlano(input.id, updateData);
+        return { ok: true };
+      }),
+
+    eliminar: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deletePlano(input.id);
+        return { ok: true };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

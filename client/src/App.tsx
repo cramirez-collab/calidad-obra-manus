@@ -52,6 +52,7 @@ const Defectos = lazy(() => import("./pages/Defectos"));
 const EnlacesExternos = lazy(() => import("./pages/EnlacesExternos"));
 const Avisos = lazy(() => import("./pages/Avisos"));
 const Terminos = lazy(() => import("./pages/Terminos"));
+const Planos = lazy(() => import("./pages/Planos"));
 const AltaRapidaEmpresa = lazy(() => import("./pages/catalogos/AltaRapidaEmpresa"));
 
 
@@ -128,6 +129,9 @@ function AppRoutes() {
       
       {/* Avisos */}
       <Route path="/avisos" component={Avisos} />
+      
+      {/* Planos */}
+      <Route path="/planos" component={Planos} />
       
       {/* Configuración y Metas */}
       <Route path="/configuracion" component={Configuracion} />

@@ -3484,3 +3484,12 @@
 - [x] Tooltip funcione con tap en móvil (toggle), no solo hover
 - [x] Todos los usuarios ven la lista de quién está en línea (no solo admin)
 - [x] Mantener descarga PDF solo para admin (botón PDF dentro del panel)
+
+## Módulo Planos por Nivel v3.78
+- [x] Crear tabla `planos` en BD (proyectoId, nombre/nivel, imagenUrl, orden)
+- [x] Helpers en db.ts para CRUD de planos
+- [x] Endpoints tRPC para subir, listar, editar y eliminar planos
+- [x] Página frontend Planos.tsx con upload de imagen por nivel
+- [x] Visualizador de plano con zoom/pan y navegación entre planos
+- [x] Integrar en menú lateral del dashboard (sección Análisis)
+- [x] Incrementar versión a 3.78
