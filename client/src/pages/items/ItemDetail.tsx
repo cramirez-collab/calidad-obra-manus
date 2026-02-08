@@ -143,6 +143,16 @@ export default function ItemDetail() {
     { enabled: !!selectedProjectId }
   );
   const [showPlanoModal, setShowPlanoModal] = useState(false);
+  const [editingPin, setEditingPin] = useState(false);
+  const [tempPinPos, setTempPinPos] = useState<{x: string; y: string} | null>(null);
+
+  const updatePinMutation = trpc.items.updatePin.useMutation({
+    onSuccess: () => {
+      utils.items.get.invalidate({ id: itemId });
+      setEditingPin(false);
+      setTempPinPos(null);
+    },
+  });
 
   const { data: editResidentes } = trpc.empresas.getAllResidentesConEmpresas.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined
@@ -1121,25 +1131,54 @@ export default function ItemDetail() {
                       <p className="text-sm text-muted-foreground">{item.ubicacionDetalle}</p>
                     )}
                   </div>
-                  {/* Thumbnail de plano con pin */}
-                  {(item as any).pinPlanoId && (item as any).pinPosX && (() => {
-                    const plano = (planosData as any[])?.find((p: any) => p.id === (item as any).pinPlanoId);
-                    if (!plano) return null;
+                  {/* Thumbnail de plano con pin + botones editar/agregar */}
+                  {(() => {
+                    const itemAny = item as any;
+                    const hasPin = itemAny.pinPlanoId && itemAny.pinPosX;
+                    // Buscar plano del nivel del ítem
+                    const planoDelPin = hasPin ? (planosData as any[])?.find((p: any) => p.id === itemAny.pinPlanoId) : null;
+                    const planoDelNivel = !hasPin ? (planosData as any[])?.find((p: any) => {
+                      const unidad = unidades?.find((u: any) => u.id === item.unidadId);
+                      return unidad && p.nombre === unidad.nivel;
+                    }) : null;
+                    const planoDisponible = planoDelPin || planoDelNivel;
+                    
+                    if (!planoDisponible) return null;
+                    
                     return (
-                      <button
-                        type="button"
-                        onClick={() => setShowPlanoModal(true)}
-                        className="relative w-16 h-16 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 hover:border-emerald-500 transition-colors flex-shrink-0 group"
-                      >
-                        <img src={plano.imagenUrl} alt={plano.nombre} className="w-full h-full object-cover" />
-                        <div className="absolute" style={{ left: `${(item as any).pinPosX}%`, top: `${(item as any).pinPosY}%`, transform: 'translate(-50%, -100%)' }}>
-                          <svg width="8" height="11" viewBox="0 0 28 36" fill="none">
-                            <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill="#ef4444" stroke="#dc2626" strokeWidth="2"/>
-                            <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9"/>
-                          </svg>
-                        </div>
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                      </button>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {hasPin && planoDelPin ? (
+                          <button
+                            type="button"
+                            onClick={() => setShowPlanoModal(true)}
+                            className="relative w-16 h-16 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 hover:border-emerald-500 transition-colors group"
+                          >
+                            <img src={planoDelPin.imagenUrl} alt={planoDelPin.nombre} className="w-full h-full object-cover" />
+                            <div className="absolute" style={{ left: `${itemAny.pinPosX}%`, top: `${itemAny.pinPosY}%`, transform: 'translate(-50%, -100%)' }}>
+                              <svg width="8" height="11" viewBox="0 0 28 36" fill="none">
+                                <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill="#ef4444" stroke="#dc2626" strokeWidth="2"/>
+                                <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9"/>
+                              </svg>
+                            </div>
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingPin(true);
+                            setShowPlanoModal(true);
+                            if (hasPin) {
+                              setTempPinPos({ x: String(itemAny.pinPosX), y: String(itemAny.pinPosY) });
+                            }
+                          }}
+                          className="flex flex-col items-center justify-center w-16 h-16 rounded-lg border border-dashed border-emerald-400 hover:bg-emerald-50 transition-colors text-emerald-600"
+                        >
+                          <MapPin className="w-4 h-4" />
+                          <span className="text-[9px] font-medium mt-0.5">{hasPin ? 'Editar' : 'Agregar'}</span>
+                          <span className="text-[9px] font-medium">Pin</span>
+                        </button>
+                      </div>
                     );
                   })()}
                 </div>
@@ -1654,38 +1693,117 @@ export default function ItemDetail() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Modal fullscreen de plano con pin de ubicación */}
-      {showPlanoModal && (item as any).pinPlanoId && (() => {
-        const plano = (planosData as any[])?.find((p: any) => p.id === (item as any).pinPlanoId);
-        if (!plano) return null;
+      {/* Modal fullscreen de plano con pin de ubicación (ver + editar) */}
+      {showPlanoModal && (() => {
+        const itemAny = item as any;
+        const hasPin = itemAny.pinPlanoId && itemAny.pinPosX;
+        const planoDelPin = hasPin ? (planosData as any[])?.find((p: any) => p.id === itemAny.pinPlanoId) : null;
+        const planoDelNivel = !planoDelPin ? (planosData as any[])?.find((p: any) => {
+          const unidad = unidades?.find((u: any) => u.id === item.unidadId);
+          return unidad && p.nombre === unidad.nivel;
+        }) : null;
+        const plano = planoDelPin || planoDelNivel;
+        if (!plano) { setShowPlanoModal(false); return null; }
+        
+        const pinX = tempPinPos ? tempPinPos.x : (hasPin ? String(itemAny.pinPosX) : null);
+        const pinY = tempPinPos ? tempPinPos.y : (hasPin ? String(itemAny.pinPosY) : null);
+        
+        const handlePlanoClick = (e: React.MouseEvent<HTMLImageElement>) => {
+          if (!editingPin) return;
+          const rect = e.currentTarget.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(2);
+          const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(2);
+          setTempPinPos({ x, y });
+        };
+        
         return (
           <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col">
             <div className="flex items-center justify-between px-3 py-2 bg-black/80 text-white">
               <div className="flex items-center gap-2">
-                <button onClick={() => setShowPlanoModal(false)} className="p-2 hover:bg-white/10 rounded-lg">
+                <button onClick={() => { setShowPlanoModal(false); setEditingPin(false); setTempPinPos(null); }} className="p-2 hover:bg-white/10 rounded-lg">
                   <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
                   <span className="font-semibold text-sm">{plano.nombre}</span>
-                  <span className="text-xs text-white/60 block">Ubicación del ítem {item?.codigo}</span>
+                  <span className="text-xs text-white/60 block">
+                    {editingPin ? 'Toca el plano para colocar el pin' : `Ubicación del ítem ${item?.codigo}`}
+                  </span>
                 </div>
               </div>
-              <button onClick={() => setShowPlanoModal(false)} className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded font-medium">
-                Cerrar
-              </button>
+              <div className="flex items-center gap-2">
+                {!editingPin && (
+                  <button onClick={() => { setEditingPin(true); if (hasPin) setTempPinPos({ x: String(itemAny.pinPosX), y: String(itemAny.pinPosY) }); }} className="text-xs bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded font-medium">
+                    {hasPin ? 'Mover Pin' : 'Colocar Pin'}
+                  </button>
+                )}
+                {editingPin && tempPinPos && (
+                  <button
+                    onClick={() => {
+                      updatePinMutation.mutate({
+                        itemId: item.id,
+                        pinPlanoId: plano.id,
+                        pinPosX: tempPinPos.x,
+                        pinPosY: tempPinPos.y,
+                      });
+                    }}
+                    disabled={updatePinMutation.isPending}
+                    className="text-xs bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded font-medium disabled:opacity-50"
+                  >
+                    {updatePinMutation.isPending ? 'Guardando...' : 'Guardar Pin'}
+                  </button>
+                )}
+                {editingPin && hasPin && (
+                  <button
+                    onClick={() => {
+                      updatePinMutation.mutate({
+                        itemId: item.id,
+                        pinPlanoId: null,
+                        pinPosX: null,
+                        pinPosY: null,
+                      });
+                    }}
+                    className="text-xs bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded font-medium"
+                  >
+                    Eliminar Pin
+                  </button>
+                )}
+                {editingPin && (
+                  <button onClick={() => { setEditingPin(false); setTempPinPos(null); }} className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded font-medium">
+                    Cancelar
+                  </button>
+                )}
+                <button onClick={() => { setShowPlanoModal(false); setEditingPin(false); setTempPinPos(null); }} className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded font-medium">
+                  Cerrar
+                </button>
+              </div>
             </div>
             <div className="flex-1 overflow-auto flex items-center justify-center p-4">
               <div className="relative">
-                <img src={plano.imagenUrl} alt={plano.nombre} className="max-w-full max-h-[80vh] object-contain" draggable={false} />
-                <div className="absolute" style={{ left: `${(item as any).pinPosX}%`, top: `${(item as any).pinPosY}%`, transform: 'translate(-50%, -100%)', zIndex: 10 }}>
-                  <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
-                    <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill="#ef4444" stroke="#dc2626" strokeWidth="2"/>
-                    <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9"/>
-                  </svg>
-                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap">
-                    {item?.codigo}
+                <img
+                  src={plano.imagenUrl}
+                  alt={plano.nombre}
+                  className={`max-w-full max-h-[80vh] object-contain ${editingPin ? 'cursor-crosshair' : ''}`}
+                  draggable={false}
+                  onClick={handlePlanoClick}
+                />
+                {pinX && pinY && (
+                  <div className="absolute pointer-events-none" style={{ left: `${pinX}%`, top: `${pinY}%`, transform: 'translate(-50%, -100%)', zIndex: 10 }}>
+                    <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
+                      <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill={editingPin ? '#f59e0b' : '#ef4444'} stroke={editingPin ? '#d97706' : '#dc2626'} strokeWidth="2"/>
+                      <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9"/>
+                    </svg>
+                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap">
+                      {item?.codigo}
+                    </div>
                   </div>
-                </div>
+                )}
+                {editingPin && !pinX && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="bg-black/60 text-white px-4 py-2 rounded-lg text-sm">
+                      Toca el plano para colocar el pin
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -3523,3 +3523,10 @@
 - [x] Guardar coordenadas del pin junto con el ítem (pinPlanoId, pinPosX, pinPosY en tabla items)
 - [x] En ficha del ítem (DetalleItem): mostrar plano con pin de ubicación marcado
 - [x] getItemById devuelve campos de pin para visualización
+
+## Editar pin existente v3.84
+- [x] Endpoint tRPC items.updatePin (pinPlanoId, pinPosX, pinPosY nullable)
+- [x] Botón "Editar/Agregar Pin" en ItemDetail junto al thumbnail del plano
+- [x] Modal fullscreen con modo edición: cursor crosshair, click para colocar pin
+- [x] Botón "Eliminar Pin" para quitar pin existente
+- [x] Pin amarillo en modo edición, rojo en modo visualización

@@ -1491,6 +1491,23 @@ export const appRouter = router({
         }
         return { success: true, deleted };
       }),
+
+    // Actualizar pin de ubicación de un ítem
+    updatePin: protectedProcedure
+      .input(z.object({
+        itemId: z.number(),
+        pinPlanoId: z.number().nullable(),
+        pinPosX: z.string().nullable(),
+        pinPosY: z.string().nullable(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateItem(input.itemId, {
+          pinPlanoId: input.pinPlanoId,
+          pinPosX: input.pinPosX,
+          pinPosY: input.pinPosY,
+        });
+        return { success: true };
+      }),
   }),
 
   // ==================== ESTADÍSTICAS ====================
