@@ -2680,6 +2680,12 @@ export const appRouter = router({
         return db.getPlanosByProyecto(input.proyectoId);
       }),
 
+    pinCount: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getPinCountByPlano(input.proyectoId);
+      }),
+
     obtener: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {

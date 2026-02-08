@@ -49,12 +49,12 @@ function getStatusLabel(status?: string | null) {
 }
 
 function getItemNumber(pin: PlanoPin): string {
-  if (pin.numeroInterno) return `#${pin.numeroInterno}`;
+  if (pin.numeroInterno) return `${pin.numeroInterno}`;
   if (pin.codigo) {
     const parts = pin.codigo.split("-");
-    return `#${parts[parts.length - 1] || pin.id}`;
+    return parts[parts.length - 1] || `${pin.id}`;
   }
-  return `#${pin.id}`;
+  return `${pin.id}`;
 }
 
 function truncate(str: string, max: number) {
@@ -80,7 +80,7 @@ export default function ZoomablePlano({
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [expandedPin, setExpandedPin] = useState<number | null>(null);
+  const [hoveredPin, setHoveredPin] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imgWrapperRef = useRef<HTMLDivElement>(null);
   const internalImgRef = useRef<HTMLImageElement>(null);
@@ -323,108 +323,15 @@ export default function ZoomablePlano({
   const pinFill = pinColor === "yellow" ? "#f59e0b" : "#ef4444";
   const otherPins = allPins.filter((p) => p.id !== currentItemId && p.pinPosX && p.pinPosY);
 
-  // Pin sizes - bigger for readability
-  const basePinW = Math.max(20, 28 / scale);
+  // Pin sizes - REDUCED 50% from previous
+  const basePinW = Math.max(10, 14 / scale);
   const basePinH = basePinW * 1.3;
-  const mainPinW = Math.max(26, 36 / scale);
+  const mainPinW = Math.max(14, 20 / scale);
   const mainPinH = mainPinW * 1.3;
-  const labelScale = Math.max(0.5, 1 / scale);
+  const labelScale = Math.max(0.4, 0.7 / scale);
 
-  const renderPinLabel = (pin: PlanoPin, isMain: boolean = false) => {
-    const colors = getStatusColor(pin.status);
-    const itemNum = getItemNumber(pin);
-    const desc = truncate(pin.descripcion || "", 25);
-    const residente = truncate(pin.residenteNombre || "", 20);
-    const isExpanded = expandedPin === pin.id || isMain;
-
-    return (
-      <div
-        className="absolute left-0 flex flex-col items-center"
-        style={{
-          top: "4px",
-          transform: `translateX(-50%) scale(${labelScale})`,
-          transformOrigin: "top center",
-          zIndex: isExpanded ? 25 : 15,
-          pointerEvents: "auto",
-        }}
-      >
-        {/* Number badge - always visible */}
-        <div
-          className="flex items-center gap-1 rounded-full px-2 py-0.5 font-bold text-white shadow-md cursor-pointer whitespace-nowrap"
-          style={{
-            backgroundColor: isMain ? pinFill : colors.bg,
-            border: `2px solid ${isMain ? "white" : colors.border}`,
-            fontSize: "11px",
-            lineHeight: 1.2,
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!isMain) {
-              setExpandedPin(expandedPin === pin.id ? null : pin.id);
-            }
-          }}
-        >
-          <span>{itemNum}</span>
-          {!isMain && (
-            <ExternalLink
-              className="w-3 h-3 opacity-80 hover:opacity-100 cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                onPinClick?.(pin.id);
-              }}
-            />
-          )}
-        </div>
-
-        {/* Info card - shown when expanded or for main pin */}
-        {isExpanded && (
-          <div
-            className="mt-1 rounded-lg shadow-lg border overflow-hidden"
-            style={{
-              backgroundColor: "rgba(0,0,0,0.85)",
-              borderColor: isMain ? pinFill : colors.bg,
-              minWidth: "120px",
-              maxWidth: "180px",
-            }}
-          >
-            {/* Defecto */}
-            {desc && (
-              <div className="px-2 py-1 text-white text-[10px] leading-tight border-b border-white/10">
-                <span className="text-white/60">Defecto: </span>
-                <span className="font-medium">{desc}</span>
-              </div>
-            )}
-            {/* Residente */}
-            {residente && (
-              <div className="px-2 py-1 text-white text-[10px] leading-tight border-b border-white/10">
-                <span className="text-white/60">Residente: </span>
-                <span className="font-medium">{residente}</span>
-              </div>
-            )}
-            {/* Status */}
-            <div className="px-2 py-1 flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.bg }} />
-              <span className="text-[9px] text-white/80">{getStatusLabel(pin.status)}</span>
-            </div>
-            {/* Go to item button */}
-            {!isMain && (
-              <button
-                type="button"
-                className="w-full px-2 py-1.5 text-[10px] font-medium text-white flex items-center justify-center gap-1 hover:bg-white/10 transition-colors border-t border-white/10"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPinClick?.(pin.id);
-                }}
-              >
-                <ExternalLink className="w-3 h-3" />
-                Ver Ítem
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
+  // Check if pin is "aprobado" - render as small green dot only
+  const isAprobado = (status?: string | null) => status === "aprobado";
 
   const renderPlanoContent = () => (
     <div
@@ -436,9 +343,8 @@ export default function ZoomablePlano({
       onTouchEnd={handleTouchEnd}
       onClick={(e) => {
         handleClick(e);
-        // Close expanded pin when clicking on empty area
-        if (!editingPin && expandedPin !== null) {
-          setExpandedPin(null);
+        if (!editingPin && hoveredPin !== null) {
+          setHoveredPin(null);
         }
       }}
     >
@@ -465,6 +371,77 @@ export default function ZoomablePlano({
             const colors = getStatusColor(pin.status);
             const px = parseFloat(pin.pinPosX!);
             const py = parseFloat(pin.pinPosY!);
+            const isHovered = hoveredPin === pin.id;
+            const aprobado = isAprobado(pin.status);
+
+            // Aprobado pins: small green dot only
+            if (aprobado) {
+              return (
+                <div
+                  key={pin.id}
+                  className="absolute"
+                  style={{
+                    left: `${px}%`,
+                    top: `${py}%`,
+                    zIndex: isHovered ? 20 : 3,
+                    pointerEvents: "auto",
+                  }}
+                >
+                  <div
+                    className="rounded-full cursor-pointer"
+                    style={{
+                      width: `${Math.max(6, 8 / scale)}px`,
+                      height: `${Math.max(6, 8 / scale)}px`,
+                      backgroundColor: "#22c55e",
+                      border: "1.5px solid white",
+                      transform: "translate(-50%, -50%)",
+                      boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
+                    }}
+                    onMouseEnter={() => setHoveredPin(pin.id)}
+                    onMouseLeave={() => setHoveredPin(null)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPinClick?.(pin.id);
+                    }}
+                  />
+                  {/* Hover tooltip */}
+                  {isHovered && (
+                    <div
+                      className="absolute rounded-lg shadow-lg border overflow-hidden pointer-events-none"
+                      style={{
+                        left: "50%",
+                        bottom: `${Math.max(8, 10 / scale)}px`,
+                        transform: `translateX(-50%) scale(${labelScale})`,
+                        transformOrigin: "bottom center",
+                        backgroundColor: "rgba(0,0,0,0.9)",
+                        borderColor: colors.bg,
+                        minWidth: "100px",
+                        maxWidth: "160px",
+                        zIndex: 30,
+                      }}
+                    >
+                      <div className="px-2 py-1 text-white text-[10px] font-bold border-b border-white/10">
+                        {getItemNumber(pin)} - Aprobado
+                      </div>
+                      {pin.descripcion && (
+                        <div className="px-2 py-1 text-white text-[10px] leading-tight border-b border-white/10">
+                          <span className="text-white/60">Defecto: </span>
+                          <span>{truncate(pin.descripcion, 30)}</span>
+                        </div>
+                      )}
+                      {pin.residenteNombre && (
+                        <div className="px-2 py-1 text-white text-[10px] leading-tight">
+                          <span className="text-white/60">Residente: </span>
+                          <span>{truncate(pin.residenteNombre, 25)}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // Non-aprobado pins: small pin with number, hover shows defecto
             return (
               <div
                 key={pin.id}
@@ -472,23 +449,25 @@ export default function ZoomablePlano({
                 style={{
                   left: `${px}%`,
                   top: `${py}%`,
-                  zIndex: expandedPin === pin.id ? 20 : 5,
+                  zIndex: isHovered ? 20 : 5,
                   pointerEvents: "auto",
                 }}
               >
-                {/* Pin SVG marker */}
+                {/* Pin SVG marker - 50% smaller */}
                 <svg
                   width={basePinW}
                   height={basePinH}
                   viewBox="0 0 24 31"
                   className="cursor-pointer"
                   style={{
-                    transform: `translate(-50%, -100%)`,
-                    filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.5))",
+                    transform: "translate(-50%, -100%)",
+                    filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.5))",
                   }}
+                  onMouseEnter={() => setHoveredPin(pin.id)}
+                  onMouseLeave={() => setHoveredPin(null)}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setExpandedPin(expandedPin === pin.id ? null : pin.id);
+                    onPinClick?.(pin.id);
                   }}
                 >
                   <path
@@ -499,8 +478,69 @@ export default function ZoomablePlano({
                   />
                   <circle cx="12" cy="11" r="4.5" fill="white" fillOpacity="0.9" />
                 </svg>
-                {/* Label with number, defecto, residente */}
-                {renderPinLabel(pin)}
+
+                {/* Number label below pin - no # symbol */}
+                <div
+                  className="absolute flex items-center justify-center"
+                  style={{
+                    left: "0",
+                    top: "2px",
+                    transform: `translateX(-50%) scale(${labelScale})`,
+                    transformOrigin: "top center",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <span
+                    className="font-bold text-white rounded-full px-1.5 py-0.5 shadow-sm whitespace-nowrap"
+                    style={{
+                      backgroundColor: colors.bg,
+                      border: `1.5px solid ${colors.border}`,
+                      fontSize: "9px",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {getItemNumber(pin)}
+                  </span>
+                </div>
+
+                {/* Hover tooltip with defecto info */}
+                {isHovered && (
+                  <div
+                    className="absolute rounded-lg shadow-lg border overflow-hidden pointer-events-none"
+                    style={{
+                      left: "50%",
+                      bottom: `${basePinH + 4}px`,
+                      transform: `translateX(-50%) scale(${Math.max(0.6, 1 / scale)})`,
+                      transformOrigin: "bottom center",
+                      backgroundColor: "rgba(0,0,0,0.9)",
+                      borderColor: colors.bg,
+                      minWidth: "110px",
+                      maxWidth: "180px",
+                      zIndex: 30,
+                    }}
+                  >
+                    <div className="px-2 py-1 text-white text-[10px] font-bold border-b border-white/10 flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: colors.bg }} />
+                      <span>{getItemNumber(pin)} - {getStatusLabel(pin.status)}</span>
+                    </div>
+                    {pin.descripcion && (
+                      <div className="px-2 py-1 text-white text-[10px] leading-tight border-b border-white/10">
+                        <span className="text-white/60">Defecto: </span>
+                        <span className="font-medium">{truncate(pin.descripcion, 30)}</span>
+                      </div>
+                    )}
+                    {pin.residenteNombre && (
+                      <div className="px-2 py-1 text-white text-[10px] leading-tight border-b border-white/10">
+                        <span className="text-white/60">Residente: </span>
+                        <span>{truncate(pin.residenteNombre, 25)}</span>
+                      </div>
+                    )}
+                    <div className="px-2 py-1 text-[9px] text-blue-300 flex items-center gap-1">
+                      <ExternalLink className="w-2.5 h-2.5" />
+                      <span>Click para ver ítem</span>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -533,7 +573,7 @@ export default function ZoomablePlano({
                 height={mainPinH}
                 viewBox="0 0 24 31"
                 style={{
-                  transform: `translate(-50%, -100%)`,
+                  transform: "translate(-50%, -100%)",
                   filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))",
                 }}
               >
@@ -545,28 +585,33 @@ export default function ZoomablePlano({
                 />
                 <circle cx="12" cy="11" r="4.5" fill="white" />
               </svg>
-              {/* Main pin label */}
-              {itemCodigo && (() => {
-                const mainPin = allPins.find(p => p.id === currentItemId);
-                if (mainPin) {
-                  return renderPinLabel(mainPin, true);
-                }
-                return (
-                  <div
-                    className="absolute whitespace-nowrap bg-black/85 text-white rounded-full px-2 py-0.5 font-bold shadow-md"
+              {/* Main pin label - just number and code */}
+              {itemCodigo && (
+                <div
+                  className="absolute whitespace-nowrap flex flex-col items-center"
+                  style={{
+                    left: "0",
+                    top: "4px",
+                    transform: `translateX(-50%) scale(${labelScale})`,
+                    transformOrigin: "top center",
+                  }}
+                >
+                  <span
+                    className="font-bold text-white rounded-full px-2 py-0.5 shadow-md"
                     style={{
-                      left: "0",
-                      top: "4px",
-                      transform: `translateX(-50%) scale(${labelScale})`,
-                      transformOrigin: "top center",
-                      fontSize: "11px",
-                      border: `2px solid ${pinFill}`,
+                      backgroundColor: pinFill,
+                      border: "2px solid white",
+                      fontSize: "10px",
+                      lineHeight: 1.2,
                     }}
                   >
-                    {itemCodigo}
-                  </div>
-                );
-              })()}
+                    {(() => {
+                      const mainPin = allPins.find(p => p.id === currentItemId);
+                      return mainPin ? getItemNumber(mainPin) : itemCodigo;
+                    })()}
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
@@ -590,10 +635,14 @@ export default function ZoomablePlano({
         { label: "Pend. Foto", color: "#3b82f6" },
         { label: "Pend. Aprob.", color: "#f59e0b" },
         { label: "Rechazado", color: "#ef4444" },
-        { label: "Aprobado", color: "#22c55e" },
+        { label: "Aprobado", color: "#22c55e", dot: true },
       ].map((s) => (
         <div key={s.label} className="flex items-center gap-1">
-          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+          {s.dot ? (
+            <div className="w-2 h-2 rounded-full border border-white/50" style={{ backgroundColor: s.color }} />
+          ) : (
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+          )}
           <span className="text-[9px] text-white/70">{s.label}</span>
         </div>
       ))}
@@ -623,7 +672,7 @@ export default function ZoomablePlano({
                   <Maximize2 className="w-4 h-4" />
                 </button>
               )}
-              <button type="button" onClick={() => { setIsFullscreen(false); resetZoom(); setExpandedPin(null); }} className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors" title="Salir">
+              <button type="button" onClick={() => { setIsFullscreen(false); resetZoom(); setHoveredPin(null); }} className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors" title="Salir">
                 <Minimize2 className="w-4 h-4" />
               </button>
             </div>

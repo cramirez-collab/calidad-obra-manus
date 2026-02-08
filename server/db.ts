@@ -5350,3 +5350,24 @@ export async function getPinesCountByPlano(planoId: number) {
     .where(and(eq(planoPines.planoId, planoId), eq(planoPines.activo, true)));
   return result?.count || 0;
 }
+
+// ==================== PIN COUNT POR PLANO ====================
+export async function getPinCountByPlano(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db
+    .select({
+      planoId: items.pinPlanoId,
+      count: sql<number>`COUNT(*)`.as('count'),
+    })
+    .from(items)
+    .innerJoin(planos, eq(items.pinPlanoId, planos.id))
+    .where(and(
+      eq(planos.proyectoId, proyectoId),
+      isNotNull(items.pinPosX),
+      isNotNull(items.pinPosY),
+      isNotNull(items.pinPlanoId)
+    ))
+    .groupBy(items.pinPlanoId);
+  return result;
+}

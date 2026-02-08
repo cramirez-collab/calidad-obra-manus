@@ -154,6 +154,13 @@ export default function Bienvenida() {
   const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
   const [showPlanoViewer, setShowPlanoViewer] = useState(false);
 
+  // Pin count por plano
+  const { data: pinCountData } = trpc.planos.pinCount.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
+  );
+  const pinCountMap = new Map((pinCountData || []).map((p: any) => [p.planoId, Number(p.count)]));
+
   // Pins del plano seleccionado
   const { data: planosPins } = trpc.items.pinsByPlano.useQuery(
     { planoId: selectedPlanoId! },
@@ -956,6 +963,11 @@ export default function Bienvenida() {
                     <p className="font-medium text-sm text-[#002C63] truncate">{plano.nombre}</p>
                     {plano.descripcion && <p className="text-xs text-gray-500 truncate">{plano.descripcion}</p>}
                   </div>
+                  {(pinCountMap.get(plano.id) ?? 0) > 0 && (
+                    <span className="text-[10px] font-bold text-white bg-[#002C63] rounded-full px-2 py-0.5 shrink-0">
+                      {pinCountMap.get(plano.id)} pin{(pinCountMap.get(plano.id) ?? 0) !== 1 ? 'es' : ''}
+                    </span>
+                  )}
                   <ArrowRight className="h-4 w-4 text-gray-400 shrink-0" />
                 </button>
               ))

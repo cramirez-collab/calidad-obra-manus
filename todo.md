@@ -3625,3 +3625,10 @@
 - [x] Modal selector de nivel con thumbnails de planos
 - [x] Modal visor fullscreen de plano con ZoomablePlano y todos los pins
 - [x] Botón "Cambiar nivel" en el visor para volver al selector
+
+## Ajustes pins en plano v3.96
+- [x] Quitar símbolo # del pin, solo mostrar número
+- [x] Hover sobre pin muestra tipo de defecto en recuadro
+- [x] Selector de nivel muestra cantidad de pines por nivel
+- [x] Pins aceptados: solo puntito verde pequeño (sin número ni etiqueta)
+- [x] Reducir tamaño del pin al 50%
