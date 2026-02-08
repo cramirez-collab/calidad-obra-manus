@@ -1,12 +1,22 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 
+export interface PlanoPin {
+  id: number;
+  codigo: string;
+  descripcion?: string | null;
+  status?: string | null;
+  pinPosX: string | null;
+  pinPosY: string | null;
+  numeroInterno?: number | null;
+}
+
 interface ZoomablePlanoProps {
   imagenUrl: string;
   nombre: string;
   /** Si true, click coloca pin en vez de hacer zoom */
   editingPin?: boolean;
-  /** Posición del pin en % (0-100) */
+  /** Posición del pin principal en % (0-100) */
   pinX?: number | string | null;
   pinY?: number | string | null;
   /** Código del ítem para mostrar en el label del pin */
@@ -19,6 +29,23 @@ interface ZoomablePlanoProps {
   imgRef?: React.RefObject<HTMLImageElement | null>;
   /** Clase CSS adicional para el contenedor */
   className?: string;
+  /** Todos los pins del plano (otros ítems) */
+  allPins?: PlanoPin[];
+  /** ID del ítem actual (para resaltarlo entre allPins) */
+  currentItemId?: number;
+  /** Callback cuando se hace click en un pin de otro ítem */
+  onPinClick?: (itemId: number) => void;
+}
+
+// Color del pin según status
+function getStatusColor(status?: string | null) {
+  switch (status) {
+    case "aprobado": return { fill: "#22c55e", stroke: "#16a34a" }; // verde
+    case "rechazado": return { fill: "#ef4444", stroke: "#dc2626" }; // rojo
+    case "pendiente_aprobacion": return { fill: "#f59e0b", stroke: "#d97706" }; // amarillo
+    case "pendiente_foto_despues": return { fill: "#3b82f6", stroke: "#2563eb" }; // azul
+    default: return { fill: "#6b7280", stroke: "#4b5563" }; // gris
+  }
 }
 
 export default function ZoomablePlano({
@@ -32,6 +59,9 @@ export default function ZoomablePlano({
   onPinPlace,
   imgRef: externalImgRef,
   className = "",
+  allPins = [],
+  currentItemId,
+  onPinClick,
 }: ZoomablePlanoProps) {
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
@@ -47,7 +77,6 @@ export default function ZoomablePlano({
   const lastTapTime = useRef(0);
   const lastTapPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Clamp scale
   const MIN_SCALE = 1;
   const MAX_SCALE = 5;
 
@@ -68,7 +97,6 @@ export default function ZoomablePlano({
     if (newScale <= 1) setTranslate({ x: 0, y: 0 });
   }, [scale, clampScale]);
 
-  // Clamp translate to keep image in bounds
   const clampTranslate = useCallback(
     (tx: number, ty: number, s: number) => {
       if (s <= 1) return { x: 0, y: 0 };
@@ -86,7 +114,6 @@ export default function ZoomablePlano({
     []
   );
 
-  // Get distance between two touches
   const getTouchDistance = (t1: React.Touch, t2: React.Touch) => {
     const dx = t1.clientX - t2.clientX;
     const dy = t1.clientY - t2.clientY;
@@ -98,12 +125,9 @@ export default function ZoomablePlano({
     y: (t1.clientY + t2.clientY) / 2,
   });
 
-  // Handle click/tap for pin placement
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      // If zoomed in and not editing, ignore (it was probably a pan end)
       if (!editingPin && scale > 1) return;
-
       if (editingPin && onPinPlace && imgRef.current) {
         const rect = imgRef.current.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -116,31 +140,23 @@ export default function ZoomablePlano({
     [editingPin, onPinPlace, imgRef, scale]
   );
 
-  // Double tap to zoom
   const handleTouchEnd = useCallback(
     (e: React.TouchEvent) => {
-      // Reset pinch state
       lastTouchDistance.current = null;
       lastTouchCenter.current = null;
       isPanning.current = false;
       lastPanPos.current = null;
-
       if (e.touches.length > 0) return;
-
       const now = Date.now();
       const touch = e.changedTouches[0];
       const tapPos = { x: touch.clientX, y: touch.clientY };
       const timeDiff = now - lastTapTime.current;
       const posDiff = Math.abs(tapPos.x - lastTapPos.current.x) + Math.abs(tapPos.y - lastTapPos.current.y);
-
       if (timeDiff < 350 && posDiff < 50 && !editingPin) {
-        // Double tap detected
         e.preventDefault();
         if (scale > 1.5) {
-          // Zoom out
           resetZoom();
         } else {
-          // Zoom in to 3x centered on tap point
           const container = containerRef.current;
           if (container) {
             const rect = container.getBoundingClientRect();
@@ -153,7 +169,6 @@ export default function ZoomablePlano({
           }
         }
       }
-
       lastTapTime.current = now;
       lastTapPos.current = tapPos;
     },
@@ -162,12 +177,10 @@ export default function ZoomablePlano({
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
-      // Start pinch
       lastTouchDistance.current = getTouchDistance(e.touches[0], e.touches[1]);
       lastTouchCenter.current = getTouchCenter(e.touches[0], e.touches[1]);
       e.preventDefault();
     } else if (e.touches.length === 1 && scale > 1) {
-      // Start pan
       isPanning.current = true;
       lastPanPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }
@@ -176,26 +189,21 @@ export default function ZoomablePlano({
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
       if (e.touches.length === 2 && lastTouchDistance.current !== null) {
-        // Pinch zoom
         e.preventDefault();
         const newDist = getTouchDistance(e.touches[0], e.touches[1]);
         const newCenter = getTouchCenter(e.touches[0], e.touches[1]);
         const ratio = newDist / lastTouchDistance.current;
         const newScale = clampScale(scale * ratio);
-
-        // Pan while pinching
         if (lastTouchCenter.current) {
           const dx = newCenter.x - lastTouchCenter.current.x;
           const dy = newCenter.y - lastTouchCenter.current.y;
           const newTranslate = clampTranslate(translate.x + dx, translate.y + dy, newScale);
           setTranslate(newTranslate);
         }
-
         setScale(newScale);
         lastTouchDistance.current = newDist;
         lastTouchCenter.current = newCenter;
       } else if (e.touches.length === 1 && isPanning.current && lastPanPos.current && scale > 1) {
-        // Pan
         const dx = e.touches[0].clientX - lastPanPos.current.x;
         const dy = e.touches[0].clientY - lastPanPos.current.y;
         const newTranslate = clampTranslate(translate.x + dx, translate.y + dy, scale);
@@ -207,7 +215,6 @@ export default function ZoomablePlano({
     [scale, translate, clampScale, clampTranslate]
   );
 
-  // Mouse wheel zoom (desktop)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -235,6 +242,9 @@ export default function ZoomablePlano({
 
   const pinFill = pinColor === "yellow" ? "#f59e0b" : "#ef4444";
   const pinStroke = pinColor === "yellow" ? "#d97706" : "#dc2626";
+
+  // Filter allPins to exclude current item (we render it separately as the main pin)
+  const otherPins = allPins.filter((p) => p.id !== currentItemId && p.pinPosX && p.pinPosY);
 
   return (
     <div className={`relative ${className}`}>
@@ -268,12 +278,19 @@ export default function ZoomablePlano({
         )}
       </div>
 
-      {/* Scale indicator */}
-      {scale > 1 && (
-        <div className="absolute bottom-2 left-2 z-20 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
-          {scale.toFixed(1)}x
-        </div>
-      )}
+      {/* Pin count + Scale indicator */}
+      <div className="absolute bottom-2 left-2 z-20 flex items-center gap-2">
+        {allPins.length > 0 && (
+          <div className="bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
+            {allPins.length} pin{allPins.length !== 1 ? "es" : ""}
+          </div>
+        )}
+        {scale > 1 && (
+          <div className="bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
+            {scale.toFixed(1)}x
+          </div>
+        )}
+      </div>
 
       {/* Zoomable container */}
       <div
@@ -300,7 +317,48 @@ export default function ZoomablePlano({
             className="max-w-full max-h-[80vh] object-contain"
             draggable={false}
           />
-          {/* Pin */}
+
+          {/* Other pins from allPins (smaller, clickable) */}
+          {otherPins.map((pin) => {
+            const colors = getStatusColor(pin.status);
+            const label = pin.codigo ? `#${pin.codigo.split("-").pop() || pin.codigo}` : `#${pin.numeroInterno || pin.id}`;
+            return (
+              <div
+                key={pin.id}
+                className="absolute cursor-pointer group"
+                style={{
+                  left: `${pin.pinPosX}%`,
+                  top: `${pin.pinPosY}%`,
+                  transform: "translate(-50%, -100%)",
+                  zIndex: 5,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPinClick?.(pin.id);
+                }}
+              >
+                <svg width="20" height="26" viewBox="0 0 28 36" fill="none">
+                  <path
+                    d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z"
+                    fill={colors.fill}
+                    stroke={colors.stroke}
+                    strokeWidth="2"
+                    opacity="0.85"
+                  />
+                  <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9" />
+                </svg>
+                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-[8px] px-1.5 py-0.5 rounded whitespace-nowrap opacity-80 group-hover:opacity-100 transition-opacity">
+                  {label}
+                </div>
+                {/* Tooltip on hover */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-black/90 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none max-w-[200px] truncate">
+                  {pin.descripcion || pin.codigo}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Main pin (current item - larger, highlighted) */}
           {pinX != null && pinY != null && (
             <div
               className="absolute pointer-events-none"
@@ -311,6 +369,11 @@ export default function ZoomablePlano({
                 zIndex: 10,
               }}
             >
+              {/* Pulse animation ring */}
+              <div
+                className="absolute animate-ping"
+                style={{ top: "2px", left: "4px", width: "20px", height: "20px", borderRadius: "50%", backgroundColor: pinFill, opacity: 0.3 }}
+              />
               <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
                 <path
                   d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z"
@@ -321,12 +384,13 @@ export default function ZoomablePlano({
                 <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9" />
               </svg>
               {itemCodigo && (
-                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap">
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap font-bold">
                   {itemCodigo}
                 </div>
               )}
             </div>
           )}
+
           {/* Placeholder when editing and no pin */}
           {editingPin && pinX == null && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

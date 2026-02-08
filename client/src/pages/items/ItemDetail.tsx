@@ -153,6 +153,13 @@ export default function ItemDetail() {
   const [editingPin, setEditingPin] = useState(false);
   const [tempPinPos, setTempPinPos] = useState<{x: string; y: string} | null>(null);
 
+  // Obtener el planoId del ítem actual para cargar todos los pins del plano
+  const itemPlanoId = (item as any)?.pinPlanoId;
+  const { data: allPinsData } = trpc.items.pinsByPlano.useQuery(
+    { planoId: itemPlanoId! },
+    { enabled: !!itemPlanoId && showPlanoModal, staleTime: 30_000 }
+  );
+
   const updatePinMutation = trpc.items.updatePin.useMutation({
     onSuccess: () => {
       utils.items.get.invalidate({ id: itemId });
@@ -1918,8 +1925,16 @@ export default function ItemDetail() {
                 pinY={pinY}
                 itemCodigo={item?.codigo}
                 pinColor={editingPin ? 'yellow' : 'red'}
-                onPinPlace={(x, y) => {
+                onPinPlace={(x: number, y: number) => {
                   setTempPinPos({ x: x.toFixed(2), y: y.toFixed(2) });
+                }}
+                allPins={!editingPin ? (allPinsData || []) : []}
+                currentItemId={item?.id}
+                onPinClick={(id: number) => {
+                  setShowPlanoModal(false);
+                  setEditingPin(false);
+                  setTempPinPos(null);
+                  setLocation(`/items/${id}`);
                 }}
                 className="w-full h-full flex items-center justify-center"
               />

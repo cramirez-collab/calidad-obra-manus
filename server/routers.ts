@@ -1513,6 +1513,12 @@ export const appRouter = router({
         });
         return { success: true };
       }),
+
+    pinsByPlano: protectedProcedure
+      .input(z.object({ planoId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getPinsByPlano(input.planoId);
+      }),
   }),
 
   // ==================== ESTADÍSTICAS ====================

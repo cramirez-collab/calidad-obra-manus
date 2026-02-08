@@ -3587,3 +3587,13 @@
 - [x] Mouse wheel zoom en desktop
 - [x] Indicador de nivel de zoom (1.0x - 5.0x)
 - [x] Componente reutilizable ZoomablePlano.tsx
+
+## Todos los pins del nivel en el plano v3.91
+- [x] Endpoint pinsByPlano: obtener todos los ítems con pin de un plano (id, codigo, descripcion, status, pinPosX, pinPosY, numeroInterno)
+- [x] Mostrar todos los pins en el plano de ItemDetail con su código aleatorio
+- [x] Pin del ítem actual resaltado (más grande, con animación pulse)
+- [x] Click en pin de otro ítem navega a ese ítem
+- [x] Colores de pin según status (verde=aprobado, rojo=rechazado, amarillo=pendiente, azul=foto)
+- [x] Tooltip con descripción al hover sobre pin
+- [x] Contador de pins totales en el plano
+- [x] Ocultar otros pins cuando se está editando pin (modo edición limpio)

@@ -1,4 +1,4 @@
-import { eq, and, or, gte, lte, like, desc, asc, sql, inArray, notInArray } from "drizzle-orm";
+import { eq, and, or, gte, lte, like, desc, asc, sql, inArray, notInArray, isNotNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2";
 import bcrypt from 'bcryptjs';
@@ -2763,6 +2763,28 @@ export async function getItemByClientId(clientId: string) {
   return result[0] || null;
 }
 
+
+// ==================== PINS POR PLANO ====================
+export async function getPinsByPlano(planoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db.select({
+    id: items.id,
+    codigo: items.codigo,
+    descripcion: items.descripcion,
+    status: items.status,
+    pinPosX: items.pinPosX,
+    pinPosY: items.pinPosY,
+    numeroInterno: items.numeroInterno,
+  }).from(items)
+    .where(and(
+      eq(items.pinPlanoId, planoId),
+      isNotNull(items.pinPosX),
+      isNotNull(items.pinPosY)
+    ))
+    .orderBy(items.id);
+  return result;
+}
 
 // ==================== MENSAJES (CHAT POR ÍTEM) ====================
 
