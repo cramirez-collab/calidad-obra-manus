@@ -36,7 +36,7 @@ export default function DashboardResidente() {
     selectedProjectId ? { proyectoId: selectedProjectId } : {},
     { enabled: !!selectedProjectId }
   );
-  const { data: proyectos } = trpc.proyectos.list.useQuery();
+  const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
   const proyectoNombre = proyectos?.find(p => p.id === selectedProjectId)?.nombre || 'Proyecto';
 
   const formatFecha = (fecha: Date | string) => {

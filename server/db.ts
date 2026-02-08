@@ -2627,42 +2627,49 @@ export async function getProyectosByUsuario(usuarioId: number) {
   const todosProyectos = await db.select().from(proyectos)
     .where(and(inArray(proyectos.id, proyectoIds), eq(proyectos.activo, true)));
   
-  // Obtener estadísticas de cada proyecto
-  const result = await Promise.all(relaciones.map(async (rel) => {
+  // UNA sola query para contar unidades de todos los proyectos
+  const unidadesStats = await db.select({
+    proyectoId: unidades.proyectoId,
+    count: sql<number>`count(*)`
+  }).from(unidades)
+    .where(inArray(unidades.proyectoId, proyectoIds))
+    .groupBy(unidades.proyectoId);
+  
+  // UNA sola query para contar items totales de todos los proyectos
+  const itemsStats = await db.select({
+    proyectoId: items.proyectoId,
+    count: sql<number>`count(*)`
+  }).from(items)
+    .where(inArray(items.proyectoId, proyectoIds))
+    .groupBy(items.proyectoId);
+  
+  // UNA sola query para contar items pendientes de todos los proyectos
+  const pendientesStats = await db.select({
+    proyectoId: items.proyectoId,
+    count: sql<number>`count(*)`
+  }).from(items)
+    .where(and(
+      inArray(items.proyectoId, proyectoIds),
+      inArray(items.status, ['pendiente_foto_despues', 'rechazado', 'pendiente_aprobacion'])
+    ))
+    .groupBy(items.proyectoId);
+  
+  // Mapear a lookup rápido
+  const unidadesMap = new Map(unidadesStats.map(u => [u.proyectoId, Number(u.count)]));
+  const itemsMap = new Map(itemsStats.map(i => [i.proyectoId, Number(i.count)]));
+  const pendientesMap = new Map(pendientesStats.map(p => [p.proyectoId, Number(p.count)]));
+  
+  return relaciones.map(rel => {
     const proyecto = todosProyectos.find(p => p.id === rel.proyectoId);
-    
-    // Contar unidades del proyecto
-    const unidadesCount = await db.select({ count: sql<number>`count(*)` })
-      .from(unidades)
-      .where(eq(unidades.proyectoId, rel.proyectoId));
-    
-    // Contar items del proyecto
-    const itemsCount = await db.select({ count: sql<number>`count(*)` })
-      .from(items)
-      .where(eq(items.proyectoId, rel.proyectoId));
-    
-    // Contar items pendientes
-    const pendientesCount = await db.select({ count: sql<number>`count(*)` })
-      .from(items)
-      .where(and(
-        eq(items.proyectoId, rel.proyectoId),
-        inArray(items.status, ['pendiente_foto_despues', 'rechazado', 'pendiente_aprobacion'])
-      ));
-    
-    // Obtener nombre de empresa (cliente del proyecto)
-    const empresaNombre = proyecto?.cliente || null;
-    
     return {
       ...rel,
       proyecto,
-      empresaNombre,
-      totalUnidades: Number(unidadesCount[0]?.count || 0),
-      totalItems: Number(itemsCount[0]?.count || 0),
-      itemsPendientes: Number(pendientesCount[0]?.count || 0),
+      empresaNombre: proyecto?.cliente || null,
+      totalUnidades: unidadesMap.get(rel.proyectoId) || 0,
+      totalItems: itemsMap.get(rel.proyectoId) || 0,
+      itemsPendientes: pendientesMap.get(rel.proyectoId) || 0,
     };
-  }));
-  
-  return result;
+  });
 }
 
 export async function asignarUsuarioAProyecto(data: InsertProyectoUsuario) {

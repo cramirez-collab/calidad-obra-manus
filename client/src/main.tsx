@@ -35,11 +35,11 @@ function checkAndUpdateVersion(): boolean {
   if (storedVersion !== CURRENT_VERSION) {
     console.log(`[VERSION] Actualizando: ${storedVersion} → ${CURRENT_VERSION}`);
     
-    // Guardar nueva versión
+    // Guardar nueva versión inmediatamente para evitar loops
     localStorage.setItem('oqc_installed_version', CURRENT_VERSION.toString());
     localStorage.setItem('oqc_app_version', CURRENT_VERSION.toString());
     
-    // Limpiar caches obsoletas
+    // Limpiar caches obsoletas en background (no bloquea)
     if ('caches' in window) {
       caches.keys().then(names => {
         const currentCacheName = `oqc-v${CURRENT_VERSION}`;
@@ -47,47 +47,40 @@ function checkAndUpdateVersion(): boolean {
       });
     }
     
-    // Si la diferencia es grande, forzar recarga limpia
-    if (storedVersion > 0 && Math.abs(CURRENT_VERSION - storedVersion) > 2) {
-      // Desregistrar SWs viejos
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(regs => {
-          regs.forEach(reg => reg.unregister());
-        });
-      }
-      window.location.replace(window.location.pathname + '?v=' + CURRENT_VERSION + '&t=' + Date.now());
-      return false;
-    }
-    
-    // Para cambios menores, continuar normalmente
+    // NUNCA hacer reload aquí - index.html ya maneja la limpieza nuclear
+    // Continuar normalmente, la app ya tiene el código correcto
     return true;
   }
   
   return true;
 }
 
-// Verificar periódicamente contra el servidor
+// Verificar periódicamente contra el servidor (cada 5 min, no cada 60s)
 function startVersionChecker(): void {
   setInterval(async () => {
+    if (document.visibilityState !== 'visible') return; // No verificar si tab oculta
     try {
       const response = await fetch('/api/version?t=' + Date.now(), {
         cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
       });
       
       if (response.ok) {
         const data = await response.json();
         if (data.version && data.version > CURRENT_VERSION) {
-          console.log(`[VERSION] Nueva versión: v${data.version}`);
+          console.log(`[VERSION] Nueva versión disponible: v${data.version}`);
+          // Solo actualizar localStorage, el reload lo hace el usuario o al navegar
           localStorage.setItem('oqc_installed_version', '0');
           localStorage.setItem('oqc_app_version', '0');
-          window.location.reload();
+          // Reload suave - solo si la diferencia es significativa
+          if (data.version - CURRENT_VERSION >= 2) {
+            window.location.reload();
+          }
         }
       }
     } catch (e) {
       // Silenciar errores de red
     }
-  }, 60000); // Cada 60 segundos
+  }, 5 * 60 * 1000); // Cada 5 minutos
 }
 
 // ============================================
@@ -337,8 +330,9 @@ function startPeriodicChecks(): void {
   // Verificar notificaciones al inicio
   setTimeout(() => forcePushNotifications(), 2000);
   
-  // Verificar periódicamente (solo en producción)
+  // Verificar periódicamente (solo en producción, cada 5 min)
   setInterval(async () => {
+    if (document.visibilityState !== 'visible') return;
     if ('Notification' in window && isProductionDomain()) {
       if (Notification.permission === 'granted') {
         removeNotificationBlocker();
@@ -347,7 +341,7 @@ function startPeriodicChecks(): void {
         showNotificationBlocker();
       }
     }
-  }, 30000);
+  }, 5 * 60 * 1000);
   
   // Al volver a la app
   document.addEventListener('visibilitychange', async () => {

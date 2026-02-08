@@ -217,7 +217,7 @@ function DashboardLayoutContent({
   
   // Obtener proyecto actual para los enlaces dinámicos
   const { selectedProjectId } = useProject();
-  const { data: proyectos } = trpc.proyectos.list.useQuery();
+  const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
   const proyectoActual = proyectos?.find(p => p.id === selectedProjectId) || null;
   
   // Verificar si el usuario ha aceptado los términos

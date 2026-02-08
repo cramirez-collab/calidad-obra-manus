@@ -86,15 +86,15 @@
       data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
     
     <!-- ============================================ -->
-    <!-- SISTEMA DE ACTUALIZACIÓN OBLIGATORIA v3.69   -->
+    <!-- SISTEMA DE ACTUALIZACIÓN OBLIGATORIA v3.88   -->
     <!-- VERSIÓN UNIFICADA: Debe coincidir con        -->
-    <!-- shared/version.ts VERSION_NUMBER = 369       -->
+    <!-- shared/version.ts VERSION_NUMBER = 388       -->
     <!-- ============================================ -->
     <script>
       (function() {
         // ⚠️ MANTENER SINCRONIZADO CON shared/version.ts
-        const REQUIRED_VERSION = 384;
-        const DISPLAY_VERSION = 'v3.80';
+        const REQUIRED_VERSION = 388;
+        const DISPLAY_VERSION = 'v3.88';
         const VERSION_KEY = 'oqc_app_version';
         const UPDATING_KEY = 'oqc_updating';
         
@@ -170,62 +170,13 @@
           console.log('[VERSION] Actualización completada: ' + DISPLAY_VERSION);
         }
         
-        // Verificar periódicamente contra el servidor
-        setInterval(function() {
-          fetch('/api/version?t=' + Date.now(), { cache: 'no-store' })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-              if (data.version && data.version > REQUIRED_VERSION) {
-                console.log('[VERSION] Nueva versión en servidor: v' + data.version);
-                localStorage.setItem(VERSION_KEY, '0');
-                localStorage.setItem('oqc_installed_version', '0');
-                window.location.reload();
-              }
-            })
-            .catch(function() {});
-        }, 60000); // Verificar cada 60 segundos
+        // Version checker periódico ELIMINADO de index.html
+        // Solo main.tsx hace version check para evitar doble reload
         
       })();
     </script>
     
-    <!-- Register Service Worker -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
-            .then(function(registration) {
-              console.log('[SW] Registrado');
-              registration.update();
-              // Si hay un SW esperando, activarlo inmediatamente
-              if (registration.waiting) {
-                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-              }
-              // Escuchar nuevos SW que se instalen
-              registration.addEventListener('updatefound', function() {
-                var newWorker = registration.installing;
-                if (newWorker) {
-                  newWorker.addEventListener('statechange', function() {
-                    if (newWorker.state === 'activated') {
-                      console.log('[SW] Nuevo SW activado, recargando...');
-                      window.location.reload();
-                    }
-                  });
-                }
-              });
-            })
-            .catch(function(error) {
-              console.log('[SW] Error de registro:', error);
-            });
-        });
-        
-        // Escuchar mensajes del SW
-        navigator.serviceWorker.addEventListener('message', function(event) {
-          if (event.data && event.data.type === 'SW_UPDATED') {
-            console.log('[SW] Actualizado a v' + event.data.version);
-          }
-        });
-      }
-    </script>
+    <!-- SW se registra SOLO en main.tsx para evitar doble registro y reload loops -->
   </body>
 
 </html>

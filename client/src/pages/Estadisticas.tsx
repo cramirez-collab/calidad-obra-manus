@@ -120,7 +120,7 @@ export default function Estadisticas() {
   );
   const { data: defectos } = trpc.defectos.list.useQuery();
   const { data: usuarios } = trpc.users.list.useQuery();
-  const { data: proyectos } = trpc.proyectos.list.useQuery();
+  const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
   const proyectoNombre = proyectos?.find(p => p.id === selectedProjectId)?.nombre || 'Proyecto';
 
   // Obtener niveles únicos de las unidades

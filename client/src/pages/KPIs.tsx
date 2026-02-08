@@ -69,7 +69,7 @@ export default function KPIs() {
     { enabled: !!selectedProjectId }
   );
   const { data: users } = trpc.users.list.useQuery();
-  const { data: proyectos } = trpc.proyectos.list.useQuery();
+  const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
   const proyectoNombre = proyectos?.find(p => p.id === selectedProjectId)?.nombre || 'Proyecto';
 
   const getSupervisorName = (id: number | null) => {

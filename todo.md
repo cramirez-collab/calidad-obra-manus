@@ -3562,3 +3562,14 @@
 - [x] Eliminar icono de fotografía de página de bienvenida
 - [x] Ficha PDF: plano sin deformar, mantener escala (contain) con centrado
 - [x] Eliminar icono de lápiz de la caja donde se raya la foto (inicia en modo dibujo directo)
+
+## Bug: Carga lenta al iniciar v3.88
+- [x] Diagnosticar causa: loop de versión (REQUIRED_VERSION=384 vs app=387), doble SW register, doble version checker, misProyectos N+1
+- [x] Sincronizar REQUIRED_VERSION en index.html con version.ts (388)
+- [x] Eliminar doble registro de SW (solo main.tsx lo registra)
+- [x] Eliminar doble version checker (solo main.tsx cada 5min, no index.html cada 60s)
+- [x] Eliminar reload en loop de checkAndUpdateVersion (solo guardar localStorage)
+- [x] Optimizar getProyectosByUsuario: de N+1 queries a 3 queries batch con GROUP BY
+- [x] Agregar staleTime 5min a todas las queries de proyectos.list (11 componentes)
+- [x] Reducir push notification check de 30s a 5min
+- [x] Version checker de 60s a 5min, solo si tab visible

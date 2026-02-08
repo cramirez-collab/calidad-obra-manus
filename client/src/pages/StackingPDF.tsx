@@ -68,7 +68,7 @@ export default function StackingPDF() {
     { enabled: !!selectedProjectId }
   );
 
-  const { data: proyectos } = trpc.proyectos.list.useQuery();
+  const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
   const proyecto = proyectos?.find(p => p.id === selectedProjectId);
   const proyectoNombre = proyecto?.nombre || 'Proyecto';
 
