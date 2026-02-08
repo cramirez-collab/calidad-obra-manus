@@ -471,10 +471,10 @@ export default function Bienvenida() {
                   className="h-10 w-10 border-slate-300 hover:bg-slate-50"
                   onClick={() => setShowPlanoSelector(true)}
                 >
-                  <Layers className="h-5 w-5 text-[#002C63]" />
+                  <MapPin className="h-5 w-5 text-[#002C63]" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Ver Planos</TooltipContent>
+              <TooltipContent>Ver Pines</TooltipContent>
             </Tooltip>
             {/* Botón Avisos con badge rojo */}
             <Tooltip>
