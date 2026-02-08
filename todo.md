@@ -3573,3 +3573,8 @@
 - [x] Agregar staleTime 5min a todas las queries de proyectos.list (11 componentes)
 - [x] Reducir push notification check de 30s a 5min
 - [x] Version checker de 60s a 5min, solo si tab visible
+
+## Precarga de catálogos v3.89
+- [x] Prefetch de empresas, unidades, especialidades, residentes, planos, espacios al seleccionar proyecto
+- [x] Prefetch en ProjectContext al cambiar proyecto activo (setSelectedProjectId)
+- [x] Prefetch en ProjectContext al cargar proyecto activo inicial (useEffect con proyectoActivoData)

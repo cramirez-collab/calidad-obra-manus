@@ -74,12 +74,26 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
+  // Prefetch de catálogos al seleccionar/cambiar proyecto
+  const prefetchCatalogos = useCallback((proyectoId: number) => {
+    // Catálogos que NuevoItem, ItemsList e ItemDetail necesitan
+    utils.empresas.list.prefetch({ proyectoId });
+    utils.unidades.list.prefetch({ proyectoId });
+    utils.especialidades.list.prefetch({ proyectoId });
+    utils.empresas.getAllResidentesConEmpresas.prefetch({ proyectoId });
+    utils.espacios.plantilla.prefetch({ proyectoId });
+    utils.planos.listar.prefetch({ proyectoId });
+    utils.users.list.prefetch();
+  }, [utils]);
+
   // Sincronizar proyecto activo desde la base de datos (solo al cargar inicialmente)
   useEffect(() => {
     if (proyectoActivoData?.proyectoId && !isChangingProject && !isChangingRef.current) {
       setSelectedProjectIdState(proyectoActivoData.proyectoId);
+      // Precargar catálogos del proyecto activo al iniciar
+      prefetchCatalogos(proyectoActivoData.proyectoId);
     }
-  }, [proyectoActivoData, isChangingProject]);
+  }, [proyectoActivoData, isChangingProject, prefetchCatalogos]);
 
   // Verificar que el proyecto seleccionado esté en la lista de proyectos del usuario
   // SOLO si no estamos en proceso de cambio de proyecto
@@ -116,7 +130,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setIsChangingProject(true);
     setSelectedProjectIdState(id); // Actualización optimista
     setProyectoActivoMutation.mutate({ proyectoId: id });
-  }, [setProyectoActivoMutation]);
+    // Precargar catálogos del nuevo proyecto en background
+    if (id) prefetchCatalogos(id);
+  }, [setProyectoActivoMutation, prefetchCatalogos]);
 
   const canAccessProject = (projectId: number): boolean => {
     if (isSuperadmin || isAdmin) return true;
