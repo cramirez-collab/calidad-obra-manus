@@ -27,8 +27,12 @@ import {
   X,
   Check,
   XCircle,
-  Megaphone
+  Megaphone,
+  Layers
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ZoomablePlano from "@/components/ZoomablePlano";
+import type { PlanoPin } from "@/components/ZoomablePlano";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -126,6 +130,11 @@ export default function Bienvenida() {
     { enabled: !!selectedProjectId, refetchInterval: 60_000, staleTime: 30_000 }
   );
   
+  // Planos del proyecto para el selector de nivel
+  const { data: planosData } = trpc.planos.listar.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
+  );
   const { data: pendientes, isLoading } = trpc.pendientes.misPendientes.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
@@ -141,6 +150,15 @@ export default function Bienvenida() {
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const [showDeleteMultipleDialog, setShowDeleteMultipleDialog] = useState(false);
+  const [showPlanoSelector, setShowPlanoSelector] = useState(false);
+  const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
+  const [showPlanoViewer, setShowPlanoViewer] = useState(false);
+
+  // Pins del plano seleccionado
+  const { data: planosPins } = trpc.items.pinsByPlano.useQuery(
+    { planoId: selectedPlanoId! },
+    { enabled: !!selectedPlanoId, staleTime: 30_000 }
+  );
   
   const utils = trpc.useUtils();
   const deleteItemMutation = trpc.items.delete.useMutation({
@@ -444,6 +462,20 @@ export default function Bienvenida() {
                 <TooltipContent>{action.label}</TooltipContent>
               </Tooltip>
             ))}
+            {/* Botón Ver Planos con Pines */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-10 w-10 border-slate-300 hover:bg-slate-50"
+                  onClick={() => setShowPlanoSelector(true)}
+                >
+                  <Layers className="h-5 w-5 text-[#002C63]" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Ver Planos</TooltipContent>
+            </Tooltip>
             {/* Botón Avisos con badge rojo */}
             <Tooltip>
               <TooltipTrigger asChild>
@@ -895,6 +927,88 @@ export default function Bienvenida() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Modal Selector de Plano/Nivel */}
+      <Dialog open={showPlanoSelector} onOpenChange={setShowPlanoSelector}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[#002C63] flex items-center gap-2">
+              <Layers className="h-5 w-5" /> Seleccionar Nivel
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {!planosData || planosData.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">No hay planos configurados para este proyecto</p>
+            ) : (
+              planosData.map((plano: any) => (
+                <button
+                  key={plano.id}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-[#02B381] transition-all text-left"
+                  onClick={() => {
+                    setSelectedPlanoId(plano.id);
+                    setShowPlanoSelector(false);
+                    setShowPlanoViewer(true);
+                  }}
+                >
+                  <div className="h-12 w-12 rounded bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                    <img src={getImageUrl(plano.imagenUrl)} alt={plano.nombre} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm text-[#002C63] truncate">{plano.nombre}</p>
+                    {plano.descripcion && <p className="text-xs text-gray-500 truncate">{plano.descripcion}</p>}
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-gray-400 shrink-0" />
+                </button>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Visor de Plano con Pines */}
+      {showPlanoViewer && selectedPlanoId && (() => {
+        const plano = planosData?.find((p: any) => p.id === selectedPlanoId);
+        if (!plano) return null;
+        const pins: PlanoPin[] = (planosPins || []).map((p: any) => ({
+          id: p.id,
+          codigo: p.codigo,
+          descripcion: p.descripcion,
+          status: p.status,
+          pinPosX: p.pinPosX,
+          pinPosY: p.pinPosY,
+          numeroInterno: p.numeroInterno,
+          residenteNombre: p.residenteNombre,
+        }));
+        return (
+          <Dialog open={showPlanoViewer} onOpenChange={(open) => { if (!open) setShowPlanoViewer(false); }}>
+            <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden">
+              <div className="flex flex-col h-[90vh]">
+                <div className="flex items-center justify-between px-4 py-2 border-b bg-white">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-[#002C63]" />
+                    <span className="font-semibold text-sm text-[#002C63]">{plano.nombre}</span>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{pins.length} pins</span>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => { setShowPlanoViewer(false); setShowPlanoSelector(true); }}>
+                    <Layers className="h-4 w-4 mr-1" /> Cambiar nivel
+                  </Button>
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <ZoomablePlano
+                    imagenUrl={getImageUrl(plano.imagenUrl)}
+                    nombre={plano.nombre}
+                    allPins={pins}
+                    onPinClick={(itemId) => {
+                      setShowPlanoViewer(false);
+                      setLocation(`/items/${itemId}`);
+                    }}
+                    className="h-full"
+                  />
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
     </DashboardLayout>
   );
 }

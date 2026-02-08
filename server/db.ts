@@ -2776,7 +2776,9 @@ export async function getPinsByPlano(planoId: number) {
     pinPosX: items.pinPosX,
     pinPosY: items.pinPosY,
     numeroInterno: items.numeroInterno,
+    residenteNombre: users.name,
   }).from(items)
+    .leftJoin(users, eq(items.residenteId, users.id))
     .where(and(
       eq(items.pinPlanoId, planoId),
       isNotNull(items.pinPosX),

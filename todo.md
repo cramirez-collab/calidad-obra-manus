@@ -3615,3 +3615,13 @@
 - [x] Pins posicionados relativos a wrapper de imagen (no al contenedor de zoom)
 - [x] Mejorar detección de touch: ignorar taps que fueron pan/pinch (touchMoved flag)
 - [x] Double-tap en modo edición hace zoom para precisar, no abre fullscreen
+
+## Pins más visibles con defecto y residente v3.94
+- [x] Agrandar pins: SVG gota con número visible, etiqueta debajo con defecto y residente
+- [x] Agregar residenteNombre al endpoint pinsByPlano (LEFT JOIN users)
+- [x] Mostrar etiqueta debajo del pin con defecto (descripción) y residente
+- [x] Click en pin navega directo al ítem (onPinClick)
+- [x] Icono Layers en bienvenida para selector de nivel/plano
+- [x] Modal selector de nivel con thumbnails de planos
+- [x] Modal visor fullscreen de plano con ZoomablePlano y todos los pins
+- [x] Botón "Cambiar nivel" en el visor para volver al selector
