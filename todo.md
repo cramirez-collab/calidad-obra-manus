@@ -3530,3 +3530,10 @@
 - [x] Modal fullscreen con modo edición: cursor crosshair, click para colocar pin
 - [x] Botón "Eliminar Pin" para quitar pin existente
 - [x] Pin amarillo en modo edición, rojo en modo visualización
+
+## Plano con pin en ficha PDF v3.85
+- [x] Cargar imagen del plano del ítem al generar PDF
+- [x] Caja contenedora "UBICACIÓN EN PLANO" a la derecha de Información + Trazabilidad
+- [x] Pin rojo con punto blanco sobre la imagen del plano en coordenadas correctas
+- [x] Nombre del nivel debajo de la imagen
+- [x] Ajuste de yPos para no solapar con la caja del plano

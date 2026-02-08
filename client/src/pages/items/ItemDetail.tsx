@@ -647,6 +647,33 @@ export default function ItemDetail() {
       
       yPos += 28;
       
+      // --- Cargar imagen del plano con pin (si existe) ---
+      const itemAny = item as any;
+      const hasPin = itemAny.pinPlanoId && itemAny.pinPosX;
+      const planoDelPin = hasPin ? (planosData as any[])?.find((p: any) => p.id === itemAny.pinPlanoId) : null;
+      const planoDelNivel = !planoDelPin ? (planosData as any[])?.find((p: any) => {
+        const unidad = unidades?.find((u: any) => u.id === item.unidadId);
+        return unidad && p.nombre === unidad.nivel;
+      }) : null;
+      const planoParaPDF = planoDelPin || planoDelNivel;
+      let planoBase64: string | null = null;
+      
+      if (planoParaPDF?.imagenUrl) {
+        try {
+          planoBase64 = await loadImageAsBase64(planoParaPDF.imagenUrl);
+        } catch (e) {
+          console.warn('Error cargando plano para PDF:', e);
+        }
+      }
+      
+      // Definir ancho de columna izquierda (info) y derecha (plano)
+      const contentWidth = pageWidth - 2 * margin;
+      const planoBoxWidth = 70; // ancho de la caja del plano
+      const planoBoxHeight = 75; // alto de la caja del plano
+      const infoColumnWidth = planoBase64 ? (contentWidth - planoBoxWidth - 8) : contentWidth;
+      const planoBoxX = margin + infoColumnWidth + 8;
+      const planoBoxY = yPos; // mismo nivel que INFORMACIÓN DEL ÍTEM
+      
       // Información del ítem en tabla
       doc.setFontSize(11);
       doc.setTextColor(...AZUL_OBJETIVA);
@@ -671,7 +698,12 @@ export default function ItemDetail() {
         doc.setFont('helvetica', 'bold');
         doc.text(label, margin, yPos);
         doc.setFont('helvetica', 'normal');
-        doc.text(value, margin + 35, yPos);
+        // Truncar valor si es muy largo para no sobrepasar la columna
+        const maxTextWidth = infoColumnWidth - 40;
+        const truncatedValue = doc.getTextWidth(value) > maxTextWidth 
+          ? value.substring(0, Math.floor(value.length * maxTextWidth / doc.getTextWidth(value))) + '...'
+          : value;
+        doc.text(truncatedValue, margin + 35, yPos);
         yPos += 5;
       });
       
@@ -699,11 +731,84 @@ export default function ItemDetail() {
         doc.setFont('helvetica', 'bold');
         doc.text(step, margin, yPos);
         doc.setFont('helvetica', 'normal');
-        doc.text(`${name} - ${fecha}`, margin + 35, yPos);
+        const trazText = `${name} - ${fecha}`;
+        const maxTrazWidth = infoColumnWidth - 40;
+        const truncatedTraz = doc.getTextWidth(trazText) > maxTrazWidth
+          ? trazText.substring(0, Math.floor(trazText.length * maxTrazWidth / doc.getTextWidth(trazText))) + '...'
+          : trazText;
+        doc.text(truncatedTraz, margin + 35, yPos);
         yPos += 5;
       });
       
-      yPos += 10;
+      // --- Dibujar caja del plano con pin en el lado derecho ---
+      if (planoBase64) {
+        // Borde de la caja
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(planoBoxX, planoBoxY, planoBoxWidth, planoBoxHeight, 2, 2, 'S');
+        
+        // Título "UBICACIÓN EN PLANO"
+        doc.setFillColor(...AZUL_OBJETIVA);
+        doc.roundedRect(planoBoxX, planoBoxY, planoBoxWidth, 7, 2, 2, 'F');
+        // Cubrir esquinas inferiores del título
+        doc.setFillColor(...AZUL_OBJETIVA);
+        doc.rect(planoBoxX, planoBoxY + 4, planoBoxWidth, 3, 'F');
+        doc.setFontSize(7);
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.text('UBICACIÓN EN PLANO', planoBoxX + planoBoxWidth / 2, planoBoxY + 4.8, { align: 'center' });
+        
+        // Imagen del plano dentro de la caja
+        const imgPadding = 2;
+        const imgY = planoBoxY + 8;
+        const imgW = planoBoxWidth - imgPadding * 2;
+        const imgH = planoBoxHeight - 10 - imgPadding;
+        
+        try {
+          doc.addImage(planoBase64, 'JPEG', planoBoxX + imgPadding, imgY, imgW, imgH, undefined, 'MEDIUM');
+          
+          // Dibujar pin sobre la imagen si tiene coordenadas
+          if (hasPin && itemAny.pinPosX && itemAny.pinPosY) {
+            const pinAbsX = planoBoxX + imgPadding + (parseFloat(itemAny.pinPosX) / 100) * imgW;
+            const pinAbsY = imgY + (parseFloat(itemAny.pinPosY) / 100) * imgH;
+            
+            // Pin: círculo rojo con borde blanco
+            doc.setFillColor(239, 68, 68); // rojo
+            doc.setDrawColor(255, 255, 255);
+            doc.setLineWidth(0.8);
+            doc.circle(pinAbsX, pinAbsY, 2.5, 'FD');
+            
+            // Punto central blanco
+            doc.setFillColor(255, 255, 255);
+            doc.circle(pinAbsX, pinAbsY, 0.8, 'F');
+          }
+        } catch (e) {
+          console.warn('Error agregando plano al PDF:', e);
+          doc.setFontSize(7);
+          doc.setTextColor(150, 150, 150);
+          doc.text('Error al cargar plano', planoBoxX + planoBoxWidth / 2, imgY + imgH / 2, { align: 'center' });
+        }
+        
+        // Nombre del nivel debajo de la imagen
+        if (planoParaPDF.nombre) {
+          doc.setFontSize(6);
+          doc.setTextColor(100, 100, 100);
+          doc.setFont('helvetica', 'normal');
+          doc.text(planoParaPDF.nombre, planoBoxX + planoBoxWidth / 2, planoBoxY + planoBoxHeight - 1, { align: 'center' });
+        }
+      }
+      
+      // Asegurar que yPos no se solape con la caja del plano
+      if (planoBase64) {
+        const planoBottomY = planoBoxY + planoBoxHeight + 5;
+        if (yPos < planoBottomY) {
+          yPos = planoBottomY;
+        } else {
+          yPos += 10;
+        }
+      } else {
+        yPos += 10;
+      }
       
       // Fotos
       doc.setFontSize(11);
