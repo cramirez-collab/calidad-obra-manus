@@ -393,6 +393,13 @@
       "when": 1770520504836,
       "tag": "0055_right_slapstick",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "5",
+      "when": 1770523400514,
+      "tag": "0056_petite_emma_frost",
+      "breakpoints": true
     }
   ]
 }

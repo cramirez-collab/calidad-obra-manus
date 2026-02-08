@@ -2718,6 +2718,42 @@ export const appRouter = router({
         await db.deletePlano(input.id);
         return { ok: true };
       }),
+
+    // --- PINES SOBRE PLANOS ---
+    pines: router({
+      listar: protectedProcedure
+        .input(z.object({ planoId: z.number() }))
+        .query(async ({ input }) => {
+          return db.getPinesByPlano(input.planoId);
+        }),
+
+      crear: protectedProcedure
+        .input(z.object({
+          planoId: z.number(),
+          itemId: z.number().optional(),
+          posX: z.string(), // porcentaje como string (decimal)
+          posY: z.string(),
+          nota: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const id = await db.createPlanoPin({
+            planoId: input.planoId,
+            itemId: input.itemId ?? null,
+            posX: input.posX,
+            posY: input.posY,
+            nota: input.nota || null,
+            creadoPorId: ctx.user.id,
+          });
+          return { id };
+        }),
+
+      eliminar: protectedProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.deletePlanoPin(input.id);
+          return { ok: true };
+        }),
+    }),
   }),
 });
 export type AppRouter = typeof appRouter;

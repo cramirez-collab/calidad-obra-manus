@@ -3493,3 +3493,12 @@
 - [x] Visualizador de plano con zoom/pan y navegación entre planos
 - [x] Integrar en menú lateral del dashboard (sección Análisis)
 - [x] Incrementar versión a 3.78
+
+## Pines interactivos sobre planos v3.79
+- [x] Crear tabla `planoPines` en BD (planoId, itemId, posX, posY, nota)
+- [x] Helpers CRUD en db.ts para pines
+- [x] Endpoints tRPC para crear/listar/eliminar pines
+- [x] Modo "agregar pin" en visor de plano: tap en plano → seleccionar ítem → pin creado
+- [x] Visualizar pines con color según estado del ítem (pendiente/aprobado/rechazado)
+- [x] Tooltip al tocar pin: código, estado, foto miniatura
+- [x] Navegar al detalle del ítem desde el pin

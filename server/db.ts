@@ -27,7 +27,8 @@ import {
   empresaHistorial, InsertEmpresaHistorial,
   avisos, InsertAviso,
   avisosLecturas, InsertAvisoLectura,
-  planos, InsertPlano
+  planos, InsertPlano,
+  planoPines, InsertPlanoPin
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -5244,4 +5245,59 @@ export async function deletePlano(id: number) {
   const db = await getDb();
   if (!db) return;
   await db.update(planos).set({ activo: false }).where(eq(planos.id, id));
+}
+
+
+// ==========================================
+// PINES SOBRE PLANOS
+// ==========================================
+
+export async function getPinesByPlano(planoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const result = await db
+    .select({
+      id: planoPines.id,
+      planoId: planoPines.planoId,
+      itemId: planoPines.itemId,
+      posX: planoPines.posX,
+      posY: planoPines.posY,
+      nota: planoPines.nota,
+      creadoPorId: planoPines.creadoPorId,
+      createdAt: planoPines.createdAt,
+      // Datos del ítem vinculado
+      itemCodigo: items.codigo,
+      itemEstado: items.status,
+      itemDescripcion: items.descripcion,
+      itemFotoAntes: items.fotoAntesUrl,
+      itemConsecutivo: items.numeroInterno,
+    })
+    .from(planoPines)
+    .leftJoin(items, eq(items.id, planoPines.itemId))
+    .where(and(eq(planoPines.planoId, planoId), eq(planoPines.activo, true)))
+    .orderBy(desc(planoPines.createdAt));
+  return result;
+}
+
+export async function createPlanoPin(data: InsertPlanoPin) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.insert(planoPines).values(data);
+  return result.insertId;
+}
+
+export async function deletePlanoPin(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(planoPines).set({ activo: false }).where(eq(planoPines.id, id));
+}
+
+export async function getPinesCountByPlano(planoId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  const [result] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(planoPines)
+    .where(and(eq(planoPines.planoId, planoId), eq(planoPines.activo, true)));
+  return result?.count || 0;
 }

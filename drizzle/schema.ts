@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal } from "drizzle-orm/mysql-core";
 
 // Enum para roles de usuario (superadmin tiene acceso total, admin/supervisor limitado en config)
 export const userRoleEnum = mysqlEnum("role", ["superadmin", "admin", "supervisor", "jefe_residente", "residente", "desarrollador"]);
@@ -605,3 +605,23 @@ export const planos = mysqlTable("planos", {
 
 export type Plano = typeof planos.$inferSelect;
 export type InsertPlano = typeof planos.$inferInsert;
+
+
+/**
+ * Tabla de pines - marcadores sobre planos vinculados a ítems de calidad
+ * posX y posY son porcentajes (0-100) relativos al tamaño de la imagen del plano
+ */
+export const planoPines = mysqlTable("plano_pines", {
+  id: int("id").autoincrement().primaryKey(),
+  planoId: int("planoId").notNull(),
+  itemId: int("itemId"), // Vinculado a un ítem de calidad (opcional)
+  posX: decimal("posX", { precision: 8, scale: 4 }).notNull(), // % horizontal (0-100)
+  posY: decimal("posY", { precision: 8, scale: 4 }).notNull(), // % vertical (0-100)
+  nota: text("nota"), // Nota opcional del pin
+  creadoPorId: int("creadoPorId"),
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PlanoPin = typeof planoPines.$inferSelect;
+export type InsertPlanoPin = typeof planoPines.$inferInsert;
