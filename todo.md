@@ -3637,3 +3637,6 @@
 - [x] Filtro de pines por status en visor de plano (mostrar/ocultar aprobados, rechazados, pendientes)
 - [x] Tap largo (long press) en móvil como equivalente al hover para ver tooltip del defecto
 - [x] Exportar plano con pines a PDF desde visor fullscreen
+
+## Bugfix v3.97.1
+- [x] Imagen del plano no carga en fullscreen (crossOrigin="anonymous" bloquea carga desde S3)

@@ -429,8 +429,23 @@ export default function ZoomablePlano({
     try {
       const { jsPDF } = await import("jspdf");
 
-      const img = imgRef.current;
-      if (!img) throw new Error("Imagen no disponible");
+      const imgEl = imgRef.current;
+      if (!imgEl) throw new Error("Imagen no disponible");
+
+      // Load image with crossOrigin for canvas export
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new Image();
+        i.crossOrigin = "anonymous";
+        i.onload = () => resolve(i);
+        i.onerror = () => {
+          // Fallback: try without crossOrigin (won't taint canvas but may fail toDataURL)
+          const i2 = new Image();
+          i2.onload = () => resolve(i2);
+          i2.onerror = reject;
+          i2.src = imgEl.src;
+        };
+        i.src = imgEl.src;
+      });
 
       // Create canvas with plano image + pins drawn on it
       const canvas = document.createElement("canvas");
@@ -619,7 +634,6 @@ export default function ZoomablePlano({
             className={isFullscreen ? "max-w-full max-h-full object-contain" : "max-w-full max-h-[80vh] object-contain"}
             draggable={false}
             style={{ display: "block" }}
-            crossOrigin="anonymous"
           />
 
           {/* Other pins (filtered) */}
