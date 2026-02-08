@@ -55,6 +55,7 @@ import jsPDF from "jspdf";
 import { format } from "date-fns";
 import { downloadPDFBestMethod } from "@/lib/pdfDownload";
 import { Input } from "@/components/ui/input";
+import ZoomablePlano from "@/components/ZoomablePlano";
 import {
   Select,
   SelectContent,
@@ -1847,14 +1848,6 @@ export default function ItemDetail() {
         const pinX = tempPinPos ? tempPinPos.x : (hasPin ? String(itemAny.pinPosX) : null);
         const pinY = tempPinPos ? tempPinPos.y : (hasPin ? String(itemAny.pinPosY) : null);
         
-        const handlePlanoClick = (e: React.MouseEvent<HTMLImageElement>) => {
-          if (!editingPin) return;
-          const rect = e.currentTarget.getBoundingClientRect();
-          const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(2);
-          const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(2);
-          setTempPinPos({ x, y });
-        };
-        
         return (
           <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col">
             <div className="flex items-center justify-between px-3 py-2 bg-black/80 text-white">
@@ -1916,34 +1909,20 @@ export default function ItemDetail() {
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-auto flex items-center justify-center p-4">
-              <div className="relative">
-                <img
-                  src={plano.imagenUrl}
-                  alt={plano.nombre}
-                  className={`max-w-full max-h-[80vh] object-contain ${editingPin ? 'cursor-crosshair' : ''}`}
-                  draggable={false}
-                  onClick={handlePlanoClick}
-                />
-                {pinX && pinY && (
-                  <div className="absolute pointer-events-none" style={{ left: `${pinX}%`, top: `${pinY}%`, transform: 'translate(-50%, -100%)', zIndex: 10 }}>
-                    <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
-                      <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill={editingPin ? '#f59e0b' : '#ef4444'} stroke={editingPin ? '#d97706' : '#dc2626'} strokeWidth="2"/>
-                      <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9"/>
-                    </svg>
-                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap">
-                      {item?.codigo}
-                    </div>
-                  </div>
-                )}
-                {editingPin && !pinX && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="bg-black/60 text-white px-4 py-2 rounded-lg text-sm">
-                      Toca el plano para colocar el pin
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div className="flex-1 overflow-hidden flex items-center justify-center p-2">
+              <ZoomablePlano
+                imagenUrl={plano.imagenUrl}
+                nombre={plano.nombre}
+                editingPin={editingPin}
+                pinX={pinX}
+                pinY={pinY}
+                itemCodigo={item?.codigo}
+                pinColor={editingPin ? 'yellow' : 'red'}
+                onPinPlace={(x, y) => {
+                  setTempPinPos({ x: x.toFixed(2), y: y.toFixed(2) });
+                }}
+                className="w-full h-full flex items-center justify-center"
+              />
             </div>
           </div>
         );

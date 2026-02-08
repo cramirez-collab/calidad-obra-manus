@@ -3578,3 +3578,12 @@
 - [x] Prefetch de empresas, unidades, especialidades, residentes, planos, espacios al seleccionar proyecto
 - [x] Prefetch en ProjectContext al cambiar proyecto activo (setSelectedProjectId)
 - [x] Prefetch en ProjectContext al cargar proyecto activo inicial (useEffect con proyectoActivoData)
+
+## Zoom pinch/double-tap en plano v3.90
+- [x] Zoom pinch (dos dedos) en plano de ItemDetail y NuevoItem
+- [x] Double-tap para zoom in/out en plano (3x zoom centrado en tap)
+- [x] Pan (arrastrar) cuando está con zoom, con límites
+- [x] Botones de zoom +/- y reset
+- [x] Mouse wheel zoom en desktop
+- [x] Indicador de nivel de zoom (1.0x - 5.0x)
+- [x] Componente reutilizable ZoomablePlano.tsx

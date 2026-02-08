@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
 import { savePendingAction, isOnline } from "@/lib/offlineStorage";
 import { compressAdaptive, getConnectionInfo } from "@/lib/imageCompression";
+import ZoomablePlano from "@/components/ZoomablePlano";
 
 export default function NuevoItem() {
   const [location, setLocation] = useLocation();
@@ -806,25 +807,18 @@ export default function NuevoItem() {
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-auto flex items-center justify-center p-4">
-              <div className="relative cursor-crosshair" onClick={(e) => {
-                const img = pinImgRef.current;
-                if (!img) return;
-                const rect = img.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                if (x >= 0 && x <= 100 && y >= 0 && y <= 100) setPinPos({ x, y });
-              }}>
-                <img ref={pinImgRef} src={planoDelNivel.imagenUrl} alt={planoDelNivel.nombre} className="max-w-full max-h-[80vh] object-contain" draggable={false} />
-                {pinPos && (
-                  <div className="absolute" style={{ left: `${pinPos.x}%`, top: `${pinPos.y}%`, transform: 'translate(-50%, -100%)', zIndex: 10 }}>
-                    <svg width="24" height="32" viewBox="0 0 28 36" fill="none">
-                      <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill="#ef4444" stroke="#dc2626" strokeWidth="2"/>
-                      <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9"/>
-                    </svg>
-                  </div>
-                )}
-              </div>
+            <div className="flex-1 overflow-hidden flex items-center justify-center p-2">
+              <ZoomablePlano
+                imagenUrl={planoDelNivel.imagenUrl}
+                nombre={planoDelNivel.nombre}
+                editingPin={true}
+                pinX={pinPos?.x}
+                pinY={pinPos?.y}
+                pinColor="red"
+                onPinPlace={(x: number, y: number) => setPinPos({ x, y })}
+                imgRef={pinImgRef}
+                className="w-full h-full flex items-center justify-center"
+              />
             </div>
           </div>
         )}
