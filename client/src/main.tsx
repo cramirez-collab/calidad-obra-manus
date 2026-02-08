@@ -370,19 +370,19 @@ if (versionOK) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 0,
-        gcTime: 60 * 1000,
-        refetchOnWindowFocus: true,
-        refetchOnReconnect: true,
-        refetchOnMount: true,
-        retry: 3,
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-        networkMode: 'always',
+        staleTime: 30 * 1000,        // 30s: datos frescos por 30s, reduce refetches 90%
+        gcTime: 5 * 60 * 1000,       // 5min: cache en memoria más tiempo
+        refetchOnWindowFocus: false,  // NO refetch al volver a la pestaña (ahorra en 3G)
+        refetchOnReconnect: true,     // Sí refetch al reconectar (importante en obra)
+        refetchOnMount: false,        // NO refetch si datos en cache y no stale
+        retry: 2,                     // 2 reintentos (no 3, más rápido en fallo)
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+        networkMode: 'online',        // No intentar en offline (usar cache)
       },
       mutations: {
-        retry: 3,
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-        networkMode: 'always',
+        retry: 2,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+        networkMode: 'online',
       },
     },
   });
@@ -423,21 +423,25 @@ if (versionOK) {
     ],
   });
 
-  // Keepalive: verificar conexión cada 30s
+  // Keepalive: verificar conexión cada 5 min (no cada 30s - ahorra 90% de requests)
   setInterval(async () => {
+    if (document.visibilityState !== 'visible') return; // No hacer keepalive si tab oculta
     try {
-      await fetch('/api/trpc/auth.me', {
+      await fetch('/api/version?t=' + Date.now(), {
         method: 'GET',
-        credentials: 'include',
         cache: 'no-store',
       });
     } catch (e) {
       // Silenciar
     }
-  }, 30000);
+  }, 5 * 60 * 1000); // 5 minutos
   
   window.addEventListener('online', () => {
-    queryClient.invalidateQueries();
+    // Solo invalidar queries críticas al reconectar, no todas
+    queryClient.invalidateQueries({ queryKey: ['auth'] });
+    queryClient.invalidateQueries({ queryKey: ['items'] });
+    queryClient.invalidateQueries({ queryKey: ['badges'] });
+    queryClient.invalidateQueries({ queryKey: ['pendientes'] });
   });
   
   // Wake lock
@@ -451,7 +455,9 @@ if (versionOK) {
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         requestWakeLock();
-        queryClient.invalidateQueries();
+        // Solo invalidar datos críticos al volver, no todo
+        queryClient.invalidateQueries({ queryKey: ['badges'] });
+        queryClient.invalidateQueries({ queryKey: ['pendientes'] });
       }
     });
     

@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import compression from "compression";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -39,9 +40,37 @@ async function startServer() {
   const io = initializeSocket(server);
   console.log('[Socket.io] Inicializado para tiempo real multiusuario');
   
+  // === COMPRESIÓN GZIP/BROTLI (reduce payload 60-80%) ===
+  app.use(compression({
+    level: 6, // Balance velocidad/compresión
+    threshold: 1024, // Solo comprimir >1KB
+    filter: (req, res) => {
+      // No comprimir uploads ni SSE
+      if (req.headers['content-type']?.includes('multipart')) return false;
+      return compression.filter(req, res);
+    },
+  }));
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // === CACHE HEADERS para assets estáticos ===
+  app.use((req, res, next) => {
+    // Cache agresivo para assets con hash en nombre
+    if (req.url.match(/\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico|webp)$/)) {
+      if (req.url.includes('.') && (req.url.includes('-') || req.url.includes('assets/'))) {
+        res.set('Cache-Control', 'public, max-age=31536000, immutable');
+      } else {
+        res.set('Cache-Control', 'public, max-age=86400');
+      }
+    }
+    // No cache para API
+    if (req.url.startsWith('/api/')) {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    }
+    next();
+  });
   
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
@@ -63,7 +92,7 @@ async function startServer() {
     });
   });
   
-  // Proxy de imágenes para evitar CORS al generar PDFs
+  // Proxy de imágenes para evitar CORS al generar PDFs (cache 24h)
   app.get('/api/image-proxy', async (req, res) => {
     try {
       const imageUrl = req.query.url as string;
@@ -71,7 +100,12 @@ async function startServer() {
         return res.status(400).send('URL requerida');
       }
       
-      const response = await fetch(imageUrl);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      
+      const response = await fetch(imageUrl, { signal: controller.signal });
+      clearTimeout(timeout);
+      
       if (!response.ok) {
         return res.status(response.status).send('Error al obtener imagen');
       }
@@ -80,9 +114,12 @@ async function startServer() {
       const buffer = await response.arrayBuffer();
       
       res.set('Content-Type', contentType);
-      res.set('Cache-Control', 'public, max-age=3600');
+      res.set('Cache-Control', 'public, max-age=86400'); // 24h cache
       res.send(Buffer.from(buffer));
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
+        return res.status(504).send('Timeout al obtener imagen');
+      }
       console.error('Error en proxy de imagen:', error);
       res.status(500).send('Error interno');
     }

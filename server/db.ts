@@ -1,5 +1,6 @@
 import { eq, and, or, gte, lte, like, desc, asc, sql, inArray, notInArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import mysql from "mysql2";
 import bcrypt from 'bcryptjs';
 import { 
   InsertUser, users, 
@@ -34,6 +35,7 @@ import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _pool: ReturnType<typeof mysql.createPool> | null = null;
 
 // Campos de items sin Base64 para evitar cargar datos enormes
 const itemFieldsWithoutBase64 = {
@@ -81,7 +83,20 @@ const itemFieldsWithoutBase64 = {
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      // Connection pool optimizado para 20+ usuarios concurrentes
+      _pool = mysql.createPool({
+        uri: process.env.DATABASE_URL,
+        connectionLimit: 20,       // Max conexiones simultáneas
+        maxIdle: 10,               // Conexiones idle en pool
+        idleTimeout: 60000,        // 60s antes de cerrar idle
+        enableKeepAlive: true,     // Mantener conexiones vivas
+        keepAliveInitialDelay: 30000, // Keepalive cada 30s
+        waitForConnections: true,  // Esperar si pool lleno
+        queueLimit: 0,             // Sin límite de cola (0=ilimitado, evita Queue limit reached)
+        connectTimeout: 10000,     // 10s timeout de conexión
+      });
+      _db = drizzle(_pool);
+      console.log('[Database] Pool de conexiones inicializado (limit: 20)');
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;

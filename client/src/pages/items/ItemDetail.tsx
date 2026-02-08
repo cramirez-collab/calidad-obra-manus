@@ -123,24 +123,30 @@ export default function ItemDetail() {
   const { data: item, isLoading } = trpc.items.get.useQuery({ id: itemId });
   const { data: historial } = trpc.items.historial.useQuery({ itemId });
   const { data: comentarios, refetch: refetchComentarios } = trpc.comentarios.byItem.useQuery({ itemId });
+  // Catálogos con staleTime alto (5min) - no refetch en cada mount
+  const catalogStale = { staleTime: 5 * 60 * 1000 };
   const { data: empresas } = trpc.empresas.list.useQuery(
-    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    catalogStale
   );
   const { data: unidades } = trpc.unidades.list.useQuery(
-    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    catalogStale
   );
   const { data: especialidades } = trpc.especialidades.list.useQuery(
-    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    catalogStale
   );
-  const { data: users } = trpc.users.listForMentions.useQuery();
-  const { data: defectos } = trpc.defectos.list.useQuery();
+  const { data: users } = trpc.users.listForMentions.useQuery(undefined, catalogStale);
+  const { data: defectos } = trpc.defectos.list.useQuery(undefined, catalogStale);
   const { data: espacios } = trpc.espacios.list.useQuery(
-    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    catalogStale
   );
   // Planos del proyecto para mostrar pin de ubicación
   const { data: planosData } = trpc.planos.listar.useQuery(
     { proyectoId: selectedProjectId || 0 },
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
   );
   const [showPlanoModal, setShowPlanoModal] = useState(false);
   const [editingPin, setEditingPin] = useState(false);
@@ -155,7 +161,8 @@ export default function ItemDetail() {
   });
 
   const { data: editResidentes } = trpc.empresas.getAllResidentesConEmpresas.useQuery(
-    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    catalogStale
   );
 
   const [nuevoComentario, setNuevoComentario] = useState("");

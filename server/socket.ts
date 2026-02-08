@@ -3,7 +3,7 @@ import { Server, Socket } from 'socket.io';
 
 let io: Server | null = null;
 
-// Almacén de usuarios conectados
+// Almacén de usuarios conectados (en memoria, sin BD)
 const connectedUsers = new Map<string, { 
   oderId: number; 
   name: string; 
@@ -18,14 +18,22 @@ export function initializeSocket(httpServer: HttpServer) {
       origin: '*',
       methods: ['GET', 'POST'],
     },
-    pingTimeout: 60000,
-    pingInterval: 25000,
-    transports: ['websocket', 'polling'],
+    // === OPTIMIZADO PARA 20+ USUARIOS EN 3G ===
+    pingTimeout: 120000,       // 2min timeout (3G puede ser lento)
+    pingInterval: 45000,       // Ping cada 45s (no 25s, ahorra bandwidth)
+    transports: ['websocket', 'polling'], // WebSocket primero
+    upgradeTimeout: 30000,     // 30s para upgrade a WS
+    maxHttpBufferSize: 1e6,    // 1MB max payload por mensaje
+    perMessageDeflate: {       // Comprimir mensajes WS
+      threshold: 1024,         // Solo >1KB
+    },
+    allowUpgrades: true,
+    httpCompression: {
+      threshold: 1024,
+    },
   });
 
   io.on('connection', (socket: Socket) => {
-    console.log(`[Socket] Cliente conectado: ${socket.id}`);
-
     // Autenticar usuario
     socket.on('auth', (userData: { userId: number; name: string; role: string }) => {
       connectedUsers.set(socket.id, {
@@ -38,22 +46,19 @@ export function initializeSocket(httpServer: HttpServer) {
       
       // Notificar a todos los usuarios conectados
       broadcastUserCount();
-      console.log(`[Socket] Usuario autenticado: ${userData.name} (${userData.role})`);
     });
 
     // Unirse a sala específica (por empresa, unidad, etc.)
     socket.on('join-room', (room: string) => {
       socket.join(room);
-      console.log(`[Socket] ${socket.id} se unió a sala: ${room}`);
     });
 
     // Salir de sala
     socket.on('leave-room', (room: string) => {
       socket.leave(room);
-      console.log(`[Socket] ${socket.id} salió de sala: ${room}`);
     });
 
-    // Ping para mantener conexión activa
+    // Ping para mantener conexión activa (solo actualizar en memoria, NO en BD)
     socket.on('ping', () => {
       const user = connectedUsers.get(socket.id);
       if (user) {
@@ -66,24 +71,28 @@ export function initializeSocket(httpServer: HttpServer) {
     socket.on('disconnect', (reason) => {
       const user = connectedUsers.get(socket.id);
       if (user) {
-        console.log(`[Socket] Usuario desconectado: ${user.name} (${reason})`);
         connectedUsers.delete(socket.id);
         broadcastUserCount();
       }
     });
   });
 
-  // Limpiar usuarios inactivos cada 30 segundos
+  // Limpiar usuarios inactivos cada 60 segundos (no 30s)
   setInterval(() => {
     const now = new Date();
-    const timeout = 2 * 60 * 1000; // 2 minutos
+    const timeout = 3 * 60 * 1000; // 3 minutos (no 2, más tolerante en 3G)
+    let changed = false;
     
     connectedUsers.forEach((user, socketId) => {
       if (now.getTime() - user.lastActivity.getTime() > timeout) {
         connectedUsers.delete(socketId);
+        changed = true;
       }
     });
-  }, 30000);
+    
+    // Solo broadcast si hubo cambios
+    if (changed) broadcastUserCount();
+  }, 60000);
 
   return io;
 }
@@ -93,8 +102,14 @@ export function getIO(): Server | null {
   return io;
 }
 
-// Broadcast de conteo de usuarios
+// Broadcast de conteo de usuarios (throttled)
+let lastBroadcast = 0;
 function broadcastUserCount() {
+  const now = Date.now();
+  // Throttle: max 1 broadcast cada 2 segundos
+  if (now - lastBroadcast < 2000) return;
+  lastBroadcast = now;
+  
   if (io) {
     io.emit('users-count', {
       count: connectedUsers.size,

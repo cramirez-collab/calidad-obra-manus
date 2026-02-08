@@ -5,9 +5,9 @@
 // ESTRATEGIA: Network-first para todo, cache solo como fallback offline
 // REGLA: /api/ NUNCA se cachea
 // ============================================
-const APP_VERSION = 385;
-const DISPLAY_VERSION = 'v3.85';
-const CACHE_NAME = `oqc-v385`;
+const APP_VERSION = 386;
+const DISPLAY_VERSION = 'v3.86';
+const CACHE_NAME = `oqc-v386`;
 const OFFLINE_URL = '/offline.html';
 
 // Recursos esenciales para modo offline
@@ -150,22 +150,36 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // ===== Assets estáticos → Network-first con cache fallback =====
-  if (isStaticAsset(url.pathname)) {
+  // ===== Assets con hash (inmutables) → Cache-first (nunca cambian) =====
+  if (url.pathname.match(/\/assets\/.*\.[a-f0-9]{8}\./)) {
     event.respondWith(
-      fetch(request)
-        .then(response => {
+      caches.match(request).then(cached => {
+        if (cached) return cached;
+        return fetch(request).then(response => {
           if (response.ok) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
           }
           return response;
-        })
-        .catch(async () => {
-          const cached = await caches.match(request);
-          if (cached) return cached;
-          return new Response('', { status: 404 });
-        })
+        });
+      })
+    );
+    return;
+  }
+
+  // ===== Assets estáticos sin hash → Stale-while-revalidate =====
+  if (isStaticAsset(url.pathname)) {
+    event.respondWith(
+      caches.match(request).then(cached => {
+        const fetchPromise = fetch(request).then(response => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+          }
+          return response;
+        }).catch(() => cached || new Response('', { status: 404 }));
+        return cached || fetchPromise;
+      })
     );
     return;
   }

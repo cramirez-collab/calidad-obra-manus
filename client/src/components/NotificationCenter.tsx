@@ -41,8 +41,8 @@ export default function NotificationCenter() {
   const { data: count = 0, refetch: refetchCount } = trpc.notificaciones.count.useQuery(
     undefined,
     { 
-      refetchInterval: 30000, // Refetch cada 30 segundos
-      staleTime: 10000,
+      refetchInterval: 60000, // Refetch cada 60s (no 30s, ahorra en 3G)
+      staleTime: 30000,
     }
   );
   const { data: notificaciones = [], refetch: refetchList } = trpc.notificaciones.list.useQuery(

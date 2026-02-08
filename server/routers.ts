@@ -13,6 +13,11 @@ import pushService from "./pushService";
 import { transcribeAudio, transcribeAudioBase64 } from "./_core/voiceTranscription";
 import { invokeLLM } from "./_core/llm";
 
+// Throttle map para heartbeat (evita writes excesivos a BD)
+const heartbeatThrottle = new Map<number, number>();
+// Limpiar throttle cada 10 min para evitar memory leak
+setInterval(() => heartbeatThrottle.clear(), 10 * 60 * 1000);
+
 // Middleware para verificar rol de superadmin (acceso total)
 const superadminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== 'superadmin') {
@@ -2625,11 +2630,17 @@ export const appRouter = router({
         }));
       }),
 
-    // Heartbeat: registra actividad del usuario
+    // Heartbeat: registra actividad del usuario (throttled: max 1 write/min por usuario)
     heartbeat: protectedProcedure
       .input(z.object({ proyectoId: z.number() }))
       .mutation(async ({ ctx, input }) => {
-        await db.updateHeartbeat(ctx.user.id);
+        // Throttle: solo escribir en BD cada 60s por usuario
+        const now = Date.now();
+        const lastWrite = heartbeatThrottle.get(ctx.user.id) || 0;
+        if (now - lastWrite > 60000) {
+          heartbeatThrottle.set(ctx.user.id, now);
+          await db.updateHeartbeat(ctx.user.id);
+        }
         return { ok: true };
       }),
 

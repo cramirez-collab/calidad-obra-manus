@@ -67,25 +67,20 @@ export default function NuevoItem() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Obtener empresas con sus residentes
+  // Catálogos con staleTime alto (5min) - no refetch innecesarios
+  const catStale = { staleTime: 5 * 60 * 1000 };
   const { data: todasEmpresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, ...catStale }
   );
-  
-  // Obtener usuarios para mapear nombres
-  const { data: usuarios } = trpc.users.list.useQuery();
-  
-  // Obtener todos los residentes con sus empresas (nueva estructura)
+  const { data: usuarios } = trpc.users.list.useQuery(undefined, catStale);
   const { data: residentesConEmpresasNuevo } = trpc.empresas.getAllResidentesConEmpresas.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, ...catStale }
   );
-  
-  // Obtener especialidades del proyecto (movido arriba para usar en residentesConEmpresa)
   const { data: especialidades } = trpc.especialidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, ...catStale }
   );
   
   // Crear lista de residentes únicos que tienen empresa asignada
@@ -193,7 +188,7 @@ export default function NuevoItem() {
   // Obtener unidades del proyecto
   const { data: todasUnidades } = trpc.unidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
   );
   
   // Obtener niveles únicos de las unidades
@@ -213,14 +208,14 @@ export default function NuevoItem() {
   // Espacios de la plantilla del proyecto (no por unidad)
   const { data: espaciosPlantilla } = trpc.espacios.plantilla.useQuery(
     { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
   );
   
   // Defectos filtrados por especialidad
   const especialidadIdParaDefectos = residenteSeleccionado?.especialidadId || (formData.especialidadId ? parseInt(formData.especialidadId) : 0);
   const { data: defectos } = trpc.defectos.byEspecialidad.useQuery(
     { especialidadId: especialidadIdParaDefectos },
-    { enabled: !!especialidadIdParaDefectos }
+    { enabled: !!especialidadIdParaDefectos, staleTime: 5 * 60 * 1000 }
   );
 
   const createItemMutation = trpc.items.create.useMutation();
@@ -228,7 +223,7 @@ export default function NuevoItem() {
   // Planos del proyecto para mostrar thumbnail al seleccionar nivel
   const { data: planosData } = trpc.planos.listar.useQuery(
     { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
   );
 
   // Plano que corresponde al nivel seleccionado

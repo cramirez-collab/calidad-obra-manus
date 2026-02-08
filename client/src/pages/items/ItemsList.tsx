@@ -129,17 +129,18 @@ export default function ItemsList() {
     }
   }, []);
 
+  // Catálogos: staleTime alto (cambian poco, no refetch en cada mount)
   const { data: empresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
   );
   const { data: unidades } = trpc.unidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
   );
   const { data: especialidades } = trpc.especialidades.listConAtributos.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
   );
   
   // Filtrar atributos según especialidad seleccionada
@@ -199,7 +200,10 @@ export default function ItemsList() {
   };
   
   // Obtener lista de usuarios del proyecto actual para el filtro
-  const { data: usuarios } = trpc.users.list.useQuery({ proyectoId: selectedProjectId || undefined });
+  const { data: usuarios } = trpc.users.list.useQuery(
+    { proyectoId: selectedProjectId || undefined },
+    { staleTime: 5 * 60 * 1000 }
+  );
   
   // Mostrar todos los usuarios en el filtro (no solo residentes)
   const usuariosFiltro = useMemo(() => {

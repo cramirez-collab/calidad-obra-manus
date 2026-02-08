@@ -3537,3 +3537,21 @@
 - [x] Pin rojo con punto blanco sobre la imagen del plano en coordenadas correctas
 - [x] Nombre del nivel debajo de la imagen
 - [x] Ajuste de yPos para no solapar con la caja del plano
+
+## Optimización agresiva de rendimiento v3.86 (20+ usuarios en obra, 3G)
+- [x] Auditar queries N+1, payloads pesados, endpoints lentos
+- [x] Agregar 60+ índices BD en columnas de filtrado frecuente
+- [x] Optimizar connection pooling de BD (mysql2 pool, limit:20, keepalive)
+- [x] Comprimir respuestas (gzip level 6, threshold 1KB)
+- [x] Cache headers: immutable para assets con hash, 24h para image-proxy
+- [x] Frontend: staleTime 30s global, 5min para catálogos, reducir refetches 90%
+- [x] Frontend: lazy loading agresivo ya implementado (todos los componentes)
+- [x] Backend: timeouts en image-proxy (15s abort)
+- [x] Backend: optimizar heartbeat (throttle 1 write/min por usuario en servidor)
+- [x] Backend: payload limits (50mb body)
+- [x] Service Worker: cache-first para assets con hash, stale-while-revalidate para otros
+- [x] Socket.io: compresión WS, ping cada 45s, throttle broadcast 2s
+- [x] Keepalive auth.me reducido de 30s a 5min, solo si tab visible
+- [x] Notificaciones refetch de 30s a 60s
+- [x] Heartbeat frontend de 2min a 3min, solo si tab visible
+- [x] Reconexión: solo invalidar queries críticas, no todas

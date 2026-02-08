@@ -56,22 +56,25 @@ export default function Bienvenida() {
   const { selectedProjectId, isLoadingProjects } = useProject();
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
-  // Heartbeat: registra actividad cada 2 min
+  // Heartbeat: registra actividad cada 3 min (throttled en servidor a 1/min)
   const heartbeatMut = trpc.avisos.heartbeat.useMutation();
   useEffect(() => {
     if (!selectedProjectId) return;
     // Enviar heartbeat inmediato al entrar
     heartbeatMut.mutate({ proyectoId: selectedProjectId });
     const interval = setInterval(() => {
-      heartbeatMut.mutate({ proyectoId: selectedProjectId });
-    }, 2 * 60 * 1000); // cada 2 min
+      // Solo enviar si la tab está visible (ahorra en 3G)
+      if (document.visibilityState === 'visible') {
+        heartbeatMut.mutate({ proyectoId: selectedProjectId });
+      }
+    }, 3 * 60 * 1000); // cada 3 min
     return () => clearInterval(interval);
   }, [selectedProjectId]);
 
   // Usuarios en línea (heartbeat BD, últimos 5 min)
   const enLineaQuery = trpc.avisos.enLinea.useQuery(
     { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId, refetchInterval: 30_000 }
+    { enabled: !!selectedProjectId, refetchInterval: 60_000, staleTime: 30_000 }
   );
   const usersCount = enLineaQuery.data?.total ?? 0;
   const connectedUsers = enLineaQuery.data?.usuarios ?? [];
@@ -120,7 +123,7 @@ export default function Bienvenida() {
   // Avisos no leídos
   const { data: avisosNoLeidos } = trpc.avisos.noLeidos.useQuery(
     { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId, refetchInterval: 30000 }
+    { enabled: !!selectedProjectId, refetchInterval: 60_000, staleTime: 30_000 }
   );
   
   const { data: pendientes, isLoading } = trpc.pendientes.misPendientes.useQuery(
