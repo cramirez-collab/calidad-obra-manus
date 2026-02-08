@@ -3607,3 +3607,11 @@
 - [x] Fullscreen con header (nombre plano, zoom +/-, reset, minimizar) y footer (conteo pins, zoom level)
 - [x] Escape cierra fullscreen
 - [x] En NuevoItem: botones también como iconos con tooltip
+
+## Bug: Pin no queda en punto exacto v3.93
+- [x] Corregir cálculo de coordenadas: pins ahora usan SVG con forma de pin real (punta abajo)
+- [x] Pin posicionado con transform translate(-50%, -100%) para que la punta apunte al punto exacto
+- [x] Eliminar doble offset (margin + translate) que desplazaba el pin
+- [x] Pins posicionados relativos a wrapper de imagen (no al contenedor de zoom)
+- [x] Mejorar detección de touch: ignorar taps que fueron pan/pinch (touchMoved flag)
+- [x] Double-tap en modo edición hace zoom para precisar, no abre fullscreen

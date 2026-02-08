@@ -1,13 +1,13 @@
 // ============================================
-// OBJETIVAQC - SERVICE WORKER v3.92
+// OBJETIVAQC - SERVICE WORKER v3.93
 // ============================================
 // VERSIÓN UNIFICADA: Debe coincidir con shared/version.ts VERSION_NUMBER
 // ESTRATEGIA: Network-first para todo, cache solo como fallback offline
 // REGLA: /api/ NUNCA se cachea
 // ============================================
-const APP_VERSION = 392;
-const DISPLAY_VERSION = 'v3.92';
-const CACHE_NAME = `oqc-v392`;
+const APP_VERSION = 393;
+const DISPLAY_VERSION = 'v3.93';
+const CACHE_NAME = `oqc-v393`;
 const OFFLINE_URL = '/offline.html';
 
 // Recursos esenciales para modo offline
