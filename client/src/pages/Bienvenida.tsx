@@ -402,8 +402,6 @@ export default function Bienvenida() {
   );
 
   const filterButtons: { key: FilterType; tooltip: string; icon: any; color: string }[] = [
-    { key: "todos", tooltip: "Todos", icon: Filter, color: "bg-slate-500" },
-    { key: "foto", tooltip: "Pendiente foto después", icon: Camera, color: "bg-[#002C63]" },
     { key: "aprobar", tooltip: "Pendiente aprobación", icon: Clock, color: "bg-[#02B381]" },
     { key: "corregir", tooltip: "Rechazado - Corregir", icon: AlertCircle, color: "bg-red-500" },
   ];

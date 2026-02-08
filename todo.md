@@ -3555,3 +3555,10 @@
 - [x] Notificaciones refetch de 30s a 60s
 - [x] Heartbeat frontend de 2min a 3min, solo si tab visible
 - [x] Reconexión: solo invalidar queries críticas, no todas
+
+## Ajustes UI v3.87
+- [x] Notificaciones: al hacer click lleva a página /notificaciones con lista completa, config push, agrupadas por fecha
+- [x] Eliminar icono de filtro de página de bienvenida
+- [x] Eliminar icono de fotografía de página de bienvenida
+- [x] Ficha PDF: plano sin deformar, mantener escala (contain) con centrado
+- [x] Eliminar icono de lápiz de la caja donde se raya la foto (inicia en modo dibujo directo)

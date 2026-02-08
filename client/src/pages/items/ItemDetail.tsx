@@ -765,19 +765,46 @@ export default function ItemDetail() {
         doc.setFont('helvetica', 'bold');
         doc.text('UBICACIÓN EN PLANO', planoBoxX + planoBoxWidth / 2, planoBoxY + 4.8, { align: 'center' });
         
-        // Imagen del plano dentro de la caja
+        // Imagen del plano dentro de la caja - mantener proporción (contain)
         const imgPadding = 2;
         const imgY = planoBoxY + 8;
-        const imgW = planoBoxWidth - imgPadding * 2;
-        const imgH = planoBoxHeight - 10 - imgPadding;
+        const maxImgW = planoBoxWidth - imgPadding * 2;
+        const maxImgH = planoBoxHeight - 10 - imgPadding;
         
+        // Calcular dimensiones reales de la imagen para mantener aspecto
+        let imgW = maxImgW;
+        let imgH = maxImgH;
+        let imgOffsetX = 0;
+        let imgOffsetY = 0;
         try {
-          doc.addImage(planoBase64, 'JPEG', planoBoxX + imgPadding, imgY, imgW, imgH, undefined, 'MEDIUM');
+          // Obtener dimensiones reales de la imagen
+          const tempImg = new Image();
+          await new Promise<void>((resolve) => {
+            tempImg.onload = () => resolve();
+            tempImg.onerror = () => resolve();
+            tempImg.src = planoBase64!;
+          });
+          if (tempImg.naturalWidth && tempImg.naturalHeight) {
+            const imgAspect = tempImg.naturalWidth / tempImg.naturalHeight;
+            const boxAspect = maxImgW / maxImgH;
+            if (imgAspect > boxAspect) {
+              // Imagen más ancha que la caja: ajustar por ancho
+              imgW = maxImgW;
+              imgH = maxImgW / imgAspect;
+              imgOffsetY = (maxImgH - imgH) / 2;
+            } else {
+              // Imagen más alta que la caja: ajustar por alto
+              imgH = maxImgH;
+              imgW = maxImgH * imgAspect;
+              imgOffsetX = (maxImgW - imgW) / 2;
+            }
+          }
+          doc.addImage(planoBase64!, 'JPEG', planoBoxX + imgPadding + imgOffsetX, imgY + imgOffsetY, imgW, imgH, undefined, 'MEDIUM');
           
           // Dibujar pin sobre la imagen si tiene coordenadas
           if (hasPin && itemAny.pinPosX && itemAny.pinPosY) {
-            const pinAbsX = planoBoxX + imgPadding + (parseFloat(itemAny.pinPosX) / 100) * imgW;
-            const pinAbsY = imgY + (parseFloat(itemAny.pinPosY) / 100) * imgH;
+            const pinAbsX = planoBoxX + imgPadding + imgOffsetX + (parseFloat(itemAny.pinPosX) / 100) * imgW;
+            const pinAbsY = imgY + imgOffsetY + (parseFloat(itemAny.pinPosY) / 100) * imgH;
             
             // Pin: círculo rojo con borde blanco
             doc.setFillColor(239, 68, 68); // rojo

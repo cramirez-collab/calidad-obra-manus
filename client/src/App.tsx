@@ -54,6 +54,7 @@ const Avisos = lazy(() => import("./pages/Avisos"));
 const Terminos = lazy(() => import("./pages/Terminos"));
 const Planos = lazy(() => import("./pages/Planos"));
 const AltaRapidaEmpresa = lazy(() => import("./pages/catalogos/AltaRapidaEmpresa"));
+const Notificaciones = lazy(() => import("./pages/Notificaciones"));
 
 
 
@@ -132,6 +133,7 @@ function AppRoutes() {
       
       {/* Planos */}
       <Route path="/planos" component={Planos} />
+      <Route path="/notificaciones" component={Notificaciones} />
       
       {/* Configuración y Metas */}
       <Route path="/configuracion" component={Configuracion} />

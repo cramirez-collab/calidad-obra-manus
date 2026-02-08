@@ -23,6 +23,7 @@ export default function ImageMarker({ imageUrl, onSave, onCancel }: ImageMarkerP
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  // Siempre inicia en modo dibujo (pen) - el usuario raya directamente
   const [tool, setTool] = useState<"pen" | "eraser">("pen");
   const [history, setHistory] = useState<ImageData[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -220,15 +221,6 @@ export default function ImageMarker({ imageUrl, onSave, onCancel }: ImageMarkerP
       <div className="flex items-center justify-between p-2 sm:p-3 bg-slate-800 border-b border-slate-700">
         {/* Herramientas izquierda */}
         <div className="flex items-center gap-1 sm:gap-2">
-          <Button
-            variant={tool === "pen" ? "default" : "secondary"}
-            size="icon"
-            onClick={() => setTool("pen")}
-            className={`h-8 w-8 sm:h-9 sm:w-9 ${tool === "pen" ? "bg-red-600 hover:bg-red-700" : ""}`}
-            title="Marcar"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
           <Button
             variant={tool === "eraser" ? "default" : "secondary"}
             size="icon"
