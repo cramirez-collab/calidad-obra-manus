@@ -87,11 +87,11 @@ export default function NuevoItem() {
   
   // Crear lista de residentes únicos que tienen empresa asignada
   const residentesConEmpresa = useMemo(() => {
-    if (!todasEmpresas || !usuarios) return [];
+    if (!todasEmpresas) return [];
     
     const residentesMap = new Map<number, { id: number; name: string; empresaId: number; empresaNombre: string; especialidadId: number | null; especialidadNombre?: string | null; tipoResidente?: string }>();
     
-    // Primero agregar residentes de la nueva estructura (empresa_residentes)
+    // Fuente principal: getAllResidentesConEmpresas (protectedProcedure, accesible por todos)
     if (residentesConEmpresasNuevo && residentesConEmpresasNuevo.length > 0) {
       residentesConEmpresasNuevo.forEach((residente: any) => {
         residente.empresas?.forEach((emp: any) => {
@@ -111,66 +111,65 @@ export default function NuevoItem() {
       });
     }
     
-    // Luego agregar residentes de la estructura antigua (compatibilidad)
-    todasEmpresas.forEach(empresa => {
-      // Residente principal
-      if (empresa.residenteId) {
-        const user = usuarios.find(u => u.id === empresa.residenteId);
-        if (user) {
-          const key = user.id * 10000 + empresa.id;
-          if (!residentesMap.has(key)) {
-            residentesMap.set(key, {
-              id: user.id,
-              name: user.name || 'Sin nombre',
-              empresaId: empresa.id,
-              empresaNombre: empresa.nombre,
-              especialidadId: empresa.especialidadId || null,
-              especialidadNombre: especialidades?.find(e => e.id === empresa.especialidadId)?.nombre || null,
-              tipoResidente: 'residente'
-            });
+    // Fallback: estructura antigua (compatibilidad) - solo si usuarios está disponible (admin)
+    if (usuarios) {
+      todasEmpresas.forEach(empresa => {
+        if (empresa.residenteId) {
+          const user = usuarios.find(u => u.id === empresa.residenteId);
+          if (user) {
+            const key = user.id * 10000 + empresa.id;
+            if (!residentesMap.has(key)) {
+              residentesMap.set(key, {
+                id: user.id,
+                name: user.name || 'Sin nombre',
+                empresaId: empresa.id,
+                empresaNombre: empresa.nombre,
+                especialidadId: empresa.especialidadId || null,
+                especialidadNombre: especialidades?.find(e => e.id === empresa.especialidadId)?.nombre || null,
+                tipoResidente: 'residente'
+              });
+            }
           }
         }
-      }
-      // Jefe de residente
-      if (empresa.jefeResidenteId) {
-        const user = usuarios.find(u => u.id === empresa.jefeResidenteId);
-        if (user) {
-          const key = user.id * 10000 + empresa.id;
-          if (!residentesMap.has(key)) {
-            residentesMap.set(key, {
-              id: user.id,
-              name: user.name || 'Sin nombre',
-              empresaId: empresa.id,
-              empresaNombre: empresa.nombre,
-              especialidadId: empresa.especialidadId || null,
-              especialidadNombre: especialidades?.find(e => e.id === empresa.especialidadId)?.nombre || null,
-              tipoResidente: 'jefe_residente'
-            });
+        if (empresa.jefeResidenteId) {
+          const user = usuarios.find(u => u.id === empresa.jefeResidenteId);
+          if (user) {
+            const key = user.id * 10000 + empresa.id;
+            if (!residentesMap.has(key)) {
+              residentesMap.set(key, {
+                id: user.id,
+                name: user.name || 'Sin nombre',
+                empresaId: empresa.id,
+                empresaNombre: empresa.nombre,
+                especialidadId: empresa.especialidadId || null,
+                especialidadNombre: especialidades?.find(e => e.id === empresa.especialidadId)?.nombre || null,
+                tipoResidente: 'jefe_residente'
+              });
+            }
           }
         }
-      }
-    });
-    
-    // También incluir usuarios con rol residente/jefe_residente que tengan empresaId
-    usuarios.forEach(user => {
-      if (['residente', 'jefe_residente'].includes(user.role) && user.empresaId) {
-        const empresa = todasEmpresas.find(e => e.id === user.empresaId);
-        if (empresa) {
-          const key = user.id * 10000 + empresa.id;
-          if (!residentesMap.has(key)) {
-            residentesMap.set(key, {
-              id: user.id,
-              name: user.name || 'Sin nombre',
-              empresaId: empresa.id,
-              empresaNombre: empresa.nombre,
-              especialidadId: empresa.especialidadId || null,
-              especialidadNombre: especialidades?.find(e => e.id === empresa.especialidadId)?.nombre || null,
-              tipoResidente: user.role
-            });
+      });
+      
+      usuarios.forEach(user => {
+        if (['residente', 'jefe_residente'].includes(user.role) && user.empresaId) {
+          const empresa = todasEmpresas.find(e => e.id === user.empresaId);
+          if (empresa) {
+            const key = user.id * 10000 + empresa.id;
+            if (!residentesMap.has(key)) {
+              residentesMap.set(key, {
+                id: user.id,
+                name: user.name || 'Sin nombre',
+                empresaId: empresa.id,
+                empresaNombre: empresa.nombre,
+                especialidadId: empresa.especialidadId || null,
+                especialidadNombre: especialidades?.find(e => e.id === empresa.especialidadId)?.nombre || null,
+                tipoResidente: user.role
+              });
+            }
           }
         }
-      }
-    });
+      });
+    }
     
     return Array.from(residentesMap.values());
   }, [todasEmpresas, usuarios, residentesConEmpresasNuevo, especialidades]);

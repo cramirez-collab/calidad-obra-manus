@@ -3640,3 +3640,7 @@
 
 ## Bugfix v3.97.1
 - [x] Imagen del plano no carga en fullscreen (crossOrigin="anonymous" bloquea carga desde S3)
+
+## Bugfix v3.97.2
+- [x] Residentes no aparecen al crear ítem (selector vacío) - users.list era adminProcedure, ahora usa getAllResidentesConEmpresas como fuente principal
+- [x] Forzar que todos los usuarios puedan entrar y capturar - cambiado users.list a listForMentions en páginas accesibles por todos

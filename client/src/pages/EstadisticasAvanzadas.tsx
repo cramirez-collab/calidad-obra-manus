@@ -46,7 +46,7 @@ export default function EstadisticasAvanzadas() {
   const [selectedDefecto, setSelectedDefecto] = useState<string>("");
 
   // Datos base
-  const { data: usuarios } = trpc.users.list.useQuery();
+  const { data: usuarios } = trpc.users.listForMentions.useQuery();
   const { data: defectos } = trpc.defectos.list.useQuery();
 
   // Estadísticas

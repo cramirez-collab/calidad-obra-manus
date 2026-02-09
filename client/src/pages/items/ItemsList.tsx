@@ -199,9 +199,9 @@ export default function ItemsList() {
     });
   };
   
-  // Obtener lista de usuarios del proyecto actual para el filtro
-  const { data: usuarios } = trpc.users.list.useQuery(
-    { proyectoId: selectedProjectId || undefined },
+  // Obtener lista de usuarios para el filtro (accesible por todos los roles)
+  const { data: usuarios } = trpc.users.listForMentions.useQuery(
+    undefined,
     { staleTime: 5 * 60 * 1000 }
   );
   

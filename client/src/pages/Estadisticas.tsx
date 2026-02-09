@@ -119,7 +119,7 @@ export default function Estadisticas() {
     { enabled: !!selectedProjectId }
   );
   const { data: defectos } = trpc.defectos.list.useQuery();
-  const { data: usuarios } = trpc.users.list.useQuery();
+  const { data: usuarios } = trpc.users.listForMentions.useQuery();
   const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
   const proyectoNombre = proyectos?.find(p => p.id === selectedProjectId)?.nombre || 'Proyecto';
 
@@ -443,7 +443,7 @@ export default function Estadisticas() {
                   <SelectItem value="all">Todos los usuarios</SelectItem>
                   {usuarios?.map((user) => (
                     <SelectItem key={user.id} value={user.id.toString()}>
-                      {user.name || user.email}
+                      {user.name || `Usuario ${user.id}`}
                     </SelectItem>
                   ))}
                 </SelectContent>
