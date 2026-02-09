@@ -1,0 +1,274 @@
+{
+  "query": "SELECT id, name, role, email, empresaId, activo FROM users ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, name, role, email, empresaId, activo FROM users ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Carlos Ramirez",
+      "role": "superadmin",
+      "email": "cramirez@objetiva.mx",
+      "empresaId": "360001",
+      "activo": "1"
+    },
+    {
+      "id": "540085",
+      "name": "Julian Rodríguez Ramírez",
+      "role": "admin",
+      "email": "jrodriguez@objetiva.mx",
+      "empresaId": "360001",
+      "activo": "1"
+    },
+    {
+      "id": "721649",
+      "name": "Estefany Sanchez",
+      "role": "admin",
+      "email": "esanchez@objetiva.mx",
+      "empresaId": "360001",
+      "activo": "1"
+    },
+    {
+      "id": "721666",
+      "name": "Ing.Daniel Vazquez",
+      "role": "supervisor",
+      "email": "dvazquez@objetiva.mx",
+      "empresaId": "360001",
+      "activo": "1"
+    },
+    {
+      "id": "781860",
+      "name": "Omar Palencia",
+      "role": "supervisor",
+      "email": "opalencia@objetiva.mx",
+      "empresaId": "360001",
+      "activo": "1"
+    },
+    {
+      "id": "1410108",
+      "name": "Karen Navith",
+      "role": "residente",
+      "email": "kanaah0995@gmail.com",
+      "empresaId": "480001",
+      "activo": "1"
+    },
+    {
+      "id": "1410178",
+      "name": "Natalia Diaz",
+      "role": "residente",
+      "email": "ndiaz@waller.mx",
+      "empresaId": "480003",
+      "activo": "1"
+    },
+    {
+      "id": "1470049",
+      "name": "Esteban Guerrero ",
+      "role": "residente",
+      "email": "arqestebanguerrero.garcab@gmail.com",
+      "empresaId": "510001",
+      "activo": "1"
+    },
+    {
+      "id": "1470059",
+      "name": "Jairo Briseño",
+      "role": "residente",
+      "email": "iimsa5825@gmail.com",
+      "empresaId": "510002",
+      "activo": "1"
+    },
+    {
+      "id": "1470083",
+      "name": "Saul Tovar",
+      "role": "residente",
+      "email": "saulstovar@gmail.com",
+      "empresaId": "510004",
+      "activo": "1"
+    },
+    {
+      "id": "1470095",
+      "name": "Eduardo Rodriguez ",
+      "role": "residente",
+      "email": "fac.obrasripesa@gmail.com",
+      "empresaId": "510003",
+      "activo": "1"
+    },
+    {
+      "id": "1470115",
+      "name": "Katy Orozco ",
+      "role": "residente",
+      "email": "katyorogumik@gmail.com",
+      "empresaId": "510005",
+      "activo": "1"
+    },
+    {
+      "id": "1530050",
+      "name": "Zaira Alvarez",
+      "role": "desarrollador",
+      "email": "zaira.alvarez@gbpo.com.mx",
+      "empresaId": "330003",
+      "activo": "1"
+    },
+    {
+      "id": "1530056",
+      "name": "Marco López",
+      "role": "desarrollador",
+      "email": "marco.lopez@gbpo.com.mx",
+      "empresaId": "330003",
+      "activo": "1"
+    },
+    {
+      "id": "1530063",
+      "name": "Andres Quiroz",
+      "role": "desarrollador",
+      "email": "andres.quiroz@gbpo.com.mx",
+      "empresaId": "330003",
+      "activo": "1"
+    },
+    {
+      "id": "1530070",
+      "name": "Xitlali Reyes",
+      "role": "residente",
+      "email": "zreyesperez@gmail.com",
+      "empresaId": "510001",
+      "activo": "1"
+    },
+    {
+      "id": "1530085",
+      "name": "Pablo Mercado",
+      "role": "residente",
+      "email": "pmercado74@gmail.com",
+      "empresaId": "540001",
+      "activo": "1"
+    },
+    {
+      "id": "1530090",
+      "name": "Genaro Solis",
+      "role": "residente",
+      "email": "genaro.solis.espana@gmail.com",
+      "empresaId": "480003",
+      "activo": "1"
+    },
+    {
+      "id": "1530106",
+      "name": "Jesús Contreras",
+      "role": "residente",
+      "email": "jcontreras@objetiva.mx",
+      "empresaId": "360001",
+      "activo": "1"
+    },
+    {
+      "id": "1650044",
+      "name": "Jorge Esquivel",
+      "role": "supervisor",
+      "email": "jesquivel@objetiva.mx",
+      "empresaId": "360001",
+      "activo": "1"
+    },
+    {
+      "id": "2160018",
+      "name": "Ximena Becerril ",
+      "role": "supervisor",
+      "email": "xbecerril@objetiva.mx",
+      "empresaId": "660001",
+      "activo": "1"
+    },
+    {
+      "id": "2160022",
+      "name": "Gerardo Hurtado ",
+      "role": "supervisor",
+      "email": "ghurtado@objetiva.mx",
+      "empresaId": "660001",
+      "activo": "1"
+    },
+    {
+      "id": "2160064",
+      "name": "Nayibe Cardenas",
+      "role": "residente",
+      "email": "nayibecardenas@arcin.mx",
+      "empresaId": "660002",
+      "activo": "1"
+    },
+    {
+      "id": "4200419",
+      "name": "Rafael Manriquez",
+      "role": "residente",
+      "email": "rafaelmanriqueznovotile@gmail.com",
+      "empresaId": "1950001",
+      "activo": "1"
+    },
+    {
+      "id": "4201178",
+      "name": "Esteban Guerrero ",
+      "role": "residente",
+      "email": "arqestebanguerrero.garcab@gmail.com",
+      "empresaId": "1950002",
+      "activo": "1"
+    },
+    {
+      "id": "4351934",
+      "name": "Jesus Ferrer",
+      "role": "residente",
+      "email": "iimsajferrer@gmail.com",
+      "empresaId": "510002",
+      "activo": "1"
+    },
+    {
+      "id": "4351962",
+      "name": "Juan Ruiz",
+      "role": "residente",
+      "email": "jruiz@waller.mx",
+      "empresaId": "480003",
+      "activo": "1"
+    },
+    {
+      "id": "4352044",
+      "name": "Mayra Perez",
+      "role": "residente",
+      "email": "proyecto@lupher.com.mx",
+      "empresaId": "2010006",
+      "activo": "1"
+    },
+    {
+      "id": "4352184",
+      "name": "Juan Javier Morales",
+      "role": "residente",
+      "email": "gbgproyecto@gmail.com",
+      "empresaId": "2010007",
+      "activo": "1"
+    },
+    {
+      "id": "4357159",
+      "name": "Eduardo Rubicel ",
+      "role": "residente",
+      "email": "riepsaingenieria@gmail.com",
+      "empresaId": "510003",
+      "activo": "1"
+    },
+    {
+      "id": "4357176",
+      "name": "Gustavo Orozco",
+      "role": "residente",
+      "email": "gustavo@gumi-k.com.mx",
+      "empresaId": "510005",
+      "activo": "1"
+    },
+    {
+      "id": "4357204",
+      "name": "Gerardo Rojas",
+      "role": "residente",
+      "email": "mowy.rrh@gmail.com",
+      "empresaId": "510005",
+      "activo": "1"
+    },
+    {
+      "id": "5130888",
+      "name": "Jesus Contreras",
+      "role": "supervisor",
+      "email": "jcontreras@objetiva.mx",
+      "empresaId": "360001",
+      "activo": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trole\temail\tempresaId\tactivo\n1\tCarlos Ramirez\tsuperadmin\tcramirez@objetiva.mx\t360001\t1\n540085\tJulian Rodríguez Ramírez\tadmin\tjrodriguez@objetiva.mx\t360001\t1\n721649\tEstefany Sanchez\tadmin\tesanchez@objetiva.mx\t360001\t1\n721666\tIng.Daniel Vazquez\tsupervisor\tdvazquez@objetiva.mx\t360001\t1\n781860\tOmar Palencia\tsupervisor\topalencia@objetiva.mx\t360001\t1\n1410108\tKaren Navith\tresidente\tkanaah0995@gmail.com\t480001\t1\n1410178\tNatalia Diaz\tresidente\tndiaz@waller.mx\t480003\t1\n1470049\tEsteban Guerrero \tresidente\tarqestebanguerrero.garcab@gmail.com\t510001\t1\n1470059\tJairo Briseño\tresidente\tiimsa5825@gmail.com\t510002\t1\n1470083\tSaul Tovar\tresidente\tsaulstovar@gmail.com\t510004\t1\n1470095\tEduardo Rodriguez \tresidente\tfac.obrasripesa@gmail.com\t510003\t1\n1470115\tKaty Orozco \tresidente\tkatyorogumik@gmail.com\t510005\t1\n1530050\tZaira Alvarez\tdesarrollador\tzaira.alvarez@gbpo.com.mx\t330003\t1\n1530056\tMarco López\tdesarrollador\tmarco.lopez@gbpo.com.mx\t330003\t1\n1530063\tAndres Quiroz\tdesarrollador\tandres.quiroz@gbpo.com.mx\t330003\t1\n1530070\tXitlali Reyes\tresidente\tzreyesperez@gmail.com\t510001\t1\n1530085\tPablo Mercado\tresidente\tpmercado74@gmail.com\t540001\t1\n1530090\tGenaro Solis\tresidente\tgenaro.solis.espana@gmail.com\t480003\t1\n1530106\tJesús Contreras\tresidente\tjcontreras@objetiva.mx\t360001\t1\n1650044\tJorge Esquivel\tsupervisor\tjesquivel@objetiva.mx\t360001\t1\n2160018\tXimena Becerril \tsupervisor\txbecerril@objetiva.mx\t660001\t1\n2160022\tGerardo Hurtado \tsupervisor\tghurtado@objetiva.mx\t660001\t1\n2160064\tNayibe Cardenas\tresidente\tnayibecardenas@arcin.mx\t660002\t1\n4200419\tRafael Manriquez\tresidente\trafaelmanriqueznovotile@gmail.com\t1950001\t1\n4201178\tEsteban Guerrero \tresidente\tarqestebanguerrero.garcab@gmail.com\t1950002\t1\n4351934\tJesus Ferrer\tresidente\tiimsajferrer@gmail.com\t510002\t1\n4351962\tJuan Ruiz\tresidente\tjruiz@waller.mx\t480003\t1\n4352044\tMayra Perez\tresidente\tproyecto@lupher.com.mx\t2010006\t1\n4352184\tJuan Javier Morales\tresidente\tgbgproyecto@gmail.com\t2010007\t1\n4357159\tEduardo Rubicel \tresidente\triepsaingenieria@gmail.com\t510003\t1\n4357176\tGustavo Orozco\tresidente\tgustavo@gumi-k.com.mx\t510005\t1\n4357204\tGerardo Rojas\tresidente\tmowy.rrh@gmail.com\t510005\t1\n5130888\tJesus Contreras\tsupervisor\tjcontreras@objetiva.mx\t360001\t1\n",
+  "stderr": "",
+  "execution_time_ms": 86
+}

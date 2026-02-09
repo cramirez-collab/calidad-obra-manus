@@ -3644,3 +3644,8 @@
 ## Bugfix v3.97.2
 - [x] Residentes no aparecen al crear ítem (selector vacío) - users.list era adminProcedure, ahora usa getAllResidentesConEmpresas como fuente principal
 - [x] Forzar que todos los usuarios puedan entrar y capturar - cambiado users.list a listForMentions en páginas accesibles por todos
+
+## Bugfix y limpieza v3.97.3
+- [x] Limpiar datos de prueba de la BD (167 ítems, 71 empresas test, 3 defectos test eliminados)
+- [x] Omar Palencia no puede seleccionar residente al crear nuevo ítem (eliminado trpc.users.list de NuevoItem, usa solo getAllResidentesConEmpresas)
+- [x] Verificar funcionalidad para todos los roles (228 tests pasando, sin errores TS)
