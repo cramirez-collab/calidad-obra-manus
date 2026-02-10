@@ -2166,10 +2166,12 @@ export async function getMetasConProgreso() {
 
 // ==================== DEFECTOS ====================
 
-export async function getAllDefectos() {
+export async function getAllDefectos(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(defectos).where(eq(defectos.activo, true)).orderBy(defectos.nombre);
+  const conditions = [eq(defectos.activo, true)];
+  if (proyectoId) conditions.push(eq(defectos.proyectoId, proyectoId));
+  return await db.select().from(defectos).where(and(...conditions)).orderBy(defectos.nombre);
 }
 
 export async function getDefectoById(id: number) {
@@ -2210,12 +2212,19 @@ export async function deleteDefecto(id: number) {
 }
 
 // Obtener defectos con estadísticas de uso
-export async function getDefectosConEstadisticas() {
+export async function getDefectosConEstadisticas(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
   
-  const todosDefectos = await db.select().from(defectos).where(eq(defectos.activo, true)).orderBy(defectos.nombre);
-  const todosItems = await db.select(itemFieldsWithoutBase64).from(items);
+  const defConditions = [eq(defectos.activo, true)];
+  if (proyectoId) defConditions.push(eq(defectos.proyectoId, proyectoId));
+  const todosDefectos = await db.select().from(defectos).where(and(...defConditions)).orderBy(defectos.nombre);
+  
+  const itemConditions = [];
+  if (proyectoId) itemConditions.push(eq(items.proyectoId, proyectoId));
+  const todosItems = itemConditions.length > 0 
+    ? await db.select(itemFieldsWithoutBase64).from(items).where(and(...itemConditions))
+    : await db.select(itemFieldsWithoutBase64).from(items);
   const todasEspecialidades = await db.select().from(especialidades);
   
   const especialidadesMap = new Map(todasEspecialidades.map(e => [e.id, e]));
@@ -2382,6 +2391,7 @@ export async function getEstadisticasDefectos(filters: ItemFilters = {}) {
   if (!db) return null;
   
   const conditions = [];
+  if (filters.proyectoId) conditions.push(eq(items.proyectoId, filters.proyectoId));
   if (filters.empresaId) conditions.push(eq(items.empresaId, filters.empresaId));
   if (filters.unidadId) conditions.push(eq(items.unidadId, filters.unidadId));
   if (filters.especialidadId) conditions.push(eq(items.especialidadId, filters.especialidadId));

@@ -3666,3 +3666,10 @@
 - [x] Verificar que todos los usuarios tengan acceso con correo y clave 123456 (33/33 OK)
 - [x] Garantizar que el login nunca falle (trim, lowercase, case-insensitive, retry automático, try-catch robusto)
 - [x] Resetear contraseña 123456 a Katy Orozco (la única con clave diferente)
+
+## Separación de proyectos y limpieza Mayas v4.01
+- [x] Diagnosticar datos contaminados de Hidalma en proyecto Mayas
+- [x] Limpiar toda la data de Mayas que pertenece a Hidalma (10 defectos, 1 empresa, 36 ítems huérfanos, 9 empresas Test UX)
+- [x] Dejar Mayas limpia y lista para iniciar desde cero (0 ítems, 0 empresas, 0 unidades, 0 planos)
+- [x] Reforzar separación agresiva entre proyectos (defectos.list, defectos.estadisticas, getEstadisticasDefectos filtran por proyectoId)
+- [x] NO tocar datos de Hidalma (confirmado: Hidalma intacta con 24 ítems)

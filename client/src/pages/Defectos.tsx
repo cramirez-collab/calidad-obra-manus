@@ -60,7 +60,10 @@ export default function Defectos() {
   const { selectedProjectId } = useProject();
   const { user } = useAuth();
   const utils = trpc.useUtils();
-  const { data: allDefectos, isLoading } = trpc.defectos.listConEstadisticas.useQuery();
+  const { data: allDefectos, isLoading } = trpc.defectos.listConEstadisticas.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
   const { data: especialidades } = trpc.especialidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }

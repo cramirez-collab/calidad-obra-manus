@@ -1969,14 +1969,18 @@ export const appRouter = router({
 
   // ==================== DEFECTOS ====================
   defectos: router({
-    list: protectedProcedure.query(async () => {
-      return await db.getAllDefectos();
-    }),
+    list: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllDefectos(input?.proyectoId);
+      }),
     
     // Lista con estadísticas de uso
-    listConEstadisticas: protectedProcedure.query(async () => {
-      return await db.getDefectosConEstadisticas();
-    }),
+    listConEstadisticas: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getDefectosConEstadisticas(input?.proyectoId);
+      }),
     
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
@@ -2032,6 +2036,7 @@ export const appRouter = router({
     // Estadísticas de defectos con filtros
     estadisticas: protectedProcedure
       .input(z.object({
+        proyectoId: z.number().optional(),
         empresaId: z.number().optional(),
         unidadId: z.number().optional(),
         especialidadId: z.number().optional(),

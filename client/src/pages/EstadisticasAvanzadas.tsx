@@ -47,7 +47,10 @@ export default function EstadisticasAvanzadas() {
 
   // Datos base
   const { data: usuarios } = trpc.users.listForMentions.useQuery();
-  const { data: defectos } = trpc.defectos.list.useQuery();
+  const { data: defectos } = trpc.defectos.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
 
   // Estadísticas
   const { data: rankingUsuarios, isLoading: loadingRanking } = trpc.estadisticas.rankingUsuarios.useQuery(

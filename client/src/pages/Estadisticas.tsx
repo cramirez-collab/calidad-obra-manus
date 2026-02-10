@@ -121,7 +121,10 @@ export default function Estadisticas() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
-  const { data: defectos } = trpc.defectos.list.useQuery();
+  const { data: defectos } = trpc.defectos.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
   const { data: usuarios } = trpc.users.listForMentions.useQuery();
   const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
   const proyectoNombre = proyectos?.find(p => p.id === selectedProjectId)?.nombre || 'Proyecto';
@@ -145,7 +148,10 @@ export default function Estadisticas() {
   }), [filters]);
 
   const { data: stats, isLoading, refetch } = trpc.estadisticas.general.useQuery(queryFilters);
-  const { data: defectosStats } = trpc.defectos.estadisticas.useQuery();
+  const { data: defectosStats } = trpc.defectos.estadisticas.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
   const { data: penalizaciones } = trpc.estadisticas.penalizaciones.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
