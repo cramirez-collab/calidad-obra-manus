@@ -1,4 +1,4 @@
-import { eq, and, or, gte, lte, like, desc, asc, sql, inArray, notInArray, isNotNull } from "drizzle-orm";
+import { eq, ne, and, or, gte, lte, like, desc, asc, sql, inArray, notInArray, isNotNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2";
 import bcrypt from 'bcryptjs';
@@ -1458,6 +1458,73 @@ export async function getEstadisticas(filters: ItemFilters = {}) {
   };
 }
 
+
+// ==================== PENALIZACIONES ====================
+
+const PENALIZACION_POR_ITEM = 2000; // $2,000 MXN por ítem no aprobado
+
+export async function getPenalizacionesPorEmpresa(filters: { proyectoId?: number; empresaId?: number; fechaDesde?: Date; fechaHasta?: Date } = {}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [];
+  if (filters.proyectoId) conditions.push(eq(items.proyectoId, filters.proyectoId));
+  if (filters.empresaId) conditions.push(eq(items.empresaId, filters.empresaId));
+  if (filters.fechaDesde) conditions.push(gte(items.fechaCreacion, filters.fechaDesde));
+  if (filters.fechaHasta) conditions.push(lte(items.fechaCreacion, filters.fechaHasta));
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  // Total de ítems y aprobados por empresa
+  const result = await db
+    .select({
+      empresaId: items.empresaId,
+      totalItems: sql<number>`count(*)`,
+      aprobados: sql<number>`SUM(CASE WHEN ${items.status} = 'aprobado' THEN 1 ELSE 0 END)`,
+      noAprobados: sql<number>`SUM(CASE WHEN ${items.status} != 'aprobado' THEN 1 ELSE 0 END)`,
+    })
+    .from(items)
+    .where(whereClause)
+    .groupBy(items.empresaId);
+
+  // Obtener nombres de empresas
+  const empresaIds = result.map(r => r.empresaId).filter(Boolean);
+  let empresasMap: Record<number, string> = {};
+  if (empresaIds.length > 0) {
+    const emps = await db.select({ id: empresas.id, nombre: empresas.nombre }).from(empresas).where(inArray(empresas.id, empresaIds as number[]));
+    empresasMap = Object.fromEntries(emps.map(e => [e.id, e.nombre]));
+  }
+
+  return result.map(r => ({
+    empresaId: r.empresaId,
+    empresaNombre: empresasMap[r.empresaId!] || `Empresa ${r.empresaId}`,
+    totalItems: Number(r.totalItems),
+    aprobados: Number(r.aprobados || 0),
+    noAprobados: Number(r.noAprobados || 0),
+    penalizacionActiva: Number(r.noAprobados || 0) * PENALIZACION_POR_ITEM,
+    penalizacionLiberada: Number(r.aprobados || 0) * PENALIZACION_POR_ITEM,
+    montoPorItem: PENALIZACION_POR_ITEM,
+  }));
+}
+
+export async function getPenalizacionItem(itemId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select({ status: items.status, empresaId: items.empresaId }).from(items).where(eq(items.id, itemId));
+  if (!result.length) return null;
+
+  const item = result[0];
+  return {
+    monto: PENALIZACION_POR_ITEM,
+    activa: item.status !== 'aprobado',
+    status: item.status,
+  };
+}
+
+export function getMontoPenalizacion() {
+  return PENALIZACION_POR_ITEM;
+}
 
 // ==================== NOTIFICACIONES ====================
 

@@ -482,10 +482,17 @@ export default function ItemsList() {
                             <p className="text-sm text-muted-foreground font-mono">
                               {item.codigo} <span className="text-xs text-[#02B381] font-bold">#{item.numeroInterno || '-'}</span>
                             </p>
-                            <Badge className={`${statusColors[item.status]} mt-1 text-xs`}>
-                              <StatusIcon className="h-3 w-3 mr-1" />
-                              {statusLabels[item.status]}
-                            </Badge>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Badge className={`${statusColors[item.status]} text-xs`}>
+                                <StatusIcon className="h-3 w-3 mr-1" />
+                                {statusLabels[item.status]}
+                              </Badge>
+                              {item.status !== 'aprobado' && (
+                                <Badge className="bg-red-100 text-red-700 border border-red-300 text-[10px] py-0 px-1">
+                                  -$2k
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center gap-1">
                             <Button variant="ghost" size="icon" onClick={(e) => {

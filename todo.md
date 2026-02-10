@@ -3654,3 +3654,10 @@
 - [x] Corregir desfase de posición del pin al guardar (calcPinPos usa imgWrapperRef + toFixed(4) consistente)
 - [x] Tooltip con info del pin al hover/tap (defecto, residente, status) + long press en móvil
 - [x] Navegación progresiva: tap1=tooltip, tap2=plano amplio fullscreen, tap3=ir al ítem específico
+
+## Sistema de Penalizaciones v3.99
+- [x] Penalización de $2,000 MXN por ítem no aprobado (badge en ItemDetail + ItemsList)
+- [x] Acumulado de penalizaciones por empresa/contratista en estadísticas (tabla + gráfico stacked)
+- [x] Restar penalización cuando supervisor aprueba (calculado dinámicamente por status)
+- [x] Aplicar retroactivamente a ítems existentes (query sobre todos los ítems)
+- [x] Resumen en estadísticas: KPIs (activa, liberada, total, monto/ítem) + tabla + gráfico

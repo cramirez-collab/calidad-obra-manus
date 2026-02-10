@@ -1606,6 +1606,27 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await db.getEstadisticasQR(input?.proyectoId);
       }),
+
+    // Penalizaciones por empresa/contratista
+    penalizaciones: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number().optional(),
+        empresaId: z.number().optional(),
+        fechaDesde: z.date().optional(),
+        fechaHasta: z.date().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const data = await db.getPenalizacionesPorEmpresa(input || {});
+        const totalActiva = data.reduce((sum, e) => sum + e.penalizacionActiva, 0);
+        const totalLiberada = data.reduce((sum, e) => sum + e.penalizacionLiberada, 0);
+        return {
+          porEmpresa: data,
+          totalActiva,
+          totalLiberada,
+          totalGeneral: totalActiva + totalLiberada,
+          montoPorItem: db.getMontoPenalizacion(),
+        };
+      }),
   }),
 
   // ==================== NOTIFICACIONES ====================

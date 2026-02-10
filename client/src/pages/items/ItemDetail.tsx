@@ -38,7 +38,8 @@ import {
   Save,
   Trash,
   X,
-  MapPinPlus
+  MapPinPlus,
+  DollarSign
 } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import {
@@ -1036,6 +1037,17 @@ export default function ItemDetail() {
               <Badge className={statusColors[item.status] + " text-sm py-1 px-3"}>
                 {statusLabels[item.status]}
               </Badge>
+              {item.status !== 'aprobado' ? (
+                <Badge className="bg-red-100 text-red-700 border border-red-300 text-xs py-1 px-2">
+                  <DollarSign className="h-3 w-3 mr-0.5" />
+                  -$2,000
+                </Badge>
+              ) : (
+                <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs py-1 px-2">
+                  <DollarSign className="h-3 w-3 mr-0.5" />
+                  Liberada
+                </Badge>
+              )}
             </div>
             
             {/* Título y badges de información */}

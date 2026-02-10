@@ -40,7 +40,10 @@ import {
   MapPin,
   Home,
   Wrench,
-  X
+  X,
+  DollarSign,
+  Ban,
+  ShieldCheck
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useProject } from "@/contexts/ProjectContext";
@@ -143,6 +146,10 @@ export default function Estadisticas() {
 
   const { data: stats, isLoading, refetch } = trpc.estadisticas.general.useQuery(queryFilters);
   const { data: defectosStats } = trpc.defectos.estadisticas.useQuery();
+  const { data: penalizaciones } = trpc.estadisticas.penalizaciones.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
 
   const clearFilter = (key: keyof typeof filters) => {
     setFilters(prev => ({ ...prev, [key]: "" }));
@@ -990,6 +997,175 @@ export default function Estadisticas() {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Penalizaciones por Empresa */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-red-500" />
+            Penalizaciones por Calidad
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            $2,000 MXN por ítem no aprobado — se libera al aprobar por supervisión
+          </p>
+
+          {/* KPIs de Penalizaciones */}
+          <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+            <Card className="border-red-200 bg-red-50/50">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-red-100">
+                    <Ban className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-xl sm:text-2xl font-bold text-red-600">
+                      ${(penalizaciones?.totalActiva || 0).toLocaleString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Penalización Activa</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-emerald-200 bg-emerald-50/50">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-emerald-100">
+                    <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-xl sm:text-2xl font-bold text-emerald-600">
+                      ${(penalizaciones?.totalLiberada || 0).toLocaleString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Penalización Liberada</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-100">
+                    <DollarSign className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xl sm:text-2xl font-bold">
+                      ${(penalizaciones?.totalGeneral || 0).toLocaleString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Total Acumulado</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-amber-100">
+                    <DollarSign className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-xl sm:text-2xl font-bold text-amber-600">
+                      ${(penalizaciones?.montoPorItem || 2000).toLocaleString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Monto por Ítem</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Tabla de Penalizaciones por Empresa */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Desglose por Contratista
+              </CardTitle>
+              <CardDescription>
+                Penalización acumulada por empresa — se resta al aprobar ítems
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {penalizaciones?.porEmpresa && penalizaciones.porEmpresa.length > 0 ? (
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <table className="w-full text-xs sm:text-sm min-w-[500px]">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="text-left p-2 font-medium">Empresa</th>
+                        <th className="text-center p-2 font-medium">Total</th>
+                        <th className="text-center p-2 font-medium">No Aprob.</th>
+                        <th className="text-center p-2 font-medium">Aprob.</th>
+                        <th className="text-right p-2 font-medium text-red-600">Penalización</th>
+                        <th className="text-right p-2 font-medium text-emerald-600">Liberada</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {penalizaciones.porEmpresa
+                        .sort((a, b) => b.penalizacionActiva - a.penalizacionActiva)
+                        .map((emp, idx) => (
+                        <tr key={idx} className="border-b hover:bg-muted/30">
+                          <td className="p-2 font-medium">{emp.empresaNombre}</td>
+                          <td className="p-2 text-center">{emp.totalItems}</td>
+                          <td className="p-2 text-center text-red-600 font-medium">{emp.noAprobados}</td>
+                          <td className="p-2 text-center text-emerald-600 font-medium">{emp.aprobados}</td>
+                          <td className="p-2 text-right text-red-600 font-bold">${emp.penalizacionActiva.toLocaleString()}</td>
+                          <td className="p-2 text-right text-emerald-600 font-bold">${emp.penalizacionLiberada.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                      <tr className="border-t-2 border-gray-400 bg-muted/50 font-bold">
+                        <td className="p-2">TOTAL</td>
+                        <td className="p-2 text-center">{penalizaciones.porEmpresa.reduce((s, e) => s + e.totalItems, 0)}</td>
+                        <td className="p-2 text-center text-red-600">{penalizaciones.porEmpresa.reduce((s, e) => s + e.noAprobados, 0)}</td>
+                        <td className="p-2 text-center text-emerald-600">{penalizaciones.porEmpresa.reduce((s, e) => s + e.aprobados, 0)}</td>
+                        <td className="p-2 text-right text-red-600">${penalizaciones.totalActiva.toLocaleString()}</td>
+                        <td className="p-2 text-right text-emerald-600">${penalizaciones.totalLiberada.toLocaleString()}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="py-8 text-center text-muted-foreground">
+                  No hay datos de penalizaciones disponibles
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Gráfico de barras de penalizaciones */}
+          {penalizaciones?.porEmpresa && penalizaciones.porEmpresa.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Penalizaciones por Contratista
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={Math.max(250, penalizaciones.porEmpresa.length * 45)}>
+                  <BarChart 
+                    data={penalizaciones.porEmpresa.sort((a, b) => b.penalizacionActiva - a.penalizacionActiva).map(e => ({
+                      name: e.empresaNombre.length > 15 ? e.empresaNombre.substring(0, 15) + '...' : e.empresaNombre,
+                      activa: e.penalizacionActiva,
+                      liberada: e.penalizacionLiberada,
+                    }))}
+                    layout="vertical"
+                    margin={{ left: 20, right: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+                    <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 10 }} />
+                    <Tooltip formatter={(value: number) => [`$${value.toLocaleString()}`, '']} />
+                    <Legend />
+                    <Bar dataKey="activa" fill="#EF4444" name="Penalización Activa" stackId="a" radius={[0, 0, 0, 0]}>
+                      <LabelList dataKey="activa" position="center" fill="#fff" fontSize={10} fontWeight="bold" formatter={(v: number) => v > 0 ? `$${(v/1000).toFixed(0)}k` : ''} />
+                    </Bar>
+                    <Bar dataKey="liberada" fill="#10B981" name="Liberada" stackId="a" radius={[0, 4, 4, 0]}>
+                      <LabelList dataKey="liberada" position="center" fill="#fff" fontSize={10} fontWeight="bold" formatter={(v: number) => v > 0 ? `$${(v/1000).toFixed(0)}k` : ''} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* KPIs Mejores y Peores */}
