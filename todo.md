@@ -3649,3 +3649,8 @@
 - [x] Limpiar datos de prueba de la BD (167 ítems, 71 empresas test, 3 defectos test eliminados)
 - [x] Omar Palencia no puede seleccionar residente al crear nuevo ítem (eliminado trpc.users.list de NuevoItem, usa solo getAllResidentesConEmpresas)
 - [x] Verificar funcionalidad para todos los roles (228 tests pasando, sin errores TS)
+
+## Mejoras pines en plano v3.98
+- [x] Corregir desfase de posición del pin al guardar (calcPinPos usa imgWrapperRef + toFixed(4) consistente)
+- [x] Tooltip con info del pin al hover/tap (defecto, residente, status) + long press en móvil
+- [x] Navegación progresiva: tap1=tooltip, tap2=plano amplio fullscreen, tap3=ir al ítem específico

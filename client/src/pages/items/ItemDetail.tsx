@@ -1952,7 +1952,7 @@ export default function ItemDetail() {
                 itemCodigo={item?.codigo}
                 pinColor={editingPin ? 'yellow' : 'red'}
                 onPinPlace={(x: number, y: number) => {
-                  setTempPinPos({ x: x.toFixed(2), y: y.toFixed(2) });
+                  setTempPinPos({ x: x.toFixed(4), y: y.toFixed(4) });
                 }}
                 allPins={!editingPin ? (allPinsData || []) : []}
                 currentItemId={item?.id}

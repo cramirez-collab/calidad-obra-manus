@@ -91,6 +91,9 @@ export default function ZoomablePlano({
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [hiddenStatuses, setHiddenStatuses] = useState<Set<string>>(new Set());
   const [exportingPdf, setExportingPdf] = useState(false);
+  // Track which pin was tapped (for progressive navigation: tap1=tooltip, tap2=fullscreen/navigate)
+  const [tappedPinId, setTappedPinId] = useState<number | null>(null);
+  const tappedPinTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imgWrapperRef = useRef<HTMLDivElement>(null);
   const internalImgRef = useRef<HTMLImageElement>(null);
@@ -156,15 +159,24 @@ export default function ZoomablePlano({
     y: (t1.clientY + t2.clientY) / 2,
   });
 
+  // CRITICAL FIX: Calculate pin position using imgWrapperRef instead of imgRef
+  // This ensures the % position is relative to the same container where pins are rendered
+  // Using imgWrapperRef.getBoundingClientRect() which matches the absolute positioning context
   const calcPinPos = useCallback(
     (clientX: number, clientY: number): { x: number; y: number } | null => {
+      const wrapper = imgWrapperRef.current;
       const img = imgRef.current;
-      if (!img) return null;
-      const rect = img.getBoundingClientRect();
+      if (!wrapper || !img) return null;
+      
+      // Use the wrapper's rect since pins are positioned as % of the wrapper
+      const rect = wrapper.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return null;
+      
       const x = ((clientX - rect.left) / rect.width) * 100;
       const y = ((clientY - rect.top) / rect.height) * 100;
+      
       if (x >= 0 && x <= 100 && y >= 0 && y <= 100) {
-        return { x, y };
+        return { x: parseFloat(x.toFixed(4)), y: parseFloat(y.toFixed(4)) };
       }
       return null;
     },
@@ -353,9 +365,12 @@ export default function ZoomablePlano({
     return () => window.removeEventListener("keydown", handleKey);
   }, [isFullscreen, resetZoom]);
 
-  // Cleanup long press on unmount
+  // Cleanup timers on unmount
   useEffect(() => {
-    return () => clearLongPress();
+    return () => {
+      clearLongPress();
+      if (tappedPinTimer.current) clearTimeout(tappedPinTimer.current);
+    };
   }, [clearLongPress]);
 
   const pinFill = pinColor === "yellow" ? "#f59e0b" : "#ef4444";
@@ -376,7 +391,7 @@ export default function ZoomablePlano({
     return acc;
   }, {} as Record<string, number>);
 
-  // Pin sizes - REDUCED 50% from previous
+  // Pin sizes - REDUCED 50% from original
   const basePinW = Math.max(10, 14 / scale);
   const basePinH = basePinW * 1.3;
   const mainPinW = Math.max(14, 20 / scale);
@@ -422,6 +437,55 @@ export default function ZoomablePlano({
     clearLongPress();
   }, [clearLongPress]);
 
+  // Progressive pin click/tap handler:
+  // Desktop: click always navigates to item
+  // Mobile: tap1 = show tooltip, tap2 = go to fullscreen if not already, tap3 = navigate to item
+  const handlePinInteraction = useCallback((pinId: number, isMobile: boolean) => {
+    if (longPressTriggered.current) return;
+    
+    if (!isMobile) {
+      // Desktop: single click goes to item
+      onPinClick?.(pinId);
+      return;
+    }
+
+    // Mobile progressive navigation
+    if (tappedPinId === pinId) {
+      // Same pin tapped again
+      if (tappedPinTimer.current) {
+        clearTimeout(tappedPinTimer.current);
+        tappedPinTimer.current = null;
+      }
+      if (!isFullscreen) {
+        // tap2: open fullscreen
+        setIsFullscreen(true);
+        resetZoom();
+        setHoveredPin(pinId);
+        setTappedPinId(pinId);
+        // Reset after 4 seconds
+        tappedPinTimer.current = setTimeout(() => {
+          setTappedPinId(null);
+          setHoveredPin(null);
+        }, 4000);
+      } else {
+        // tap3 (or tap2 in fullscreen): navigate to item
+        setTappedPinId(null);
+        setHoveredPin(null);
+        onPinClick?.(pinId);
+      }
+    } else {
+      // New pin tapped - tap1: show tooltip
+      if (tappedPinTimer.current) clearTimeout(tappedPinTimer.current);
+      setTappedPinId(pinId);
+      setHoveredPin(pinId);
+      // Auto-dismiss after 4 seconds
+      tappedPinTimer.current = setTimeout(() => {
+        setTappedPinId(null);
+        setHoveredPin(null);
+      }, 4000);
+    }
+  }, [tappedPinId, isFullscreen, onPinClick, resetZoom]);
+
   // Export plano with pins to PDF
   const exportPlanoPdf = useCallback(async () => {
     if (exportingPdf) return;
@@ -438,7 +502,7 @@ export default function ZoomablePlano({
         i.crossOrigin = "anonymous";
         i.onload = () => resolve(i);
         i.onerror = () => {
-          // Fallback: try without crossOrigin (won't taint canvas but may fail toDataURL)
+          // Fallback: try without crossOrigin
           const i2 = new Image();
           i2.onload = () => resolve(i2);
           i2.onerror = reject;
@@ -473,7 +537,6 @@ export default function ZoomablePlano({
         const isCurrent = pin.id === currentItemId;
 
         if (aprobado && !isCurrent) {
-          // Small green dot
           const r = Math.max(4, naturalW * 0.004);
           ctx.beginPath();
           ctx.arc(px, py, r, 0, Math.PI * 2);
@@ -483,11 +546,9 @@ export default function ZoomablePlano({
           ctx.lineWidth = Math.max(1, r * 0.4);
           ctx.stroke();
         } else {
-          // Pin marker
           const pinSize = isCurrent ? Math.max(16, naturalW * 0.018) : Math.max(12, naturalW * 0.012);
           const pinH = pinSize * 1.4;
 
-          // Draw pin shape (teardrop)
           ctx.save();
           ctx.translate(px, py);
           ctx.beginPath();
@@ -500,21 +561,18 @@ export default function ZoomablePlano({
           ctx.lineWidth = Math.max(1, pinSize * 0.1);
           ctx.stroke();
 
-          // White circle inside
           ctx.beginPath();
           ctx.arc(0, -pinH + pinSize * 0.6, pinSize * 0.22, 0, Math.PI * 2);
           ctx.fillStyle = "white";
           ctx.fill();
           ctx.restore();
 
-          // Number label below
           const num = getItemNumber(pin);
           const fontSize = Math.max(8, naturalW * 0.008);
           ctx.font = `bold ${fontSize}px Arial`;
           ctx.textAlign = "center";
           ctx.textBaseline = "top";
 
-          // Badge background
           const textW = ctx.measureText(num).width;
           const badgeW = textW + fontSize * 0.8;
           const badgeH = fontSize * 1.4;
@@ -527,7 +585,6 @@ export default function ZoomablePlano({
           ctx.lineWidth = Math.max(1, fontSize * 0.15);
           ctx.stroke();
 
-          // Number text
           ctx.fillStyle = "white";
           ctx.fillText(num, px, badgeY + fontSize * 0.2);
         }
@@ -545,25 +602,21 @@ export default function ZoomablePlano({
       const pageH = pdf.internal.pageSize.getHeight();
       const margin = 10;
 
-      // Title
       pdf.setFontSize(14);
       pdf.setFont("helvetica", "bold");
       pdf.text(nombre, margin, margin + 5);
 
-      // Date
       pdf.setFontSize(8);
       pdf.setFont("helvetica", "normal");
       const dateStr = new Date().toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
       pdf.text(dateStr, pageW - margin, margin + 5, { align: "right" });
 
-      // Pin count
       pdf.setFontSize(9);
       pdf.text(`${visiblePins.length} pin${visiblePins.length !== 1 ? "es" : ""} marcados`, margin, margin + 11);
 
-      // Image
       const imgY = margin + 15;
       const availW = pageW - margin * 2;
-      const availH = pageH - imgY - margin - 20; // leave space for legend
+      const availH = pageH - imgY - margin - 20;
       const imgRatio = naturalW / naturalH;
       let drawW = availW;
       let drawH = drawW / imgRatio;
@@ -576,20 +629,17 @@ export default function ZoomablePlano({
       const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
       pdf.addImage(dataUrl, "JPEG", imgX, imgY, drawW, drawH);
 
-      // Legend at bottom
       const legendY = imgY + drawH + 4;
       pdf.setFontSize(7);
       let legendX = margin;
       for (const opt of STATUS_OPTIONS) {
         const count = statusCounts[opt.key] || 0;
         if (count === 0 && hiddenStatuses.has(opt.key)) continue;
-        // Color dot
         pdf.setFillColor(opt.color);
         pdf.circle(legendX + 1.5, legendY + 1, 1.5, "F");
         legendX += 4;
-        // Label
-        const hidden = hiddenStatuses.has(opt.key);
         pdf.setFont("helvetica", "normal");
+        const hidden = hiddenStatuses.has(opt.key);
         const label = `${opt.label}: ${count}${hidden ? " (ocultos)" : ""}`;
         pdf.text(label, legendX, legendY + 1.8);
         legendX += pdf.getTextWidth(label) + 6;
@@ -603,6 +653,50 @@ export default function ZoomablePlano({
     }
   }, [exportingPdf, imgRef, allPins, hiddenStatuses, nombre, pinFill, currentItemId, statusCounts]);
 
+  // Render tooltip for a pin
+  const renderPinTooltip = (pin: PlanoPin, colors: ReturnType<typeof getStatusColor>, bottomOffset: number) => {
+    const showNavigateHint = isFullscreen || tappedPinId === pin.id;
+    return (
+      <div
+        className="absolute rounded-lg shadow-lg border overflow-hidden pointer-events-none"
+        style={{
+          left: "50%",
+          bottom: `${bottomOffset}px`,
+          transform: `translateX(-50%) scale(${Math.max(0.6, 1 / scale)})`,
+          transformOrigin: "bottom center",
+          backgroundColor: "rgba(0,0,0,0.92)",
+          borderColor: colors.bg,
+          minWidth: "120px",
+          maxWidth: "200px",
+          zIndex: 30,
+        }}
+      >
+        <div className="px-2 py-1 text-white text-[10px] font-bold border-b border-white/10 flex items-center gap-1">
+          <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: colors.bg }} />
+          <span>{getItemNumber(pin)} - {getStatusLabel(pin.status)}</span>
+        </div>
+        {pin.descripcion && (
+          <div className="px-2 py-1 text-white text-[10px] leading-tight border-b border-white/10">
+            <span className="text-white/60">Defecto: </span>
+            <span className="font-medium">{truncate(pin.descripcion, 40)}</span>
+          </div>
+        )}
+        {pin.residenteNombre && (
+          <div className="px-2 py-1 text-white text-[10px] leading-tight border-b border-white/10">
+            <span className="text-white/60">Residente: </span>
+            <span>{truncate(pin.residenteNombre, 30)}</span>
+          </div>
+        )}
+        {showNavigateHint && (
+          <div className="px-2 py-1 text-[9px] text-blue-300 flex items-center gap-1">
+            <ExternalLink className="w-2.5 h-2.5" />
+            <span>{isFullscreen ? "Toca de nuevo para ver ítem" : "Toca para ampliar plano"}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderPlanoContent = () => (
     <div
       ref={containerRef}
@@ -614,7 +708,12 @@ export default function ZoomablePlano({
       onClick={(e) => {
         handleClick(e);
         if (!editingPin && hoveredPin !== null) {
-          setHoveredPin(null);
+          // Only clear if clicking on empty area (not on a pin)
+          const target = e.target as HTMLElement;
+          if (!target.closest('[data-pin-id]')) {
+            setHoveredPin(null);
+            setTappedPinId(null);
+          }
         }
       }}
     >
@@ -649,6 +748,7 @@ export default function ZoomablePlano({
               return (
                 <div
                   key={pin.id}
+                  data-pin-id={pin.id}
                   className="absolute"
                   style={{
                     left: `${px}%`,
@@ -670,46 +770,15 @@ export default function ZoomablePlano({
                     onMouseEnter={() => setHoveredPin(pin.id)}
                     onMouseLeave={() => setHoveredPin(null)}
                     onTouchStart={(e) => { e.stopPropagation(); handlePinTouchStart(pin.id); }}
-                    onTouchEnd={(e) => { e.stopPropagation(); handlePinTouchEnd(); }}
+                    onTouchEnd={(e) => { e.stopPropagation(); handlePinTouchEnd(); handlePinInteraction(pin.id, true); }}
                     onTouchMove={() => handlePinTouchMove()}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (!longPressTriggered.current) onPinClick?.(pin.id);
+                      handlePinInteraction(pin.id, false);
                     }}
                   />
                   {/* Hover/longpress tooltip */}
-                  {isHovered && (
-                    <div
-                      className="absolute rounded-lg shadow-lg border overflow-hidden pointer-events-none"
-                      style={{
-                        left: "50%",
-                        bottom: `${Math.max(8, 10 / scale)}px`,
-                        transform: `translateX(-50%) scale(${labelScale})`,
-                        transformOrigin: "bottom center",
-                        backgroundColor: "rgba(0,0,0,0.9)",
-                        borderColor: colors.bg,
-                        minWidth: "100px",
-                        maxWidth: "160px",
-                        zIndex: 30,
-                      }}
-                    >
-                      <div className="px-2 py-1 text-white text-[10px] font-bold border-b border-white/10">
-                        {getItemNumber(pin)} - Aprobado
-                      </div>
-                      {pin.descripcion && (
-                        <div className="px-2 py-1 text-white text-[10px] leading-tight border-b border-white/10">
-                          <span className="text-white/60">Defecto: </span>
-                          <span>{truncate(pin.descripcion, 30)}</span>
-                        </div>
-                      )}
-                      {pin.residenteNombre && (
-                        <div className="px-2 py-1 text-white text-[10px] leading-tight">
-                          <span className="text-white/60">Residente: </span>
-                          <span>{truncate(pin.residenteNombre, 25)}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {isHovered && renderPinTooltip(pin, colors, Math.max(8, 10 / scale))}
                 </div>
               );
             }
@@ -718,6 +787,7 @@ export default function ZoomablePlano({
             return (
               <div
                 key={pin.id}
+                data-pin-id={pin.id}
                 className="absolute"
                 style={{
                   left: `${px}%`,
@@ -739,11 +809,11 @@ export default function ZoomablePlano({
                   onMouseEnter={() => setHoveredPin(pin.id)}
                   onMouseLeave={() => setHoveredPin(null)}
                   onTouchStart={(e) => { e.stopPropagation(); handlePinTouchStart(pin.id); }}
-                  onTouchEnd={(e) => { e.stopPropagation(); handlePinTouchEnd(); }}
+                  onTouchEnd={(e) => { e.stopPropagation(); handlePinTouchEnd(); handlePinInteraction(pin.id, true); }}
                   onTouchMove={() => handlePinTouchMove()}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (!longPressTriggered.current) onPinClick?.(pin.id);
+                    handlePinInteraction(pin.id, false);
                   }}
                 >
                   <path
@@ -780,43 +850,7 @@ export default function ZoomablePlano({
                 </div>
 
                 {/* Hover/longpress tooltip with defecto info */}
-                {isHovered && (
-                  <div
-                    className="absolute rounded-lg shadow-lg border overflow-hidden pointer-events-none"
-                    style={{
-                      left: "50%",
-                      bottom: `${basePinH + 4}px`,
-                      transform: `translateX(-50%) scale(${Math.max(0.6, 1 / scale)})`,
-                      transformOrigin: "bottom center",
-                      backgroundColor: "rgba(0,0,0,0.9)",
-                      borderColor: colors.bg,
-                      minWidth: "110px",
-                      maxWidth: "180px",
-                      zIndex: 30,
-                    }}
-                  >
-                    <div className="px-2 py-1 text-white text-[10px] font-bold border-b border-white/10 flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: colors.bg }} />
-                      <span>{getItemNumber(pin)} - {getStatusLabel(pin.status)}</span>
-                    </div>
-                    {pin.descripcion && (
-                      <div className="px-2 py-1 text-white text-[10px] leading-tight border-b border-white/10">
-                        <span className="text-white/60">Defecto: </span>
-                        <span className="font-medium">{truncate(pin.descripcion, 30)}</span>
-                      </div>
-                    )}
-                    {pin.residenteNombre && (
-                      <div className="px-2 py-1 text-white text-[10px] leading-tight border-b border-white/10">
-                        <span className="text-white/60">Residente: </span>
-                        <span>{truncate(pin.residenteNombre, 25)}</span>
-                      </div>
-                    )}
-                    <div className="px-2 py-1 text-[9px] text-blue-300 flex items-center gap-1">
-                      <ExternalLink className="w-2.5 h-2.5" />
-                      <span>Click para ver ítem</span>
-                    </div>
-                  </div>
-                )}
+                {isHovered && renderPinTooltip(pin, colors, basePinH + 4)}
               </div>
             );
           })}
@@ -1021,7 +1055,7 @@ export default function ZoomablePlano({
                   <Maximize2 className="w-4 h-4" />
                 </button>
               )}
-              <button type="button" onClick={() => { setIsFullscreen(false); resetZoom(); setHoveredPin(null); setShowFilterMenu(false); }} className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors" title="Salir">
+              <button type="button" onClick={() => { setIsFullscreen(false); resetZoom(); setHoveredPin(null); setShowFilterMenu(false); setTappedPinId(null); }} className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors" title="Salir">
                 <Minimize2 className="w-4 h-4" />
               </button>
             </div>
