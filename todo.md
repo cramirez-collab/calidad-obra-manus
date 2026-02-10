@@ -3661,3 +3661,8 @@
 - [x] Restar penalización cuando supervisor aprueba (calculado dinámicamente por status)
 - [x] Aplicar retroactivamente a ítems existentes (query sobre todos los ítems)
 - [x] Resumen en estadísticas: KPIs (activa, liberada, total, monto/ítem) + tabla + gráfico
+
+## Autenticación robusta v4.00
+- [x] Verificar que todos los usuarios tengan acceso con correo y clave 123456 (33/33 OK)
+- [x] Garantizar que el login nunca falle (trim, lowercase, case-insensitive, retry automático, try-catch robusto)
+- [x] Resetear contraseña 123456 a Katy Orozco (la única con clave diferente)

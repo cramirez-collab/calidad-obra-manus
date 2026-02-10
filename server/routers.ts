@@ -80,33 +80,46 @@ export const appRouter = router({
     // Login con email y contraseña
     loginWithPassword: publicProcedure
       .input(z.object({
-        email: z.string().email(),
+        email: z.string().min(1),
         password: z.string().min(1),
       }))
       .mutation(async ({ ctx, input }) => {
-        const user = await db.getUserByEmailAndPassword(input.email, input.password);
-        if (!user) {
-          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Email o contraseña incorrectos' });
+        try {
+          // Normalizar email
+          const cleanEmail = input.email.trim().toLowerCase();
+          
+          const user = await db.getUserByEmailAndPassword(cleanEmail, input.password);
+          if (!user) {
+            throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Email o contraseña incorrectos. Verifica tus datos.' });
+          }
+          if (!user.activo) {
+            throw new TRPCError({ code: 'FORBIDDEN', message: 'Usuario inactivo. Contacta al administrador.' });
+          }
+          if (!user.openId) {
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error de configuración de usuario. Contacta al administrador.' });
+          }
+          
+          // Crear token de sesión
+          const { sdk } = await import('./_core/sdk');
+          const sessionToken = await sdk.createSessionToken(user.openId, {
+            name: user.name || '',
+            expiresInMs: 365 * 24 * 60 * 60 * 1000, // 1 año
+          });
+          
+          // Establecer cookie de sesión
+          const cookieOptions = getSessionCookieOptions(ctx.req);
+          ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: 365 * 24 * 60 * 60 * 1000 });
+          
+          // Actualizar último acceso (no bloquear si falla)
+          db.updateUserLastSignedIn(user.id).catch(e => console.error('[Auth] Error actualizando lastSignedIn:', e));
+          
+          console.log(`[Auth] Login exitoso: ${user.name} (${user.email}) - Rol: ${user.role}`);
+          return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
+        } catch (e) {
+          if (e instanceof TRPCError) throw e;
+          console.error('[Auth] Error inesperado en login:', e);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error del servidor. Intenta de nuevo.' });
         }
-        if (!user.activo) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Usuario inactivo. Contacta al administrador.' });
-        }
-        
-        // Crear token de sesión
-        const { sdk } = await import('./_core/sdk');
-        const sessionToken = await sdk.createSessionToken(user.openId, {
-          name: user.name || '',
-          expiresInMs: 365 * 24 * 60 * 60 * 1000, // 1 año
-        });
-        
-        // Establecer cookie de sesión
-        const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: 365 * 24 * 60 * 60 * 1000 });
-        
-        // Actualizar último acceso
-        await db.updateUserLastSignedIn(user.id);
-        
-        return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
       }),
     
     // Aceptar términos y condiciones

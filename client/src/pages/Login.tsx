@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation, useSearch } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, LogIn, Mail, Lock, AlertCircle } from "lucide-react";
+import { Loader2, LogIn, Mail, Lock, AlertCircle, RefreshCw } from "lucide-react";
 
 const STORAGE_KEY = "oqc_login_remember";
+const MAX_RETRIES = 2;
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -17,6 +18,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
   
   // Cargar datos guardados al iniciar
   useEffect(() => {
@@ -39,7 +42,6 @@ export default function Login() {
     const oauthError = params.get("error");
     if (oauthError) {
       setError(`Error de autenticación: ${oauthError}`);
-      // Limpiar el parámetro de error de la URL
       window.history.replaceState({}, "", "/login");
     }
   }, [searchString]);
@@ -48,7 +50,7 @@ export default function Login() {
     onSuccess: () => {
       // Guardar o eliminar datos según la opción de recordar
       if (rememberMe) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ email, password }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: email.trim().toLowerCase(), password }));
       } else {
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -56,21 +58,64 @@ export default function Login() {
       window.location.href = "/";
     },
     onError: (err) => {
-      setError(err.message || "Error al iniciar sesión");
+      // Si es error de servidor y no hemos agotado reintentos, reintentar automáticamente
+      if (err.data?.code === 'INTERNAL_SERVER_ERROR' && retryCount < MAX_RETRIES) {
+        setIsRetrying(true);
+        setRetryCount(prev => prev + 1);
+        setTimeout(() => {
+          setIsRetrying(false);
+          doLogin();
+        }, 1000 * (retryCount + 1)); // Backoff: 1s, 2s
+        return;
+      }
+      
+      setRetryCount(0);
+      
+      // Mensajes amigables según el tipo de error
+      if (err.data?.code === 'UNAUTHORIZED') {
+        setError("Email o contraseña incorrectos. Verifica tus datos e intenta de nuevo.");
+      } else if (err.data?.code === 'FORBIDDEN') {
+        setError("Tu cuenta está inactiva. Contacta al administrador.");
+      } else if (err.message?.includes('fetch') || err.message?.includes('network') || err.message?.includes('Failed')) {
+        setError("Error de conexión. Verifica tu internet e intenta de nuevo.");
+      } else {
+        setError(err.message || "Error al iniciar sesión. Intenta de nuevo.");
+      }
     },
   });
+  
+  const doLogin = useCallback(() => {
+    if (!email.trim() || !password) return;
+    loginMutation.mutate({ email: email.trim().toLowerCase(), password });
+  }, [email, password, loginMutation]);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setRetryCount(0);
     
-    if (!email || !password) {
-      setError("Por favor ingresa email y contraseña");
+    const trimmedEmail = email.trim();
+    
+    if (!trimmedEmail) {
+      setError("Por favor ingresa tu email");
       return;
     }
     
-    loginMutation.mutate({ email, password });
+    if (!password) {
+      setError("Por favor ingresa tu contraseña");
+      return;
+    }
+    
+    // Validación básica de formato email
+    if (!trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
+      setError("El formato del email no es válido");
+      return;
+    }
+    
+    doLogin();
   };
+  
+  const isPending = loginMutation.isPending || isRetrying;
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
@@ -107,7 +152,10 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
-                  disabled={loginMutation.isPending}
+                  disabled={isPending}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                 />
               </div>
             </div>
@@ -125,8 +173,11 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
-                  disabled={loginMutation.isPending}
+                  disabled={isPending}
                   autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                 />
               </div>
               <p className="text-xs text-muted-foreground">
@@ -152,19 +203,37 @@ export default function Login() {
             {error && (
               <div className="flex items-start gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
                 <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                <span>{error}</span>
+                <div className="flex-1">
+                  <span>{error}</span>
+                  {error.includes('conexión') && (
+                    <button 
+                      type="button"
+                      onClick={() => { setError(''); doLogin(); }}
+                      className="block mt-1 text-xs text-blue-600 underline"
+                    >
+                      Reintentar
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {isRetrying && (
+              <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                <span>Reintentando conexión... ({retryCount}/{MAX_RETRIES})</span>
               </div>
             )}
             
             <Button 
               type="submit" 
               className="w-full bg-[#02B381] hover:bg-[#029a6e] text-white"
-              disabled={loginMutation.isPending}
+              disabled={isPending}
             >
-              {loginMutation.isPending ? (
+              {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Iniciando sesión...
+                  {isRetrying ? 'Reintentando...' : 'Iniciando sesión...'}
                 </>
               ) : (
                 <>

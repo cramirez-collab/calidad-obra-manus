@@ -4766,15 +4766,39 @@ export async function getUserByEmailAndPassword(email: string, password: string)
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  // Buscar todos los usuarios con ese email (puede haber duplicados manual_ y OAuth)
-  const result = await db.select().from(users).where(eq(users.email, email));
+  // Normalizar email: trim + lowercase para evitar fallos por espacios o mayúsculas
+  const normalizedEmail = email.trim().toLowerCase();
   
-  // Priorizar usuario con contraseña (manual o con passwordHash)
+  // Buscar todos los usuarios con ese email (case-insensitive via LOWER)
+  const result = await db.select().from(users).where(
+    sql`LOWER(${users.email}) = ${normalizedEmail}`
+  );
+  
+  // Priorizar usuario activo con contraseña
+  // Primero intentar con usuarios activos
   for (const user of result) {
-    if (user.passwordHash) {
-      const isValid = await bcrypt.compare(password, user.passwordHash);
-      if (isValid) {
-        return user;
+    if (user.passwordHash && user.activo) {
+      try {
+        const isValid = await bcrypt.compare(password, user.passwordHash);
+        if (isValid) {
+          return user;
+        }
+      } catch (e) {
+        console.error(`[Auth] Error comparando hash para usuario ${user.id}:`, e);
+      }
+    }
+  }
+  
+  // Si no encontró activo, intentar con inactivos (para dar mensaje correcto)
+  for (const user of result) {
+    if (user.passwordHash && !user.activo) {
+      try {
+        const isValid = await bcrypt.compare(password, user.passwordHash);
+        if (isValid) {
+          return user; // El router verificará user.activo y dará mensaje adecuado
+        }
+      } catch (e) {
+        console.error(`[Auth] Error comparando hash para usuario inactivo ${user.id}:`, e);
       }
     }
   }
