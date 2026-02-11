@@ -3747,3 +3747,10 @@
 - [x] Eliminar bloqueos innecesarios en carga inicial (staleTime/gcTime en todas las queries)
 - [x] PDF con fichas de ítems, historial, fotos y planos integrado
 - [x] Eliminar ítems de prueba (8 eliminados de nuevo)
+## Imagen plano con pines en fichas PDF v4.11
+- [ ] Cargar imagen del plano del ítem via proxy y dibujar pin marcado sobre ella
+- [ ] Incluir plano con pin en cada ficha individual del PDF
+- [ ] Diseño profesional y experto de la ficha completa
+## Mejoras Estadísticas v4.12
+- [x] Gráficas más bonitas y profesionales en página de Estadísticas
+- [x] Sección de firmas de especialidades en Estadísticas

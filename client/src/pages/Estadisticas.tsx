@@ -69,7 +69,10 @@ import {
   Cell,
   Legend,
   LabelList,
+  RadialBarChart,
+  RadialBar,
 } from "recharts";
+import { Pen } from "lucide-react";
 
 const statusColors: Record<string, string> = {
   pendiente_foto_despues: "#F59E0B",
@@ -138,6 +141,7 @@ export default function Estadisticas() {
   }, [unidades]);
 
   const queryFilters = useMemo(() => ({
+    proyectoId: selectedProjectId || undefined,
     empresaId: filters.empresaId ? parseInt(filters.empresaId) : undefined,
     especialidadId: filters.especialidadId ? parseInt(filters.especialidadId) : undefined,
     unidadId: filters.unidadId ? parseInt(filters.unidadId) : undefined,
@@ -146,7 +150,7 @@ export default function Estadisticas() {
     status: filters.status || undefined,
     nivel: filters.nivel ? parseInt(filters.nivel) : undefined,
     defectoId: filters.defectoId ? parseInt(filters.defectoId) : undefined,
-  }), [filters]);
+  }), [filters, selectedProjectId]);
 
   const { data: stats, isLoading, refetch } = trpc.estadisticas.general.useQuery(queryFilters);
   const { data: defectosStats } = trpc.defectos.estadisticas.useQuery(
@@ -739,107 +743,196 @@ export default function Estadisticas() {
 
         {/* Gráficos */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Distribución por Estado */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          {/* Distribución por Estado - Donut Profesional */}
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-[#002C63]">
                 <PieChart className="h-5 w-5" />
                 Distribución por Estado
               </CardTitle>
             </CardHeader>
             <CardContent>
               {statusData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <RechartsPie>
-                    <Pie
-                      data={statusData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                    >
-                      {statusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </RechartsPie>
-                </ResponsiveContainer>
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="relative">
+                    <ResponsiveContainer width={220} height={220}>
+                      <RechartsPie>
+                        <defs>
+                          {statusData.map((entry, i) => (
+                            <linearGradient key={`grad-status-${i}`} id={`gradStatus${i}`} x1="0" y1="0" x2="1" y2="1">
+                              <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                              <stop offset="100%" stopColor={entry.color} stopOpacity={0.7} />
+                            </linearGradient>
+                          ))}
+                        </defs>
+                        <Pie
+                          data={statusData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={90}
+                          paddingAngle={3}
+                          dataKey="value"
+                          stroke="#fff"
+                          strokeWidth={2}
+                          animationBegin={0}
+                          animationDuration={800}
+                        >
+                          {statusData.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={`url(#gradStatus${index})`} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0].payload;
+                          const total = statusData.reduce((s, x) => s + x.value, 0);
+                          return (
+                            <div className="bg-white rounded-lg shadow-lg border p-3 text-xs">
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
+                                <span className="font-semibold">{d.name}</span>
+                              </div>
+                              <div className="text-gray-600">{d.value} ítems ({((d.value / total) * 100).toFixed(1)}%)</div>
+                            </div>
+                          );
+                        }} />
+                      </RechartsPie>
+                    </ResponsiveContainer>
+                    {/* Centro del donut */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-2xl font-bold text-[#002C63]">{stats?.total || 0}</span>
+                      <span className="text-[10px] text-muted-foreground">Total</span>
+                    </div>
+                  </div>
+                  {/* Leyenda lateral */}
+                  <div className="flex flex-col gap-2 text-sm">
+                    {statusData.map((item, i) => {
+                      const total = statusData.reduce((s, x) => s + x.value, 0);
+                      const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0';
+                      return (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                          <div className="flex-1">
+                            <div className="font-medium text-xs">{item.name}</div>
+                            <div className="text-muted-foreground text-[10px]">{item.value} ({pct}%)</div>
+                          </div>
+                          <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: item.color }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[220px] flex items-center justify-center text-muted-foreground">
                   No hay datos disponibles
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Por Empresa */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
+          {/* Por Empresa - Barras con gradiente */}
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-[#002C63]">
+                <Building2 className="h-5 w-5" />
                 Ítems por Empresa
               </CardTitle>
             </CardHeader>
             <CardContent>
               {empresaData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={empresaData} layout="vertical" margin={{ left: 20, right: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" tick={{ fontSize: 11 }} />
+                <ResponsiveContainer width="100%" height={Math.max(220, empresaData.length * 50)}>
+                  <BarChart data={empresaData} layout="vertical" margin={{ left: 10, right: 40 }}>
+                    <defs>
+                      <linearGradient id="gradEmpresa" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#002C63" stopOpacity={0.9} />
+                        <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.8} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} />
                     <YAxis 
                       dataKey="name" 
                       type="category" 
-                      width={100} 
-                      tick={{ fontSize: 10 }} 
-                      tickFormatter={(value) => value.length > 12 ? value.substring(0, 12) + '...' : value}
+                      width={110} 
+                      tick={{ fontSize: 11, fill: '#334155' }} 
+                      tickFormatter={(value) => value.length > 14 ? value.substring(0, 14) + '...' : value}
+                      axisLine={false}
+                      tickLine={false}
                     />
-                    <Tooltip />
-                    <Bar dataKey="total" fill="#3B82F6" radius={[0, 4, 4, 0]}>
-                      <LabelList dataKey="total" position="right" fill="#333" fontSize={11} fontWeight="bold" />
+                    <Tooltip content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      return (
+                        <div className="bg-white rounded-lg shadow-lg border p-3 text-xs">
+                          <div className="font-semibold mb-1">{payload[0].payload.name}</div>
+                          <div className="text-[#002C63] font-bold">{payload[0].value} ítems</div>
+                        </div>
+                      );
+                    }} />
+                    <Bar dataKey="total" fill="url(#gradEmpresa)" radius={[0, 6, 6, 0]} barSize={28} animationDuration={800}>
+                      <LabelList dataKey="total" position="right" fill="#002C63" fontSize={12} fontWeight="bold" />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[220px] flex items-center justify-center text-muted-foreground">
                   No hay datos disponibles
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Por Especialidad */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
+          {/* Por Especialidad - Barras con colores individuales */}
+          <Card className="lg:col-span-2 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-[#002C63]">
+                <Wrench className="h-5 w-5" />
                 Ítems por Especialidad
               </CardTitle>
             </CardHeader>
             <CardContent>
               {especialidadData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={especialidadData} margin={{ bottom: 60 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={especialidadData} margin={{ bottom: 70, top: 20 }}>
+                    <defs>
+                      {especialidadData.map((entry, i) => (
+                        <linearGradient key={`grad-esp-${i}`} id={`gradEsp${i}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                          <stop offset="100%" stopColor={entry.color} stopOpacity={0.6} />
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                     <XAxis 
                       dataKey="name" 
-                      tick={{ fontSize: 10 }} 
+                      tick={{ fontSize: 10, fill: '#334155' }} 
                       angle={-45}
                       textAnchor="end"
                       height={80}
                       interval={0}
-                      tickFormatter={(value) => value && value.length > 10 ? value.substring(0, 10) + '...' : (value || 'Sin nombre')}
+                      tickFormatter={(value) => value && value.length > 12 ? value.substring(0, 12) + '...' : (value || 'Sin nombre')}
+                      axisLine={false}
                     />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                      {especialidadData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                    <YAxis tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} />
+                    <Tooltip content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const d = payload[0].payload;
+                      return (
+                        <div className="bg-white rounded-lg shadow-lg border p-3 text-xs">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
+                            <span className="font-semibold">{d.name}</span>
+                          </div>
+                          <div className="text-gray-600 font-bold">{d.value} ítems</div>
+                        </div>
+                      );
+                    }} />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={40} animationDuration={800}>
+                      {especialidadData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={`url(#gradEsp${index})`} />
                       ))}
-                      <LabelList dataKey="value" position="top" fill="#333" fontSize={11} fontWeight="bold" />
+                      <LabelList dataKey="value" position="top" fill="#002C63" fontSize={12} fontWeight="bold" />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -923,92 +1016,141 @@ export default function Estadisticas() {
 
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Por Tipo de Defecto */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-[#002C63]">
                   <BarChart3 className="h-5 w-5" />
                   Top 10 Tipos de Defectos
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {defectosData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={defectosData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" />
-                      <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11 }} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="aprobados" stackId="a" fill="#10B981" name="Aprobados">
-                        <LabelList dataKey="aprobados" position="center" fill="#fff" fontSize={10} fontWeight="bold" />
+                  <ResponsiveContainer width="100%" height={Math.max(280, defectosData.length * 40)}>
+                    <BarChart data={defectosData} layout="vertical" margin={{ left: 10, right: 30 }}>
+                      <defs>
+                        <linearGradient id="gradAprobados" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#10B981" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="#34D399" stopOpacity={0.8} />
+                        </linearGradient>
+                        <linearGradient id="gradRechazados" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#EF4444" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="#F87171" stopOpacity={0.8} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} />
+                      <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 10, fill: '#334155' }} axisLine={false} tickLine={false} tickFormatter={(v) => v.length > 16 ? v.substring(0, 16) + '...' : v} />
+                      <Tooltip content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const d = payload[0].payload;
+                        return (
+                          <div className="bg-white rounded-lg shadow-lg border p-3 text-xs">
+                            <div className="font-semibold mb-2">{d.name}</div>
+                            <div className="flex gap-4">
+                              <span className="text-emerald-600">Aprobados: {d.aprobados}</span>
+                              <span className="text-red-600">Rechazados: {d.rechazados}</span>
+                            </div>
+                            <div className="text-gray-500 mt-1">Total: {d.total}</div>
+                          </div>
+                        );
+                      }} />
+                      <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      <Bar dataKey="aprobados" stackId="a" fill="url(#gradAprobados)" name="Aprobados" radius={[0, 0, 0, 0]} animationDuration={800}>
+                        <LabelList dataKey="aprobados" position="center" fill="#fff" fontSize={10} fontWeight="bold" formatter={(v: number) => v > 0 ? v : ''} />
                       </Bar>
-                      <Bar dataKey="rechazados" stackId="a" fill="#EF4444" name="Rechazados">
-                        <LabelList dataKey="rechazados" position="center" fill="#fff" fontSize={10} fontWeight="bold" />
+                      <Bar dataKey="rechazados" stackId="a" fill="url(#gradRechazados)" name="Rechazados" radius={[0, 6, 6, 0]} animationDuration={800}>
+                        <LabelList dataKey="rechazados" position="center" fill="#fff" fontSize={10} fontWeight="bold" formatter={(v: number) => v > 0 ? v : ''} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  <div className="h-[280px] flex items-center justify-center text-muted-foreground">
                     No hay datos de defectos disponibles
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Por Severidad */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5" />
+            {/* Por Severidad - Donut profesional */}
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-[#002C63]">
+                  <AlertTriangle className="h-5 w-5" />
                   Distribución por Severidad
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {severidadData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={350}>
-                    <RechartsPie>
-                      <Pie
-                        data={severidadData}
-                        cx="50%"
-                        cy="45%"
-                        innerRadius={50}
-                        outerRadius={85}
-                        paddingAngle={3}
-                        dataKey="value"
-                        labelLine={{ strokeWidth: 1 }}
-                        label={({ name, percent, cx, cy, midAngle, outerRadius }) => {
-                          const RADIAN = Math.PI / 180;
-                          const radius = outerRadius + 25;
-                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                          return (
-                            <text 
-                              x={x} 
-                              y={y} 
-                              fill="#333" 
-                              textAnchor={x > cx ? 'start' : 'end'} 
-                              dominantBaseline="central"
-                              fontSize={11}
-                            >
-                              {`${name} (${(percent * 100).toFixed(0)}%)`}
-                            </text>
-                          );
-                        }}
-                      >
-                        {severidadData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend 
-                        verticalAlign="bottom" 
-                        height={36}
-                        wrapperStyle={{ fontSize: '11px' }}
-                      />
-                    </RechartsPie>
-                  </ResponsiveContainer>
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div className="relative">
+                      <ResponsiveContainer width={200} height={200}>
+                        <RechartsPie>
+                          <defs>
+                            {severidadData.map((entry, i) => (
+                              <linearGradient key={`grad-sev-${i}`} id={`gradSev${i}`} x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                                <stop offset="100%" stopColor={entry.color} stopOpacity={0.65} />
+                              </linearGradient>
+                            ))}
+                          </defs>
+                          <Pie
+                            data={severidadData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={50}
+                            outerRadius={80}
+                            paddingAngle={3}
+                            dataKey="value"
+                            stroke="#fff"
+                            strokeWidth={2}
+                            animationDuration={800}
+                          >
+                            {severidadData.map((_, index) => (
+                              <Cell key={`cell-${index}`} fill={`url(#gradSev${index})`} />
+                            ))}
+                          </Pie>
+                          <Tooltip content={({ active, payload }) => {
+                            if (!active || !payload?.length) return null;
+                            const d = payload[0].payload;
+                            const total = severidadData.reduce((s, x) => s + x.value, 0);
+                            return (
+                              <div className="bg-white rounded-lg shadow-lg border p-3 text-xs">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
+                                  <span className="font-semibold">{d.name}</span>
+                                </div>
+                                <div className="text-gray-600">{d.value} defectos ({((d.value / total) * 100).toFixed(1)}%)</div>
+                              </div>
+                            );
+                          }} />
+                        </RechartsPie>
+                      </ResponsiveContainer>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span className="text-xl font-bold text-[#002C63]">{severidadData.reduce((s, x) => s + x.value, 0)}</span>
+                        <span className="text-[10px] text-muted-foreground">Defectos</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2.5 text-sm">
+                      {severidadData.map((item, i) => {
+                        const total = severidadData.reduce((s, x) => s + x.value, 0);
+                        const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0';
+                        return (
+                          <div key={i} className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                            <div className="flex-1">
+                              <div className="font-medium text-xs">{item.name}</div>
+                              <div className="text-muted-foreground text-[10px]">{item.value} ({pct}%)</div>
+                            </div>
+                            <div className="w-14 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: item.color }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ) : (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  <div className="h-[200px] flex items-center justify-center text-muted-foreground">
                     No hay datos de severidad disponibles
                   </div>
                 )}
@@ -1150,33 +1292,56 @@ export default function Estadisticas() {
 
           {/* Gráfico de barras de penalizaciones */}
           {penalizaciones?.porEmpresa && penalizaciones.porEmpresa.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-[#002C63]">
                   <BarChart3 className="h-5 w-5" />
                   Penalizaciones por Contratista
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={Math.max(250, penalizaciones.porEmpresa.length * 45)}>
+                <ResponsiveContainer width="100%" height={Math.max(250, penalizaciones.porEmpresa.length * 50)}>
                   <BarChart 
-                    data={penalizaciones.porEmpresa.sort((a, b) => b.penalizacionActiva - a.penalizacionActiva).map(e => ({
+                    data={[...penalizaciones.porEmpresa].sort((a, b) => b.penalizacionActiva - a.penalizacionActiva).map(e => ({
                       name: e.empresaNombre.length > 15 ? e.empresaNombre.substring(0, 15) + '...' : e.empresaNombre,
+                      fullName: e.empresaNombre,
                       activa: e.penalizacionActiva,
                       liberada: e.penalizacionLiberada,
                     }))}
                     layout="vertical"
-                    margin={{ left: 20, right: 20 }}
+                    margin={{ left: 10, right: 30 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
-                    <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 10 }} />
-                    <Tooltip formatter={(value: number) => [`$${value.toLocaleString()}`, '']} />
-                    <Legend />
-                    <Bar dataKey="activa" fill="#EF4444" name="Penalización Activa" stackId="a" radius={[0, 0, 0, 0]}>
+                    <defs>
+                      <linearGradient id="gradPenActiva" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#EF4444" stopOpacity={0.9} />
+                        <stop offset="100%" stopColor="#F87171" stopOpacity={0.8} />
+                      </linearGradient>
+                      <linearGradient id="gradPenLiberada" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#10B981" stopOpacity={0.9} />
+                        <stop offset="100%" stopColor="#34D399" stopOpacity={0.8} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                    <XAxis type="number" tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} />
+                    <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 10, fill: '#334155' }} axisLine={false} tickLine={false} />
+                    <Tooltip content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const d = payload[0].payload;
+                      return (
+                        <div className="bg-white rounded-lg shadow-lg border p-3 text-xs">
+                          <div className="font-semibold mb-2">{d.fullName}</div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-red-600">Activa: ${d.activa.toLocaleString()}</span>
+                            <span className="text-emerald-600">Liberada: ${d.liberada.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      );
+                    }} />
+                    <Legend wrapperStyle={{ fontSize: '11px' }} />
+                    <Bar dataKey="activa" fill="url(#gradPenActiva)" name="Penalización Activa" stackId="a" radius={[0, 0, 0, 0]} barSize={28} animationDuration={800}>
                       <LabelList dataKey="activa" position="center" fill="#fff" fontSize={10} fontWeight="bold" formatter={(v: number) => v > 0 ? `$${(v/1000).toFixed(0)}k` : ''} />
                     </Bar>
-                    <Bar dataKey="liberada" fill="#10B981" name="Liberada" stackId="a" radius={[0, 4, 4, 0]}>
+                    <Bar dataKey="liberada" fill="url(#gradPenLiberada)" name="Liberada" stackId="a" radius={[0, 6, 6, 0]} barSize={28} animationDuration={800}>
                       <LabelList dataKey="liberada" position="center" fill="#fff" fontSize={10} fontWeight="bold" formatter={(v: number) => v > 0 ? `$${(v/1000).toFixed(0)}k` : ''} />
                     </Bar>
                   </BarChart>
@@ -1207,6 +1372,18 @@ export default function Estadisticas() {
           </h2>
           
           <RendimientoUsuarios />
+        </div>
+
+        {/* Firmas de Especialidades */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Pen className="h-5 w-5 text-[#002C63]" />
+            Firmas por Especialidad
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Responsables de calidad por especialidad y empresa contratista
+          </p>
+          <FirmasEspecialidades />
         </div>
       </div>
     </DashboardLayout>
@@ -1457,6 +1634,111 @@ function RendimientoUsuarios() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// Componente de Firmas por Especialidad
+function FirmasEspecialidades() {
+  const { selectedProjectId } = useProject();
+  const { data: firmantes, isLoading } = trpc.estadisticas.firmantesReporte.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (!firmantes || firmantes.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-muted-foreground">
+          No hay empresas/especialidades registradas para este proyecto
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Agrupar por especialidad
+  const porEspecialidad = firmantes.reduce<Record<string, typeof firmantes>>((acc, f) => {
+    const esp = f.especialidadNombre || 'Sin Especialidad';
+    if (!acc[esp]) acc[esp] = [];
+    acc[esp].push(f);
+    return acc;
+  }, {});
+
+  const especialidadColors: Record<string, string> = {
+    'Tablaroca y Plafón': '#3B82F6',
+    'Pasta': '#EC4899',
+    'Aluminio y Vidrio': '#06B6D4',
+    'Pintura': '#8B5CF6',
+    'Herrería': '#F59E0B',
+    'Impermeabilización': '#10B981',
+    'Eléctrica': '#EF4444',
+    'Hidráulica': '#0EA5E9',
+    'Acabados': '#F97316',
+  };
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {Object.entries(porEspecialidad).map(([especialidad, empresas]) => {
+        const color = especialidadColors[especialidad] || '#6B7280';
+        return (
+          <Card key={especialidad} className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            {/* Header con color de especialidad */}
+            <div className="h-1.5" style={{ backgroundColor: color }} />
+            <CardHeader className="pb-2 pt-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                <span className="text-[#002C63]">{especialidad}</span>
+                <span className="ml-auto text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  {empresas.length} {empresas.length === 1 ? 'empresa' : 'empresas'}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                {empresas.map((emp, idx) => (
+                  <div key={idx} className="border-b last:border-0 pb-3 last:pb-0">
+                    <div className="flex items-start gap-2">
+                      <div className="p-1.5 rounded-md bg-gray-50">
+                        <Building2 className="h-3.5 w-3.5 text-gray-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-800 truncate" title={emp.empresaNombre}>
+                          {emp.empresaNombre}
+                        </p>
+                        {emp.jefeNombre ? (
+                          <div className="flex items-center gap-1 mt-1">
+                            <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <span className="text-[11px] text-muted-foreground truncate" title={emp.jefeNombre}>
+                              {emp.jefeNombre}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground italic">Sin jefe asignado</span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Línea de firma */}
+                    <div className="mt-4 pt-2">
+                      <div className="border-b border-dashed border-gray-300 mb-1" />
+                      <p className="text-[9px] text-center text-muted-foreground">
+                        Firma — {emp.jefeNombre || emp.empresaNombre}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
