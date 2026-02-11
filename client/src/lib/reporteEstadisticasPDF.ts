@@ -1,5 +1,6 @@
 /**
- * Reporte PDF completo de Estadisticas - ObjetivaOQC v4.04
+ * Reporte PDF completo de Estadisticas - ObjetivaOQC v4.15
+ * Graficas con fondo blanco, gradientes, sombras y diseño profesional
  * Genera un PDF profesional con graficas visuales renderizadas en canvas
  * e insertadas como imagenes PNG en el documento.
  *
@@ -175,18 +176,21 @@ const statusLabels: Record<string, string> = {
 
 function createCanvas(w: number, h: number): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
   const canvas = document.createElement("canvas");
-  const dpr = 1.5;
+  const dpr = 2;
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   canvas.style.width = `${w}px`;
   canvas.style.height = `${h}px`;
   const ctx = canvas.getContext("2d")!;
   ctx.scale(dpr, dpr);
+  // Fondo blanco obligatorio — JPEG no soporta transparencia
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, w, h);
   return { canvas, ctx };
 }
 
 function canvasToDataURL(canvas: HTMLCanvasElement): string {
-  return canvas.toDataURL("image/jpeg", 0.85);
+  return canvas.toDataURL("image/png");
 }
 
 function truncLabel(str: string, max: number): string {
@@ -210,11 +214,25 @@ function drawDonut(
 
   if (title) {
     ctx.fillStyle = "#002C63";
-    ctx.font = "bold 13px Arial, sans-serif";
+    ctx.font = "bold 14px Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(sinAcentos(title), w / 2, 16);
+    ctx.fillText(sinAcentos(title), w / 2, 18);
+    // Línea decorativa bajo título
+    const tw = ctx.measureText(sinAcentos(title)).width;
+    ctx.strokeStyle = "#02B381";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(w / 2 - tw / 2, 22);
+    ctx.lineTo(w / 2 + tw / 2, 22);
+    ctx.stroke();
   }
 
+  // Sombra sutil del donut
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.08)";
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
   let startAngle = -Math.PI / 2;
   data.forEach((d) => {
     const sliceAngle = (d.value / total) * 2 * Math.PI;
@@ -224,6 +242,20 @@ function drawDonut(
     ctx.closePath();
     ctx.fillStyle = d.color;
     ctx.fill();
+    startAngle += sliceAngle;
+  });
+  ctx.restore();
+
+  // Separadores blancos entre slices
+  startAngle = -Math.PI / 2;
+  data.forEach((d) => {
+    const sliceAngle = (d.value / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(startAngle) * outerR, cy + Math.sin(startAngle) * outerR);
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2;
+    ctx.stroke();
     startAngle += sliceAngle;
   });
 
@@ -279,14 +311,39 @@ function drawHorizontalBars(
 
   if (title) {
     ctx.fillStyle = "#002C63";
-    ctx.font = "bold 13px Arial, sans-serif";
+    ctx.font = "bold 14px Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(sinAcentos(title), w / 2, 16);
+    ctx.fillText(sinAcentos(title), w / 2, 18);
+    const tw = ctx.measureText(sinAcentos(title)).width;
+    ctx.strokeStyle = "#02B381";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(w / 2 - tw / 2, 22);
+    ctx.lineTo(w / 2 + tw / 2, 22);
+    ctx.stroke();
+  }
+
+  // Líneas guía horizontales sutiles
+  const gridSteps = 4;
+  for (let g = 0; g <= gridSteps; g++) {
+    const gx = marginLeft + (g / gridSteps) * (w - marginLeft - marginRight);
+    ctx.strokeStyle = "#F1F5F9";
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(gx, marginTop - 4);
+    ctx.lineTo(gx, marginTop + data.length * (barH + gap));
+    ctx.stroke();
   }
 
   data.forEach((d, i) => {
     const y = marginTop + i * (barH + gap);
     const barW = (d.value / maxVal) * (w - marginLeft - marginRight);
+
+    // Fondo sutil de la fila
+    if (i % 2 === 0) {
+      ctx.fillStyle = "#F8FAFC";
+      ctx.fillRect(marginLeft, y - 1, w - marginLeft - marginRight, barH + 2);
+    }
 
     ctx.fillStyle = "#334155";
     ctx.font = "11px Arial, sans-serif";
@@ -294,19 +351,30 @@ function drawHorizontalBars(
     ctx.textBaseline = "middle";
     ctx.fillText(truncLabel(d.label, 18), marginLeft - 6, y + barH / 2);
 
-    const radius = 3;
-    ctx.fillStyle = d.color || defaultColor || "#3B82F6";
+    // Barra con gradiente
+    const baseColor = d.color || defaultColor || "#3B82F6";
+    const grad = ctx.createLinearGradient(marginLeft, y, marginLeft + barW, y);
+    grad.addColorStop(0, baseColor);
+    grad.addColorStop(1, baseColor + "CC");
+    
+    const radius = 4;
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.06)";
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetY = 1;
+    ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.moveTo(marginLeft, y);
-    ctx.lineTo(marginLeft + barW - radius, y);
-    ctx.quadraticCurveTo(marginLeft + barW, y, marginLeft + barW, y + radius);
-    ctx.lineTo(marginLeft + barW, y + barH - radius);
-    ctx.quadraticCurveTo(marginLeft + barW, y + barH, marginLeft + barW - radius, y + barH);
+    ctx.lineTo(marginLeft + Math.max(barW - radius, 0), y);
+    ctx.quadraticCurveTo(marginLeft + barW, y, marginLeft + barW, y + Math.min(radius, barH / 2));
+    ctx.lineTo(marginLeft + barW, y + barH - Math.min(radius, barH / 2));
+    ctx.quadraticCurveTo(marginLeft + barW, y + barH, marginLeft + Math.max(barW - radius, 0), y + barH);
     ctx.lineTo(marginLeft, y + barH);
     ctx.closePath();
     ctx.fill();
+    ctx.restore();
 
-    ctx.fillStyle = "#334155";
+    ctx.fillStyle = "#1E293B";
     ctx.font = "bold 11px Arial, sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(String(d.value), marginLeft + barW + 6, y + barH / 2);
@@ -332,9 +400,16 @@ function drawStackedHBars(
 
   if (title) {
     ctx.fillStyle = "#002C63";
-    ctx.font = "bold 13px Arial, sans-serif";
+    ctx.font = "bold 14px Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(sinAcentos(title), w / 2, 16);
+    ctx.fillText(sinAcentos(title), w / 2, 18);
+    const tw = ctx.measureText(sinAcentos(title)).width;
+    ctx.strokeStyle = "#02B381";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(w / 2 - tw / 2, 22);
+    ctx.lineTo(w / 2 + tw / 2, 22);
+    ctx.stroke();
   }
 
   const labels = legendLabels || [];
@@ -398,12 +473,19 @@ function drawPenaltyBars(
 
   if (title) {
     ctx.fillStyle = "#002C63";
-    ctx.font = "bold 13px Arial, sans-serif";
+    ctx.font = "bold 14px Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(sinAcentos(title), w / 2, 16);
+    ctx.fillText(sinAcentos(title), w / 2, 18);
+    const tw = ctx.measureText(sinAcentos(title)).width;
+    ctx.strokeStyle = "#02B381";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(w / 2 - tw / 2, 22);
+    ctx.lineTo(w / 2 + tw / 2, 22);
+    ctx.stroke();
   }
 
-  const ly = title ? 28 : 10;
+  const ly = title ? 30 : 10;
   let lx = marginLeft;
   [
     { label: "Penalizacion Activa", color: "#EF4444" },
@@ -484,9 +566,16 @@ function drawVerticalBars(
 
   if (title) {
     ctx.fillStyle = "#002C63";
-    ctx.font = "bold 13px Arial, sans-serif";
+    ctx.font = "bold 14px Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(sinAcentos(title), w / 2, 16);
+    ctx.fillText(sinAcentos(title), w / 2, 18);
+    const tw = ctx.measureText(sinAcentos(title)).width;
+    ctx.strokeStyle = "#02B381";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(w / 2 - tw / 2, 22);
+    ctx.lineTo(w / 2 + tw / 2, 22);
+    ctx.stroke();
   }
 
   ctx.strokeStyle = "#E2E8F0";
@@ -508,8 +597,17 @@ function drawVerticalBars(
     const bH = (d.value / maxVal) * barAreaH;
     const y = marginTop + barAreaH - bH;
 
-    const radius = 3;
-    ctx.fillStyle = d.color;
+    // Gradiente vertical
+    const grad = ctx.createLinearGradient(x, y, x, marginTop + barAreaH);
+    grad.addColorStop(0, d.color);
+    grad.addColorStop(1, d.color + "99");
+
+    const radius = 4;
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.08)";
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 2;
+    ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.moveTo(x, y + radius);
     ctx.quadraticCurveTo(x, y, x + radius, y);
@@ -519,8 +617,9 @@ function drawVerticalBars(
     ctx.lineTo(x, marginTop + barAreaH);
     ctx.closePath();
     ctx.fill();
+    ctx.restore();
 
-    ctx.fillStyle = "#334155";
+    ctx.fillStyle = "#1E293B";
     ctx.font = "bold 10px Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(String(d.value), x + barW / 2, y - 4);
@@ -553,11 +652,24 @@ function drawPie(
 
   if (title) {
     ctx.fillStyle = "#002C63";
-    ctx.font = "bold 13px Arial, sans-serif";
+    ctx.font = "bold 14px Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(sinAcentos(title), w / 2, 16);
+    ctx.fillText(sinAcentos(title), w / 2, 18);
+    const tw = ctx.measureText(sinAcentos(title)).width;
+    ctx.strokeStyle = "#02B381";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(w / 2 - tw / 2, 22);
+    ctx.lineTo(w / 2 + tw / 2, 22);
+    ctx.stroke();
   }
 
+  // Sombra sutil
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.1)";
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
   let startAngle = -Math.PI / 2;
   data.forEach((d) => {
     const sliceAngle = (d.value / total) * 2 * Math.PI;
@@ -567,13 +679,34 @@ function drawPie(
     ctx.closePath();
     ctx.fillStyle = d.color;
     ctx.fill();
+    startAngle += sliceAngle;
+  });
+  ctx.restore();
+
+  // Separadores blancos
+  startAngle = -Math.PI / 2;
+  data.forEach((d) => {
+    const sliceAngle = (d.value / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(startAngle) * radius, cy + Math.sin(startAngle) * radius);
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    startAngle += sliceAngle;
+  });
+
+  // Labels de porcentaje
+  startAngle = -Math.PI / 2;
+  data.forEach((d) => {
+    const sliceAngle = (d.value / total) * 2 * Math.PI;
     if (sliceAngle > 0.3) {
       const midAngle = startAngle + sliceAngle / 2;
       const labelR = radius * 0.65;
       const lx = cx + Math.cos(midAngle) * labelR;
       const ly = cy + Math.sin(midAngle) * labelR;
       ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 11px Arial, sans-serif";
+      ctx.font = "bold 12px Arial, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(`${((d.value / total) * 100).toFixed(0)}%`, lx, ly);
@@ -732,8 +865,13 @@ function addChartImage(doc: jsPDF, dataURL: string, yPos: number, imgW: number, 
     yPos = 38;
   }
   const xPos = (pw - mmW) / 2;
-  doc.addImage(dataURL, "JPEG", xPos, yPos, mmW, mmH);
-  return yPos + mmH + 4;
+  // Borde sutil alrededor de la gráfica
+  doc.setDrawColor(226, 232, 240); // slate-200
+  doc.setLineWidth(0.3);
+  doc.roundedRect(xPos - 1, yPos - 1, mmW + 2, mmH + 2, 1.5, 1.5, "S");
+  const fmt = dataURL.startsWith("data:image/png") ? "PNG" : "JPEG";
+  doc.addImage(dataURL, fmt, xPos, yPos, mmW, mmH);
+  return yPos + mmH + 6;
 }
 
 function rankingTable(doc: jsPDF, titulo: string, mejores: RankItem[], peores: RankItem[], dataKey: string, yPos: number, unit: string = "%"): number {

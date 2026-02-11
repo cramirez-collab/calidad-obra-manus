@@ -3766,3 +3766,9 @@
 - [x] Segundo proyecto "Mayas Habitat" existe en BD, es real (Grupo Bahe)
 - [x] Estadísticas mostraban 0 — Fix: enabled: !!selectedProjectId en query
 - [x] Verificación completa de todos los módulos: Selección, Bienvenida, Items, Estadísticas OK
+
+## Rediseño Gráficas PDF Estadísticas v4.14
+- [x] Cambiar fondo de todas las gráficas a BLANCO (createCanvas pinta #FFFFFF + PNG format)
+- [x] Textos de gráficas en negro/gris oscuro (#002C63 títulos, #1E293B valores)
+- [x] Colores vibrantes y profesionales con gradientes y sombras
+- [x] Diseño agresivamente estético: línea decorativa verde bajo títulos, separadores blancos en donuts, bordes redondeados en barras, borde sutil alrededor de cada gráfica
