@@ -113,6 +113,11 @@ interface ReporteData {
     aprobados: number;
     rechazados: number;
   }> | null;
+  firmantes: Array<{
+    empresaNombre: string;
+    especialidadNombre: string;
+    jefeNombre: string;
+  }> | null;
 }
 
 interface RankItem {
@@ -724,10 +729,42 @@ function rankingTable(doc: jsPDF, titulo: string, mejores: RankItem[], peores: R
 
 export function generarReporteEstadisticasPDF(data: ReporteData) {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
-  const { proyectoNombre, stats, empresas, especialidades, defectosStats, penalizaciones, kpis, rendimiento, defectosPorUsuario } = data;
+  const { proyectoNombre, stats, empresas, especialidades, defectosStats, penalizaciones, kpis, rendimiento, defectosPorUsuario, firmantes } = data;
 
   addHeader(doc, "Reporte de Estadisticas", proyectoNombre);
+  const pw = doc.internal.pageSize.getWidth();
   let y = 38;
+
+  // ═══════════ LEYENDA DE COMPROMISO ═══════════
+  const fechaEmision = new Date();
+  const fechaFin = new Date(fechaEmision.getTime() + 8 * 24 * 60 * 60 * 1000);
+  const fmtFecha = (d: Date) => {
+    const dia = d.getDate().toString().padStart(2, "0");
+    const mes = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][d.getMonth()];
+    return `${dia} de ${mes} de ${d.getFullYear()}`;
+  };
+  // Recuadro rojo
+  doc.setDrawColor(220, 38, 38);
+  doc.setLineWidth(0.8);
+  doc.roundedRect(15, y, pw - 30, 32, 2, 2, "S");
+  // Título
+  doc.setTextColor(220, 38, 38);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.text(sinAcentos("COMPROMISO DE CORRECCION DE DEFECTOS"), 20, y + 6);
+  // Texto
+  doc.setTextColor(60, 60, 60);
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  doc.text(sinAcentos("Las personas y empresas que firman el presente documento se comprometen a tener arreglados los defectos"), 20, y + 12);
+  doc.text(sinAcentos("detectados en un periodo de una semana a partir de la fecha de emision de este reporte."), 20, y + 16);
+  // Fechas
+  doc.setTextColor(220, 38, 38);
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "bold");
+  doc.text(sinAcentos(`Fecha de emision: ${fmtFecha(fechaEmision)}`), 20, y + 24);
+  doc.text(sinAcentos(`Fecha limite de correccion: ${fmtFecha(fechaFin)}`), pw / 2, y + 24);
+  y += 40;
 
   // ═══════════ 1. RESUMEN GENERAL ═══════════
   y = seccion(doc, "1. Resumen General", y);
@@ -1027,6 +1064,68 @@ export function generarReporteEstadisticasPDF(data: ReporteData) {
         u.totalDefectos > 0 ? `${((u.aprobados / u.totalDefectos) * 100).toFixed(0)}%` : "0%",
       ]);
     y = tabla(doc, ["#", "Usuario", "Defectos", "Aprob.", "Rech.", "% Aprob."], defUserRows, y);
+  }
+
+  // ═══════════ SECCION DE FIRMAS ═══════════
+  const firmantesList = firmantes && firmantes.length > 0 ? firmantes : [];
+  if (firmantesList.length > 0) {
+    const ph = doc.internal.pageSize.getHeight();
+    doc.addPage();
+    y = 25;
+
+    y = seccion(doc, "Firmas de Compromiso", y);
+
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "italic");
+    doc.text(sinAcentos(`Fecha de emision: ${fmtFecha(fechaEmision)}  |  Fecha limite: ${fmtFecha(fechaFin)}`), 15, y);
+    y += 8;
+
+    const colW = (pw - 30 - 10) / 2;
+    const firmaH = 38;
+    let currentY = y;
+
+    for (let i = 0; i < firmantesList.length; i += 2) {
+      if (currentY + firmaH > ph - 25) {
+        doc.addPage();
+        currentY = 25;
+      }
+      drawFirmaBox(doc, firmantesList[i], 15, currentY, colW, firmaH);
+      if (i + 1 < firmantesList.length) {
+        drawFirmaBox(doc, firmantesList[i + 1], 15 + colW + 10, currentY, colW, firmaH);
+      }
+      currentY += firmaH;
+    }
+  }
+
+  function drawFirmaBox(d: jsPDF, f: { empresaNombre: string; especialidadNombre: string; jefeNombre: string }, xB: number, yB: number, cW: number, fH: number) {
+    d.setFillColor(252, 252, 253);
+    d.roundedRect(xB, yB, cW, fH - 3, 1.5, 1.5, "F");
+    d.setDrawColor(...C.GRIS_CLARO);
+    d.setLineWidth(0.3);
+    d.roundedRect(xB, yB, cW, fH - 3, 1.5, 1.5, "S");
+    d.setFillColor(...C.VERDE);
+    d.rect(xB, yB, cW, 2.5, "F");
+    d.setTextColor(...C.AZUL);
+    d.setFontSize(6.5);
+    d.setFont("helvetica", "bold");
+    d.text(sinAcentos(f.especialidadNombre.toUpperCase()), xB + 4, yB + 7);
+    d.setTextColor(80, 80, 80);
+    d.setFontSize(6);
+    d.setFont("helvetica", "normal");
+    d.text(sinAcentos(f.empresaNombre), xB + 4, yB + 11);
+    d.setDrawColor(...C.AZUL);
+    d.setLineWidth(0.4);
+    d.line(xB + 8, yB + 24, xB + cW - 8, yB + 24);
+    const nombre = f.jefeNombre || "";
+    d.setTextColor(...C.AZUL);
+    d.setFontSize(6.5);
+    d.setFont("helvetica", "bold");
+    d.text(sinAcentos(nombre), xB + cW / 2, yB + 28, { align: "center" });
+    d.setTextColor(...C.GRIS);
+    d.setFontSize(5.5);
+    d.setFont("helvetica", "normal");
+    d.text("Responsable de Especialidad", xB + cW / 2, yB + 31.5, { align: "center" });
   }
 
   // ═══════════ FOOTER ═══════════

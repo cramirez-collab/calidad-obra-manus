@@ -3710,3 +3710,10 @@
 ## Limpieza de ítems de prueba v4.06
 - [x] Identificar y eliminar permanentemente todos los ítems de prueba de la BD (20 ítems Test eliminados, quedan 24 reales)
 - [x] Verificar que estadísticas y demás vistas no muestran datos de prueba (Total Ítems: 24, solo Hidalma)
+## Leyenda compromiso y firmas en PDF v4.07
+- [x] Leyenda de compromiso con recuadro rojo arriba del reporte
+- [x] Fecha emisión + 8 días = fecha límite de corrección
+- [x] Sección de firmas al final con 2 columnas por página
+- [x] Cada firma: especialidad, empresa, línea de firma, nombre jefe
+- [x] Endpoint firmantesReporte con datos de empresas/especialidades/jefes
+- [x] 243 tests pasando, 0 errores TS

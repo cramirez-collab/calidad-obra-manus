@@ -169,6 +169,10 @@ export default function Estadisticas() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
+  const { data: firmantesData } = trpc.estadisticas.firmantesReporte.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
 
   const clearFilter = (key: keyof typeof filters) => {
     setFilters(prev => ({ ...prev, [key]: "" }));
@@ -321,6 +325,7 @@ export default function Estadisticas() {
                   kpis: kpisData || null,
                   rendimiento: rendimientoData || null,
                   defectosPorUsuario: defectosPorUsuarioData || null,
+                  firmantes: firmantesData || null,
                 });
               }}
               className="text-red-600 border-red-200 hover:bg-red-50"

@@ -1640,6 +1640,30 @@ export const appRouter = router({
           montoPorItem: db.getMontoPenalizacion(),
         };
       }),
+
+    firmantesReporte: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        const proyectoId = input?.proyectoId;
+        const empresas = await db.getAllEmpresas(proyectoId);
+        const especialidades = await db.getAllEspecialidades(proyectoId);
+        const espMap: Record<number, string> = {};
+        for (const e of especialidades) espMap[e.id] = e.nombre;
+        // Obtener nombres de jefes
+        const jefesIds = empresas.filter(e => e.jefeResidenteId).map(e => e.jefeResidenteId!);
+        const jefesMap: Record<number, string> = {};
+        if (jefesIds.length > 0) {
+          for (const jId of jefesIds) {
+            const u = await db.getUserById(jId);
+            if (u) jefesMap[jId] = u.name || u.email || '';
+          }
+        }
+        return empresas.map(e => ({
+          empresaNombre: e.nombre,
+          especialidadNombre: e.especialidadId ? (espMap[e.especialidadId] || 'Sin Especialidad') : 'Sin Especialidad',
+          jefeNombre: e.jefeResidenteId ? (jefesMap[e.jefeResidenteId] || '') : '',
+        }));
+      }),
   }),
 
   // ==================== NOTIFICACIONES ====================
