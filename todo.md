@@ -3684,3 +3684,9 @@
 - [x] Ranking por especialidad y por defecto (frecuencia)
 - [x] Sin acentos en exportación (función sinAcentos aplicada a todo)
 - [x] Sin gráfica de cuellos de botella (no incluida)
+
+## Rediseño pines en plano v4.03
+- [x] Badge tipo pill ancho con código del ítem visible (pill con border-radius completo)
+- [x] Reducir agresivamente el tamaño del pin (escala inversa 1/zoom, tamaño constante)
+- [x] Tap en pin lleva al ítem específico (click directo navega a /items/ID)
+- [x] Zoom funcional para ampliar y ver lugar exacto del pin (pinch-zoom + botones)

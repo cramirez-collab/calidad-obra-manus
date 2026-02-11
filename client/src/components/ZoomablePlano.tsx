@@ -391,12 +391,9 @@ export default function ZoomablePlano({
     return acc;
   }, {} as Record<string, number>);
 
-  // Pin sizes - REDUCED 50% from original
-  const basePinW = Math.max(10, 14 / scale);
-  const basePinH = basePinW * 1.3;
-  const mainPinW = Math.max(14, 20 / scale);
-  const mainPinH = mainPinW * 1.3;
-  const labelScale = Math.max(0.4, 0.7 / scale);
+  // Pin sizes - pill badge style, counter-scale with zoom to stay small
+  const pillScale = Math.max(0.3, 1 / scale);
+  const mainPillScale = Math.max(0.4, 1.2 / scale);
 
   // Check if pin is "aprobado" - render as small green dot only
   const isAprobado = (status?: string | null) => status === "aprobado";
@@ -537,6 +534,7 @@ export default function ZoomablePlano({
         const isCurrent = pin.id === currentItemId;
 
         if (aprobado && !isCurrent) {
+          // Small green dot for approved
           const r = Math.max(4, naturalW * 0.004);
           ctx.beginPath();
           ctx.arc(px, py, r, 0, Math.PI * 2);
@@ -546,47 +544,39 @@ export default function ZoomablePlano({
           ctx.lineWidth = Math.max(1, r * 0.4);
           ctx.stroke();
         } else {
-          const pinSize = isCurrent ? Math.max(16, naturalW * 0.018) : Math.max(12, naturalW * 0.012);
-          const pinH = pinSize * 1.4;
-
-          ctx.save();
-          ctx.translate(px, py);
-          ctx.beginPath();
-          ctx.arc(0, -pinH + pinSize * 0.6, pinSize * 0.5, Math.PI, 0);
-          ctx.lineTo(0, 0);
-          ctx.closePath();
-          ctx.fillStyle = isCurrent ? pinFill : colors.bg;
-          ctx.fill();
-          ctx.strokeStyle = "white";
-          ctx.lineWidth = Math.max(1, pinSize * 0.1);
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.arc(0, -pinH + pinSize * 0.6, pinSize * 0.22, 0, Math.PI * 2);
-          ctx.fillStyle = "white";
-          ctx.fill();
-          ctx.restore();
-
-          const num = getItemNumber(pin);
-          const fontSize = Math.max(8, naturalW * 0.008);
+          // Pill badge with code
+          const code = pin.codigo || getItemNumber(pin);
+          const fontSize = isCurrent ? Math.max(10, naturalW * 0.009) : Math.max(8, naturalW * 0.007);
           ctx.font = `bold ${fontSize}px Arial`;
           ctx.textAlign = "center";
-          ctx.textBaseline = "top";
+          ctx.textBaseline = "middle";
 
-          const textW = ctx.measureText(num).width;
-          const badgeW = textW + fontSize * 0.8;
-          const badgeH = fontSize * 1.4;
-          const badgeY = py + 2;
+          const textW = ctx.measureText(code).width;
+          const badgeW = textW + fontSize * 1.2;
+          const badgeH = fontSize * 1.6;
+          const badgeX = px - badgeW / 2;
+          const badgeY = py - badgeH / 2;
+
+          // Pill background
           ctx.fillStyle = isCurrent ? pinFill : colors.bg;
           ctx.beginPath();
-          ctx.roundRect(px - badgeW / 2, badgeY, badgeW, badgeH, badgeH / 2);
+          ctx.roundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2);
           ctx.fill();
           ctx.strokeStyle = "white";
-          ctx.lineWidth = Math.max(1, fontSize * 0.15);
+          ctx.lineWidth = Math.max(1.5, fontSize * 0.15);
           ctx.stroke();
 
+          // Small dot
+          const dotR = fontSize * 0.2;
+          const dotX = badgeX + fontSize * 0.5;
+          ctx.beginPath();
+          ctx.arc(dotX, py, dotR, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(255,255,255,0.8)";
+          ctx.fill();
+
+          // Code text
           ctx.fillStyle = "white";
-          ctx.fillText(num, px, badgeY + fontSize * 0.2);
+          ctx.fillText(code, px + fontSize * 0.15, py);
         }
       }
 
@@ -783,7 +773,7 @@ export default function ZoomablePlano({
               );
             }
 
-            // Non-aprobado pins: small pin with number, hover shows defecto
+            // Non-aprobado pins: pill badge with code
             return (
               <div
                 key={pin.id}
@@ -796,15 +786,16 @@ export default function ZoomablePlano({
                   pointerEvents: "auto",
                 }}
               >
-                {/* Pin SVG marker - 50% smaller */}
-                <svg
-                  width={basePinW}
-                  height={basePinH}
-                  viewBox="0 0 24 31"
-                  className="cursor-pointer"
+                {/* Pill badge with item code */}
+                <div
+                  className="cursor-pointer flex items-center gap-0.5 rounded-full shadow-md whitespace-nowrap"
                   style={{
-                    transform: "translate(-50%, -100%)",
-                    filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.5))",
+                    transform: `translate(-50%, -50%) scale(${pillScale})`,
+                    transformOrigin: "center center",
+                    backgroundColor: colors.bg,
+                    border: `1.5px solid ${colors.border}`,
+                    padding: "2px 6px",
+                    boxShadow: isHovered ? `0 0 8px ${colors.bg}` : "0 1px 3px rgba(0,0,0,0.5)",
                   }}
                   onMouseEnter={() => setHoveredPin(pin.id)}
                   onMouseLeave={() => setHoveredPin(null)}
@@ -816,41 +807,17 @@ export default function ZoomablePlano({
                     handlePinInteraction(pin.id, false);
                   }}
                 >
-                  <path
-                    d="M12 0C5.4 0 0 5.4 0 12c0 9 12 19 12 19s12-10 12-19C24 5.4 18.6 0 12 0z"
-                    fill={colors.bg}
-                    stroke="white"
-                    strokeWidth="2"
-                  />
-                  <circle cx="12" cy="11" r="4.5" fill="white" fillOpacity="0.9" />
-                </svg>
-
-                {/* Number label below pin - no # symbol */}
-                <div
-                  className="absolute flex items-center justify-center"
-                  style={{
-                    left: "0",
-                    top: "2px",
-                    transform: `translateX(-50%) scale(${labelScale})`,
-                    transformOrigin: "top center",
-                    pointerEvents: "none",
-                  }}
-                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/80 shrink-0" />
                   <span
-                    className="font-bold text-white rounded-full px-1.5 py-0.5 shadow-sm whitespace-nowrap"
-                    style={{
-                      backgroundColor: colors.bg,
-                      border: `1.5px solid ${colors.border}`,
-                      fontSize: "9px",
-                      lineHeight: 1,
-                    }}
+                    className="font-bold text-white leading-none"
+                    style={{ fontSize: "10px" }}
                   >
-                    {getItemNumber(pin)}
+                    {pin.codigo || getItemNumber(pin)}
                   </span>
                 </div>
 
                 {/* Hover/longpress tooltip with defecto info */}
-                {isHovered && renderPinTooltip(pin, colors, basePinH + 4)}
+                {isHovered && renderPinTooltip(pin, colors, 16)}
               </div>
             );
           })}
@@ -869,59 +836,38 @@ export default function ZoomablePlano({
               <div
                 className="absolute animate-ping rounded-full"
                 style={{
-                  width: `${mainPinW}px`,
-                  height: `${mainPinW}px`,
-                  left: `${-mainPinW / 2}px`,
-                  top: `${-mainPinW}px`,
+                  width: "16px",
+                  height: "16px",
+                  left: "-8px",
+                  top: "-8px",
                   backgroundColor: pinFill,
                   opacity: 0.3,
+                  transform: `scale(${mainPillScale})`,
                 }}
               />
-              {/* Pin SVG marker */}
-              <svg
-                width={mainPinW}
-                height={mainPinH}
-                viewBox="0 0 24 31"
+              {/* Main pill badge with code */}
+              <div
+                className="flex items-center gap-1 rounded-full shadow-lg whitespace-nowrap"
                 style={{
-                  transform: "translate(-50%, -100%)",
-                  filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))",
+                  transform: `translate(-50%, -50%) scale(${mainPillScale})`,
+                  transformOrigin: "center center",
+                  backgroundColor: pinFill,
+                  border: "2px solid white",
+                  padding: "3px 8px",
+                  boxShadow: `0 0 10px ${pinFill}80, 0 2px 6px rgba(0,0,0,0.5)`,
                 }}
               >
-                <path
-                  d="M12 0C5.4 0 0 5.4 0 12c0 9 12 19 12 19s12-10 12-19C24 5.4 18.6 0 12 0z"
-                  fill={pinFill}
-                  stroke="white"
-                  strokeWidth="2.5"
-                />
-                <circle cx="12" cy="11" r="4.5" fill="white" />
-              </svg>
-              {/* Main pin label - just number */}
-              {itemCodigo && (
-                <div
-                  className="absolute whitespace-nowrap flex flex-col items-center"
-                  style={{
-                    left: "0",
-                    top: "4px",
-                    transform: `translateX(-50%) scale(${labelScale})`,
-                    transformOrigin: "top center",
-                  }}
+                <div className="w-2 h-2 rounded-full bg-white shrink-0" />
+                <span
+                  className="font-bold text-white leading-none"
+                  style={{ fontSize: "11px" }}
                 >
-                  <span
-                    className="font-bold text-white rounded-full px-2 py-0.5 shadow-md"
-                    style={{
-                      backgroundColor: pinFill,
-                      border: "2px solid white",
-                      fontSize: "10px",
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {(() => {
-                      const mainPin = allPins.find(p => p.id === currentItemId);
-                      return mainPin ? getItemNumber(mainPin) : itemCodigo;
-                    })()}
-                  </span>
-                </div>
-              )}
+                  {itemCodigo || (() => {
+                    const mainPin = allPins.find(p => p.id === currentItemId);
+                    return mainPin ? mainPin.codigo || getItemNumber(mainPin) : "";
+                  })()}
+                </span>
+              </div>
             </div>
           )}
 
