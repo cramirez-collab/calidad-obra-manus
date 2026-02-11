@@ -3707,3 +3707,6 @@
 - [x] Fix "Empresa null" → "Sin Empresa" en gráficas y tablas
 - [x] Optimización tamaño PDF: JPEG 85% + DPI 1.5x (13.5MB → 296KB)
 - [x] Verificación completa: 8 páginas con gráficas donut, barras, pie, stacked
+## Limpieza de ítems de prueba v4.06
+- [x] Identificar y eliminar permanentemente todos los ítems de prueba de la BD (20 ítems Test eliminados, quedan 24 reales)
+- [x] Verificar que estadísticas y demás vistas no muestran datos de prueba (Total Ítems: 24, solo Hidalma)

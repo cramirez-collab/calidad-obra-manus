@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM items WHERE titulo LIKE 'Test%' OR (proyectoId IS NULL AND codigo LIKE 'OQC-%');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute DELETE FROM items WHERE titulo LIKE 'Test%' OR (proyectoId IS NULL AND codigo LIKE 'OQC-%');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 106
+}

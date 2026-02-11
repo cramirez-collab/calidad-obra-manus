@@ -1,0 +1,26 @@
+{
+  "query": "SELECT id, nombre, codigo, cliente, activo, createdAt FROM proyectos;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, codigo, cliente, activo, createdAt FROM proyectos;",
+  "rows": [
+    {
+      "id": "1",
+      "nombre": "Hidalma ",
+      "codigo": "Hidalma",
+      "cliente": "Gbpo",
+      "activo": "1",
+      "createdAt": "2026-01-25 08:13:17"
+    },
+    {
+      "id": "150001",
+      "nombre": "Mayas Habitat",
+      "codigo": "Mayas",
+      "cliente": "Grupo Bahe ",
+      "activo": "1",
+      "createdAt": "2026-01-30 19:00:04"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tcodigo\tcliente\tactivo\tcreatedAt\n1\tHidalma \tHidalma\tGbpo\t1\t2026-01-25 08:13:17\n150001\tMayas Habitat\tMayas\tGrupo Bahe \t1\t2026-01-30 19:00:04\n",
+  "stderr": "",
+  "execution_time_ms": 75
+}

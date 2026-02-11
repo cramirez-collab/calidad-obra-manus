@@ -1,0 +1,406 @@
+{
+  "query": "SELECT i.id, i.codigo, i.titulo, i.status, i.proyectoId, p.nombre as proyecto, i.fechaCreacion FROM items i LEFT JOIN proyectos p ON i.proyectoId = p.id ORDER BY i.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT i.id, i.codigo, i.titulo, i.status, i.proyectoId, p.nombre as proyecto, i.fechaCreacion FROM items i LEFT JOIN proyectos p ON i.proyectoId = p.id ORDER BY i.id;",
+  "rows": [
+    {
+      "id": "1290001",
+      "codigo": "Hidalma-F8XTCG",
+      "titulo": "Faldon",
+      "status": "pendiente_aprobacion",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 21:11:36"
+    },
+    {
+      "id": "1290002",
+      "codigo": "Hidalma-RFTFJA",
+      "titulo": "Entrecalle",
+      "status": "pendiente_aprobacion",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 21:15:30"
+    },
+    {
+      "id": "1290003",
+      "codigo": "Hidalma-F5DUKF",
+      "titulo": "Entrecalle",
+      "status": "pendiente_aprobacion",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 21:17:24"
+    },
+    {
+      "id": "1290004",
+      "codigo": "Hidalma-DFRNLX",
+      "titulo": "Pasta descuadre",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 22:26:17"
+    },
+    {
+      "id": "1290005",
+      "codigo": "Hidalma-GQLS7A",
+      "titulo": "Ventanas descuadre",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 22:31:22"
+    },
+    {
+      "id": "1290007",
+      "codigo": "Hidalma-4YKAYL",
+      "titulo": "Resane de Hueco ",
+      "status": "pendiente_aprobacion",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 22:40:39"
+    },
+    {
+      "id": "1290008",
+      "codigo": "Hidalma-L4ZLGK",
+      "titulo": "Entrecalle",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 22:42:12"
+    },
+    {
+      "id": "1290009",
+      "codigo": "Hidalma-Z4GJN8",
+      "titulo": "Ventanas descuadre",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 22:43:53"
+    },
+    {
+      "id": "1290010",
+      "codigo": "Hidalma-6MTE5R",
+      "titulo": "Ventanas descuadre",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 22:44:59"
+    },
+    {
+      "id": "1290011",
+      "codigo": "Hidalma-H3G3H2",
+      "titulo": "Pasta descuadre",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 22:46:34"
+    },
+    {
+      "id": "1290012",
+      "codigo": "Hidalma-YT7T87",
+      "titulo": "Remate de pasta",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 22:47:45"
+    },
+    {
+      "id": "1290013",
+      "codigo": "Hidalma-82GLVY",
+      "titulo": "Registro",
+      "status": "pendiente_aprobacion",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 22:55:48"
+    },
+    {
+      "id": "1290014",
+      "codigo": "Hidalma-YQ46D7",
+      "titulo": "Desplome en muro ",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 22:58:08"
+    },
+    {
+      "id": "1290015",
+      "codigo": "Hidalma-CVE38D",
+      "titulo": "Ventanas descuadre",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 23:00:34"
+    },
+    {
+      "id": "1290016",
+      "codigo": "Hidalma-EQZVN6",
+      "titulo": "Perfilado",
+      "status": "pendiente_aprobacion",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 23:14:54"
+    },
+    {
+      "id": "1290017",
+      "codigo": "Hidalma-5FYTSJ",
+      "titulo": "Ventanas descuadre",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 23:16:01"
+    },
+    {
+      "id": "1290018",
+      "codigo": "Hidalma-6GCWBF",
+      "titulo": "Entrecalle",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 23:17:07"
+    },
+    {
+      "id": "1290019",
+      "codigo": "Hidalma-VNQ86J",
+      "titulo": "Entrecalle",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 23:17:53"
+    },
+    {
+      "id": "1290020",
+      "codigo": "Hidalma-HGSXEQ",
+      "titulo": "Pasta descuadre",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 23:19:14"
+    },
+    {
+      "id": "1290021",
+      "codigo": "Hidalma-BQ4ZWP",
+      "titulo": "Remate de pasta",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-04 23:19:51"
+    },
+    {
+      "id": "1350031",
+      "codigo": "Hidalma-JGTM79",
+      "titulo": "Cancel desalineado",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-05 18:07:07"
+    },
+    {
+      "id": "2070001",
+      "codigo": "Hidalma-BYD8SH",
+      "titulo": "Material dañado",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-09 17:45:17"
+    },
+    {
+      "id": "2190001",
+      "codigo": "Hidalma-YFXEPR",
+      "titulo": "Acabado deficiente",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-10 15:47:43"
+    },
+    {
+      "id": "2280001",
+      "codigo": "Hidalma-96NJCT",
+      "titulo": "Sin título",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "fechaCreacion": "2026-02-10 23:00:10"
+    },
+    {
+      "id": "2280002",
+      "codigo": "OQC-WYQ6FC",
+      "titulo": "Test Item con Base64",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-10 23:16:46"
+    },
+    {
+      "id": "2280003",
+      "codigo": "OQC-K8Z349",
+      "titulo": "Test Duplicado",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-10 23:16:46"
+    },
+    {
+      "id": "2280004",
+      "codigo": "OQC-QBMXKS",
+      "titulo": "Test Sin Foto",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-10 23:16:46"
+    },
+    {
+      "id": "2280005",
+      "codigo": "OQC-T4CZYK",
+      "titulo": "Test Residente",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-10 23:16:46"
+    },
+    {
+      "id": "2280006",
+      "codigo": "OQC-ACP6PH",
+      "titulo": "Test Item con Base64",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 00:07:22"
+    },
+    {
+      "id": "2280007",
+      "codigo": "OQC-DE3QYN",
+      "titulo": "Test Duplicado",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 00:07:22"
+    },
+    {
+      "id": "2280008",
+      "codigo": "OQC-YKX88A",
+      "titulo": "Test Sin Foto",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 00:07:22"
+    },
+    {
+      "id": "2280009",
+      "codigo": "OQC-BPV9K8",
+      "titulo": "Test Residente",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 00:07:22"
+    },
+    {
+      "id": "2280010",
+      "codigo": "OQC-B8GYEH",
+      "titulo": "Test Item con Base64",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 00:29:14"
+    },
+    {
+      "id": "2280011",
+      "codigo": "OQC-CNUDRH",
+      "titulo": "Test Duplicado",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 00:29:14"
+    },
+    {
+      "id": "2280012",
+      "codigo": "OQC-CC32KZ",
+      "titulo": "Test Sin Foto",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 00:29:14"
+    },
+    {
+      "id": "2280013",
+      "codigo": "OQC-9GEY53",
+      "titulo": "Test Residente",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 00:29:14"
+    },
+    {
+      "id": "2280014",
+      "codigo": "OQC-B45LA5",
+      "titulo": "Test Item con Base64",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 00:46:22"
+    },
+    {
+      "id": "2280015",
+      "codigo": "OQC-RNL7UL",
+      "titulo": "Test Duplicado",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 00:46:22"
+    },
+    {
+      "id": "2280016",
+      "codigo": "OQC-N53BCV",
+      "titulo": "Test Sin Foto",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 00:46:22"
+    },
+    {
+      "id": "2280017",
+      "codigo": "OQC-YUJ4PM",
+      "titulo": "Test Residente",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 00:46:22"
+    },
+    {
+      "id": "2280018",
+      "codigo": "OQC-TMRBM3",
+      "titulo": "Test Item con Base64",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 01:07:07"
+    },
+    {
+      "id": "2280019",
+      "codigo": "OQC-R2M6EQ",
+      "titulo": "Test Duplicado",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 01:07:08"
+    },
+    {
+      "id": "2280020",
+      "codigo": "OQC-LUDJ2U",
+      "titulo": "Test Sin Foto",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 01:07:08"
+    },
+    {
+      "id": "2280021",
+      "codigo": "OQC-EPEJ69",
+      "titulo": "Test Residente",
+      "status": "pendiente_foto_despues",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "fechaCreacion": "2026-02-11 01:07:08"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\ttitulo\tstatus\tproyectoId\tproyecto\tfechaCreacion\n1290001\tHidalma-F8XTCG\tFaldon\tpendiente_aprobacion\t1\tHidalma \t2026-02-04 21:11:36\n1290002\tHidalma-RFTFJA\tEntrecalle\tpendiente_aprobacion\t1\tHidalma \t2026-02-04 21:15:30\n1290003\tHidalma-F5DUKF\tEntrecalle\tpendiente_aprobacion\t1\tHidalma \t2026-02-04 21:17:24\n1290004\tHidalma-DFRNLX\tPasta descuadre\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 22:26:17\n1290005\tHidalma-GQLS7A\tVentanas descuadre\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 22:31:22\n1290007\tHidalma-4YKAYL\tResane de Hueco \tpendiente_aprobacion\t1\tHidalma \t2026-02-04 22:40:39\n1290008\tHidalma-L4ZLGK\tEntrecalle\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 22:42:12\n1290009\tHidalma-Z4GJN8\tVentanas descuadre\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 22:43:53\n1290010\tHidalma-6MTE5R\tVentanas descuadre\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 22:44:59\n1290011\tHidalma-H3G3H2\tPasta descuadre\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 22:46:34\n1290012\tHidalma-YT7T87\tRemate de pasta\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 22:47:45\n1290013\tHidalma-82GLVY\tRegistro\tpendiente_aprobacion\t1\tHidalma \t2026-02-04 22:55:48\n1290014\tHidalma-YQ46D7\tDesplome en muro \tpendiente_foto_despues\t1\tHidalma \t2026-02-04 22:58:08\n1290015\tHidalma-CVE38D\tVentanas descuadre\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 23:00:34\n1290016\tHidalma-EQZVN6\tPerfilado\tpendiente_aprobacion\t1\tHidalma \t2026-02-04 23:14:54\n1290017\tHidalma-5FYTSJ\tVentanas descuadre\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 23:16:01\n1290018\tHidalma-6GCWBF\tEntrecalle\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 23:17:07\n1290019\tHidalma-VNQ86J\tEntrecalle\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 23:17:53\n1290020\tHidalma-HGSXEQ\tPasta descuadre\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 23:19:14\n1290021\tHidalma-BQ4ZWP\tRemate de pasta\tpendiente_foto_despues\t1\tHidalma \t2026-02-04 23:19:51\n1350031\tHidalma-JGTM79\tCancel desalineado\tpendiente_foto_despues\t1\tHidalma \t2026-02-05 18:07:07\n2070001\tHidalma-BYD8SH\tMaterial dañado\tpendiente_foto_despues\t1\tHidalma \t2026-02-09 17:45:17\n2190001\tHidalma-YFXEPR\tAcabado deficiente\tpendiente_foto_despues\t1\tHidalma \t2026-02-10 15:47:43\n2280001\tHidalma-96NJCT\tSin título\tpendiente_foto_despues\t1\tHidalma \t2026-02-10 23:00:10\n2280002\tOQC-WYQ6FC\tTest Item con Base64\tpendiente_foto_despues\tNULL\tNULL\t2026-02-10 23:16:46\n2280003\tOQC-K8Z349\tTest Duplicado\tpendiente_foto_despues\tNULL\tNULL\t2026-02-10 23:16:46\n2280004\tOQC-QBMXKS\tTest Sin Foto\tpendiente_foto_despues\tNULL\tNULL\t2026-02-10 23:16:46\n2280005\tOQC-T4CZYK\tTest Residente\tpendiente_foto_despues\tNULL\tNULL\t2026-02-10 23:16:46\n2280006\tOQC-ACP6PH\tTest Item con Base64\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 00:07:22\n2280007\tOQC-DE3QYN\tTest Duplicado\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 00:07:22\n2280008\tOQC-YKX88A\tTest Sin Foto\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 00:07:22\n2280009\tOQC-BPV9K8\tTest Residente\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 00:07:22\n2280010\tOQC-B8GYEH\tTest Item con Base64\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 00:29:14\n2280011\tOQC-CNUDRH\tTest Duplicado\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 00:29:14\n2280012\tOQC-CC32KZ\tTest Sin Foto\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 00:29:14\n2280013\tOQC-9GEY53\tTest Residente\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 00:29:14\n2280014\tOQC-B45LA5\tTest Item con Base64\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 00:46:22\n2280015\tOQC-RNL7UL\tTest Duplicado\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 00:46:22\n2280016\tOQC-N53BCV\tTest Sin Foto\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 00:46:22\n2280017\tOQC-YUJ4PM\tTest Residente\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 00:46:22\n2280018\tOQC-TMRBM3\tTest Item con Base64\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 01:07:07\n2280019\tOQC-R2M6EQ\tTest Duplicado\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 01:07:08\n2280020\tOQC-LUDJ2U\tTest Sin Foto\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 01:07:08\n2280021\tOQC-EPEJ69\tTest Residente\tpendiente_foto_despues\tNULL\tNULL\t2026-02-11 01:07:08\n",
+  "stderr": "",
+  "execution_time_ms": 81
+}

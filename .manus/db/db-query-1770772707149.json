@@ -1,0 +1,362 @@
+{
+  "query": "SELECT i.id, i.codigo, i.titulo, i.descripcion, i.proyectoId, i.status FROM items i ORDER BY i.id LIMIT 50;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT i.id, i.codigo, i.titulo, i.descripcion, i.proyectoId, i.status FROM items i ORDER BY i.id LIMIT 50;",
+  "rows": [
+    {
+      "id": "1290001",
+      "codigo": "Hidalma-F8XTCG",
+      "titulo": "Faldon",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290002",
+      "codigo": "Hidalma-RFTFJA",
+      "titulo": "Entrecalle",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290003",
+      "codigo": "Hidalma-F5DUKF",
+      "titulo": "Entrecalle",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290004",
+      "codigo": "Hidalma-DFRNLX",
+      "titulo": "Pasta descuadre",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290005",
+      "codigo": "Hidalma-GQLS7A",
+      "titulo": "Ventanas descuadre",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290007",
+      "codigo": "Hidalma-4YKAYL",
+      "titulo": "Resane de Hueco ",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290008",
+      "codigo": "Hidalma-L4ZLGK",
+      "titulo": "Entrecalle",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290009",
+      "codigo": "Hidalma-Z4GJN8",
+      "titulo": "Ventanas descuadre",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290010",
+      "codigo": "Hidalma-6MTE5R",
+      "titulo": "Ventanas descuadre",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290011",
+      "codigo": "Hidalma-H3G3H2",
+      "titulo": "Pasta descuadre",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290012",
+      "codigo": "Hidalma-YT7T87",
+      "titulo": "Remate de pasta",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290013",
+      "codigo": "Hidalma-82GLVY",
+      "titulo": "Registro",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290014",
+      "codigo": "Hidalma-YQ46D7",
+      "titulo": "Desplome en muro ",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290015",
+      "codigo": "Hidalma-CVE38D",
+      "titulo": "Ventanas descuadre",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290016",
+      "codigo": "Hidalma-EQZVN6",
+      "titulo": "Perfilado",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290017",
+      "codigo": "Hidalma-5FYTSJ",
+      "titulo": "Ventanas descuadre",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290018",
+      "codigo": "Hidalma-6GCWBF",
+      "titulo": "Entrecalle",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290019",
+      "codigo": "Hidalma-VNQ86J",
+      "titulo": "Entrecalle",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290020",
+      "codigo": "Hidalma-HGSXEQ",
+      "titulo": "Pasta descuadre",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290021",
+      "codigo": "Hidalma-BQ4ZWP",
+      "titulo": "Remate de pasta",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1350031",
+      "codigo": "Hidalma-JGTM79",
+      "titulo": "Cancel desalineado",
+      "descripcion": "Encuadre con muro y piso",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2070001",
+      "codigo": "Hidalma-BYD8SH",
+      "titulo": "Material dañado",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2190001",
+      "codigo": "Hidalma-YFXEPR",
+      "titulo": "Acabado deficiente",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280001",
+      "codigo": "Hidalma-96NJCT",
+      "titulo": "Sin título",
+      "descripcion": "NULL",
+      "proyectoId": "1",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280002",
+      "codigo": "OQC-WYQ6FC",
+      "titulo": "Test Item con Base64",
+      "descripcion": "Ítem de prueba con foto Base64",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280003",
+      "codigo": "OQC-K8Z349",
+      "titulo": "Test Duplicado",
+      "descripcion": "NULL",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280004",
+      "codigo": "OQC-QBMXKS",
+      "titulo": "Test Sin Foto",
+      "descripcion": "Ítem sin foto para probar",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280005",
+      "codigo": "OQC-T4CZYK",
+      "titulo": "Test Residente",
+      "descripcion": "NULL",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280006",
+      "codigo": "OQC-ACP6PH",
+      "titulo": "Test Item con Base64",
+      "descripcion": "Ítem de prueba con foto Base64",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280007",
+      "codigo": "OQC-DE3QYN",
+      "titulo": "Test Duplicado",
+      "descripcion": "NULL",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280008",
+      "codigo": "OQC-YKX88A",
+      "titulo": "Test Sin Foto",
+      "descripcion": "Ítem sin foto para probar",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280009",
+      "codigo": "OQC-BPV9K8",
+      "titulo": "Test Residente",
+      "descripcion": "NULL",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280010",
+      "codigo": "OQC-B8GYEH",
+      "titulo": "Test Item con Base64",
+      "descripcion": "Ítem de prueba con foto Base64",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280011",
+      "codigo": "OQC-CNUDRH",
+      "titulo": "Test Duplicado",
+      "descripcion": "NULL",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280012",
+      "codigo": "OQC-CC32KZ",
+      "titulo": "Test Sin Foto",
+      "descripcion": "Ítem sin foto para probar",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280013",
+      "codigo": "OQC-9GEY53",
+      "titulo": "Test Residente",
+      "descripcion": "NULL",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280014",
+      "codigo": "OQC-B45LA5",
+      "titulo": "Test Item con Base64",
+      "descripcion": "Ítem de prueba con foto Base64",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280015",
+      "codigo": "OQC-RNL7UL",
+      "titulo": "Test Duplicado",
+      "descripcion": "NULL",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280016",
+      "codigo": "OQC-N53BCV",
+      "titulo": "Test Sin Foto",
+      "descripcion": "Ítem sin foto para probar",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280017",
+      "codigo": "OQC-YUJ4PM",
+      "titulo": "Test Residente",
+      "descripcion": "NULL",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280018",
+      "codigo": "OQC-TMRBM3",
+      "titulo": "Test Item con Base64",
+      "descripcion": "Ítem de prueba con foto Base64",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280019",
+      "codigo": "OQC-R2M6EQ",
+      "titulo": "Test Duplicado",
+      "descripcion": "NULL",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280020",
+      "codigo": "OQC-LUDJ2U",
+      "titulo": "Test Sin Foto",
+      "descripcion": "Ítem sin foto para probar",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280021",
+      "codigo": "OQC-EPEJ69",
+      "titulo": "Test Residente",
+      "descripcion": "NULL",
+      "proyectoId": "NULL",
+      "status": "pendiente_foto_despues"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\ttitulo\tdescripcion\tproyectoId\tstatus\n1290001\tHidalma-F8XTCG\tFaldon\tNULL\t1\tpendiente_aprobacion\n1290002\tHidalma-RFTFJA\tEntrecalle\tNULL\t1\tpendiente_aprobacion\n1290003\tHidalma-F5DUKF\tEntrecalle\tNULL\t1\tpendiente_aprobacion\n1290004\tHidalma-DFRNLX\tPasta descuadre\tNULL\t1\tpendiente_foto_despues\n1290005\tHidalma-GQLS7A\tVentanas descuadre\tNULL\t1\tpendiente_foto_despues\n1290007\tHidalma-4YKAYL\tResane de Hueco \tNULL\t1\tpendiente_aprobacion\n1290008\tHidalma-L4ZLGK\tEntrecalle\tNULL\t1\tpendiente_foto_despues\n1290009\tHidalma-Z4GJN8\tVentanas descuadre\tNULL\t1\tpendiente_foto_despues\n1290010\tHidalma-6MTE5R\tVentanas descuadre\tNULL\t1\tpendiente_foto_despues\n1290011\tHidalma-H3G3H2\tPasta descuadre\tNULL\t1\tpendiente_foto_despues\n1290012\tHidalma-YT7T87\tRemate de pasta\tNULL\t1\tpendiente_foto_despues\n1290013\tHidalma-82GLVY\tRegistro\tNULL\t1\tpendiente_aprobacion\n1290014\tHidalma-YQ46D7\tDesplome en muro \tNULL\t1\tpendiente_foto_despues\n1290015\tHidalma-CVE38D\tVentanas descuadre\tNULL\t1\tpendiente_foto_despues\n1290016\tHidalma-EQZVN6\tPerfilado\tNULL\t1\tpendiente_aprobacion\n1290017\tHidalma-5FYTSJ\tVentanas descuadre\tNULL\t1\tpendiente_foto_despues\n1290018\tHidalma-6GCWBF\tEntrecalle\tNULL\t1\tpendiente_foto_despues\n1290019\tHidalma-VNQ86J\tEntrecalle\tNULL\t1\tpendiente_foto_despues\n1290020\tHidalma-HGSXEQ\tPasta descuadre\tNULL\t1\tpendiente_foto_despues\n1290021\tHidalma-BQ4ZWP\tRemate de pasta\tNULL\t1\tpendiente_foto_despues\n1350031\tHidalma-JGTM79\tCancel desalineado\tEncuadre con muro y piso\t1\tpendiente_foto_despues\n2070001\tHidalma-BYD8SH\tMaterial dañado\tNULL\t1\tpendiente_foto_despues\n2190001\tHidalma-YFXEPR\tAcabado deficiente\tNULL\t1\tpendiente_foto_despues\n2280001\tHidalma-96NJCT\tSin título\tNULL\t1\tpendiente_foto_despues\n2280002\tOQC-WYQ6FC\tTest Item con Base64\tÍtem de prueba con foto Base64\tNULL\tpendiente_foto_despues\n2280003\tOQC-K8Z349\tTest Duplicado\tNULL\tNULL\tpendiente_foto_despues\n2280004\tOQC-QBMXKS\tTest Sin Foto\tÍtem sin foto para probar\tNULL\tpendiente_foto_despues\n2280005\tOQC-T4CZYK\tTest Residente\tNULL\tNULL\tpendiente_foto_despues\n2280006\tOQC-ACP6PH\tTest Item con Base64\tÍtem de prueba con foto Base64\tNULL\tpendiente_foto_despues\n2280007\tOQC-DE3QYN\tTest Duplicado\tNULL\tNULL\tpendiente_foto_despues\n2280008\tOQC-YKX88A\tTest Sin Foto\tÍtem sin foto para probar\tNULL\tpendiente_foto_despues\n2280009\tOQC-BPV9K8\tTest Residente\tNULL\tNULL\tpendiente_foto_despues\n2280010\tOQC-B8GYEH\tTest Item con Base64\tÍtem de prueba con foto Base64\tNULL\tpendiente_foto_despues\n2280011\tOQC-CNUDRH\tTest Duplicado\tNULL\tNULL\tpendiente_foto_despues\n2280012\tOQC-CC32KZ\tTest Sin Foto\tÍtem sin foto para probar\tNULL\tpendiente_foto_despues\n2280013\tOQC-9GEY53\tTest Residente\tNULL\tNULL\tpendiente_foto_despues\n2280014\tOQC-B45LA5\tTest Item con Base64\tÍtem de prueba con foto Base64\tNULL\tpendiente_foto_despues\n2280015\tOQC-RNL7UL\tTest Duplicado\tNULL\tNULL\tpendiente_foto_despues\n2280016\tOQC-N53BCV\tTest Sin Foto\tÍtem sin foto para probar\tNULL\tpendiente_foto_despues\n2280017\tOQC-YUJ4PM\tTest Residente\tNULL\tNULL\tpendiente_foto_despues\n2280018\tOQC-TMRBM3\tTest Item con Base64\tÍtem de prueba con foto Base64\tNULL\tpendiente_foto_despues\n2280019\tOQC-R2M6EQ\tTest Duplicado\tNULL\tNULL\tpendiente_foto_despues\n2280020\tOQC-LUDJ2U\tTest Sin Foto\tÍtem sin foto para probar\tNULL\tpendiente_foto_despues\n2280021\tOQC-EPEJ69\tTest Residente\tNULL\tNULL\tpendiente_foto_despues\n",
+  "stderr": "",
+  "execution_time_ms": 108
+}
