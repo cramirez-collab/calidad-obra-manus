@@ -3760,3 +3760,9 @@
 - [x] Optimizar queries backend para carga instantánea
 - [x] Optimizar lazy loading y bundle splitting
 - [x] Eliminar waterfalls de datos innecesarios
+
+## URGENTE - Bugs producción v4.13
+- [x] Proyectos no muestran datos ni imágenes en página de selección (skeleton infinito) — Fix: getAllProyectosEnriquecidos para superadmin
+- [x] Segundo proyecto "Mayas Habitat" existe en BD, es real (Grupo Bahe)
+- [x] Estadísticas mostraban 0 — Fix: enabled: !!selectedProjectId en query
+- [x] Verificación completa de todos los módulos: Selección, Bienvenida, Items, Estadísticas OK

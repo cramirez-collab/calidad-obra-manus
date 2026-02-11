@@ -2301,8 +2301,11 @@ export const appRouter = router({
         return await db.getUsuariosByProyecto(input.proyectoId);
       }),
     
-    // Obtener proyectos del usuario actual
+    // Obtener proyectos del usuario actual (superadmin ve todos)
     misProyectos: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role === 'superadmin' || ctx.user.role === 'admin') {
+        return await db.getAllProyectosEnriquecidos();
+      }
       return await db.getProyectosByUsuario(ctx.user.id);
     }),
     

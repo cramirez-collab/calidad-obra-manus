@@ -2690,6 +2690,57 @@ export async function getUsuariosByProyecto(proyectoId: number) {
   }));
 }
 
+// Para superadmin/admin: todos los proyectos con el mismo formato que misProyectos
+export async function getAllProyectosEnriquecidos() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const todosProyectos = await db.select().from(proyectos).where(eq(proyectos.activo, true)).orderBy(proyectos.nombre);
+  if (todosProyectos.length === 0) return [];
+  
+  const proyectoIds = todosProyectos.map(p => p.id);
+  
+  const unidadesStats = await db.select({
+    proyectoId: unidades.proyectoId,
+    count: sql<number>`count(*)`
+  }).from(unidades)
+    .where(inArray(unidades.proyectoId, proyectoIds))
+    .groupBy(unidades.proyectoId);
+  
+  const itemsStats = await db.select({
+    proyectoId: items.proyectoId,
+    count: sql<number>`count(*)`
+  }).from(items)
+    .where(inArray(items.proyectoId, proyectoIds))
+    .groupBy(items.proyectoId);
+  
+  const pendientesStats = await db.select({
+    proyectoId: items.proyectoId,
+    count: sql<number>`count(*)`
+  }).from(items)
+    .where(and(
+      inArray(items.proyectoId, proyectoIds),
+      inArray(items.status, ['pendiente_foto_despues', 'rechazado', 'pendiente_aprobacion'])
+    ))
+    .groupBy(items.proyectoId);
+  
+  const unidadesMap = new Map(unidadesStats.map(u => [u.proyectoId, Number(u.count)]));
+  const itemsMap = new Map(itemsStats.map(i => [i.proyectoId, Number(i.count)]));
+  const pendientesMap = new Map(pendientesStats.map(p => [p.proyectoId, Number(p.count)]));
+  
+  return todosProyectos.map(proyecto => ({
+    proyectoId: proyecto.id,
+    usuarioId: 0,
+    rolEnProyecto: 'admin' as const,
+    activo: true,
+    proyecto,
+    empresaNombre: proyecto.cliente || null,
+    totalUnidades: unidadesMap.get(proyecto.id) || 0,
+    totalItems: itemsMap.get(proyecto.id) || 0,
+    itemsPendientes: pendientesMap.get(proyecto.id) || 0,
+  }));
+}
+
 export async function getProyectosByUsuario(usuarioId: number) {
   const db = await getDb();
   if (!db) return [];

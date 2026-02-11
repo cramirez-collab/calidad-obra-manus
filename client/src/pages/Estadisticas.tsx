@@ -152,7 +152,9 @@ export default function Estadisticas() {
     defectoId: filters.defectoId ? parseInt(filters.defectoId) : undefined,
   }), [filters, selectedProjectId]);
 
-  const { data: stats, isLoading, refetch } = trpc.estadisticas.general.useQuery(queryFilters);
+  const { data: stats, isLoading, refetch } = trpc.estadisticas.general.useQuery(queryFilters, {
+    enabled: !!selectedProjectId,
+  });
   const { data: defectosStats } = trpc.defectos.estadisticas.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
