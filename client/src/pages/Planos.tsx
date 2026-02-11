@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers, Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff, Eye, Search } from "lucide-react";
+import { Plus, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers, Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff, Eye, Search, Filter, Download, Maximize, Minimize, ExternalLink } from "lucide-react";
 import { useLocation } from "wouter";
 
 // Colores de pin según estado del ítem
@@ -16,6 +16,14 @@ const PIN_COLORS: Record<string, { bg: string; border: string; text: string }> =
   aprobado: { bg: "#10b981", border: "#059669", text: "#fff" },
   rechazado: { bg: "#ef4444", border: "#dc2626", text: "#fff" },
   sin_item: { bg: "#6b7280", border: "#4b5563", text: "#fff" },
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  pendiente_foto_despues: "Pend. Foto",
+  pendiente_aprobacion: "Pend. Aprob.",
+  aprobado: "Aprobado",
+  rechazado: "Rechazado",
+  sin_item: "Sin ítem",
 };
 
 export default function Planos() {
@@ -74,13 +82,28 @@ export default function Planos() {
   const imgRef = useRef<HTMLImageElement>(null);
 
   // State pines
-  const [pinMode, setPinMode] = useState(false); // Modo agregar pin
+  const [pinMode, setPinMode] = useState(false);
   const [showPins, setShowPins] = useState(true);
   const [selectedPin, setSelectedPin] = useState<any>(null);
   const [showItemSelector, setShowItemSelector] = useState(false);
   const [pendingPinPos, setPendingPinPos] = useState<{ x: number; y: number } | null>(null);
   const [itemSearch, setItemSearch] = useState("");
   const [pinNota, setPinNota] = useState("");
+
+  // State para interacción de taps
+  const [tappedPin, setTappedPin] = useState<any>(null);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const pinModalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // State para filtro de pines por estado
+  const [pinFilter, setPinFilter] = useState<string | null>(null);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+
+  // State para fullscreen del plano
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // State para filtro por nivel
+  const [filterNivel, setFilterNivel] = useState<number | null>(null);
 
   // Query pines del plano actual
   const planos = planosData || [];
@@ -96,11 +119,40 @@ export default function Planos() {
     onError: (e: any) => toast.error(e.message),
   });
   const eliminarPin = trpc.planos.pines.eliminar.useMutation({
-    onSuccess: () => { refetchPines(); toast.success("Pin eliminado"); setSelectedPin(null); },
+    onSuccess: () => { refetchPines(); toast.success("Pin eliminado"); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); },
     onError: (e: any) => toast.error(e.message),
   });
 
   const pines = pinesData || [];
+
+  // Filtrar pines por estado
+  const filteredPines = useMemo(() => {
+    if (!pinFilter) return pines;
+    return pines.filter((p: any) => (p.itemEstado || "sin_item") === pinFilter);
+  }, [pines, pinFilter]);
+
+  // Niveles únicos para filtro
+  const nivelesUnicos = useMemo(() => {
+    const niveles = new Set<number>();
+    planos.forEach((p: any) => niveles.add(p.nivel ?? 0));
+    return Array.from(niveles).sort((a, b) => a - b);
+  }, [planos]);
+
+  // Planos filtrados por nivel
+  const planosFiltrados = useMemo(() => {
+    if (filterNivel === null) return planos;
+    return planos.filter((p: any) => (p.nivel ?? 0) === filterNivel);
+  }, [planos, filterNivel]);
+
+  // Conteo de pines por estado
+  const pinCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    pines.forEach((p: any) => {
+      const estado = p.itemEstado || "sin_item";
+      counts[estado] = (counts[estado] || 0) + 1;
+    });
+    return counts;
+  }, [pines]);
 
   // Filtrar items para el selector
   const allItems = useMemo(() => {
@@ -175,6 +227,9 @@ export default function Planos() {
     setPan({ x: 0, y: 0 });
     setPinMode(false);
     setSelectedPin(null);
+    setTappedPin(null);
+    setShowPinModal(false);
+    setPinFilter(null);
     setShowViewer(true);
   };
 
@@ -185,8 +240,48 @@ export default function Planos() {
     if (currentPlano?.id) {
       refetchPines();
       setSelectedPin(null);
+      setTappedPin(null);
+      setShowPinModal(false);
     }
   }, [viewerIndex, currentPlano?.id]);
+
+  // Limpiar timer del modal al desmontar
+  useEffect(() => {
+    return () => {
+      if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current);
+    };
+  }, []);
+
+  // === TAP EN PIN: Navegación inmediata ===
+  const handlePinTap = useCallback((pin: any, e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    if (pinMode) return;
+
+    // Si tiene ítem vinculado, navegar directo sin espera
+    if (pin.itemId) {
+      setShowViewer(false);
+      navigate(`/item/${pin.itemId}`);
+      return;
+    }
+
+    // Si no tiene ítem, mostrar toast con la nota
+    toast.info(pin.nota || "Pin sin ítem vinculado");
+  }, [pinMode, navigate]);
+
+  // Ir al ítem inmediatamente
+  const goToItem = useCallback((itemId: number) => {
+    if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current);
+    setShowPinModal(false);
+    setShowViewer(false);
+    navigate(`/item/${itemId}`);
+  }, [navigate]);
+
+  // Cerrar modal de pin
+  const closePinModal = useCallback(() => {
+    if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current);
+    setShowPinModal(false);
+    setTappedPin(null);
+  }, []);
 
   // Click en el plano para agregar pin
   const handlePlanoClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -218,7 +313,31 @@ export default function Planos() {
     });
   };
 
-  // Pan handlers - solo si no estamos en modo pin
+  // Descargar imagen del plano
+  const handleDownloadPlano = useCallback(() => {
+    if (!currentPlano?.imagenUrl) return;
+    const a = document.createElement("a");
+    a.href = currentPlano.imagenUrl;
+    a.download = `${currentPlano.nombre || "plano"}.jpg`;
+    a.target = "_blank";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast.success("Descargando plano...");
+  }, [currentPlano]);
+
+  // Toggle fullscreen
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      viewerRef.current?.parentElement?.requestFullscreen?.().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+      setIsFullscreen(false);
+    }
+  }, []);
+
+  // Pan handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     if (pinMode) return;
     setIsDragging(true);
@@ -260,7 +379,7 @@ export default function Planos() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <Layers className="w-5 h-5 text-emerald-600" />
@@ -270,11 +389,33 @@ export default function Planos() {
             {planos.length} plano{planos.length !== 1 ? "s" : ""} cargado{planos.length !== 1 ? "s" : ""}
           </p>
         </div>
-        {isAdmin && (
-          <Button onClick={() => { resetForm(); setShowAddDialog(true); }} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5">
-            <Plus className="w-4 h-4" /> Subir Plano
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Filtro por nivel */}
+          {nivelesUnicos.length > 1 && (
+            <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+              <button
+                onClick={() => setFilterNivel(null)}
+                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${filterNivel === null ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Todos
+              </button>
+              {nivelesUnicos.map(n => (
+                <button
+                  key={n}
+                  onClick={() => setFilterNivel(n)}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${filterNivel === n ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  N{n}
+                </button>
+              ))}
+            </div>
+          )}
+          {isAdmin && (
+            <Button onClick={() => { resetForm(); setShowAddDialog(true); }} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5">
+              <Plus className="w-4 h-4" /> Subir Plano
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Loading */}
@@ -307,103 +448,147 @@ export default function Planos() {
       )}
 
       {/* Grid de planos */}
-      {!isLoading && planos.length > 0 && (
+      {!isLoading && planosFiltrados.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {planos.map((plano: any, index: number) => (
-            <Card key={plano.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
-              <div
-                className="relative h-44 bg-slate-50 overflow-hidden"
-                onClick={() => openViewer(index)}
-              >
-                <img
-                  src={plano.imagenUrl}
-                  alt={plano.nombre}
-                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                />
-                <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-md px-2 py-0.5 text-xs font-bold text-slate-700 shadow-sm">
-                  Nivel {plano.nivel ?? 0}
+          {planosFiltrados.map((plano: any) => {
+            const originalIndex = planos.findIndex((p: any) => p.id === plano.id);
+            return (
+              <Card key={plano.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
+                <div
+                  className="relative h-44 bg-slate-50 overflow-hidden"
+                  onClick={() => openViewer(originalIndex)}
+                >
+                  <img
+                    src={plano.imagenUrl}
+                    alt={plano.nombre}
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                  <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-md px-2 py-0.5 text-xs font-bold text-slate-700 shadow-sm">
+                    Nivel {plano.nivel ?? 0}
+                  </div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <ZoomIn className="w-8 h-8 text-white drop-shadow-lg" />
+                  </div>
                 </div>
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <ZoomIn className="w-8 h-8 text-white drop-shadow-lg" />
-                </div>
-              </div>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-slate-800 truncate text-sm">{plano.nombre}</h3>
-                    {plano.descripcion && (
-                      <p className="text-xs text-slate-500 truncate mt-0.5">{plano.descripcion}</p>
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-slate-800 truncate text-sm">{plano.nombre}</h3>
+                      {plano.descripcion && (
+                        <p className="text-xs text-slate-500 truncate mt-0.5">{plano.descripcion}</p>
+                      )}
+                    </div>
+                    {isAdmin && (
+                      <div className="flex gap-1 flex-shrink-0 ml-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); openEditDialog(plano); }}
+                          className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`¿Eliminar plano "${plano.nombre}"?`)) {
+                              eliminarPlano.mutate({ id: plano.id });
+                            }
+                          }}
+                          className="p-1.5 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     )}
                   </div>
-                  {isAdmin && (
-                    <div className="flex gap-1 flex-shrink-0 ml-2">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); openEditDialog(plano); }}
-                        className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`¿Eliminar plano "${plano.nombre}"?`)) {
-                            eliminarPlano.mutate({ id: plano.id });
-                          }
-                        }}
-                        className="p-1.5 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
       {/* ========== VISOR FULLSCREEN CON PINES ========== */}
       {showViewer && currentPlano && (
         <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col">
-          {/* Toolbar */}
-          <div className="flex items-center justify-between px-3 py-2 bg-black/80 text-white gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <button onClick={() => { setShowViewer(false); setPinMode(false); setSelectedPin(null); }} className="p-2 hover:bg-white/10 rounded-lg flex-shrink-0">
+          {/* Toolbar compacta */}
+          <div className="flex items-center justify-between px-2 py-1.5 bg-black/80 text-white gap-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <button onClick={() => { setShowViewer(false); setPinMode(false); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current); }} className="p-1.5 hover:bg-white/10 rounded-lg flex-shrink-0">
                 <X className="w-5 h-5" />
               </button>
               <div className="min-w-0">
-                <span className="font-semibold text-sm truncate block">{currentPlano.nombre}</span>
-                <span className="text-xs text-white/60">Nivel {currentPlano.nivel ?? 0} — {pines.length} pin{pines.length !== 1 ? "es" : ""}</span>
+                <span className="font-semibold text-xs truncate block">{currentPlano.nombre}</span>
+                <span className="text-[10px] text-white/60">N{currentPlano.nivel ?? 0} — {filteredPines.length} pin{filteredPines.length !== 1 ? "es" : ""}</span>
               </div>
             </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {/* Toggle pines visibles */}
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              {/* Filtro por estado */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowFilterMenu(f => !f)}
+                  className={`p-1.5 rounded-lg transition-colors ${pinFilter ? 'bg-emerald-600' : 'hover:bg-white/10'}`}
+                  title="Filtrar pines"
+                >
+                  <Filter className="w-4 h-4" />
+                </button>
+                {showFilterMenu && (
+                  <div className="absolute top-full right-0 mt-1 bg-slate-900 rounded-lg shadow-xl border border-slate-700 py-1 min-w-[160px] z-50">
+                    <button
+                      onClick={() => { setPinFilter(null); setShowFilterMenu(false); }}
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/10 ${!pinFilter ? 'text-emerald-400 font-bold' : 'text-white'}`}
+                    >
+                      Todos ({pines.length})
+                    </button>
+                    {Object.entries(PIN_COLORS).map(([key, colors]) => (
+                      <button
+                        key={key}
+                        onClick={() => { setPinFilter(key); setShowFilterMenu(false); }}
+                        className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/10 flex items-center gap-2 ${pinFilter === key ? 'font-bold' : ''}`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bg }} />
+                        <span>{STATUS_LABELS[key]} ({pinCounts[key] || 0})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* Descargar plano */}
+              <button onClick={handleDownloadPlano} className="p-1.5 hover:bg-white/10 rounded-lg" title="Descargar plano">
+                <Download className="w-4 h-4" />
+              </button>
+              {/* Toggle pines */}
               <button
                 onClick={() => setShowPins(p => !p)}
-                className={`p-2 rounded-lg transition-colors ${showPins ? 'bg-emerald-600 hover:bg-emerald-700' : 'hover:bg-white/10'}`}
+                className={`p-1.5 rounded-lg transition-colors ${showPins ? 'bg-emerald-600 hover:bg-emerald-700' : 'hover:bg-white/10'}`}
                 title={showPins ? "Ocultar pines" : "Mostrar pines"}
               >
                 {showPins ? <MapPin className="w-4 h-4" /> : <MapPinOff className="w-4 h-4" />}
               </button>
-              {/* Modo agregar pin */}
-              <button
-                onClick={() => { setPinMode(p => !p); setSelectedPin(null); }}
-                className={`p-2 rounded-lg transition-colors ${pinMode ? 'bg-red-500 hover:bg-red-600 animate-pulse' : 'hover:bg-white/10'}`}
-                title={pinMode ? "Cancelar modo pin" : "Agregar pin"}
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-              <div className="w-px h-5 bg-white/20 mx-1" />
-              <button onClick={() => setZoom(z => Math.max(0.2, z - 0.2))} className="p-2 hover:bg-white/10 rounded-lg">
+              {/* Agregar pin (admin) */}
+              {isAdmin && (
+                <button
+                  onClick={() => { setPinMode(p => !p); setSelectedPin(null); }}
+                  className={`p-1.5 rounded-lg transition-colors ${pinMode ? 'bg-red-500 hover:bg-red-600 animate-pulse' : 'hover:bg-white/10'}`}
+                  title={pinMode ? "Cancelar modo pin" : "Agregar pin"}
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              )}
+              <div className="w-px h-4 bg-white/20 mx-0.5" />
+              {/* Zoom */}
+              <button onClick={() => setZoom(z => Math.max(0.2, z - 0.2))} className="p-1.5 hover:bg-white/10 rounded-lg">
                 <ZoomOut className="w-4 h-4" />
               </button>
-              <span className="text-xs w-10 text-center">{Math.round(zoom * 100)}%</span>
-              <button onClick={() => setZoom(z => Math.min(5, z + 0.2))} className="p-2 hover:bg-white/10 rounded-lg">
+              <button onClick={() => setZoom(z => Math.min(5, z + 0.2))} className="p-1.5 hover:bg-white/10 rounded-lg">
                 <ZoomIn className="w-4 h-4" />
               </button>
-              <button onClick={resetView} className="p-2 hover:bg-white/10 rounded-lg">
+              {/* Fullscreen */}
+              <button onClick={toggleFullscreen} className="p-1.5 hover:bg-white/10 rounded-lg" title="Pantalla completa">
+                {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+              </button>
+              {/* Reset */}
+              <button onClick={resetView} className="p-1.5 hover:bg-white/10 rounded-lg" title="Restablecer vista">
                 <RotateCcw className="w-4 h-4" />
               </button>
             </div>
@@ -443,91 +628,40 @@ export default function Planos() {
                   draggable={false}
                 />
 
-                {/* Pines renderizados sobre la imagen */}
-                {showPins && pines.map((pin: any) => {
+                {/* Pines: solo número pequeño */}
+                {showPins && filteredPines.map((pin: any, idx: number) => {
                   const estado = pin.itemEstado || "sin_item";
                   const colors = PIN_COLORS[estado] || PIN_COLORS.sin_item;
-                  const isSelected = selectedPin?.id === pin.id;
+                  const isTapped = tappedPin?.id === pin.id;
 
                   return (
                     <div
                       key={pin.id}
-                      className="absolute group"
+                      className="absolute"
                       style={{
                         left: `${parseFloat(pin.posX)}%`,
                         top: `${parseFloat(pin.posY)}%`,
-                        transform: 'translate(-50%, -100%)',
-                        zIndex: isSelected ? 50 : 10,
+                        transform: 'translate(-50%, -50%)',
+                        zIndex: isTapped ? 50 : 10,
                       }}
-                      onClick={(e) => { e.stopPropagation(); setSelectedPin(isSelected ? null : pin); }}
+                      onClick={(e) => handlePinTap(pin, e)}
                     >
-                      {/* Pin marker */}
+                      {/* Pin: circulo pequeño con número */}
                       <div
-                        className="relative flex flex-col items-center"
-                        style={{ filter: isSelected ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+                        className="flex items-center justify-center rounded-full shadow-lg border-2 transition-transform"
+                        style={{
+                          width: isTapped ? '28px' : '22px',
+                          height: isTapped ? '28px' : '22px',
+                          backgroundColor: colors.bg,
+                          borderColor: colors.border,
+                          transform: isTapped ? 'scale(1.3)' : 'scale(1)',
+                          cursor: 'pointer',
+                        }}
                       >
-                        <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
-                          <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.268 21.732 0 14 0z" fill={colors.bg} stroke={colors.border} strokeWidth="1.5"/>
-                          <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.9"/>
-                          <text x="14" y="16" textAnchor="middle" fontSize="8" fontWeight="bold" fill={colors.bg}>
-                            {pin.itemConsecutivo || "#"}
-                          </text>
-                        </svg>
+                        <span className="text-white font-bold" style={{ fontSize: isTapped ? '11px' : '9px' }}>
+                          {pin.itemConsecutivo || idx + 1}
+                        </span>
                       </div>
-
-                      {/* Tooltip al seleccionar */}
-                      {isSelected && (
-                        <div
-                          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-white rounded-lg shadow-xl border border-slate-200 p-2.5 min-w-[200px] max-w-[280px] z-50"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="flex items-start gap-2">
-                            {pin.itemFotoAntes && (
-                              <img src={pin.itemFotoAntes} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />
-                            )}
-                            <div className="min-w-0 flex-1">
-                              {pin.itemCodigo && (
-                                <p className="text-xs font-bold text-slate-800 truncate">{pin.itemCodigo}</p>
-                              )}
-                              {pin.itemConsecutivo ? (
-                                <p className="text-xs text-slate-500">#{pin.itemConsecutivo}</p>
-                              ) : null}
-                              {pin.itemDescripcion && (
-                                <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">{pin.itemDescripcion}</p>
-                              )}
-                              {pin.nota && !pin.itemId && (
-                                <p className="text-xs text-slate-600 mt-0.5 italic">{pin.nota}</p>
-                              )}
-                              {pin.itemEstado && (
-                                <span
-                                  className="inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                                  style={{ backgroundColor: colors.bg + '20', color: colors.bg }}
-                                >
-                                  {pin.itemEstado.replace(/_/g, " ")}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1 mt-2 pt-2 border-t border-slate-100">
-                            {pin.itemId && (
-                              <button
-                                onClick={() => navigate(`/item/${pin.itemId}`)}
-                                className="flex-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 rounded px-2 py-1 font-medium flex items-center justify-center gap-1"
-                              >
-                                <Eye className="w-3 h-3" /> Ver ítem
-                              </button>
-                            )}
-                            <button
-                              onClick={() => {
-                                if (confirm("¿Eliminar este pin?")) eliminarPin.mutate({ id: pin.id });
-                              }}
-                              className="text-xs bg-red-50 hover:bg-red-100 text-red-600 rounded px-2 py-1 font-medium flex items-center justify-center gap-1"
-                            >
-                              <Trash2 className="w-3 h-3" /> Quitar
-                            </button>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -535,32 +669,56 @@ export default function Planos() {
             </div>
           </div>
 
+          {/* Leyenda de estados en la parte inferior */}
+          <div className="flex items-center justify-between px-3 py-1.5 bg-black/80 text-white text-[10px] gap-2 overflow-x-auto">
+            <div className="flex items-center gap-3">
+              {Object.entries(PIN_COLORS).map(([key, colors]) => {
+                const count = pinCounts[key] || 0;
+                if (count === 0 && key === "sin_item") return null;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setPinFilter(pinFilter === key ? null : key)}
+                    className={`flex items-center gap-1 whitespace-nowrap transition-opacity ${pinFilter && pinFilter !== key ? 'opacity-40' : 'opacity-100'}`}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colors.bg }} />
+                    <span>{STATUS_LABELS[key]} ({count})</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-2 text-white/60 flex-shrink-0">
+              <span>{filteredPines.length} pin{filteredPines.length !== 1 ? "es" : ""}</span>
+              <span>{Math.round(zoom * 100)}%</span>
+            </div>
+          </div>
+
           {/* Navigation arrows */}
           {planos.length > 1 && (
             <>
               <button
-                onClick={() => { setViewerIndex(i => (i - 1 + planos.length) % planos.length); resetView(); setSelectedPin(null); }}
-                className="absolute left-3 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white z-20"
+                onClick={() => { setViewerIndex(i => (i - 1 + planos.length) % planos.length); resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white z-20"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-5 h-5" />
               </button>
               <button
-                onClick={() => { setViewerIndex(i => (i + 1) % planos.length); resetView(); setSelectedPin(null); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white z-20"
+                onClick={() => { setViewerIndex(i => (i + 1) % planos.length); resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white z-20"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-5 h-5" />
               </button>
             </>
           )}
 
           {/* Bottom thumbnails */}
           {planos.length > 1 && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-black/80 overflow-x-auto">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-black/80 overflow-x-auto">
               {planos.map((p: any, i: number) => (
                 <button
                   key={p.id}
-                  onClick={() => { setViewerIndex(i); resetView(); setSelectedPin(null); }}
-                  className={`flex-shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 transition-all ${
+                  onClick={() => { setViewerIndex(i); resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); }}
+                  className={`flex-shrink-0 w-14 h-10 rounded-md overflow-hidden border-2 transition-all ${
                     i === viewerIndex ? 'border-emerald-500 opacity-100' : 'border-transparent opacity-50 hover:opacity-80'
                   }`}
                 >
@@ -569,6 +727,112 @@ export default function Planos() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ========== MODAL: Info del pin (aparece al tap, 10s auto-navega) ========== */}
+      {showPinModal && tappedPin && (
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center" onClick={closePinModal}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm mx-auto overflow-hidden animate-in slide-in-from-bottom-4 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Barra de progreso (10 segundos) */}
+            <div className="h-1 bg-slate-100 overflow-hidden">
+              <div
+                className="h-full bg-emerald-500"
+                style={{ animation: 'shrink-bar 10s linear forwards' }}
+              />
+            </div>
+            <style>{`@keyframes shrink-bar { from { width: 100%; } to { width: 0%; } }`}</style>
+
+            {/* Header con estado */}
+            <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: PIN_COLORS[tappedPin.itemEstado || "sin_item"]?.bg || "#6b7280" }}
+                />
+                <span className="text-xs font-semibold text-slate-500 uppercase">
+                  {STATUS_LABELS[tappedPin.itemEstado || "sin_item"] || "Sin estado"}
+                </span>
+              </div>
+              <button onClick={closePinModal} className="p-1 hover:bg-slate-100 rounded-full">
+                <X className="w-4 h-4 text-slate-400" />
+              </button>
+            </div>
+
+            {/* Contenido */}
+            <div className="px-4 pb-3">
+              {/* Código y consecutivo */}
+              {tappedPin.itemCodigo && (
+                <h3 className="text-base font-bold text-slate-800">{tappedPin.itemCodigo}</h3>
+              )}
+              {tappedPin.itemConsecutivo && (
+                <p className="text-xs text-slate-400">#{tappedPin.itemConsecutivo}</p>
+              )}
+
+              {/* Foto + descripción */}
+              <div className="flex gap-3 mt-2">
+                {tappedPin.itemFotoAntes && (
+                  <img src={tappedPin.itemFotoAntes} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                )}
+                <div className="min-w-0 flex-1">
+                  {tappedPin.itemDescripcion && (
+                    <p className="text-sm text-slate-600 line-clamp-3">{tappedPin.itemDescripcion}</p>
+                  )}
+                  {tappedPin.nota && !tappedPin.itemId && (
+                    <p className="text-sm text-slate-500 italic mt-1">{tappedPin.nota}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Info adicional */}
+              {(tappedPin.itemTitulo || tappedPin.empresaNombre || tappedPin.residenteNombre) && (
+                <div className="mt-2 pt-2 border-t border-slate-100 space-y-0.5">
+                  {tappedPin.itemTitulo && (
+                    <p className="text-xs text-slate-500"><span className="font-medium text-slate-600">Defecto:</span> {tappedPin.itemTitulo}</p>
+                  )}
+                  {tappedPin.empresaNombre && (
+                    <p className="text-xs text-slate-500"><span className="font-medium text-slate-600">Empresa:</span> {tappedPin.empresaNombre}</p>
+                  )}
+                  {tappedPin.residenteNombre && (
+                    <p className="text-xs text-slate-500"><span className="font-medium text-slate-600">Asignado:</span> {tappedPin.residenteNombre}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Acciones */}
+            <div className="px-4 pb-4 flex gap-2">
+              {tappedPin.itemId && (
+                <button
+                  onClick={() => goToItem(tappedPin.itemId)}
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-2.5 text-sm font-medium transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" /> Ir al Ítem
+                </button>
+              )}
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    if (confirm("¿Eliminar este pin?")) eliminarPin.mutate({ id: tappedPin.id });
+                  }}
+                  className="px-3 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-lg py-2.5 text-sm font-medium transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Texto auto-navegación */}
+            {tappedPin.itemId && (
+              <div className="bg-slate-50 px-4 py-2 text-center">
+                <p className="text-[10px] text-slate-400">Navegando al ítem en 10 segundos...</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -582,13 +846,10 @@ export default function Planos() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
-            {/* Nota opcional */}
             <div>
               <label className="text-xs font-medium text-slate-600">Nota (opcional)</label>
               <Input value={pinNota} onChange={e => setPinNota(e.target.value)} placeholder="Nota del pin..." />
             </div>
-
-            {/* Buscar ítem */}
             <div>
               <label className="text-xs font-medium text-slate-600">Buscar ítem para vincular</label>
               <div className="relative">
@@ -601,8 +862,6 @@ export default function Planos() {
                 />
               </div>
             </div>
-
-            {/* Lista de ítems */}
             <div className="flex-1 overflow-y-auto border rounded-lg divide-y max-h-[300px]">
               {filteredItems.map((item: any) => {
                 const estado = item.status || "pendiente_foto_despues";

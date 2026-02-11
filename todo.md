@@ -3721,3 +3721,17 @@
 - [x] Corregir React error #300 (returns tempranos antes de useCallback/useEffect en Bienvenida.tsx)
 - [x] Restaurar imagen del pin/plano en la ficha PDF (ya funcionaba, verificado con Hidalma-BYD8SH #24)
 - [x] Eliminar 8 ítems de prueba restantes (32 → 24 reales)
+## Rediseño pines en planos v4.09
+- [ ] Pines solo con número consecutivo (sin código largo)
+- [ ] 1 tap en pin → modal info 10 segundos → navega al ítem automáticamente
+- [ ] Toque en plano (no pin) → 15 segundos para ampliar/ubicar
+- [ ] Vista de pines por nivel en planos
+- [ ] Verificar PDF estadísticas con gráficas visuales reales
+## Rediseño pines y toolbar planos v4.09
+- [ ] Pin muestra solo número consecutivo pequeño (sin código largo)
+- [ ] 1 tap en pin → modal info 10s → navega al ítem automáticamente
+- [ ] Toque en plano (no pin) → 15s para ampliar/ubicar
+- [ ] Corregir botones filtro/descarga en toolbar de planos
+- [ ] Vista de pines por nivel
+## Fix navegación pin inmediata v4.09b
+- [x] Tap en pin navega directo al ítem sin espera ni modal largo
