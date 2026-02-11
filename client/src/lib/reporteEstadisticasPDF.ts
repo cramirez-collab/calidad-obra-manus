@@ -134,7 +134,7 @@ const statusLabels: Record<string, string> = {
 
 function createCanvas(w: number, h: number): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
   const canvas = document.createElement("canvas");
-  const dpr = 2;
+  const dpr = 1.5;
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   canvas.style.width = `${w}px`;
@@ -145,7 +145,7 @@ function createCanvas(w: number, h: number): { canvas: HTMLCanvasElement; ctx: C
 }
 
 function canvasToDataURL(canvas: HTMLCanvasElement): string {
-  return canvas.toDataURL("image/png");
+  return canvas.toDataURL("image/jpeg", 0.85);
 }
 
 function truncLabel(str: string, max: number): string {
@@ -691,7 +691,7 @@ function addChartImage(doc: jsPDF, dataURL: string, yPos: number, imgW: number, 
     yPos = 38;
   }
   const xPos = (pw - mmW) / 2;
-  doc.addImage(dataURL, "PNG", xPos, yPos, mmW, mmH);
+  doc.addImage(dataURL, "JPEG", xPos, yPos, mmW, mmH);
   return yPos + mmH + 4;
 }
 
@@ -770,7 +770,7 @@ export function generarReporteEstadisticasPDF(data: ReporteData) {
     y = seccion(doc, "2. Items por Empresa", y);
     const empSorted = [...stats.porEmpresa].sort((a, b) => b.count - a.count);
     const empChartData = empSorted.slice(0, 12).map((e, i) => ({
-      label: empresas?.find((emp) => emp.id === e.empresaId)?.nombre || `Empresa ${e.empresaId}`,
+      label: empresas?.find((emp) => emp.id === e.empresaId)?.nombre || (e.empresaId === null ? "Sin Empresa" : `Empresa ${e.empresaId}`),
       value: e.count,
       color: CHART_PALETTE[i % CHART_PALETTE.length],
     }));
@@ -779,7 +779,7 @@ export function generarReporteEstadisticasPDF(data: ReporteData) {
     y = addChartImage(doc, empImg, y, 520, chartH);
 
     const empRows = empSorted.map((e, i) => {
-      const nombre = empresas?.find((emp) => emp.id === e.empresaId)?.nombre || `Empresa ${e.empresaId}`;
+      const nombre = empresas?.find((emp) => emp.id === e.empresaId)?.nombre || (e.empresaId === null ? "Sin Empresa" : `Empresa ${e.empresaId}`);
       return [String(i + 1), nombre, String(e.count), totalItems > 0 ? `${((e.count / totalItems) * 100).toFixed(1)}%` : "0%"];
     });
     y = tabla(doc, ["#", "Empresa", "Items", "%"], empRows, y);
@@ -793,7 +793,7 @@ export function generarReporteEstadisticasPDF(data: ReporteData) {
     const espChartData = espSorted.slice(0, 10).map((e, i) => {
       const esp = especialidades?.find((esp) => esp.id === e.especialidadId);
       return {
-        label: esp?.nombre || `Esp ${e.especialidadId}`,
+        label: esp?.nombre || (e.especialidadId === null ? "Sin Especialidad" : `Esp ${e.especialidadId}`),
         value: e.count,
         color: esp?.color || CHART_PALETTE[i % CHART_PALETTE.length],
       };
@@ -802,7 +802,7 @@ export function generarReporteEstadisticasPDF(data: ReporteData) {
     y = addChartImage(doc, espImg, y, 520, 220);
 
     const espRows = espSorted.map((e, i) => {
-      const nombre = especialidades?.find((esp) => esp.id === e.especialidadId)?.nombre || `Esp ${e.especialidadId}`;
+      const nombre = especialidades?.find((esp) => esp.id === e.especialidadId)?.nombre || (e.especialidadId === null ? "Sin Especialidad" : `Esp ${e.especialidadId}`);
       return [String(i + 1), nombre, String(e.count), totalItems > 0 ? `${((e.count / totalItems) * 100).toFixed(1)}%` : "0%"];
     });
     y = tabla(doc, ["#", "Especialidad", "Items", "%"], espRows, y);

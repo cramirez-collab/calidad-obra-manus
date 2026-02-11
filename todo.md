@@ -3701,3 +3701,9 @@
 - [x] Layout visualmente atractivo con headers, separadores y secciones claras
 - [x] Información congruente entre gráficas y datos numéricos
 - [x] Sin acentos en exportación
+## Corrección PDF gráficas v4.05
+- [x] Fix PDF descargándose con 0 bytes (blob vacío)
+- [x] Fix "Esp null" → "Sin Especialidad" en gráficas y tablas
+- [x] Fix "Empresa null" → "Sin Empresa" en gráficas y tablas
+- [x] Optimización tamaño PDF: JPEG 85% + DPI 1.5x (13.5MB → 296KB)
+- [x] Verificación completa: 8 páginas con gráficas donut, barras, pie, stacked
