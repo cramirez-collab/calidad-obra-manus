@@ -173,6 +173,10 @@ export default function Estadisticas() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
+  const { data: itemsReporteData } = trpc.estadisticas.itemsParaReporte.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
 
   const clearFilter = (key: keyof typeof filters) => {
     setFilters(prev => ({ ...prev, [key]: "" }));
@@ -314,19 +318,26 @@ export default function Estadisticas() {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => {
-                generarReporteEstadisticasPDF({
-                  proyectoNombre,
-                  stats: stats || null,
-                  empresas: empresas || null,
-                  especialidades: especialidades || null,
-                  defectosStats: defectosStats || null,
-                  penalizaciones: penalizaciones || null,
-                  kpis: kpisData || null,
-                  rendimiento: rendimientoData || null,
-                  defectosPorUsuario: defectosPorUsuarioData || null,
-                  firmantes: firmantesData || null,
-                });
+              onClick={async () => {
+                try {
+                  console.log('PDF: Iniciando generación...');
+                  await generarReporteEstadisticasPDF({
+                    proyectoNombre,
+                    stats: stats || null,
+                    empresas: empresas || null,
+                    especialidades: especialidades || null,
+                    defectosStats: defectosStats || null,
+                    penalizaciones: penalizaciones || null,
+                    kpis: kpisData || null,
+                    rendimiento: rendimientoData || null,
+                    defectosPorUsuario: defectosPorUsuarioData || null,
+                    firmantes: firmantesData || null,
+                    itemsReporte: itemsReporteData || null,
+                  });
+                  console.log('PDF: Generación completada');
+                } catch (err) {
+                  console.error('PDF ERROR:', err);
+                }
               }}
               className="text-red-600 border-red-200 hover:bg-red-50"
             >

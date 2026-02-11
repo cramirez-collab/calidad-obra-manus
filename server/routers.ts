@@ -1664,6 +1664,76 @@ export const appRouter = router({
           jefeNombre: e.jefeResidenteId ? (jefesMap[e.jefeResidenteId] || '') : '',
         }));
       }),
+    // Ítems con historial, fotos y capturador para el PDF
+    itemsParaReporte: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        const proyectoId = input?.proyectoId;
+        if (!proyectoId) return { items: [], planos: [] };
+        // Items con datos relacionados
+        const allItems = await db.getItemsByProyecto(proyectoId);
+        const todosUsuarios = await db.getAllUsers();
+        const todasEmpresas = await db.getAllEmpresas(proyectoId);
+        const todasEspecialidades = await db.getAllEspecialidades(proyectoId);
+        const todosDefectos = await db.getAllDefectos(proyectoId);
+        const todasUnidades = await db.getAllUnidades(proyectoId);
+        const planosData = await db.getPlanosByProyecto(proyectoId);
+        const usuariosMap = new Map(todosUsuarios.map((u: any) => [u.id, u]));
+        const empresasMap = new Map(todasEmpresas.map((e: any) => [e.id, e]));
+        const espMap = new Map(todasEspecialidades.map((e: any) => [e.id, e]));
+        const defMap = new Map(todosDefectos.map((d: any) => [d.id, d]));
+        const unidadesMap = new Map(todasUnidades.map((u: any) => [u.id, u]));
+        // Historial de todos los items
+        const itemsConHistorial = await Promise.all(allItems.map(async (item: any) => {
+          const historial = await db.getItemHistorial(item.id);
+          const creadoPor = item.creadoPorId ? usuariosMap.get(item.creadoPorId) : null;
+          const residente = item.residenteId ? usuariosMap.get(item.residenteId) : null;
+          const empresa = item.empresaId ? empresasMap.get(item.empresaId) : null;
+          const especialidad = item.especialidadId ? espMap.get(item.especialidadId) : null;
+          const defecto = item.defectoId ? defMap.get(item.defectoId) : null;
+          const unidad = item.unidadId ? unidadesMap.get(item.unidadId) : null;
+          return {
+            id: item.id,
+            codigo: item.codigo,
+            titulo: item.titulo,
+            descripcion: item.descripcion,
+            status: item.status,
+            fotoAntesUrl: item.fotoAntesUrl,
+            fotoDespuesUrl: item.fotoDespuesUrl,
+            fotoAntesMarcadaUrl: item.fotoAntesMarcadaUrl,
+            fechaCreacion: item.fechaCreacion,
+            fechaAprobacion: item.fechaAprobacion,
+            pinPlanoId: item.pinPlanoId,
+            pinPosX: item.pinPosX,
+            pinPosY: item.pinPosY,
+            creadoPorNombre: creadoPor?.name || creadoPor?.email || null,
+            residenteNombre: residente?.name || residente?.email || null,
+            empresaNombre: empresa?.nombre || null,
+            especialidadNombre: especialidad?.nombre || null,
+            defectoNombre: defecto?.nombre || null,
+            unidadNombre: unidad?.nombre || null,
+            historial: historial.map((h: any) => {
+              const usuario = h.usuarioId ? usuariosMap.get(h.usuarioId) : null;
+              return {
+                statusAnterior: h.statusAnterior,
+                statusNuevo: h.statusNuevo,
+                comentario: h.comentario,
+                fecha: h.createdAt,
+                usuarioNombre: usuario?.name || usuario?.email || 'Sistema',
+              };
+            }),
+          };
+        }));
+        return {
+          items: itemsConHistorial,
+          planos: planosData.map((p: any) => ({
+            id: p.id,
+            nombre: p.nombre,
+            nivel: p.nivel,
+            imagenUrl: p.imagenUrl,
+          })),
+        };
+      }),
   }),
 
   // ==================== NOTIFICACIONES ====================

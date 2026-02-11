@@ -1,0 +1,202 @@
+{
+  "query": "SELECT id, codigo, titulo, proyectoId FROM items ORDER BY id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, titulo, proyectoId FROM items ORDER BY id",
+  "rows": [
+    {
+      "id": "1290001",
+      "codigo": "Hidalma-F8XTCG",
+      "titulo": "Faldon",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290002",
+      "codigo": "Hidalma-RFTFJA",
+      "titulo": "Entrecalle",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290003",
+      "codigo": "Hidalma-F5DUKF",
+      "titulo": "Entrecalle",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290004",
+      "codigo": "Hidalma-DFRNLX",
+      "titulo": "Pasta descuadre",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290005",
+      "codigo": "Hidalma-GQLS7A",
+      "titulo": "Ventanas descuadre",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290007",
+      "codigo": "Hidalma-4YKAYL",
+      "titulo": "Resane de Hueco ",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290008",
+      "codigo": "Hidalma-L4ZLGK",
+      "titulo": "Entrecalle",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290009",
+      "codigo": "Hidalma-Z4GJN8",
+      "titulo": "Ventanas descuadre",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290010",
+      "codigo": "Hidalma-6MTE5R",
+      "titulo": "Ventanas descuadre",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290011",
+      "codigo": "Hidalma-H3G3H2",
+      "titulo": "Pasta descuadre",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290012",
+      "codigo": "Hidalma-YT7T87",
+      "titulo": "Remate de pasta",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290013",
+      "codigo": "Hidalma-82GLVY",
+      "titulo": "Registro",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290014",
+      "codigo": "Hidalma-YQ46D7",
+      "titulo": "Desplome en muro ",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290015",
+      "codigo": "Hidalma-CVE38D",
+      "titulo": "Ventanas descuadre",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290016",
+      "codigo": "Hidalma-EQZVN6",
+      "titulo": "Perfilado",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290017",
+      "codigo": "Hidalma-5FYTSJ",
+      "titulo": "Ventanas descuadre",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290018",
+      "codigo": "Hidalma-6GCWBF",
+      "titulo": "Entrecalle",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290019",
+      "codigo": "Hidalma-VNQ86J",
+      "titulo": "Entrecalle",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290020",
+      "codigo": "Hidalma-HGSXEQ",
+      "titulo": "Pasta descuadre",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1290021",
+      "codigo": "Hidalma-BQ4ZWP",
+      "titulo": "Remate de pasta",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1350031",
+      "codigo": "Hidalma-JGTM79",
+      "titulo": "Cancel desalineado",
+      "proyectoId": "1"
+    },
+    {
+      "id": "2070001",
+      "codigo": "Hidalma-BYD8SH",
+      "titulo": "Material dañado",
+      "proyectoId": "1"
+    },
+    {
+      "id": "2190001",
+      "codigo": "Hidalma-YFXEPR",
+      "titulo": "Acabado deficiente",
+      "proyectoId": "1"
+    },
+    {
+      "id": "2280001",
+      "codigo": "Hidalma-96NJCT",
+      "titulo": "Sin título",
+      "proyectoId": "1"
+    },
+    {
+      "id": "2280030",
+      "codigo": "OQC-3DQWR9",
+      "titulo": "Test Item con Base64",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "2280031",
+      "codigo": "OQC-3REMVT",
+      "titulo": "Test Duplicado",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "2280032",
+      "codigo": "OQC-WCSEM6",
+      "titulo": "Test Sin Foto",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "2280033",
+      "codigo": "OQC-TGSF44",
+      "titulo": "Test Residente",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "2280034",
+      "codigo": "OQC-FX7J2Y",
+      "titulo": "Test Item con Base64",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "2280035",
+      "codigo": "OQC-BB85XX",
+      "titulo": "Test Duplicado",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "2280036",
+      "codigo": "OQC-XKLZ8R",
+      "titulo": "Test Sin Foto",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "2280037",
+      "codigo": "OQC-M8HUKU",
+      "titulo": "Test Residente",
+      "proyectoId": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\ttitulo\tproyectoId\n1290001\tHidalma-F8XTCG\tFaldon\t1\n1290002\tHidalma-RFTFJA\tEntrecalle\t1\n1290003\tHidalma-F5DUKF\tEntrecalle\t1\n1290004\tHidalma-DFRNLX\tPasta descuadre\t1\n1290005\tHidalma-GQLS7A\tVentanas descuadre\t1\n1290007\tHidalma-4YKAYL\tResane de Hueco \t1\n1290008\tHidalma-L4ZLGK\tEntrecalle\t1\n1290009\tHidalma-Z4GJN8\tVentanas descuadre\t1\n1290010\tHidalma-6MTE5R\tVentanas descuadre\t1\n1290011\tHidalma-H3G3H2\tPasta descuadre\t1\n1290012\tHidalma-YT7T87\tRemate de pasta\t1\n1290013\tHidalma-82GLVY\tRegistro\t1\n1290014\tHidalma-YQ46D7\tDesplome en muro \t1\n1290015\tHidalma-CVE38D\tVentanas descuadre\t1\n1290016\tHidalma-EQZVN6\tPerfilado\t1\n1290017\tHidalma-5FYTSJ\tVentanas descuadre\t1\n1290018\tHidalma-6GCWBF\tEntrecalle\t1\n1290019\tHidalma-VNQ86J\tEntrecalle\t1\n1290020\tHidalma-HGSXEQ\tPasta descuadre\t1\n1290021\tHidalma-BQ4ZWP\tRemate de pasta\t1\n1350031\tHidalma-JGTM79\tCancel desalineado\t1\n2070001\tHidalma-BYD8SH\tMaterial dañado\t1\n2190001\tHidalma-YFXEPR\tAcabado deficiente\t1\n2280001\tHidalma-96NJCT\tSin título\t1\n2280030\tOQC-3DQWR9\tTest Item con Base64\tNULL\n2280031\tOQC-3REMVT\tTest Duplicado\tNULL\n2280032\tOQC-WCSEM6\tTest Sin Foto\tNULL\n2280033\tOQC-TGSF44\tTest Residente\tNULL\n2280034\tOQC-FX7J2Y\tTest Item con Base64\tNULL\n2280035\tOQC-BB85XX\tTest Duplicado\tNULL\n2280036\tOQC-XKLZ8R\tTest Sin Foto\tNULL\n2280037\tOQC-M8HUKU\tTest Residente\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

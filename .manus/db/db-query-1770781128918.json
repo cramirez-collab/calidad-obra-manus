@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM item_historial WHERE itemId IN (SELECT id FROM items WHERE proyectoId IS NULL); DELETE FROM items WHERE proyectoId IS NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute DELETE FROM item_historial WHERE itemId IN (SELECT id FROM items WHERE proyectoId IS NULL); DELETE FROM items WHERE proyectoId IS NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 67
+}

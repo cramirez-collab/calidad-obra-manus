@@ -118,6 +118,42 @@ interface ReporteData {
     especialidadNombre: string;
     jefeNombre: string;
   }> | null;
+  itemsReporte: {
+    items: Array<{
+      id: number;
+      codigo: string;
+      titulo: string;
+      descripcion: string | null;
+      status: string;
+      fotoAntesUrl: string | null;
+      fotoDespuesUrl: string | null;
+      fotoAntesMarcadaUrl: string | null;
+      fechaCreacion: any;
+      fechaAprobacion: any;
+      pinPlanoId: number | null;
+      pinPosX: number | null;
+      pinPosY: number | null;
+      creadoPorNombre: string | null;
+      residenteNombre: string | null;
+      empresaNombre: string | null;
+      especialidadNombre: string | null;
+      defectoNombre: string | null;
+      unidadNombre: string | null;
+      historial: Array<{
+        statusAnterior: string | null;
+        statusNuevo: string;
+        comentario: string | null;
+        fecha: any;
+        usuarioNombre: string;
+      }>;
+    }>;
+    planos: Array<{
+      id: number;
+      nombre: string;
+      nivel: string | null;
+      imagenUrl: string | null;
+    }>;
+  } | null;
 }
 
 interface RankItem {
@@ -727,7 +763,30 @@ function rankingTable(doc: jsPDF, titulo: string, mejores: RankItem[], peores: R
 
 // ─── Main Export ───
 
-export function generarReporteEstadisticasPDF(data: ReporteData) {
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace('#', '');
+  return [parseInt(h.substring(0, 2), 16), parseInt(h.substring(2, 4), 16), parseInt(h.substring(4, 6), 16)];
+}
+
+async function loadImageForPDF(url: string): Promise<string | null> {
+  try {
+    // Usar proxy del servidor para evitar CORS con CloudFront
+    const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function generarReporteEstadisticasPDF(data: ReporteData) {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
   const { proyectoNombre, stats, empresas, especialidades, defectosStats, penalizaciones, kpis, rendimiento, defectosPorUsuario, firmantes } = data;
 
@@ -1064,6 +1123,250 @@ export function generarReporteEstadisticasPDF(data: ReporteData) {
         u.totalDefectos > 0 ? `${((u.aprobados / u.totalDefectos) * 100).toFixed(0)}%` : "0%",
       ]);
     y = tabla(doc, ["#", "Usuario", "Defectos", "Aprob.", "Rech.", "% Aprob."], defUserRows, y);
+  }
+
+  // ═══════════ 9. FICHAS DE ITEMS ═══════════
+  const itemsData = data.itemsReporte;
+  if (itemsData && itemsData.items.length > 0) {
+    y = seccion(doc, "9. Fichas de Items", y);
+    doc.setTextColor(...C.GRIS);
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "italic");
+    doc.text(sinAcentos(`Total: ${itemsData.items.length} items registrados`), 15, y);
+    y += 6;
+
+    // Tabla resumen de todos los ítems
+    const itemResumenRows = itemsData.items.map((it, i) => {
+      const fecha = it.fechaCreacion ? new Date(it.fechaCreacion).toLocaleDateString("es-MX") : "-";
+      const statusLabel = statusLabels[it.status] || it.status;
+      return [
+        String(i + 1),
+        it.codigo || "-",
+        it.defectoNombre || "-",
+        it.empresaNombre || "-",
+        it.especialidadNombre || "-",
+        statusLabel,
+        it.creadoPorNombre || "-",
+        fecha,
+      ];
+    });
+    y = tabla(doc, ["#", "Codigo", "Defecto", "Empresa", "Especialidad", "Status", "Capturo", "Fecha"], itemResumenRows, y, {
+      columnStyles: { 0: { cellWidth: 8 }, 1: { cellWidth: 22 }, 5: { cellWidth: 20 }, 7: { cellWidth: 18 } },
+    });
+    y += 4;
+
+    // Fichas individuales con fotos e historial
+    for (const item of itemsData.items) {
+      doc.addPage();
+      addHeader(doc, "Ficha de Item", proyectoNombre);
+      let fy = 36;
+
+      // Encabezado de ficha
+      doc.setFillColor(...C.AZUL);
+      doc.roundedRect(15, fy, pw - 30, 12, 2, 2, "F");
+      doc.setTextColor(...C.BLANCO);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text(sinAcentos(`${item.codigo} - ${item.defectoNombre || item.titulo || 'Sin defecto'}`), 20, fy + 8);
+      const statusLabel = statusLabels[item.status] || item.status;
+      doc.setFontSize(8);
+      doc.text(sinAcentos(statusLabel), pw - 20, fy + 8, { align: "right" });
+      fy += 18;
+
+      // Info del ítem en 2 columnas
+      const infoLeft = [
+        ["Empresa", item.empresaNombre || "-"],
+        ["Especialidad", item.especialidadNombre || "-"],
+        ["Defecto", item.defectoNombre || "-"],
+        ["Unidad", item.unidadNombre || "-"],
+      ];
+      const infoRight = [
+        ["Capturo", item.creadoPorNombre || "-"],
+        ["Residente", item.residenteNombre || "-"],
+        ["Fecha Creacion", item.fechaCreacion ? new Date(item.fechaCreacion).toLocaleDateString("es-MX") : "-"],
+        ["Fecha Aprobacion", item.fechaAprobacion ? new Date(item.fechaAprobacion).toLocaleDateString("es-MX") : "-"],
+      ];
+
+      const colW = (pw - 30) / 2 - 2;
+      doc.setFontSize(7);
+      infoLeft.forEach(([label, val], i) => {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...C.AZUL);
+        doc.text(sinAcentos(label + ":"), 17, fy + i * 6);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...C.NEGRO);
+        doc.text(sinAcentos(val), 50, fy + i * 6);
+      });
+      infoRight.forEach(([label, val], i) => {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...C.AZUL);
+        doc.text(sinAcentos(label + ":"), pw / 2 + 5, fy + i * 6);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...C.NEGRO);
+        doc.text(sinAcentos(val), pw / 2 + 40, fy + i * 6);
+      });
+      fy += 28;
+
+      if (item.descripcion) {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...C.AZUL);
+        doc.setFontSize(7);
+        doc.text("Descripcion:", 17, fy);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...C.NEGRO);
+        const descLines = doc.splitTextToSize(sinAcentos(item.descripcion), pw - 55);
+        doc.text(descLines, 50, fy);
+        fy += descLines.length * 4 + 4;
+      }
+
+      // Fotos antes/después
+      const fotoAntes = item.fotoAntesMarcadaUrl || item.fotoAntesUrl;
+      const fotoDespues = item.fotoDespuesUrl;
+      if (fotoAntes || fotoDespues) {
+        doc.setFillColor(...C.BG_CARD);
+        doc.roundedRect(15, fy - 2, pw - 30, 8, 1, 1, "F");
+        doc.setTextColor(...C.AZUL);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.text("Evidencia Fotografica", 20, fy + 3);
+        fy += 10;
+
+        const imgW = (pw - 40) / 2;
+        const imgH = imgW * 0.75;
+
+        // Labels
+        doc.setFontSize(7);
+        doc.setTextColor(...C.AZUL);
+        doc.setFont("helvetica", "bold");
+        if (fotoAntes) doc.text("ANTES", 15 + imgW / 2, fy, { align: "center" });
+        if (fotoDespues) doc.text("DESPUES", pw - 15 - imgW / 2, fy, { align: "center" });
+        fy += 3;
+
+        // Intentar cargar imágenes
+        try {
+          if (fotoAntes) {
+            const imgData = await loadImageForPDF(fotoAntes);
+            if (imgData) doc.addImage(imgData, "JPEG", 15, fy, imgW, imgH);
+          }
+        } catch { /* skip */ }
+        try {
+          if (fotoDespues) {
+            const imgData = await loadImageForPDF(fotoDespues);
+            if (imgData) doc.addImage(imgData, "JPEG", pw - 15 - imgW, fy, imgW, imgH);
+          }
+        } catch { /* skip */ }
+
+        // Placeholder rectangles si no hay imagen
+        doc.setDrawColor(...C.GRIS_CLARO);
+        doc.setLineWidth(0.3);
+        if (fotoAntes) doc.roundedRect(15, fy, imgW, imgH, 1, 1, "S");
+        if (fotoDespues) doc.roundedRect(pw - 15 - imgW, fy, imgW, imgH, 1, 1, "S");
+        fy += imgH + 6;
+      }
+
+      // Historial del ítem
+      if (item.historial && item.historial.length > 0) {
+        if (fy > doc.internal.pageSize.getHeight() - 50) {
+          doc.addPage();
+          fy = 38;
+        }
+        doc.setFillColor(...C.BG_CARD);
+        doc.roundedRect(15, fy - 2, pw - 30, 8, 1, 1, "F");
+        doc.setTextColor(...C.AZUL);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.text("Historial de Cambios", 20, fy + 3);
+        fy += 10;
+
+        const histRows = item.historial.map((h) => {
+          const fecha = h.fecha ? new Date(h.fecha).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-";
+          const statusAnt = h.statusAnterior ? (statusLabels[h.statusAnterior] || h.statusAnterior) : "Nuevo";
+          const statusNuevo = statusLabels[h.statusNuevo] || h.statusNuevo;
+          return [
+            fecha,
+            `${statusAnt} -> ${statusNuevo}`,
+            h.usuarioNombre || "-",
+            h.comentario || "-",
+          ];
+        });
+        fy = tabla(doc, ["Fecha", "Cambio", "Usuario", "Comentario"], histRows, fy, {
+          columnStyles: { 0: { cellWidth: 35 }, 3: { cellWidth: 50 } },
+        });
+      }
+    }
+
+    // Planos con pines
+    if (itemsData.planos.length > 0) {
+      for (const plano of itemsData.planos) {
+        const itemsEnPlano = itemsData.items.filter((it) => it.pinPlanoId === plano.id);
+        if (itemsEnPlano.length === 0) continue;
+
+        doc.addPage();
+        addHeader(doc, "Plano con Items", proyectoNombre);
+        let py = 36;
+
+        doc.setFillColor(...C.AZUL);
+        doc.roundedRect(15, py, pw - 30, 12, 2, 2, "F");
+        doc.setTextColor(...C.BLANCO);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text(sinAcentos(`Plano: ${plano.nombre} ${plano.nivel ? '('+plano.nivel+')' : ''}`), 20, py + 8);
+        doc.setFontSize(8);
+        doc.text(`${itemsEnPlano.length} items`, pw - 20, py + 8, { align: "right" });
+        py += 18;
+
+        // Intentar cargar imagen del plano
+        if (plano.imagenUrl) {
+          try {
+            const planoImg = await loadImageForPDF(plano.imagenUrl);
+            if (planoImg) {
+              const planoW = pw - 30;
+              const planoH = planoW * 0.6;
+              doc.addImage(planoImg, "JPEG", 15, py, planoW, planoH);
+              // Dibujar pines sobre el plano
+              itemsEnPlano.forEach((it, idx) => {
+                if (it.pinPosX != null && it.pinPosY != null) {
+                  const px = 15 + (it.pinPosX / 100) * planoW;
+                  const ppY = py + (it.pinPosY / 100) * planoH;
+                  const color = STATUS_COLORS[it.status] || "#3B82F6";
+                  const rgb = hexToRgb(color);
+                  doc.setFillColor(rgb[0], rgb[1], rgb[2]);
+                  doc.circle(px, ppY, 2.5, "F");
+                  doc.setFillColor(255, 255, 255);
+                  doc.setFontSize(5);
+                  doc.setFont("helvetica", "bold");
+                  doc.setTextColor(255, 255, 255);
+                  doc.text(String(idx + 1), px, ppY + 0.8, { align: "center" });
+                }
+              });
+              py += planoH + 6;
+            }
+          } catch { /* skip plano image */ }
+        }
+
+        // Leyenda de pines
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...C.AZUL);
+        doc.text("Leyenda de pines:", 15, py);
+        py += 4;
+        itemsEnPlano.forEach((it, idx) => {
+          if (py > doc.internal.pageSize.getHeight() - 15) {
+            doc.addPage();
+            py = 38;
+          }
+          const color = STATUS_COLORS[it.status] || "#3B82F6";
+          const rgb = hexToRgb(color);
+          doc.setFillColor(rgb[0], rgb[1], rgb[2]);
+          doc.circle(17, py, 1.5, "F");
+          doc.setFontSize(6.5);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(...C.NEGRO);
+          doc.text(sinAcentos(`${idx + 1}. ${it.codigo} - ${it.defectoNombre || it.titulo || '-'} (${it.empresaNombre || '-'})`), 21, py + 0.5);
+          py += 4.5;
+        });
+      }
+    }
   }
 
   // ═══════════ SECCION DE FIRMAS ═══════════

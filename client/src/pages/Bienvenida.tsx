@@ -78,7 +78,7 @@ export default function Bienvenida() {
   // Usuarios en línea (heartbeat BD, últimos 5 min)
   const enLineaQuery = trpc.avisos.enLinea.useQuery(
     { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId, refetchInterval: 60_000, staleTime: 30_000 }
+    { enabled: !!selectedProjectId, refetchInterval: 120_000, staleTime: 120_000, gcTime: 10 * 60 * 1000 }
   );
   const usersCount = enLineaQuery.data?.total ?? 0;
   const connectedUsers = enLineaQuery.data?.usuarios ?? [];
@@ -127,17 +127,17 @@ export default function Bienvenida() {
   // Avisos no leídos
   const { data: avisosNoLeidos } = trpc.avisos.noLeidos.useQuery(
     { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId, refetchInterval: 60_000, staleTime: 30_000 }
+    { enabled: !!selectedProjectId, refetchInterval: 120_000, staleTime: 120_000, gcTime: 10 * 60 * 1000 }
   );
   
   // Planos del proyecto para el selector de nivel
   const { data: planosData } = trpc.planos.listar.useQuery(
     { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   const { data: pendientes, isLoading } = trpc.pendientes.misPendientes.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, staleTime: 30_000, gcTime: 5 * 60 * 1000 }
   );
   const [activeFilter, setActiveFilter] = useState<FilterType>("todos");
   const [showOnlineList, setShowOnlineList] = useState(false);
@@ -157,7 +157,7 @@ export default function Bienvenida() {
   // Pin count por plano
   const { data: pinCountData } = trpc.planos.pinCount.useQuery(
     { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   const pinCountMap = new Map((pinCountData || []).map((p: any) => [p.planoId, Number(p.count)]));
 
@@ -399,12 +399,19 @@ export default function Bienvenida() {
     return <Redirect to="/seleccionar-proyecto" />;
   }
 
-  // Mostrar loading mientras carga proyectos
+  // Mostrar skeleton instantáneo mientras carga proyectos
   if (isLoadingProjects) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <Loader2 className="h-8 w-8 animate-spin text-[#02B381]" />
-      </div>
+      <DashboardLayout>
+        <div className="space-y-4 animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-full bg-slate-200" />
+            <div className="space-y-2"><div className="h-5 w-32 bg-slate-200 rounded" /><div className="h-3 w-20 bg-slate-200 rounded" /></div>
+          </div>
+          <div className="flex gap-2">{[1,2,3].map(i=><div key={i} className="h-8 w-20 bg-slate-200 rounded-full" />)}</div>
+          {[1,2,3,4,5].map(i=><div key={i} className="h-20 bg-slate-200 rounded-xl" />)}
+        </div>
+      </DashboardLayout>
     );
   }
 
@@ -662,8 +669,17 @@ export default function Bienvenida() {
 
         {/* Lista de pendientes - scroll infinito */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#02B381]" />
+          <div className="space-y-2 animate-pulse">
+            {[1,2,3,4,5,6].map(i => (
+              <div key={i} className="rounded-xl bg-white shadow-sm p-3 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-slate-200 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-slate-200 rounded w-3/4" />
+                  <div className="h-3 bg-slate-100 rounded w-1/2" />
+                </div>
+                <div className="h-6 w-16 bg-slate-200 rounded-full" />
+              </div>
+            ))}
           </div>
         ) : visibleItems.length > 0 ? (
           <div className="space-y-2" ref={listRef}>
