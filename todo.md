@@ -3754,3 +3754,9 @@
 ## Mejoras Estadísticas v4.12
 - [x] Gráficas más bonitas y profesionales en página de Estadísticas
 - [x] Sección de firmas de especialidades en Estadísticas
+
+## Optimización Agresiva de Velocidad v4.13
+- [x] Diagnosticar cuellos de botella en página de selección de proyectos
+- [x] Optimizar queries backend para carga instantánea
+- [x] Optimizar lazy loading y bundle splitting
+- [x] Eliminar waterfalls de datos innecesarios

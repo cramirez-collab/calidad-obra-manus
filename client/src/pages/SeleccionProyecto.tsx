@@ -26,7 +26,7 @@ export default function SeleccionProyecto() {
   }
   
   const { data: proyectos, isLoading } = trpc.proyectos.misProyectos.useQuery(undefined, {
-    staleTime: 5 * 60 * 1000, // Cache 5 minutos
+    staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000, // Cache 5 minutos
   });
   
   const canCreateProject = user?.role === 'superadmin' || user?.role === 'admin';

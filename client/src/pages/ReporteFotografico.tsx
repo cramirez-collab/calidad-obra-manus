@@ -53,7 +53,7 @@ const statusColors: Record<string, string> = {
 
 export default function ReporteFotografico() {
   const { selectedProjectId } = useProject();
-  const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
+  const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 });
   
   const [filters, setFilters] = useState({
     proyectoId: "",

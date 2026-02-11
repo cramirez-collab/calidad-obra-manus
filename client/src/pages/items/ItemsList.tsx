@@ -132,15 +132,15 @@ export default function ItemsList() {
   // Catálogos: staleTime alto (cambian poco, no refetch en cada mount)
   const { data: empresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   const { data: unidades } = trpc.unidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   const { data: especialidades } = trpc.especialidades.listConAtributos.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   
   // Filtrar atributos según especialidad seleccionada
@@ -202,7 +202,7 @@ export default function ItemsList() {
   // Obtener lista de usuarios para el filtro (accesible por todos los roles)
   const { data: usuarios } = trpc.users.listForMentions.useQuery(
     undefined,
-    { staleTime: 5 * 60 * 1000 }
+    { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   
   // Mostrar todos los usuarios en el filtro (no solo residentes)

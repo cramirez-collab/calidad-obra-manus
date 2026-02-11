@@ -217,11 +217,11 @@ function DashboardLayoutContent({
   
   // Obtener proyecto actual para los enlaces dinámicos
   const { selectedProjectId } = useProject();
-  const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
+  const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 });
   const proyectoActual = proyectos?.find(p => p.id === selectedProjectId) || null;
   
   // Verificar si el usuario ha aceptado los términos
-  const { data: terminosData, refetch: refetchTerminos } = trpc.auth.verificarTerminos.useQuery();
+  const { data: terminosData, refetch: refetchTerminos } = trpc.auth.verificarTerminos.useQuery(undefined, { staleTime: 30 * 60 * 1000, gcTime: 60 * 60 * 1000 });
   const [showTermsModal, setShowTermsModal] = useState(false);
   
   // Mostrar modal de términos si no han sido aceptados

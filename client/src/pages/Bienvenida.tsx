@@ -78,7 +78,7 @@ export default function Bienvenida() {
   // Usuarios en línea (heartbeat BD, últimos 5 min)
   const enLineaQuery = trpc.avisos.enLinea.useQuery(
     { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId, refetchInterval: 120_000, staleTime: 120_000, gcTime: 10 * 60 * 1000 }
+    { enabled: !!selectedProjectId, refetchInterval: 180_000, staleTime: 180_000, gcTime: 30 * 60 * 1000 }
   );
   const usersCount = enLineaQuery.data?.total ?? 0;
   const connectedUsers = enLineaQuery.data?.usuarios ?? [];
@@ -127,7 +127,7 @@ export default function Bienvenida() {
   // Avisos no leídos
   const { data: avisosNoLeidos } = trpc.avisos.noLeidos.useQuery(
     { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId, refetchInterval: 120_000, staleTime: 120_000, gcTime: 10 * 60 * 1000 }
+    { enabled: !!selectedProjectId, refetchInterval: 300_000, staleTime: 300_000, gcTime: 30 * 60 * 1000 }
   );
   
   // Planos del proyecto para el selector de nivel
@@ -137,7 +137,7 @@ export default function Bienvenida() {
   );
   const { data: pendientes, isLoading } = trpc.pendientes.misPendientes.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId, staleTime: 30_000, gcTime: 5 * 60 * 1000 }
+    { enabled: !!selectedProjectId, staleTime: 60_000, gcTime: 10 * 60 * 1000 }
   );
   const [activeFilter, setActiveFilter] = useState<FilterType>("todos");
   const [showOnlineList, setShowOnlineList] = useState(false);

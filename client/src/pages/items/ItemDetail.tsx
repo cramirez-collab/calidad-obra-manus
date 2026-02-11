@@ -131,7 +131,7 @@ export default function ItemDetail() {
   const { data: historial } = trpc.items.historial.useQuery({ itemId });
   const { data: comentarios, refetch: refetchComentarios } = trpc.comentarios.byItem.useQuery({ itemId });
   // Catálogos con staleTime alto (5min) - no refetch en cada mount
-  const catalogStale = { staleTime: 5 * 60 * 1000 };
+  const catalogStale = { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 };
   const { data: empresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     catalogStale
@@ -153,7 +153,7 @@ export default function ItemDetail() {
   // Planos del proyecto para mostrar pin de ubicación
   const { data: planosData } = trpc.planos.listar.useQuery(
     { proyectoId: selectedProjectId || 0 },
-    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   const [showPlanoModal, setShowPlanoModal] = useState(false);
   const [editingPin, setEditingPin] = useState(false);

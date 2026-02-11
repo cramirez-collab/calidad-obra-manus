@@ -70,7 +70,7 @@ export default function NuevoItem() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Catálogos con staleTime alto (5min) - no refetch innecesarios
-  const catStale = { staleTime: 5 * 60 * 1000 };
+  const catStale = { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 };
   const { data: todasEmpresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId, ...catStale }
@@ -126,7 +126,7 @@ export default function NuevoItem() {
   // Obtener unidades del proyecto
   const { data: todasUnidades } = trpc.unidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   
   // Obtener niveles únicos de las unidades
@@ -146,14 +146,14 @@ export default function NuevoItem() {
   // Espacios de la plantilla del proyecto (no por unidad)
   const { data: espaciosPlantilla } = trpc.espacios.plantilla.useQuery(
     { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   
   // Defectos filtrados por especialidad
   const especialidadIdParaDefectos = residenteSeleccionado?.especialidadId || (formData.especialidadId ? parseInt(formData.especialidadId) : 0);
   const { data: defectos } = trpc.defectos.byEspecialidad.useQuery(
     { especialidadId: especialidadIdParaDefectos },
-    { enabled: !!especialidadIdParaDefectos, staleTime: 5 * 60 * 1000 }
+    { enabled: !!especialidadIdParaDefectos, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
 
   const createItemMutation = trpc.items.create.useMutation();
@@ -161,7 +161,7 @@ export default function NuevoItem() {
   // Planos del proyecto para mostrar thumbnail al seleccionar nivel
   const { data: planosData } = trpc.planos.listar.useQuery(
     { proyectoId: selectedProjectId! },
-    { enabled: !!selectedProjectId, staleTime: 5 * 60 * 1000 }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
 
   // Plano que corresponde al nivel seleccionado

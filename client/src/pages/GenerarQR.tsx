@@ -33,7 +33,7 @@ export default function GenerarQR() {
   const printRef = useRef<HTMLDivElement>(null);
 
   // Obtener datos del proyecto seleccionado
-  const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
+  const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 });
   const proyectoActual = proyectos?.find(p => p.id === selectedProjectId);
   
   // Obtener último consecutivo QR impreso del proyecto

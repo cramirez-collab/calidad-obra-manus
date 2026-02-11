@@ -26,7 +26,7 @@ export default function EnlacesExternos() {
   const { selectedProjectId } = useProject();
   
   // Obtener datos del proyecto seleccionado
-  const { data: proyectos, refetch: refetchProyecto } = trpc.proyectos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
+  const { data: proyectos, refetch: refetchProyecto } = trpc.proyectos.list.useQuery(undefined, { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 });
   const proyectoActual = proyectos?.find(p => p.id === selectedProjectId);
   
   const [enlaces, setEnlaces] = useState({

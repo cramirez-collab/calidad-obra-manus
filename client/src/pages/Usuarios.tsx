@@ -72,7 +72,7 @@ export default function Usuarios() {
   const { data: usuarios, isLoading, refetch: refetchUsuarios } = trpc.users.listConEmpresa.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined
   );
-  const { data: todosProyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
+  const { data: todosProyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 });
   // Obtener empresas filtradas por proyecto desde el backend
   const { data: empresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,

@@ -27,19 +27,19 @@ export default function Home() {
   // Estadísticas y datos filtrados por proyecto desde el backend
   const { data: stats } = trpc.estadisticas.general.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : {},
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   const { data: empresas } = trpc.empresas.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   const { data: unidades } = trpc.unidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   const { data: especialidades } = trpc.especialidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
-    { enabled: !!selectedProjectId }
+    { enabled: !!selectedProjectId, staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
 
   const statusCounts = stats?.porStatus?.reduce((acc, item) => {

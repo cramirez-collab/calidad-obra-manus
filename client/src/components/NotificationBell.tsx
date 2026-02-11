@@ -10,8 +10,9 @@ export function NotificationBell() {
   const { data: countData } = trpc.notificaciones.count.useQuery(
     undefined,
     { 
-      refetchInterval: 60000,
-      staleTime: 30000,
+      refetchInterval: 120_000,
+      staleTime: 60_000,
+      gcTime: 10 * 60 * 1000,
     }
   );
   

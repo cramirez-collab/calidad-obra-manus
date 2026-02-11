@@ -13,19 +13,21 @@ interface ProjectContextType {
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
+// Cache agresivo: 10 min stale, 30 min gc
+const CACHE_OPTS = { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 } as const;
+
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [selectedProjectId, setSelectedProjectIdState] = useState<number | null>(null);
   const [isChangingProject, setIsChangingProject] = useState(false);
   const utils = trpc.useUtils();
-  
-  // Ref para evitar que el useEffect de verificación de acceso se ejecute durante el cambio de proyecto
   const isChangingRef = useRef(false);
+  const hasPrefetched = useRef(false);
 
   // Obtener proyecto activo desde la base de datos
   const { data: proyectoActivoData, isLoading: isLoadingProyectoActivo } = trpc.users.getProyectoActivo.useQuery(
     undefined,
-    { enabled: !!user, staleTime: 5 * 60 * 1000 } // Cache por 5 minutos
+    { enabled: !!user, ...CACHE_OPTS }
   );
 
   // Mutation para cambiar proyecto activo
@@ -34,8 +36,15 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       setSelectedProjectIdState(data.proyectoId);
       setIsChangingProject(false);
       isChangingRef.current = false;
-      // Invalidar todas las queries para refrescar datos del nuevo proyecto
-      utils.invalidate();
+      // Invalidar solo queries que dependen del proyecto, no todo
+      utils.empresas.invalidate();
+      utils.unidades.invalidate();
+      utils.especialidades.invalidate();
+      utils.items.invalidate();
+      utils.estadisticas.invalidate();
+      utils.pendientes.invalidate();
+      utils.espacios.invalidate();
+      utils.planos.invalidate();
     },
     onError: () => {
       setIsChangingProject(false);
@@ -50,87 +59,73 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   // Superadmin ve todos los proyectos, otros usuarios solo los asignados
   const { data: allProjects, isLoading: isLoadingAll } = trpc.proyectos.list.useQuery(
     undefined,
-    { enabled: isSuperadmin, staleTime: 5 * 60 * 1000 } // Cache por 5 minutos
+    { enabled: isSuperadmin, ...CACHE_OPTS }
   );
   
   const { data: userProjectsData, isLoading: isLoadingUser } = trpc.proyectos.misProyectos.useQuery(
     undefined,
-    { enabled: !isSuperadmin && !!user, staleTime: 5 * 60 * 1000 } // Cache por 5 minutos
+    { enabled: !isSuperadmin && !!user, ...CACHE_OPTS }
   );
 
   const userProjects = isSuperadmin ? (allProjects || []) : (userProjectsData || []);
   const isLoadingProjects = isSuperadmin ? isLoadingAll : isLoadingUser;
 
-  // Función auxiliar para obtener el ID del proyecto
-  // Para usuarios normales: p.proyectoId o p.proyecto.id (de la relación proyecto_usuarios)
-  // Para superadmin: p.id (del proyecto directamente)
   const getProjectId = (p: any): number | null => {
-    // Primero verificar si es una relación proyecto_usuarios (tiene proyectoId)
     if (p.proyectoId) return p.proyectoId;
-    // Luego verificar si tiene el proyecto anidado
     if (p.proyecto?.id) return p.proyecto.id;
-    // Finalmente, si es un proyecto directo (para superadmin)
     if (p.id && !p.usuarioId) return p.id;
     return null;
   };
 
-  // Prefetch de catálogos al seleccionar/cambiar proyecto
+  // Prefetch DIFERIDO de catálogos — solo los esenciales, con delay
   const prefetchCatalogos = useCallback((proyectoId: number) => {
-    // Catálogos que NuevoItem, ItemsList e ItemDetail necesitan
-    utils.empresas.list.prefetch({ proyectoId });
-    utils.unidades.list.prefetch({ proyectoId });
-    utils.especialidades.list.prefetch({ proyectoId });
-    utils.empresas.getAllResidentesConEmpresas.prefetch({ proyectoId });
-    utils.espacios.plantilla.prefetch({ proyectoId });
-    utils.planos.listar.prefetch({ proyectoId });
-    utils.users.list.prefetch();
+    if (hasPrefetched.current) return; // Solo prefetch una vez
+    hasPrefetched.current = true;
+    
+    // Diferir prefetch 500ms para no bloquear la navegación inicial
+    setTimeout(() => {
+      utils.empresas.list.prefetch({ proyectoId });
+      utils.unidades.list.prefetch({ proyectoId });
+      utils.especialidades.list.prefetch({ proyectoId });
+    }, 500);
+    
+    // Los demás catálogos se cargan aún más tarde (solo cuando se necesiten)
+    setTimeout(() => {
+      utils.empresas.getAllResidentesConEmpresas.prefetch({ proyectoId });
+      utils.espacios.plantilla.prefetch({ proyectoId });
+      utils.planos.listar.prefetch({ proyectoId });
+      utils.users.list.prefetch();
+    }, 2000);
   }, [utils]);
 
-  // Sincronizar proyecto activo desde la base de datos (solo al cargar inicialmente)
+  // Sincronizar proyecto activo desde la base de datos
   useEffect(() => {
     if (proyectoActivoData?.proyectoId && !isChangingProject && !isChangingRef.current) {
       setSelectedProjectIdState(proyectoActivoData.proyectoId);
-      // Precargar catálogos del proyecto activo al iniciar
       prefetchCatalogos(proyectoActivoData.proyectoId);
     }
   }, [proyectoActivoData, isChangingProject, prefetchCatalogos]);
 
-  // Verificar que el proyecto seleccionado esté en la lista de proyectos del usuario
-  // SOLO si no estamos en proceso de cambio de proyecto
+  // Verificar acceso al proyecto seleccionado
   useEffect(() => {
-    // No ejecutar si estamos cambiando de proyecto
-    if (isChangingProject || isChangingRef.current) {
-      return;
-    }
+    if (isChangingProject || isChangingRef.current || isLoadingProjects || isSuperadmin || isAdmin) return;
     
-    // No ejecutar si aún estamos cargando
-    if (isLoadingProjects) {
-      return;
-    }
-    
-    // No verificar para superadmin o admin (tienen acceso a todo)
-    if (isSuperadmin || isAdmin) {
-      return;
-    }
-    
-    // Solo verificar si hay un proyecto seleccionado y tenemos la lista de proyectos
     if (selectedProjectId && userProjects.length > 0) {
       const hasAccess = userProjects.some(p => getProjectId(p) === selectedProjectId);
       if (!hasAccess) {
-        // Si no tiene acceso, limpiar selección para forzar pantalla de selección
         setSelectedProjectIdState(null);
         setProyectoActivoMutation.mutate({ proyectoId: null });
       }
     }
   }, [selectedProjectId, userProjects, isSuperadmin, isAdmin, isLoadingProjects, isChangingProject]);
 
-  // Función para cambiar proyecto (guarda en base de datos)
+  // Función para cambiar proyecto
   const setSelectedProjectId = useCallback((id: number | null) => {
     isChangingRef.current = true;
     setIsChangingProject(true);
-    setSelectedProjectIdState(id); // Actualización optimista
+    setSelectedProjectIdState(id);
+    hasPrefetched.current = false; // Reset prefetch flag para nuevo proyecto
     setProyectoActivoMutation.mutate({ proyectoId: id });
-    // Precargar catálogos del nuevo proyecto en background
     if (id) prefetchCatalogos(id);
   }, [setProyectoActivoMutation, prefetchCatalogos]);
 
