@@ -55,6 +55,7 @@ import {
   COLORES 
 } from "@/lib/pdfUnificado";
 import KPIsMejoresPeores from "@/components/KPIsMejoresPeores";
+import { generarReporteEstadisticasPDF } from "@/lib/reporteEstadisticasPDF";
 import {
   BarChart,
   Bar,
@@ -153,6 +154,18 @@ export default function Estadisticas() {
     { enabled: !!selectedProjectId }
   );
   const { data: penalizaciones } = trpc.estadisticas.penalizaciones.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const { data: kpisData } = trpc.estadisticasAvanzadas.kpisMejoresPeores.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const { data: rendimientoData } = trpc.estadisticasAvanzadas.rendimientoUsuarios.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    { enabled: !!selectedProjectId }
+  );
+  const { data: defectosPorUsuarioData } = trpc.estadisticasAvanzadas.defectosPorUsuario.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
@@ -293,44 +306,27 @@ export default function Estadisticas() {
             </p>
           </div>
           <div className="flex gap-2">
-            {/* Botón Descargar PDF - Formato unificado */}
+            {/* Botón Descargar PDF - Reporte Completo */}
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => {
-                const doc = crearPDFUnificado({
-                  titulo: 'Estadisticas',
+                generarReporteEstadisticasPDF({
                   proyectoNombre,
-                  orientation: 'portrait'
+                  stats: stats || null,
+                  empresas: empresas || null,
+                  especialidades: especialidades || null,
+                  defectosStats: defectosStats || null,
+                  penalizaciones: penalizaciones || null,
+                  kpis: kpisData || null,
+                  rendimiento: rendimientoData || null,
+                  defectosPorUsuario: defectosPorUsuarioData || null,
                 });
-                
-                let yPos = agregarSeccion(doc, 'Resumen General', 35);
-                
-                const resumenData = [
-                  ['Total Items', String(stats?.total || 0)],
-                  ['Pendientes', String(stats?.porStatus?.filter(s => s.status.includes('pendiente')).reduce((a, b) => a + b.count, 0) || 0)],
-                  ['Aprobados', String(stats?.porStatus?.find(s => s.status === 'aprobado')?.count || 0)],
-                  ['Rechazados', String(stats?.porStatus?.find(s => s.status === 'rechazado')?.count || 0)]
-                ];
-                
-                yPos = agregarTablaUnificada(doc, ['Metrica', 'Cantidad'], resumenData, yPos);
-                yPos += 10;
-                
-                if (stats?.porEmpresa && stats.porEmpresa.length > 0) {
-                  yPos = agregarSeccion(doc, 'Items por Empresa', yPos);
-                  const empresaData = stats.porEmpresa.slice(0, 10).map(e => {
-                    const empresaNombre = empresas?.find(emp => emp.id === e.empresaId)?.nombre || 'Empresa ' + e.empresaId;
-                    return [empresaNombre, String(e.count)];
-                  });
-                  yPos = agregarTablaUnificada(doc, ['Empresa', 'Items'], empresaData, yPos);
-                }
-                
-                descargarPDFUnificado(doc, 'estadisticas', proyectoNombre);
               }}
               className="text-red-600 border-red-200 hover:bg-red-50"
             >
               <FileDown className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">PDF</span>
+              <span className="hidden sm:inline">PDF Completo</span>
             </Button>
             {/* Menú de exportación Excel/CSV */}
             <DropdownMenu>

@@ -3673,3 +3673,14 @@
 - [x] Dejar Mayas limpia y lista para iniciar desde cero (0 ítems, 0 empresas, 0 unidades, 0 planos)
 - [x] Reforzar separación agresiva entre proyectos (defectos.list, defectos.estadisticas, getEstadisticasDefectos filtran por proyectoId)
 - [x] NO tocar datos de Hidalma (confirmado: Hidalma intacta con 24 ítems)
+
+## Reporte PDF Estadísticas v4.02
+- [x] Reporte PDF descargable completo desde módulo de Estadísticas (8 secciones)
+- [x] Incluir todas las gráficas (por status, por empresa, por residente, por especialidad, por defecto)
+- [x] Incluir KPIs generales (total ítems, aprobados, pendientes, rechazados)
+- [x] Incluir penalizaciones por empresa (activas, liberadas, total) con tabla desglose
+- [x] Ranking mejores y peores contratistas (tasa aprobación antes y después)
+- [x] Ranking mejores y peores residentes, jefes residentes, unidades, espacios, niveles
+- [x] Ranking por especialidad y por defecto (frecuencia)
+- [x] Sin acentos en exportación (función sinAcentos aplicada a todo)
+- [x] Sin gráfica de cuellos de botella (no incluida)
