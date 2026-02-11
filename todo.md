@@ -3690,3 +3690,14 @@
 - [x] Reducir agresivamente el tamaño del pin (escala inversa 1/zoom, tamaño constante)
 - [x] Tap en pin lleva al ítem específico (click directo navega a /items/ID)
 - [x] Zoom funcional para ampliar y ver lugar exacto del pin (pinch-zoom + botones)
+
+## Reporte PDF con gráficas visuales v4.04
+- [x] Gráficas reales renderizadas en canvas e insertadas como imágenes en el PDF
+- [x] Pie/donut chart de distribución por status
+- [x] Barras horizontales de ítems por empresa
+- [x] Barras de penalizaciones por empresa (activas vs liberadas)
+- [x] Barras de defectos más frecuentes
+- [x] Diseño profesional con colores corporativos Objetiva (#02B381, #002C63)
+- [x] Layout visualmente atractivo con headers, separadores y secciones claras
+- [x] Información congruente entre gráficas y datos numéricos
+- [x] Sin acentos en exportación
