@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_NAME='items' AND COLUMN_NAME LIKE '%pin%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_NAME='items' AND COLUMN_NAME LIKE '%pin%'",
+  "rows": [
+    {
+      "COLUMN_NAME": "pinPlanoId"
+    },
+    {
+      "COLUMN_NAME": "pinPosX"
+    },
+    {
+      "COLUMN_NAME": "pinPosY"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\npinPlanoId\npinPosX\npinPosY\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

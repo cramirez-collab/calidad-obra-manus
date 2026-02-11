@@ -344,20 +344,6 @@ export default function Bienvenida() {
     }
   }, [pendientes]);
 
-  // Redirigir a selección de proyecto si no hay proyecto seleccionado
-  if (!isLoadingProjects && !selectedProjectId) {
-    return <Redirect to="/seleccionar-proyecto" />;
-  }
-
-  // Mostrar loading mientras carga proyectos
-  if (isLoadingProjects) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <Loader2 className="h-8 w-8 animate-spin text-[#02B381]" />
-      </div>
-    );
-  }
-
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "pendiente_foto_despues":
@@ -407,6 +393,20 @@ export default function Bienvenida() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loadMore]);
+
+  // Redirigir a selección de proyecto si no hay proyecto seleccionado
+  if (!isLoadingProjects && !selectedProjectId) {
+    return <Redirect to="/seleccionar-proyecto" />;
+  }
+
+  // Mostrar loading mientras carga proyectos
+  if (isLoadingProjects) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-[#02B381]" />
+      </div>
+    );
+  }
 
   // Contar por tipo
   const counts = {

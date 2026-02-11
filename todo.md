@@ -3717,3 +3717,7 @@
 - [x] Cada firma: especialidad, empresa, línea de firma, nombre jefe
 - [x] Endpoint firmantesReporte con datos de empresas/especialidades/jefes
 - [x] 243 tests pasando, 0 errores TS
+## Fix React error #300 + imagen pin en PDF v4.08
+- [x] Corregir React error #300 (returns tempranos antes de useCallback/useEffect en Bienvenida.tsx)
+- [x] Restaurar imagen del pin/plano en la ficha PDF (ya funcionaba, verificado con Hidalma-BYD8SH #24)
+- [x] Eliminar 8 ítems de prueba restantes (32 → 24 reales)

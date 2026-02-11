@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_NAME='item_historial' AND COLUMN_NAME LIKE '%item%'; SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_NAME='pines' AND COLUMN_NAME LIKE '%item%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_NAME='item_historial' AND COLUMN_NAME LIKE '%item%'; SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_NAME='pines' AND COLUMN_NAME LIKE '%item%'",
+  "rows": [
+    {
+      "COLUMN_NAME": "itemId"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nitemId\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

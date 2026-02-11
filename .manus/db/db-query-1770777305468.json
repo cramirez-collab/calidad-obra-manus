@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, MIN(id) as min_id, MAX(id) as max_id FROM items",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT COUNT(*) as total, MIN(id) as min_id, MAX(id) as max_id FROM items",
+  "rows": [
+    {
+      "total": "32",
+      "min_id": "1290001",
+      "max_id": "2280029"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tmin_id\tmax_id\n32\t1290001\t2280029\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}
