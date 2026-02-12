@@ -9,10 +9,9 @@ import {
   Image as ImageIcon
 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { downloadPDFBestMethod } from "@/lib/pdfDownload";
+// PDF download uses jsPDF.save() directly for reliability
 import { toast } from "sonner";
 
 type UnidadPanoramica = {
@@ -32,6 +31,242 @@ type UnidadPanoramica = {
   };
   porcentaje: number;
 };
+
+// Dibujar el diagrama del stacking directamente en un Canvas 2D
+function drawStackingOnCanvas(
+  canvas: HTMLCanvasElement,
+  celdasPorNivel: Map<number, UnidadPanoramica[]>,
+  maxUnidadesPorNivel: number,
+  estadisticas: { total: number; completadas: number; pendientes: number; rechazadas: number; sinItems: number },
+  proyectoNombre: string,
+  fechaActual: string,
+) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const SCALE = 1; // keep at 1x for PDF compatibility (smaller file)
+  const PADDING = 40;
+  const HEADER_H = 90;
+  const STATS_H = 70;
+  const LEGEND_H = 40;
+  const ROW_H = 56;
+  const LEVEL_COL_W = 60;
+  const CELL_GAP = 3;
+  const FOOTER_H = 40;
+
+  const nivelesArr = Array.from(celdasPorNivel.entries());
+  const numRows = nivelesArr.length;
+  const cellW = Math.max(70, Math.min(110, (900 - LEVEL_COL_W) / maxUnidadesPorNivel));
+  const gridW = LEVEL_COL_W + maxUnidadesPorNivel * (cellW + CELL_GAP) + CELL_GAP;
+  const totalW = Math.max(gridW + PADDING * 2, 900);
+  const totalH = HEADER_H + STATS_H + LEGEND_H + numRows * (ROW_H + CELL_GAP) + CELL_GAP + FOOTER_H + PADDING * 2;
+
+  canvas.width = totalW * SCALE;
+  canvas.height = totalH * SCALE;
+  canvas.style.width = `${totalW}px`;
+  canvas.style.height = `${totalH}px`;
+  ctx.scale(SCALE, SCALE);
+
+  // Fondo blanco
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, totalW, totalH);
+
+  let y = PADDING;
+
+  // === HEADER ===
+  ctx.fillStyle = "#002C63";
+  ctx.font = "bold 24px Helvetica, Arial, sans-serif";
+  ctx.textBaseline = "top";
+  ctx.fillText("OBJETIV", PADDING, y);
+  const objW = ctx.measureText("OBJETIV").width;
+  ctx.fillStyle = "#02B381";
+  ctx.fillText("A", PADDING + objW, y);
+  ctx.fillStyle = "#6b7280";
+  ctx.font = "13px Helvetica, Arial, sans-serif";
+  ctx.fillText("Control de Calidad", PADDING, y + 30);
+
+  ctx.fillStyle = "#002C63";
+  ctx.font = "bold 20px Helvetica, Arial, sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText(proyectoNombre, totalW - PADDING, y);
+  ctx.fillStyle = "#6b7280";
+  ctx.font = "13px Helvetica, Arial, sans-serif";
+  ctx.fillText(fechaActual, totalW - PADDING, y + 28);
+  ctx.textAlign = "left";
+
+  // Línea separadora
+  y += 55;
+  ctx.strokeStyle = "#002C63";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(PADDING, y);
+  ctx.lineTo(totalW - PADDING, y);
+  ctx.stroke();
+  y += 10;
+
+  // === TÍTULO ===
+  ctx.fillStyle = "#002C63";
+  ctx.font = "bold 18px Helvetica, Arial, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("Stacking de Unidades", totalW / 2, y);
+  ctx.textAlign = "left";
+  y += 30;
+
+  // === ESTADÍSTICAS ===
+  const statsData = [
+    { label: "Total", value: estadisticas.total, bg: "#f3f4f6", border: "#d1d5db", color: "#002C63" },
+    { label: "Completadas", value: estadisticas.completadas, bg: "#ecfdf5", border: "#a7f3d0", color: "#059669" },
+    { label: "Pendientes", value: estadisticas.pendientes, bg: "#fffbeb", border: "#fde68a", color: "#d97706" },
+    { label: "Rechazadas", value: estadisticas.rechazadas, bg: "#fef2f2", border: "#fecaca", color: "#dc2626" },
+    { label: "Sin Ítems", value: estadisticas.sinItems, bg: "#f3f4f6", border: "#d1d5db", color: "#4b5563" },
+  ];
+  const statBoxW = 100;
+  const statGap = 16;
+  const statsStartX = (totalW - (statsData.length * statBoxW + (statsData.length - 1) * statGap)) / 2;
+  statsData.forEach((s, i) => {
+    const sx = statsStartX + i * (statBoxW + statGap);
+    ctx.fillStyle = s.bg;
+    roundRect(ctx, sx, y, statBoxW, 50, 8);
+    ctx.fill();
+    ctx.strokeStyle = s.border;
+    ctx.lineWidth = 1;
+    roundRect(ctx, sx, y, statBoxW, 50, 8);
+    ctx.stroke();
+    ctx.fillStyle = s.color;
+    ctx.font = "bold 22px Helvetica, Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(String(s.value), sx + statBoxW / 2, y + 10);
+    ctx.fillStyle = "#6b7280";
+    ctx.font = "11px Helvetica, Arial, sans-serif";
+    ctx.fillText(s.label, sx + statBoxW / 2, y + 36);
+  });
+  ctx.textAlign = "left";
+  y += 60;
+
+  // === LEYENDA ===
+  const legendData = [
+    { label: "Completado", color: "#10b981" },
+    { label: "Pendiente", color: "#f59e0b" },
+    { label: "Rechazado", color: "#ef4444" },
+    { label: "Sin Ítems", color: "#d1d5db" },
+  ];
+  const legendStartX = (totalW - (legendData.length * 120)) / 2;
+  legendData.forEach((l, i) => {
+    const lx = legendStartX + i * 120;
+    ctx.fillStyle = l.color;
+    roundRect(ctx, lx, y, 16, 16, 3);
+    ctx.fill();
+    ctx.fillStyle = "#374151";
+    ctx.font = "12px Helvetica, Arial, sans-serif";
+    ctx.textBaseline = "top";
+    ctx.fillText(l.label, lx + 22, y + 2);
+  });
+  y += 30;
+
+  // === CUADRÍCULA DEL STACKING ===
+  const gridStartX = (totalW - gridW) / 2;
+
+  // Borde exterior
+  ctx.strokeStyle = "#002C63";
+  ctx.lineWidth = 2;
+  const gridTotalH = numRows * (ROW_H + CELL_GAP) + CELL_GAP;
+  roundRect(ctx, gridStartX, y, gridW, gridTotalH, 8);
+  ctx.stroke();
+
+  nivelesArr.forEach(([nivel, unidadesNivel], rowIdx) => {
+    const rowY = y + CELL_GAP + rowIdx * (ROW_H + CELL_GAP);
+
+    // Label del nivel
+    ctx.fillStyle = "#002C63";
+    roundRect(ctx, gridStartX, rowY, LEVEL_COL_W, ROW_H, 0);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 13px Helvetica, Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`N${nivel}`, gridStartX + LEVEL_COL_W / 2, rowY + ROW_H / 2);
+
+    // Celdas de unidades
+    unidadesNivel.forEach((unidad, colIdx) => {
+      const cx = gridStartX + LEVEL_COL_W + CELL_GAP + colIdx * (cellW + CELL_GAP);
+      const isEmptySpace = unidad.codigo === "-" || unidad.nombre === "-";
+
+      if (isEmptySpace) {
+        ctx.strokeStyle = "#d1d5db";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        roundRect(ctx, cx, rowY, cellW, ROW_H, 4);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else {
+        const bgColor = getEstadoColorHex(unidad.estado);
+        ctx.fillStyle = bgColor;
+        roundRect(ctx, cx, rowY, cellW, ROW_H, 4);
+        ctx.fill();
+
+        const textColor = unidad.estado === "sin_items" ? "#374151" : "#ffffff";
+        ctx.fillStyle = textColor;
+        ctx.font = "bold 11px Helvetica, Arial, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const label = unidad.codigo || unidad.nombre;
+        // Truncar si es muy largo
+        const maxChars = Math.floor(cellW / 7);
+        const displayLabel = label.length > maxChars ? label.slice(0, maxChars - 1) + "…" : label;
+        ctx.fillText(displayLabel, cx + cellW / 2, rowY + ROW_H / 2 - 8);
+        ctx.font = "10px Helvetica, Arial, sans-serif";
+        ctx.globalAlpha = 0.9;
+        ctx.fillText(`${unidad.porcentaje}%`, cx + cellW / 2, rowY + ROW_H / 2 + 10);
+        ctx.globalAlpha = 1;
+      }
+    });
+
+    // Línea separadora entre filas
+    if (rowIdx < nivelesArr.length - 1) {
+      ctx.strokeStyle = "#e5e7eb";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(gridStartX + LEVEL_COL_W, rowY + ROW_H + CELL_GAP / 2);
+      ctx.lineTo(gridStartX + gridW, rowY + ROW_H + CELL_GAP / 2);
+      ctx.stroke();
+    }
+  });
+
+  ctx.textAlign = "left";
+  y += gridTotalH + 15;
+
+  // === FOOTER ===
+  ctx.fillStyle = "#9ca3af";
+  ctx.font = "11px Helvetica, Arial, sans-serif";
+  ctx.textBaseline = "top";
+  ctx.fillText(`OQC - ${proyectoNombre}`, PADDING, y);
+  ctx.textAlign = "right";
+  ctx.fillText(fechaActual, totalW - PADDING, y);
+  ctx.textAlign = "left";
+}
+
+function getEstadoColorHex(estado: string): string {
+  switch (estado) {
+    case "completado": return "#10b981";
+    case "rechazado": return "#ef4444";
+    case "pendiente": return "#f59e0b";
+    default: return "#d1d5db";
+  }
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
 
 export default function StackingPDF() {
   const [, setLocation] = useLocation();
@@ -111,18 +346,19 @@ export default function StackingPDF() {
     year: 'numeric',
   });
 
+  // Crear canvas off-screen y dibujar diagrama
+  const createDiagramCanvas = (): HTMLCanvasElement => {
+    const canvas = document.createElement("canvas");
+    drawStackingOnCanvas(canvas, celdasPorNivel, maxUnidadesPorNivel, estadisticas, proyectoNombre, fechaActual);
+    return canvas;
+  };
+
   // Descargar diagrama visual como imagen PNG
   const handleDownloadImage = async () => {
-    if (!diagramRef.current) return;
     setDownloading(true);
-    toast.info("Capturando diagrama...");
+    toast.info("Generando imagen del stacking...");
     try {
-      const canvas = await html2canvas(diagramRef.current, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        logging: false,
-        useCORS: true,
-      });
+      const canvas = createDiagramCanvas();
       const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
       if (!blob) { toast.error("Error al generar imagen"); setDownloading(false); return; }
       const url = URL.createObjectURL(blob);
@@ -137,8 +373,8 @@ export default function StackingPDF() {
       setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
       toast.success("Stacking descargado como imagen");
     } catch (err) {
-      console.error("Error capturando stacking:", err);
-      toast.error("Error al capturar diagrama");
+      console.error("Error generando imagen stacking:", err);
+      toast.error("Error al generar imagen");
     }
     setDownloading(false);
   };
@@ -146,7 +382,7 @@ export default function StackingPDF() {
   // Descargar PDF con diagrama visual + tabla de datos
   const handleDownloadPDF = async () => {
     setDownloading(true);
-    toast.info("Generando PDF...");
+    toast.info("Generando PDF del stacking...");
     try {
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' });
       const pageWidth = doc.internal.pageSize.getWidth();
@@ -154,42 +390,36 @@ export default function StackingPDF() {
       const VERDE_OBJETIVA: [number, number, number] = [2, 179, 129];
       const AZUL_OBJETIVA: [number, number, number] = [0, 44, 99];
       
-      // Página 1: Diagrama visual capturado con html2canvas
-      if (diagramRef.current) {
-        const canvas = await html2canvas(diagramRef.current, {
-          backgroundColor: "#ffffff",
-          scale: 2,
-          logging: false,
-          useCORS: true,
-        });
-        const imgData = canvas.toDataURL("image/png");
-        
-        // Header
-        doc.setFillColor(...AZUL_OBJETIVA);
-        doc.rect(0, 0, pageWidth, 16, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('OBJETIVA', 10, 11);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Stacking Visual - ${proyectoNombre}`, pageWidth - 10, 8, { align: 'right' });
-        doc.text(fechaActual, pageWidth - 10, 13, { align: 'right' });
-        
-        // Insertar imagen del diagrama
-        const imgWidth = pageWidth - 20;
-        const imgHeight = (canvas.height / canvas.width) * imgWidth;
-        const maxImgHeight = pageHeight - 30;
-        const finalHeight = Math.min(imgHeight, maxImgHeight);
-        const finalWidth = imgHeight > maxImgHeight ? (canvas.width / canvas.height) * finalHeight : imgWidth;
-        
-        doc.addImage(imgData, 'PNG', 10, 20, finalWidth, finalHeight);
-        
-        // Footer
-        doc.setFontSize(7);
-        doc.setTextColor(128, 128, 128);
-        doc.text(`OQC - ${proyectoNombre} | Página 1`, pageWidth / 2, pageHeight - 5, { align: 'center' });
-      }
+      // Página 1: Diagrama visual dibujado en Canvas
+      const canvas = createDiagramCanvas();
+      const imgData = canvas.toDataURL("image/jpeg", 0.85);
+      
+      // Header
+      doc.setFillColor(...AZUL_OBJETIVA);
+      doc.rect(0, 0, pageWidth, 16, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('OBJETIVA', 10, 11);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Stacking Visual - ${proyectoNombre}`, pageWidth - 10, 8, { align: 'right' });
+      doc.text(fechaActual, pageWidth - 10, 13, { align: 'right' });
+      
+      // Insertar imagen del diagrama
+      const imgWidth = pageWidth - 20;
+      const imgHeight = (canvas.height / canvas.width) * imgWidth;
+      const maxImgHeight = pageHeight - 30;
+      const finalHeight = Math.min(imgHeight, maxImgHeight);
+      const finalWidth = imgHeight > maxImgHeight ? (canvas.width / canvas.height) * finalHeight : imgWidth;
+      const imgX = (pageWidth - finalWidth) / 2;
+      
+      doc.addImage(imgData, 'JPEG', imgX, 20, finalWidth, finalHeight);
+      
+      // Footer
+      doc.setFontSize(7);
+      doc.setTextColor(128, 128, 128);
+      doc.text(`OQC - ${proyectoNombre} | Página 1`, pageWidth / 2, pageHeight - 5, { align: 'center' });
       
       // Página 2: Tabla de datos
       if (unidades && unidades.length > 0) {
@@ -272,11 +502,25 @@ export default function StackingPDF() {
         doc.text(`OQC - ${proyectoNombre} | Página ${i} de ${pageCount}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
       }
       
-      downloadPDFBestMethod(doc, `Stacking_${proyectoNombre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
-      toast.success("PDF descargado");
+      const pdfFilename = `Stacking_${proyectoNombre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      const pdfBlob = doc.output('blob');
+      
+      // Descargar manualmente con blob
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = pdfFilename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(pdfUrl);
+      }, 1000);
+      toast.success("PDF del stacking descargado");
     } catch (err) {
-      console.error("Error generando PDF:", err);
-      toast.error("Error al generar PDF");
+      console.error("Error generando PDF stacking:", err);
+      toast.error("Error al generar PDF del stacking");
     }
     setDownloading(false);
   };
@@ -338,7 +582,7 @@ export default function StackingPDF() {
         </div>
       </div>
 
-      {/* Diagrama visual capturado por html2canvas */}
+      {/* Diagrama visual del stacking (HTML preview) */}
       <div className="max-w-7xl mx-auto p-6">
         <div 
           ref={diagramRef} 

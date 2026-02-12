@@ -3802,3 +3802,4 @@
 - [x] FIX: Descarga stacking debe bajar gráfico completo de ubicación de departamentos
 - [ ] FIX: Notificaciones push se desactivan — fijar permanentemente para todos los usuarios
 - [x] Notificación masiva al asignar ítem: notificar a TODOS los usuarios de la empresa y especialidad del responsable
+- [x] FIX: PDF del stacking no se genera/descarga correctamente — corregir descarga del esquema visual
