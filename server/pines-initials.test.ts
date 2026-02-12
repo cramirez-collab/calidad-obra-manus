@@ -66,7 +66,6 @@ describe('Pin Data Enrichment', () => {
       itemCreatedAt: new Date('2026-01-15'),
     };
 
-    // Verify all fields exist
     expect(mockPin.residenteNombre).toBe('Esteban Guerrero');
     expect(mockPin.empresaNombre).toBe('GBPO');
     expect(mockPin.unidadNombre).toBe('101');
@@ -75,8 +74,6 @@ describe('Pin Data Enrichment', () => {
     expect(mockPin.itemTitulo).toBe('Grieta estructural');
     expect(mockPin.itemFotoDespues).toBeNull();
     expect(mockPin.itemCreatedAt).toBeInstanceOf(Date);
-
-    // Verify initials
     expect(getInitials(mockPin.residenteNombre)).toBe('EG');
   });
 
@@ -90,5 +87,27 @@ describe('Pin Data Enrichment', () => {
     };
 
     expect(getInitials(mockPin.residenteNombre)).toBe('?');
+  });
+});
+
+describe('Fecha Terminación (Alta + 8 días)', () => {
+  it('calcula fecha de terminación correctamente (alta + 8 días)', () => {
+    const fechaAlta = new Date('2026-01-15T00:00:00Z');
+    const fechaTerminacion = new Date(fechaAlta.getTime() + 8 * 24 * 60 * 60 * 1000);
+    expect(fechaTerminacion.toISOString().slice(0, 10)).toBe('2026-01-23');
+  });
+
+  it('detecta ítem vencido cuando hoy > fecha terminación', () => {
+    const fechaAlta = new Date('2025-12-01T00:00:00Z');
+    const fechaTerminacion = new Date(fechaAlta.getTime() + 8 * 24 * 60 * 60 * 1000);
+    const hoy = new Date('2026-02-12T00:00:00Z');
+    expect(hoy > fechaTerminacion).toBe(true);
+  });
+
+  it('detecta ítem no vencido cuando hoy < fecha terminación', () => {
+    const fechaAlta = new Date('2026-02-10T00:00:00Z');
+    const fechaTerminacion = new Date(fechaAlta.getTime() + 8 * 24 * 60 * 60 * 1000);
+    const hoy = new Date('2026-02-12T00:00:00Z');
+    expect(hoy > fechaTerminacion).toBe(false);
   });
 });

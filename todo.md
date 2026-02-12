@@ -3806,3 +3806,6 @@
 - [x] Pines en planos: pin tipo gota/marcador pequeño con iniciales del residente (ej: EG para Esteban Guerrero)
 - [x] Modal de pin: mostrar todos los datos del ítem (código, estado, especialidad, atributo, defecto, fechas, etc.)
 - [x] Modal de pin: enlace directo que lleve al detalle del ítem
+- [x] Rediseñar pin como pin de mapa real (gota/marcador tipo Google Maps) con iniciales del residente adentro
+- [x] Interacción: long press (~1s) abre modal con ítem + fecha alta + fecha terminación (alta+8 días)
+- [x] Interacción: click normal navega directo al ítem

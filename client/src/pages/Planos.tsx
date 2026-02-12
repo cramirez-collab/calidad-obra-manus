@@ -96,6 +96,8 @@ export default function Planos() {
   const [tappedPin, setTappedPin] = useState<any>(null);
   const [showPinModal, setShowPinModal] = useState(false);
   const pinModalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggeredRef = useRef(false);
 
   // State para filtro de pines por estado
   const [pinFilter, setPinFilter] = useState<string | null>(null);
@@ -254,15 +256,41 @@ export default function Planos() {
     };
   }, []);
 
-  // === TAP EN PIN: Mostrar modal con datos completos ===
-  const handlePinTap = useCallback((pin: any, e: React.MouseEvent | React.TouchEvent) => {
+  // === LONG PRESS en PIN: Mostrar modal ===
+  const handlePinPointerDown = useCallback((pin: any, e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
     if (pinMode) return;
-
-    // Mostrar modal con toda la info del pin
-    setTappedPin(pin);
-    setShowPinModal(true);
+    longPressTriggeredRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      setTappedPin(pin);
+      setShowPinModal(true);
+    }, 800); // 800ms long press
   }, [pinMode]);
+
+  const handlePinPointerUp = useCallback((pin: any, e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    // Si no fue long press, es click normal → ir al ítem
+    if (!longPressTriggeredRef.current && !pinMode) {
+      if (pin.itemId) {
+        setShowViewer(false);
+        navigate(`/item/${pin.itemId}`);
+      } else {
+        toast.info(pin.nota || "Pin sin ítem vinculado");
+      }
+    }
+  }, [pinMode, navigate]);
+
+  const handlePinPointerLeave = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
 
   // Ir al ítem inmediatamente
   const goToItem = useCallback((itemId: number) => {
@@ -702,12 +730,11 @@ export default function Planos() {
                   draggable={false}
                 />
 
-                {/* Pines: tipo gota/marcador con iniciales del residente */}
-                {showPins && filteredPines.map((pin: any, idx: number) => {
+                {/* Pines: tipo pin de mapa con iniciales del residente */}
+                {showPins && filteredPines.map((pin: any) => {
                   const estado = pin.itemEstado || "sin_item";
                   const colors = PIN_COLORS[estado] || PIN_COLORS.sin_item;
                   const isTapped = tappedPin?.id === pin.id;
-                  // Obtener iniciales del residente
                   const getInitials = (name: string | null | undefined) => {
                     if (!name) return "?";
                     const parts = name.trim().split(/\s+/);
@@ -715,6 +742,7 @@ export default function Planos() {
                     return parts[0].substring(0, 2).toUpperCase();
                   };
                   const initials = getInitials(pin.residenteNombre);
+                  const pinSize = isTapped ? 38 : 30;
 
                   return (
                     <div
@@ -725,37 +753,30 @@ export default function Planos() {
                         top: `${parseFloat(pin.posY)}%`,
                         transform: 'translate(-50%, -100%)',
                         zIndex: isTapped ? 50 : 10,
+                        cursor: 'pointer',
+                        transition: 'transform 0.15s ease',
                       }}
-                      onClick={(e) => handlePinTap(pin, e)}
+                      onMouseDown={(e) => handlePinPointerDown(pin, e)}
+                      onMouseUp={(e) => handlePinPointerUp(pin, e)}
+                      onMouseLeave={handlePinPointerLeave}
+                      onTouchStart={(e) => handlePinPointerDown(pin, e)}
+                      onTouchEnd={(e) => handlePinPointerUp(pin, e)}
                     >
-                      {/* Pin tipo marcador con punta */}
-                      <div className="flex flex-col items-center" style={{ cursor: 'pointer' }}>
-                        <div
-                          className="flex items-center justify-center rounded-full shadow-lg border-2 transition-transform"
-                          style={{
-                            width: isTapped ? '30px' : '24px',
-                            height: isTapped ? '30px' : '24px',
-                            backgroundColor: colors.bg,
-                            borderColor: colors.border,
-                            transform: isTapped ? 'scale(1.2)' : 'scale(1)',
-                          }}
-                        >
-                          <span className="text-white font-bold leading-none" style={{ fontSize: isTapped ? '11px' : '9px' }}>
-                            {initials}
-                          </span>
-                        </div>
-                        {/* Punta del pin */}
-                        <div
-                          style={{
-                            width: 0,
-                            height: 0,
-                            borderLeft: '5px solid transparent',
-                            borderRight: '5px solid transparent',
-                            borderTop: `6px solid ${colors.bg}`,
-                            marginTop: '-1px',
-                          }}
-                        />
-                      </div>
+                      {/* SVG Pin de mapa real */}
+                      <svg width={pinSize} height={pinSize * 1.35} viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        style={{ filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.35))' }}>
+                        {/* Forma del pin: gota invertida */}
+                        <path d="M15 38C15 38 28 22 28 14C28 6.82 22.18 1 15 1C7.82 1 2 6.82 2 14C2 22 15 38 15 38Z"
+                          fill={colors.bg} stroke={colors.border} strokeWidth="1.5" />
+                        {/* Círculo interior blanco */}
+                        <circle cx="15" cy="14" r="9" fill="white" fillOpacity="0.25" />
+                        {/* Iniciales */}
+                        <text x="15" y="14" textAnchor="middle" dominantBaseline="central"
+                          fill="white" fontWeight="700" fontSize={initials.length > 2 ? '8' : '10'}
+                          fontFamily="system-ui, -apple-system, sans-serif">
+                          {initials}
+                        </text>
+                      </svg>
                     </div>
                   );
                 })}
@@ -919,12 +940,27 @@ export default function Planos() {
                   <span className="text-xs font-mono text-slate-600">#{tappedPin.itemConsecutivo}</span>
                 </div>
               )}
-              {tappedPin.itemCreatedAt && (
-                <div className="flex items-start gap-2">
-                  <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Fecha</span>
-                  <span className="text-xs text-slate-600">{new Date(tappedPin.itemCreatedAt).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: '2-digit' })}</span>
-                </div>
-              )}
+              {tappedPin.itemCreatedAt && (() => {
+                const fechaAlta = new Date(tappedPin.itemCreatedAt);
+                const fechaTerminacion = new Date(fechaAlta.getTime() + 8 * 24 * 60 * 60 * 1000);
+                const hoy = new Date();
+                const vencido = hoy > fechaTerminacion;
+                return (
+                  <>
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Fecha Alta</span>
+                      <span className="text-xs text-slate-600">{fechaAlta.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: '2-digit' })}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Corrección</span>
+                      <span className={`text-xs font-semibold ${vencido ? 'text-red-600' : 'text-emerald-600'}`}>
+                        {fechaTerminacion.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                        {vencido && ' (Vencido)'}
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
               {tappedPin.nota && !tappedPin.itemId && (
                 <div className="flex items-start gap-2">
                   <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Nota</span>
