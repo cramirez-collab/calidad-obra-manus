@@ -1315,19 +1315,19 @@ export async function generarReporteEstadisticasPDF(data: ReporteData) {
     y = tabla(doc, ["#", "Usuario", "Defectos", "Aprob.", "Rech.", "% Aprob."], defUserRows, y);
   }
 
-  // ═══════════ 9. FICHAS DE ITEMS ═══════════
+  // ═══════════ 9. CATALOGO DE ITEMS (CONDENSADO) ═══════════
   const itemsData = data.itemsReporte;
   if (itemsData && itemsData.items.length > 0) {
-    y = seccion(doc, "9. Fichas de Items", y);
+    y = seccion(doc, "9. Catalogo de Items", y);
     doc.setTextColor(...C.GRIS);
     doc.setFontSize(7);
     doc.setFont("helvetica", "italic");
     doc.text(sinAcentos(`Total: ${itemsData.items.length} items registrados`), 15, y);
     y += 6;
 
-    // Tabla resumen de todos los ítems
+    // Tabla resumen compacta de todos los ítems
     const itemResumenRows = itemsData.items.map((it, i) => {
-      const fecha = it.fechaCreacion ? new Date(it.fechaCreacion).toLocaleDateString("es-MX") : "-";
+      const fecha = it.fechaCreacion ? new Date(it.fechaCreacion).toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "-";
       const statusLabel = statusLabels[it.status] || it.status;
       return [
         String(i + 1),
@@ -1336,249 +1336,208 @@ export async function generarReporteEstadisticasPDF(data: ReporteData) {
         it.empresaNombre || "-",
         it.especialidadNombre || "-",
         statusLabel,
-        it.creadoPorNombre || "-",
         fecha,
       ];
     });
-    y = tabla(doc, ["#", "Codigo", "Defecto", "Empresa", "Especialidad", "Status", "Capturo", "Fecha"], itemResumenRows, y, {
-      columnStyles: { 0: { cellWidth: 8 }, 1: { cellWidth: 22 }, 5: { cellWidth: 20 }, 7: { cellWidth: 18 } },
+    y = tabla(doc, ["#", "Codigo", "Defecto", "Empresa", "Especialidad", "Status", "Fecha"], itemResumenRows, y, {
+      columnStyles: { 0: { cellWidth: 7 }, 1: { cellWidth: 20 }, 5: { cellWidth: 18 }, 6: { cellWidth: 16 } },
+      fontSize: 6.5,
     });
     y += 4;
 
-    // Fichas individuales con fotos e historial
-    for (const item of itemsData.items) {
+    // ═══ GRID DE MINIATURAS (fotos antes/después) ═══
+    // 3 items por fila, 2 filas por página = 6 items por página
+    const itemsConFoto = itemsData.items.filter(it => it.fotoAntesMarcadaUrl || it.fotoAntesUrl || it.fotoDespuesUrl);
+    if (itemsConFoto.length > 0) {
       doc.addPage();
-      addHeader(doc, "Ficha de Item", proyectoNombre);
-      let fy = 36;
+      addHeader(doc, "Evidencia Fotografica", proyectoNombre);
+      let gy = 34;
+      const ph = doc.internal.pageSize.getHeight();
+      const margin = 12;
+      const cols = 3;
+      const thumbW = (pw - margin * 2 - (cols - 1) * 4) / cols;
+      const thumbPhotoH = thumbW * 0.38; // Miniatura más compacta
+      const thumbTotalH = thumbPhotoH * 2 + 22; // 2 fotos + info
+      let col = 0;
 
-      // Encabezado de ficha
-      doc.setFillColor(...C.AZUL);
-      doc.roundedRect(15, fy, pw - 30, 12, 2, 2, "F");
-      doc.setTextColor(...C.BLANCO);
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text(sinAcentos(`${item.codigo} - ${item.defectoNombre || item.titulo || 'Sin defecto'}`), 20, fy + 8);
-      const statusLabel = statusLabels[item.status] || item.status;
-      doc.setFontSize(8);
-      doc.text(sinAcentos(statusLabel), pw - 20, fy + 8, { align: "right" });
-      fy += 18;
+      for (let idx = 0; idx < itemsConFoto.length; idx++) {
+        const it = itemsConFoto[idx];
+        if (gy + thumbTotalH > ph - 18) {
+          doc.addPage();
+          addHeader(doc, "Evidencia Fotografica", proyectoNombre);
+          gy = 34;
+          col = 0;
+        }
+        if (col >= cols) { col = 0; gy += thumbTotalH + 4; }
+        if (gy + thumbTotalH > ph - 18) {
+          doc.addPage();
+          addHeader(doc, "Evidencia Fotografica", proyectoNombre);
+          gy = 34;
+          col = 0;
+        }
 
-      // Info del ítem en 2 columnas
-      const infoLeft = [
-        ["Empresa", item.empresaNombre || "-"],
-        ["Especialidad", item.especialidadNombre || "-"],
-        ["Defecto", item.defectoNombre || "-"],
-        ["Unidad", item.unidadNombre || "-"],
-      ];
-      const infoRight = [
-        ["Capturo", item.creadoPorNombre || "-"],
-        ["Residente", item.residenteNombre || "-"],
-        ["Fecha Creacion", item.fechaCreacion ? new Date(item.fechaCreacion).toLocaleDateString("es-MX") : "-"],
-        ["Fecha Aprobacion", item.fechaAprobacion ? new Date(item.fechaAprobacion).toLocaleDateString("es-MX") : "-"],
-      ];
+        const xBase = margin + col * (thumbW + 4);
 
-      const colW = (pw - 30) / 2 - 2;
-      doc.setFontSize(7);
-      infoLeft.forEach(([label, val], i) => {
-        doc.setFont("helvetica", "bold");
+        // Card background
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(xBase, gy, thumbW, thumbTotalH, 1.5, 1.5, "F");
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.2);
+        doc.roundedRect(xBase, gy, thumbW, thumbTotalH, 1.5, 1.5, "S");
+
+        // Status color bar
+        const stColor = STATUS_COLORS[it.status] || "#3B82F6";
+        const stRgb = hexToRgb(stColor);
+        doc.setFillColor(stRgb[0], stRgb[1], stRgb[2]);
+        doc.rect(xBase, gy, thumbW, 2, "F");
+
+        // Código y defecto
         doc.setTextColor(...C.AZUL);
-        doc.text(sinAcentos(label + ":"), 17, fy + i * 6);
+        doc.setFontSize(5.5);
+        doc.setFont("helvetica", "bold");
+        doc.text(sinAcentos(it.codigo || "-"), xBase + 2, gy + 6);
+        doc.setTextColor(80, 80, 80);
+        doc.setFontSize(4.5);
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(...C.NEGRO);
-        doc.text(sinAcentos(val), 50, fy + i * 6);
-      });
-      infoRight.forEach(([label, val], i) => {
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(...C.AZUL);
-        doc.text(sinAcentos(label + ":"), pw / 2 + 5, fy + i * 6);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(...C.NEGRO);
-        doc.text(sinAcentos(val), pw / 2 + 40, fy + i * 6);
-      });
-      fy += 28;
+        const defText = sinAcentos((it.defectoNombre || it.titulo || "-").substring(0, 30));
+        doc.text(defText, xBase + 2, gy + 10);
 
-      if (item.descripcion) {
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(...C.AZUL);
-        doc.setFontSize(7);
-        doc.text("Descripcion:", 17, fy);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(...C.NEGRO);
-        const descLines = doc.splitTextToSize(sinAcentos(item.descripcion), pw - 55);
-        doc.text(descLines, 50, fy);
-        fy += descLines.length * 4 + 4;
-      }
-
-      // Fotos antes/después
-      const fotoAntes = item.fotoAntesMarcadaUrl || item.fotoAntesUrl;
-      const fotoDespues = item.fotoDespuesUrl;
-      if (fotoAntes || fotoDespues) {
-        doc.setFillColor(...C.BG_CARD);
-        doc.roundedRect(15, fy - 2, pw - 30, 8, 1, 1, "F");
-        doc.setTextColor(...C.AZUL);
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "bold");
-        doc.text("Evidencia Fotografica", 20, fy + 3);
-        fy += 10;
-
-        const imgW = (pw - 40) / 2;
-        const imgH = imgW * 0.75;
-
-        // Labels
-        doc.setFontSize(7);
+        // Labels ANTES / DESPUES
+        const halfW = (thumbW - 3) / 2;
+        doc.setFontSize(4);
         doc.setTextColor(...C.AZUL);
         doc.setFont("helvetica", "bold");
-        if (fotoAntes) doc.text("ANTES", 15 + imgW / 2, fy, { align: "center" });
-        if (fotoDespues) doc.text("DESPUES", pw - 15 - imgW / 2, fy, { align: "center" });
-        fy += 3;
+        doc.text("ANTES", xBase + 1 + halfW / 2, gy + 14, { align: "center" });
+        doc.text("DESPUES", xBase + 2 + halfW + halfW / 2, gy + 14, { align: "center" });
 
-        // Cargar imágenes con logging
-        try {
-          if (fotoAntes) {
-            console.log(`[PDF FICHA] Cargando foto ANTES: ${fotoAntes.substring(0, 80)}...`);
+        const photoY = gy + 15;
+
+        // Foto ANTES miniatura
+        const fotoAntes = it.fotoAntesMarcadaUrl || it.fotoAntesUrl;
+        if (fotoAntes) {
+          try {
             const imgData = await loadImageForPDF(fotoAntes);
             if (imgData) {
               const fmt = imgData.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-              doc.addImage(imgData, fmt, 15, fy, imgW, imgH);
-              console.log(`[PDF FICHA] Foto ANTES añadida OK (${fmt})`);
-            } else {
-              console.warn(`[PDF FICHA] Foto ANTES no se pudo cargar`);
+              doc.addImage(imgData, fmt, xBase + 1, photoY, halfW, thumbPhotoH);
             }
-          }
-        } catch (e) { console.error('[PDF FICHA] Error foto ANTES:', e); }
-        try {
-          if (fotoDespues) {
-            console.log(`[PDF FICHA] Cargando foto DESPUES: ${fotoDespues.substring(0, 80)}...`);
-            const imgData = await loadImageForPDF(fotoDespues);
+          } catch { /* skip */ }
+        }
+        doc.setDrawColor(...C.GRIS_CLARO);
+        doc.setLineWidth(0.15);
+        doc.roundedRect(xBase + 1, photoY, halfW, thumbPhotoH, 0.5, 0.5, "S");
+
+        // Foto DESPUES miniatura
+        if (it.fotoDespuesUrl) {
+          try {
+            const imgData = await loadImageForPDF(it.fotoDespuesUrl);
             if (imgData) {
               const fmt = imgData.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-              doc.addImage(imgData, fmt, pw - 15 - imgW, fy, imgW, imgH);
-              console.log(`[PDF FICHA] Foto DESPUES añadida OK (${fmt})`);
-            } else {
-              console.warn(`[PDF FICHA] Foto DESPUES no se pudo cargar`);
+              doc.addImage(imgData, fmt, xBase + 2 + halfW, photoY, halfW, thumbPhotoH);
             }
-          }
-        } catch (e) { console.error('[PDF FICHA] Error foto DESPUES:', e); }
-
-        // Placeholder rectangles si no hay imagen
-        doc.setDrawColor(...C.GRIS_CLARO);
-        doc.setLineWidth(0.3);
-        if (fotoAntes) doc.roundedRect(15, fy, imgW, imgH, 1, 1, "S");
-        if (fotoDespues) doc.roundedRect(pw - 15 - imgW, fy, imgW, imgH, 1, 1, "S");
-        fy += imgH + 6;
-      }
-
-      // Historial del ítem
-      if (item.historial && item.historial.length > 0) {
-        if (fy > doc.internal.pageSize.getHeight() - 50) {
-          doc.addPage();
-          fy = 38;
+          } catch { /* skip */ }
         }
-        doc.setFillColor(...C.BG_CARD);
-        doc.roundedRect(15, fy - 2, pw - 30, 8, 1, 1, "F");
-        doc.setTextColor(...C.AZUL);
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "bold");
-        doc.text("Historial de Cambios", 20, fy + 3);
-        fy += 10;
+        doc.roundedRect(xBase + 2 + halfW, photoY, halfW, thumbPhotoH, 0.5, 0.5, "S");
 
-        const histRows = item.historial.map((h) => {
-          const fecha = h.fecha ? new Date(h.fecha).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-";
-          const statusAnt = h.statusAnterior ? (statusLabels[h.statusAnterior] || h.statusAnterior) : "Nuevo";
-          const statusNuevo = statusLabels[h.statusNuevo] || h.statusNuevo;
-          return [
-            fecha,
-            `${statusAnt} -> ${statusNuevo}`,
-            h.usuarioNombre || "-",
-            h.comentario || "-",
-          ];
-        });
-        fy = tabla(doc, ["Fecha", "Cambio", "Usuario", "Comentario"], histRows, fy, {
-          columnStyles: { 0: { cellWidth: 35 }, 3: { cellWidth: 50 } },
-        });
+        // Info compacta debajo
+        const infoY = photoY + thumbPhotoH + 3;
+        doc.setFontSize(4);
+        doc.setTextColor(80, 80, 80);
+        doc.setFont("helvetica", "normal");
+        doc.text(sinAcentos((it.empresaNombre || "-").substring(0, 25)), xBase + 2, infoY);
+        doc.text(sinAcentos((it.especialidadNombre || "-").substring(0, 25)), xBase + 2, infoY + 3.5);
+
+        col++;
       }
     }
 
-    // Planos con pines
-    console.log(`[PDF PLANOS] Total planos: ${itemsData.planos.length}, Items con pin: ${itemsData.items.filter(it => it.pinPlanoId).length}`);
-    const itemsConPin = itemsData.items.filter(it => it.pinPlanoId !== undefined && it.pinPlanoId !== null);
-    console.log(`[PDF PLANOS] Items con pinPlanoId definido: ${itemsConPin.length}`, itemsConPin.slice(0, 5).map(it => ({ id: it.id, codigo: it.codigo, pinPlanoId: it.pinPlanoId })));
-    console.log(`[PDF PLANOS] Items SIN pin (sample):`, itemsData.items.filter(it => !it.pinPlanoId).slice(0, 3).map(it => ({ id: it.id, codigo: it.codigo, pinPlanoId: it.pinPlanoId, keys: Object.keys(it).filter(k => k.includes('pin')) })));
-    console.log(`[PDF PLANOS] Plano IDs:`, itemsData.planos.map(p => ({ id: p.id, type: typeof p.id })));
+    // ═══ PLANOS CON PINES (2 por página) ═══
     if (itemsData.planos.length > 0) {
-      for (const plano of itemsData.planos) {
-        // Usar == para comparar (puede haber mismatch string/number)
-        const itemsEnPlano = itemsData.items.filter((it) => it.pinPlanoId != null && String(it.pinPlanoId) === String(plano.id));
-        console.log(`[PDF PLANOS] Plano ${plano.id} (${plano.nombre}): ${itemsEnPlano.length} items`);
-        if (itemsEnPlano.length === 0) continue;
+      const planosConItems = itemsData.planos.filter(plano => {
+        return itemsData.items.some(it => it.pinPlanoId != null && String(it.pinPlanoId) === String(plano.id));
+      });
 
+      if (planosConItems.length > 0) {
         doc.addPage();
-        addHeader(doc, "Plano con Items", proyectoNombre);
-        let py = 36;
+        addHeader(doc, "Planos con Items", proyectoNombre);
+        let py = 34;
+        const ph = doc.internal.pageSize.getHeight();
+        const planoSlotH = (ph - 50) / 2; // 2 planos por página
+        let planoCount = 0;
 
-        doc.setFillColor(...C.AZUL);
-        doc.roundedRect(15, py, pw - 30, 12, 2, 2, "F");
-        doc.setTextColor(...C.BLANCO);
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "bold");
-        doc.text(sinAcentos(`Plano: ${plano.nombre} ${plano.nivel ? '('+plano.nivel+')' : ''}`), 20, py + 8);
-        doc.setFontSize(8);
-        doc.text(`${itemsEnPlano.length} items`, pw - 20, py + 8, { align: "right" });
-        py += 18;
+        for (const plano of planosConItems) {
+          const itemsEnPlano = itemsData.items.filter((it) => it.pinPlanoId != null && String(it.pinPlanoId) === String(plano.id));
+          if (itemsEnPlano.length === 0) continue;
 
-        // Cargar imagen del plano
-        if (plano.imagenUrl) {
-          try {
-            console.log(`[PDF PLANO] Cargando plano: ${plano.nombre} - ${plano.imagenUrl.substring(0, 80)}...`);
-            const planoImg = await loadImageForPDF(plano.imagenUrl);
-            if (planoImg) {
-              const planoW = pw - 30;
-              const planoH = planoW * 0.6;
-              const planoFmt = planoImg.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-              doc.addImage(planoImg, planoFmt, 15, py, planoW, planoH);
-              console.log(`[PDF PLANO] Plano añadido OK (${planoFmt})`);
-              // Dibujar pines sobre el plano
-              itemsEnPlano.forEach((it, idx) => {
-                if (it.pinPosX != null && it.pinPosY != null) {
-                  const px = 15 + (it.pinPosX / 100) * planoW;
-                  const ppY = py + (it.pinPosY / 100) * planoH;
-                  const color = STATUS_COLORS[it.status] || "#3B82F6";
-                  const rgb = hexToRgb(color);
-                  doc.setFillColor(rgb[0], rgb[1], rgb[2]);
-                  doc.circle(px, ppY, 2.5, "F");
-                  doc.setFillColor(255, 255, 255);
-                  doc.setFontSize(5);
-                  doc.setFont("helvetica", "bold");
-                  doc.setTextColor(255, 255, 255);
-                  doc.text(String(idx + 1), px, ppY + 0.8, { align: "center" });
-                }
-              });
-              py += planoH + 6;
-            }
-          } catch (e) { console.error(`[PDF PLANO] Error cargando plano ${plano.nombre}:`, e); }
-        }
-
-        // Leyenda de pines
-        doc.setFontSize(7);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(...C.AZUL);
-        doc.text("Leyenda de pines:", 15, py);
-        py += 4;
-        itemsEnPlano.forEach((it, idx) => {
-          if (py > doc.internal.pageSize.getHeight() - 15) {
+          if (py + planoSlotH > ph - 15) {
             doc.addPage();
-            py = 38;
+            addHeader(doc, "Planos con Items", proyectoNombre);
+            py = 34;
           }
-          const color = STATUS_COLORS[it.status] || "#3B82F6";
-          const rgb = hexToRgb(color);
-          doc.setFillColor(rgb[0], rgb[1], rgb[2]);
-          doc.circle(17, py, 1.5, "F");
-          doc.setFontSize(6.5);
+
+          // Título del plano compacto
+          doc.setFillColor(...C.AZUL);
+          doc.roundedRect(12, py, pw - 24, 8, 1.5, 1.5, "F");
+          doc.setTextColor(...C.BLANCO);
+          doc.setFontSize(7);
+          doc.setFont("helvetica", "bold");
+          doc.text(sinAcentos(`${plano.nombre} ${plano.nivel ? '(' + plano.nivel + ')' : ''} - ${itemsEnPlano.length} items`), 16, py + 5.5);
+          py += 10;
+
+          // Imagen del plano
+          if (plano.imagenUrl) {
+            try {
+              const planoImg = await loadImageForPDF(plano.imagenUrl);
+              if (planoImg) {
+                const planoW = pw - 30;
+                const planoH = Math.min(planoSlotH - 30, planoW * 0.5);
+                const planoFmt = planoImg.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+                doc.addImage(planoImg, planoFmt, 15, py, planoW, planoH);
+                // Pines
+                itemsEnPlano.forEach((it, idx) => {
+                  if (it.pinPosX != null && it.pinPosY != null) {
+                    const px = 15 + (it.pinPosX / 100) * planoW;
+                    const ppY = py + (it.pinPosY / 100) * planoH;
+                    const color = STATUS_COLORS[it.status] || "#3B82F6";
+                    const rgb = hexToRgb(color);
+                    doc.setFillColor(rgb[0], rgb[1], rgb[2]);
+                    doc.circle(px, ppY, 2, "F");
+                    doc.setFillColor(255, 255, 255);
+                    doc.setFontSize(4.5);
+                    doc.setFont("helvetica", "bold");
+                    doc.setTextColor(255, 255, 255);
+                    doc.text(String(idx + 1), px, ppY + 0.7, { align: "center" });
+                  }
+                });
+                py += planoH + 2;
+              }
+            } catch { /* skip */ }
+          }
+
+          // Leyenda compacta en línea (no lista vertical)
+          doc.setFontSize(4.5);
           doc.setFont("helvetica", "normal");
           doc.setTextColor(...C.NEGRO);
-          doc.text(sinAcentos(`${idx + 1}. ${it.codigo} - ${it.defectoNombre || it.titulo || '-'} (${it.empresaNombre || '-'})`), 21, py + 0.5);
-          py += 4.5;
-        });
+          let lx = 15;
+          const maxLegendWidth = pw - 30;
+          for (let idx = 0; idx < itemsEnPlano.length; idx++) {
+            const it = itemsEnPlano[idx];
+            const legendText = `${idx + 1}.${it.codigo}`;
+            const textW = doc.getTextWidth(sinAcentos(legendText)) + 6;
+            if (lx + textW > 15 + maxLegendWidth) {
+              lx = 15;
+              py += 4;
+            }
+            const color = STATUS_COLORS[it.status] || "#3B82F6";
+            const rgb = hexToRgb(color);
+            doc.setFillColor(rgb[0], rgb[1], rgb[2]);
+            doc.circle(lx + 1.5, py, 1, "F");
+            doc.text(sinAcentos(legendText), lx + 4, py + 0.5);
+            lx += textW;
+          }
+          py += 8;
+          planoCount++;
+        }
       }
     }
   }
@@ -1598,20 +1557,21 @@ export async function generarReporteEstadisticasPDF(data: ReporteData) {
     doc.text(sinAcentos(`Fecha de emision: ${fmtFecha(fechaEmision)}  |  Fecha limite: ${fmtFecha(fechaFin)}`), 15, y);
     y += 8;
 
-    const colW = (pw - 30 - 10) / 2;
-    const firmaH = 38;
+    const firmaCols = 3;
+    const firmaGap = 4;
+    const colW = (pw - 24 - (firmaCols - 1) * firmaGap) / firmaCols;
+    const firmaH = 34;
     let currentY = y;
 
-    for (let i = 0; i < firmantesList.length; i += 2) {
-      if (currentY + firmaH > ph - 25) {
+    for (let i = 0; i < firmantesList.length; i += firmaCols) {
+      if (currentY + firmaH > ph - 20) {
         doc.addPage();
         currentY = 25;
       }
-      drawFirmaBox(doc, firmantesList[i], 15, currentY, colW, firmaH);
-      if (i + 1 < firmantesList.length) {
-        drawFirmaBox(doc, firmantesList[i + 1], 15 + colW + 10, currentY, colW, firmaH);
+      for (let c = 0; c < firmaCols && i + c < firmantesList.length; c++) {
+        drawFirmaBox(doc, firmantesList[i + c], 12 + c * (colW + firmaGap), currentY, colW, firmaH);
       }
-      currentY += firmaH;
+      currentY += firmaH + 2;
     }
   }
 

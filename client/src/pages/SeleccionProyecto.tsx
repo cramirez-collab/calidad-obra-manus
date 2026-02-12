@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { Building2, Users, Calendar, MapPin, Plus, Settings, LogOut } from 'lucide-react';
+import { Building2, Users, Calendar, MapPin, Plus, Settings, LogOut, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -132,7 +132,8 @@ export default function SeleccionProyecto() {
                   onClick={() => handleSelectProject(proyecto)}
                 >
                 <Card 
-                  className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 group"
+                  className="overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 group border-0 shadow-md"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
                   {/* Imagen de Portada o Color Header */}
                   <div className={`h-48 sm:h-56 md:h-64 relative overflow-hidden ${!(proyecto.imagenPortadaBase64 || proyecto.imagenPortadaUrl) ? `bg-gradient-to-r ${getProjectColor(index)}` : ''}`}>
@@ -143,11 +144,15 @@ export default function SeleccionProyecto() {
                         className="w-full h-full object-cover"
                       />
                     ) : null}
-                    <div className="absolute inset-0 bg-black/20" />
-                    <div className="absolute bottom-3 left-4 right-4">
-                      <Badge variant="secondary" className="bg-white/90 text-slate-800">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                    <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
+                      <Badge variant="secondary" className="bg-white/95 text-slate-800 font-semibold shadow-sm">
                         {proyecto.codigo}
                       </Badge>
+                      <div className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1">
+                        <span>Entrar</span>
+                        <ArrowRight className="h-3 w-3" />
+                      </div>
                     </div>
                   </div>
                   
@@ -171,26 +176,43 @@ export default function SeleccionProyecto() {
                     )}
                     
                     {/* Stats */}
-                    <div className="flex items-center gap-4 pt-3 border-t">
+                    <div className="flex items-center gap-3 pt-3 border-t">
                       {proyectoData.totalUnidades !== undefined && (
-                        <div className="text-center">
+                        <div className="text-center flex-1">
                           <p className="text-lg font-bold text-slate-800">{proyectoData.totalUnidades}</p>
-                          <p className="text-xs text-slate-500">Unidades</p>
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wider">Unidades</p>
                         </div>
                       )}
                       {proyectoData.totalItems !== undefined && (
-                        <div className="text-center">
+                        <div className="text-center flex-1">
                           <p className="text-lg font-bold text-slate-800">{proyectoData.totalItems}</p>
-                          <p className="text-xs text-slate-500">Ítems</p>
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wider">Ítems</p>
                         </div>
                       )}
-                      {proyectoData.itemsPendientes !== undefined && proyectoData.itemsPendientes > 0 && (
-                        <div className="text-center">
-                          <p className="text-lg font-bold text-amber-600">{proyectoData.itemsPendientes}</p>
-                          <p className="text-xs text-slate-500">Pendientes</p>
+                      {proyectoData.itemsPendientes !== undefined && (
+                        <div className="text-center flex-1">
+                          <p className={`text-lg font-bold ${proyectoData.itemsPendientes > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>{proyectoData.itemsPendientes}</p>
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wider">Pendientes</p>
                         </div>
                       )}
                     </div>
+                    {/* Progress bar */}
+                    {proyectoData.totalItems !== undefined && proyectoData.totalItems > 0 && (
+                      <div className="mt-2">
+                        <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+                          <span>Progreso</span>
+                          <span className="font-semibold text-emerald-600">
+                            {Math.round(((proyectoData.totalItems - (proyectoData.itemsPendientes || 0)) / proyectoData.totalItems) * 100)}%
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700"
+                            style={{ width: `${Math.round(((proyectoData.totalItems - (proyectoData.itemsPendientes || 0)) / proyectoData.totalItems) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
                 </button>
@@ -244,9 +266,21 @@ export default function SeleccionProyecto() {
         </div>
       </main>
       
-      {/* Footer */}
-      <footer className="mt-auto py-6 text-center text-sm text-slate-500">
-        <p>© 2026 Objetiva - Control de Calidad de Obra</p>
+      {/* Footer Corporativo */}
+      <footer className="mt-auto py-6 border-t border-slate-200 bg-white">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <img src="/logo-objetiva.jpg" alt="Objetiva" className="h-6 opacity-60" />
+              <span className="text-xs text-slate-400">© 2026 Objetiva. Derechos Reservados.</span>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-slate-400">
+              <a href="/terminos" className="hover:text-slate-600 transition-colors">Términos y Condiciones</a>
+              <span className="text-slate-300">|</span>
+              <a href="/privacidad" className="hover:text-slate-600 transition-colors">Aviso de Privacidad</a>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   );

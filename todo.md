@@ -3780,3 +3780,16 @@
 ## Fix PDF Urgente
 - [x] FIX: pinPlanoId no llega al PDF — agregado a itemFieldsWithoutBase64 en db.ts
 - [x] FIX: Tablas del PDF cortan texto — overflow linebreak + márgenes amplios + fontSize adaptativo
+
+## PDF Condensado para Junta (máx 20 páginas)
+- [x] Condensar PDF a máximo 20 páginas — tabla resumen + grid miniaturas 3x2
+- [x] Fotos en miniatura (antes/después lado a lado, 3 ítems por fila)
+- [x] Firmas compactas 3 por fila — solo líneas de firma por especialidad
+- [x] Gráficas impresionantes mantenidas intactas
+- [x] Planos con pines 2 por página + leyenda inline
+
+## Mejora UI/UX General
+- [x] Mejorar UI/UX general — cards con progreso, hover Entrar, footer corporativo
+- [ ] Responsive mobile/tablet perfecto
+- [ ] Minimizar scroll vertical
+- [ ] Menú hamburguesa a la derecha en mobile
