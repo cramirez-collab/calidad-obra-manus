@@ -3812,3 +3812,8 @@
 - [x] Días de corrección configurables desde configuración del proyecto (campo diasCorreccion en proyectos)
 - [x] Tooltip en desktop al hover sobre pin mostrando nombre completo del residente
 - [x] Filtro por residente en barra de herramientas del visor de planos
+- [ ] FIX: Pines siguen como pill/badge con código — cambiar a pin de mapa con iniciales del residente
+- [ ] FIX: Modal del pin debe mostrar TODOS los datos de la ficha + fecha inicio y término (diasCorreccion)
+- [ ] URGENTE: Verificar y restaurar proyecto Mayas si fue eliminado de la BD
+- [ ] REGLA PERMANENTE: Proyectos son 100% independientes — JAMÁS mezclar datos entre proyectos
+- [x] FIX: Pines en ZoomablePlano.tsx siguen como pill badge — cambiar a pin de mapa SVG con iniciales del residente

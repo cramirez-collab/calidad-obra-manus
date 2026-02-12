@@ -69,6 +69,13 @@ function truncate(str: string, max: number) {
   return str.length > max ? str.slice(0, max) + "…" : str;
 }
 
+function getInitials(name: string | null | undefined): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return parts[0].substring(0, 2).toUpperCase();
+}
+
 export default function ZoomablePlano({
   imagenUrl,
   nombre,
@@ -530,54 +537,41 @@ export default function ZoomablePlano({
         const px = (parseFloat(pin.pinPosX!) / 100) * naturalW;
         const py = (parseFloat(pin.pinPosY!) / 100) * naturalH;
         const colors = getStatusColor(pin.status);
-        const aprobado = isAprobado(pin.status);
         const isCurrent = pin.id === currentItemId;
+        const initials = getInitials(pin.residenteNombre);
 
-        if (aprobado && !isCurrent) {
-          // Small green dot for approved
-          const r = Math.max(4, naturalW * 0.004);
-          ctx.beginPath();
-          ctx.arc(px, py, r, 0, Math.PI * 2);
-          ctx.fillStyle = "#22c55e";
-          ctx.fill();
-          ctx.strokeStyle = "white";
-          ctx.lineWidth = Math.max(1, r * 0.4);
-          ctx.stroke();
-        } else {
-          // Pill badge with code
-          const code = pin.codigo || getItemNumber(pin);
-          const fontSize = isCurrent ? Math.max(10, naturalW * 0.009) : Math.max(8, naturalW * 0.007);
-          ctx.font = `bold ${fontSize}px Arial`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
+        // Draw SVG-style map pin on canvas
+        const pinW = isCurrent ? Math.max(20, naturalW * 0.018) : Math.max(16, naturalW * 0.014);
+        const pinH = pinW * 1.35;
+        const pinCenterX = px;
+        const pinTopY = py - pinH; // pin points down to py
+        const circleY = pinTopY + pinW * 0.47;
+        const circleR = pinW * 0.35;
 
-          const textW = ctx.measureText(code).width;
-          const badgeW = textW + fontSize * 1.2;
-          const badgeH = fontSize * 1.6;
-          const badgeX = px - badgeW / 2;
-          const badgeY = py - badgeH / 2;
+        // Pin shape (teardrop)
+        ctx.beginPath();
+        ctx.arc(pinCenterX, circleY, pinW * 0.47, Math.PI * 0.8, Math.PI * 0.2, false);
+        ctx.lineTo(pinCenterX, py);
+        ctx.closePath();
+        ctx.fillStyle = isCurrent ? pinFill : colors.bg;
+        ctx.fill();
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = Math.max(1.5, pinW * 0.06);
+        ctx.stroke();
 
-          // Pill background
-          ctx.fillStyle = isCurrent ? pinFill : colors.bg;
-          ctx.beginPath();
-          ctx.roundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2);
-          ctx.fill();
-          ctx.strokeStyle = "white";
-          ctx.lineWidth = Math.max(1.5, fontSize * 0.15);
-          ctx.stroke();
+        // Inner circle
+        ctx.beginPath();
+        ctx.arc(pinCenterX, circleY, circleR, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.25)";
+        ctx.fill();
 
-          // Small dot
-          const dotR = fontSize * 0.2;
-          const dotX = badgeX + fontSize * 0.5;
-          ctx.beginPath();
-          ctx.arc(dotX, py, dotR, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(255,255,255,0.8)";
-          ctx.fill();
-
-          // Code text
-          ctx.fillStyle = "white";
-          ctx.fillText(code, px + fontSize * 0.15, py);
-        }
+        // Initials text
+        const fontSize = isCurrent ? Math.max(9, pinW * 0.38) : Math.max(7, pinW * 0.35);
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "white";
+        ctx.fillText(initials, pinCenterX, circleY);
       }
 
       // Create PDF
@@ -725,55 +719,15 @@ export default function ZoomablePlano({
             style={{ display: "block" }}
           />
 
-          {/* Other pins (filtered) */}
+          {/* Other pins (filtered) - SVG map pin with initials */}
           {!editingPin && filteredOtherPins.map((pin) => {
             const colors = getStatusColor(pin.status);
             const px = parseFloat(pin.pinPosX!);
             const py = parseFloat(pin.pinPosY!);
             const isHovered = hoveredPin === pin.id;
-            const aprobado = isAprobado(pin.status);
+            const initials = getInitials(pin.residenteNombre);
+            const pinSize = Math.max(18, 26 / scale);
 
-            // Aprobado pins: small green dot only
-            if (aprobado) {
-              return (
-                <div
-                  key={pin.id}
-                  data-pin-id={pin.id}
-                  className="absolute"
-                  style={{
-                    left: `${px}%`,
-                    top: `${py}%`,
-                    zIndex: isHovered ? 20 : 3,
-                    pointerEvents: "auto",
-                  }}
-                >
-                  <div
-                    className="rounded-full cursor-pointer"
-                    style={{
-                      width: `${Math.max(6, 8 / scale)}px`,
-                      height: `${Math.max(6, 8 / scale)}px`,
-                      backgroundColor: "#22c55e",
-                      border: "1.5px solid white",
-                      transform: "translate(-50%, -50%)",
-                      boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
-                    }}
-                    onMouseEnter={() => setHoveredPin(pin.id)}
-                    onMouseLeave={() => setHoveredPin(null)}
-                    onTouchStart={(e) => { e.stopPropagation(); handlePinTouchStart(pin.id); }}
-                    onTouchEnd={(e) => { e.stopPropagation(); handlePinTouchEnd(); handlePinInteraction(pin.id, true); }}
-                    onTouchMove={() => handlePinTouchMove()}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePinInteraction(pin.id, false);
-                    }}
-                  />
-                  {/* Hover/longpress tooltip */}
-                  {isHovered && renderPinTooltip(pin, colors, Math.max(8, 10 / scale))}
-                </div>
-              );
-            }
-
-            // Non-aprobado pins: pill badge with code
             return (
               <div
                 key={pin.id}
@@ -784,92 +738,89 @@ export default function ZoomablePlano({
                   top: `${py}%`,
                   zIndex: isHovered ? 20 : 5,
                   pointerEvents: "auto",
+                  transform: `translate(-50%, -100%) scale(${Math.max(0.4, 1 / scale)})`,
+                  transformOrigin: "bottom center",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={() => setHoveredPin(pin.id)}
+                onMouseLeave={() => setHoveredPin(null)}
+                onTouchStart={(e) => { e.stopPropagation(); handlePinTouchStart(pin.id); }}
+                onTouchEnd={(e) => { e.stopPropagation(); handlePinTouchEnd(); handlePinInteraction(pin.id, true); }}
+                onTouchMove={() => handlePinTouchMove()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePinInteraction(pin.id, false);
                 }}
               >
-                {/* Pill badge with item code */}
-                <div
-                  className="cursor-pointer flex items-center gap-0.5 rounded-full shadow-md whitespace-nowrap"
-                  style={{
-                    transform: `translate(-50%, -50%) scale(${pillScale})`,
-                    transformOrigin: "center center",
-                    backgroundColor: colors.bg,
-                    border: `1.5px solid ${colors.border}`,
-                    padding: "2px 6px",
-                    boxShadow: isHovered ? `0 0 8px ${colors.bg}` : "0 1px 3px rgba(0,0,0,0.5)",
-                  }}
-                  onMouseEnter={() => setHoveredPin(pin.id)}
-                  onMouseLeave={() => setHoveredPin(null)}
-                  onTouchStart={(e) => { e.stopPropagation(); handlePinTouchStart(pin.id); }}
-                  onTouchEnd={(e) => { e.stopPropagation(); handlePinTouchEnd(); handlePinInteraction(pin.id, true); }}
-                  onTouchMove={() => handlePinTouchMove()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePinInteraction(pin.id, false);
-                  }}
-                >
-                  <div className="w-1.5 h-1.5 rounded-full bg-white/80 shrink-0" />
-                  <span
-                    className="font-bold text-white leading-none"
-                    style={{ fontSize: "10px" }}
-                  >
-                    {pin.codigo || getItemNumber(pin)}
-                  </span>
-                </div>
-
-                {/* Hover/longpress tooltip with defecto info */}
-                {isHovered && renderPinTooltip(pin, colors, 16)}
+                {/* Tooltip hover */}
+                {isHovered && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-slate-900 text-white text-[10px] rounded-md whitespace-nowrap shadow-lg pointer-events-none z-50"
+                    style={{ minWidth: 'max-content' }}>
+                    <span className="font-semibold">{pin.residenteNombre || 'Sin asignar'}</span>
+                    {pin.codigo && <span className="text-white/60 ml-1.5">{pin.codigo}</span>}
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-l-transparent border-r-transparent border-t-slate-900" />
+                  </div>
+                )}
+                {/* SVG Pin de mapa con iniciales */}
+                <svg width={pinSize} height={pinSize * 1.35} viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg"
+                  style={{ filter: isHovered ? `drop-shadow(0 0 6px ${colors.bg})` : 'drop-shadow(0 2px 3px rgba(0,0,0,0.35))' }}>
+                  <path d="M15 38C15 38 28 22 28 14C28 6.82 22.18 1 15 1C7.82 1 2 6.82 2 14C2 22 15 38 15 38Z"
+                    fill={colors.bg} stroke={colors.border} strokeWidth="1.5" />
+                  <circle cx="15" cy="14" r="9" fill="white" fillOpacity="0.25" />
+                  <text x="15" y="14" textAnchor="middle" dominantBaseline="central"
+                    fill="white" fontWeight="700" fontSize={initials.length > 2 ? '8' : '10'}
+                    fontFamily="system-ui, -apple-system, sans-serif">
+                    {initials}
+                  </text>
+                </svg>
               </div>
             );
           })}
 
-          {/* Main pin (current item) */}
-          {pinX != null && pinY != null && (
-            <div
-              className="absolute"
-              style={{
-                left: `${pinX}%`,
-                top: `${pinY}%`,
-                zIndex: 10,
-              }}
-            >
-              {/* Pulse ring */}
+          {/* Main pin (current item) - SVG map pin with initials */}
+          {pinX != null && pinY != null && (() => {
+            const mainPin = allPins.find(p => p.id === currentItemId);
+            const mainInitials = mainPin ? getInitials(mainPin.residenteNombre) : "?";
+            const mainPinSize = Math.max(24, 34 / scale);
+            return (
               <div
-                className="absolute animate-ping rounded-full"
+                className="absolute"
                 style={{
-                  width: "16px",
-                  height: "16px",
-                  left: "-8px",
-                  top: "-8px",
-                  backgroundColor: pinFill,
-                  opacity: 0.3,
-                  transform: `scale(${mainPillScale})`,
-                }}
-              />
-              {/* Main pill badge with code */}
-              <div
-                className="flex items-center gap-1 rounded-full shadow-lg whitespace-nowrap"
-                style={{
-                  transform: `translate(-50%, -50%) scale(${mainPillScale})`,
-                  transformOrigin: "center center",
-                  backgroundColor: pinFill,
-                  border: "2px solid white",
-                  padding: "3px 8px",
-                  boxShadow: `0 0 10px ${pinFill}80, 0 2px 6px rgba(0,0,0,0.5)`,
+                  left: `${pinX}%`,
+                  top: `${pinY}%`,
+                  zIndex: 10,
+                  transform: `translate(-50%, -100%) scale(${Math.max(0.5, 1.2 / scale)})`,
+                  transformOrigin: "bottom center",
                 }}
               >
-                <div className="w-2 h-2 rounded-full bg-white shrink-0" />
-                <span
-                  className="font-bold text-white leading-none"
-                  style={{ fontSize: "11px" }}
-                >
-                  {itemCodigo || (() => {
-                    const mainPin = allPins.find(p => p.id === currentItemId);
-                    return mainPin ? mainPin.codigo || getItemNumber(mainPin) : "";
-                  })()}
-                </span>
+                {/* Pulse ring */}
+                <div
+                  className="absolute animate-ping rounded-full"
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    left: "50%",
+                    bottom: "0",
+                    marginLeft: "-10px",
+                    backgroundColor: pinFill,
+                    opacity: 0.3,
+                  }}
+                />
+                {/* SVG Pin de mapa con iniciales */}
+                <svg width={mainPinSize} height={mainPinSize * 1.35} viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg"
+                  style={{ filter: `drop-shadow(0 0 8px ${pinFill}80) drop-shadow(0 2px 4px rgba(0,0,0,0.5))` }}>
+                  <path d="M15 38C15 38 28 22 28 14C28 6.82 22.18 1 15 1C7.82 1 2 6.82 2 14C2 22 15 38 15 38Z"
+                    fill={pinFill} stroke="white" strokeWidth="2" />
+                  <circle cx="15" cy="14" r="9" fill="white" fillOpacity="0.25" />
+                  <text x="15" y="14" textAnchor="middle" dominantBaseline="central"
+                    fill="white" fontWeight="700" fontSize={mainInitials.length > 2 ? '8' : '10'}
+                    fontFamily="system-ui, -apple-system, sans-serif">
+                    {mainInitials}
+                  </text>
+                </svg>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Placeholder when editing */}
           {editingPin && pinX == null && (

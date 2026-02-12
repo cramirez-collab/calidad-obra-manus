@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, nombre, descripcion, logoUrl, direccion, diasCorreccion, createdAt FROM proyectos ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, descripcion, logoUrl, direccion, diasCorreccion, createdAt FROM proyectos ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "nombre": "Hidalma ",
+      "descripcion": "",
+      "logoUrl": "NULL",
+      "direccion": "Hidalgo 2372. Vallarta Norte  Guadalajara",
+      "diasCorreccion": "8",
+      "createdAt": "2026-01-25 08:13:17"
+    },
+    {
+      "id": "150001",
+      "nombre": "Mayas Habitat",
+      "descripcion": "15 Unidades",
+      "logoUrl": "NULL",
+      "direccion": "Mayas 3195.",
+      "diasCorreccion": "8",
+      "createdAt": "2026-01-30 19:00:04"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tdescripcion\tlogoUrl\tdireccion\tdiasCorreccion\tcreatedAt\n1\tHidalma \t\tNULL\tHidalgo 2372. Vallarta Norte  Guadalajara\t8\t2026-01-25 08:13:17\n150001\tMayas Habitat\t15 Unidades\tNULL\tMayas 3195.\t8\t2026-01-30 19:00:04\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}
