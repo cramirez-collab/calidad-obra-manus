@@ -90,24 +90,81 @@ describe('Pin Data Enrichment', () => {
   });
 });
 
-describe('Fecha Terminación (Alta + 8 días)', () => {
-  it('calcula fecha de terminación correctamente (alta + 8 días)', () => {
+describe('Fecha Terminación (configurable diasCorreccion)', () => {
+  it('calcula fecha de terminación con 8 días (default)', () => {
+    const diasCorreccion = 8;
     const fechaAlta = new Date('2026-01-15T00:00:00Z');
-    const fechaTerminacion = new Date(fechaAlta.getTime() + 8 * 24 * 60 * 60 * 1000);
+    const fechaTerminacion = new Date(fechaAlta.getTime() + diasCorreccion * 24 * 60 * 60 * 1000);
     expect(fechaTerminacion.toISOString().slice(0, 10)).toBe('2026-01-23');
   });
 
+  it('calcula fecha de terminación con 15 días configurados', () => {
+    const diasCorreccion = 15;
+    const fechaAlta = new Date('2026-01-15T00:00:00Z');
+    const fechaTerminacion = new Date(fechaAlta.getTime() + diasCorreccion * 24 * 60 * 60 * 1000);
+    expect(fechaTerminacion.toISOString().slice(0, 10)).toBe('2026-01-30');
+  });
+
+  it('calcula fecha de terminación con 3 días configurados', () => {
+    const diasCorreccion = 3;
+    const fechaAlta = new Date('2026-02-10T00:00:00Z');
+    const fechaTerminacion = new Date(fechaAlta.getTime() + diasCorreccion * 24 * 60 * 60 * 1000);
+    expect(fechaTerminacion.toISOString().slice(0, 10)).toBe('2026-02-13');
+  });
+
   it('detecta ítem vencido cuando hoy > fecha terminación', () => {
+    const diasCorreccion = 8;
     const fechaAlta = new Date('2025-12-01T00:00:00Z');
-    const fechaTerminacion = new Date(fechaAlta.getTime() + 8 * 24 * 60 * 60 * 1000);
+    const fechaTerminacion = new Date(fechaAlta.getTime() + diasCorreccion * 24 * 60 * 60 * 1000);
     const hoy = new Date('2026-02-12T00:00:00Z');
     expect(hoy > fechaTerminacion).toBe(true);
   });
 
   it('detecta ítem no vencido cuando hoy < fecha terminación', () => {
+    const diasCorreccion = 8;
     const fechaAlta = new Date('2026-02-10T00:00:00Z');
-    const fechaTerminacion = new Date(fechaAlta.getTime() + 8 * 24 * 60 * 60 * 1000);
+    const fechaTerminacion = new Date(fechaAlta.getTime() + diasCorreccion * 24 * 60 * 60 * 1000);
     const hoy = new Date('2026-02-12T00:00:00Z');
     expect(hoy > fechaTerminacion).toBe(false);
+  });
+});
+
+describe('Filtro por residente', () => {
+  const mockPines = [
+    { id: 1, residenteNombre: 'Esteban Guerrero', itemEstado: 'pendiente_aprobacion' },
+    { id: 2, residenteNombre: 'Carlos Ramirez', itemEstado: 'aprobado' },
+    { id: 3, residenteNombre: 'Esteban Guerrero', itemEstado: 'rechazado' },
+    { id: 4, residenteNombre: null, itemEstado: null },
+    { id: 5, residenteNombre: 'Ana Lopez', itemEstado: 'pendiente_foto_despues' },
+  ];
+
+  it('filtra pines por residente específico', () => {
+    const residenteFilter = 'Esteban Guerrero';
+    const filtered = mockPines.filter(p => p.residenteNombre === residenteFilter);
+    expect(filtered).toHaveLength(2);
+    expect(filtered.every(p => p.residenteNombre === 'Esteban Guerrero')).toBe(true);
+  });
+
+  it('muestra todos cuando no hay filtro', () => {
+    const residenteFilter = null;
+    const filtered = residenteFilter ? mockPines.filter(p => p.residenteNombre === residenteFilter) : mockPines;
+    expect(filtered).toHaveLength(5);
+  });
+
+  it('extrae residentes únicos correctamente', () => {
+    const names = new Set<string>();
+    mockPines.forEach(p => { if (p.residenteNombre) names.add(p.residenteNombre); });
+    const residentesUnicos = Array.from(names).sort();
+    expect(residentesUnicos).toEqual(['Ana Lopez', 'Carlos Ramirez', 'Esteban Guerrero']);
+  });
+
+  it('combina filtro de estado y residente', () => {
+    const pinFilter = 'pendiente_aprobacion';
+    const residenteFilter = 'Esteban Guerrero';
+    let result = mockPines;
+    result = result.filter(p => (p.itemEstado || 'sin_item') === pinFilter);
+    result = result.filter(p => p.residenteNombre === residenteFilter);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe(1);
   });
 });

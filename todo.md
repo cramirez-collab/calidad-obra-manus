@@ -3809,3 +3809,6 @@
 - [x] Rediseñar pin como pin de mapa real (gota/marcador tipo Google Maps) con iniciales del residente adentro
 - [x] Interacción: long press (~1s) abre modal con ítem + fecha alta + fecha terminación (alta+8 días)
 - [x] Interacción: click normal navega directo al ítem
+- [x] Días de corrección configurables desde configuración del proyecto (campo diasCorreccion en proyectos)
+- [x] Tooltip en desktop al hover sobre pin mostrando nombre completo del residente
+- [x] Filtro por residente en barra de herramientas del visor de planos

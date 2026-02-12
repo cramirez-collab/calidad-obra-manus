@@ -2330,6 +2330,7 @@ export const appRouter = router({
         linkSecuencias: z.string().nullable().optional(),
         linkVisor: z.string().nullable().optional(),
         linkPlanos: z.string().nullable().optional(),
+        diasCorreccion: z.number().min(1).max(365).optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;

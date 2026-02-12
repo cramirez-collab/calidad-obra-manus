@@ -1,0 +1,1 @@
+ALTER TABLE `proyectos` ADD `diasCorreccion` int DEFAULT 8 NOT NULL;

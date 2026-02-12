@@ -407,6 +407,13 @@
       "when": 1770533771560,
       "tag": "0057_faulty_justice",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "5",
+      "when": 1770935069831,
+      "tag": "0058_bright_speed",
+      "breakpoints": true
     }
   ]
 }

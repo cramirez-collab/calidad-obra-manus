@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers, Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff, Eye, Search, Filter, Download, Maximize, Minimize, ExternalLink } from "lucide-react";
+import { Plus, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers, Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff, Eye, Search, Filter, Download, Maximize, Minimize, ExternalLink, Users } from "lucide-react";
 import { useLocation } from "wouter";
 
 // Colores de pin según estado del ítem
@@ -38,6 +38,13 @@ export default function Planos() {
     { proyectoId: selectedProjectId! },
     { enabled: !!selectedProjectId }
   );
+
+  // Proyecto para diasCorreccion
+  const { data: proyectoData } = trpc.proyectos.get.useQuery(
+    { id: selectedProjectId! },
+    { enabled: !!selectedProjectId }
+  );
+  const diasCorreccion = proyectoData?.diasCorreccion || 8;
 
   // Items del proyecto para vincular pines
   const { data: itemsData } = trpc.items.list.useQuery(
@@ -102,6 +109,11 @@ export default function Planos() {
   // State para filtro de pines por estado
   const [pinFilter, setPinFilter] = useState<string | null>(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  // State para filtro por residente
+  const [residenteFilter, setResidenteFilter] = useState<string | null>(null);
+  const [showResidenteMenu, setShowResidenteMenu] = useState(false);
+  // State para tooltip hover
+  const [hoveredPin, setHoveredPin] = useState<number | null>(null);
 
   // State para fullscreen del plano
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -129,11 +141,20 @@ export default function Planos() {
 
   const pines = pinesData || [];
 
-  // Filtrar pines por estado
+  // Filtrar pines por estado y residente
   const filteredPines = useMemo(() => {
-    if (!pinFilter) return pines;
-    return pines.filter((p: any) => (p.itemEstado || "sin_item") === pinFilter);
-  }, [pines, pinFilter]);
+    let result = pines;
+    if (pinFilter) result = result.filter((p: any) => (p.itemEstado || "sin_item") === pinFilter);
+    if (residenteFilter) result = result.filter((p: any) => p.residenteNombre === residenteFilter);
+    return result;
+  }, [pines, pinFilter, residenteFilter]);
+
+  // Residentes únicos para filtro
+  const residentesUnicos = useMemo(() => {
+    const names = new Set<string>();
+    pines.forEach((p: any) => { if (p.residenteNombre) names.add(p.residenteNombre); });
+    return Array.from(names).sort();
+  }, [pines]);
 
   // Niveles únicos para filtro
   const nivelesUnicos = useMemo(() => {
@@ -655,6 +676,40 @@ export default function Planos() {
                   </div>
                 )}
               </div>
+              {/* Filtro por residente */}
+              <div className="relative">
+                <button
+                  onClick={() => { setShowResidenteMenu(f => !f); setShowFilterMenu(false); }}
+                  className={`p-1.5 rounded-lg transition-colors ${residenteFilter ? 'bg-blue-600' : 'hover:bg-white/10'}`}
+                  title="Filtrar por residente"
+                >
+                  <Users className="w-4 h-4" />
+                </button>
+                {showResidenteMenu && (
+                  <div className="absolute top-full right-0 mt-1 bg-slate-900 rounded-lg shadow-xl border border-slate-700 py-1 min-w-[180px] z-50 max-h-[250px] overflow-y-auto">
+                    <button
+                      onClick={() => { setResidenteFilter(null); setShowResidenteMenu(false); }}
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/10 ${!residenteFilter ? 'text-blue-400 font-bold' : 'text-white'}`}
+                    >
+                      Todos los residentes
+                    </button>
+                    {residentesUnicos.map((nombre) => {
+                      const count = pines.filter((p: any) => p.residenteNombre === nombre).length;
+                      const getInit = (n: string) => { const p = n.trim().split(/\s+/); return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : p[0].substring(0,2).toUpperCase(); };
+                      return (
+                        <button
+                          key={nombre}
+                          onClick={() => { setResidenteFilter(nombre); setShowResidenteMenu(false); }}
+                          className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/10 flex items-center gap-2 ${residenteFilter === nombre ? 'text-blue-400 font-bold' : 'text-white'}`}
+                        >
+                          <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[8px] font-bold flex items-center justify-center flex-shrink-0">{getInit(nombre)}</span>
+                          <span className="truncate">{nombre} ({count})</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
               {/* Descargar plano */}
               <button onClick={handleDownloadPlano} className="p-1.5 hover:bg-white/10 rounded-lg" title="Descargar plano">
                 <Download className="w-4 h-4" />
@@ -744,6 +799,8 @@ export default function Planos() {
                   const initials = getInitials(pin.residenteNombre);
                   const pinSize = isTapped ? 38 : 30;
 
+                  const isHovered = hoveredPin === pin.id;
+
                   return (
                     <div
                       key={pin.id}
@@ -752,16 +809,26 @@ export default function Planos() {
                         left: `${parseFloat(pin.posX)}%`,
                         top: `${parseFloat(pin.posY)}%`,
                         transform: 'translate(-50%, -100%)',
-                        zIndex: isTapped ? 50 : 10,
+                        zIndex: isTapped || isHovered ? 50 : 10,
                         cursor: 'pointer',
                         transition: 'transform 0.15s ease',
                       }}
                       onMouseDown={(e) => handlePinPointerDown(pin, e)}
                       onMouseUp={(e) => handlePinPointerUp(pin, e)}
-                      onMouseLeave={handlePinPointerLeave}
+                      onMouseEnter={() => setHoveredPin(pin.id)}
+                      onMouseLeave={() => { setHoveredPin(null); handlePinPointerLeave(); }}
                       onTouchStart={(e) => handlePinPointerDown(pin, e)}
                       onTouchEnd={(e) => handlePinPointerUp(pin, e)}
                     >
+                      {/* Tooltip hover (desktop) */}
+                      {isHovered && !showPinModal && pin.residenteNombre && (
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-slate-900 text-white text-[10px] rounded-md whitespace-nowrap shadow-lg pointer-events-none z-50"
+                          style={{ minWidth: 'max-content' }}>
+                          <span className="font-semibold">{pin.residenteNombre}</span>
+                          {pin.itemCodigo && <span className="text-white/60 ml-1.5">{pin.itemCodigo}</span>}
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-l-transparent border-r-transparent border-t-slate-900" />
+                        </div>
+                      )}
                       {/* SVG Pin de mapa real */}
                       <svg width={pinSize} height={pinSize * 1.35} viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg"
                         style={{ filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.35))' }}>
@@ -942,7 +1009,7 @@ export default function Planos() {
               )}
               {tappedPin.itemCreatedAt && (() => {
                 const fechaAlta = new Date(tappedPin.itemCreatedAt);
-                const fechaTerminacion = new Date(fechaAlta.getTime() + 8 * 24 * 60 * 60 * 1000);
+                const fechaTerminacion = new Date(fechaAlta.getTime() + diasCorreccion * 24 * 60 * 60 * 1000);
                 const hoy = new Date();
                 const vencido = hoy > fechaTerminacion;
                 return (
@@ -952,7 +1019,7 @@ export default function Planos() {
                       <span className="text-xs text-slate-600">{fechaAlta.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: '2-digit' })}</span>
                     </div>
                     <div className="flex items-start gap-2">
-                      <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Corrección</span>
+                      <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Límite ({diasCorreccion}d)</span>
                       <span className={`text-xs font-semibold ${vencido ? 'text-red-600' : 'text-emerald-600'}`}>
                         {fechaTerminacion.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: '2-digit' })}
                         {vencido && ' (Vencido)'}

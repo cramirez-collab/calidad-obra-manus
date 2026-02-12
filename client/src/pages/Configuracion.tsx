@@ -510,6 +510,11 @@ export default function Configuracion() {
           </CardContent>
         </Card>
 
+        {/* P - Plazo de Corrección */}
+        {isAdmin && selectedProjectId && (
+          <DiasCorreccionManager proyectoId={selectedProjectId} />
+        )}
+
         {/* P - Pines (antes Planos por Nivel) */}
         {isAdmin && selectedProjectId && (
           <div id="gestion-pines">
@@ -891,6 +896,65 @@ const PIN_COLORS: Record<string, { bg: string; border: string }> = {
   sin_item: { bg: "#6b7280", border: "#4b5563" },
 };
 
+// ==================== COMPONENTE DIAS CORRECCION ====================
+function DiasCorreccionManager({ proyectoId }: { proyectoId: number }) {
+  const { data: proyecto, refetch } = trpc.proyectos.get.useQuery({ id: proyectoId });
+  const updateMutation = trpc.proyectos.update.useMutation({
+    onSuccess: () => { toast.success("Plazo de corrección actualizado"); refetch(); },
+    onError: () => toast.error("Error al actualizar"),
+  });
+  const [dias, setDias] = useState<number>(8);
+
+  useEffect(() => {
+    if (proyecto?.diasCorreccion) setDias(proyecto.diasCorreccion);
+  }, [proyecto?.diasCorreccion]);
+
+  const handleSave = () => {
+    if (dias < 1 || dias > 365) { toast.error("El plazo debe ser entre 1 y 365 días"); return; }
+    updateMutation.mutate({ id: proyectoId, diasCorreccion: dias });
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Clock className="h-5 w-5 text-[#002C63]" />
+          Plazo de Corrección
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground mb-4">
+          Días que tiene el residente para corregir un ítem desde su fecha de alta. Se muestra en los pines del plano.
+        </p>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={1}
+              max={365}
+              value={dias}
+              onChange={(e) => setDias(parseInt(e.target.value) || 8)}
+              className="w-20 text-center font-semibold"
+            />
+            <span className="text-sm text-muted-foreground">días</span>
+          </div>
+          <Button
+            onClick={handleSave}
+            disabled={updateMutation.isPending || dias === proyecto?.diasCorreccion}
+            size="sm"
+            className="bg-[#002C63] hover:bg-[#002C63]/90"
+          >
+            {updateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+            Guardar
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">Actual: <strong>{proyecto?.diasCorreccion || 8} días</strong></p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ==================== COMPONENTE PINES MANAGER ====================
 function PinesManager({ proyectoId }: { proyectoId: number }) {
   const [, navigate] = useLocation();
   // Form state
