@@ -4,13 +4,16 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useLocation } from "wouter";
 import { 
   ArrowLeft,
-  Printer,
-  Building2
+  Download,
+  Building2,
+  Image as ImageIcon
 } from "lucide-react";
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useMemo, useRef, useState } from "react";
+import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { downloadPDFBestMethod } from "@/lib/pdfDownload";
+import { toast } from "sonner";
 
 type UnidadPanoramica = {
   id: number;
@@ -30,38 +33,11 @@ type UnidadPanoramica = {
   porcentaje: number;
 };
 
-// Componente de encabezado reutilizable
-function EncabezadoPDF({ proyectoNombre, fecha }: { proyectoNombre: string; fecha: string }) {
-  return (
-    <div className="flex justify-between items-start border-b-2 border-[#002C63] pb-3 mb-4">
-      <div>
-        <div className="text-xl sm:text-2xl font-bold text-[#002C63] tracking-tight">
-          OBJETIV<span className="text-[#02B381]">A</span>
-        </div>
-        <div className="text-xs text-gray-500 mt-1">Control de Calidad</div>
-      </div>
-      <div className="text-right">
-        <div className="font-bold text-[#002C63] text-lg">{proyectoNombre}</div>
-        <div className="text-xs text-gray-500">{fecha}</div>
-      </div>
-    </div>
-  );
-}
-
-// Componente de pie de página reutilizable
-function PiePaginaPDF({ proyectoNombre, pagina, totalPaginas }: { proyectoNombre: string; pagina: number; totalPaginas: number }) {
-  return (
-    <div className="flex justify-between items-center mt-auto pt-2 border-t text-xs text-gray-500">
-      <span>OQC - {proyectoNombre}</span>
-      <span>Página {pagina} de {totalPaginas}</span>
-    </div>
-  );
-}
-
 export default function StackingPDF() {
   const [, setLocation] = useLocation();
   const { selectedProjectId } = useProject();
-  const printRef = useRef<HTMLDivElement>(null);
+  const diagramRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
   
   const { data: unidades, isLoading } = trpc.unidades.panoramica.useQuery(
     { proyectoId: selectedProjectId || 0 },
@@ -72,7 +48,7 @@ export default function StackingPDF() {
   const proyecto = proyectos?.find(p => p.id === selectedProjectId);
   const proyectoNombre = proyecto?.nombre || 'Proyecto';
 
-  // Agrupar unidades por nivel - ordenado de MENOR a MAYOR para el PDF (ascendente)
+  // Agrupar unidades por nivel - ordenado de MAYOR a MENOR (edificio visual)
   const celdasPorNivel = useMemo(() => {
     if (!unidades) return new Map<number, UnidadPanoramica[]>();
     
@@ -86,14 +62,13 @@ export default function StackingPDF() {
       grouped.get(nivel)!.push(unidad);
     });
     
-    // Ordenar por posición dentro de cada nivel
     grouped.forEach((celdas, nivel) => {
       celdas.sort((a, b) => (a.orden || 0) - (b.orden || 0));
       grouped.set(nivel, celdas);
     });
     
-    // Ordenar niveles ASCENDENTE (menor a mayor) para el PDF
-    return new Map(Array.from(grouped.entries()).sort((a, b) => a[0] - b[0]));
+    // Ordenar niveles DESCENDENTE (mayor arriba) para visual de edificio
+    return new Map(Array.from(grouped.entries()).sort((a, b) => b[0] - a[0]));
   }, [unidades]);
 
   // Estadísticas generales
@@ -109,140 +84,201 @@ export default function StackingPDF() {
     };
   }, [unidades]);
 
-  // Dividir unidades en páginas para la tabla (30 por página)
-  const unidadesParaTabla = useMemo(() => {
-    const todas: UnidadPanoramica[] = [];
-    Array.from(celdasPorNivel.entries()).forEach(([_, unidadesNivel]) => {
-      todas.push(...unidadesNivel);
+  const maxUnidadesPorNivel = useMemo(() => {
+    let max = 0;
+    celdasPorNivel.forEach((celdas) => {
+      if (celdas.length > max) max = celdas.length;
     });
-    
-    const paginas: UnidadPanoramica[][] = [];
-    const ITEMS_POR_PAGINA = 30;
-    
-    for (let i = 0; i < todas.length; i += ITEMS_POR_PAGINA) {
-      paginas.push(todas.slice(i, i + ITEMS_POR_PAGINA));
-    }
-    
-    return paginas;
+    return max;
   }, [celdasPorNivel]);
-
-  // Total de páginas: 1 (cuadrícula) + páginas de tabla
-  const totalPaginas = 1 + unidadesParaTabla.length;
 
   const getEstadoColor = (estado: string) => {
     switch (estado) {
-      case 'completado': return 'bg-emerald-500';
-      case 'rechazado': return 'bg-red-500';
-      case 'pendiente': return 'bg-amber-500';
-      default: return 'bg-gray-300';
+      case 'completado': return '#10b981';
+      case 'rechazado': return '#ef4444';
+      case 'pendiente': return '#f59e0b';
+      default: return '#d1d5db';
     }
   };
 
-  const getEstadoLabel = (estado: string) => {
-    switch (estado) {
-      case 'completado': return '100%';
-      case 'rechazado': return 'Rechazado';
-      case 'pendiente': return 'Pendiente';
-      default: return 'Sin ítems';
-    }
+  const getEstadoTextColor = (estado: string) => {
+    return estado === 'sin_items' ? '#374151' : '#ffffff';
   };
 
   const fechaActual = new Date().toLocaleDateString('es-MX', { 
     day: '2-digit', 
     month: 'long', 
     year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
   });
 
-  const handlePrint = () => {
-    // Generar PDF real con jsPDF
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const VERDE_OBJETIVA: [number, number, number] = [2, 179, 129];
-    const AZUL_OBJETIVA: [number, number, number] = [0, 44, 99];
-    
-    // Header
-    doc.setFillColor(...AZUL_OBJETIVA);
-    doc.rect(0, 0, pageWidth, 20, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('OBJETIVA', 10, 13);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Stacking - ${proyectoNombre}`, pageWidth - 10, 10, { align: 'right' });
-    doc.text(fechaActual, pageWidth - 10, 16, { align: 'right' });
-    
-    let yPos = 30;
-    
-    // Resumen estadistico
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Resumen de Unidades', 10, yPos);
-    yPos += 8;
-    
-    const resumenData = [
-      ['Total', String(estadisticas.total)],
-      ['Completadas', String(estadisticas.completadas)],
-      ['Pendientes', String(estadisticas.pendientes)],
-      ['Rechazadas', String(estadisticas.rechazadas)],
-      ['Sin Items', String(estadisticas.sinItems)]
-    ];
-    
-    autoTable(doc, {
-      startY: yPos,
-      head: [['Estado', 'Cantidad']],
-      body: resumenData,
-      theme: 'striped',
-      headStyles: { fillColor: VERDE_OBJETIVA, textColor: [255, 255, 255] },
-      margin: { left: 10, right: pageWidth - 100 },
-      tableWidth: 80
-    });
-    
-    yPos = (doc as any).lastAutoTable.finalY + 10;
-    
-    // Tabla de unidades
-    if (unidades && unidades.length > 0) {
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Detalle por Unidad', 10, yPos);
-      yPos += 8;
-      
-      const unidadesData = (unidades as UnidadPanoramica[]).map(u => [
-        String(u.nivel),
-        u.codigo || u.nombre,
-        u.estado,
-        String(u.items.total),
-        String(u.items.aprobados),
-        String(u.items.pendientes),
-        String(u.items.rechazados),
-        `${u.porcentaje}%`
-      ]);
-      
-      autoTable(doc, {
-        startY: yPos,
-        head: [['Nivel', 'Unidad', 'Estado', 'Total', 'Aprobados', 'Pendientes', 'Rechazados', '%']],
-        body: unidadesData,
-        theme: 'striped',
-        headStyles: { fillColor: AZUL_OBJETIVA, textColor: [255, 255, 255] },
-        margin: { left: 10, right: 10 },
-        styles: { fontSize: 8 }
+  // Descargar diagrama visual como imagen PNG
+  const handleDownloadImage = async () => {
+    if (!diagramRef.current) return;
+    setDownloading(true);
+    toast.info("Capturando diagrama...");
+    try {
+      const canvas = await html2canvas(diagramRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        logging: false,
+        useCORS: true,
       });
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
+      if (!blob) { toast.error("Error al generar imagen"); setDownloading(false); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const nombreArchivo = `Stacking_${proyectoNombre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.png`;
+      a.download = nombreArchivo;
+      a.setAttribute("download", nombreArchivo);
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+      toast.success("Stacking descargado como imagen");
+    } catch (err) {
+      console.error("Error capturando stacking:", err);
+      toast.error("Error al capturar diagrama");
     }
-    
-    // Footer en todas las paginas
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(128, 128, 128);
-      doc.text(`OQC - ${proyectoNombre} | Pagina ${i} de ${pageCount}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
+    setDownloading(false);
+  };
+
+  // Descargar PDF con diagrama visual + tabla de datos
+  const handleDownloadPDF = async () => {
+    setDownloading(true);
+    toast.info("Generando PDF...");
+    try {
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const VERDE_OBJETIVA: [number, number, number] = [2, 179, 129];
+      const AZUL_OBJETIVA: [number, number, number] = [0, 44, 99];
+      
+      // Página 1: Diagrama visual capturado con html2canvas
+      if (diagramRef.current) {
+        const canvas = await html2canvas(diagramRef.current, {
+          backgroundColor: "#ffffff",
+          scale: 2,
+          logging: false,
+          useCORS: true,
+        });
+        const imgData = canvas.toDataURL("image/png");
+        
+        // Header
+        doc.setFillColor(...AZUL_OBJETIVA);
+        doc.rect(0, 0, pageWidth, 16, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('OBJETIVA', 10, 11);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Stacking Visual - ${proyectoNombre}`, pageWidth - 10, 8, { align: 'right' });
+        doc.text(fechaActual, pageWidth - 10, 13, { align: 'right' });
+        
+        // Insertar imagen del diagrama
+        const imgWidth = pageWidth - 20;
+        const imgHeight = (canvas.height / canvas.width) * imgWidth;
+        const maxImgHeight = pageHeight - 30;
+        const finalHeight = Math.min(imgHeight, maxImgHeight);
+        const finalWidth = imgHeight > maxImgHeight ? (canvas.width / canvas.height) * finalHeight : imgWidth;
+        
+        doc.addImage(imgData, 'PNG', 10, 20, finalWidth, finalHeight);
+        
+        // Footer
+        doc.setFontSize(7);
+        doc.setTextColor(128, 128, 128);
+        doc.text(`OQC - ${proyectoNombre} | Página 1`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+      }
+      
+      // Página 2: Tabla de datos
+      if (unidades && unidades.length > 0) {
+        doc.addPage();
+        
+        // Header
+        doc.setFillColor(...AZUL_OBJETIVA);
+        doc.rect(0, 0, pageWidth, 16, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('OBJETIVA', 10, 11);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Detalle de Unidades - ${proyectoNombre}`, pageWidth - 10, 8, { align: 'right' });
+        doc.text(fechaActual, pageWidth - 10, 13, { align: 'right' });
+        
+        let yPos = 24;
+        
+        // Resumen
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Resumen', 10, yPos);
+        yPos += 6;
+        
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Total', 'Completadas', 'Pendientes', 'Rechazadas', 'Sin Ítems']],
+          body: [[
+            String(estadisticas.total),
+            String(estadisticas.completadas),
+            String(estadisticas.pendientes),
+            String(estadisticas.rechazadas),
+            String(estadisticas.sinItems)
+          ]],
+          theme: 'grid',
+          headStyles: { fillColor: VERDE_OBJETIVA, textColor: [255, 255, 255], fontSize: 8 },
+          bodyStyles: { fontSize: 9, halign: 'center', fontStyle: 'bold' },
+          margin: { left: 10, right: pageWidth / 2 + 10 },
+          tableWidth: pageWidth / 2 - 20,
+        });
+        
+        yPos = (doc as any).lastAutoTable.finalY + 8;
+        
+        // Tabla detallada
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Detalle por Unidad', 10, yPos);
+        yPos += 6;
+        
+        const unidadesData = (unidades as UnidadPanoramica[]).map(u => [
+          String(u.nivel),
+          u.codigo || u.nombre,
+          u.estado === 'completado' ? '100%' : u.estado === 'rechazado' ? 'Rechazado' : u.estado === 'pendiente' ? 'Pendiente' : 'Sin ítems',
+          String(u.items.total),
+          String(u.items.aprobados),
+          String(u.items.pendientes),
+          String(u.items.rechazados),
+          `${u.porcentaje}%`
+        ]);
+        
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Nivel', 'Unidad', 'Estado', 'Total', 'Aprob.', 'Pend.', 'Rech.', '%']],
+          body: unidadesData,
+          theme: 'striped',
+          headStyles: { fillColor: AZUL_OBJETIVA, textColor: [255, 255, 255], fontSize: 7 },
+          bodyStyles: { fontSize: 7 },
+          margin: { left: 10, right: 10 },
+        });
+      }
+      
+      // Footer en todas las páginas
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(7);
+        doc.setTextColor(128, 128, 128);
+        doc.text(`OQC - ${proyectoNombre} | Página ${i} de ${pageCount}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+      }
+      
+      downloadPDFBestMethod(doc, `Stacking_${proyectoNombre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+      toast.success("PDF descargado");
+    } catch (err) {
+      console.error("Error generando PDF:", err);
+      toast.error("Error al generar PDF");
     }
-    
-    downloadPDFBestMethod(doc, `stacking_${proyectoNombre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+    setDownloading(false);
   };
 
   if (!selectedProjectId) {
@@ -270,240 +306,163 @@ export default function StackingPDF() {
   }
 
   return (
-    <div className="min-h-screen bg-white print:bg-white">
-      {/* Header con botones - NO se imprime */}
-      <div className="bg-gray-50 border-b p-4 print:hidden">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header con botones */}
+      <div className="bg-white border-b p-4 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => setLocation("/panoramica")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-lg font-bold text-[#002C63]">Vista PDF del Stacking</h1>
+            <h1 className="text-lg font-bold text-[#002C63]">Stacking Visual</h1>
           </div>
-          <Button onClick={handlePrint} className="bg-[#02B381] hover:bg-[#02B381]/90">
-            <Printer className="h-4 w-4 mr-2" />
-            Descargar PDF
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleDownloadImage} 
+              disabled={downloading}
+              variant="outline"
+              className="gap-2"
+            >
+              <ImageIcon className="h-4 w-4" />
+              {downloading ? "Capturando..." : "Descargar Imagen"}
+            </Button>
+            <Button 
+              onClick={handleDownloadPDF} 
+              disabled={downloading}
+              className="bg-[#02B381] hover:bg-[#02B381]/90 gap-2"
+            >
+              <Download className="h-4 w-4" />
+              {downloading ? "Generando..." : "Descargar PDF"}
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Contenido imprimible */}
-      <div ref={printRef} className="print:p-0 print:max-w-none">
-        
-        {/* ========== PÁGINA 1: CUADRÍCULA ========== */}
-        <div className="pdf-page max-w-7xl mx-auto p-6 print:p-4 print:max-w-none print:h-[100vh] print:flex print:flex-col">
-          {/* Encabezado */}
-          <EncabezadoPDF proyectoNombre={proyectoNombre} fecha={fechaActual} />
-          
-          <h1 className="text-xl font-bold text-[#002C63] mb-4 text-center print:text-lg">
-            Reporte de Stacking - Cuadrícula
-          </h1>
+      {/* Diagrama visual capturado por html2canvas */}
+      <div className="max-w-7xl mx-auto p-6">
+        <div 
+          ref={diagramRef} 
+          className="bg-white rounded-xl shadow-lg p-8"
+          style={{ minWidth: '800px' }}
+        >
+          {/* Encabezado del diagrama */}
+          <div className="flex justify-between items-start border-b-2 border-[#002C63] pb-4 mb-6">
+            <div>
+              <div className="text-2xl font-bold text-[#002C63] tracking-tight">
+                OBJETIV<span className="text-[#02B381]">A</span>
+              </div>
+              <div className="text-sm text-gray-500 mt-1">Control de Calidad</div>
+            </div>
+            <div className="text-right">
+              <div className="font-bold text-[#002C63] text-xl">{proyectoNombre}</div>
+              <div className="text-sm text-gray-500">{fechaActual}</div>
+            </div>
+          </div>
+
+          <h2 className="text-xl font-bold text-[#002C63] text-center mb-4">
+            Stacking de Unidades
+          </h2>
 
           {/* Resumen estadístico */}
-          <div className="grid grid-cols-5 gap-2 mb-4 print:gap-1">
-            <div className="text-center p-2 bg-gray-50 rounded border print:p-1">
-              <p className="text-xl font-bold text-[#002C63] print:text-lg">{estadisticas.total}</p>
-              <p className="text-xs text-gray-500">Total</p>
+          <div className="flex justify-center gap-6 mb-6">
+            <div className="text-center px-4 py-2 bg-gray-50 rounded-lg border">
+              <div className="text-2xl font-bold text-[#002C63]">{estadisticas.total}</div>
+              <div className="text-xs text-gray-500">Total</div>
             </div>
-            <div className="text-center p-2 bg-emerald-50 rounded border border-emerald-200 print:p-1">
-              <p className="text-xl font-bold text-emerald-600 print:text-lg">{estadisticas.completadas}</p>
-              <p className="text-xs text-gray-500">Completadas</p>
+            <div className="text-center px-4 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
+              <div className="text-2xl font-bold text-emerald-600">{estadisticas.completadas}</div>
+              <div className="text-xs text-gray-500">Completadas</div>
             </div>
-            <div className="text-center p-2 bg-amber-50 rounded border border-amber-200 print:p-1">
-              <p className="text-xl font-bold text-amber-600 print:text-lg">{estadisticas.pendientes}</p>
-              <p className="text-xs text-gray-500">Pendientes</p>
+            <div className="text-center px-4 py-2 bg-amber-50 rounded-lg border border-amber-200">
+              <div className="text-2xl font-bold text-amber-600">{estadisticas.pendientes}</div>
+              <div className="text-xs text-gray-500">Pendientes</div>
             </div>
-            <div className="text-center p-2 bg-red-50 rounded border border-red-200 print:p-1">
-              <p className="text-xl font-bold text-red-600 print:text-lg">{estadisticas.rechazadas}</p>
-              <p className="text-xs text-gray-500">Rechazadas</p>
+            <div className="text-center px-4 py-2 bg-red-50 rounded-lg border border-red-200">
+              <div className="text-2xl font-bold text-red-600">{estadisticas.rechazadas}</div>
+              <div className="text-xs text-gray-500">Rechazadas</div>
             </div>
-            <div className="text-center p-2 bg-gray-50 rounded border print:p-1">
-              <p className="text-xl font-bold text-gray-600 print:text-lg">{estadisticas.sinItems}</p>
-              <p className="text-xs text-gray-500">Sin ítems</p>
+            <div className="text-center px-4 py-2 bg-gray-50 rounded-lg border">
+              <div className="text-2xl font-bold text-gray-600">{estadisticas.sinItems}</div>
+              <div className="text-xs text-gray-500">Sin Ítems</div>
             </div>
           </div>
 
           {/* Leyenda */}
-          <div className="flex justify-center gap-4 mb-4 text-xs print:mb-2">
-            <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded bg-emerald-500"></div>
+          <div className="flex justify-center gap-6 mb-6 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 rounded" style={{ backgroundColor: '#10b981' }}></div>
               <span>Completado</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded bg-amber-500"></div>
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
               <span>Pendiente</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded bg-red-500"></div>
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 rounded" style={{ backgroundColor: '#ef4444' }}></div>
               <span>Rechazado</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded bg-gray-300"></div>
-              <span>Sin ítems</span>
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 rounded" style={{ backgroundColor: '#d1d5db' }}></div>
+              <span>Sin Ítems</span>
             </div>
           </div>
 
-          {/* Cuadrícula del stacking */}
-          <div className="border rounded-lg p-4 print:p-2 print:border-gray-300 flex-1">
-            <h2 className="font-semibold text-[#002C63] mb-3 print:text-sm print:mb-2">
-              Cuadrícula de Unidades por Nivel (Menor a Mayor)
-            </h2>
-            
-            <div className="space-y-3 print:space-y-2">
-              {Array.from(celdasPorNivel.entries()).map(([nivel, unidadesNivel]) => (
-                <div key={nivel} className="print:break-inside-avoid">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-sm bg-gray-100 px-2 py-0.5 rounded print:text-xs">
-                      Nivel {nivel}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      ({unidadesNivel.length} unidades)
-                    </span>
-                  </div>
-                  
-                  <div className="grid grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-1 print:grid-cols-12 print:gap-0.5">
-                    {unidadesNivel.map((unidad) => (
+          {/* Cuadrícula visual del stacking (edificio) */}
+          <div className="border-2 border-[#002C63] rounded-lg overflow-hidden">
+            {Array.from(celdasPorNivel.entries()).map(([nivel, unidadesNivel]) => (
+              <div key={nivel} className="flex border-b border-gray-200 last:border-b-0">
+                {/* Label del nivel */}
+                <div 
+                  className="flex items-center justify-center font-bold text-white text-sm px-3 min-w-[60px]"
+                  style={{ backgroundColor: '#002C63' }}
+                >
+                  N{nivel}
+                </div>
+                {/* Celdas de unidades */}
+                <div 
+                  className="flex-1 grid gap-[2px] p-[3px]"
+                  style={{ 
+                    gridTemplateColumns: `repeat(${Math.max(maxUnidadesPorNivel, unidadesNivel.length)}, minmax(0, 1fr))` 
+                  }}
+                >
+                  {unidadesNivel.map((unidad) => {
+                    const isEmptySpace = unidad.codigo === "-" || unidad.nombre === "-";
+                    if (isEmptySpace) {
+                      return (
+                        <div 
+                          key={unidad.id} 
+                          className="h-14 rounded-sm border border-dashed border-gray-300 bg-gray-50"
+                        />
+                      );
+                    }
+                    return (
                       <div
                         key={unidad.id}
-                        className={`
-                          p-1 rounded text-center text-xs
-                          ${getEstadoColor(unidad.estado)} text-white
-                          print:p-0.5 print:text-[7px]
-                        `}
+                        className="h-14 rounded-sm flex flex-col items-center justify-center px-1"
+                        style={{ 
+                          backgroundColor: getEstadoColor(unidad.estado),
+                          color: getEstadoTextColor(unidad.estado),
+                        }}
                       >
-                        <div className="font-semibold truncate">
+                        <span className="font-bold text-xs truncate w-full text-center leading-tight">
                           {unidad.codigo || unidad.nombre}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Pie de página - Página 1 */}
-          <PiePaginaPDF proyectoNombre={proyectoNombre} pagina={1} totalPaginas={totalPaginas} />
-        </div>
-
-        {/* ========== PÁGINAS DE TABLA DETALLADA ========== */}
-        {unidadesParaTabla.map((paginaUnidades, indexPagina) => (
-          <div 
-            key={indexPagina} 
-            className="pdf-page max-w-7xl mx-auto p-6 print:p-4 print:max-w-none print:h-[100vh] print:flex print:flex-col print:page-break-before"
-          >
-            {/* Encabezado repetido */}
-            <EncabezadoPDF proyectoNombre={proyectoNombre} fecha={fechaActual} />
-
-            <h2 className="font-semibold text-[#002C63] mb-3 print:text-sm print:mb-2">
-              Detalle por Unidad {indexPagina > 0 ? `(continuación ${indexPagina + 1})` : ''}
-            </h2>
-            
-            <div className="flex-1">
-              <table className="w-full text-xs border-collapse print:text-[8px]">
-                <thead>
-                  <tr className="bg-[#002C63] text-white">
-                    <th className="border border-[#002C63] p-2 text-left print:p-1">Nivel</th>
-                    <th className="border border-[#002C63] p-2 text-left print:p-1">Unidad</th>
-                    <th className="border border-[#002C63] p-2 text-center print:p-1">Estado</th>
-                    <th className="border border-[#002C63] p-2 text-center print:p-1">Total</th>
-                    <th className="border border-[#002C63] p-2 text-center print:p-1">Aprobados</th>
-                    <th className="border border-[#002C63] p-2 text-center print:p-1">Pendientes</th>
-                    <th className="border border-[#002C63] p-2 text-center print:p-1">Rechazados</th>
-                    <th className="border border-[#002C63] p-2 text-center print:p-1">%</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginaUnidades.map((unidad, idx) => (
-                    <tr key={unidad.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="border p-2 print:p-1">{unidad.nivel}</td>
-                      <td className="border p-2 print:p-1 font-medium">
-                        {unidad.codigo || unidad.nombre}
-                      </td>
-                      <td className="border p-2 text-center print:p-1">
-                        <span className={`
-                          inline-block px-2 py-0.5 rounded text-white text-[10px]
-                          ${getEstadoColor(unidad.estado)}
-                        `}>
-                          {getEstadoLabel(unidad.estado)}
                         </span>
-                      </td>
-                      <td className="border p-2 text-center print:p-1">{unidad.items.total}</td>
-                      <td className="border p-2 text-center print:p-1 text-emerald-600 font-medium">{unidad.items.aprobados}</td>
-                      <td className="border p-2 text-center print:p-1 text-amber-600 font-medium">{unidad.items.pendientes}</td>
-                      <td className="border p-2 text-center print:p-1 text-red-600 font-medium">{unidad.items.rechazados}</td>
-                      <td className="border p-2 text-center print:p-1 font-bold">{unidad.porcentaje}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pie de página */}
-            <PiePaginaPDF proyectoNombre={proyectoNombre} pagina={indexPagina + 2} totalPaginas={totalPaginas} />
+                        <span className="text-[10px] opacity-90">{unidad.porcentaje}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Estilos de impresión profesionales */}
-      <style>{`
-        @media print {
-          @page {
-            size: letter landscape;
-            margin: 0.5cm;
-          }
-          
-          html, body {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            color-adjust: exact !important;
-          }
-          
-          /* Ocultar ABSOLUTAMENTE todo lo que no sea el contenido */
-          body > div > div > aside,
-          body > div > div > header,
-          body > div > div > nav,
-          [data-sidebar],
-          [class*="sidebar"],
-          [class*="Sidebar"],
-          .print\\:hidden {
-            display: none !important;
-          }
-          
-          /* Asegurar que el contenido ocupe todo */
-          main, [role="main"] {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-          }
-          
-          /* Cada página PDF */
-          .pdf-page {
-            page-break-after: always;
-            min-height: 100vh;
-            box-sizing: border-box;
-          }
-          
-          .pdf-page:last-child {
-            page-break-after: auto;
-          }
-          
-          .print\\:page-break-before {
-            page-break-before: always;
-          }
-        }
-        
-        /* Vista previa en pantalla */
-        @media screen {
-          .pdf-page {
-            margin-bottom: 2rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-          }
-        }
-      `}</style>
+          {/* Footer del diagrama */}
+          <div className="flex justify-between items-center mt-4 pt-3 border-t text-xs text-gray-400">
+            <span>OQC - {proyectoNombre}</span>
+            <span>{fechaActual}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

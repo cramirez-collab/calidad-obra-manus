@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import html2canvas from "html2canvas";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -80,6 +81,7 @@ export default function Planos() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const planoContainerRef = useRef<HTMLDivElement>(null);
 
   // State pines
   const [pinMode, setPinMode] = useState(false);
@@ -313,17 +315,95 @@ export default function Planos() {
     });
   };
 
-  // Descargar imagen del plano
-  const handleDownloadPlano = useCallback(() => {
+  // Descargar plano CON pines renderizados como imagen
+  const handleDownloadPlano = useCallback(async () => {
     if (!currentPlano?.imagenUrl) return;
-    const a = document.createElement("a");
-    a.href = currentPlano.imagenUrl;
-    a.download = `${currentPlano.nombre || "plano"}.jpg`;
-    a.target = "_blank";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    toast.success("Descargando plano...");
+    const container = planoContainerRef.current;
+    const img = imgRef.current;
+    if (!container || !img) {
+      // Fallback: descargar imagen base via fetch+blob
+      try {
+        const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(currentPlano.imagenUrl)}`;
+        const resp = await fetch(proxyUrl);
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Plano_${currentPlano.nombre || "plano"}.png`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+      } catch {
+        toast.error("Error al descargar plano");
+      }
+      return;
+    }
+    toast.info("Capturando plano con pines...");
+    try {
+      // Paso 1: Convertir imagen a base64 via proxy para evitar CORS con html2canvas
+      const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(currentPlano.imagenUrl)}`;
+      const imgResp = await fetch(proxyUrl);
+      const imgBlob = await imgResp.blob();
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(imgBlob);
+      });
+      
+      // Paso 2: Temporalmente reemplazar src de la imagen con base64
+      const originalSrc = img.src;
+      img.src = base64;
+      // Esperar a que la imagen base64 cargue
+      await new Promise<void>((resolve) => {
+        if (img.complete) { resolve(); return; }
+        img.onload = () => resolve();
+        setTimeout(resolve, 2000); // timeout safety
+      });
+      
+      // Paso 3: Capturar con html2canvas
+      const canvas = await html2canvas(container, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        scale: 2,
+        logging: false,
+      });
+      
+      // Paso 4: Restaurar src original
+      img.src = originalSrc;
+      
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
+      if (!blob) { toast.error("Error al generar imagen"); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const nombreArchivo = `Plano_${currentPlano.nombre || "plano"}_N${currentPlano.nivel ?? 0}_con_pines.png`;
+      a.download = nombreArchivo;
+      a.setAttribute("download", nombreArchivo);
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+      toast.success("Plano descargado con pines");
+    } catch (err) {
+      console.error("Error capturando plano:", err);
+      // Fallback: descargar imagen base via fetch+blob
+      try {
+        const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(currentPlano.imagenUrl)}`;
+        const resp = await fetch(proxyUrl);
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Plano_${currentPlano.nombre || "plano"}.png`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+        toast.success("Plano descargado (sin pines)");
+      } catch {
+        toast.error("Error al descargar plano");
+      }
+    }
   }, [currentPlano]);
 
   // Toggle fullscreen
@@ -618,7 +698,7 @@ export default function Planos() {
               className="w-full h-full flex items-center justify-center relative"
               style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transition: isDragging ? 'none' : 'transform 0.1s' }}
             >
-              <div className="relative" onClick={handlePlanoClick}>
+              <div ref={planoContainerRef} className="relative" onClick={handlePlanoClick}>
                 <img
                   ref={imgRef}
                   src={currentPlano.imagenUrl}

@@ -1053,6 +1053,89 @@ export const appRouter = router({
               '📷 Nuevo Ítem Creado',
               `Se creó el ítem "${input.titulo}" (${itemResult.codigo})`
             );
+            
+            // === NOTIFICACIÓN MASIVA: a todos los usuarios de la empresa y especialidad ===
+            try {
+              const notifiedIds = new Set<number>();
+              // No notificar al creador
+              notifiedIds.add(ctx.user.id);
+              
+              // 1) Usuarios directos de la empresa (users.empresaId)
+              const empresaUsers = await db.getUsersByEmpresa(input.empresaId);
+              for (const eu of empresaUsers) {
+                if (notifiedIds.has(eu.id)) continue;
+                notifiedIds.add(eu.id);
+                await db.createNotificacion({
+                  usuarioId: eu.id,
+                  itemId: itemResult.id,
+                  tipo: 'item_pendiente_foto',
+                  titulo: '🔔 Nuevo ítem asignado a tu empresa',
+                  mensaje: `Se creó el ítem "${input.titulo}" (${itemResult.codigo}) para tu empresa`,
+                });
+                const pushSubs = await db.getPushSubscriptionsByUsuario(eu.id);
+                if (pushSubs.length > 0) {
+                  const pushService = (await import('./pushService')).default;
+                  await pushService.sendPushToMultiple(pushSubs, {
+                    title: '🔔 Nuevo ítem en tu empresa',
+                    body: `${input.titulo} (${itemResult.codigo})`,
+                    itemId: itemResult.id,
+                    data: { url: `/items/${itemResult.id}`, itemId: itemResult.id, tipo: 'item_empresa' }
+                  });
+                }
+              }
+              
+              // 2) Residentes vinculados a la empresa (empresa_residentes)
+              const empresaResidentes = await db.getResidentesByEmpresa(input.empresaId);
+              for (const er of empresaResidentes) {
+                const uid = (er as any).usuarioId || (er as any).id;
+                if (!uid || notifiedIds.has(uid)) continue;
+                notifiedIds.add(uid);
+                await db.createNotificacion({
+                  usuarioId: uid,
+                  itemId: itemResult.id,
+                  tipo: 'item_pendiente_foto',
+                  titulo: '🔔 Nuevo ítem asignado a tu empresa',
+                  mensaje: `Se creó el ítem "${input.titulo}" (${itemResult.codigo}) para tu empresa`,
+                });
+                const pushSubs = await db.getPushSubscriptionsByUsuario(uid);
+                if (pushSubs.length > 0) {
+                  const pushService = (await import('./pushService')).default;
+                  await pushService.sendPushToMultiple(pushSubs, {
+                    title: '🔔 Nuevo ítem en tu empresa',
+                    body: `${input.titulo} (${itemResult.codigo})`,
+                    itemId: itemResult.id,
+                    data: { url: `/items/${itemResult.id}`, itemId: itemResult.id, tipo: 'item_empresa' }
+                  });
+                }
+              }
+              
+              // 3) Residente asignado a la especialidad
+              if (input.especialidadId) {
+                const esp = await db.getEspecialidadById(input.especialidadId);
+                if (esp?.residenteId && !notifiedIds.has(esp.residenteId)) {
+                  notifiedIds.add(esp.residenteId);
+                  await db.createNotificacion({
+                    usuarioId: esp.residenteId,
+                    itemId: itemResult.id,
+                    tipo: 'item_pendiente_foto',
+                    titulo: '🔔 Nuevo ítem en tu especialidad',
+                    mensaje: `Se creó el ítem "${input.titulo}" (${itemResult.codigo}) en tu especialidad`,
+                  });
+                  const pushSubs = await db.getPushSubscriptionsByUsuario(esp.residenteId);
+                  if (pushSubs.length > 0) {
+                    const pushService = (await import('./pushService')).default;
+                    await pushService.sendPushToMultiple(pushSubs, {
+                      title: '🔔 Nuevo ítem en tu especialidad',
+                      body: `${input.titulo} (${itemResult.codigo})`,
+                      itemId: itemResult.id,
+                      data: { url: `/items/${itemResult.id}`, itemId: itemResult.id, tipo: 'item_especialidad' }
+                    });
+                  }
+                }
+              }
+            } catch (notifErr) {
+              console.error('Error en notificación masiva empresa/especialidad:', notifErr);
+            }
           } catch (e) {
             console.error('Error en operaciones secundarias de item:', e);
           }

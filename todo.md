@@ -3793,3 +3793,12 @@
 - [ ] Responsive mobile/tablet perfecto
 - [ ] Minimizar scroll vertical
 - [ ] Menú hamburguesa a la derecha en mobile
+
+## Fix Descarga PDF
+- [ ] FIX: PDF no se descarga en Chrome Android/móvil — implementar método compatible
+
+## Fix Descarga Plano + Notificaciones Push
+- [x] FIX: Descarga de plano debe descargar imagen CON pines renderizados + nombre con especialidad
+- [x] FIX: Descarga stacking debe bajar gráfico completo de ubicación de departamentos
+- [ ] FIX: Notificaciones push se desactivan — fijar permanentemente para todos los usuarios
+- [x] Notificación masiva al asignar ítem: notificar a TODOS los usuarios de la empresa y especialidad del responsable
