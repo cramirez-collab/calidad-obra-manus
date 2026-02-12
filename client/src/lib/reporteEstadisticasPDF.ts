@@ -806,21 +806,24 @@ function subSeccion(doc: jsPDF, titulo: string, yPos: number): number {
   return yPos + 7;
 }
 
-function tabla(doc: jsPDF, headers: string[], data: string[][], startY: number, opts?: { columnStyles?: any }): number {
+function tabla(doc: jsPDF, headers: string[], data: string[][], startY: number, opts?: { columnStyles?: any; fontSize?: number }): number {
   const ph = doc.internal.pageSize.getHeight();
   if (startY > ph - 40) {
     doc.addPage();
     startY = 38;
   }
+  // Ajustar fontSize según cantidad de columnas
+  const baseFontSize = opts?.fontSize || (headers.length > 7 ? 6.5 : 7.5);
   autoTable(doc, {
     startY,
     head: [headers.map((h) => sinAcentos(h))],
     body: data.map((row) => row.map((cell) => sinAcentos(cell ?? "-"))),
     theme: "striped",
-    headStyles: { fillColor: C.AZUL, textColor: C.BLANCO, fontStyle: "bold", fontSize: 7.5, cellPadding: 2 },
-    bodyStyles: { fontSize: 7.5, textColor: C.NEGRO, cellPadding: 1.8 },
+    headStyles: { fillColor: C.AZUL, textColor: C.BLANCO, fontStyle: "bold", fontSize: baseFontSize, cellPadding: 1.5, overflow: 'linebreak' as any },
+    bodyStyles: { fontSize: baseFontSize, textColor: C.NEGRO, cellPadding: 1.5, overflow: 'linebreak' as any },
     alternateRowStyles: { fillColor: [245, 248, 252] },
-    margin: { left: 15, right: 15 },
+    margin: { left: 12, right: 12 },
+    tableWidth: 'auto',
     columnStyles: opts?.columnStyles,
   });
   return (doc as any).lastAutoTable?.finalY || startY + 20;
@@ -907,20 +910,69 @@ function hexToRgb(hex: string): [number, number, number] {
 }
 
 async function loadImageForPDF(url: string): Promise<string | null> {
+  if (!url) return null;
+  
+  // Método 1: Proxy del servidor (evita CORS)
   try {
-    // Usar proxy del servidor para evitar CORS con CloudFront
     const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(url)}`;
-    const response = await fetch(proxyUrl);
-    if (!response.ok) return null;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    const response = await fetch(proxyUrl, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!response.ok) {
+      console.warn(`[PDF IMG] Proxy falló para ${url.substring(0, 60)}... status: ${response.status}`);
+      throw new Error(`Proxy status ${response.status}`);
+    }
     const blob = await response.blob();
+    if (blob.size === 0) {
+      console.warn(`[PDF IMG] Proxy devolvió blob vacío para ${url.substring(0, 60)}...`);
+      throw new Error('Blob vacío');
+    }
+    console.log(`[PDF IMG] OK via proxy: ${url.substring(0, 60)}... (${(blob.size / 1024).toFixed(1)}KB)`);
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result as string);
       reader.onerror = () => resolve(null);
       reader.readAsDataURL(blob);
     });
-  } catch {
-    return null;
+  } catch (proxyErr) {
+    // Método 2: Carga directa via Image + Canvas (fallback)
+    try {
+      console.log(`[PDF IMG] Intentando carga directa para ${url.substring(0, 60)}...`);
+      return await new Promise<string | null>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        const timeoutId = setTimeout(() => {
+          console.warn(`[PDF IMG] Timeout carga directa: ${url.substring(0, 60)}...`);
+          resolve(null);
+        }, 20000);
+        img.onload = () => {
+          clearTimeout(timeoutId);
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d')!;
+            ctx.drawImage(img, 0, 0);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            console.log(`[PDF IMG] OK via canvas: ${url.substring(0, 60)}...`);
+            resolve(dataUrl);
+          } catch {
+            console.warn(`[PDF IMG] Canvas tainted: ${url.substring(0, 60)}...`);
+            resolve(null);
+          }
+        };
+        img.onerror = () => {
+          clearTimeout(timeoutId);
+          console.warn(`[PDF IMG] Carga directa falló: ${url.substring(0, 60)}...`);
+          resolve(null);
+        };
+        img.src = url;
+      });
+    } catch {
+      console.error(`[PDF IMG] Todos los métodos fallaron para: ${url.substring(0, 60)}...`);
+      return null;
+    }
   }
 }
 
@@ -1380,19 +1432,33 @@ export async function generarReporteEstadisticasPDF(data: ReporteData) {
         if (fotoDespues) doc.text("DESPUES", pw - 15 - imgW / 2, fy, { align: "center" });
         fy += 3;
 
-        // Intentar cargar imágenes
+        // Cargar imágenes con logging
         try {
           if (fotoAntes) {
+            console.log(`[PDF FICHA] Cargando foto ANTES: ${fotoAntes.substring(0, 80)}...`);
             const imgData = await loadImageForPDF(fotoAntes);
-            if (imgData) doc.addImage(imgData, "JPEG", 15, fy, imgW, imgH);
+            if (imgData) {
+              const fmt = imgData.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+              doc.addImage(imgData, fmt, 15, fy, imgW, imgH);
+              console.log(`[PDF FICHA] Foto ANTES añadida OK (${fmt})`);
+            } else {
+              console.warn(`[PDF FICHA] Foto ANTES no se pudo cargar`);
+            }
           }
-        } catch { /* skip */ }
+        } catch (e) { console.error('[PDF FICHA] Error foto ANTES:', e); }
         try {
           if (fotoDespues) {
+            console.log(`[PDF FICHA] Cargando foto DESPUES: ${fotoDespues.substring(0, 80)}...`);
             const imgData = await loadImageForPDF(fotoDespues);
-            if (imgData) doc.addImage(imgData, "JPEG", pw - 15 - imgW, fy, imgW, imgH);
+            if (imgData) {
+              const fmt = imgData.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+              doc.addImage(imgData, fmt, pw - 15 - imgW, fy, imgW, imgH);
+              console.log(`[PDF FICHA] Foto DESPUES añadida OK (${fmt})`);
+            } else {
+              console.warn(`[PDF FICHA] Foto DESPUES no se pudo cargar`);
+            }
           }
-        } catch { /* skip */ }
+        } catch (e) { console.error('[PDF FICHA] Error foto DESPUES:', e); }
 
         // Placeholder rectangles si no hay imagen
         doc.setDrawColor(...C.GRIS_CLARO);
@@ -1434,9 +1500,16 @@ export async function generarReporteEstadisticasPDF(data: ReporteData) {
     }
 
     // Planos con pines
+    console.log(`[PDF PLANOS] Total planos: ${itemsData.planos.length}, Items con pin: ${itemsData.items.filter(it => it.pinPlanoId).length}`);
+    const itemsConPin = itemsData.items.filter(it => it.pinPlanoId !== undefined && it.pinPlanoId !== null);
+    console.log(`[PDF PLANOS] Items con pinPlanoId definido: ${itemsConPin.length}`, itemsConPin.slice(0, 5).map(it => ({ id: it.id, codigo: it.codigo, pinPlanoId: it.pinPlanoId })));
+    console.log(`[PDF PLANOS] Items SIN pin (sample):`, itemsData.items.filter(it => !it.pinPlanoId).slice(0, 3).map(it => ({ id: it.id, codigo: it.codigo, pinPlanoId: it.pinPlanoId, keys: Object.keys(it).filter(k => k.includes('pin')) })));
+    console.log(`[PDF PLANOS] Plano IDs:`, itemsData.planos.map(p => ({ id: p.id, type: typeof p.id })));
     if (itemsData.planos.length > 0) {
       for (const plano of itemsData.planos) {
-        const itemsEnPlano = itemsData.items.filter((it) => it.pinPlanoId === plano.id);
+        // Usar == para comparar (puede haber mismatch string/number)
+        const itemsEnPlano = itemsData.items.filter((it) => it.pinPlanoId != null && String(it.pinPlanoId) === String(plano.id));
+        console.log(`[PDF PLANOS] Plano ${plano.id} (${plano.nombre}): ${itemsEnPlano.length} items`);
         if (itemsEnPlano.length === 0) continue;
 
         doc.addPage();
@@ -1453,14 +1526,17 @@ export async function generarReporteEstadisticasPDF(data: ReporteData) {
         doc.text(`${itemsEnPlano.length} items`, pw - 20, py + 8, { align: "right" });
         py += 18;
 
-        // Intentar cargar imagen del plano
+        // Cargar imagen del plano
         if (plano.imagenUrl) {
           try {
+            console.log(`[PDF PLANO] Cargando plano: ${plano.nombre} - ${plano.imagenUrl.substring(0, 80)}...`);
             const planoImg = await loadImageForPDF(plano.imagenUrl);
             if (planoImg) {
               const planoW = pw - 30;
               const planoH = planoW * 0.6;
-              doc.addImage(planoImg, "JPEG", 15, py, planoW, planoH);
+              const planoFmt = planoImg.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+              doc.addImage(planoImg, planoFmt, 15, py, planoW, planoH);
+              console.log(`[PDF PLANO] Plano añadido OK (${planoFmt})`);
               // Dibujar pines sobre el plano
               itemsEnPlano.forEach((it, idx) => {
                 if (it.pinPosX != null && it.pinPosY != null) {
@@ -1479,7 +1555,7 @@ export async function generarReporteEstadisticasPDF(data: ReporteData) {
               });
               py += planoH + 6;
             }
-          } catch { /* skip plano image */ }
+          } catch (e) { console.error(`[PDF PLANO] Error cargando plano ${plano.nombre}:`, e); }
         }
 
         // Leyenda de pines

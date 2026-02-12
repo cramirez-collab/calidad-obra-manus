@@ -76,6 +76,10 @@ const itemFieldsWithoutBase64 = {
   comentarioSupervisor: items.comentarioSupervisor,
   clientId: items.clientId,
   numeroInterno: items.numeroInterno,
+  // Campos de pin en plano
+  pinPlanoId: items.pinPlanoId,
+  pinPosX: items.pinPosX,
+  pinPosY: items.pinPosY,
   createdAt: items.createdAt,
   updatedAt: items.updatedAt,
 };

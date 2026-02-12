@@ -308,6 +308,20 @@ export default function Estadisticas() {
     }
   };
 
+  // Mostrar loading si aún no se resuelve el proyecto
+  if (!selectedProjectId) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="text-muted-foreground text-sm">Cargando proyecto...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-4 max-w-full overflow-hidden">

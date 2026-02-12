@@ -3772,3 +3772,11 @@
 - [x] Textos de gráficas en negro/gris oscuro (#002C63 títulos, #1E293B valores)
 - [x] Colores vibrantes y profesionales con gradientes y sombras
 - [x] Diseño agresivamente estético: línea decorativa verde bajo títulos, separadores blancos en donuts, bordes redondeados en barras, borde sutil alrededor de cada gráfica
+
+## Verificación Ficha Ítem PDF
+- [x] FIX: Fotos antes/después no aparecen en PDF de ficha de ítem — loadImageForPDF mejorado con fallback
+- [x] FIX: Imagen de plano con pin no aparece en PDF — pinPlanoId agregado a itemFieldsWithoutBase64
+
+## Fix PDF Urgente
+- [x] FIX: pinPlanoId no llega al PDF — agregado a itemFieldsWithoutBase64 en db.ts
+- [x] FIX: Tablas del PDF cortan texto — overflow linebreak + márgenes amplios + fontSize adaptativo

@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, fotoAntesUrl, fotoAntesMarcadaUrl FROM items WHERE fotoAntesUrl IS NOT NULL LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, fotoAntesUrl, fotoAntesMarcadaUrl FROM items WHERE fotoAntesUrl IS NOT NULL LIMIT 1;",
+  "rows": [
+    {
+      "id": "1290001",
+      "fotoAntesUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/Hidalma-F8XTCG/antes-USxKy22W.jpg",
+      "fotoAntesMarcadaUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/Hidalma-F8XTCG/antes-marcada-b5zs4pt-.png"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfotoAntesUrl\tfotoAntesMarcadaUrl\n1290001\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/Hidalma-F8XTCG/antes-USxKy22W.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/items/Hidalma-F8XTCG/antes-marcada-b5zs4pt-.png\n",
+  "stderr": "",
+  "execution_time_ms": 49
+}
