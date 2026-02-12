@@ -5475,13 +5475,58 @@ export async function getPinesByPlano(planoId: number) {
       itemEstado: items.status,
       itemDescripcion: items.descripcion,
       itemFotoAntes: items.fotoAntesUrl,
+      itemFotoDespues: items.fotoDespuesUrl,
       itemConsecutivo: items.numeroInterno,
+      itemTitulo: items.titulo,
+      // Datos relacionados
+      residenteNombre: users.name,
+      empresaId: items.empresaId,
+      unidadId: items.unidadId,
+      especialidadId: items.especialidadId,
+      defectoId: items.defectoId,
+      itemCreatedAt: items.createdAt,
     })
     .from(planoPines)
     .leftJoin(items, eq(items.id, planoPines.itemId))
+    .leftJoin(users, eq(users.id, items.asignadoAId))
     .where(and(eq(planoPines.planoId, planoId), eq(planoPines.activo, true)))
     .orderBy(desc(planoPines.createdAt));
-  return result;
+
+  // Enriquecer con nombres de empresa, unidad, especialidad, defecto
+  const empresaIds = Array.from(new Set(result.filter(r => r.empresaId).map(r => r.empresaId!)));
+  const unidadIds = Array.from(new Set(result.filter(r => r.unidadId).map(r => r.unidadId!)));
+  const espIds = Array.from(new Set(result.filter(r => r.especialidadId).map(r => r.especialidadId!)));
+  const defectoIds = Array.from(new Set(result.filter(r => r.defectoId).map(r => r.defectoId!)));
+
+  const empresasMap = new Map<number, string>();
+  const unidadesMap = new Map<number, string>();
+  const espMap = new Map<number, string>();
+  const defectosMap = new Map<number, string>();
+
+  if (empresaIds.length > 0) {
+    const emps = await db.select({ id: empresas.id, nombre: empresas.nombre }).from(empresas).where(inArray(empresas.id, empresaIds));
+    emps.forEach(e => empresasMap.set(e.id, e.nombre));
+  }
+  if (unidadIds.length > 0) {
+    const unis = await db.select({ id: unidades.id, nombre: unidades.nombre }).from(unidades).where(inArray(unidades.id, unidadIds));
+    unis.forEach(u => unidadesMap.set(u.id, u.nombre));
+  }
+  if (espIds.length > 0) {
+    const esps = await db.select({ id: especialidades.id, nombre: especialidades.nombre }).from(especialidades).where(inArray(especialidades.id, espIds));
+    esps.forEach(e => espMap.set(e.id, e.nombre));
+  }
+  if (defectoIds.length > 0) {
+    const defs = await db.select({ id: defectos.id, nombre: defectos.nombre }).from(defectos).where(inArray(defectos.id, defectoIds));
+    defs.forEach(d => defectosMap.set(d.id, d.nombre));
+  }
+
+  return result.map(r => ({
+    ...r,
+    empresaNombre: r.empresaId ? empresasMap.get(r.empresaId) || null : null,
+    unidadNombre: r.unidadId ? unidadesMap.get(r.unidadId) || null : null,
+    especialidadNombre: r.especialidadId ? espMap.get(r.especialidadId) || null : null,
+    defectoNombre: r.defectoId ? defectosMap.get(r.defectoId) || null : null,
+  }));
 }
 
 export async function createPlanoPin(data: InsertPlanoPin) {

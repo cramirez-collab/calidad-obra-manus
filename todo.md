@@ -3803,3 +3803,6 @@
 - [ ] FIX: Notificaciones push se desactivan — fijar permanentemente para todos los usuarios
 - [x] Notificación masiva al asignar ítem: notificar a TODOS los usuarios de la empresa y especialidad del responsable
 - [x] FIX: PDF del stacking no se genera/descarga correctamente — corregir descarga del esquema visual
+- [x] Pines en planos: pin tipo gota/marcador pequeño con iniciales del residente (ej: EG para Esteban Guerrero)
+- [x] Modal de pin: mostrar todos los datos del ítem (código, estado, especialidad, atributo, defecto, fechas, etc.)
+- [x] Modal de pin: enlace directo que lleve al detalle del ítem

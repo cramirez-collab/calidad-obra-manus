@@ -254,21 +254,15 @@ export default function Planos() {
     };
   }, []);
 
-  // === TAP EN PIN: Navegación inmediata ===
+  // === TAP EN PIN: Mostrar modal con datos completos ===
   const handlePinTap = useCallback((pin: any, e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
     if (pinMode) return;
 
-    // Si tiene ítem vinculado, navegar directo sin espera
-    if (pin.itemId) {
-      setShowViewer(false);
-      navigate(`/item/${pin.itemId}`);
-      return;
-    }
-
-    // Si no tiene ítem, mostrar toast con la nota
-    toast.info(pin.nota || "Pin sin ítem vinculado");
-  }, [pinMode, navigate]);
+    // Mostrar modal con toda la info del pin
+    setTappedPin(pin);
+    setShowPinModal(true);
+  }, [pinMode]);
 
   // Ir al ítem inmediatamente
   const goToItem = useCallback((itemId: number) => {
@@ -708,11 +702,19 @@ export default function Planos() {
                   draggable={false}
                 />
 
-                {/* Pines: solo número pequeño */}
+                {/* Pines: tipo gota/marcador con iniciales del residente */}
                 {showPins && filteredPines.map((pin: any, idx: number) => {
                   const estado = pin.itemEstado || "sin_item";
                   const colors = PIN_COLORS[estado] || PIN_COLORS.sin_item;
                   const isTapped = tappedPin?.id === pin.id;
+                  // Obtener iniciales del residente
+                  const getInitials = (name: string | null | undefined) => {
+                    if (!name) return "?";
+                    const parts = name.trim().split(/\s+/);
+                    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+                    return parts[0].substring(0, 2).toUpperCase();
+                  };
+                  const initials = getInitials(pin.residenteNombre);
 
                   return (
                     <div
@@ -721,26 +723,38 @@ export default function Planos() {
                       style={{
                         left: `${parseFloat(pin.posX)}%`,
                         top: `${parseFloat(pin.posY)}%`,
-                        transform: 'translate(-50%, -50%)',
+                        transform: 'translate(-50%, -100%)',
                         zIndex: isTapped ? 50 : 10,
                       }}
                       onClick={(e) => handlePinTap(pin, e)}
                     >
-                      {/* Pin: circulo pequeño con número */}
-                      <div
-                        className="flex items-center justify-center rounded-full shadow-lg border-2 transition-transform"
-                        style={{
-                          width: isTapped ? '28px' : '22px',
-                          height: isTapped ? '28px' : '22px',
-                          backgroundColor: colors.bg,
-                          borderColor: colors.border,
-                          transform: isTapped ? 'scale(1.3)' : 'scale(1)',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <span className="text-white font-bold" style={{ fontSize: isTapped ? '11px' : '9px' }}>
-                          {pin.itemConsecutivo || idx + 1}
-                        </span>
+                      {/* Pin tipo marcador con punta */}
+                      <div className="flex flex-col items-center" style={{ cursor: 'pointer' }}>
+                        <div
+                          className="flex items-center justify-center rounded-full shadow-lg border-2 transition-transform"
+                          style={{
+                            width: isTapped ? '30px' : '24px',
+                            height: isTapped ? '30px' : '24px',
+                            backgroundColor: colors.bg,
+                            borderColor: colors.border,
+                            transform: isTapped ? 'scale(1.2)' : 'scale(1)',
+                          }}
+                        >
+                          <span className="text-white font-bold leading-none" style={{ fontSize: isTapped ? '11px' : '9px' }}>
+                            {initials}
+                          </span>
+                        </div>
+                        {/* Punta del pin */}
+                        <div
+                          style={{
+                            width: 0,
+                            height: 0,
+                            borderLeft: '5px solid transparent',
+                            borderRight: '5px solid transparent',
+                            borderTop: `6px solid ${colors.bg}`,
+                            marginTop: '-1px',
+                          }}
+                        />
                       </div>
                     </div>
                   );
@@ -810,76 +824,111 @@ export default function Planos() {
         </div>
       )}
 
-      {/* ========== MODAL: Info del pin (aparece al tap, 10s auto-navega) ========== */}
+      {/* ========== MODAL: Info completa del pin ========== */}
       {showPinModal && tappedPin && (
         <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center" onClick={closePinModal}>
           <div className="absolute inset-0 bg-black/40" />
           <div
-            className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm mx-auto overflow-hidden animate-in slide-in-from-bottom-4 duration-200"
+            className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md mx-auto overflow-hidden animate-in slide-in-from-bottom-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Barra de progreso (10 segundos) */}
-            <div className="h-1 bg-slate-100 overflow-hidden">
-              <div
-                className="h-full bg-emerald-500"
-                style={{ animation: 'shrink-bar 10s linear forwards' }}
-              />
-            </div>
-            <style>{`@keyframes shrink-bar { from { width: 100%; } to { width: 0%; } }`}</style>
-
-            {/* Header con estado */}
-            <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+            {/* Header con estado y código */}
+            <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <span
-                  className="w-3 h-3 rounded-full"
+                  className="w-3 h-3 rounded-full flex-shrink-0"
                   style={{ backgroundColor: PIN_COLORS[tappedPin.itemEstado || "sin_item"]?.bg || "#6b7280" }}
                 />
-                <span className="text-xs font-semibold text-slate-500 uppercase">
+                <span className="text-xs font-semibold uppercase" style={{ color: PIN_COLORS[tappedPin.itemEstado || "sin_item"]?.bg || "#6b7280" }}>
                   {STATUS_LABELS[tappedPin.itemEstado || "sin_item"] || "Sin estado"}
                 </span>
+                {tappedPin.itemCodigo && (
+                  <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{tappedPin.itemCodigo}</span>
+                )}
               </div>
               <button onClick={closePinModal} className="p-1 hover:bg-slate-100 rounded-full">
                 <X className="w-4 h-4 text-slate-400" />
               </button>
             </div>
 
-            {/* Contenido */}
-            <div className="px-4 pb-3">
-              {/* Código y consecutivo */}
-              {tappedPin.itemCodigo && (
-                <h3 className="text-base font-bold text-slate-800">{tappedPin.itemCodigo}</h3>
+            {/* Fotos antes/después */}
+            {(tappedPin.itemFotoAntes || tappedPin.itemFotoDespues) && (
+              <div className="flex gap-1 px-4 pt-3">
+                {tappedPin.itemFotoAntes && (
+                  <div className="flex-1">
+                    <p className="text-[10px] text-slate-400 mb-1">Antes</p>
+                    <img src={tappedPin.itemFotoAntes} alt="Antes" className="w-full h-20 rounded-lg object-cover" />
+                  </div>
+                )}
+                {tappedPin.itemFotoDespues && (
+                  <div className="flex-1">
+                    <p className="text-[10px] text-slate-400 mb-1">Después</p>
+                    <img src={tappedPin.itemFotoDespues} alt="Después" className="w-full h-20 rounded-lg object-cover" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Datos del ítem */}
+            <div className="px-4 py-3 space-y-1.5">
+              {tappedPin.itemTitulo && (
+                <div className="flex items-start gap-2">
+                  <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Defecto</span>
+                  <span className="text-xs font-medium text-slate-700">{tappedPin.itemTitulo}</span>
+                </div>
+              )}
+              {tappedPin.itemDescripcion && (
+                <div className="flex items-start gap-2">
+                  <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Descripción</span>
+                  <span className="text-xs text-slate-600 line-clamp-2">{tappedPin.itemDescripcion}</span>
+                </div>
+              )}
+              {tappedPin.residenteNombre && (
+                <div className="flex items-start gap-2">
+                  <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Residente</span>
+                  <span className="text-xs font-medium text-slate-700">{tappedPin.residenteNombre}</span>
+                </div>
+              )}
+              {tappedPin.empresaNombre && (
+                <div className="flex items-start gap-2">
+                  <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Empresa</span>
+                  <span className="text-xs text-slate-600">{tappedPin.empresaNombre}</span>
+                </div>
+              )}
+              {tappedPin.unidadNombre && (
+                <div className="flex items-start gap-2">
+                  <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Unidad</span>
+                  <span className="text-xs text-slate-600">{tappedPin.unidadNombre}</span>
+                </div>
+              )}
+              {tappedPin.especialidadNombre && (
+                <div className="flex items-start gap-2">
+                  <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Especialidad</span>
+                  <span className="text-xs text-slate-600">{tappedPin.especialidadNombre}</span>
+                </div>
+              )}
+              {tappedPin.defectoNombre && (
+                <div className="flex items-start gap-2">
+                  <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Tipo defecto</span>
+                  <span className="text-xs text-slate-600">{tappedPin.defectoNombre}</span>
+                </div>
               )}
               {tappedPin.itemConsecutivo && (
-                <p className="text-xs text-slate-400">#{tappedPin.itemConsecutivo}</p>
-              )}
-
-              {/* Foto + descripción */}
-              <div className="flex gap-3 mt-2">
-                {tappedPin.itemFotoAntes && (
-                  <img src={tappedPin.itemFotoAntes} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
-                )}
-                <div className="min-w-0 flex-1">
-                  {tappedPin.itemDescripcion && (
-                    <p className="text-sm text-slate-600 line-clamp-3">{tappedPin.itemDescripcion}</p>
-                  )}
-                  {tappedPin.nota && !tappedPin.itemId && (
-                    <p className="text-sm text-slate-500 italic mt-1">{tappedPin.nota}</p>
-                  )}
+                <div className="flex items-start gap-2">
+                  <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Consecutivo</span>
+                  <span className="text-xs font-mono text-slate-600">#{tappedPin.itemConsecutivo}</span>
                 </div>
-              </div>
-
-              {/* Info adicional */}
-              {(tappedPin.itemTitulo || tappedPin.empresaNombre || tappedPin.residenteNombre) && (
-                <div className="mt-2 pt-2 border-t border-slate-100 space-y-0.5">
-                  {tappedPin.itemTitulo && (
-                    <p className="text-xs text-slate-500"><span className="font-medium text-slate-600">Defecto:</span> {tappedPin.itemTitulo}</p>
-                  )}
-                  {tappedPin.empresaNombre && (
-                    <p className="text-xs text-slate-500"><span className="font-medium text-slate-600">Empresa:</span> {tappedPin.empresaNombre}</p>
-                  )}
-                  {tappedPin.residenteNombre && (
-                    <p className="text-xs text-slate-500"><span className="font-medium text-slate-600">Asignado:</span> {tappedPin.residenteNombre}</p>
-                  )}
+              )}
+              {tappedPin.itemCreatedAt && (
+                <div className="flex items-start gap-2">
+                  <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Fecha</span>
+                  <span className="text-xs text-slate-600">{new Date(tappedPin.itemCreatedAt).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: '2-digit' })}</span>
+                </div>
+              )}
+              {tappedPin.nota && !tappedPin.itemId && (
+                <div className="flex items-start gap-2">
+                  <span className="text-[10px] text-slate-400 w-20 flex-shrink-0 pt-0.5">Nota</span>
+                  <span className="text-xs text-slate-500 italic">{tappedPin.nota}</span>
                 </div>
               )}
             </div>
@@ -889,9 +938,9 @@ export default function Planos() {
               {tappedPin.itemId && (
                 <button
                   onClick={() => goToItem(tappedPin.itemId)}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-2.5 text-sm font-medium transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-[#002C63] hover:bg-[#001d42] text-white rounded-lg py-2.5 text-sm font-medium transition-colors"
                 >
-                  <ExternalLink className="w-4 h-4" /> Ir al Ítem
+                  <ExternalLink className="w-4 h-4" /> Ver Ítem Completo
                 </button>
               )}
               {isAdmin && (
@@ -905,13 +954,6 @@ export default function Planos() {
                 </button>
               )}
             </div>
-
-            {/* Texto auto-navegación */}
-            {tappedPin.itemId && (
-              <div className="bg-slate-50 px-4 py-2 text-center">
-                <p className="text-[10px] text-slate-400">Navegando al ítem en 10 segundos...</p>
-              </div>
-            )}
           </div>
         </div>
       )}
