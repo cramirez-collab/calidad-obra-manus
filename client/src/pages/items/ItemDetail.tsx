@@ -62,6 +62,7 @@ import { format } from "date-fns";
 import { downloadPDFBestMethod } from "@/lib/pdfDownload";
 import { Input } from "@/components/ui/input";
 import ZoomablePlano from "@/components/ZoomablePlano";
+import { subirConRetry } from "@/lib/uploadQueue";
 import {
   Select,
   SelectContent,
@@ -335,73 +336,39 @@ export default function ItemDetail() {
       return;
     }
     setIsSubmitting(true);
-    
-    // Función con reintentos ILIMITADOS y backoff exponencial
-    const intentarSubir = async (maxIntentos = 10) => {
-      for (let i = 0; i < maxIntentos; i++) {
-        try {
-          if (i > 0) {
-            toast.info(`Reintentando... (${i + 1}/${maxIntentos})`);
-          }
-          return await uploadFotoDespuesMutation.mutateAsync({
-            itemId,
-            fotoBase64: fotoDespues,
-            comentario: comentario || undefined,
-          });
-        } catch (error: any) {
-          console.error(`Intento ${i + 1} falló:`, error.message);
-          if (i === maxIntentos - 1) throw error;
-          // Backoff exponencial: 1s, 2s, 4s, 8s, 16s...
-          const waitTime = Math.min(Math.pow(2, i) * 1000, 30000);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-        }
-      }
-    };
-    
+
     try {
       toast.info("Subiendo foto...");
-      await intentarSubir(10);
-      toast.success("¡Foto subida exitosamente!");
-    } catch (error: any) {
-      console.error('Error subiendo foto después:', error);
-      // Guardar en IndexedDB para sincronizar después
-      try {
-        await guardarFotoOffline(itemId, fotoDespues, comentario);
-        toast.warning("Foto guardada localmente. Se subirá cuando haya mejor conexión.");
-      } catch {
-        toast.error("Error al subir la foto. Intenta de nuevo más tarde.");
+      const { success } = await subirConRetry(
+        () => uploadFotoDespuesMutation.mutateAsync({
+          itemId,
+          fotoBase64: fotoDespues,
+          comentario: comentario || undefined,
+        }),
+        {
+          itemId,
+          tipo: 'foto_despues',
+          foto: fotoDespues,
+          comentario: comentario || undefined,
+        },
+        8 // 8 intentos con backoff antes de guardar en cola
+      );
+
+      if (success) {
+        toast.success("\u00a1Foto subida exitosamente!");
+        utils.items.invalidate();
+        setFotoDespues(null);
+        setComentario("");
+      } else {
+        toast.warning("Foto guardada localmente. Se subir\u00e1 autom\u00e1ticamente cuando mejore la conexi\u00f3n.", { duration: 6000 });
+        setFotoDespues(null);
+        setComentario("");
       }
+    } catch (error: any) {
+      toast.error("No se pudo guardar la foto. Verifica tu conexi\u00f3n e intenta de nuevo.");
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Guardar foto en IndexedDB para sincronización posterior
-  const guardarFotoOffline = async (itemId: number, foto: string, comentario: string) => {
-    return new Promise<void>((resolve, reject) => {
-      const request = indexedDB.open('oqc_offline', 1);
-      request.onerror = () => reject(new Error('Error abriendo IndexedDB'));
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        if (!db.objectStoreNames.contains('fotos_pendientes')) {
-          db.createObjectStore('fotos_pendientes', { keyPath: 'id', autoIncrement: true });
-        }
-      };
-      request.onsuccess = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        const transaction = db.transaction(['fotos_pendientes'], 'readwrite');
-        const store = transaction.objectStore('fotos_pendientes');
-        store.add({
-          itemId,
-          foto,
-          comentario,
-          timestamp: Date.now(),
-          tipo: 'foto_despues'
-        });
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(new Error('Error guardando en IndexedDB'));
-      };
-    });
   };
 
   const handleApproval = async () => {

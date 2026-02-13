@@ -1,41 +1,47 @@
 /**
- * Componente de sincronización automática de fotos pendientes
- * Se ejecuta en segundo plano y sincroniza fotos guardadas offline
+ * Componente de sincronización automática de fotos y acciones pendientes.
+ * Se ejecuta en segundo plano y sincroniza todo lo guardado offline.
+ *
+ * Unifica las dos colas:
+ * - uploadQueue (oqc_upload_queue): fotos pendientes
+ * - offlineStorage (oqc_offline_db): ítems creados offline
  */
-
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
-import { 
-  obtenerPendientes, 
-  eliminarDeCola, 
-  actualizarIntentos,
+import {
+  obtenerPendientes,
+  eliminarDeCola,
+  marcarFallo,
   limpiarAntiguos,
-  contarPendientes
+  contarPendientes,
 } from '@/lib/uploadQueue';
+import {
+  getPendingActions,
+  removePendingAction,
+  countPendingActions,
+} from '@/lib/offlineStorage';
 
 export function SyncManager() {
   const syncingRef = useRef(false);
   const utils = trpc.useUtils();
-  
+
   const uploadFotoDespuesMutation = trpc.items.uploadFotoDespues.useMutation();
   const createItemMutation = trpc.items.create.useMutation();
 
-  // Función de sincronización
-  const sincronizar = async () => {
-    if (syncingRef.current) return;
-    
+  const sincronizar = useCallback(async () => {
+    if (syncingRef.current || !navigator.onLine) return;
+
     try {
       syncingRef.current = true;
-      
-      // Limpiar fotos antiguas primero
+
+      // 1. Limpiar fotos antiguas
       await limpiarAntiguos();
-      
+
+      // 2. Sincronizar cola de fotos (uploadQueue)
       const pendientes = await obtenerPendientes();
-      if (pendientes.length === 0) return;
-      
-      console.log(`[SyncManager] ${pendientes.length} fotos pendientes de sincronizar`);
-      
+      let syncedFotos = 0;
+
       for (const upload of pendientes) {
         try {
           if (upload.tipo === 'foto_despues') {
@@ -45,78 +51,108 @@ export function SyncManager() {
               comentario: upload.comentario,
             });
           }
-          // Para foto_antes, se maneja en el flujo de creación de ítem
-          
-          // Eliminar de la cola si fue exitoso
+
           if (upload.id) {
             await eliminarDeCola(upload.id);
-            console.log(`[SyncManager] Foto ${upload.id} sincronizada exitosamente`);
+            syncedFotos++;
+            console.log(`[SyncManager] Foto ${upload.id} sincronizada`);
           }
-          
-          // Invalidar queries para refrescar datos
-          utils.items.invalidate();
-          
         } catch (error: any) {
-          console.error(`[SyncManager] Error sincronizando foto ${upload.id}:`, error);
-          
-          // Actualizar contador de intentos
+          console.error(`[SyncManager] Error foto ${upload.id}:`, error.message);
           if (upload.id) {
-            await actualizarIntentos(upload.id, (upload.intentos || 0) + 1, error.message);
-          }
-          
-          // Si ya tiene muchos intentos, notificar al usuario
-          if ((upload.intentos || 0) >= 5) {
-            toast.error(`No se pudo sincronizar una foto. Verifica tu conexión.`);
+            await marcarFallo(upload.id, error.message);
           }
         }
       }
-      
+
+      // 3. Sincronizar cola de ítems offline (offlineStorage)
+      let syncedItems = 0;
+      try {
+        const offlineActions = await getPendingActions();
+        for (const action of offlineActions) {
+          try {
+            if (action.type === 'create_item' && action.data) {
+              await createItemMutation.mutateAsync({
+                proyectoId: action.data.proyectoId,
+                empresaId: action.data.empresaId,
+                unidadId: action.data.unidadId,
+                especialidadId: action.data.especialidadId,
+                defectoId: action.data.defectoId,
+                espacioId: action.data.espacioId,
+                titulo: action.data.titulo,
+                fotoAntesBase64: action.data.fotoAntesBase64,
+                fotoAntesMarcadaBase64: action.data.fotoAntesMarcadaBase64,
+                clientId: action.data.clientId,
+                codigoQrPreasignado: action.data.codigoQrPreasignado,
+              });
+              syncedItems++;
+            }
+            await removePendingAction(action.id);
+          } catch (error: any) {
+            if (error.message?.includes('duplicate') || error.message?.includes('DUPLICATE')) {
+              await removePendingAction(action.id);
+              syncedItems++;
+            } else {
+              console.error(`[SyncManager] Error ítem ${action.id}:`, error.message);
+            }
+          }
+        }
+      } catch (e) {
+        // offlineStorage puede no estar disponible
+      }
+
+      // 4. Notificar al usuario
+      const total = syncedFotos + syncedItems;
+      if (total > 0) {
+        toast.success(`${total} elemento(s) sincronizado(s)`);
+        utils.items.invalidate();
+      }
     } catch (error) {
-      console.error('[SyncManager] Error en sincronización:', error);
+      console.error('[SyncManager] Error general:', error);
     } finally {
       syncingRef.current = false;
     }
-  };
+  }, []);
 
-  // Sincronizar cuando hay conexión
+  // Sincronizar al montar + cuando vuelve la conexión + periódicamente
   useEffect(() => {
-    // Sincronizar al montar
     sincronizar();
-    
-    // Sincronizar cuando vuelve la conexión
+
     const handleOnline = () => {
-      console.log('[SyncManager] Conexión restaurada, sincronizando...');
-      toast.info('Conexión restaurada. Sincronizando fotos pendientes...');
-      sincronizar();
+      console.log('[SyncManager] Conexión restaurada');
+      toast.info('Conexión restaurada. Sincronizando pendientes...');
+      setTimeout(sincronizar, 2000);
     };
-    
+
     window.addEventListener('online', handleOnline);
-    
-    // Sincronizar periódicamente (cada 30 segundos)
-    const interval = setInterval(sincronizar, 30000);
-    
+
+    const interval = setInterval(() => {
+      if (navigator.onLine) sincronizar();
+    }, 15000);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       clearInterval(interval);
     };
-  }, []);
+  }, [sincronizar]);
 
-  // Mostrar indicador si hay fotos pendientes
+  // Mostrar indicador de pendientes al montar
   useEffect(() => {
-    const checkPendientes = async () => {
-      const count = await contarPendientes();
-      if (count > 0) {
-        toast.info(`${count} foto(s) pendiente(s) de sincronizar`, {
-          duration: 3000,
+    const check = async () => {
+      const fotoCount = await contarPendientes();
+      let itemCount = 0;
+      try { itemCount = await countPendingActions(); } catch {}
+      const total = fotoCount + itemCount;
+      if (total > 0) {
+        toast.info(`${total} elemento(s) pendiente(s) de sincronizar`, {
+          duration: 4000,
           id: 'sync-pending',
         });
       }
     };
-    
-    checkPendientes();
+    check();
   }, []);
 
-  // Este componente no renderiza nada visible
   return null;
 }
 

@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { compressAdaptive } from "@/lib/imageCompression";
+import { subirConRetry } from "@/lib/uploadQueue";
 
 const statusLabels: Record<string, string> = {
   pendiente_foto_despues: "En Proceso - Pendiente Corrección",
@@ -150,10 +151,33 @@ export default function Seguimiento() {
     }
     setIsSubmitting(true);
     try {
-      await uploadFotoDespuesMutation.mutateAsync({
-        itemId: item.id,
-        fotoBase64: fotoDespues,
-      });
+      toast.info("Subiendo foto...");
+      const { success } = await subirConRetry(
+        () => uploadFotoDespuesMutation.mutateAsync({
+          itemId: item.id,
+          fotoBase64: fotoDespues,
+        }),
+        {
+          itemId: item.id,
+          tipo: 'foto_despues',
+          foto: fotoDespues,
+          comentario: undefined,
+        },
+        5 // 5 intentos con backoff antes de guardar en cola
+      );
+
+      if (success) {
+        toast.success("\u00a1Foto subida exitosamente!");
+        utils.items.getByCodigo.invalidate({ codigo: codigo || "" });
+        setFotoDespues(null);
+        setShowUploadSection(false);
+      } else {
+        toast.warning("Foto guardada localmente. Se subir\u00e1 autom\u00e1ticamente cuando mejore la conexi\u00f3n.", { duration: 6000 });
+        setFotoDespues(null);
+        setShowUploadSection(false);
+      }
+    } catch (error: any) {
+      toast.error("No se pudo guardar la foto. Verifica tu conexi\u00f3n e intenta de nuevo.");
     } finally {
       setIsSubmitting(false);
     }

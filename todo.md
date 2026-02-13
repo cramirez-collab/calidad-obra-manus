@@ -3895,3 +3895,7 @@
 - [x] CRITICAL: Auditar CapturaRapida y NuevoItem para que envíen residenteId correcto al backend
 - [x] BUG: Enlace externo (Avances Graficas / Google Sheets pubhtml) no abre al hacer click - cambiado window.open a <a target=_blank> en sidebar, mobile menu y EnlacesExternos
 - [x] FEATURE: Trazabilidad (Creó, Asignado, Aprobó) completamente visible y responsiva en tarjetas de ítems - iconos compactos en móvil, info completa siempre
+- [x] CRITICAL: Sistema de retry automático para subida de fotos con mala señal - guardar en IndexedDB y reintentar cuando mejore conexión
+- [x] CRITICAL: Integrar cola de retry en todos los flujos de foto: crear ítem, foto después, foto antes
+- [x] FEATURE: Indicador visual de fotos pendientes de subir (badge/banner) - SyncManager muestra toast con conteo
+- [x] FEATURE: Botón manual de reintentar subida si el auto-retry no funciona - SyncManager reintenta cada 15s + al detectar conexión

@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM empresas WHERE id IN (2760001,2760002,2760003,2760004,2760005,2760007,2760008,2760009,2760010,2760011,2760012,2760013);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute DELETE FROM empresas WHERE id IN (2760001,2760002,2760003,2760004,2760005,2760007,2760008,2760009,2760010,2760011,2760012,2760013);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 59
+}
