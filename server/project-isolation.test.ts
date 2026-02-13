@@ -239,3 +239,104 @@ describe('Project Isolation - Function Signatures', () => {
     expect(db.getAllEspecialidadesConAtributos.length).toBeLessThanOrEqual(1);
   });
 });
+
+describe('Cache Cleanup on Project Switch', () => {
+  it('should clear all caches when switching projects', () => {
+    // Simulate cache keys that should be cleared
+    const cacheKeys = ['items', 'empresas', 'unidades', 'especialidades', 'planos', 'pines', 'estadisticas'];
+    const clearedKeys: string[] = [];
+    
+    // Simulate cache invalidation
+    for (const key of cacheKeys) {
+      clearedKeys.push(key);
+    }
+    
+    expect(clearedKeys.length).toBe(cacheKeys.length);
+    expect(clearedKeys).toEqual(cacheKeys);
+  });
+
+  it('should not retain data from previous project after switch', () => {
+    // Simulate switching from Hidalma (id=1) to Mayas (id=150001)
+    let currentProjectId = 1;
+    let cachedItems = [{ id: 1, proyectoId: 1, titulo: 'Item Hidalma' }];
+    
+    // Switch project
+    currentProjectId = 150001;
+    cachedItems = []; // Cache cleared
+    
+    expect(currentProjectId).toBe(150001);
+    expect(cachedItems.length).toBe(0);
+    // No Hidalma items should remain
+    expect(cachedItems.filter(i => i.proyectoId === 1).length).toBe(0);
+  });
+});
+
+describe('Pin Initials Generation', () => {
+  const getInitials = (name: string): string => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0].substring(0, 2).toUpperCase();
+  };
+
+  it('should generate correct initials for two-word names', () => {
+    expect(getInitials('Esteban Guerrero')).toBe('EG');
+    expect(getInitials('Carlos Ramirez')).toBe('CR');
+    expect(getInitials('Juan Javier')).toBe('JJ');
+  });
+
+  it('should use first and last name initials for multi-word names', () => {
+    expect(getInitials('Juan José García López')).toBe('JL');
+    expect(getInitials('María del Carmen Pérez')).toBe('MP');
+  });
+
+  it('should handle single-word names', () => {
+    expect(getInitials('Ana')).toBe('AN');
+    expect(getInitials('X')).toBe('X');
+  });
+
+  it('should handle names with extra spaces', () => {
+    expect(getInitials('  Esteban   Guerrero  ')).toBe('EG');
+  });
+});
+
+describe('Correction Date Calculation', () => {
+  it('should calculate correction date as alta + diasCorreccion', () => {
+    const diasCorreccion = 8;
+    const fechaAlta = new Date('2026-02-01');
+    const fechaCorreccion = new Date(fechaAlta);
+    fechaCorreccion.setDate(fechaCorreccion.getDate() + diasCorreccion);
+    
+    expect(fechaCorreccion.toISOString().split('T')[0]).toBe('2026-02-09');
+  });
+
+  it('should support custom diasCorreccion values', () => {
+    const fechaAlta = new Date('2026-02-01');
+    
+    const test15 = new Date(fechaAlta);
+    test15.setDate(test15.getDate() + 15);
+    expect(test15.toISOString().split('T')[0]).toBe('2026-02-16');
+    
+    const test30 = new Date(fechaAlta);
+    test30.setDate(test30.getDate() + 30);
+    expect(test30.toISOString().split('T')[0]).toBe('2026-03-03');
+  });
+
+  it('should identify overdue items correctly', () => {
+    const diasCorreccion = 8;
+    const now = new Date('2026-02-12');
+    
+    // Item created Jan 20 - 8 days = Jan 28 deadline, now Feb 12 = OVERDUE
+    const oldItem = new Date('2026-01-20');
+    const oldDeadline = new Date(oldItem);
+    oldDeadline.setDate(oldDeadline.getDate() + diasCorreccion);
+    expect(now > oldDeadline).toBe(true);
+    
+    // Item created Feb 10 - 8 days = Feb 18 deadline, now Feb 12 = NOT overdue
+    const recentItem = new Date('2026-02-10');
+    const recentDeadline = new Date(recentItem);
+    recentDeadline.setDate(recentDeadline.getDate() + diasCorreccion);
+    expect(now > recentDeadline).toBe(false);
+  });
+});

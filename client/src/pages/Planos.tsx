@@ -117,6 +117,10 @@ export default function Planos() {
 
   // State para fullscreen del plano
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // State para subir/cambiar imagen del plano desde el visor
+  const [pendingImageBase64, setPendingImageBase64] = useState("");
+  const [pendingImageNombre, setPendingImageNombre] = useState("");
+  const viewerFileInputRef = useRef<HTMLInputElement>(null);
 
   // State para filtro por nivel
   const [filterNivel, setFilterNivel] = useState<number | null>(null);
@@ -731,6 +735,68 @@ export default function Planos() {
                 >
                   <Plus className="w-4 h-4" />
                 </button>
+              )}
+              {/* Subir/cambiar imagen del plano */}
+              {isAdmin && (
+                <>
+                  <input
+                    ref={viewerFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 15 * 1024 * 1024) { toast.error("Imagen demasiado grande (máx 15MB)"); return; }
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        setPendingImageBase64(reader.result as string);
+                        setPendingImageNombre(file.name);
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  <button
+                    onClick={() => viewerFileInputRef.current?.click()}
+                    className="p-1.5 hover:bg-white/10 rounded-lg"
+                    title="Subir/cambiar imagen del plano"
+                  >
+                    <Upload className="w-4 h-4" />
+                  </button>
+                  {pendingImageBase64 && (
+                    <button
+                      onClick={() => {
+                        if (!currentPlano) return;
+                        actualizarPlano.mutate({
+                          id: currentPlano.id,
+                          nombre: currentPlano.nombre,
+                          nivel: currentPlano.nivel ?? 0,
+                          descripcion: currentPlano.descripcion || undefined,
+                          imagenBase64: pendingImageBase64,
+                          imagenNombre: pendingImageNombre,
+                        }, {
+                          onSuccess: () => {
+                            setPendingImageBase64("");
+                            setPendingImageNombre("");
+                            toast.success("Imagen del plano actualizada");
+                          }
+                        });
+                      }}
+                      disabled={actualizarPlano.isPending}
+                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 animate-pulse"
+                      title="Guardar imagen del plano"
+                    >
+                      {actualizarPlano.isPending ? (
+                        <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="w-3.5 h-3.5" />
+                          Guardar
+                        </>
+                      )}
+                    </button>
+                  )}
+                </>
               )}
               <div className="w-px h-4 bg-white/20 mx-0.5" />
               {/* Zoom */}
