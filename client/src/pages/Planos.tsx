@@ -827,14 +827,15 @@ export default function Planos() {
               >
                 {showPins ? <MapPin className="w-4 h-4" /> : <MapPinOff className="w-4 h-4" />}
               </button>
-              {/* Agregar pin (admin) */}
+              {/* Agregar pin (admin) - botón prominente */}
               {isAdmin && (
                 <button
                   onClick={() => { setPinMode(p => !p); setSelectedPin(null); }}
-                  className={`p-1.5 rounded-lg transition-colors ${pinMode ? 'bg-red-500 hover:bg-red-600 animate-pulse' : 'hover:bg-white/10'}`}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-semibold text-xs transition-colors ${pinMode ? 'bg-red-500 hover:bg-red-600 animate-pulse text-white' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'}`}
                   title={pinMode ? "Cancelar modo pin" : "Agregar pin"}
                 >
                   <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">{pinMode ? 'Cancelar' : 'Pin'}</span>
                 </button>
               )}
             </div>
@@ -956,6 +957,17 @@ export default function Planos() {
                 })}
               </div>
             </div>
+            {/* FAB flotante: Agregar Pin (admin, solo cuando NO está en modo pin) */}
+            {isAdmin && !pinMode && (
+              <button
+                onClick={() => { setPinMode(true); setSelectedPin(null); }}
+                className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-xl shadow-emerald-500/40 font-bold text-sm transition-all active:scale-95 animate-bounce"
+                style={{ animationDuration: '2s', animationIterationCount: 3 }}
+              >
+                <Plus className="w-5 h-5" />
+                <span>Agregar Pin</span>
+              </button>
+            )}
           </div>
 
           {/* Leyenda de estados en la parte inferior */}
