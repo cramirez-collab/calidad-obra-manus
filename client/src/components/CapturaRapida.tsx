@@ -36,12 +36,14 @@ import { getImageUrl } from "@/lib/imageUrl";
 import { useLocation } from "wouter";
 
 interface CapturaRapidaProps {
-  pinPos: { x: number; y: number };
-  planoId: number;
-  planoNivel: number | null;
+  pinPos: { x: number; y: number } | null;
+  planoId?: number;
+  planoNivel?: number | null;
   onClose: () => void;
   onItemCreated: (item: any) => void;
-  onContinuePin: () => void;
+  onContinuePin?: () => void;
+  headerTitle?: string;
+  headerSubtitle?: string;
 }
 
 export default function CapturaRapida({
@@ -51,10 +53,13 @@ export default function CapturaRapida({
   onClose,
   onItemCreated,
   onContinuePin,
+  headerTitle,
+  headerSubtitle,
 }: CapturaRapidaProps) {
   const { user } = useAuth();
   const { selectedProjectId } = useProject();
   const [, navigate] = useLocation();
+  const hasPin = !!pinPos;
 
   // Form state
   const [residenteId, setResidenteId] = useState("");
@@ -218,9 +223,9 @@ export default function CapturaRapida({
       titulo: tituloFinal,
       fotoAntesBase64: fotoAntes,
       clientId,
-      pinPlanoId: planoId,
-      pinPosX: pinPos.x.toFixed(4),
-      pinPosY: pinPos.y.toFixed(4),
+      pinPlanoId: hasPin && planoId ? planoId : undefined,
+      pinPosX: hasPin && pinPos ? pinPos.x.toFixed(4) : undefined,
+      pinPosY: hasPin && pinPos ? pinPos.y.toFixed(4) : undefined,
     };
 
     const maxRetries = 3;
@@ -283,9 +288,9 @@ export default function CapturaRapida({
               <MapPin className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-slate-800">Captura Rápida</h3>
+              <h3 className="font-bold text-sm text-slate-800">{headerTitle || "Captura Rápida"}</h3>
               <p className="text-[10px] text-slate-500">
-                Pin en ({pinPos.x.toFixed(0)}%, {pinPos.y.toFixed(0)}%) — Nivel {planoNivel ?? 0}
+                {headerSubtitle || (hasPin && pinPos ? `Pin en (${pinPos.x.toFixed(0)}%, ${pinPos.y.toFixed(0)}%) — Nivel ${planoNivel ?? 0}` : "Nuevo ítem sin ubicación en plano")}
               </p>
             </div>
           </div>

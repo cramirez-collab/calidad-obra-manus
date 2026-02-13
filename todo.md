@@ -3880,3 +3880,10 @@
 - [x] CRITICAL: Modo pin se activa automáticamente al abrir visor de planos para admin - sin necesidad de tocar ningún botón
 - [x] CRITICAL: Al tocar plano, abrir captura rápida directamente sin dialog intermedio de opciones
 - [x] CRITICAL: FAB flotante siempre visible y agresivo para que sea imposible no verlo
+- [x] FEATURE: Sticky header en módulo Pines con 3 modos de captura: +Nuevo Ítem, Pin en Plano, QR
+- [x] FEATURE: Modo Pin en Plano - long press 2s coloca pin rojo → abre modal Crear Ítem → guarda ítem vinculado al pin
+- [x] FEATURE: Modo +Nuevo Ítem - formulario modal para crear ítem sin pin, con opción de asignar ubicación después
+- [x] FEATURE: Modo QR - lector de cámara + fallback input manual, abre ítem existente o crea nuevo
+- [x] RULE: Click en pin existente sigue abriendo directo el ítem asociado (NO modificar comportamiento actual)
+- [x] RULE: Coordenadas de pin normalizadas 0..1 respecto al plano
+- [x] RULE: Aislamiento multiproyecto - no mezclar pines/ítems entre proyectos
