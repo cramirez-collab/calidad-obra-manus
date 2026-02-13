@@ -596,16 +596,17 @@ export default function NuevoItem() {
               value={formData.residenteId}
               onValueChange={(value) => setFormData({ ...formData, residenteId: value, defectoId: "" })}
               residentes={residentesConEmpresa}
-              placeholder="Seleccionar Residente *"
+              placeholder="Seleccionar Responsable *"
             />
             
-            {/* Mostrar Empresa (solo lectura, auto-completado) */}
+            {/* Mostrar Empresa y asignación (solo lectura, auto-completado) */}
             {residenteSeleccionado && (
-              <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                <Building2 className="h-3 w-3 text-gray-400" />
-                <span className="text-xs text-gray-600">{residenteSeleccionado.empresaNombre}</span>
+              <div className="flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
+                <Building2 className="h-3 w-3 text-amber-500" />
+                <span className="text-xs font-medium text-amber-800">{residenteSeleccionado.empresaNombre}</span>
+                <span className="text-[10px] text-amber-600">Debe corregir</span>
                 {especialidadDelResidente && (
-                  <Badge variant="outline" className="text-[10px] ml-auto">
+                  <Badge variant="outline" className="text-[10px] ml-auto border-amber-300 text-amber-700">
                     <Wrench className="h-2 w-2 mr-1" />
                     {especialidadDelResidente.nombre}
                   </Badge>

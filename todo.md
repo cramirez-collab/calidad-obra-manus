@@ -3888,3 +3888,8 @@
 - [x] RULE: Coordenadas de pin normalizadas 0..1 respecto al plano
 - [x] RULE: Aislamiento multiproyecto - no mezclar pines/ítems entre proyectos
 - [x] BUG: Enviar para Firma falla con error "empresaId expected number, received undefined" - corregir mapeo de empresaId en el flujo de firma electrónica
+- [x] CRITICAL: Trazabilidad de ítems - al crear ítem siempre registrar creadoPorId (quien crea) y residenteId (a quien se asigna)
+- [x] CRITICAL: Al seleccionar empresa en formulario, auto-asignar al jefe de residente de esa empresa como residenteId
+- [x] CRITICAL: Flujo completo: Creador crea y asigna → Asignado arregla el detalle → Aprueba → Supervisor da click definitivo
+- [x] CRITICAL: Auditar backend items.create para garantizar que creadoPorId = ctx.user.id siempre
+- [x] CRITICAL: Auditar CapturaRapida y NuevoItem para que envíen residenteId correcto al backend

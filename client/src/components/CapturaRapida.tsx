@@ -355,23 +355,24 @@ export default function CapturaRapida({
             )}
           </div>
 
-          {/* RESIDENTE */}
+          {/* ASIGNACIÓN - A quién se asigna para corregir */}
           <div>
             <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-1.5">
-              <User className="w-3 h-3" /> Residente *
+              <User className="w-3 h-3" /> Asignación *
             </label>
             <ResidenteSelector
               value={residenteId}
               onValueChange={(v) => { setResidenteId(v); setDefectoId(""); }}
               residentes={residentesConEmpresa}
-              placeholder="Seleccionar Residente"
+              placeholder="Seleccionar Responsable"
             />
             {residenteSeleccionado && (
-              <div className="flex items-center gap-2 mt-1.5 p-1.5 bg-slate-50 rounded text-[10px] text-slate-600">
-                <Building2 className="h-3 w-3 text-slate-400" />
-                {residenteSeleccionado.empresaNombre}
+              <div className="flex items-center gap-2 mt-1.5 p-1.5 bg-amber-50 border border-amber-200 rounded text-[10px] text-amber-800">
+                <Building2 className="h-3 w-3 text-amber-500" />
+                <span className="font-medium">{residenteSeleccionado.empresaNombre}</span>
+                <span className="text-[9px] text-amber-600 ml-auto">Debe corregir</span>
                 {especialidadDelResidente && (
-                  <Badge variant="outline" className="text-[9px] ml-auto py-0">
+                  <Badge variant="outline" className="text-[9px] py-0 border-amber-300 text-amber-700">
                     <Wrench className="h-2 w-2 mr-0.5" />
                     {especialidadDelResidente.nombre}
                   </Badge>

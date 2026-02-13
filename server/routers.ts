@@ -986,24 +986,42 @@ export const appRouter = router({
           fotoData.fotoAntesMarcadaBase64 = input.fotoAntesMarcadaBase64;
         }
         
-        // Obtener el residente asignado a la especialidad (si existe)
-        let asignadoAId: number | null = null;
-        if (input.especialidadId) {
+        // ===== TRAZABILIDAD AGRESIVA =====
+        // 1. creadoPorId = ctx.user.id (SIEMPRE: quien crea el ítem)
+        // 2. residenteId = jefe de residente de la empresa (quien debe arreglar el detalle)
+        // 3. asignadoAId = mismo que residenteId (la persona asignada para corregir)
+        // Flujo: Creador crea → Asignado arregla y sube foto después → Supervisor aprueba
+        
+        // Obtener la empresa para saber quién es el jefe de residente asignado
+        const empresa = await db.getEmpresaById(input.empresaId);
+        
+        // Determinar el residente responsable (prioridad: jefeResidenteId > residenteId de empresa > residenteId de especialidad)
+        let residenteResponsableId: number = ctx.user.id; // fallback: el creador
+        
+        if (empresa?.jefeResidenteId) {
+          // Prioridad 1: Jefe de residente de la empresa
+          residenteResponsableId = empresa.jefeResidenteId;
+        } else if (empresa?.residenteId) {
+          // Prioridad 2: Residente de la empresa
+          residenteResponsableId = empresa.residenteId;
+        } else if (input.especialidadId) {
+          // Prioridad 3: Residente de la especialidad
           const especialidad = await db.getEspecialidadById(input.especialidadId);
           if (especialidad?.residenteId) {
-            asignadoAId = especialidad.residenteId;
+            residenteResponsableId = especialidad.residenteId;
           }
         }
         
         const result = await db.createItem({
           ...input,
           ...fotoData,
-          residenteId: ctx.user.id,
+          residenteId: residenteResponsableId, // Persona responsable de arreglar
+          jefeResidenteId: empresa?.jefeResidenteId || null, // Jefe de residente de la empresa
           status: 'pendiente_foto_despues',
-          clientId: input.clientId, // Guardar para evitar duplicados
-          // Trazabilidad
-          creadoPorId: ctx.user.id, // Quien tomó la foto inicial
-          asignadoAId: asignadoAId, // Residente de la especialidad que debe corregir
+          clientId: input.clientId,
+          // Trazabilidad completa
+          creadoPorId: ctx.user.id, // SIEMPRE: quien creó el ítem
+          asignadoAId: residenteResponsableId, // Persona asignada para corregir el detalle
           pinPlanoId: input.pinPlanoId || null,
           pinPosX: input.pinPosX || null,
           pinPosY: input.pinPosY || null,
@@ -1081,11 +1099,37 @@ export const appRouter = router({
               `Se creó el ítem "${input.titulo}" (${itemResult.codigo})`
             );
             
+            // === NOTIFICACIÓN DIRECTA AL ASIGNADO ===
+            // Notificar específicamente al residente responsable (asignadoAId)
+            if (residenteResponsableId && residenteResponsableId !== ctx.user.id) {
+              try {
+                await db.createNotificacion({
+                  usuarioId: residenteResponsableId,
+                  itemId: itemResult.id,
+                  proyectoId: input.proyectoId || undefined,
+                  tipo: 'item_pendiente_foto',
+                  titulo: '⚠️ Ítem asignado a ti para corrección',
+                  mensaje: `Se te asignó el ítem "${input.titulo}" (${itemResult.codigo}). Debes arreglar el detalle y subir foto después.`,
+                });
+                const pushSubsAsignado = await db.getPushSubscriptionsByUsuario(residenteResponsableId);
+                if (pushSubsAsignado.length > 0) {
+                  const pushService = (await import('./pushService')).default;
+                  await pushService.sendPushToMultiple(pushSubsAsignado, {
+                    title: '⚠️ Ítem asignado a ti',
+                    body: `${input.titulo} (${itemResult.codigo}) - Debes corregir este detalle`,
+                    itemId: itemResult.id,
+                    data: { url: `/items/${itemResult.id}`, itemId: itemResult.id, tipo: 'item_asignado' }
+                  });
+                }
+              } catch (e) { console.log('Error notificando al asignado:', e); }
+            }
+            
             // === NOTIFICACIÓN MASIVA: a todos los usuarios de la empresa y especialidad ===
             try {
               const notifiedIds = new Set<number>();
-              // No notificar al creador
+              // No notificar al creador ni al asignado (ya notificado arriba)
               notifiedIds.add(ctx.user.id);
+              if (residenteResponsableId) notifiedIds.add(residenteResponsableId);
               
               // 1) Usuarios directos de la empresa (users.empresaId)
               const empresaUsers = await db.getUsersByEmpresa(input.empresaId);

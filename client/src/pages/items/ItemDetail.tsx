@@ -1414,19 +1414,33 @@ export default function ItemDetail() {
                     </div>
                   </div>
                   
-                  {/* Asignado a */}
+                  {/* Asignado a - Debe corregir */}
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
                       <span className="text-amber-600 text-xs font-bold">2</span>
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs text-muted-foreground">Asignado a</p>
+                      <p className="text-xs text-muted-foreground">Asignado a (debe corregir)</p>
                       <p className="font-medium text-sm">
                         {item.asignadoAId ? getUserName(item.asignadoAId) : (especialidad?.residenteId ? getUserName(especialidad.residenteId) : '-')}
                       </p>
-                      <p className="text-xs text-muted-foreground">Residente de especialidad</p>
+                      <p className="text-xs text-amber-600">Responsable de arreglar el detalle y subir foto después</p>
                     </div>
                   </div>
+                  
+                  {/* Foto después subida por */}
+                  {item.jefeResidenteId && item.fechaFotoDespues && (
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-teal-100 flex items-center justify-center">
+                        <span className="text-teal-600 text-xs font-bold">2b</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">Foto después subida por</p>
+                        <p className="font-medium text-sm">{getUserName(item.jefeResidenteId)}</p>
+                        <p className="text-xs text-muted-foreground">{formatDate(item.fechaFotoDespues)}</p>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Aprobado/Rechazado por */}
                   {(item.status === 'aprobado' || item.status === 'rechazado') && (
@@ -1435,7 +1449,7 @@ export default function ItemDetail() {
                         <span className={`text-xs font-bold ${item.status === 'aprobado' ? 'text-emerald-600' : 'text-red-600'}`}>3</span>
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs text-muted-foreground">{item.status === 'aprobado' ? 'Aprobado por' : 'Rechazado por'}</p>
+                        <p className="text-xs text-muted-foreground">{item.status === 'aprobado' ? 'Aprobado por (click definitivo)' : 'Rechazado por'}</p>
                         <p className="font-medium text-sm">
                           {item.aprobadoPorId ? getUserName(item.aprobadoPorId) : (item.supervisorId ? getUserName(item.supervisorId) : '-')}
                         </p>
