@@ -1,0 +1,32 @@
+{
+  "query": "\nSELECT p.id, p.nombre, \n  (SELECT COUNT(*) FROM items WHERE proyectoId = p.id) as total_items,\n  (SELECT COUNT(*) FROM empresas WHERE proyectoId = p.id) as total_empresas,\n  (SELECT COUNT(*) FROM unidades WHERE proyectoId = p.id) as total_unidades,\n  (SELECT COUNT(*) FROM especialidades WHERE proyectoId = p.id) as total_especialidades,\n  (SELECT COUNT(*) FROM items WHERE proyectoId IS NULL) as items_sin_proyecto,\n  (SELECT COUNT(*) FROM empresas WHERE proyectoId IS NULL) as empresas_sin_proyecto,\n  (SELECT COUNT(*) FROM unidades WHERE proyectoId IS NULL) as unidades_sin_proyecto\nFROM proyectos p ORDER BY p.id;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute \nSELECT p.id, p.nombre, \n  (SELECT COUNT(*) FROM items WHERE proyectoId = p.id) as total_items,\n  (SELECT COUNT(*) FROM empresas WHERE proyectoId = p.id) as total_empresas,\n  (SELECT COUNT(*) FROM unidades WHERE proyectoId = p.id) as total_unidades,\n  (SELECT COUNT(*) FROM especialidades WHERE proyectoId = p.id) as total_especialidades,\n  (SELECT COUNT(*) FROM items WHERE proyectoId IS NULL) as items_sin_proyecto,\n  (SELECT COUNT(*) FROM empresas WHERE proyectoId IS NULL) as empresas_sin_proyecto,\n  (SELECT COUNT(*) FROM unidades WHERE proyectoId IS NULL) as unidades_sin_proyecto\nFROM proyectos p ORDER BY p.id;\n",
+  "rows": [
+    {
+      "id": "1",
+      "nombre": "Hidalma ",
+      "total_items": "49",
+      "total_empresas": "23",
+      "total_unidades": "164",
+      "total_especialidades": "18",
+      "items_sin_proyecto": "12",
+      "empresas_sin_proyecto": "13",
+      "unidades_sin_proyecto": "2"
+    },
+    {
+      "id": "150001",
+      "nombre": "Mayas Habitat",
+      "total_items": "0",
+      "total_empresas": "1",
+      "total_unidades": "0",
+      "total_especialidades": "1",
+      "items_sin_proyecto": "12",
+      "empresas_sin_proyecto": "13",
+      "unidades_sin_proyecto": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\ttotal_items\ttotal_empresas\ttotal_unidades\ttotal_especialidades\titems_sin_proyecto\tempresas_sin_proyecto\tunidades_sin_proyecto\n1\tHidalma \t49\t23\t164\t18\t12\t13\t2\n150001\tMayas Habitat\t0\t1\t0\t1\t12\t13\t2\n",
+  "stderr": "",
+  "execution_time_ms": 353
+}

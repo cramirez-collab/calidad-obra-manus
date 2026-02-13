@@ -46,7 +46,9 @@ export default function EstadisticasAvanzadas() {
   const [selectedDefecto, setSelectedDefecto] = useState<string>("");
 
   // Datos base
-  const { data: usuarios } = trpc.users.listForMentions.useQuery();
+  const { data: usuarios } = trpc.users.listForMentions.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
   const { data: defectos } = trpc.defectos.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }

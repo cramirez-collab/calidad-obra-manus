@@ -201,7 +201,7 @@ export default function ItemsList() {
   
   // Obtener lista de usuarios para el filtro (accesible por todos los roles)
   const { data: usuarios } = trpc.users.listForMentions.useQuery(
-    undefined,
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 }
   );
   

@@ -250,15 +250,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
             }
             console.log(`[Database] Usuario ${user.openId} asignado a ${inheritedProyectos.length} proyectos heredados`);
           } else {
-            // Si no hay proyectos heredados, asignar al proyecto Hidalma (ID 1) por defecto
-            const proyectoHidalma = await db.select().from(proyectos).where(eq(proyectos.id, 1)).limit(1);
-            if (proyectoHidalma.length > 0) {
-              await db.insert(proyectoUsuarios).values({
-                proyectoId: 1,
-                usuarioId: newUser[0].id,
-              }).onDuplicateKeyUpdate({ set: { activo: true } });
-              console.log(`[Database] Usuario ${user.openId} asignado automáticamente al proyecto Hidalma`);
-            }
+            // Sin proyectos heredados: NO asignar automáticamente a ningún proyecto
+            // El admin debe asignar manualmente al usuario al proyecto correcto
+            console.log(`[Database] Usuario ${user.openId} creado sin proyecto asignado - requiere asignación manual por admin`);
           }
         }
       } catch (assignError) {
@@ -1061,10 +1055,12 @@ export async function deleteEspacio(id: number) {
 
 // ==================== ATRIBUTOS ====================
 
-export async function getAllAtributos() {
+export async function getAllAtributos(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(atributos).where(eq(atributos.activo, true)).orderBy(atributos.nombre);
+  const conditions = [eq(atributos.activo, true)];
+  if (proyectoId) conditions.push(eq(atributos.proyectoId, proyectoId));
+  return await db.select().from(atributos).where(and(...conditions)).orderBy(atributos.nombre);
 }
 
 export async function getAtributoById(id: number) {
@@ -1379,7 +1375,7 @@ export async function getItems(filters: ItemFilters = {}, limit = 100, offset = 
   };
 }
 
-export async function getItemsByUser(userId: number, role: string) {
+export async function getItemsByUser(userId: number, role: string, proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
 
@@ -1420,15 +1416,18 @@ export async function getItemsByUser(userId: number, role: string) {
     updatedAt: items.updatedAt,
   };
 
+  const baseConditions = proyectoId ? [eq(items.proyectoId, proyectoId)] : [];
+
   if (role === 'admin' || role === 'supervisor') {
-    return await db.select(selectFields).from(items).orderBy(desc(items.createdAt)).limit(100);
+    const where = baseConditions.length > 0 ? and(...baseConditions) : undefined;
+    return await db.select(selectFields).from(items).where(where).orderBy(desc(items.createdAt)).limit(100);
   } else if (role === 'jefe_residente') {
     return await db.select(selectFields).from(items)
-      .where(eq(items.status, 'pendiente_foto_despues'))
+      .where(and(...baseConditions, eq(items.status, 'pendiente_foto_despues')))
       .orderBy(desc(items.createdAt)).limit(100);
   } else {
     return await db.select(selectFields).from(items)
-      .where(eq(items.residenteId, userId))
+      .where(and(...baseConditions, eq(items.residenteId, userId)))
       .orderBy(desc(items.createdAt)).limit(100);
   }
 }

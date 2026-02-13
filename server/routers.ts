@@ -160,7 +160,7 @@ export const appRouter = router({
         if (input?.proyectoId) {
           // Filtrar usuarios por proyecto y agregar empresa
           const usuariosProyecto = await db.getUsuariosByProyecto(input.proyectoId);
-          const todasEmpresas = await db.getAllEmpresas();
+          const todasEmpresas = await db.getAllEmpresas(input.proyectoId);
           const empresasMap = new Map(todasEmpresas.map(e => [e.id, e]));
           
           return usuariosProyecto
@@ -353,18 +353,26 @@ export const appRouter = router({
       return await db.getUserById(ctx.user.id);
     }),
 
-    // Lista básica de usuarios para @mentions (accesible por cualquier rol autenticado)
-    listForMentions: protectedProcedure.query(async () => {
-      const users = await db.getAllUsers();
-      // Retornar solo datos básicos necesarios para menciones
-      return users.map(u => ({
-        id: u.id,
-        name: u.name,
-        role: u.role,
-        fotoUrl: u.fotoUrl || null,
-        fotoBase64: (u as any).fotoBase64 || null,
-      }));
-    }),
+    // Lista básica de usuarios para @mentions (filtrada por proyecto activo)
+    listForMentions: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        let usersList;
+        if (input?.proyectoId) {
+          const usuariosProyecto = await db.getUsuariosByProyecto(input.proyectoId);
+          usersList = usuariosProyecto.map(up => up.usuario).filter((u): u is NonNullable<typeof u> => u !== undefined);
+        } else {
+          usersList = await db.getAllUsers();
+        }
+        // Retornar solo datos básicos necesarios para menciones
+        return usersList.map(u => ({
+          id: u.id,
+          name: u.name,
+          role: u.role,
+          fotoUrl: u.fotoUrl || null,
+          fotoBase64: (u as any).fotoBase64 || null,
+        }));
+      }),
   }),
 
   // ==================== EMPRESAS ====================
@@ -841,9 +849,11 @@ export const appRouter = router({
 
   // ==================== ATRIBUTOS ====================
   atributos: router({
-    list: protectedProcedure.query(async () => {
-      return await db.getAllAtributos();
-    }),
+    list: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllAtributos(input?.proyectoId);
+      }),
     
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
@@ -856,6 +866,7 @@ export const appRouter = router({
         nombre: z.string().min(1),
         categoria: z.string().optional(),
         descripcion: z.string().optional(),
+        proyectoId: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const id = await db.createAtributo(input);
@@ -1762,7 +1773,8 @@ export const appRouter = router({
         if (!proyectoId) return { items: [], planos: [] };
         // Items con datos relacionados
         const allItems = await db.getItemsByProyecto(proyectoId);
-        const todosUsuarios = await db.getAllUsers();
+        const usuariosProyecto = await db.getUsuariosByProyecto(proyectoId);
+        const todosUsuarios = usuariosProyecto.map(up => up.usuario).filter((u): u is NonNullable<typeof u> => u !== undefined);
         const todasEmpresas = await db.getAllEmpresas(proyectoId);
         const todasEspecialidades = await db.getAllEspecialidades(proyectoId);
         const todosDefectos = await db.getAllDefectos(proyectoId);

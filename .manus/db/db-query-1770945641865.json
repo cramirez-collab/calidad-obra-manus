@@ -1,0 +1,38 @@
+{
+  "query": "\nSELECT 'items_sin_proyecto' as tipo, COUNT(*) as total FROM items WHERE proyectoId IS NULL\nUNION ALL\nSELECT 'empresas_sin_proyecto', COUNT(*) FROM empresas WHERE proyectoId IS NULL\nUNION ALL\nSELECT 'unidades_sin_proyecto', COUNT(*) FROM unidades WHERE proyectoId IS NULL\nUNION ALL\nSELECT 'especialidades_sin_proyecto', COUNT(*) FROM especialidades WHERE proyectoId IS NULL\nUNION ALL\nSELECT 'atributos_sin_proyecto', COUNT(*) FROM atributos WHERE proyectoId IS NULL\nUNION ALL\nSELECT 'defectos_sin_proyecto', COUNT(*) FROM defectos WHERE proyectoId IS NULL\nUNION ALL\nSELECT 'planos_total', COUNT(*) FROM planos;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute \nSELECT 'items_sin_proyecto' as tipo, COUNT(*) as total FROM items WHERE proyectoId IS NULL\nUNION ALL\nSELECT 'empresas_sin_proyecto', COUNT(*) FROM empresas WHERE proyectoId IS NULL\nUNION ALL\nSELECT 'unidades_sin_proyecto', COUNT(*) FROM unidades WHERE proyectoId IS NULL\nUNION ALL\nSELECT 'especialidades_sin_proyecto', COUNT(*) FROM especialidades WHERE proyectoId IS NULL\nUNION ALL\nSELECT 'atributos_sin_proyecto', COUNT(*) FROM atributos WHERE proyectoId IS NULL\nUNION ALL\nSELECT 'defectos_sin_proyecto', COUNT(*) FROM defectos WHERE proyectoId IS NULL\nUNION ALL\nSELECT 'planos_total', COUNT(*) FROM planos;\n",
+  "rows": [
+    {
+      "tipo": "items_sin_proyecto",
+      "total": "12"
+    },
+    {
+      "tipo": "atributos_sin_proyecto",
+      "total": "1"
+    },
+    {
+      "tipo": "especialidades_sin_proyecto",
+      "total": "0"
+    },
+    {
+      "tipo": "unidades_sin_proyecto",
+      "total": "2"
+    },
+    {
+      "tipo": "empresas_sin_proyecto",
+      "total": "13"
+    },
+    {
+      "tipo": "defectos_sin_proyecto",
+      "total": "39"
+    },
+    {
+      "tipo": "planos_total",
+      "total": "18"
+    }
+  ],
+  "messages": [],
+  "stdout": "tipo\ttotal\nitems_sin_proyecto\t12\natributos_sin_proyecto\t1\nespecialidades_sin_proyecto\t0\nunidades_sin_proyecto\t2\nempresas_sin_proyecto\t13\ndefectos_sin_proyecto\t39\nplanos_total\t18\n",
+  "stderr": "",
+  "execution_time_ms": 349
+}

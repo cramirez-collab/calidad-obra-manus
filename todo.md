@@ -3835,3 +3835,10 @@
 - [ ] Verificar que el frontend SIEMPRE pasa proyectoId en cada request
 - [x] Botón guardar plano: mover a barra fija superior que no se tape con pines
 - [x] Visor de planos: barra superior siempre visible fija, plano contenido debajo, responsivo PC/tablet/móvil
+- [x] AUDITORÍA CRÍTICA: Aislamiento total por proyectoId entre Hidalma y Mayas
+- [x] Auditar schema: verificar que TODAS las tablas tengan proyectoId
+- [x] Auditar db.ts: verificar que TODAS las queries filtren por proyectoId
+- [x] Auditar routers.ts: verificar que TODOS los procedures pasen proyectoId
+- [x] Auditar frontend: verificar que SIEMPRE envíe proyectoId
+- [x] Verificar datos en BD: buscar registros huérfanos o mezclados
+- [x] Corregir TODOS los problemas de aislamiento encontrados

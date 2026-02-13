@@ -153,8 +153,12 @@ export default function Empresas() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
-  const { data: usuarios } = trpc.users.list.useQuery();
-  const { data: allDefectos } = trpc.defectos.listConEstadisticas.useQuery();
+  const { data: usuarios } = trpc.users.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
+  const { data: allDefectos } = trpc.defectos.listConEstadisticas.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
 
   // Query para obtener residentes de la empresa actual (cuando se está editando)
   const { data: residentesEmpresa, refetch: refetchResidentes } = trpc.empresas.getResidentes.useQuery(

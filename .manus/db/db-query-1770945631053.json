@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, nombre, codigo FROM proyectos ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, codigo FROM proyectos ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "nombre": "Hidalma ",
+      "codigo": "Hidalma"
+    },
+    {
+      "id": "150001",
+      "nombre": "Mayas Habitat",
+      "codigo": "Mayas"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tcodigo\n1\tHidalma \tHidalma\n150001\tMayas Habitat\tMayas\n",
+  "stderr": "",
+  "execution_time_ms": 347
+}

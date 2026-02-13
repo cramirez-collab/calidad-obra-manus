@@ -144,8 +144,14 @@ export default function ItemDetail() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     catalogStale
   );
-  const { data: users } = trpc.users.listForMentions.useQuery(undefined, catalogStale);
-  const { data: defectos } = trpc.defectos.list.useQuery(undefined, catalogStale);
+  const { data: users } = trpc.users.listForMentions.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    catalogStale
+  );
+  const { data: defectos } = trpc.defectos.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
+    catalogStale
+  );
   const { data: espacios } = trpc.espacios.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     catalogStale

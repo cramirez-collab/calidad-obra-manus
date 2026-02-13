@@ -129,7 +129,9 @@ export default function Estadisticas() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
-  const { data: usuarios } = trpc.users.listForMentions.useQuery();
+  const { data: usuarios } = trpc.users.listForMentions.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
   const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 });
   const proyectoNombre = proyectos?.find(p => p.id === selectedProjectId)?.nombre || 'Proyecto';
 

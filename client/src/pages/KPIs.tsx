@@ -68,7 +68,9 @@ export default function KPIs() {
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { enabled: !!selectedProjectId }
   );
-  const { data: users } = trpc.users.listForMentions.useQuery();
+  const { data: users } = trpc.users.listForMentions.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
   const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 });
   const proyectoNombre = proyectos?.find(p => p.id === selectedProjectId)?.nombre || 'Proyecto';
 

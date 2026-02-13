@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 // Estados del dictado por voz
 type VoiceState = 'idle' | 'recording' | 'transcribing' | 'summarizing' | 'ready' | 'error';
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useProject } from "@/contexts/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,6 +44,7 @@ interface ItemChatProps {
 
 export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
   const { user } = useAuth();
+  const { selectedProjectId } = useProject();
   const [mensaje, setMensaje] = useState("");
   const [menciones, setMenciones] = useState<number[]>([]);
   const [showMentions, setShowMentions] = useState(false);
@@ -62,7 +64,9 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
 
   // Queries
   const { data: mensajes, isLoading } = trpc.mensajes.byItem.useQuery({ itemId });
-  const { data: usuarios } = trpc.users.listForMentions.useQuery();
+  const { data: usuarios } = trpc.users.listForMentions.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
 
   // Mutations
   const createMensaje = trpc.mensajes.create.useMutation({

@@ -1,0 +1,20 @@
+{
+  "query": "\nSELECT 'proyectos' as tabla, id, nombre FROM proyectos;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute \nSELECT 'proyectos' as tabla, id, nombre FROM proyectos;\n",
+  "rows": [
+    {
+      "tabla": "proyectos",
+      "id": "1",
+      "nombre": "Hidalma "
+    },
+    {
+      "tabla": "proyectos",
+      "id": "150001",
+      "nombre": "Mayas Habitat"
+    }
+  ],
+  "messages": [],
+  "stdout": "tabla\tid\tnombre\nproyectos\t1\tHidalma \nproyectos\t150001\tMayas Habitat\n",
+  "stderr": "",
+  "execution_time_ms": 477
+}

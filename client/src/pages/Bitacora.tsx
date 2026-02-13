@@ -95,7 +95,9 @@ export default function Bitacora() {
   const [activeTab, setActiveTab] = useState<string>("bitacora");
   
   // Queries
-  const { data: usuarios } = trpc.users.list.useQuery();
+  const { data: usuarios } = trpc.users.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
   const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 });
   // Bitacora es global, no tiene proyecto específico, pero mostramos el contexto
   const proyectoNombre = 'Sistema OQC';
