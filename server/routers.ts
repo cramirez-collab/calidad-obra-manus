@@ -1068,6 +1068,7 @@ export const appRouter = router({
                 await db.createNotificacion({
                   usuarioId: eu.id,
                   itemId: itemResult.id,
+                  proyectoId: input.proyectoId || undefined,
                   tipo: 'item_pendiente_foto',
                   titulo: '🔔 Nuevo ítem asignado a tu empresa',
                   mensaje: `Se creó el ítem "${input.titulo}" (${itemResult.codigo}) para tu empresa`,
@@ -1093,6 +1094,7 @@ export const appRouter = router({
                 await db.createNotificacion({
                   usuarioId: uid,
                   itemId: itemResult.id,
+                  proyectoId: input.proyectoId || undefined,
                   tipo: 'item_pendiente_foto',
                   titulo: '🔔 Nuevo ítem asignado a tu empresa',
                   mensaje: `Se creó el ítem "${input.titulo}" (${itemResult.codigo}) para tu empresa`,
@@ -1117,6 +1119,7 @@ export const appRouter = router({
                   await db.createNotificacion({
                     usuarioId: esp.residenteId,
                     itemId: itemResult.id,
+                    proyectoId: input.proyectoId || undefined,
                     tipo: 'item_pendiente_foto',
                     titulo: '🔔 Nuevo ítem en tu especialidad',
                     mensaje: `Se creó el ítem "${input.titulo}" (${itemResult.codigo}) en tu especialidad`,
@@ -1186,6 +1189,7 @@ export const appRouter = router({
               accion: 'subir_foto',
               entidad: 'item',
               entidadId: input.itemId,
+              proyectoId: item.proyectoId || undefined,
               detalles: `Subió fotografía "antes" para ítem ${item.codigo}`,
             });
           } catch (e) {
@@ -1256,6 +1260,7 @@ export const appRouter = router({
               accion: 'subir_foto',
               entidad: 'item',
               entidadId: input.itemId,
+              proyectoId: item.proyectoId || undefined,
               detalles: `Subió fotografía "después" para ítem ${item.codigo}`,
             });
             
@@ -1367,6 +1372,7 @@ export const appRouter = router({
             await db.createNotificacion({
               usuarioId: item.residenteId,
               itemId: input.itemId,
+              proyectoId: item.proyectoId || undefined,
               tipo: 'item_aprobado',
               titulo: 'Ítem Aprobado',
               mensaje: `El ítem "${item.titulo}" ha sido aprobado por el supervisor.`,
@@ -1465,6 +1471,7 @@ export const appRouter = router({
             await db.createNotificacion({
               usuarioId: item.residenteId,
               itemId: input.itemId,
+              proyectoId: item.proyectoId || undefined,
               tipo: 'item_rechazado',
               titulo: 'Ítem Rechazado',
               mensaje: `El ítem "${item.titulo}" ha sido rechazado. Motivo: ${input.comentario}`,
@@ -1822,14 +1829,16 @@ export const appRouter = router({
   // ==================== NOTIFICACIONES ====================
   notificaciones: router({
     list: protectedProcedure
-      .input(z.object({ soloNoLeidas: z.boolean().optional() }).optional())
+      .input(z.object({ soloNoLeidas: z.boolean().optional(), proyectoId: z.number().optional() }).optional())
       .query(async ({ ctx, input }) => {
-        return await db.getNotificacionesByUsuario(ctx.user.id, input?.soloNoLeidas);
+        return await db.getNotificacionesByUsuario(ctx.user.id, input?.soloNoLeidas, input?.proyectoId);
       }),
     
-    count: protectedProcedure.query(async ({ ctx }) => {
-      return await db.contarNotificacionesNoLeidas(ctx.user.id);
-    }),
+    count: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        return await db.contarNotificacionesNoLeidas(ctx.user.id, input?.proyectoId);
+      }),
     
     marcarLeida: protectedProcedure
       .input(z.object({ id: z.number() }))
@@ -1838,10 +1847,12 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    marcarTodasLeidas: protectedProcedure.mutation(async ({ ctx }) => {
-      await db.marcarTodasNotificacionesLeidas(ctx.user.id);
-      return { success: true };
-    }),
+    marcarTodasLeidas: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .mutation(async ({ ctx, input }) => {
+        await db.marcarTodasNotificacionesLeidas(ctx.user.id, input?.proyectoId);
+        return { success: true };
+      }),
     
     // Obtener clave pública VAPID para push
     getVapidPublicKey: publicProcedure.query(() => {
@@ -1991,6 +2002,7 @@ export const appRouter = router({
         entidad: z.string().optional(),
         fechaDesde: z.date().optional(),
         fechaHasta: z.date().optional(),
+        proyectoId: z.number().optional(),
         limit: z.number().optional(),
       }).optional())
       .query(async ({ input }) => {
@@ -1998,9 +2010,9 @@ export const appRouter = router({
       }),
     
     miActividad: protectedProcedure
-      .input(z.object({ limit: z.number().optional() }).optional())
+      .input(z.object({ limit: z.number().optional(), proyectoId: z.number().optional() }).optional())
       .query(async ({ ctx, input }) => {
-        return await db.getBitacoraByUsuario(ctx.user.id, input?.limit || 50);
+        return await db.getBitacoraByUsuario(ctx.user.id, input?.limit || 50, input?.proyectoId);
       }),
     
     // Eliminar una entrada de bitácora (solo superadmin)
@@ -2085,13 +2097,17 @@ export const appRouter = router({
 
   // ==================== METAS ====================
   metas: router({
-    list: adminProcedure.query(async () => {
-      return await db.getAllMetas();
-    }),
+    list: adminProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getAllMetas(input?.proyectoId);
+      }),
     
-    listConProgreso: adminProcedure.query(async () => {
-      return await db.getMetasConProgreso();
-    }),
+    listConProgreso: adminProcedure
+      .input(z.object({ proyectoId: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getMetasConProgreso(input?.proyectoId);
+      }),
     
     get: adminProcedure
       .input(z.object({ id: z.number() }))
@@ -2544,6 +2560,7 @@ export const appRouter = router({
             await db.createNotificacion({
               usuarioId: userId,
               itemId: input.itemId,
+              proyectoId: itemInfoMencion?.proyectoId || undefined,
               tipo: 'mencion',
               titulo: 'Te mencionaron en un comentario',
               mensaje: `${ctx.user.name || 'Un usuario'} te mencionó en el ítem #${input.itemId}`,

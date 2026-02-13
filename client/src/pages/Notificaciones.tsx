@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useProject } from "@/contexts/ProjectContext";
 
 interface Notificacion {
   id: number;
@@ -33,12 +34,15 @@ interface Notificacion {
 export default function Notificaciones() {
   const [, navigate] = useLocation();
   const [showSettings, setShowSettings] = useState(false);
+  const { selectedProjectId } = useProject();
   
   const { data: notificaciones = [], refetch } = trpc.notificaciones.list.useQuery(
-    {},
+    selectedProjectId ? { proyectoId: selectedProjectId } : {},
     { staleTime: 5000 }
   );
-  const { data: countData, refetch: refetchCount } = trpc.notificaciones.count.useQuery();
+  const { data: countData, refetch: refetchCount } = trpc.notificaciones.count.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
   const marcarLeidaMutation = trpc.notificaciones.marcarLeida.useMutation();
   const marcarTodasLeidasMutation = trpc.notificaciones.marcarTodasLeidas.useMutation();
   
@@ -66,7 +70,7 @@ export default function Notificaciones() {
   };
   
   const handleMarkAllRead = async () => {
-    await marcarTodasLeidasMutation.mutateAsync();
+    await marcarTodasLeidasMutation.mutateAsync(selectedProjectId ? { proyectoId: selectedProjectId } : undefined);
     refetch();
     refetchCount();
   };

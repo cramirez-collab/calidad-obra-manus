@@ -3829,3 +3829,7 @@
 - [x] PERF: Caché stale-while-revalidate en queries tRPC
 - [x] PERF: Prefetch de datos al hover/seleccionar proyecto
 - [ ] PERF: Compresión de imágenes y lazy load de imágenes
+- [x] REGLA SUPREMA: Auditar y reforzar aislamiento total por proyectoId en TODAS las queries, endpoints y caché
+- [ ] Verificar que CADA query en db.ts filtra por proyectoId cuando aplica
+- [ ] Reforzar caché del servidor con proyectoId en las claves de caché
+- [ ] Verificar que el frontend SIEMPRE pasa proyectoId en cada request

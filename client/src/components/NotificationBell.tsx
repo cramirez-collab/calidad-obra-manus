@@ -3,12 +3,14 @@ import { Bell, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
 import { useLocation } from 'wouter';
+import { useProject } from '@/contexts/ProjectContext';
 
 export function NotificationBell() {
   const [, navigate] = useLocation();
+  const { selectedProjectId } = useProject();
   
   const { data: countData } = trpc.notificaciones.count.useQuery(
-    undefined,
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { 
       refetchInterval: 120_000,
       staleTime: 60_000,

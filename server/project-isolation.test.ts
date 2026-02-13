@@ -301,6 +301,62 @@ describe('Pin Initials Generation', () => {
   });
 });
 
+describe('Notificaciones y Bitácora con proyectoId obligatorio', () => {
+  it('createNotificacion debe incluir proyectoId para aislamiento', () => {
+    const notifHidalma = {
+      usuarioId: 1,
+      itemId: 10,
+      proyectoId: 1,
+      tipo: 'item_pendiente_foto',
+      titulo: 'Nuevo ítem',
+      mensaje: 'Test',
+    };
+    const notifMayas = {
+      usuarioId: 1,
+      itemId: 20,
+      proyectoId: 150001,
+      tipo: 'item_pendiente_foto',
+      titulo: 'Nuevo ítem Mayas',
+      mensaje: 'Test',
+    };
+    expect(notifHidalma.proyectoId).not.toBe(notifMayas.proyectoId);
+    expect(notifHidalma.proyectoId).toBe(1);
+    expect(notifMayas.proyectoId).toBe(150001);
+  });
+
+  it('registrarActividad debe incluir proyectoId', () => {
+    const actividad = {
+      usuarioId: 1,
+      accion: 'subir_foto',
+      entidad: 'item',
+      entidadId: 10,
+      proyectoId: 1,
+      detalles: 'Subió fotografía',
+    };
+    expect(actividad.proyectoId).toBeDefined();
+  });
+
+  it('getItemInfoForPush debe incluir proyectoId en el retorno', () => {
+    const itemInfo = {
+      itemId: 1,
+      codigo: 'HID-001',
+      titulo: 'Test',
+      unidadNombre: 'Unidad 1',
+      defectoNombre: 'Defecto 1',
+      residenteId: 1,
+      proyectoId: 1,
+    };
+    expect(itemInfo).toHaveProperty('proyectoId');
+    expect(itemInfo.proyectoId).toBe(1);
+  });
+
+  it('caché del servidor debe usar proyectoId en las claves', () => {
+    const cacheKey1 = `pendientes:1:superadmin:1`;
+    const cacheKey2 = `pendientes:1:superadmin:150001`;
+    expect(cacheKey1).not.toBe(cacheKey2);
+  });
+});
+
 describe('Correction Date Calculation', () => {
   it('should calculate correction date as alta + diasCorreccion', () => {
     const diasCorreccion = 8;

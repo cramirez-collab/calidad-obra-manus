@@ -16,11 +16,15 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { useProject } from "@/contexts/ProjectContext";
 
 export function BadgeNotifications() {
   const [, setLocation] = useLocation();
+  const { selectedProjectId } = useProject();
   const { data: badges, isLoading } = trpc.badges.me.useQuery();
-  const { data: notificaciones } = trpc.notificaciones.list.useQuery();
+  const { data: notificaciones } = trpc.notificaciones.list.useQuery(
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined
+  );
   const utils = trpc.useUtils();
 
   const marcarLeidos = trpc.badges.marcarMensajesLeidos.useMutation({

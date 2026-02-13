@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserAvatar } from "@/components/UserAvatar";
+import { useProject } from "@/contexts/ProjectContext";
 import { 
   History, 
   User, 
@@ -69,6 +70,7 @@ type SortField = 'fecha' | 'usuario' | 'rol' | 'accion' | 'categoria' | 'entidad
 type SortDirection = 'asc' | 'desc';
 
 export default function Bitacora() {
+  const { selectedProjectId } = useProject();
   const { user } = useAuth();
   const isAdmin = user?.role === 'superadmin' || user?.role === 'admin';
   
@@ -123,9 +125,10 @@ export default function Bitacora() {
         accion: filtros.categoria,
         fechaDesde: filtros.fechaDesde,
         fechaHasta: filtros.fechaHasta,
-        limit: 500, // Cargar más para ordenar localmente
+        proyectoId: selectedProjectId || undefined,
+        limit: 500,
       })
-    : trpc.bitacora.miActividad.useQuery({});
+    : trpc.bitacora.miActividad.useQuery({ proyectoId: selectedProjectId || undefined });
   
   // Mutación para eliminar entradas (solo superadmin)
   const deleteMutation = trpc.bitacora.delete.useMutation({

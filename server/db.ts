@@ -1205,9 +1205,9 @@ export async function getItemInfoForPush(id: number) {
     unidadNombre: result[0].unidad?.nombre || 'Sin unidad',
     defectoNombre: result[0].defecto?.nombre || result[0].item.titulo || 'Sin defecto',
     residenteId: result[0].item.residenteId,
+    proyectoId: result[0].item.proyectoId,
   };
 }
-
 export async function getItemByCodigo(codigo: string) {
   const db = await getDb();
   if (!db) return undefined;
@@ -1569,13 +1569,16 @@ export async function createNotificacion(data: InsertNotificacion) {
   return result[0].insertId;
 }
 
-export async function getNotificacionesByUsuario(usuarioId: number, soloNoLeidas: boolean = false) {
+export async function getNotificacionesByUsuario(usuarioId: number, soloNoLeidas: boolean = false, proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
   
   const conditions = [eq(notificaciones.usuarioId, usuarioId)];
   if (soloNoLeidas) {
     conditions.push(eq(notificaciones.leida, false));
+  }
+  if (proyectoId) {
+    conditions.push(eq(notificaciones.proyectoId, proyectoId));
   }
   
   return await db
@@ -1592,19 +1595,27 @@ export async function marcarNotificacionLeida(id: number) {
   await db.update(notificaciones).set({ leida: true }).where(eq(notificaciones.id, id));
 }
 
-export async function marcarTodasNotificacionesLeidas(usuarioId: number) {
+export async function marcarTodasNotificacionesLeidas(usuarioId: number, proyectoId?: number) {
   const db = await getDb();
   if (!db) return;
-  await db.update(notificaciones).set({ leida: true }).where(eq(notificaciones.usuarioId, usuarioId));
+  const conditions = [eq(notificaciones.usuarioId, usuarioId)];
+  if (proyectoId) {
+    conditions.push(eq(notificaciones.proyectoId, proyectoId));
+  }
+  await db.update(notificaciones).set({ leida: true }).where(and(...conditions));
 }
 
-export async function contarNotificacionesNoLeidas(usuarioId: number) {
+export async function contarNotificacionesNoLeidas(usuarioId: number, proyectoId?: number) {
   const db = await getDb();
   if (!db) return 0;
+  const conditions = [eq(notificaciones.usuarioId, usuarioId), eq(notificaciones.leida, false)];
+  if (proyectoId) {
+    conditions.push(eq(notificaciones.proyectoId, proyectoId));
+  }
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(notificaciones)
-    .where(and(eq(notificaciones.usuarioId, usuarioId), eq(notificaciones.leida, false)));
+    .where(and(...conditions));
   return result[0]?.count || 0;
 }
 
@@ -1866,13 +1877,15 @@ export async function registrarActividad(data: InsertBitacora) {
   return result[0].insertId;
 }
 
-export async function getBitacoraByUsuario(usuarioId: number, limit = 100) {
+export async function getBitacoraByUsuario(usuarioId: number, limit = 100, proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
+  const conditions = [eq(bitacora.usuarioId, usuarioId)];
+  if (proyectoId) conditions.push(eq(bitacora.proyectoId, proyectoId));
   return await db
     .select()
     .from(bitacora)
-    .where(eq(bitacora.usuarioId, usuarioId))
+    .where(and(...conditions))
     .orderBy(desc(bitacora.createdAt))
     .limit(limit);
 }
@@ -1883,6 +1896,7 @@ export async function getBitacoraGeneral(filtros: {
   entidad?: string;
   fechaDesde?: Date;
   fechaHasta?: Date;
+  proyectoId?: number;
 } = {}, limit = 200) {
   const db = await getDb();
   if (!db) return [];
@@ -1893,6 +1907,7 @@ export async function getBitacoraGeneral(filtros: {
   if (filtros.entidad) conditions.push(eq(bitacora.entidad, filtros.entidad));
   if (filtros.fechaDesde) conditions.push(gte(bitacora.createdAt, filtros.fechaDesde));
   if (filtros.fechaHasta) conditions.push(lte(bitacora.createdAt, filtros.fechaHasta));
+  if (filtros.proyectoId) conditions.push(eq(bitacora.proyectoId, filtros.proyectoId));
   
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
   
@@ -2114,10 +2129,12 @@ export async function getAllConfiguracion(includeSuperadmin = false) {
 
 // ==================== METAS ====================
 
-export async function getAllMetas() {
+export async function getAllMetas(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(metas).where(eq(metas.activo, true)).orderBy(desc(metas.createdAt));
+  const conditions = [eq(metas.activo, true)];
+  if (proyectoId) conditions.push(eq(metas.proyectoId, proyectoId));
+  return await db.select().from(metas).where(and(...conditions)).orderBy(desc(metas.createdAt));
 }
 
 export async function getMetaById(id: number) {
@@ -2146,11 +2163,13 @@ export async function deleteMeta(id: number) {
   await db.update(metas).set({ activo: false }).where(eq(metas.id, id));
 }
 
-export async function getMetasConProgreso() {
+export async function getMetasConProgreso(proyectoId?: number) {
   const db = await getDb();
   if (!db) return [];
   
-  const metasActivas = await db.select().from(metas).where(eq(metas.activo, true));
+  const metaConditions = [eq(metas.activo, true)];
+  if (proyectoId) metaConditions.push(eq(metas.proyectoId, proyectoId));
+  const metasActivas = await db.select().from(metas).where(and(...metaConditions));
   
   const metasConProgreso = await Promise.all(metasActivas.map(async (meta) => {
     let valorActual = 0;

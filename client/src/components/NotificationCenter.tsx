@@ -19,6 +19,7 @@ import { useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeData";
+import { useProject } from "@/contexts/ProjectContext";
 
 const tipoIcons: Record<string, typeof Bell> = {
   item_pendiente_foto: Camera,
@@ -37,16 +38,17 @@ const tipoColors: Record<string, string> = {
 export default function NotificationCenter() {
   const [open, setOpen] = useState(false);
   const [, setLocation] = useLocation();
+  const { selectedProjectId } = useProject();
   
   const { data: count = 0, refetch: refetchCount } = trpc.notificaciones.count.useQuery(
-    undefined,
+    selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
     { 
-      refetchInterval: 60000, // Refetch cada 60s (no 30s, ahorra en 3G)
+      refetchInterval: 60000,
       staleTime: 30000,
     }
   );
   const { data: notificaciones = [], refetch: refetchList } = trpc.notificaciones.list.useQuery(
-    {},
+    selectedProjectId ? { proyectoId: selectedProjectId } : {},
     { 
       enabled: open,
       staleTime: 5000,
@@ -69,6 +71,10 @@ export default function NotificationCenter() {
       refetchList();
     },
   });
+
+  const handleMarcarTodasLeidas = () => {
+    marcarTodasLeidasMutation.mutate(selectedProjectId ? { proyectoId: selectedProjectId } : undefined);
+  };
 
   const handleNotificationClick = (notificacion: any) => {
     if (!notificacion.leida) {
@@ -104,7 +110,7 @@ export default function NotificationCenter() {
           {count > 0 && (
             <button 
               className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-              onClick={() => marcarTodasLeidasMutation.mutate()}
+              onClick={handleMarcarTodasLeidas}
             >
               <CheckCheck className="h-3 w-3" />
               Limpiar

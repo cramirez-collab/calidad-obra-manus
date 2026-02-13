@@ -311,6 +311,7 @@ export const notificaciones = mysqlTable("notificaciones", {
   id: int("id").autoincrement().primaryKey(),
   usuarioId: int("usuarioId").notNull(),
   itemId: int("itemId"),
+  proyectoId: int("proyectoId"), // Aislamiento por proyecto
   tipo: varchar("tipo", { length: 50 }).notNull(), // 'item_pendiente', 'item_aprobado', 'item_rechazado', etc.
   titulo: varchar("titulo", { length: 255 }).notNull(),
   mensaje: text("mensaje"),
@@ -343,6 +344,7 @@ export type InsertComentario = typeof comentarios.$inferInsert;
 export const bitacora = mysqlTable("bitacora", {
   id: int("id").autoincrement().primaryKey(),
   usuarioId: int("usuarioId").notNull(),
+  proyectoId: int("proyectoId"), // Aislamiento por proyecto
   accion: varchar("accion", { length: 100 }).notNull(), // 'login', 'logout', 'crear_item', 'aprobar_item', etc.
   entidad: varchar("entidad", { length: 50 }), // 'item', 'empresa', 'usuario', etc.
   entidadId: int("entidadId"),
@@ -376,6 +378,7 @@ export type InsertConfiguracion = typeof configuracion.$inferInsert;
  */
 export const metas = mysqlTable("metas", {
   id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId"), // Aislamiento por proyecto
   nombre: varchar("nombre", { length: 255 }).notNull(),
   descripcion: text("descripcion"),
   tipo: varchar("tipo", { length: 50 }).notNull(), // 'aprobacion', 'tiempo_resolucion', 'items_mes'
