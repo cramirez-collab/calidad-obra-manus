@@ -430,4 +430,199 @@ router.get("/api/items/:id/fotos-pdf", async (req, res) => {
   }
 });
 
+// ==================== TRACKING DE APERTURA DE CORREOS ====================
+
+// Pixel de tracking 1x1 transparente - se incrusta en emails como <img src="/api/track/open?t=TOKEN">
+router.get("/api/track/open", async (req, res) => {
+  try {
+    const token = req.query.t as string;
+    if (token) {
+      const ip = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || '';
+      await db.marcarCorreoAbierto(token, ip);
+    }
+  } catch (error) {
+    console.error("[Track] Error registrando apertura:", error);
+  }
+  // Siempre devolver pixel transparente 1x1
+  const pixel = Buffer.from(
+    "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+    "base64"
+  );
+  res.set({
+    "Content-Type": "image/gif",
+    "Content-Length": pixel.length.toString(),
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0",
+  });
+  res.end(pixel);
+});
+
+// ==================== PÁGINA DE FIRMA ELECTRÓNICA ====================
+
+// Página pública donde el representante de la empresa firma el reporte
+router.get("/api/firma/:token", async (req, res) => {
+  try {
+    const firma = await db.getFirmaByToken(req.params.token);
+    if (!firma) {
+      return res.status(404).send(`
+        <html><body style="font-family:sans-serif;text-align:center;padding:60px;">
+          <h1>Enlace inválido</h1>
+          <p>Este enlace de firma no existe o ha expirado.</p>
+        </body></html>
+      `);
+    }
+    if (firma.firmado) {
+      return res.send(`
+        <html><body style="font-family:sans-serif;text-align:center;padding:60px;">
+          <h1 style="color:#10B981;">✓ Reporte ya firmado</h1>
+          <p>Este reporte ya fue firmado por <strong>${firma.firmadoPorNombre || 'la empresa'}</strong> el ${firma.fechaFirma ? new Date(firma.fechaFirma).toLocaleString('es-MX') : ''}.</p>
+        </body></html>
+      `);
+    }
+    // Servir página de firma con canvas
+    const html = getFirmaPageHTML(req.params.token);
+    res.send(html);
+  } catch (error) {
+    console.error("[Firma] Error:", error);
+    res.status(500).send("Error interno");
+  }
+});
+
+// POST para recibir la firma
+router.post("/api/firma/:token", async (req, res) => {
+  try {
+    const { nombre, email, firmaBase64 } = req.body;
+    if (!nombre || !email || !firmaBase64) {
+      return res.status(400).json({ ok: false, error: "Datos incompletos" });
+    }
+    const ip = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || '';
+    await db.firmarReporte({
+      tokenFirma: req.params.token,
+      firmaBase64,
+      firmadoPorNombre: nombre,
+      firmadoPorEmail: email,
+      ip,
+    });
+    // Verificar si todas las firmas están completas
+    const firma = await db.getFirmaByToken(req.params.token);
+    if (firma) {
+      const todasCompletas = await db.todasFirmasCompletas(firma.reporteId);
+      if (todasCompletas) {
+        try {
+          const { notifyOwner } = await import("./_core/notification");
+          await notifyOwner({
+            title: "Reporte completamente firmado",
+            content: `Todas las empresas han firmado el reporte ${firma.reporteId}. El reporte está listo para distribución.`,
+          });
+        } catch (e) {
+          console.log("[Firma] No se pudo notificar:", e);
+        }
+      }
+    }
+    res.json({ ok: true });
+  } catch (error: any) {
+    console.error("[Firma] Error procesando firma:", error);
+    res.status(400).json({ ok: false, error: error.message || "Error al procesar firma" });
+  }
+});
+
+// HTML de la página de firma electrónica
+function getFirmaPageHTML(token: string): string {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firma Electrónica - ObjetivaQC</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b}
+    .container{max-width:600px;margin:0 auto;padding:20px}
+    .card{background:white;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-bottom:16px}
+    .header{background:linear-gradient(135deg,#002C63 0%,#003d8f 100%);color:white;border-radius:12px;padding:24px;text-align:center;margin-bottom:16px}
+    .header h1{font-size:20px;margin-bottom:4px}
+    .header p{opacity:0.8;font-size:14px}
+    .leyenda{background:#fffbeb;border:1px solid #fbbf24;border-radius:8px;padding:16px;margin-bottom:16px;font-size:13px;line-height:1.5;color:#92400e}
+    .leyenda strong{display:block;margin-bottom:4px;color:#78350f}
+    label{display:block;font-size:14px;font-weight:600;margin-bottom:6px;color:#374151}
+    input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;margin-bottom:12px}
+    input:focus{outline:none;border-color:#002C63;box-shadow:0 0 0 3px rgba(0,44,99,0.1)}
+    canvas{border:2px dashed #d1d5db;border-radius:8px;cursor:crosshair;touch-action:none;width:100%;height:200px;background:white}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;width:100%}
+    .btn-primary{background:#002C63;color:white}
+    .btn-primary:hover{background:#003d8f}
+    .btn-primary:disabled{background:#9ca3af;cursor:not-allowed}
+    .btn-outline{background:white;color:#374151;border:1px solid #d1d5db;margin-bottom:8px}
+    .btn-outline:hover{background:#f9fafb}
+    .success{text-align:center;padding:40px 20px}
+    .success h2{color:#10B981;font-size:24px;margin-bottom:8px}
+    .success p{color:#6b7280}
+    #firmaStatus{display:none}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Firma Electrónica</h1>
+      <p>Reporte de Calidad - ObjetivaQC</p>
+    </div>
+    <div class="leyenda">
+      <strong>Aviso Legal</strong>
+      Acepto y atiendo en oportunidad los ítems en los que se hace mención a mi empresa. Al firmar este documento, confirmo que he revisado el contenido del reporte y me comprometo a atender las observaciones señaladas dentro de los plazos establecidos.
+    </div>
+    <div class="card" id="firmaForm">
+      <label>Nombre completo</label>
+      <input type="text" id="nombre" placeholder="Nombre del firmante" required>
+      <label>Correo electrónico</label>
+      <input type="email" id="email" placeholder="correo@empresa.com" required>
+      <label>Firma (dibuje con el dedo o mouse)</label>
+      <canvas id="firmaCanvas"></canvas>
+      <button class="btn btn-outline" onclick="limpiarFirma()" style="margin-top:8px">Limpiar firma</button>
+      <button class="btn btn-primary" onclick="enviarFirma()" style="margin-top:8px" id="btnFirmar">Firmar Reporte</button>
+    </div>
+    <div class="card success" id="firmaStatus">
+      <h2>Firmado correctamente</h2>
+      <p>Su firma ha sido registrada. Se notificará a todos los involucrados cuando todas las empresas hayan firmado.</p>
+    </div>
+  </div>
+  <script>
+    const canvas=document.getElementById('firmaCanvas');
+    const ctx=canvas.getContext('2d');
+    let drawing=false,hasFirma=false;
+    function initCanvas(){
+      const r=canvas.getBoundingClientRect();
+      canvas.width=r.width*2;canvas.height=400;
+      ctx.scale(2,2);ctx.lineWidth=2;ctx.lineCap='round';ctx.strokeStyle='#1e293b';
+    }
+    initCanvas();window.addEventListener('resize',initCanvas);
+    function getPos(e){const r=canvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}}
+    canvas.addEventListener('mousedown',e=>{drawing=true;ctx.beginPath();const p=getPos(e);ctx.moveTo(p.x,p.y)});
+    canvas.addEventListener('mousemove',e=>{if(!drawing)return;const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();hasFirma=true});
+    canvas.addEventListener('mouseup',()=>drawing=false);
+    canvas.addEventListener('mouseleave',()=>drawing=false);
+    canvas.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;ctx.beginPath();const p=getPos(e);ctx.moveTo(p.x,p.y)},{passive:false});
+    canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();hasFirma=true},{passive:false});
+    canvas.addEventListener('touchend',()=>drawing=false);
+    function limpiarFirma(){ctx.clearRect(0,0,canvas.width,canvas.height);hasFirma=false}
+    async function enviarFirma(){
+      const nombre=document.getElementById('nombre').value.trim();
+      const email=document.getElementById('email').value.trim();
+      if(!nombre||!email){alert('Complete nombre y correo');return}
+      if(!hasFirma){alert('Dibuje su firma');return}
+      const btn=document.getElementById('btnFirmar');
+      btn.disabled=true;btn.textContent='Enviando...';
+      try{
+        const firmaBase64=canvas.toDataURL('image/png');
+        const resp=await fetch('/api/firma/${token}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,firmaBase64})});
+        const data=await resp.json();
+        if(data.ok){document.getElementById('firmaForm').style.display='none';document.getElementById('firmaStatus').style.display='block'}
+        else{alert(data.error||'Error al firmar');btn.disabled=false;btn.textContent='Firmar Reporte'}
+      }catch(err){alert('Error de conexión');btn.disabled=false;btn.textContent='Firmar Reporte'}
+    }
+  </script>
+</body>
+</html>`;
+}
+
 export default router;

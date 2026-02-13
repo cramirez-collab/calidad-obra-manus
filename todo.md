@@ -3855,3 +3855,9 @@
 - [x] Verificar que pines filtra SIEMPRE por planoId que pertenece al proyecto correcto
 - [x] Verificar caché del servidor no sirve datos cruzados entre proyectos
 - [x] Verificar que el frontend limpia datos al cambiar de proyecto
+- [x] UI: Números y textos en cards de penalizaciones no deben partirse en 2 renglones - tamaño responsivo
+- [x] UI: Ordenar TODAS las gráficas de mayor a menor
+- [x] FEATURE: Firma electrónica por empresa en reportes PDF
+- [x] FEATURE: Envío de reporte firmado por correo a todos los usuarios involucrados
+- [x] FEATURE: Leyenda en correo "Acepto y atiendo en oportunidad los ítems en los que se hace mención a mi empresa"
+- [x] FEATURE: Bitácora de Correos con fecha/hora de apertura del correo

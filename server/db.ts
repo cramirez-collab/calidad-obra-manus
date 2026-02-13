@@ -29,7 +29,9 @@ import {
   avisos, InsertAviso,
   avisosLecturas, InsertAvisoLectura,
   planos, InsertPlano,
-  planoPines, InsertPlanoPin
+  planoPines, InsertPlanoPin,
+  firmasReporte, InsertFirmaReporte,
+  bitacoraCorreos, InsertBitacoraCorreo
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -5631,4 +5633,139 @@ export async function getPinCountByPlano(proyectoId: number) {
     ))
     .groupBy(items.pinPlanoId);
   return result;
+}
+
+
+// ==================== FIRMAS ELECTRÓNICAS DE REPORTES ====================
+
+export async function crearFirmasReporte(data: {
+  proyectoId: number;
+  reporteId: string;
+  empresas: { empresaId: number; emails: { userId?: number; nombre: string; email: string }[] }[];
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const results = [];
+  for (const emp of data.empresas) {
+    const token = nanoid(32);
+    const [result] = await db.insert(firmasReporte).values({
+      proyectoId: data.proyectoId,
+      reporteId: data.reporteId,
+      empresaId: emp.empresaId,
+      firmado: false,
+      tokenFirma: token,
+    });
+    results.push({ id: result.insertId, empresaId: emp.empresaId, token });
+  }
+  return results;
+}
+
+export async function firmarReporte(data: {
+  tokenFirma: string;
+  firmaBase64: string;
+  firmadoPorId?: number;
+  firmadoPorNombre: string;
+  firmadoPorEmail: string;
+  ip?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [firma] = await db.select().from(firmasReporte).where(eq(firmasReporte.tokenFirma, data.tokenFirma));
+  if (!firma) throw new Error("Token de firma inválido");
+  if (firma.firmado) throw new Error("Este reporte ya fue firmado por esta empresa");
+  await db.update(firmasReporte).set({
+    firmado: true,
+    firmaBase64: data.firmaBase64,
+    firmadoPorId: data.firmadoPorId || null,
+    firmadoPorNombre: data.firmadoPorNombre,
+    firmadoPorEmail: data.firmadoPorEmail,
+    fechaFirma: new Date(),
+    ipFirma: data.ip || null,
+  }).where(eq(firmasReporte.id, firma.id));
+  return firma;
+}
+
+export async function getFirmasByReporte(reporteId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  return await db.select().from(firmasReporte).where(eq(firmasReporte.reporteId, reporteId)).orderBy(firmasReporte.createdAt);
+}
+
+export async function getFirmaByToken(token: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [firma] = await db.select().from(firmasReporte).where(eq(firmasReporte.tokenFirma, token));
+  return firma || null;
+}
+
+export async function todasFirmasCompletas(reporteId: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const firmas = await db.select().from(firmasReporte).where(eq(firmasReporte.reporteId, reporteId));
+  if (firmas.length === 0) return false;
+  return firmas.every(f => f.firmado);
+}
+
+// ==================== BITÁCORA DE CORREOS ====================
+
+export async function registrarCorreo(data: {
+  proyectoId: number;
+  reporteId?: string;
+  tipo: string;
+  destinatarioEmail: string;
+  destinatarioNombre?: string;
+  destinatarioEmpresa?: string;
+  asunto: string;
+  contenido?: string;
+  leyenda?: string;
+  enviadoPorId?: number;
+  enviadoPorNombre?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const tokenTracking = nanoid(32);
+  const [result] = await db.insert(bitacoraCorreos).values({
+    ...data,
+    enviado: true,
+    fechaEnvio: new Date(),
+    tokenTracking,
+  });
+  return { id: result.insertId, tokenTracking };
+}
+
+export async function marcarCorreoAbierto(tokenTracking: string, ip?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [correo] = await db.select().from(bitacoraCorreos).where(eq(bitacoraCorreos.tokenTracking, tokenTracking));
+  if (!correo) return null;
+  if (!correo.abierto) {
+    await db.update(bitacoraCorreos).set({
+      abierto: true,
+      fechaApertura: new Date(),
+      ipApertura: ip || null,
+    }).where(eq(bitacoraCorreos.id, correo.id));
+  }
+  return correo;
+}
+
+export async function getBitacoraCorreos(proyectoId: number, opts?: { limit?: number; offset?: number; tipo?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const conditions = [eq(bitacoraCorreos.proyectoId, proyectoId)];
+  if (opts?.tipo) conditions.push(eq(bitacoraCorreos.tipo, opts.tipo));
+  const result = await db.select().from(bitacoraCorreos)
+    .where(and(...conditions))
+    .orderBy(desc(bitacoraCorreos.createdAt))
+    .limit(opts?.limit || 100)
+    .offset(opts?.offset || 0);
+  return result;
+}
+
+export async function countBitacoraCorreos(proyectoId: number, tipo?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const conditions = [eq(bitacoraCorreos.proyectoId, proyectoId)];
+  if (tipo) conditions.push(eq(bitacoraCorreos.tipo, tipo));
+  const [result] = await db.select({ count: sql<number>`COUNT(*)` }).from(bitacoraCorreos).where(and(...conditions));
+  return result?.count || 0;
 }

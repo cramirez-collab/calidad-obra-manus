@@ -3053,5 +3053,100 @@ export const appRouter = router({
         }),
     }),
   }),
+
+  // ==================== FIRMAS ELECTRÓNICAS ====================
+  firmas: router({
+    // Crear firmas para un reporte (una por empresa involucrada)
+    crearParaReporte: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        reporteId: z.string(),
+        empresas: z.array(z.object({
+          empresaId: z.number(),
+          empresaNombre: z.string(),
+          contactoNombre: z.string().optional(),
+          contactoEmail: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        return db.crearFirmasReporte({
+          proyectoId: input.proyectoId,
+          reporteId: input.reporteId,
+          empresas: input.empresas.map(emp => ({
+            empresaId: emp.empresaId,
+            emails: [{
+              nombre: emp.contactoNombre || emp.empresaNombre,
+              email: emp.contactoEmail || '',
+            }],
+          })),
+        });
+      }),
+
+    // Obtener firmas de un reporte
+    porReporte: protectedProcedure
+      .input(z.object({ reporteId: z.string() }))
+      .query(async ({ input }) => {
+        return db.getFirmasByReporte(input.reporteId);
+      }),
+
+    // Obtener firmas por proyecto
+    porProyecto: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getFirmasByReporte(input.proyectoId.toString());
+      }),
+  }),
+
+  // ==================== BITÁCORA DE CORREOS ====================
+  bitacoraCorreos: router({
+    // Registrar envío de correo
+    registrar: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        reporteId: z.string().optional(),
+        tipo: z.string(),
+        destinatarioEmail: z.string(),
+        destinatarioNombre: z.string().optional(),
+        destinatarioEmpresa: z.string().optional(),
+        asunto: z.string(),
+        contenido: z.string().optional(),
+        leyenda: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        return db.registrarCorreo({
+          proyectoId: input.proyectoId,
+          reporteId: input.reporteId,
+          tipo: input.tipo,
+          destinatarioEmail: input.destinatarioEmail,
+          destinatarioNombre: input.destinatarioNombre,
+          destinatarioEmpresa: input.destinatarioEmpresa,
+          asunto: input.asunto,
+          contenido: input.contenido,
+          leyenda: input.leyenda,
+          enviadoPorId: ctx.user.id,
+          enviadoPorNombre: ctx.user.name || ctx.user.email || 'Sistema',
+        });
+      }),
+
+    // Listar correos enviados
+    listar: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        tipo: z.string().optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const [correos, total] = await Promise.all([
+          db.getBitacoraCorreos(input.proyectoId, {
+            tipo: input.tipo,
+            limit: input.limit,
+            offset: input.offset,
+          }),
+          db.countBitacoraCorreos(input.proyectoId, input.tipo),
+        ]);
+        return { correos, total };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

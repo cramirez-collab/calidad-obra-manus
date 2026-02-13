@@ -1,0 +1,40 @@
+CREATE TABLE `bitacora_correos` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`proyectoId` int NOT NULL,
+	`reporteId` varchar(100),
+	`tipo` varchar(50) NOT NULL,
+	`destinatarioEmail` varchar(320) NOT NULL,
+	`destinatarioNombre` varchar(255),
+	`destinatarioEmpresa` varchar(255),
+	`asunto` varchar(500) NOT NULL,
+	`contenido` text,
+	`leyenda` text,
+	`enviadoPorId` int,
+	`enviadoPorNombre` varchar(255),
+	`enviado` boolean NOT NULL DEFAULT false,
+	`fechaEnvio` timestamp,
+	`abierto` boolean NOT NULL DEFAULT false,
+	`fechaApertura` timestamp,
+	`ipApertura` varchar(45),
+	`tokenTracking` varchar(255),
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `bitacora_correos_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `firmas_reporte` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`proyectoId` int NOT NULL,
+	`reporteId` varchar(100) NOT NULL,
+	`empresaId` int NOT NULL,
+	`firmadoPorId` int,
+	`firmadoPorNombre` varchar(255),
+	`firmadoPorEmail` varchar(320),
+	`firmaBase64` text,
+	`firmado` boolean NOT NULL DEFAULT false,
+	`fechaFirma` timestamp,
+	`ipFirma` varchar(45),
+	`tokenFirma` varchar(255),
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `firmas_reporte_id` PRIMARY KEY(`id`)
+);

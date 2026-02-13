@@ -635,3 +635,54 @@ export const planoPines = mysqlTable("plano_pines", {
 
 export type PlanoPin = typeof planoPines.$inferSelect;
 export type InsertPlanoPin = typeof planoPines.$inferInsert;
+
+
+/**
+ * Tabla de firmas electrónicas en reportes PDF
+ * Cada empresa involucrada en un reporte puede firmar electrónicamente
+ */
+export const firmasReporte = mysqlTable("firmas_reporte", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  reporteId: varchar("reporteId", { length: 100 }).notNull(), // ID único del reporte generado
+  empresaId: int("empresaId").notNull(),
+  firmadoPorId: int("firmadoPorId"), // Usuario que firmó
+  firmadoPorNombre: varchar("firmadoPorNombre", { length: 255 }),
+  firmadoPorEmail: varchar("firmadoPorEmail", { length: 320 }),
+  firmaBase64: text("firmaBase64"), // Imagen de la firma en base64
+  firmado: boolean("firmado").default(false).notNull(),
+  fechaFirma: timestamp("fechaFirma"),
+  ipFirma: varchar("ipFirma", { length: 45 }),
+  tokenFirma: varchar("tokenFirma", { length: 255 }), // Token único para link de firma
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type FirmaReporte = typeof firmasReporte.$inferSelect;
+export type InsertFirmaReporte = typeof firmasReporte.$inferInsert;
+
+/**
+ * Tabla de correos enviados - bitácora de todos los correos con tracking de apertura
+ */
+export const bitacoraCorreos = mysqlTable("bitacora_correos", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  reporteId: varchar("reporteId", { length: 100 }), // Vinculado a un reporte (opcional)
+  tipo: varchar("tipo", { length: 50 }).notNull(), // 'reporte_firmado', 'solicitud_firma', 'notificacion', etc.
+  destinatarioEmail: varchar("destinatarioEmail", { length: 320 }).notNull(),
+  destinatarioNombre: varchar("destinatarioNombre", { length: 255 }),
+  destinatarioEmpresa: varchar("destinatarioEmpresa", { length: 255 }),
+  asunto: varchar("asunto", { length: 500 }).notNull(),
+  contenido: text("contenido"), // Resumen del contenido
+  leyenda: text("leyenda"), // Leyenda legal incluida
+  enviadoPorId: int("enviadoPorId"),
+  enviadoPorNombre: varchar("enviadoPorNombre", { length: 255 }),
+  enviado: boolean("enviado").default(false).notNull(),
+  fechaEnvio: timestamp("fechaEnvio"),
+  abierto: boolean("abierto").default(false).notNull(),
+  fechaApertura: timestamp("fechaApertura"), // Fecha y hora de apertura del correo
+  ipApertura: varchar("ipApertura", { length: 45 }),
+  tokenTracking: varchar("tokenTracking", { length: 255 }), // Token único para pixel de tracking
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type BitacoraCorreo = typeof bitacoraCorreos.$inferSelect;
+export type InsertBitacoraCorreo = typeof bitacoraCorreos.$inferInsert;

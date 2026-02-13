@@ -45,7 +45,8 @@ import {
   FileText,
   RefreshCw,
   Wifi,
-  WifiOff
+  WifiOff,
+  Mail
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -147,6 +148,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     // Usuarios
     { icon: Users, label: "Usuarios", path: "/usuarios", group: "Usuarios" },
     { icon: History, label: "Bitácora", path: "/bitacora", group: "Usuarios" },
+    { icon: Mail, label: "Correos", path: "/bitacora-correos", group: "Usuarios" },
   ];
 
   // Todos los usuarios ven los items base y de análisis

@@ -421,6 +421,13 @@
       "when": 1770942825092,
       "tag": "0059_peaceful_raider",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "5",
+      "when": 1770952311152,
+      "tag": "0060_cold_nextwave",
+      "breakpoints": true
     }
   ]
 }

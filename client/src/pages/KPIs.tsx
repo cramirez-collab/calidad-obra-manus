@@ -109,13 +109,13 @@ export default function KPIs() {
   })) || [];
 
   // Datos de rendimiento de supervisores
-  const supervisoresData = kpis?.rendimientoSupervisores?.map(s => ({
+  const supervisoresData = (kpis?.rendimientoSupervisores?.map(s => ({
     nombre: getSupervisorName(s.supervisorId),
     aprobados: s.aprobados,
     rechazados: s.rechazados,
     total: s.total,
     tasa: s.total > 0 ? ((s.aprobados / s.total) * 100).toFixed(1) : '0',
-  })) || [];
+  })) || []).sort((a, b) => b.total - a.total);
 
   return (
     <DashboardLayout>

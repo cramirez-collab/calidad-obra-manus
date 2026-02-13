@@ -55,6 +55,7 @@ const Terminos = lazy(() => import("./pages/Terminos"));
 const Planos = lazy(() => import("./pages/Planos"));
 const AltaRapidaEmpresa = lazy(() => import("./pages/catalogos/AltaRapidaEmpresa"));
 const Notificaciones = lazy(() => import("./pages/Notificaciones"));
+const BitacoraCorreos = lazy(() => import("./pages/BitacoraCorreos"));
 
 
 
@@ -134,6 +135,7 @@ function AppRoutes() {
       {/* Planos */}
       <Route path="/planos" component={Planos} />
       <Route path="/notificaciones" component={Notificaciones} />
+      <Route path="/bitacora-correos" component={BitacoraCorreos} />
       
       {/* Configuración y Metas */}
       <Route path="/configuracion" component={Configuracion} />

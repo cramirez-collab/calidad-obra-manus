@@ -72,7 +72,8 @@ import {
   RadialBarChart,
   RadialBar,
 } from "recharts";
-import { Pen } from "lucide-react";
+import { Pen, Send, Mail, Loader2 } from "lucide-react";
+import { toast } from 'sonner';
 
 const statusColors: Record<string, string> = {
   pendiente_foto_despues: "#F59E0B",
@@ -236,7 +237,7 @@ export default function Estadisticas() {
     return stats.porEmpresa.slice(0, 10).map(item => ({
       name: empresas?.find(e => e.id === item.empresaId)?.nombre || `Empresa ${item.empresaId}`,
       total: Number(item.count),
-    }));
+    })).sort((a, b) => b.total - a.total);
   }, [stats, empresas]);
 
   const especialidadData = useMemo(() => {
@@ -248,7 +249,7 @@ export default function Estadisticas() {
         value: Number(item.count),
         color: esp?.color || "#6B7280",
       };
-    });
+    }).sort((a, b) => b.value - a.value);
   }, [stats, especialidades]);
 
   // Datos de defectos para gráficos
@@ -259,7 +260,7 @@ export default function Estadisticas() {
       total: item.total,
       aprobados: item.aprobados,
       rechazados: item.rechazados,
-    }));
+    })).sort((a, b) => b.total - a.total);
   }, [defectosStats]);
 
   // Calcular tasa de aprobación global
@@ -283,7 +284,7 @@ export default function Estadisticas() {
       name: item.severidad.charAt(0).toUpperCase() + item.severidad.slice(1),
       value: item.total,
       color: severidadColors[item.severidad] || "#6B7280",
-    }));
+    })).sort((a, b) => b.value - a.value);
   }, [defectosStats]);
 
   // Obtener nombre del filtro activo
@@ -1190,61 +1191,61 @@ export default function Estadisticas() {
           {/* KPIs de Penalizaciones */}
           <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
             <Card className="border-red-200 bg-red-50/50">
-              <CardContent className="pt-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-red-100">
-                    <Ban className="h-5 w-5 text-red-600" />
+              <CardContent className="p-3 sm:pt-4">
+                <div className="flex flex-col items-center text-center gap-1 sm:flex-row sm:text-left sm:gap-3">
+                  <div className="p-2 rounded-lg bg-red-100 shrink-0">
+                    <Ban className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
                   </div>
-                  <div>
-                    <p className="text-xl sm:text-2xl font-bold text-red-600">
+                  <div className="min-w-0">
+                    <p className="text-base sm:text-xl md:text-2xl font-bold text-red-600 whitespace-nowrap">
                       ${(penalizaciones?.totalActiva || 0).toLocaleString()}
                     </p>
-                    <p className="text-xs text-muted-foreground">Penalización Activa</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">Penalización Activa</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             <Card className="border-emerald-200 bg-emerald-50/50">
-              <CardContent className="pt-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-emerald-100">
-                    <ShieldCheck className="h-5 w-5 text-emerald-600" />
+              <CardContent className="p-3 sm:pt-4">
+                <div className="flex flex-col items-center text-center gap-1 sm:flex-row sm:text-left sm:gap-3">
+                  <div className="p-2 rounded-lg bg-emerald-100 shrink-0">
+                    <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
                   </div>
-                  <div>
-                    <p className="text-xl sm:text-2xl font-bold text-emerald-600">
+                  <div className="min-w-0">
+                    <p className="text-base sm:text-xl md:text-2xl font-bold text-emerald-600 whitespace-nowrap">
                       ${(penalizaciones?.totalLiberada || 0).toLocaleString()}
                     </p>
-                    <p className="text-xs text-muted-foreground">Penalización Liberada</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">Penalización Liberada</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="pt-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-100">
-                    <DollarSign className="h-5 w-5 text-blue-600" />
+              <CardContent className="p-3 sm:pt-4">
+                <div className="flex flex-col items-center text-center gap-1 sm:flex-row sm:text-left sm:gap-3">
+                  <div className="p-2 rounded-lg bg-blue-100 shrink-0">
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                   </div>
-                  <div>
-                    <p className="text-xl sm:text-2xl font-bold">
+                  <div className="min-w-0">
+                    <p className="text-base sm:text-xl md:text-2xl font-bold whitespace-nowrap">
                       ${(penalizaciones?.totalGeneral || 0).toLocaleString()}
                     </p>
-                    <p className="text-xs text-muted-foreground">Total Acumulado</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">Total Acumulado</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="pt-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-amber-100">
-                    <DollarSign className="h-5 w-5 text-amber-600" />
+              <CardContent className="p-3 sm:pt-4">
+                <div className="flex flex-col items-center text-center gap-1 sm:flex-row sm:text-left sm:gap-3">
+                  <div className="p-2 rounded-lg bg-amber-100 shrink-0">
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
                   </div>
-                  <div>
-                    <p className="text-xl sm:text-2xl font-bold text-amber-600">
+                  <div className="min-w-0">
+                    <p className="text-base sm:text-xl md:text-2xl font-bold text-amber-600 whitespace-nowrap">
                       ${(penalizaciones?.montoPorItem || 2000).toLocaleString()}
                     </p>
-                    <p className="text-xs text-muted-foreground">Monto por Ítem</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">Monto por Ítem</p>
                   </div>
                 </div>
               </CardContent>
@@ -1394,13 +1395,18 @@ export default function Estadisticas() {
 
         {/* Firmas de Especialidades */}
         <div className="space-y-4">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <Pen className="h-5 w-5 text-[#002C63]" />
-            Firmas por Especialidad
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Responsables de calidad por especialidad y empresa contratista
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Pen className="h-5 w-5 text-[#002C63]" />
+                Firmas por Especialidad
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Responsables de calidad por especialidad y empresa contratista
+              </p>
+            </div>
+            <EnviarParaFirmaButton firmantes={firmantesData} proyectoId={selectedProjectId} />
+          </div>
           <FirmasEspecialidades />
         </div>
       </div>
@@ -1758,5 +1764,88 @@ function FirmasEspecialidades() {
         );
       })}
     </div>
+  );
+}
+
+
+// Componente para enviar reporte para firma electrónica
+function EnviarParaFirmaButton({ firmantes, proyectoId }: { firmantes: any; proyectoId: number | null }) {
+  const [sending, setSending] = useState(false);
+  const crearFirmas = trpc.firmas.crearParaReporte.useMutation();
+  const registrarCorreo = trpc.bitacoraCorreos.registrar.useMutation();
+
+  const handleEnviar = async () => {
+    if (!firmantes || firmantes.length === 0 || !proyectoId) {
+      toast.error('No hay empresas para enviar');
+      return;
+    }
+    setSending(true);
+    try {
+      // Generar ID único para este reporte
+      const reporteId = `RPT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      
+      // Crear firmas para cada empresa
+      const empresasUnicas = firmantes.reduce((acc: any[], f: any) => {
+        if (!acc.find((e: any) => e.empresaId === f.empresaId)) {
+          acc.push({
+            empresaId: f.empresaId,
+            empresaNombre: f.empresaNombre,
+            contactoNombre: f.jefeNombre || undefined,
+            contactoEmail: f.jefeEmail || undefined,
+          });
+        }
+        return acc;
+      }, []);
+
+      const firmasResult = await crearFirmas.mutateAsync({
+        proyectoId,
+        reporteId,
+        empresas: empresasUnicas,
+      });
+
+      // Registrar en bitácora de correos por cada empresa
+      const leyenda = "Acepto y atiendo en oportunidad los ítems en los que se hace mención a mi empresa.";
+      
+      for (const emp of empresasUnicas) {
+        await registrarCorreo.mutateAsync({
+          proyectoId,
+          reporteId,
+          tipo: 'firma_reporte',
+          destinatarioEmail: emp.contactoEmail || 'sin-email@pendiente.com',
+          destinatarioNombre: emp.contactoNombre,
+          destinatarioEmpresa: emp.empresaNombre,
+          asunto: `Firma requerida - Reporte de Calidad ${reporteId}`,
+          contenido: `Se requiere su firma electrónica para el reporte de calidad. Enlace de firma disponible en el sistema.`,
+          leyenda,
+        });
+      }
+
+      toast.success(
+        `Reporte enviado para firma a ${empresasUnicas.length} empresa(s)`,
+        { description: `ID: ${reporteId}. Los enlaces de firma están disponibles.`, duration: 5000 }
+      );
+    } catch (error: any) {
+      console.error('Error enviando para firma:', error);
+      toast.error('Error al enviar para firma', { description: error.message });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <Button
+      onClick={handleEnviar}
+      disabled={sending || !firmantes || firmantes.length === 0}
+      className="bg-[#002C63] hover:bg-[#003d8f] text-white"
+      size="sm"
+    >
+      {sending ? (
+        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+      ) : (
+        <Send className="h-4 w-4 mr-1" />
+      )}
+      <span className="hidden sm:inline">Enviar para Firma</span>
+      <span className="sm:hidden">Firmas</span>
+    </Button>
   );
 }
