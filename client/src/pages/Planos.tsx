@@ -265,6 +265,9 @@ export default function Planos() {
 
   const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
 
+  // Auto-abrir visor cuando hay planos disponibles (entrada directa al visor)
+  const [autoOpened, setAutoOpened] = useState(false);
+
   // Refetch pines al cambiar de plano
   // CERRAR VISOR Y RESETEAR al cambiar de proyecto — aislamiento agresivo
   useEffect(() => {
@@ -275,6 +278,7 @@ export default function Planos() {
     setShowPinModal(false);
     setViewerIndex(0);
     setFilterNivel(null);
+    setAutoOpened(false); // Resetear para que se auto-abra con el nuevo proyecto
   }, [selectedProjectId]);
 
   useEffect(() => {
@@ -285,6 +289,13 @@ export default function Planos() {
       setShowPinModal(false);
     }
   }, [viewerIndex, currentPlano?.id]);
+
+  useEffect(() => {
+    if (!autoOpened && planos.length > 0 && !showViewer && !isLoading) {
+      setAutoOpened(true);
+      openViewer(0);
+    }
+  }, [planos.length, isLoading, autoOpened, showViewer]);
 
   // Limpiar timer del modal al desmontar
   useEffect(() => {
