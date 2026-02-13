@@ -1020,7 +1020,7 @@ export default function Bienvenida() {
                     <Layers className="h-4 w-4 mr-1" /> Cambiar nivel
                   </Button>
                 </div>
-                <div className="flex-1 overflow-hidden relative">
+                <div className="flex-1 overflow-hidden">
                   <ZoomablePlano
                     imagenUrl={getImageUrl(plano.imagenUrl)}
                     nombre={plano.nombre}
@@ -1031,20 +1031,6 @@ export default function Bienvenida() {
                     }}
                     className="h-full"
                   />
-                  {/* FAB: Agregar Pin - solo admin */}
-                  {isAdmin && (
-                    <button
-                      onClick={() => {
-                        setShowPlanoViewer(false);
-                        setLocation('/planos');
-                      }}
-                      className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-5 py-3 bg-[#02B381] hover:bg-[#029e72] text-white rounded-full shadow-xl shadow-emerald-500/30 font-semibold text-sm transition-all active:scale-95"
-                      title="Ir a Planos para agregar pines"
-                    >
-                      <Plus className="w-5 h-5" />
-                      <span>Agregar Pin</span>
-                    </button>
-                  )}
                 </div>
               </div>
             </DialogContent>

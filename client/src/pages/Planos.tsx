@@ -827,15 +827,14 @@ export default function Planos() {
               >
                 {showPins ? <MapPin className="w-4 h-4" /> : <MapPinOff className="w-4 h-4" />}
               </button>
-              {/* Agregar pin (admin) - botón prominente */}
+              {/* Agregar pin (admin) */}
               {isAdmin && (
                 <button
                   onClick={() => { setPinMode(p => !p); setSelectedPin(null); }}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-semibold text-xs transition-colors ${pinMode ? 'bg-red-500 hover:bg-red-600 animate-pulse text-white' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'}`}
+                  className={`p-1.5 rounded-lg transition-colors ${pinMode ? 'bg-red-500 hover:bg-red-600 animate-pulse' : 'hover:bg-white/10'}`}
                   title={pinMode ? "Cancelar modo pin" : "Agregar pin"}
                 >
                   <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">{pinMode ? 'Cancelar' : 'Pin'}</span>
                 </button>
               )}
             </div>
@@ -957,17 +956,6 @@ export default function Planos() {
                 })}
               </div>
             </div>
-            {/* FAB flotante: Agregar Pin (admin, solo cuando NO está en modo pin) */}
-            {isAdmin && !pinMode && (
-              <button
-                onClick={() => { setPinMode(true); setSelectedPin(null); }}
-                className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-xl shadow-emerald-500/40 font-bold text-sm transition-all active:scale-95 animate-bounce"
-                style={{ animationDuration: '2s', animationIterationCount: 3 }}
-              >
-                <Plus className="w-5 h-5" />
-                <span>Agregar Pin</span>
-              </button>
-            )}
           </div>
 
           {/* Leyenda de estados en la parte inferior */}
@@ -1179,82 +1167,105 @@ export default function Planos() {
         </div>
       )}
 
-      {/* ========== DIALOG: Seleccionar ítem para pin ========== */}
+      {/* ========== DIALOG: Pin colocado - Crear ítem o vincular ========== */}
       <Dialog open={showItemSelector} onOpenChange={(open) => { if (!open) { setShowItemSelector(false); setPendingPinPos(null); } }}>
-        <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+        <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col p-0 gap-0">
+          {/* Header */}
+          <div className="px-4 pt-4 pb-3 border-b">
+            <DialogTitle className="flex items-center gap-2 text-base">
               <MapPin className="w-5 h-5 text-emerald-600" />
-              Vincular Pin a Ítem
+              Pin colocado
             </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
-            <div>
-              <label className="text-xs font-medium text-slate-600">Nota (opcional)</label>
-              <Input value={pinNota} onChange={e => setPinNota(e.target.value)} placeholder="Nota del pin..." />
+            <p className="text-xs text-slate-500 mt-1">Elige qué hacer con este pin en el plano</p>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            {/* === OPCIÓN PRINCIPAL: Crear nuevo ítem === */}
+            <div className="px-4 pt-4 pb-3">
+              <button
+                onClick={handleCreateItemFromPin}
+                className="w-full flex items-center gap-4 p-4 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-300 hover:border-emerald-500 rounded-xl transition-all group"
+              >
+                <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <PlusCircle className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-bold text-emerald-800 text-sm">Crear Nuevo Ítem</p>
+                  <p className="text-xs text-emerald-600 mt-0.5">Dar de alta un ítem nuevo con la ubicación de este pin</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-emerald-400 group-hover:text-emerald-600 flex-shrink-0" />
+              </button>
             </div>
-            <div>
-              <label className="text-xs font-medium text-slate-600">Buscar ítem para vincular</label>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  value={itemSearch}
-                  onChange={e => setItemSearch(e.target.value)}
-                  placeholder="Código, título o #consecutivo..."
-                  className="pl-8"
-                />
+
+            {/* Separador */}
+            <div className="flex items-center gap-3 px-4 py-1">
+              <div className="flex-1 border-t border-slate-200" />
+              <span className="text-[10px] text-slate-400 font-medium uppercase">o vincular a ítem existente</span>
+              <div className="flex-1 border-t border-slate-200" />
+            </div>
+
+            {/* === OPCIÓN SECUNDARIA: Vincular a ítem existente === */}
+            <div className="px-4 pt-2 pb-3 space-y-2">
+              <div>
+                <label className="text-xs font-medium text-slate-500">Nota del pin (opcional)</label>
+                <Input value={pinNota} onChange={e => setPinNota(e.target.value)} placeholder="Nota del pin..." className="h-8 text-sm" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-500">Buscar ítem existente</label>
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    value={itemSearch}
+                    onChange={e => setItemSearch(e.target.value)}
+                    placeholder="Código, título o #consecutivo..."
+                    className="pl-8 h-8 text-sm"
+                  />
+                </div>
+              </div>
+              <div className="border rounded-lg divide-y max-h-[200px] overflow-y-auto">
+                {filteredItems.map((item: any) => {
+                  const estado = item.status || "pendiente_foto_despues";
+                  const colors = PIN_COLORS[estado] || PIN_COLORS.sin_item;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => confirmPin(item.id)}
+                      className="w-full text-left px-3 py-2 hover:bg-emerald-50 transition-colors flex items-center gap-2"
+                    >
+                      {item.fotoAntesUrl && (
+                        <img src={item.fotoAntesUrl} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-slate-800 truncate">{item.codigo}</p>
+                        <p className="text-[10px] text-slate-500 truncate">{item.titulo}</p>
+                      </div>
+                      <span
+                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: colors.bg + '20', color: colors.bg }}
+                      >
+                        #{item.numeroInterno}
+                      </span>
+                    </button>
+                  );
+                })}
+                {filteredItems.length === 0 && (
+                  <div className="text-center py-4 text-xs text-slate-400">
+                    No se encontraron ítems
+                  </div>
+                )}
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto border rounded-lg divide-y max-h-[300px]">
-              {filteredItems.map((item: any) => {
-                const estado = item.status || "pendiente_foto_despues";
-                const colors = PIN_COLORS[estado] || PIN_COLORS.sin_item;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => confirmPin(item.id)}
-                    className="w-full text-left px-3 py-2 hover:bg-emerald-50 transition-colors flex items-center gap-2"
-                  >
-                    {item.fotoAntesUrl && (
-                      <img src={item.fotoAntesUrl} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-slate-800 truncate">{item.codigo}</p>
-                      <p className="text-[10px] text-slate-500 truncate">{item.titulo}</p>
-                    </div>
-                    <span
-                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: colors.bg + '20', color: colors.bg }}
-                    >
-                      #{item.numeroInterno}
-                    </span>
-                  </button>
-                );
-              })}
-              {filteredItems.length === 0 && (
-                <div className="text-center py-6 text-sm text-slate-400">
-                  No se encontraron ítems
-                </div>
-              )}
-            </div>
           </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              onClick={handleCreateItemFromPin}
-              className="w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2"
-            >
-              <PlusCircle className="w-4 h-4" />
-              Crear Nuevo Ítem
+
+          {/* Footer */}
+          <div className="px-4 py-3 border-t bg-slate-50 flex gap-2">
+            <Button variant="outline" onClick={() => { setShowItemSelector(false); setPendingPinPos(null); }} className="flex-1">
+              Cancelar
             </Button>
-            <div className="flex gap-2 w-full sm:flex-1">
-              <Button variant="outline" onClick={() => { setShowItemSelector(false); setPendingPinPos(null); }} className="flex-1">
-                Cancelar
-              </Button>
-              <Button onClick={() => confirmPin()} className="flex-1 bg-slate-600 hover:bg-slate-700 text-white">
-                Pin sin ítem
-              </Button>
-            </div>
-          </DialogFooter>
+            <Button onClick={() => confirmPin()} className="flex-1 bg-slate-600 hover:bg-slate-700 text-white">
+              Pin sin ítem
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
