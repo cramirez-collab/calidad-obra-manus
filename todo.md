@@ -3877,3 +3877,6 @@
 - [x] FEATURE: Al guardar ítem desde captura rápida, continuar en modo pin para seguir colocando más
 - [x] FEATURE: Panel de seguimiento con ítems creados en la sesión actual dentro del visor de planos
 - [x] BUG: Botón de agregar pin no visible en toolbar del visor de planos - agregar botón prominente para activar modo pin y captura rápida
+- [x] CRITICAL: Modo pin se activa automáticamente al abrir visor de planos para admin - sin necesidad de tocar ningún botón
+- [x] CRITICAL: Al tocar plano, abrir captura rápida directamente sin dialog intermedio de opciones
+- [x] CRITICAL: FAB flotante siempre visible y agresivo para que sea imposible no verlo

@@ -262,7 +262,7 @@ export default function Planos() {
     setViewerIndex(index);
     setZoom(1);
     setPan({ x: 0, y: 0 });
-    setPinMode(false);
+    setPinMode(isAdmin); // Admin: modo pin activo automáticamente al abrir
     setSelectedPin(null);
     setTappedPin(null);
     setShowPinModal(false);
@@ -362,7 +362,7 @@ export default function Planos() {
     setTappedPin(null);
   }, []);
 
-  // Click en el plano para agregar pin
+  // Click en el plano para agregar pin → ABRE CAPTURA RÁPIDA DIRECTAMENTE
   const handlePlanoClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!pinMode || isDragging) return;
     const img = imgRef.current;
@@ -374,10 +374,11 @@ export default function Planos() {
 
     if (x < 0 || x > 100 || y < 0 || y > 100) return;
 
-    setPendingPinPos({ x, y });
-    setItemSearch("");
-    setPinNota("");
-    setShowItemSelector(true);
+    // Abrir captura rápida DIRECTAMENTE sin dialog intermedio
+    const pos = { x, y };
+    setPendingPinPos(pos);
+    setCapturaRapidaPinPos(pos);
+    setShowCapturaRapida(true);
   }, [pinMode, isDragging]);
 
   // Confirmar pin con ítem seleccionado
@@ -523,18 +524,55 @@ export default function Planos() {
   };
   const handleMouseUp = () => setIsDragging(false);
 
+  // Touch: en modo pin, un tap coloca pin; sin modo pin, drag para pan
+  const touchStartPosRef = useRef<{ x: number; y: number; time: number } | null>(null);
+
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (pinMode) return;
     if (e.touches.length === 1) {
-      setIsDragging(true);
-      setDragStart({ x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y });
+      const touch = e.touches[0];
+      touchStartPosRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+      if (!pinMode) {
+        setIsDragging(true);
+        setDragStart({ x: touch.clientX - pan.x, y: touch.clientY - pan.y });
+      }
     }
   };
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || e.touches.length !== 1 || pinMode) return;
+    if (e.touches.length !== 1) return;
+    if (pinMode) {
+      // En modo pin, marcar que se movió (no es tap)
+      if (touchStartPosRef.current) {
+        const dx = Math.abs(e.touches[0].clientX - touchStartPosRef.current.x);
+        const dy = Math.abs(e.touches[0].clientY - touchStartPosRef.current.y);
+        if (dx > 10 || dy > 10) touchStartPosRef.current = null; // Cancelar tap
+      }
+      return;
+    }
+    if (!isDragging) return;
     setPan({ x: e.touches[0].clientX - dragStart.x, y: e.touches[0].clientY - dragStart.y });
   };
-  const handleTouchEnd = () => setIsDragging(false);
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    setIsDragging(false);
+    // En modo pin: si fue un tap corto sin movimiento, colocar pin
+    if (pinMode && touchStartPosRef.current) {
+      const elapsed = Date.now() - touchStartPosRef.current.time;
+      if (elapsed < 500) {
+        const img = imgRef.current;
+        if (img) {
+          const rect = img.getBoundingClientRect();
+          const x = ((touchStartPosRef.current.x - rect.left) / rect.width) * 100;
+          const y = ((touchStartPosRef.current.y - rect.top) / rect.height) * 100;
+          if (x >= 0 && x <= 100 && y >= 0 && y <= 100) {
+            const pos = { x, y };
+            setPendingPinPos(pos);
+            setCapturaRapidaPinPos(pos);
+            setShowCapturaRapida(true);
+          }
+        }
+      }
+      touchStartPosRef.current = null;
+    }
+  };
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -882,10 +920,12 @@ export default function Planos() {
             </div>
           </div>
 
-          {/* Pin mode banner */}
+          {/* Pin mode banner - SIEMPRE VISIBLE EN MODO PIN */}
           {pinMode && (
-            <div className="flex-shrink-0 bg-red-500 text-white text-center py-1.5 text-sm font-medium animate-pulse">
-              Toca sobre el plano para colocar un pin
+            <div className="flex-shrink-0 bg-emerald-600 text-white text-center py-2.5 text-sm font-bold flex items-center justify-center gap-2">
+              <MapPin className="w-4 h-4 animate-bounce" />
+              TOCA EL PLANO PARA COLOCAR PIN Y CREAR ÍTEM
+              <MapPin className="w-4 h-4 animate-bounce" />
             </div>
           )}
 
@@ -1005,24 +1045,27 @@ export default function Planos() {
             </div>
           </div>
 
-          {/* FAB FLOTANTE: Agregar Pin - siempre visible para admin cuando no está en modo pin */}
-          {isAdmin && !pinMode && !showPinModal && !showCapturaRapida && !showItemSelector && (
+          {/* FAB FLOTANTE: Siempre visible para admin */}
+          {isAdmin && !showPinModal && !showCapturaRapida && !showItemSelector && (
             <button
-              onClick={() => { setPinMode(true); setSelectedPin(null); }}
-              className="absolute bottom-20 left-4 z-[120] flex items-center gap-2 px-5 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-2xl shadow-emerald-500/40 font-bold text-sm transition-all hover:scale-105 active:scale-95"
+              onClick={() => {
+                if (pinMode) {
+                  setPinMode(false); setSelectedPin(null);
+                } else {
+                  setPinMode(true); setSelectedPin(null);
+                }
+              }}
+              className={`absolute bottom-20 left-4 z-[120] flex items-center gap-2 px-5 py-3.5 rounded-full shadow-2xl font-bold text-sm transition-all ${
+                pinMode
+                  ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/40'
+                  : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/40 animate-pulse hover:scale-105 active:scale-95'
+              }`}
             >
-              <MapPin className="w-5 h-5" />
-              <span>Nuevo Pin</span>
-            </button>
-          )}
-          {/* FAB: Cancelar modo pin */}
-          {isAdmin && pinMode && (
-            <button
-              onClick={() => { setPinMode(false); setSelectedPin(null); }}
-              className="absolute bottom-20 left-4 z-[120] flex items-center gap-2 px-5 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-2xl shadow-red-500/40 font-bold text-sm transition-all animate-pulse"
-            >
-              <X className="w-5 h-5" />
-              <span>Cancelar</span>
+              {pinMode ? (
+                <><X className="w-5 h-5" /><span>Salir modo pin</span></>
+              ) : (
+                <><MapPin className="w-5 h-5" /><span>Activar Pines</span></>
+              )}
             </button>
           )}
 
