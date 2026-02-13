@@ -3842,3 +3842,5 @@
 - [x] Auditar frontend: verificar que SIEMPRE envíe proyectoId
 - [x] Verificar datos en BD: buscar registros huérfanos o mezclados
 - [x] Corregir TODOS los problemas de aislamiento encontrados
+- [x] Mover botones Cancelar/Subir Plano a barra fija superior en el modal de subir plano
+- [x] Hacer preview del plano zoomeable y responsivo en el modal de subir plano

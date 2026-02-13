@@ -1210,21 +1210,31 @@ export default function Planos() {
 
       {/* Dialog: Agregar plano */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+        <DialogContent className="sm:max-w-2xl max-h-[95vh] flex flex-col p-0 gap-0">
+          {/* Barra superior fija con título y botones */}
+          <div className="sticky top-0 z-10 bg-white border-b px-4 py-3 flex items-center justify-between gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2">
               <Upload className="w-5 h-5 text-emerald-600" />
-              Subir Plano
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-medium text-slate-600">Nombre del plano *</label>
-              <Input value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Planta Baja, Nivel 1, Azotea" />
+              <span className="font-semibold text-sm sm:text-base">Subir Plano</span>
             </div>
-            <div>
-              <label className="text-xs font-medium text-slate-600">Número de nivel</label>
-              <Input type="number" value={nivel} onChange={e => setNivel(e.target.value)} placeholder="0" />
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowAddDialog(false)}>Cancelar</Button>
+              <Button size="sm" onClick={handleSubmit} disabled={crearPlano.isPending} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                {crearPlano.isPending ? "Subiendo..." : "Subir Plano"}
+              </Button>
+            </div>
+          </div>
+          {/* Contenido scrolleable */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-slate-600">Nombre del plano *</label>
+                <Input value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Planta Baja, Nivel 1, Azotea" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-600">Número de nivel</label>
+                <Input type="number" value={nivel} onChange={e => setNivel(e.target.value)} placeholder="0" />
+              </div>
             </div>
             <div>
               <label className="text-xs font-medium text-slate-600">Descripción (opcional)</label>
@@ -1241,13 +1251,16 @@ export default function Planos() {
               />
               {previewUrl ? (
                 <div className="relative mt-1">
-                  <img src={previewUrl} alt="Preview" className="w-full h-40 object-contain bg-slate-50 rounded-lg border" />
+                  <div className="w-full bg-slate-50 rounded-lg border overflow-auto" style={{ maxHeight: '50vh' }}>
+                    <img src={previewUrl} alt="Preview" className="max-w-none" style={{ minWidth: '100%' }} />
+                  </div>
                   <button
                     onClick={() => { setPreviewUrl(""); setImagenBase64(""); setImagenNombre(""); }}
-                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
                   >
                     <X className="w-3 h-3" />
                   </button>
+                  <p className="text-xs text-slate-400 mt-1 text-center">Pellizca o usa scroll para hacer zoom en el plano</p>
                 </div>
               ) : (
                 <button
@@ -1261,25 +1274,27 @@ export default function Planos() {
               )}
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={crearPlano.isPending} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-              {crearPlano.isPending ? "Subiendo..." : "Subir Plano"}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Dialog: Editar plano */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+        <DialogContent className="sm:max-w-lg max-h-[95vh] flex flex-col p-0 gap-0">
+          {/* Barra superior fija con título y botones */}
+          <div className="sticky top-0 z-10 bg-white border-b px-4 py-3 flex items-center justify-between gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2">
               <Edit2 className="w-5 h-5 text-blue-600" />
-              Editar Plano
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
+              <span className="font-semibold text-sm sm:text-base">Editar Plano</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowEditDialog(false)}>Cancelar</Button>
+              <Button size="sm" onClick={handleEdit} disabled={actualizarPlano.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
+                {actualizarPlano.isPending ? "Guardando..." : "Guardar"}
+              </Button>
+            </div>
+          </div>
+          {/* Contenido scrolleable */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
             <div>
               <label className="text-xs font-medium text-slate-600">Nombre del plano *</label>
               <Input value={editNombre} onChange={e => setEditNombre(e.target.value)} />
@@ -1293,12 +1308,6 @@ export default function Planos() {
               <Input value={editDescripcion} onChange={e => setEditDescripcion(e.target.value)} />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancelar</Button>
-            <Button onClick={handleEdit} disabled={actualizarPlano.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
-              {actualizarPlano.isPending ? "Guardando..." : "Guardar"}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
