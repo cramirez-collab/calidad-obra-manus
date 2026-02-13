@@ -1,0 +1,157 @@
+{
+  "query": "\nSELECT p.id, p.nombre, p.proyectoId, pr.nombre as proyecto_nombre, \n  (SELECT COUNT(*) FROM plano_pines pp WHERE pp.planoId = p.id AND pp.activo = 1) as num_pines\nFROM planos p \nLEFT JOIN proyectos pr ON p.proyectoId = pr.id \nWHERE p.activo = 1 \nORDER BY p.proyectoId, p.id;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute \nSELECT p.id, p.nombre, p.proyectoId, pr.nombre as proyecto_nombre, \n  (SELECT COUNT(*) FROM plano_pines pp WHERE pp.planoId = p.id AND pp.activo = 1) as num_pines\nFROM planos p \nLEFT JOIN proyectos pr ON p.proyectoId = pr.id \nWHERE p.activo = 1 \nORDER BY p.proyectoId, p.id;\n",
+  "rows": [
+    {
+      "id": "2",
+      "nombre": "Sotano -5",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "30001",
+      "nombre": "Sotano -4",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "30002",
+      "nombre": "Sotano -3",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "30003",
+      "nombre": "Sotano -2",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "30004",
+      "nombre": "Sotano -1",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "30005",
+      "nombre": "N1",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "30006",
+      "nombre": "N2",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "30007",
+      "nombre": "N3",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "30008",
+      "nombre": "N4",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "60001",
+      "nombre": "N5",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "60002",
+      "nombre": "N7",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "60003",
+      "nombre": "N9",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "60004",
+      "nombre": "N11",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "60005",
+      "nombre": "N13",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "90004",
+      "nombre": "N2",
+      "proyectoId": "1",
+      "proyecto_nombre": "Hidalma ",
+      "num_pines": "0"
+    },
+    {
+      "id": "90001",
+      "nombre": "Sotano 1",
+      "proyectoId": "150001",
+      "proyecto_nombre": "Mayas Habitat",
+      "num_pines": "0"
+    },
+    {
+      "id": "90003",
+      "nombre": "N1",
+      "proyectoId": "150001",
+      "proyecto_nombre": "Mayas Habitat",
+      "num_pines": "0"
+    },
+    {
+      "id": "90005",
+      "nombre": "N3",
+      "proyectoId": "150001",
+      "proyecto_nombre": "Mayas Habitat",
+      "num_pines": "0"
+    },
+    {
+      "id": "90006",
+      "nombre": "N4",
+      "proyectoId": "150001",
+      "proyecto_nombre": "Mayas Habitat",
+      "num_pines": "0"
+    },
+    {
+      "id": "90007",
+      "nombre": "N5",
+      "proyectoId": "150001",
+      "proyecto_nombre": "Mayas Habitat",
+      "num_pines": "0"
+    },
+    {
+      "id": "90008",
+      "nombre": "ROOF6",
+      "proyectoId": "150001",
+      "proyecto_nombre": "Mayas Habitat",
+      "num_pines": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tproyectoId\tproyecto_nombre\tnum_pines\n2\tSotano -5\t1\tHidalma \t0\n30001\tSotano -4\t1\tHidalma \t0\n30002\tSotano -3\t1\tHidalma \t0\n30003\tSotano -2\t1\tHidalma \t0\n30004\tSotano -1\t1\tHidalma \t0\n30005\tN1\t1\tHidalma \t0\n30006\tN2\t1\tHidalma \t0\n30007\tN3\t1\tHidalma \t0\n30008\tN4\t1\tHidalma \t0\n60001\tN5\t1\tHidalma \t0\n60002\tN7\t1\tHidalma \t0\n60003\tN9\t1\tHidalma \t0\n60004\tN11\t1\tHidalma \t0\n60005\tN13\t1\tHidalma \t0\n90004\tN2\t1\tHidalma \t0\n90001\tSotano 1\t150001\tMayas Habitat\t0\n90003\tN1\t150001\tMayas Habitat\t0\n90005\tN3\t150001\tMayas Habitat\t0\n90006\tN4\t150001\tMayas Habitat\t0\n90007\tN5\t150001\tMayas Habitat\t0\n90008\tROOF6\t150001\tMayas Habitat\t0\n",
+  "stderr": "",
+  "execution_time_ms": 399
+}

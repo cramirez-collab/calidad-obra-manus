@@ -3850,3 +3850,8 @@
 - [x] RENDIMIENTO: Cambio de proyecto instantáneo sin bloqueo visual
 - [x] RENDIMIENTO: Prefetch agresivo de datos al entrar al proyecto
 - [x] RENDIMIENTO: Caché larga para datos que no cambian frecuentemente
+- [x] CRÍTICO URGENTE: Planos y pines de Hidalma aparecen en Mayas - auditoría profunda del flujo completo
+- [x] Verificar que planos.listar filtra SIEMPRE por proyectoId en backend
+- [x] Verificar que pines filtra SIEMPRE por planoId que pertenece al proyecto correcto
+- [x] Verificar caché del servidor no sirve datos cruzados entre proyectos
+- [x] Verificar que el frontend limpia datos al cambiar de proyecto

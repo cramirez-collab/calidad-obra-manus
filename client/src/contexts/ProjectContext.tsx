@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef, startTransition } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProjectContextType {
   selectedProjectId: number | null;
@@ -15,17 +16,35 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 const CACHE_OPTS = { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 } as const;
 
-/** Limpieza TOTAL y AGRESIVA de todo el caché — aislamiento 100% entre proyectos */
-async function purgeAllProjectCache(utils: ReturnType<typeof trpc.useUtils>) {
-  // 1. Invalidar ABSOLUTAMENTE TODOS los queries de tRPC
-  await utils.invalidate();
-  
-  // 2. Limpiar TODAS las caches del Service Worker (en background, no bloquear)
+/**
+ * NUCLEAR PURGE: Elimina TODOS los datos en caché del queryClient.
+ * Esto es AGRESIVO a propósito: al cambiar de proyecto NO debe quedar
+ * NINGÚN dato del proyecto anterior visible ni por un milisegundo.
+ */
+function nuclearPurge(queryClient: any, utils: ReturnType<typeof trpc.useUtils>) {
+  // 1. ELIMINAR todos los queries del cache (no solo invalidar, ELIMINAR)
+  // Esto hace que los componentes muestren loading en vez de datos viejos
+  queryClient.removeQueries({
+    predicate: (query: any) => {
+      const key = query.queryKey;
+      // Preservar SOLO auth y proyectos (necesarios para la sesión)
+      if (Array.isArray(key) && key.length > 0) {
+        const root = Array.isArray(key[0]) ? key[0][0] : key[0];
+        if (root === 'auth' || root === 'users.getProyectoActivo') return false;
+        // Preservar lista de proyectos
+        if (root === 'proyectos' || (Array.isArray(key[0]) && key[0].includes('proyectos') && key[0].includes('list'))) return false;
+        if (Array.isArray(key[0]) && key[0].includes('proyectos') && key[0].includes('misProyectos')) return false;
+      }
+      return true; // ELIMINAR todo lo demás
+    }
+  });
+
+  // 2. Limpiar caches del Service Worker
   if ('caches' in window) {
     caches.keys().then(names => names.forEach(n => caches.delete(n))).catch(() => {});
   }
-  
-  // 3. Limpiar sessionStorage (no bloquear)
+
+  // 3. Limpiar sessionStorage
   try {
     const keysToRemove: string[] = [];
     for (let i = 0; i < sessionStorage.length; i++) {
@@ -34,8 +53,8 @@ async function purgeAllProjectCache(utils: ReturnType<typeof trpc.useUtils>) {
     }
     keysToRemove.forEach(k => sessionStorage.removeItem(k));
   } catch (e) {}
-  
-  // 4. Notificar al Service Worker (fire & forget)
+
+  // 4. Notificar al Service Worker
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
   }
@@ -46,6 +65,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [selectedProjectId, setSelectedProjectIdState] = useState<number | null>(null);
   const [isChangingProject, setIsChangingProject] = useState(false);
   const utils = trpc.useUtils();
+  const queryClient = useQueryClient();
   const isChangingRef = useRef(false);
   const hasPrefetched = useRef(false);
   const previousProjectRef = useRef<number | null>(null);
@@ -132,7 +152,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
   }, [selectedProjectId, userProjects, isSuperadmin, isAdmin, isLoadingProjects, isChangingProject]);
 
-  /** Cambiar proyecto — INSTANTÁNEO: primero UI, luego limpieza en background */
+  /** Cambiar proyecto — NUCLEAR: eliminar datos viejos ANTES de mostrar nuevos */
   const setSelectedProjectId = useCallback(async (id: number | null) => {
     const previousId = previousProjectRef.current;
     
@@ -143,13 +163,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     hasPrefetched.current = false;
     previousProjectRef.current = id;
     
-    // 1. PRIMERO: Actualizar UI inmediatamente — el usuario ve el cambio al instante
+    // 1. NUCLEAR PURGE: Eliminar TODOS los datos del proyecto anterior
+    // Esto es ANTES de actualizar el ID para que los componentes no muestren datos viejos
+    nuclearPurge(queryClient, utils);
+    
+    // 2. Actualizar UI
     startTransition(() => {
       setSelectedProjectIdState(id);
     });
-    
-    // 2. Limpiar caché en background (no bloquear la UI)
-    purgeAllProjectCache(utils);
     
     // 3. Persistir en servidor (fire & forget)
     setProyectoActivoMutation.mutate({ proyectoId: id });
@@ -161,8 +182,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     setTimeout(() => {
       setIsChangingProject(false);
       isChangingRef.current = false;
-    }, 100);
-  }, [setProyectoActivoMutation, prefetchCatalogos, utils]);
+    }, 150);
+  }, [setProyectoActivoMutation, prefetchCatalogos, utils, queryClient]);
 
   const canAccessProject = (projectId: number): boolean => {
     if (isSuperadmin || isAdmin) return true;
@@ -172,8 +193,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleProyectoChanged = (event: CustomEvent<{ proyectoId: number | null }>) => {
       if (event.detail.proyectoId !== selectedProjectId && !isChangingRef.current) {
+        nuclearPurge(queryClient, utils);
         setSelectedProjectIdState(event.detail.proyectoId);
-        purgeAllProjectCache(utils);
       }
     };
 
@@ -181,7 +202,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('proyecto-activo-changed' as any, handleProyectoChanged);
     };
-  }, [selectedProjectId, utils]);
+  }, [selectedProjectId, utils, queryClient]);
 
   useEffect(() => {
     if (selectedProjectId !== null) {

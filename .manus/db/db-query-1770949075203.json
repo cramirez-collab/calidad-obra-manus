@@ -1,0 +1,22 @@
+{
+  "query": "\nSELECT p.proyectoId, pr.nombre as proyecto, COUNT(*) as total_planos,\n  SUM((SELECT COUNT(*) FROM plano_pines pp WHERE pp.planoId = p.id AND pp.activo = 1)) as total_pines\nFROM planos p \nLEFT JOIN proyectos pr ON p.proyectoId = pr.id \nWHERE p.activo = 1 \nGROUP BY p.proyectoId, pr.nombre;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute \nSELECT p.proyectoId, pr.nombre as proyecto, COUNT(*) as total_planos,\n  SUM((SELECT COUNT(*) FROM plano_pines pp WHERE pp.planoId = p.id AND pp.activo = 1)) as total_pines\nFROM planos p \nLEFT JOIN proyectos pr ON p.proyectoId = pr.id \nWHERE p.activo = 1 \nGROUP BY p.proyectoId, pr.nombre;\n",
+  "rows": [
+    {
+      "proyectoId": "150001",
+      "proyecto": "Mayas Habitat",
+      "total_planos": "6",
+      "total_pines": "0"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "total_planos": "15",
+      "total_pines": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "proyectoId\tproyecto\ttotal_planos\ttotal_pines\n150001\tMayas Habitat\t6\t0\n1\tHidalma \t15\t0\n",
+  "stderr": "",
+  "execution_time_ms": 355
+}

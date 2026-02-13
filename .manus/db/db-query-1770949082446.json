@@ -1,0 +1,136 @@
+{
+  "query": "\nSELECT p.proyectoId, pr.nombre as proyecto, p.id as plano_id, p.nombre as plano_nombre\nFROM planos p \nLEFT JOIN proyectos pr ON p.proyectoId = pr.id \nWHERE p.activo = 1 \nORDER BY p.proyectoId, p.id\nLIMIT 30;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute \nSELECT p.proyectoId, pr.nombre as proyecto, p.id as plano_id, p.nombre as plano_nombre\nFROM planos p \nLEFT JOIN proyectos pr ON p.proyectoId = pr.id \nWHERE p.activo = 1 \nORDER BY p.proyectoId, p.id\nLIMIT 30;\n",
+  "rows": [
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "2",
+      "plano_nombre": "Sotano -5"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "30001",
+      "plano_nombre": "Sotano -4"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "30002",
+      "plano_nombre": "Sotano -3"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "30003",
+      "plano_nombre": "Sotano -2"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "30004",
+      "plano_nombre": "Sotano -1"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "30005",
+      "plano_nombre": "N1"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "30006",
+      "plano_nombre": "N2"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "30007",
+      "plano_nombre": "N3"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "30008",
+      "plano_nombre": "N4"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "60001",
+      "plano_nombre": "N5"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "60002",
+      "plano_nombre": "N7"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "60003",
+      "plano_nombre": "N9"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "60004",
+      "plano_nombre": "N11"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "60005",
+      "plano_nombre": "N13"
+    },
+    {
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "plano_id": "90004",
+      "plano_nombre": "N2"
+    },
+    {
+      "proyectoId": "150001",
+      "proyecto": "Mayas Habitat",
+      "plano_id": "90001",
+      "plano_nombre": "Sotano 1"
+    },
+    {
+      "proyectoId": "150001",
+      "proyecto": "Mayas Habitat",
+      "plano_id": "90003",
+      "plano_nombre": "N1"
+    },
+    {
+      "proyectoId": "150001",
+      "proyecto": "Mayas Habitat",
+      "plano_id": "90005",
+      "plano_nombre": "N3"
+    },
+    {
+      "proyectoId": "150001",
+      "proyecto": "Mayas Habitat",
+      "plano_id": "90006",
+      "plano_nombre": "N4"
+    },
+    {
+      "proyectoId": "150001",
+      "proyecto": "Mayas Habitat",
+      "plano_id": "90007",
+      "plano_nombre": "N5"
+    },
+    {
+      "proyectoId": "150001",
+      "proyecto": "Mayas Habitat",
+      "plano_id": "90008",
+      "plano_nombre": "ROOF6"
+    }
+  ],
+  "messages": [],
+  "stdout": "proyectoId\tproyecto\tplano_id\tplano_nombre\n1\tHidalma \t2\tSotano -5\n1\tHidalma \t30001\tSotano -4\n1\tHidalma \t30002\tSotano -3\n1\tHidalma \t30003\tSotano -2\n1\tHidalma \t30004\tSotano -1\n1\tHidalma \t30005\tN1\n1\tHidalma \t30006\tN2\n1\tHidalma \t30007\tN3\n1\tHidalma \t30008\tN4\n1\tHidalma \t60001\tN5\n1\tHidalma \t60002\tN7\n1\tHidalma \t60003\tN9\n1\tHidalma \t60004\tN11\n1\tHidalma \t60005\tN13\n1\tHidalma \t90004\tN2\n150001\tMayas Habitat\t90001\tSotano 1\n150001\tMayas Habitat\t90003\tN1\n150001\tMayas Habitat\t90005\tN3\n150001\tMayas Habitat\t90006\tN4\n150001\tMayas Habitat\t90007\tN5\n150001\tMayas Habitat\t90008\tROOF6\n",
+  "stderr": "",
+  "execution_time_ms": 346
+}
