@@ -3887,3 +3887,4 @@
 - [x] RULE: Click en pin existente sigue abriendo directo el ítem asociado (NO modificar comportamiento actual)
 - [x] RULE: Coordenadas de pin normalizadas 0..1 respecto al plano
 - [x] RULE: Aislamiento multiproyecto - no mezclar pines/ítems entre proyectos
+- [x] BUG: Enviar para Firma falla con error "empresaId expected number, received undefined" - corregir mapeo de empresaId en el flujo de firma electrónica

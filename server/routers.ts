@@ -1768,17 +1768,19 @@ export const appRouter = router({
         for (const e of especialidades) espMap[e.id] = e.nombre;
         // Obtener nombres de jefes
         const jefesIds = empresas.filter(e => e.jefeResidenteId).map(e => e.jefeResidenteId!);
-        const jefesMap: Record<number, string> = {};
+        const jefesMap: Record<number, { name: string; email: string }> = {};
         if (jefesIds.length > 0) {
           for (const jId of jefesIds) {
             const u = await db.getUserById(jId);
-            if (u) jefesMap[jId] = u.name || u.email || '';
+            if (u) jefesMap[jId] = { name: u.name || u.email || '', email: u.email || '' };
           }
         }
         return empresas.map(e => ({
+          empresaId: e.id,
           empresaNombre: e.nombre,
           especialidadNombre: e.especialidadId ? (espMap[e.especialidadId] || 'Sin Especialidad') : 'Sin Especialidad',
-          jefeNombre: e.jefeResidenteId ? (jefesMap[e.jefeResidenteId] || '') : '',
+          jefeNombre: e.jefeResidenteId ? (jefesMap[e.jefeResidenteId]?.name || '') : '',
+          jefeEmail: e.jefeResidenteId ? (jefesMap[e.jefeResidenteId]?.email || '') : (e.email || ''),
         }));
       }),
     // Ítems con historial, fotos y capturador para el PDF
