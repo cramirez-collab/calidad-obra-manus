@@ -245,37 +245,43 @@ export default function Unidades() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Unidades</h1>
             <p className="text-muted-foreground">
               Gestiona las unidades o áreas del proyecto
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {isOrganizing ? (
               <>
-                <Button variant="outline" onClick={handleCancelOrganize}>
-                  <X className="h-4 w-4 mr-2" />
+                <Button variant="outline" onClick={handleCancelOrganize} size="sm">
+                  <X className="h-4 w-4 mr-1.5" />
                   Cancelar
                 </Button>
-                <Button onClick={handleSaveOrder} className="bg-green-600 hover:bg-green-700">
-                  <Save className="h-4 w-4 mr-2" />
+                <Button onClick={handleSaveOrder} className="bg-green-600 hover:bg-green-700" size="sm">
+                  <Save className="h-4 w-4 mr-1.5" />
                   Guardar Orden
                 </Button>
               </>
             ) : (
               <>
-                <Button variant="outline" onClick={() => setIsOrganizing(true)}>
-                  <GripVertical className="h-4 w-4 mr-2" />
+                <Button variant="outline" onClick={() => setIsOrganizing(true)} size="sm">
+                  <GripVertical className="h-4 w-4 mr-1.5" />
                   Organizar
                 </Button>
-                <Button variant="outline" size="icon" onClick={() => window.print()} title="Exportar PDF">
+                <Button variant="outline" size="icon" onClick={() => window.print()} title="Exportar PDF" className="h-8 w-8 sm:h-9 sm:w-9">
                   <FileDown className="h-4 w-4" />
                 </Button>
-                <Button onClick={() => handleOpen()}>
-                  <Plus className="h-4 w-4 mr-2" />
+                {/* Botón visible en desktop, oculto en móvil (se usa FAB) */}
+                <Button onClick={() => handleOpen()} size="sm" className="hidden sm:flex">
+                  <Plus className="h-4 w-4 mr-1.5" />
                   Nueva Unidad
+                </Button>
+                {/* Botón compacto visible solo en móvil en el header */}
+                <Button onClick={() => handleOpen()} size="sm" className="sm:hidden">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Nueva
                 </Button>
               </>
             )}
@@ -388,6 +394,17 @@ export default function Unidades() {
             )}
           </CardContent>
         </Card>
+
+        {/* FAB flotante para móvil - siempre visible y accesible */}
+        {!isOrganizing && (
+          <button
+            onClick={() => handleOpen()}
+            className="fixed bottom-6 right-6 z-50 sm:hidden w-14 h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg shadow-emerald-600/30 flex items-center justify-center active:scale-95 transition-all"
+            aria-label="Nueva Unidad"
+          >
+            <Plus className="w-7 h-7" />
+          </button>
+        )}
 
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogContent>

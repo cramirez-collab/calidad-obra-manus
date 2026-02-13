@@ -3865,3 +3865,4 @@
 - [x] UI: Botón flotante grande de Agregar Pin visible en móvil en visor de planos
 - [x] FEATURE: Dar de alta ítem directamente al colocar pin en plano del módulo Planos - al tocar el plano se coloca pin y se abre formulario de nuevo ítem con ubicación asociada
 - [x] UX: Al entrar al módulo Planos, abrir directamente el visor del plano para poder colocar pines y dar de alta ítems sin pasos intermedios
+- [x] BUG: Botón de agregar unidad no visible/accesible en móvil - se corta fuera de pantalla. Arreglar layout responsive y agregar FAB
