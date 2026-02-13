@@ -3872,3 +3872,4 @@
 - [x] DB: Eliminar 13 ítems de prueba (IDs 2280038-2280049 + 1350031) y datos relacionados (pines, fotos, historial)
 - [x] UI: Agregar nombre del proyecto activo en el header de todas las páginas del dashboard
 - [x] UX: Evitar flash del nombre de otro proyecto en header al cambiar de proyecto o navegar entre páginas - transición limpia
+- [x] UX: Botón accesible en header para cambiar de proyecto sin salir de la app

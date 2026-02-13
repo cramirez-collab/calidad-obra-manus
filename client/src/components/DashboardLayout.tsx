@@ -218,7 +218,7 @@ function DashboardLayoutContent({
   const isMobile = useIsMobile();
   
   // Obtener proyecto actual para los enlaces dinámicos
-  const { selectedProjectId, isChangingProject } = useProject();
+  const { selectedProjectId, isChangingProject, userProjects, setSelectedProjectId } = useProject();
   const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 });
   const proyectoActual = proyectos?.find(p => p.id === selectedProjectId) || null;
   
@@ -502,15 +502,47 @@ function DashboardLayoutContent({
               </nav>
             )}
 
-            {/* Nombre del proyecto + versión e indicador de conexión */}
+            {/* Nombre del proyecto (clickeable para cambiar) + versión e indicador de conexión */}
             <div className="flex-1 flex justify-center items-center gap-2 min-w-0">
-              {stableProjectName ? (
-                <span className="font-bold text-sm sm:text-lg md:text-xl tracking-wide truncate" style={{ color: '#002C63' }}>
-                  {stableProjectName}
-                </span>
-              ) : (
-                <span className="font-bold text-xl sm:text-2xl md:text-3xl tracking-wide hidden sm:block" style={{ color: '#002C63' }}>OQC</span>
-              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-accent/50 transition-colors focus:outline-none min-w-0 max-w-[200px] sm:max-w-[300px]">
+                    {stableProjectName ? (
+                      <span className="font-bold text-sm sm:text-lg md:text-xl tracking-wide truncate" style={{ color: '#002C63' }}>
+                        {stableProjectName}
+                      </span>
+                    ) : (
+                      <span className="font-bold text-lg sm:text-2xl md:text-3xl tracking-wide" style={{ color: '#002C63' }}>OQC</span>
+                    )}
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-64">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Cambiar Proyecto</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {userProjects.map((p: any) => {
+                    const pId = p.id || p.proyecto?.id || p.proyectoId;
+                    const pName = p.nombre || p.proyecto?.nombre || 'Proyecto';
+                    const isActive = pId === selectedProjectId;
+                    return (
+                      <DropdownMenuItem
+                        key={pId}
+                        onClick={() => {
+                          if (!isActive && pId) {
+                            setSelectedProjectId(pId);
+                            setLocation('/bienvenida');
+                          }
+                        }}
+                        className={`cursor-pointer flex items-center gap-2 ${isActive ? 'bg-primary/10 text-primary font-semibold' : ''}`}
+                      >
+                        <Building2 className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{pName}</span>
+                        {isActive && <span className="ml-auto text-xs text-primary">✓</span>}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <span className="text-[10px] font-mono bg-blue-100 px-1.5 py-0.5 rounded shrink-0" style={{ color: '#002C63' }}>{(window as any).OQC_DISPLAY_VERSION || 'v2.13'}</span>
               {/* Indicador de conexión */}
               <div className="flex items-center gap-1 shrink-0">
