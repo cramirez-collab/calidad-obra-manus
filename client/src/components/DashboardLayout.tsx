@@ -218,9 +218,24 @@ function DashboardLayoutContent({
   const isMobile = useIsMobile();
   
   // Obtener proyecto actual para los enlaces dinámicos
-  const { selectedProjectId } = useProject();
+  const { selectedProjectId, isChangingProject } = useProject();
   const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 });
   const proyectoActual = proyectos?.find(p => p.id === selectedProjectId) || null;
+  
+  // Nombre del proyecto estable: solo se actualiza cuando el cambio termina
+  // Evita mostrar el nombre del proyecto anterior durante la transición
+  const [stableProjectName, setStableProjectName] = useState<string | null>(null);
+  useEffect(() => {
+    if (isChangingProject) {
+      // Durante el cambio, limpiar inmediatamente
+      setStableProjectName(null);
+    } else if (proyectoActual?.nombre) {
+      // Solo mostrar cuando el cambio terminó y tenemos datos
+      setStableProjectName(proyectoActual.nombre);
+    } else if (!selectedProjectId) {
+      setStableProjectName(null);
+    }
+  }, [isChangingProject, proyectoActual?.nombre, selectedProjectId]);
   
   // Verificar si el usuario ha aceptado los términos
   const { data: terminosData, refetch: refetchTerminos } = trpc.auth.verificarTerminos.useQuery(undefined, { staleTime: 30 * 60 * 1000, gcTime: 60 * 60 * 1000 });
@@ -489,9 +504,9 @@ function DashboardLayoutContent({
 
             {/* Nombre del proyecto + versión e indicador de conexión */}
             <div className="flex-1 flex justify-center items-center gap-2 min-w-0">
-              {proyectoActual ? (
+              {stableProjectName ? (
                 <span className="font-bold text-sm sm:text-lg md:text-xl tracking-wide truncate" style={{ color: '#002C63' }}>
-                  {proyectoActual.nombre}
+                  {stableProjectName}
                 </span>
               ) : (
                 <span className="font-bold text-xl sm:text-2xl md:text-3xl tracking-wide hidden sm:block" style={{ color: '#002C63' }}>OQC</span>

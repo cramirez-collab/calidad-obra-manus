@@ -3871,3 +3871,4 @@
 - [x] UX: Banner/indicador de estado offline cuando no hay conexión a internet
 - [x] DB: Eliminar 13 ítems de prueba (IDs 2280038-2280049 + 1350031) y datos relacionados (pines, fotos, historial)
 - [x] UI: Agregar nombre del proyecto activo en el header de todas las páginas del dashboard
+- [x] UX: Evitar flash del nombre de otro proyecto en header al cambiar de proyecto o navegar entre páginas - transición limpia
