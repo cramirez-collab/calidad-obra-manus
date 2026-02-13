@@ -3866,3 +3866,6 @@
 - [x] FEATURE: Dar de alta ítem directamente al colocar pin en plano del módulo Planos - al tocar el plano se coloca pin y se abre formulario de nuevo ítem con ubicación asociada
 - [x] UX: Al entrar al módulo Planos, abrir directamente el visor del plano para poder colocar pines y dar de alta ítems sin pasos intermedios
 - [x] BUG: Botón de agregar unidad no visible/accesible en móvil - se corta fuera de pantalla. Arreglar layout responsive y agregar FAB
+- [x] UX: Manejo elegante de errores de red - mensajes amigables en vez de errores técnicos crudos
+- [x] UX: Reintentos automáticos en queries tRPC cuando se recupera conexión
+- [x] UX: Banner/indicador de estado offline cuando no hay conexión a internet

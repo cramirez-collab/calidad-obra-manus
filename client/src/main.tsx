@@ -9,6 +9,7 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import { OfflineSyncProvider } from "./contexts/OfflineSyncContext";
 import { SyncManager } from "./components/SyncManager";
+import { NetworkStatusBanner } from "./components/NetworkStatusBanner";
 import "./index.css";
 
 // ============================================
@@ -361,6 +362,27 @@ const versionOK = checkAndUpdateVersion();
 if (versionOK) {
   console.log(`[OQC ${FULL_VERSION}] Iniciando...`);
   
+  // Helper: detectar si un error es de red (DNS, timeout, conexión)
+  const isNetworkError = (error: unknown): boolean => {
+    if (error instanceof Error) {
+      const msg = error.message.toLowerCase();
+      return (
+        msg.includes('failed to fetch') ||
+        msg.includes('network') ||
+        msg.includes('socket') ||
+        msg.includes('dns') ||
+        msg.includes('host lookup') ||
+        msg.includes('err_internet') ||
+        msg.includes('err_name_not_resolved') ||
+        msg.includes('err_connection') ||
+        msg.includes('load failed') ||
+        msg.includes('timeout') ||
+        msg.includes('aborted')
+      );
+    }
+    return false;
+  };
+
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -369,13 +391,23 @@ if (versionOK) {
         refetchOnWindowFocus: false,   // NO refetch al volver a la pestaña
         refetchOnReconnect: true,      // Sí refetch al reconectar
         refetchOnMount: false,         // NO refetch si datos en cache y no stale
-        retry: 1,                      // 1 reintento — fallo rápido
-        retryDelay: 1000,              // 1s fijo — sin backoff exponencial
+        retry: (failureCount, error) => {
+          // Errores de red: reintentar hasta 3 veces con backoff
+          if (isNetworkError(error)) return failureCount < 3;
+          // Errores de auth: no reintentar
+          if (error instanceof TRPCClientError && error.message === UNAUTHED_ERR_MSG) return false;
+          // Otros: 1 reintento
+          return failureCount < 1;
+        },
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // 1s, 2s, 4s... max 10s
         networkMode: 'online',
       },
       mutations: {
-        retry: 1,
-        retryDelay: 1000,
+        retry: (failureCount, error) => {
+          if (isNetworkError(error)) return failureCount < 2;
+          return false;
+        },
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
         networkMode: 'online',
       },
     },
@@ -389,15 +421,58 @@ if (versionOK) {
     }
   };
 
+  // Throttle para no mostrar múltiples toasts de red seguidos
+  let lastNetworkToast = 0;
+  const showNetworkToast = () => {
+    const now = Date.now();
+    if (now - lastNetworkToast < 10000) return; // Max 1 toast cada 10s
+    lastNetworkToast = now;
+    // Usar un div nativo en vez de sonner para no depender de que esté montado
+    const existing = document.getElementById('oqc-network-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.id = 'oqc-network-toast';
+    toast.style.cssText = `
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: #1e293b; color: white; padding: 12px 20px; border-radius: 12px;
+      font-size: 14px; font-weight: 500; z-index: 999999; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      display: flex; align-items: center; gap: 8px; max-width: 90vw;
+      animation: slideUp 0.3s ease-out;
+    `;
+    toast.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      <span>Sin conexión. Reintentando...</span>
+    `;
+    // Agregar animación CSS
+    if (!document.getElementById('oqc-toast-style')) {
+      const style = document.createElement('style');
+      style.id = 'oqc-toast-style';
+      style.textContent = '@keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }';
+      document.head.appendChild(style);
+    }
+    document.body.appendChild(toast);
+    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 6000);
+  };
+
   queryClient.getQueryCache().subscribe(event => {
     if (event.type === "updated" && event.action.type === "error") {
-      redirectToLoginIfUnauthorized(event.query.state.error);
+      const error = event.query.state.error;
+      if (isNetworkError(error)) {
+        showNetworkToast();
+        return; // No redirigir a login por errores de red
+      }
+      redirectToLoginIfUnauthorized(error);
     }
   });
 
   queryClient.getMutationCache().subscribe(event => {
     if (event.type === "updated" && event.action.type === "error") {
-      redirectToLoginIfUnauthorized(event.mutation.state.error);
+      const error = event.mutation.state.error;
+      if (isNetworkError(error)) {
+        showNetworkToast();
+        return;
+      }
+      redirectToLoginIfUnauthorized(error);
     }
   });
 
@@ -431,6 +506,9 @@ if (versionOK) {
   }, 5 * 60 * 1000); // 5 minutos
   
   window.addEventListener('online', () => {
+    // Limpiar toast de error de red
+    const netToast = document.getElementById('oqc-network-toast');
+    if (netToast) netToast.remove();
     // Solo invalidar queries críticas al reconectar, no todas
     queryClient.invalidateQueries({ queryKey: ['auth'] });
     queryClient.invalidateQueries({ queryKey: ['items'] });
@@ -495,6 +573,7 @@ if (versionOK) {
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <OfflineSyncProvider>
+          <NetworkStatusBanner />
           <SyncManager />
           <App />
         </OfflineSyncProvider>
