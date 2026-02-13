@@ -3869,3 +3869,5 @@
 - [x] UX: Manejo elegante de errores de red - mensajes amigables en vez de errores técnicos crudos
 - [x] UX: Reintentos automáticos en queries tRPC cuando se recupera conexión
 - [x] UX: Banner/indicador de estado offline cuando no hay conexión a internet
+- [x] DB: Eliminar 13 ítems de prueba (IDs 2280038-2280049 + 1350031) y datos relacionados (pines, fotos, historial)
+- [x] UI: Agregar nombre del proyecto activo en el header de todas las páginas del dashboard

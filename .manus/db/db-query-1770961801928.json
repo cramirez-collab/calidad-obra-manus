@@ -1,0 +1,232 @@
+{
+  "query": "SELECT id, name, openId, role FROM users ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, name, openId, role FROM users ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Carlos Ramirez",
+      "openId": "5WxHPm9UgE4buz7ckFnHZg",
+      "role": "superadmin"
+    },
+    {
+      "id": "540085",
+      "name": "Julian Rodríguez Ramírez",
+      "openId": "C2uKQGY6vUPeX6yVab7zSQ",
+      "role": "admin"
+    },
+    {
+      "id": "721649",
+      "name": "Estefany Sanchez",
+      "openId": "manual_NdPo0efE9QYcurtX",
+      "role": "admin"
+    },
+    {
+      "id": "721666",
+      "name": "Ing.Daniel Vazquez",
+      "openId": "manual_Yk7NR5kxwOuoO8KG",
+      "role": "supervisor"
+    },
+    {
+      "id": "781860",
+      "name": "Omar Palencia",
+      "openId": "manual_P-tTdDWTZjYb0Sx8",
+      "role": "supervisor"
+    },
+    {
+      "id": "1410108",
+      "name": "Karen Navith",
+      "openId": "manual_TzVRbxIfI-YaTFZK",
+      "role": "residente"
+    },
+    {
+      "id": "1410178",
+      "name": "Natalia Diaz",
+      "openId": "manual_oRNl2UNMVcj8awwY",
+      "role": "residente"
+    },
+    {
+      "id": "1470049",
+      "name": "Esteban Guerrero ",
+      "openId": "manual_O8Snv7_uJnxbaogh",
+      "role": "residente"
+    },
+    {
+      "id": "1470059",
+      "name": "Jairo Briseño",
+      "openId": "manual_8JP6Qq_H0ZBmGYoC",
+      "role": "residente"
+    },
+    {
+      "id": "1470083",
+      "name": "Saul Tovar",
+      "openId": "manual_RAbUc3-uINV-9cih",
+      "role": "residente"
+    },
+    {
+      "id": "1470095",
+      "name": "Eduardo Rodriguez ",
+      "openId": "manual_-qMJx4O9EC5C9slN",
+      "role": "residente"
+    },
+    {
+      "id": "1470115",
+      "name": "Katy Orozco ",
+      "openId": "manual_JhyRv_Zr0E4Y2s8W",
+      "role": "residente"
+    },
+    {
+      "id": "1530050",
+      "name": "Zaira Alvarez",
+      "openId": "manual_SuR61sY13GNWUSV5",
+      "role": "desarrollador"
+    },
+    {
+      "id": "1530056",
+      "name": "Marco López",
+      "openId": "manual_ppuPGVNODvy9oLWK",
+      "role": "desarrollador"
+    },
+    {
+      "id": "1530063",
+      "name": "Andres Quiroz",
+      "openId": "manual_imnZ6ltcP-AimeIn",
+      "role": "desarrollador"
+    },
+    {
+      "id": "1530070",
+      "name": "Xitlali Reyes",
+      "openId": "manual_OwdbtQN8Oqc-6vLX",
+      "role": "residente"
+    },
+    {
+      "id": "1530085",
+      "name": "Pablo Mercado",
+      "openId": "manual_u14knr_vp5CvVNnt",
+      "role": "residente"
+    },
+    {
+      "id": "1530090",
+      "name": "Genaro Solis",
+      "openId": "manual_Qbuvh9GKXc8f7yBk",
+      "role": "residente"
+    },
+    {
+      "id": "1530106",
+      "name": "Jesús Contreras",
+      "openId": "manual_RiuGHxaG6Py6JKoA",
+      "role": "residente"
+    },
+    {
+      "id": "1650044",
+      "name": "Jorge Esquivel",
+      "openId": "manual_cXpR4Qh4Oa9uC5sB",
+      "role": "supervisor"
+    },
+    {
+      "id": "2160018",
+      "name": "Ximena Becerril ",
+      "openId": "manual_UlIvRXEzdJ9JnQn1",
+      "role": "supervisor"
+    },
+    {
+      "id": "2160022",
+      "name": "Gerardo Hurtado ",
+      "openId": "manual_FzKdT5-ksAiOKFBM",
+      "role": "supervisor"
+    },
+    {
+      "id": "2160064",
+      "name": "Nayibe Cardenas",
+      "openId": "manual_E9ipUX5zvfugb8Ug",
+      "role": "residente"
+    },
+    {
+      "id": "4200419",
+      "name": "Rafael Manriquez",
+      "openId": "manual_8r1ZLuCiPh3ajoqd",
+      "role": "residente"
+    },
+    {
+      "id": "4201178",
+      "name": "Esteban Guerrero ",
+      "openId": "manual_2QvpcnT3NQXqvrWu",
+      "role": "residente"
+    },
+    {
+      "id": "4351934",
+      "name": "Jesus Ferrer",
+      "openId": "manual_2FtVcThqRR98fec7",
+      "role": "residente"
+    },
+    {
+      "id": "4351962",
+      "name": "Juan Ruiz",
+      "openId": "manual_kiixxpdA5BZeOEKa",
+      "role": "residente"
+    },
+    {
+      "id": "4352044",
+      "name": "Mayra Perez",
+      "openId": "manual_of-fwOkEoIYfeMku",
+      "role": "residente"
+    },
+    {
+      "id": "4352184",
+      "name": "Juan Javier Morales",
+      "openId": "manual_-dMDe0zsHZ0DMcTu",
+      "role": "residente"
+    },
+    {
+      "id": "4357159",
+      "name": "Eduardo Rubicel ",
+      "openId": "manual_zqjrYe_ft4D8lYEO",
+      "role": "residente"
+    },
+    {
+      "id": "4357176",
+      "name": "Gustavo Orozco",
+      "openId": "manual_ThYK7qTWJvx5NYXm",
+      "role": "residente"
+    },
+    {
+      "id": "4357204",
+      "name": "Gerardo Rojas",
+      "openId": "manual_SYBMHXETnb4uC6dT",
+      "role": "residente"
+    },
+    {
+      "id": "5130888",
+      "name": "Jesus Contreras",
+      "openId": "manual_lbPZtpsZk3LkxOvc",
+      "role": "supervisor"
+    },
+    {
+      "id": "7140780",
+      "name": "Laura Neri",
+      "openId": "manual_uhmNId3JWZ6VPHxC",
+      "role": "admin"
+    },
+    {
+      "id": "7140802",
+      "name": "Marlon Sanchez ",
+      "openId": "manual_2TqwApdcS1kkOsmy",
+      "role": "supervisor"
+    },
+    {
+      "id": "7140833",
+      "name": "Julian Rodriguez ",
+      "openId": "manual_RnQ4xS8ZyBaLcDmw",
+      "role": "admin"
+    },
+    {
+      "id": "7681577",
+      "name": "Paola Mora",
+      "openId": "manual_Ya3HZUmAeA6dH4uw",
+      "role": "residente"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\topenId\trole\n1\tCarlos Ramirez\t5WxHPm9UgE4buz7ckFnHZg\tsuperadmin\n540085\tJulian Rodríguez Ramírez\tC2uKQGY6vUPeX6yVab7zSQ\tadmin\n721649\tEstefany Sanchez\tmanual_NdPo0efE9QYcurtX\tadmin\n721666\tIng.Daniel Vazquez\tmanual_Yk7NR5kxwOuoO8KG\tsupervisor\n781860\tOmar Palencia\tmanual_P-tTdDWTZjYb0Sx8\tsupervisor\n1410108\tKaren Navith\tmanual_TzVRbxIfI-YaTFZK\tresidente\n1410178\tNatalia Diaz\tmanual_oRNl2UNMVcj8awwY\tresidente\n1470049\tEsteban Guerrero \tmanual_O8Snv7_uJnxbaogh\tresidente\n1470059\tJairo Briseño\tmanual_8JP6Qq_H0ZBmGYoC\tresidente\n1470083\tSaul Tovar\tmanual_RAbUc3-uINV-9cih\tresidente\n1470095\tEduardo Rodriguez \tmanual_-qMJx4O9EC5C9slN\tresidente\n1470115\tKaty Orozco \tmanual_JhyRv_Zr0E4Y2s8W\tresidente\n1530050\tZaira Alvarez\tmanual_SuR61sY13GNWUSV5\tdesarrollador\n1530056\tMarco López\tmanual_ppuPGVNODvy9oLWK\tdesarrollador\n1530063\tAndres Quiroz\tmanual_imnZ6ltcP-AimeIn\tdesarrollador\n1530070\tXitlali Reyes\tmanual_OwdbtQN8Oqc-6vLX\tresidente\n1530085\tPablo Mercado\tmanual_u14knr_vp5CvVNnt\tresidente\n1530090\tGenaro Solis\tmanual_Qbuvh9GKXc8f7yBk\tresidente\n1530106\tJesús Contreras\tmanual_RiuGHxaG6Py6JKoA\tresidente\n1650044\tJorge Esquivel\tmanual_cXpR4Qh4Oa9uC5sB\tsupervisor\n2160018\tXimena Becerril \tmanual_UlIvRXEzdJ9JnQn1\tsupervisor\n2160022\tGerardo Hurtado \tmanual_FzKdT5-ksAiOKFBM\tsupervisor\n2160064\tNayibe Cardenas\tmanual_E9ipUX5zvfugb8Ug\tresidente\n4200419\tRafael Manriquez\tmanual_8r1ZLuCiPh3ajoqd\tresidente\n4201178\tEsteban Guerrero \tmanual_2QvpcnT3NQXqvrWu\tresidente\n4351934\tJesus Ferrer\tmanual_2FtVcThqRR98fec7\tresidente\n4351962\tJuan Ruiz\tmanual_kiixxpdA5BZeOEKa\tresidente\n4352044\tMayra Perez\tmanual_of-fwOkEoIYfeMku\tresidente\n4352184\tJuan Javier Morales\tmanual_-dMDe0zsHZ0DMcTu\tresidente\n4357159\tEduardo Rubicel \tmanual_zqjrYe_ft4D8lYEO\tresidente\n4357176\tGustavo Orozco\tmanual_ThYK7qTWJvx5NYXm\tresidente\n4357204\tGerardo Rojas\tmanual_SYBMHXETnb4uC6dT\tresidente\n5130888\tJesus Contreras\tmanual_lbPZtpsZk3LkxOvc\tsupervisor\n7140780\tLaura Neri\tmanual_uhmNId3JWZ6VPHxC\tadmin\n7140802\tMarlon Sanchez \tmanual_2TqwApdcS1kkOsmy\tsupervisor\n7140833\tJulian Rodriguez \tmanual_RnQ4xS8ZyBaLcDmw\tadmin\n7681577\tPaola Mora\tmanual_Ya3HZUmAeA6dH4uw\tresidente\n",
+  "stderr": "",
+  "execution_time_ms": 353
+}

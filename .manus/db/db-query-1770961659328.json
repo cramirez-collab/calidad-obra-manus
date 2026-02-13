@@ -1,0 +1,145 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'items' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'items' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "codigo"
+    },
+    {
+      "COLUMN_NAME": "qrCode"
+    },
+    {
+      "COLUMN_NAME": "empresaId"
+    },
+    {
+      "COLUMN_NAME": "unidadId"
+    },
+    {
+      "COLUMN_NAME": "especialidadId"
+    },
+    {
+      "COLUMN_NAME": "atributoId"
+    },
+    {
+      "COLUMN_NAME": "residenteId"
+    },
+    {
+      "COLUMN_NAME": "jefeResidenteId"
+    },
+    {
+      "COLUMN_NAME": "supervisorId"
+    },
+    {
+      "COLUMN_NAME": "titulo"
+    },
+    {
+      "COLUMN_NAME": "descripcion"
+    },
+    {
+      "COLUMN_NAME": "ubicacionDetalle"
+    },
+    {
+      "COLUMN_NAME": "fotoAntesUrl"
+    },
+    {
+      "COLUMN_NAME": "fotoAntesKey"
+    },
+    {
+      "COLUMN_NAME": "fotoAntesMarcadaUrl"
+    },
+    {
+      "COLUMN_NAME": "fotoAntesMarcadaKey"
+    },
+    {
+      "COLUMN_NAME": "fotoDespuesUrl"
+    },
+    {
+      "COLUMN_NAME": "fotoDespuesKey"
+    },
+    {
+      "COLUMN_NAME": "status"
+    },
+    {
+      "COLUMN_NAME": "fechaCreacion"
+    },
+    {
+      "COLUMN_NAME": "fechaFotoDespues"
+    },
+    {
+      "COLUMN_NAME": "fechaAprobacion"
+    },
+    {
+      "COLUMN_NAME": "comentarioResidente"
+    },
+    {
+      "COLUMN_NAME": "comentarioJefeResidente"
+    },
+    {
+      "COLUMN_NAME": "comentarioSupervisor"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "updatedAt"
+    },
+    {
+      "COLUMN_NAME": "defectoId"
+    },
+    {
+      "COLUMN_NAME": "proyectoId"
+    },
+    {
+      "COLUMN_NAME": "espacioId"
+    },
+    {
+      "COLUMN_NAME": "fotoAntesBase64"
+    },
+    {
+      "COLUMN_NAME": "fotoAntesMarcadaBase64"
+    },
+    {
+      "COLUMN_NAME": "fotoDespuesBase64"
+    },
+    {
+      "COLUMN_NAME": "clientId"
+    },
+    {
+      "COLUMN_NAME": "numeroInterno"
+    },
+    {
+      "COLUMN_NAME": "numero_interno"
+    },
+    {
+      "COLUMN_NAME": "fechaCierre"
+    },
+    {
+      "COLUMN_NAME": "creadoPorId"
+    },
+    {
+      "COLUMN_NAME": "asignadoAId"
+    },
+    {
+      "COLUMN_NAME": "aprobadoPorId"
+    },
+    {
+      "COLUMN_NAME": "cerradoPorId"
+    },
+    {
+      "COLUMN_NAME": "pinPlanoId"
+    },
+    {
+      "COLUMN_NAME": "pinPosX"
+    },
+    {
+      "COLUMN_NAME": "pinPosY"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\ncodigo\nqrCode\nempresaId\nunidadId\nespecialidadId\natributoId\nresidenteId\njefeResidenteId\nsupervisorId\ntitulo\ndescripcion\nubicacionDetalle\nfotoAntesUrl\nfotoAntesKey\nfotoAntesMarcadaUrl\nfotoAntesMarcadaKey\nfotoDespuesUrl\nfotoDespuesKey\nstatus\nfechaCreacion\nfechaFotoDespues\nfechaAprobacion\ncomentarioResidente\ncomentarioJefeResidente\ncomentarioSupervisor\ncreatedAt\nupdatedAt\ndefectoId\nproyectoId\nespacioId\nfotoAntesBase64\nfotoAntesMarcadaBase64\nfotoDespuesBase64\nclientId\nnumeroInterno\nnumero_interno\nfechaCierre\ncreadoPorId\nasignadoAId\naprobadoPorId\ncerradoPorId\npinPlanoId\npinPosX\npinPosY\n",
+  "stderr": "",
+  "execution_time_ms": 349
+}

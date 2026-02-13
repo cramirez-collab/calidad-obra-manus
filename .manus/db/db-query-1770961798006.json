@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, name, openId, role FROM users WHERE name LIKE '%Carlos%' OR name LIKE '%Manus%' OR name LIKE '%manus%' OR name LIKE '%test%' OR name LIKE '%prueba%' ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, name, openId, role FROM users WHERE name LIKE '%Carlos%' OR name LIKE '%Manus%' OR name LIKE '%manus%' OR name LIKE '%test%' OR name LIKE '%prueba%' ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Carlos Ramirez",
+      "openId": "5WxHPm9UgE4buz7ckFnHZg",
+      "role": "superadmin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\topenId\trole\n1\tCarlos Ramirez\t5WxHPm9UgE4buz7ckFnHZg\tsuperadmin\n",
+  "stderr": "",
+  "execution_time_ms": 349
+}

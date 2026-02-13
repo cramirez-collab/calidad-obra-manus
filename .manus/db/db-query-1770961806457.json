@@ -1,0 +1,121 @@
+{
+  "query": "SELECT CONCAT(id, '|', COALESCE(name,'NULL'), '|', role) as info FROM users ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT CONCAT(id, '|', COALESCE(name,'NULL'), '|', role) as info FROM users ORDER BY id;",
+  "rows": [
+    {
+      "info": "1|Carlos Ramirez|superadmin"
+    },
+    {
+      "info": "540085|Julian Rodríguez Ramírez|admin"
+    },
+    {
+      "info": "721649|Estefany Sanchez|admin"
+    },
+    {
+      "info": "721666|Ing.Daniel Vazquez|supervisor"
+    },
+    {
+      "info": "781860|Omar Palencia|supervisor"
+    },
+    {
+      "info": "1410108|Karen Navith|residente"
+    },
+    {
+      "info": "1410178|Natalia Diaz|residente"
+    },
+    {
+      "info": "1470049|Esteban Guerrero |residente"
+    },
+    {
+      "info": "1470059|Jairo Briseño|residente"
+    },
+    {
+      "info": "1470083|Saul Tovar|residente"
+    },
+    {
+      "info": "1470095|Eduardo Rodriguez |residente"
+    },
+    {
+      "info": "1470115|Katy Orozco |residente"
+    },
+    {
+      "info": "1530050|Zaira Alvarez|desarrollador"
+    },
+    {
+      "info": "1530056|Marco López|desarrollador"
+    },
+    {
+      "info": "1530063|Andres Quiroz|desarrollador"
+    },
+    {
+      "info": "1530070|Xitlali Reyes|residente"
+    },
+    {
+      "info": "1530085|Pablo Mercado|residente"
+    },
+    {
+      "info": "1530090|Genaro Solis|residente"
+    },
+    {
+      "info": "1530106|Jesús Contreras|residente"
+    },
+    {
+      "info": "1650044|Jorge Esquivel|supervisor"
+    },
+    {
+      "info": "2160018|Ximena Becerril |supervisor"
+    },
+    {
+      "info": "2160022|Gerardo Hurtado |supervisor"
+    },
+    {
+      "info": "2160064|Nayibe Cardenas|residente"
+    },
+    {
+      "info": "4200419|Rafael Manriquez|residente"
+    },
+    {
+      "info": "4201178|Esteban Guerrero |residente"
+    },
+    {
+      "info": "4351934|Jesus Ferrer|residente"
+    },
+    {
+      "info": "4351962|Juan Ruiz|residente"
+    },
+    {
+      "info": "4352044|Mayra Perez|residente"
+    },
+    {
+      "info": "4352184|Juan Javier Morales|residente"
+    },
+    {
+      "info": "4357159|Eduardo Rubicel |residente"
+    },
+    {
+      "info": "4357176|Gustavo Orozco|residente"
+    },
+    {
+      "info": "4357204|Gerardo Rojas|residente"
+    },
+    {
+      "info": "5130888|Jesus Contreras|supervisor"
+    },
+    {
+      "info": "7140780|Laura Neri|admin"
+    },
+    {
+      "info": "7140802|Marlon Sanchez |supervisor"
+    },
+    {
+      "info": "7140833|Julian Rodriguez |admin"
+    },
+    {
+      "info": "7681577|Paola Mora|residente"
+    }
+  ],
+  "messages": [],
+  "stdout": "info\n1|Carlos Ramirez|superadmin\n540085|Julian Rodríguez Ramírez|admin\n721649|Estefany Sanchez|admin\n721666|Ing.Daniel Vazquez|supervisor\n781860|Omar Palencia|supervisor\n1410108|Karen Navith|residente\n1410178|Natalia Diaz|residente\n1470049|Esteban Guerrero |residente\n1470059|Jairo Briseño|residente\n1470083|Saul Tovar|residente\n1470095|Eduardo Rodriguez |residente\n1470115|Katy Orozco |residente\n1530050|Zaira Alvarez|desarrollador\n1530056|Marco López|desarrollador\n1530063|Andres Quiroz|desarrollador\n1530070|Xitlali Reyes|residente\n1530085|Pablo Mercado|residente\n1530090|Genaro Solis|residente\n1530106|Jesús Contreras|residente\n1650044|Jorge Esquivel|supervisor\n2160018|Ximena Becerril |supervisor\n2160022|Gerardo Hurtado |supervisor\n2160064|Nayibe Cardenas|residente\n4200419|Rafael Manriquez|residente\n4201178|Esteban Guerrero |residente\n4351934|Jesus Ferrer|residente\n4351962|Juan Ruiz|residente\n4352044|Mayra Perez|residente\n4352184|Juan Javier Morales|residente\n4357159|Eduardo Rubicel |residente\n4357176|Gustavo Orozco|residente\n4357204|Gerardo Rojas|residente\n5130888|Jesus Contreras|supervisor\n7140780|Laura Neri|admin\n7140802|Marlon Sanchez |supervisor\n7140833|Julian Rodriguez |admin\n7681577|Paola Mora|residente\n",
+  "stderr": "",
+  "execution_time_ms": 347
+}

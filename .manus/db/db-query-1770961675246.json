@@ -1,0 +1,376 @@
+{
+  "query": "SELECT id, codigo, descripcion, status FROM items ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, descripcion, status FROM items ORDER BY id;",
+  "rows": [
+    {
+      "id": "1290001",
+      "codigo": "Hidalma-F8XTCG",
+      "descripcion": "NULL",
+      "status": "aprobado"
+    },
+    {
+      "id": "1290002",
+      "codigo": "Hidalma-RFTFJA",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290003",
+      "codigo": "Hidalma-F5DUKF",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290004",
+      "codigo": "Hidalma-DFRNLX",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290005",
+      "codigo": "Hidalma-GQLS7A",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290007",
+      "codigo": "Hidalma-4YKAYL",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290008",
+      "codigo": "Hidalma-L4ZLGK",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290009",
+      "codigo": "Hidalma-Z4GJN8",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290010",
+      "codigo": "Hidalma-6MTE5R",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290011",
+      "codigo": "Hidalma-H3G3H2",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290012",
+      "codigo": "Hidalma-YT7T87",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290013",
+      "codigo": "Hidalma-82GLVY",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290014",
+      "codigo": "Hidalma-YQ46D7",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290015",
+      "codigo": "Hidalma-CVE38D",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290016",
+      "codigo": "Hidalma-EQZVN6",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290017",
+      "codigo": "Hidalma-5FYTSJ",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1290018",
+      "codigo": "Hidalma-6GCWBF",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290019",
+      "codigo": "Hidalma-VNQ86J",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290020",
+      "codigo": "Hidalma-HGSXEQ",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "1290021",
+      "codigo": "Hidalma-BQ4ZWP",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "1350031",
+      "codigo": "Hidalma-JGTM79",
+      "descripcion": "Encuadre con muro y piso",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "2070001",
+      "codigo": "Hidalma-BYD8SH",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2190001",
+      "codigo": "Hidalma-YFXEPR",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280038",
+      "codigo": "OQC-DX7HPT",
+      "descripcion": "Ítem de prueba con foto Base64",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280039",
+      "codigo": "OQC-MFLS9X",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280040",
+      "codigo": "OQC-NMYTJW",
+      "descripcion": "Ítem sin foto para probar",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280041",
+      "codigo": "OQC-FUHWAF",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280042",
+      "codigo": "OQC-7M87Z9",
+      "descripcion": "Ítem de prueba con foto Base64",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280043",
+      "codigo": "OQC-6SWJ25",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280044",
+      "codigo": "OQC-YNKU38",
+      "descripcion": "Ítem sin foto para probar",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280045",
+      "codigo": "OQC-SBXTH5",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280046",
+      "codigo": "OQC-AU6C5E",
+      "descripcion": "Ítem de prueba con foto Base64",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280047",
+      "codigo": "OQC-ZBGT8K",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280048",
+      "codigo": "OQC-EWD54K",
+      "descripcion": "Ítem sin foto para probar",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2280049",
+      "codigo": "OQC-GRHQLQ",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2310001",
+      "codigo": "Hidalma-N8MR9Y",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "2310002",
+      "codigo": "Hidalma-2XQR6E",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2340001",
+      "codigo": "Hidalma-X7Y5L4",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370001",
+      "codigo": "Hidalma-TJZH93",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370002",
+      "codigo": "Hidalma-VK4LHP",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "2370003",
+      "codigo": "Hidalma-99B2LX",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370004",
+      "codigo": "Hidalma-2UYZGX",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370005",
+      "codigo": "Hidalma-PTXRH9",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370006",
+      "codigo": "Hidalma-QQJHYQ",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370007",
+      "codigo": "Hidalma-LRZPUR",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370008",
+      "codigo": "Hidalma-7KZEZ5",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370009",
+      "codigo": "Hidalma-39E2EJ",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370010",
+      "codigo": "Hidalma-JW8M96",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370011",
+      "codigo": "Hidalma-JSKY43",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370012",
+      "codigo": "Hidalma-7WC4FD",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370013",
+      "codigo": "Hidalma-JLTTVA",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370014",
+      "codigo": "Hidalma-AJ5NRQ",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370015",
+      "codigo": "Hidalma-2TNRDC",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370016",
+      "codigo": "Hidalma-RYV2ZA",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2370017",
+      "codigo": "Hidalma-MSTT8N",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2400001",
+      "codigo": "Hidalma-5ETWC9",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2430004",
+      "codigo": "Hidalma-B5RUYH",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "2430005",
+      "codigo": "Hidalma-YY4KUV",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2430006",
+      "codigo": "Hidalma-62D5LA",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    },
+    {
+      "id": "2430007",
+      "codigo": "Hidalma-3U8NLU",
+      "descripcion": "NULL",
+      "status": "pendiente_aprobacion"
+    },
+    {
+      "id": "2430008",
+      "codigo": "Hidalma-UBTN9F",
+      "descripcion": "NULL",
+      "status": "pendiente_foto_despues"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\tdescripcion\tstatus\n1290001\tHidalma-F8XTCG\tNULL\taprobado\n1290002\tHidalma-RFTFJA\tNULL\tpendiente_aprobacion\n1290003\tHidalma-F5DUKF\tNULL\tpendiente_aprobacion\n1290004\tHidalma-DFRNLX\tNULL\tpendiente_foto_despues\n1290005\tHidalma-GQLS7A\tNULL\tpendiente_aprobacion\n1290007\tHidalma-4YKAYL\tNULL\tpendiente_aprobacion\n1290008\tHidalma-L4ZLGK\tNULL\tpendiente_aprobacion\n1290009\tHidalma-Z4GJN8\tNULL\tpendiente_foto_despues\n1290010\tHidalma-6MTE5R\tNULL\tpendiente_foto_despues\n1290011\tHidalma-H3G3H2\tNULL\tpendiente_foto_despues\n1290012\tHidalma-YT7T87\tNULL\tpendiente_foto_despues\n1290013\tHidalma-82GLVY\tNULL\tpendiente_aprobacion\n1290014\tHidalma-YQ46D7\tNULL\tpendiente_foto_despues\n1290015\tHidalma-CVE38D\tNULL\tpendiente_foto_despues\n1290016\tHidalma-EQZVN6\tNULL\tpendiente_aprobacion\n1290017\tHidalma-5FYTSJ\tNULL\tpendiente_aprobacion\n1290018\tHidalma-6GCWBF\tNULL\tpendiente_foto_despues\n1290019\tHidalma-VNQ86J\tNULL\tpendiente_foto_despues\n1290020\tHidalma-HGSXEQ\tNULL\tpendiente_foto_despues\n1290021\tHidalma-BQ4ZWP\tNULL\tpendiente_aprobacion\n1350031\tHidalma-JGTM79\tEncuadre con muro y piso\tpendiente_aprobacion\n2070001\tHidalma-BYD8SH\tNULL\tpendiente_foto_despues\n2190001\tHidalma-YFXEPR\tNULL\tpendiente_foto_despues\n2280038\tOQC-DX7HPT\tÍtem de prueba con foto Base64\tpendiente_foto_despues\n2280039\tOQC-MFLS9X\tNULL\tpendiente_foto_despues\n2280040\tOQC-NMYTJW\tÍtem sin foto para probar\tpendiente_foto_despues\n2280041\tOQC-FUHWAF\tNULL\tpendiente_foto_despues\n2280042\tOQC-7M87Z9\tÍtem de prueba con foto Base64\tpendiente_foto_despues\n2280043\tOQC-6SWJ25\tNULL\tpendiente_foto_despues\n2280044\tOQC-YNKU38\tÍtem sin foto para probar\tpendiente_foto_despues\n2280045\tOQC-SBXTH5\tNULL\tpendiente_foto_despues\n2280046\tOQC-AU6C5E\tÍtem de prueba con foto Base64\tpendiente_foto_despues\n2280047\tOQC-ZBGT8K\tNULL\tpendiente_foto_despues\n2280048\tOQC-EWD54K\tÍtem sin foto para probar\tpendiente_foto_despues\n2280049\tOQC-GRHQLQ\tNULL\tpendiente_foto_despues\n2310001\tHidalma-N8MR9Y\tNULL\tpendiente_aprobacion\n2310002\tHidalma-2XQR6E\tNULL\tpendiente_foto_despues\n2340001\tHidalma-X7Y5L4\tNULL\tpendiente_foto_despues\n2370001\tHidalma-TJZH93\tNULL\tpendiente_foto_despues\n2370002\tHidalma-VK4LHP\tNULL\tpendiente_aprobacion\n2370003\tHidalma-99B2LX\tNULL\tpendiente_foto_despues\n2370004\tHidalma-2UYZGX\tNULL\tpendiente_foto_despues\n2370005\tHidalma-PTXRH9\tNULL\tpendiente_foto_despues\n2370006\tHidalma-QQJHYQ\tNULL\tpendiente_foto_despues\n2370007\tHidalma-LRZPUR\tNULL\tpendiente_foto_despues\n2370008\tHidalma-7KZEZ5\tNULL\tpendiente_foto_despues\n2370009\tHidalma-39E2EJ\tNULL\tpendiente_foto_despues\n2370010\tHidalma-JW8M96\tNULL\tpendiente_foto_despues\n2370011\tHidalma-JSKY43\tNULL\tpendiente_foto_despues\n2370012\tHidalma-7WC4FD\tNULL\tpendiente_foto_despues\n2370013\tHidalma-JLTTVA\tNULL\tpendiente_foto_despues\n2370014\tHidalma-AJ5NRQ\tNULL\tpendiente_foto_despues\n2370015\tHidalma-2TNRDC\tNULL\tpendiente_foto_despues\n2370016\tHidalma-RYV2ZA\tNULL\tpendiente_foto_despues\n2370017\tHidalma-MSTT8N\tNULL\tpendiente_foto_despues\n2400001\tHidalma-5ETWC9\tNULL\tpendiente_foto_despues\n2430004\tHidalma-B5RUYH\tNULL\tpendiente_aprobacion\n2430005\tHidalma-YY4KUV\tNULL\tpendiente_foto_despues\n2430006\tHidalma-62D5LA\tNULL\tpendiente_foto_despues\n2430007\tHidalma-3U8NLU\tNULL\tpendiente_aprobacion\n2430008\tHidalma-UBTN9F\tNULL\tpendiente_foto_despues\n",
+  "stderr": "",
+  "execution_time_ms": 360
+}

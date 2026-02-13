@@ -487,12 +487,18 @@ function DashboardLayoutContent({
               </nav>
             )}
 
-            {/* OQC CENTRADO con versión e indicador de conexión */}
-            <div className="flex-1 flex justify-center items-center gap-2">
-              <span className="font-bold text-xl sm:text-2xl md:text-3xl tracking-wide hidden sm:block" style={{ color: '#002C63' }}>OQC</span>
-              <span className="text-[10px] font-mono bg-blue-100 px-1.5 py-0.5 rounded" style={{ color: '#002C63' }}>{(window as any).OQC_DISPLAY_VERSION || 'v2.13'}</span>
+            {/* Nombre del proyecto + versión e indicador de conexión */}
+            <div className="flex-1 flex justify-center items-center gap-2 min-w-0">
+              {proyectoActual ? (
+                <span className="font-bold text-sm sm:text-lg md:text-xl tracking-wide truncate" style={{ color: '#002C63' }}>
+                  {proyectoActual.nombre}
+                </span>
+              ) : (
+                <span className="font-bold text-xl sm:text-2xl md:text-3xl tracking-wide hidden sm:block" style={{ color: '#002C63' }}>OQC</span>
+              )}
+              <span className="text-[10px] font-mono bg-blue-100 px-1.5 py-0.5 rounded shrink-0" style={{ color: '#002C63' }}>{(window as any).OQC_DISPLAY_VERSION || 'v2.13'}</span>
               {/* Indicador de conexión */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 shrink-0">
                 {online ? (
                   <Wifi className="h-3.5 w-3.5 text-green-500" />
                 ) : (

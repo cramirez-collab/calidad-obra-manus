@@ -1,0 +1,106 @@
+{
+  "query": "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE();",
+  "rows": [
+    {
+      "TABLE_NAME": "__drizzle_migrations"
+    },
+    {
+      "TABLE_NAME": "users"
+    },
+    {
+      "TABLE_NAME": "atributos"
+    },
+    {
+      "TABLE_NAME": "empresas"
+    },
+    {
+      "TABLE_NAME": "especialidades"
+    },
+    {
+      "TABLE_NAME": "item_historial"
+    },
+    {
+      "TABLE_NAME": "items"
+    },
+    {
+      "TABLE_NAME": "unidades"
+    },
+    {
+      "TABLE_NAME": "comentarios"
+    },
+    {
+      "TABLE_NAME": "notificaciones"
+    },
+    {
+      "TABLE_NAME": "bitacora"
+    },
+    {
+      "TABLE_NAME": "configuracion"
+    },
+    {
+      "TABLE_NAME": "metas"
+    },
+    {
+      "TABLE_NAME": "defectos"
+    },
+    {
+      "TABLE_NAME": "proyecto_usuarios"
+    },
+    {
+      "TABLE_NAME": "proyectos"
+    },
+    {
+      "TABLE_NAME": "auditoria"
+    },
+    {
+      "TABLE_NAME": "mensajes"
+    },
+    {
+      "TABLE_NAME": "user_badges"
+    },
+    {
+      "TABLE_NAME": "push_subscriptions"
+    },
+    {
+      "TABLE_NAME": "empresa_especialidades"
+    },
+    {
+      "TABLE_NAME": "espacios"
+    },
+    {
+      "TABLE_NAME": "empresa_residentes"
+    },
+    {
+      "TABLE_NAME": "empresa_historial"
+    },
+    {
+      "TABLE_NAME": "actividad_usuarios"
+    },
+    {
+      "TABLE_NAME": "whatsapp_config"
+    },
+    {
+      "TABLE_NAME": "avisos"
+    },
+    {
+      "TABLE_NAME": "avisos_lecturas"
+    },
+    {
+      "TABLE_NAME": "planos"
+    },
+    {
+      "TABLE_NAME": "plano_pines"
+    },
+    {
+      "TABLE_NAME": "bitacora_correos"
+    },
+    {
+      "TABLE_NAME": "firmas_reporte"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\n__drizzle_migrations\nusers\natributos\nempresas\nespecialidades\nitem_historial\nitems\nunidades\ncomentarios\nnotificaciones\nbitacora\nconfiguracion\nmetas\ndefectos\nproyecto_usuarios\nproyectos\nauditoria\nmensajes\nuser_badges\npush_subscriptions\nempresa_especialidades\nespacios\nempresa_residentes\nempresa_historial\nactividad_usuarios\nwhatsapp_config\navisos\navisos_lecturas\nplanos\nplano_pines\nbitacora_correos\nfirmas_reporte\n",
+  "stderr": "",
+  "execution_time_ms": 350
+}
