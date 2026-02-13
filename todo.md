@@ -3833,3 +3833,4 @@
 - [ ] Verificar que CADA query en db.ts filtra por proyectoId cuando aplica
 - [ ] Reforzar caché del servidor con proyectoId en las claves de caché
 - [ ] Verificar que el frontend SIEMPRE pasa proyectoId en cada request
+- [x] Botón guardar plano: mover a barra fija superior que no se tape con pines

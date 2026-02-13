@@ -638,18 +638,101 @@ export default function Planos() {
       {/* ========== VISOR FULLSCREEN CON PINES ========== */}
       {showViewer && currentPlano && (
         <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col">
-          {/* Toolbar compacta */}
-          <div className="flex items-center justify-between px-2 py-1.5 bg-black/80 text-white gap-1">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <button onClick={() => { setShowViewer(false); setPinMode(false); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current); }} className="p-1.5 hover:bg-white/10 rounded-lg flex-shrink-0">
-                <X className="w-5 h-5" />
-              </button>
-              <div className="min-w-0">
-                <span className="font-semibold text-xs truncate block">{currentPlano.nombre}</span>
-                <span className="text-[10px] text-white/60">N{currentPlano.nivel ?? 0} — {filteredPines.length} pin{filteredPines.length !== 1 ? "es" : ""}</span>
+          {/* === BARRA SUPERIOR FIJA: Subir/Guardar imagen del plano === */}
+          {isAdmin && (
+            <div className="flex items-center justify-between px-3 py-2 bg-slate-900 text-white border-b border-slate-700 z-50">
+              <div className="flex items-center gap-2">
+                <button onClick={() => { setShowViewer(false); setPinMode(false); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current); }} className="p-1.5 hover:bg-white/10 rounded-lg flex-shrink-0">
+                  <X className="w-5 h-5" />
+                </button>
+                <div className="min-w-0">
+                  <span className="font-semibold text-sm truncate block">{currentPlano.nombre}</span>
+                  <span className="text-[10px] text-white/60">N{currentPlano.nivel ?? 0} — {filteredPines.length} pin{filteredPines.length !== 1 ? "es" : ""}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={viewerFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 15 * 1024 * 1024) { toast.error("Imagen demasiado grande (máx 15MB)"); return; }
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      setPendingImageBase64(reader.result as string);
+                      setPendingImageNombre(file.name);
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+                <button
+                  onClick={() => viewerFileInputRef.current?.click()}
+                  className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+                  title="Subir/cambiar imagen del plano"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span className="hidden sm:inline">Subir Plano</span>
+                </button>
+                {pendingImageBase64 && (
+                  <button
+                    onClick={() => {
+                      if (!currentPlano) return;
+                      actualizarPlano.mutate({
+                        id: currentPlano.id,
+                        nombre: currentPlano.nombre,
+                        nivel: currentPlano.nivel ?? 0,
+                        descripcion: currentPlano.descripcion || undefined,
+                        imagenBase64: pendingImageBase64,
+                        imagenNombre: pendingImageNombre,
+                      }, {
+                        onSuccess: () => {
+                          setPendingImageBase64("");
+                          setPendingImageNombre("");
+                          toast.success("Imagen del plano actualizada");
+                        }
+                      });
+                    }}
+                    disabled={actualizarPlano.isPending}
+                    className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-bold flex items-center gap-1.5 animate-pulse shadow-lg shadow-emerald-500/30"
+                    title="Guardar imagen del plano"
+                  >
+                    {actualizarPlano.isPending ? (
+                      <RotateCcw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        Guardar Plano
+                      </>
+                    )}
+                  </button>
+                )}
+                {/* Descargar plano con pines */}
+                <button onClick={handleDownloadPlano} className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors" title="Descargar plano con pines">
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:inline">Descargar</span>
+                </button>
               </div>
             </div>
-            <div className="flex items-center gap-0.5 flex-shrink-0">
+          )}
+
+          {/* === BARRA DE HERRAMIENTAS: Pines, filtros, zoom (para no-admin: incluye cerrar y nombre) === */}
+          <div className="flex items-center justify-between px-2 py-1 bg-black/80 text-white gap-1">
+            {/* Si no es admin, mostrar botón cerrar y nombre aquí */}
+            {!isAdmin && (
+              <div className="flex items-center gap-1.5 min-w-0">
+                <button onClick={() => { setShowViewer(false); setPinMode(false); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current); }} className="p-1.5 hover:bg-white/10 rounded-lg flex-shrink-0">
+                  <X className="w-5 h-5" />
+                </button>
+                <div className="min-w-0">
+                  <span className="font-semibold text-xs truncate block">{currentPlano.nombre}</span>
+                  <span className="text-[10px] text-white/60">N{currentPlano.nivel ?? 0} — {filteredPines.length} pin{filteredPines.length !== 1 ? "es" : ""}</span>
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-0.5 flex-shrink-0 ml-auto">
               {/* Filtro por estado */}
               <div className="relative">
                 <button
@@ -714,10 +797,12 @@ export default function Planos() {
                   </div>
                 )}
               </div>
-              {/* Descargar plano */}
-              <button onClick={handleDownloadPlano} className="p-1.5 hover:bg-white/10 rounded-lg" title="Descargar plano">
-                <Download className="w-4 h-4" />
-              </button>
+              {/* Descargar plano (para no-admin) */}
+              {!isAdmin && (
+                <button onClick={handleDownloadPlano} className="p-1.5 hover:bg-white/10 rounded-lg" title="Descargar plano">
+                  <Download className="w-4 h-4" />
+                </button>
+              )}
               {/* Toggle pines */}
               <button
                 onClick={() => setShowPins(p => !p)}
@@ -735,68 +820,6 @@ export default function Planos() {
                 >
                   <Plus className="w-4 h-4" />
                 </button>
-              )}
-              {/* Subir/cambiar imagen del plano */}
-              {isAdmin && (
-                <>
-                  <input
-                    ref={viewerFileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      if (file.size > 15 * 1024 * 1024) { toast.error("Imagen demasiado grande (máx 15MB)"); return; }
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        setPendingImageBase64(reader.result as string);
-                        setPendingImageNombre(file.name);
-                      };
-                      reader.readAsDataURL(file);
-                    }}
-                  />
-                  <button
-                    onClick={() => viewerFileInputRef.current?.click()}
-                    className="p-1.5 hover:bg-white/10 rounded-lg"
-                    title="Subir/cambiar imagen del plano"
-                  >
-                    <Upload className="w-4 h-4" />
-                  </button>
-                  {pendingImageBase64 && (
-                    <button
-                      onClick={() => {
-                        if (!currentPlano) return;
-                        actualizarPlano.mutate({
-                          id: currentPlano.id,
-                          nombre: currentPlano.nombre,
-                          nivel: currentPlano.nivel ?? 0,
-                          descripcion: currentPlano.descripcion || undefined,
-                          imagenBase64: pendingImageBase64,
-                          imagenNombre: pendingImageNombre,
-                        }, {
-                          onSuccess: () => {
-                            setPendingImageBase64("");
-                            setPendingImageNombre("");
-                            toast.success("Imagen del plano actualizada");
-                          }
-                        });
-                      }}
-                      disabled={actualizarPlano.isPending}
-                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 animate-pulse"
-                      title="Guardar imagen del plano"
-                    >
-                      {actualizarPlano.isPending ? (
-                        <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <>
-                          <Upload className="w-3.5 h-3.5" />
-                          Guardar
-                        </>
-                      )}
-                    </button>
-                  )}
-                </>
               )}
               <div className="w-px h-4 bg-white/20 mx-0.5" />
               {/* Zoom */}
