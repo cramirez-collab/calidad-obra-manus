@@ -302,12 +302,15 @@ export default function Planos() {
     if (!autoOpened && planos.length > 0 && !showViewer && !isLoading) {
       setAutoOpened(true);
       openViewer(0);
-      // Auto-activar modo pin para admin al abrir visor
-      if (isAdmin) {
-        setTimeout(() => setPinMode(true), 300);
-      }
     }
-  }, [planos.length, isLoading, autoOpened, showViewer, isAdmin]);
+  }, [planos.length, isLoading, autoOpened, showViewer]);
+
+  // AGRESIVO: Modo pin SIEMPRE activo para admin cuando el visor está abierto
+  useEffect(() => {
+    if (showViewer && isAdmin && !showCapturaRapida && !showItemSelector && !showPinModal) {
+      setPinMode(true);
+    }
+  }, [showViewer, isAdmin, showCapturaRapida, showItemSelector, showPinModal]);
 
   // Limpiar timer del modal al desmontar
   useEffect(() => {
@@ -891,21 +894,13 @@ export default function Planos() {
               >
                 {showPins ? <MapPin className="w-4 h-4" /> : <MapPinOff className="w-4 h-4" />}
               </button>
-              {/* Agregar pin (admin) - BOTÓN PROMINENTE */}
-              {isAdmin && (
-                <button
-                  onClick={() => { setPinMode(p => !p); setSelectedPin(null); }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
-                    pinMode 
-                      ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse shadow-lg shadow-red-500/30' 
-                      : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
-                  }`}
-                  title={pinMode ? "Cancelar modo pin" : "Agregar pin"}
-                >
-                  {pinMode ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                  <span className="hidden sm:inline">{pinMode ? 'Cancelar' : 'Nuevo Pin'}</span>
-                  <span className="sm:hidden">{pinMode ? '✕' : '+'}</span>
-                </button>
+              {/* Indicador de modo pin activo para admin */}
+              {isAdmin && pinMode && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 rounded-lg text-xs font-bold text-white animate-pulse shadow-lg shadow-emerald-500/30">
+                  <MapPin className="w-4 h-4" />
+                  <span className="hidden sm:inline">Toca = Pin</span>
+                  <span className="sm:hidden">PIN</span>
+                </div>
               )}
             </div>
             <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -928,11 +923,12 @@ export default function Planos() {
             </div>
           </div>
 
-          {/* Pin mode banner - SIEMPRE VISIBLE EN MODO PIN */}
-          {pinMode && (
-            <div className="flex-shrink-0 bg-emerald-600 text-white text-center py-2.5 text-sm font-bold flex items-center justify-center gap-2">
+          {/* Pin mode banner - SIEMPRE VISIBLE PARA ADMIN */}
+          {isAdmin && pinMode && (
+            <div className="flex-shrink-0 bg-emerald-600 text-white text-center py-2 text-xs sm:text-sm font-bold flex items-center justify-center gap-2">
               <MapPin className="w-4 h-4 animate-bounce" />
-              TOCA EL PLANO PARA COLOCAR PIN Y CREAR ÍTEM
+              <span className="hidden sm:inline">TOCA EL PLANO PARA COLOCAR PIN Y CREAR ÍTEM</span>
+              <span className="sm:hidden">👆 TOCA = NUEVO ÍTEM</span>
               <MapPin className="w-4 h-4 animate-bounce" />
             </div>
           )}
@@ -1053,28 +1049,12 @@ export default function Planos() {
             </div>
           </div>
 
-          {/* FAB FLOTANTE: Siempre visible para admin */}
-          {isAdmin && !showPinModal && !showCapturaRapida && !showItemSelector && (
-            <button
-              onClick={() => {
-                if (pinMode) {
-                  setPinMode(false); setSelectedPin(null);
-                } else {
-                  setPinMode(true); setSelectedPin(null);
-                }
-              }}
-              className={`absolute bottom-20 left-4 z-[120] flex items-center gap-2 px-5 py-3.5 rounded-full shadow-2xl font-bold text-sm transition-all ${
-                pinMode
-                  ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/40'
-                  : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/40 animate-pulse hover:scale-105 active:scale-95'
-              }`}
-            >
-              {pinMode ? (
-                <><X className="w-5 h-5" /><span>Salir modo pin</span></>
-              ) : (
-                <><MapPin className="w-5 h-5" /><span>Activar Pines</span></>
-              )}
-            </button>
+          {/* FAB FLOTANTE: Indicador siempre visible para admin - TOCA PARA PONER PIN */}
+          {isAdmin && pinMode && !showPinModal && !showCapturaRapida && !showItemSelector && (
+            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-[120] flex items-center gap-2 px-6 py-3 rounded-full bg-emerald-500 text-white font-bold text-sm shadow-2xl shadow-emerald-500/50 animate-bounce pointer-events-none">
+              <MapPin className="w-5 h-5" />
+              <span>TOCA EL PLANO → NUEVO ÍTEM</span>
+            </div>
           )}
 
           {/* Navigation arrows */}
