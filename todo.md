@@ -3834,3 +3834,4 @@
 - [ ] Reforzar caché del servidor con proyectoId en las claves de caché
 - [ ] Verificar que el frontend SIEMPRE pasa proyectoId en cada request
 - [x] Botón guardar plano: mover a barra fija superior que no se tape con pines
+- [x] Visor de planos: barra superior siempre visible fija, plano contenido debajo, responsivo PC/tablet/móvil
