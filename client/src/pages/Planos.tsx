@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { Plus, PlusCircle, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers, Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff, Eye, Search, Filter, Download, Maximize, Minimize, ExternalLink, Users, ListChecks } from "lucide-react";
 import CapturaRapida from "@/components/CapturaRapida";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useLocation } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -301,8 +302,12 @@ export default function Planos() {
     if (!autoOpened && planos.length > 0 && !showViewer && !isLoading) {
       setAutoOpened(true);
       openViewer(0);
+      // Auto-activar modo pin para admin al abrir visor
+      if (isAdmin) {
+        setTimeout(() => setPinMode(true), 300);
+      }
     }
-  }, [planos.length, isLoading, autoOpened, showViewer]);
+  }, [planos.length, isLoading, autoOpened, showViewer, isAdmin]);
 
   // Limpiar timer del modal al desmontar
   useEffect(() => {
@@ -582,13 +587,16 @@ export default function Planos() {
 
   if (!selectedProjectId) {
     return (
-      <div className="flex items-center justify-center h-64 text-slate-400">
-        Selecciona un proyecto primero
-      </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64 text-slate-400">
+          Selecciona un proyecto primero
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
+    <DashboardLayout>
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1558,5 +1566,6 @@ export default function Planos() {
         </DialogContent>
       </Dialog>
     </div>
+    </DashboardLayout>
   );
 }
