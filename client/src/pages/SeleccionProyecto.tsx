@@ -10,6 +10,7 @@ import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { getImageUrl } from '@/lib/imageUrl';
 import { useProject } from '@/contexts/ProjectContext';
+import { useCallback } from 'react';
 
 export default function SeleccionProyecto() {
   const { user, logout, loading: authLoading } = useAuth();
@@ -26,6 +27,15 @@ export default function SeleccionProyecto() {
   });
   
   const canCreateProject = user?.role === 'superadmin' || user?.role === 'admin';
+  const utils = trpc.useUtils();
+
+  /** Prefetch datos del proyecto al hover — carga instantánea al entrar */
+  const handlePrefetch = useCallback((proyectoId: number) => {
+    utils.pendientes.misPendientes.prefetch({ proyectoId });
+    utils.planos.listar.prefetch({ proyectoId });
+    utils.avisos.noLeidos.prefetch({ proyectoId });
+    utils.planos.pinCount.prefetch({ proyectoId });
+  }, [utils]);
   
   /** LIMPIEZA TOTAL AGRESIVA al cambiar de proyecto — aislamiento 100% */
   const handleSelectProject = async (proyecto: { id: number; nombre: string }) => {
@@ -143,6 +153,8 @@ export default function SeleccionProyecto() {
                 type="button"
                 className="w-full text-left h-full"
                 onClick={() => handleSelectProject(proyecto)}
+                onMouseEnter={() => handlePrefetch(proyecto.id)}
+                onTouchStart={() => handlePrefetch(proyecto.id)}
               >
               <Card 
                 className="overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 group border-0 shadow-md h-full flex flex-col"
@@ -155,6 +167,9 @@ export default function SeleccionProyecto() {
                       src={getImageUrl(proyecto.imagenPortadaBase64 || proyecto.imagenPortadaUrl)} 
                       alt={proyecto.nombre}
                       className="w-full h-full object-cover"
+                      loading="eager"
+                      decoding="async"
+                      fetchPriority="high"
                     />
                   ) : null}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />

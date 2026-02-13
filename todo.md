@@ -3817,3 +3817,15 @@
 - [ ] URGENTE: Verificar y restaurar proyecto Mayas si fue eliminado de la BD
 - [ ] REGLA PERMANENTE: Proyectos son 100% independientes — JAMÁS mezclar datos entre proyectos
 - [x] FIX: Pines en ZoomablePlano.tsx siguen como pill badge — cambiar a pin de mapa SVG con iniciales del residente
+- [x] PERF: Carga inmediata — optimizar velocidad agresivamente
+- [ ] PERF: Lazy loading de páginas pesadas
+- [ ] PERF: Reducir queries iniciales y paralelizar
+- [x] PERF: Caché stale-while-revalidate en queries tRPC
+- [x] PERF: Prefetch de datos al hover/seleccionar proyecto
+- [ ] PERF: Compresión de imágenes y lazy load de imágenes
+- [x] PERF: Carga inmediata — optimizar velocidad agresivamente
+- [ ] PERF: Lazy loading de páginas pesadas
+- [ ] PERF: Reducir queries iniciales y paralelizar
+- [x] PERF: Caché stale-while-revalidate en queries tRPC
+- [x] PERF: Prefetch de datos al hover/seleccionar proyecto
+- [ ] PERF: Compresión de imágenes y lazy load de imágenes

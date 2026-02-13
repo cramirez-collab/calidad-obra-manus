@@ -1,0 +1,9 @@
+{
+  "query": "\nCREATE INDEX IF NOT EXISTS idx_plano_pines_plano ON plano_pines (planoId);\nCREATE INDEX IF NOT EXISTS idx_plano_pines_item ON plano_pines (itemId);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute \nCREATE INDEX IF NOT EXISTS idx_plano_pines_plano ON plano_pines (planoId);\nCREATE INDEX IF NOT EXISTS idx_plano_pines_item ON plano_pines (itemId);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1485
+}

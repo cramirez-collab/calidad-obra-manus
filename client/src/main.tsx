@@ -364,18 +364,18 @@ if (versionOK) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 30 * 1000,        // 30s: datos frescos por 30s, reduce refetches 90%
-        gcTime: 5 * 60 * 1000,       // 5min: cache en memoria más tiempo
-        refetchOnWindowFocus: false,  // NO refetch al volver a la pestaña (ahorra en 3G)
-        refetchOnReconnect: true,     // Sí refetch al reconectar (importante en obra)
-        refetchOnMount: false,        // NO refetch si datos en cache y no stale
-        retry: 2,                     // 2 reintentos (no 3, más rápido en fallo)
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-        networkMode: 'online',        // No intentar en offline (usar cache)
+        staleTime: 5 * 60 * 1000,     // 5min: datos frescos por 5min — carga inmediata
+        gcTime: 15 * 60 * 1000,       // 15min: cache en memoria mucho más tiempo
+        refetchOnWindowFocus: false,   // NO refetch al volver a la pestaña
+        refetchOnReconnect: true,      // Sí refetch al reconectar
+        refetchOnMount: false,         // NO refetch si datos en cache y no stale
+        retry: 1,                      // 1 reintento — fallo rápido
+        retryDelay: 1000,              // 1s fijo — sin backoff exponencial
+        networkMode: 'online',
       },
       mutations: {
-        retry: 2,
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+        retry: 1,
+        retryDelay: 1000,
         networkMode: 'online',
       },
     },

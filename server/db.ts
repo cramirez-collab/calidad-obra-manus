@@ -37,6 +37,32 @@ import { nanoid } from 'nanoid';
 let _db: ReturnType<typeof drizzle> | null = null;
 let _pool: ReturnType<typeof mysql.createPool> | null = null;
 
+// ==================== CACHÉ EN MEMORIA DEL SERVIDOR ====================
+const serverCache = new Map<string, { data: any; expiry: number }>();
+const CACHE_TTL = 60_000; // 1 min default
+
+function getCached<T>(key: string): T | null {
+  const entry = serverCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiry) {
+    serverCache.delete(key);
+    return null;
+  }
+  return entry.data as T;
+}
+
+function setCache(key: string, data: any, ttl = CACHE_TTL) {
+  serverCache.set(key, { data, expiry: Date.now() + ttl });
+}
+
+export function invalidateCache(prefix?: string) {
+  if (!prefix) { serverCache.clear(); return; }
+  const keys = Array.from(serverCache.keys());
+  for (const key of keys) {
+    if (key.startsWith(prefix)) serverCache.delete(key);
+  }
+}
+
 // Campos de items sin Base64 para evitar cargar datos enormes
 const itemFieldsWithoutBase64 = {
   id: items.id,
@@ -1097,6 +1123,8 @@ export async function createItem(data: Omit<InsertItem, 'codigo'> & { codigoQrPr
   const { codigoQrPreasignado, ...insertData } = data;
   
   const result = await db.insert(items).values({ ...insertData, codigo, numeroInterno });
+  invalidateCache('pendientes');
+  invalidateCache('allProyectosEnriquecidos');
   return { id: result[0].insertId, codigo, numeroInterno };
 }
 
@@ -1246,6 +1274,8 @@ export async function updateItem(id: number, data: Partial<InsertItem>) {
   const db = await getDb();
   if (!db) return;
   await db.update(items).set(data).where(eq(items.id, id));
+  invalidateCache('pendientes');
+  invalidateCache('allProyectosEnriquecidos');
 }
 
 export interface ItemFilters {
@@ -1938,6 +1968,10 @@ export async function getNextOQCCode(proyectoId?: number): Promise<string> {
 // ==================== PENDIENTES POR USUARIO ====================
 
 export async function getPendientesByUsuario(userId: number, role: string, proyectoId?: number) {
+  const cacheKey = `pendientes:${userId}:${role}:${proyectoId || 'all'}`;
+  const cached = getCached<any[]>(cacheKey);
+  if (cached) return cached;
+  
   const db = await getDb();
   if (!db) return [];
   
@@ -2028,7 +2062,7 @@ export async function getPendientesByUsuario(userId: number, role: string, proye
   }
   
   // Agregar nombres de trazabilidad a cada resultado
-  return results.map(r => ({
+  const finalResults = results.map(r => ({
     ...r,
     especialidadResidenteNombre: r.especialidadResidenteId ? usuariosMap[r.especialidadResidenteId] || null : null,
     creadoPorNombre: r.creadoPorId ? usuariosMap[r.creadoPorId] || null : null,
@@ -2036,6 +2070,8 @@ export async function getPendientesByUsuario(userId: number, role: string, proye
     aprobadoPorNombre: r.aprobadoPorId ? usuariosMap[r.aprobadoPorId] || null : null,
     cerradoPorNombre: r.cerradoPorId ? usuariosMap[r.cerradoPorId] || null : null,
   }));
+  setCache(cacheKey, finalResults, 30_000); // 30s cache for pendientes
+  return finalResults;
 }
 
 // ==================== CONFIGURACIÓN ====================
@@ -2696,6 +2732,10 @@ export async function getUsuariosByProyecto(proyectoId: number) {
 
 // Para superadmin/admin: todos los proyectos con el mismo formato que misProyectos
 export async function getAllProyectosEnriquecidos() {
+  const cacheKey = 'allProyectosEnriquecidos';
+  const cached = getCached<any[]>(cacheKey);
+  if (cached) return cached;
+  
   const db = await getDb();
   if (!db) return [];
   
@@ -2732,7 +2772,7 @@ export async function getAllProyectosEnriquecidos() {
   const itemsMap = new Map(itemsStats.map(i => [i.proyectoId, Number(i.count)]));
   const pendientesMap = new Map(pendientesStats.map(p => [p.proyectoId, Number(p.count)]));
   
-  return todosProyectos.map(proyecto => ({
+  const result = todosProyectos.map(proyecto => ({
     proyectoId: proyecto.id,
     usuarioId: 0,
     rolEnProyecto: 'admin' as const,
@@ -2743,6 +2783,8 @@ export async function getAllProyectosEnriquecidos() {
     totalItems: itemsMap.get(proyecto.id) || 0,
     itemsPendientes: pendientesMap.get(proyecto.id) || 0,
   }));
+  setCache(cacheKey, result, 2 * 60_000); // 2 min cache
+  return result;
 }
 
 export async function getProyectosByUsuario(usuarioId: number) {
