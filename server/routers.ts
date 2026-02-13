@@ -1016,6 +1016,20 @@ export const appRouter = router({
         // Ejecutar operaciones secundarias en segundo plano (no bloquean)
         setImmediate(async () => {
           try {
+            // Crear pin en planoPines si viene con datos de pin
+            if (input.pinPlanoId && input.pinPosX && input.pinPosY) {
+              try {
+                await db.createPlanoPin({
+                  planoId: input.pinPlanoId,
+                  itemId: itemResult.id,
+                  posX: input.pinPosX,
+                  posY: input.pinPosY,
+                  nota: null,
+                  creadoPorId: ctx.user.id,
+                });
+              } catch (e) { console.log('Pin creation background failed', e); }
+            }
+
             // Subir fotos a S3 en segundo plano (no bloquea al usuario)
             if (input.fotoAntesBase64) {
               try {

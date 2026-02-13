@@ -46,15 +46,39 @@ export default function NuevoItem() {
     const params = new URLSearchParams(window.location.search);
     return params.get('qr') || null;
   }, [location]);
+
+  // Obtener datos de pin desde URL (si viene de colocar pin en plano)
+  const pinFromPlano = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    const planoId = params.get('pinPlanoId');
+    const posX = params.get('pinPosX');
+    const posY = params.get('pinPosY');
+    const nivel = params.get('nivel');
+    const nota = params.get('pinNota');
+    if (planoId && posX && posY) {
+      return {
+        planoId: parseInt(planoId),
+        posX: parseFloat(posX),
+        posY: parseFloat(posY),
+        nivel: nivel ? parseInt(nivel) : null,
+        nota: nota || null,
+      };
+    }
+    return null;
+  }, [location]);
   
-  const [formData, setFormData] = useState({
-    residenteId: "",
-    empresaId: "",
-    nivelId: "",
-    unidadId: "",
-    especialidadId: "",
-    defectoId: "",
-    espacioId: "",
+  const [formData, setFormData] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const nivel = params.get('nivel');
+    return {
+      residenteId: "",
+      empresaId: "",
+      nivelId: nivel || "",
+      unidadId: "",
+      especialidadId: "",
+      defectoId: "",
+      espacioId: "",
+    };
   });
   const [fotoAntes, setFotoAntes] = useState<string | null>(null);
   const [fotoAntesMarcada, setFotoAntesMarcada] = useState<string | null>(null);
@@ -63,7 +87,13 @@ export default function NuevoItem() {
   const [isCapturing, setIsCapturing] = useState(false);
   // Pin sobre plano
   const [showPinModal, setShowPinModal] = useState(false);
-  const [pinPos, setPinPos] = useState<{ x: number; y: number } | null>(null);
+  const [pinPos, setPinPos] = useState<{ x: number; y: number } | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const posX = params.get('pinPosX');
+    const posY = params.get('pinPosY');
+    if (posX && posY) return { x: parseFloat(posX), y: parseFloat(posY) };
+    return null;
+  });
   const pinImgRef = useRef<HTMLImageElement>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -333,8 +363,8 @@ export default function NuevoItem() {
       clientId,
       // Código QR preasignado (si viene de escanear etiqueta nueva)
       codigoQrPreasignado: qrPreasignado || undefined,
-      // Pin de ubicación en plano
-      pinPlanoId: planoDelNivel?.id || undefined,
+      // Pin de ubicación en plano (priorizar datos del pin colocado desde visor)
+      pinPlanoId: pinFromPlano?.planoId || planoDelNivel?.id || undefined,
       pinPosX: pinPos?.x?.toFixed(4) || undefined,
       pinPosY: pinPos?.y?.toFixed(4) || undefined,
     };
@@ -675,6 +705,20 @@ export default function NuevoItem() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Banner: Pin pre-asignado desde visor de planos */}
+            {pinFromPlano && pinPos && (
+              <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-emerald-800">Ubicación pre-asignada desde plano</p>
+                    <p className="text-[10px] text-emerald-600">Pin en posición ({pinPos.x.toFixed(1)}%, {pinPos.y.toFixed(1)}%){pinFromPlano.nota ? ` — ${pinFromPlano.nota}` : ''}</p>
+                  </div>
+                  <Badge className="text-[10px] bg-emerald-100 text-emerald-700 border-emerald-300 flex-shrink-0">Pin listo</Badge>
+                </div>
+              </div>
+            )}
 
             {/* Thumbnail de plano del nivel seleccionado */}
             {planoDelNivel && (

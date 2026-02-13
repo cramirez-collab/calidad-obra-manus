@@ -3861,3 +3861,4 @@
 - [x] FEATURE: Envío de reporte firmado por correo a todos los usuarios involucrados
 - [x] FEATURE: Leyenda en correo "Acepto y atiendo en oportunidad los ítems en los que se hace mención a mi empresa"
 - [x] FEATURE: Bitácora de Correos con fecha/hora de apertura del correo
+- [x] FEATURE: Crear ítems desde pines del plano - al colocar pin se abre modal de nuevo ítem con ubicación asociada

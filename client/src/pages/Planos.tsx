@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers, Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff, Eye, Search, Filter, Download, Maximize, Minimize, ExternalLink, Users } from "lucide-react";
+import { Plus, PlusCircle, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers, Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff, Eye, Search, Filter, Download, Maximize, Minimize, ExternalLink, Users } from "lucide-react";
 import { useLocation } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -372,6 +372,23 @@ export default function Planos() {
       posY: pendingPinPos.y.toFixed(4),
       nota: pinNota.trim() || undefined,
     });
+  };
+
+  // Crear nuevo ítem desde pin: navegar a NuevoItem con datos del pin
+  const handleCreateItemFromPin = () => {
+    if (!pendingPinPos || !currentPlano) return;
+    const params = new URLSearchParams();
+    params.set('pinPlanoId', currentPlano.id.toString());
+    params.set('pinPosX', pendingPinPos.x.toFixed(4));
+    params.set('pinPosY', pendingPinPos.y.toFixed(4));
+    if (currentPlano.nivel) params.set('nivel', currentPlano.nivel.toString());
+    if (pinNota.trim()) params.set('pinNota', pinNota.trim());
+    setShowItemSelector(false);
+    setPendingPinPos(null);
+    setPinNota('');
+    setShowViewer(false);
+    setPinMode(false);
+    navigate(`/nuevo-item?${params.toString()}`);
   };
 
   // Descargar plano CON pines renderizados como imagen
@@ -1209,13 +1226,22 @@ export default function Planos() {
               )}
             </div>
           </div>
-          <DialogFooter className="flex-row gap-2">
-            <Button variant="outline" onClick={() => { setShowItemSelector(false); setPendingPinPos(null); }} className="flex-1">
-              Cancelar
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              onClick={handleCreateItemFromPin}
+              className="w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2"
+            >
+              <PlusCircle className="w-4 h-4" />
+              Crear Nuevo Ítem
             </Button>
-            <Button onClick={() => confirmPin()} className="flex-1 bg-slate-600 hover:bg-slate-700 text-white">
-              Pin sin ítem
-            </Button>
+            <div className="flex gap-2 w-full sm:flex-1">
+              <Button variant="outline" onClick={() => { setShowItemSelector(false); setPendingPinPos(null); }} className="flex-1">
+                Cancelar
+              </Button>
+              <Button onClick={() => confirmPin()} className="flex-1 bg-slate-600 hover:bg-slate-700 text-white">
+                Pin sin ítem
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
