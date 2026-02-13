@@ -3873,3 +3873,6 @@
 - [x] UI: Agregar nombre del proyecto activo en el header de todas las páginas del dashboard
 - [x] UX: Evitar flash del nombre de otro proyecto en header al cambiar de proyecto o navegar entre páginas - transición limpia
 - [x] UX: Botón accesible en header para cambiar de proyecto sin salir de la app
+- [x] FEATURE: Captura rápida en Planos - colocar pin → formulario inline de nuevo ítem sin salir del visor
+- [x] FEATURE: Al guardar ítem desde captura rápida, continuar en modo pin para seguir colocando más
+- [x] FEATURE: Panel de seguimiento con ítems creados en la sesión actual dentro del visor de planos

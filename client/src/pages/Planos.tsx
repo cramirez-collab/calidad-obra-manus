@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, PlusCircle, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers, Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff, Eye, Search, Filter, Download, Maximize, Minimize, ExternalLink, Users } from "lucide-react";
+import { Plus, PlusCircle, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers, Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff, Eye, Search, Filter, Download, Maximize, Minimize, ExternalLink, Users, ListChecks } from "lucide-react";
+import CapturaRapida from "@/components/CapturaRapida";
 import { useLocation } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -115,6 +116,12 @@ export default function Planos() {
   const [showResidenteMenu, setShowResidenteMenu] = useState(false);
   // State para tooltip hover
   const [hoveredPin, setHoveredPin] = useState<number | null>(null);
+
+  // State para captura rápida inline
+  const [showCapturaRapida, setShowCapturaRapida] = useState(false);
+  const [capturaRapidaPinPos, setCapturaRapidaPinPos] = useState<{ x: number; y: number } | null>(null);
+  const [itemsCreadosSesion, setItemsCreadosSesion] = useState<any[]>([]);
+  const [showSeguimiento, setShowSeguimiento] = useState(false);
 
   // State para fullscreen del plano
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1178,31 +1185,36 @@ export default function Planos() {
         </div>
       )}
 
-      {/* ========== DIALOG: Pin colocado - Crear ítem o vincular ========== */}
+      {/* ========== DIALOG: Pin colocado - Captura rápida o vincular ========== */}
       <Dialog open={showItemSelector} onOpenChange={(open) => { if (!open) { setShowItemSelector(false); setPendingPinPos(null); } }}>
-        <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col p-0 gap-0">
+        <DialogContent className="sm:max-w-md max-h-[70vh] flex flex-col p-0 gap-0">
           {/* Header */}
           <div className="px-4 pt-4 pb-3 border-b">
             <DialogTitle className="flex items-center gap-2 text-base">
               <MapPin className="w-5 h-5 text-emerald-600" />
               Pin colocado
             </DialogTitle>
-            <p className="text-xs text-slate-500 mt-1">Elige qué hacer con este pin en el plano</p>
+            <p className="text-xs text-slate-500 mt-1">Elige qué hacer con este pin</p>
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {/* === OPCIÓN PRINCIPAL: Crear nuevo ítem === */}
+            {/* === OPCIÓN PRINCIPAL: Captura Rápida Inline === */}
             <div className="px-4 pt-4 pb-3">
               <button
-                onClick={handleCreateItemFromPin}
+                onClick={() => {
+                  if (!pendingPinPos) return;
+                  setCapturaRapidaPinPos(pendingPinPos);
+                  setShowItemSelector(false);
+                  setShowCapturaRapida(true);
+                }}
                 className="w-full flex items-center gap-4 p-4 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-300 hover:border-emerald-500 rounded-xl transition-all group"
               >
                 <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                   <PlusCircle className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left flex-1">
-                  <p className="font-bold text-emerald-800 text-sm">Crear Nuevo Ítem</p>
-                  <p className="text-xs text-emerald-600 mt-0.5">Dar de alta un ítem nuevo con la ubicación de este pin</p>
+                  <p className="font-bold text-emerald-800 text-sm">Captura Rápida</p>
+                  <p className="text-xs text-emerald-600 mt-0.5">Crear ítem aquí mismo sin salir del plano</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-emerald-400 group-hover:text-emerald-600 flex-shrink-0" />
               </button>
@@ -1211,18 +1223,28 @@ export default function Planos() {
             {/* Separador */}
             <div className="flex items-center gap-3 px-4 py-1">
               <div className="flex-1 border-t border-slate-200" />
-              <span className="text-[10px] text-slate-400 font-medium uppercase">o vincular a ítem existente</span>
+              <span className="text-[10px] text-slate-400 font-medium uppercase">otras opciones</span>
               <div className="flex-1 border-t border-slate-200" />
             </div>
 
-            {/* === OPCIÓN SECUNDARIA: Vincular a ítem existente === */}
-            <div className="px-4 pt-2 pb-3 space-y-2">
+            {/* Opción: Ir a formulario completo */}
+            <div className="px-4 pt-2 pb-2">
+              <button
+                onClick={handleCreateItemFromPin}
+                className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors"
+              >
+                <ExternalLink className="w-5 h-5 text-slate-400" />
+                <div className="text-left flex-1">
+                  <p className="text-sm font-medium text-slate-700">Formulario completo</p>
+                  <p className="text-[10px] text-slate-500">Abrir formulario de nuevo ítem con más opciones</p>
+                </div>
+              </button>
+            </div>
+
+            {/* === OPCIÓN: Vincular a ítem existente === */}
+            <div className="px-4 pt-1 pb-3 space-y-2">
               <div>
-                <label className="text-xs font-medium text-slate-500">Nota del pin (opcional)</label>
-                <Input value={pinNota} onChange={e => setPinNota(e.target.value)} placeholder="Nota del pin..." className="h-8 text-sm" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-500">Buscar ítem existente</label>
+                <label className="text-xs font-medium text-slate-500">Vincular a ítem existente</label>
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
@@ -1233,38 +1255,38 @@ export default function Planos() {
                   />
                 </div>
               </div>
-              <div className="border rounded-lg divide-y max-h-[200px] overflow-y-auto">
-                {filteredItems.map((item: any) => {
-                  const estado = item.status || "pendiente_foto_despues";
-                  const colors = PIN_COLORS[estado] || PIN_COLORS.sin_item;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => confirmPin(item.id)}
-                      className="w-full text-left px-3 py-2 hover:bg-emerald-50 transition-colors flex items-center gap-2"
-                    >
-                      {item.fotoAntesUrl && (
-                        <img src={item.fotoAntesUrl} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-slate-800 truncate">{item.codigo}</p>
-                        <p className="text-[10px] text-slate-500 truncate">{item.titulo}</p>
-                      </div>
-                      <span
-                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: colors.bg + '20', color: colors.bg }}
+              {itemSearch.trim() && (
+                <div className="border rounded-lg divide-y max-h-[150px] overflow-y-auto">
+                  {filteredItems.map((item: any) => {
+                    const estado = item.status || "pendiente_foto_despues";
+                    const colors = PIN_COLORS[estado] || PIN_COLORS.sin_item;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => confirmPin(item.id)}
+                        className="w-full text-left px-3 py-2 hover:bg-emerald-50 transition-colors flex items-center gap-2"
                       >
-                        #{item.numeroInterno}
-                      </span>
-                    </button>
-                  );
-                })}
-                {filteredItems.length === 0 && (
-                  <div className="text-center py-4 text-xs text-slate-400">
-                    No se encontraron ítems
-                  </div>
-                )}
-              </div>
+                        {item.fotoAntesUrl && (
+                          <img src={item.fotoAntesUrl} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-slate-800 truncate">{item.codigo}</p>
+                          <p className="text-[10px] text-slate-500 truncate">{item.titulo}</p>
+                        </div>
+                        <span
+                          className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: colors.bg + '20', color: colors.bg }}
+                        >
+                          #{item.numeroInterno}
+                        </span>
+                      </button>
+                    );
+                  })}
+                  {filteredItems.length === 0 && (
+                    <div className="text-center py-3 text-xs text-slate-400">No se encontraron ítems</div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -1279,6 +1301,89 @@ export default function Planos() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ========== CAPTURA RÁPIDA INLINE ========== */}
+      {showCapturaRapida && capturaRapidaPinPos && currentPlano && (
+        <CapturaRapida
+          pinPos={capturaRapidaPinPos}
+          planoId={currentPlano.id}
+          planoNivel={currentPlano.nivel}
+          onClose={() => {
+            setShowCapturaRapida(false);
+            setCapturaRapidaPinPos(null);
+            setPendingPinPos(null);
+          }}
+          onItemCreated={(item) => {
+            setItemsCreadosSesion(prev => [item, ...prev]);
+            // Crear el pin vinculado al ítem
+            if (capturaRapidaPinPos && currentPlano && item.id) {
+              crearPin.mutate({
+                planoId: currentPlano.id,
+                itemId: item.id,
+                posX: capturaRapidaPinPos.x.toFixed(4),
+                posY: capturaRapidaPinPos.y.toFixed(4),
+              });
+            }
+            setShowCapturaRapida(false);
+            setCapturaRapidaPinPos(null);
+            setPendingPinPos(null);
+            // Mantener modo pin activo para seguir colocando
+            setPinMode(true);
+          }}
+          onContinuePin={() => {
+            setShowCapturaRapida(false);
+            setCapturaRapidaPinPos(null);
+            setPendingPinPos(null);
+            setPinMode(true);
+          }}
+        />
+      )}
+
+      {/* ========== PANEL DE SEGUIMIENTO: Ítems creados en la sesión ========== */}
+      {showViewer && itemsCreadosSesion.length > 0 && (
+        <div className="fixed bottom-16 right-3 z-[150]">
+          <button
+            onClick={() => setShowSeguimiento(s => !s)}
+            className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg text-xs font-bold transition-all"
+          >
+            <ListChecks className="w-4 h-4" />
+            {itemsCreadosSesion.length} creado{itemsCreadosSesion.length !== 1 ? 's' : ''}
+          </button>
+          {showSeguimiento && (
+            <div className="absolute bottom-full right-0 mb-2 w-72 bg-white rounded-xl shadow-2xl border overflow-hidden animate-in slide-in-from-bottom-2 duration-200">
+              <div className="px-3 py-2 bg-emerald-50 border-b flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-800">Ítems creados esta sesión</span>
+                <button onClick={() => setShowSeguimiento(false)} className="p-0.5 hover:bg-emerald-100 rounded">
+                  <X className="w-3.5 h-3.5 text-emerald-600" />
+                </button>
+              </div>
+              <div className="max-h-[200px] overflow-y-auto divide-y">
+                {itemsCreadosSesion.map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      if (item.id) {
+                        setShowViewer(false);
+                        navigate(`/item/${item.id}`);
+                      }
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                      <MapPin className="w-3 h-3 text-emerald-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-slate-800 truncate">{item.codigo || 'OFFLINE'}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{item.titulo}</p>
+                    </div>
+                    <Eye className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Dialog: Agregar plano */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
