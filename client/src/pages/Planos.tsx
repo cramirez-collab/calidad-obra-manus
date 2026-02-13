@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { Plus, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers, Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff, Eye, Search, Filter, Download, Maximize, Minimize, ExternalLink, Users } from "lucide-react";
 import { useLocation } from "wouter";
+import { useProject } from "@/contexts/ProjectContext";
 
 // Colores de pin según estado del ítem
 const PIN_COLORS: Record<string, { bg: string; border: string; text: string }> = {
@@ -31,7 +32,7 @@ export default function Planos() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const isAdmin = user?.role === "superadmin" || user?.role === "admin";
-  const selectedProjectId = user?.proyectoActivoId;
+  const { selectedProjectId } = useProject();
 
   // Queries
   const { data: planosData, isLoading, refetch } = trpc.planos.listar.useQuery(
@@ -265,6 +266,17 @@ export default function Planos() {
   const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
 
   // Refetch pines al cambiar de plano
+  // CERRAR VISOR Y RESETEAR al cambiar de proyecto — aislamiento agresivo
+  useEffect(() => {
+    setShowViewer(false);
+    setPinMode(false);
+    setSelectedPin(null);
+    setTappedPin(null);
+    setShowPinModal(false);
+    setViewerIndex(0);
+    setFilterNivel(null);
+  }, [selectedProjectId]);
+
   useEffect(() => {
     if (currentPlano?.id) {
       refetchPines();

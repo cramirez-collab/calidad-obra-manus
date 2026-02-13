@@ -968,6 +968,15 @@ function PinesManager({ proyectoId }: { proyectoId: number }) {
   const [previewUrl, setPreviewUrl] = useState('');
   const [deletePlanoId, setDeletePlanoId] = useState<number | null>(null);
 
+  // CERRAR VISOR al cambiar de proyecto — aislamiento agresivo
+  useEffect(() => {
+    setViewerPlano(null);
+    setPinMode(false);
+    setSelectedPin(null);
+    setShowAddDialog(false);
+    setEditingPlano(null);
+  }, [proyectoId]);
+
   // Viewer/pin state
   const [viewerPlano, setViewerPlano] = useState<any>(null);
   const [zoom, setZoom] = useState(1);

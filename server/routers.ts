@@ -305,6 +305,8 @@ export const appRouter = router({
       .input(z.object({ proyectoId: z.number().nullable() }))
       .mutation(async ({ ctx, input }) => {
         await db.setProyectoActivoUsuario(ctx.user.id, input.proyectoId);
+        // LIMPIAR CACHÉ DEL SERVIDOR al cambiar de proyecto — aislamiento agresivo
+        db.invalidateCache();
         // Emitir evento de cambio de proyecto via WebSocket
         socketEvents.emitToUser(ctx.user.id, 'proyecto-activo-changed', { 
           proyectoId: input.proyectoId,

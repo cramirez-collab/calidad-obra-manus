@@ -121,7 +121,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       utils.empresas.getAllResidentesConEmpresas.prefetch({ proyectoId });
       utils.espacios.plantilla.prefetch({ proyectoId });
       utils.planos.listar.prefetch({ proyectoId });
-      utils.users.list.prefetch();
+      utils.users.list.prefetch({ proyectoId });
     }, 2000);
   }, [utils]);
 
@@ -144,7 +144,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
   }, [selectedProjectId, userProjects, isSuperadmin, isAdmin, isLoadingProjects, isChangingProject]);
 
-  /** Cambiar proyecto — LIMPIEZA TOTAL AGRESIVA */
+  /** Cambiar proyecto — LIMPIEZA TOTAL AGRESIVA E INSTANTÁNEA */
   const setSelectedProjectId = useCallback(async (id: number | null) => {
     const previousId = previousProjectRef.current;
     
@@ -152,14 +152,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     
     isChangingRef.current = true;
     setIsChangingProject(true);
-    setSelectedProjectIdState(id);
     hasPrefetched.current = false;
     previousProjectRef.current = id;
     
-    // Si hay proyecto anterior diferente → limpiar AGRESIVAMENTE
-    if (previousId !== null && previousId !== id) {
-      await purgeAllProjectCache(utils);
-    }
+    // SIEMPRE limpiar caché al cambiar de proyecto — sin excepciones
+    await purgeAllProjectCache(utils);
+    
+    // Actualizar estado DESPUÉS de limpiar caché
+    setSelectedProjectIdState(id);
     
     setProyectoActivoMutation.mutate({ proyectoId: id });
     if (id) prefetchCatalogos(id);
