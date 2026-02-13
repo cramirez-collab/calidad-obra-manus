@@ -845,14 +845,20 @@ export default function Planos() {
               >
                 {showPins ? <MapPin className="w-4 h-4" /> : <MapPinOff className="w-4 h-4" />}
               </button>
-              {/* Agregar pin (admin) */}
+              {/* Agregar pin (admin) - BOTÓN PROMINENTE */}
               {isAdmin && (
                 <button
                   onClick={() => { setPinMode(p => !p); setSelectedPin(null); }}
-                  className={`p-1.5 rounded-lg transition-colors ${pinMode ? 'bg-red-500 hover:bg-red-600 animate-pulse' : 'hover:bg-white/10'}`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                    pinMode 
+                      ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse shadow-lg shadow-red-500/30' 
+                      : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
+                  }`}
                   title={pinMode ? "Cancelar modo pin" : "Agregar pin"}
                 >
-                  <Plus className="w-4 h-4" />
+                  {pinMode ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                  <span className="hidden sm:inline">{pinMode ? 'Cancelar' : 'Nuevo Pin'}</span>
+                  <span className="sm:hidden">{pinMode ? '✕' : '+'}</span>
                 </button>
               )}
             </div>
@@ -998,6 +1004,27 @@ export default function Planos() {
               <span>{filteredPines.length} pin{filteredPines.length !== 1 ? "es" : ""}</span>
             </div>
           </div>
+
+          {/* FAB FLOTANTE: Agregar Pin - siempre visible para admin cuando no está en modo pin */}
+          {isAdmin && !pinMode && !showPinModal && !showCapturaRapida && !showItemSelector && (
+            <button
+              onClick={() => { setPinMode(true); setSelectedPin(null); }}
+              className="absolute bottom-20 left-4 z-[120] flex items-center gap-2 px-5 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-2xl shadow-emerald-500/40 font-bold text-sm transition-all hover:scale-105 active:scale-95"
+            >
+              <MapPin className="w-5 h-5" />
+              <span>Nuevo Pin</span>
+            </button>
+          )}
+          {/* FAB: Cancelar modo pin */}
+          {isAdmin && pinMode && (
+            <button
+              onClick={() => { setPinMode(false); setSelectedPin(null); }}
+              className="absolute bottom-20 left-4 z-[120] flex items-center gap-2 px-5 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-2xl shadow-red-500/40 font-bold text-sm transition-all animate-pulse"
+            >
+              <X className="w-5 h-5" />
+              <span>Cancelar</span>
+            </button>
+          )}
 
           {/* Navigation arrows */}
           {planos.length > 1 && (

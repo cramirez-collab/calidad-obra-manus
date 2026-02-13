@@ -3876,3 +3876,4 @@
 - [x] FEATURE: Captura rápida en Planos - colocar pin → formulario inline de nuevo ítem sin salir del visor
 - [x] FEATURE: Al guardar ítem desde captura rápida, continuar en modo pin para seguir colocando más
 - [x] FEATURE: Panel de seguimiento con ítems creados en la sesión actual dentro del visor de planos
+- [x] BUG: Botón de agregar pin no visible en toolbar del visor de planos - agregar botón prominente para activar modo pin y captura rápida
