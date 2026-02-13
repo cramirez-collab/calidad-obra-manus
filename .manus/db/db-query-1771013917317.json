@@ -1,0 +1,42 @@
+{
+  "query": "SELECT id, nombre, linkCurvas, linkSecuencias, linkVisor, linkPlanos, linkManuales, linkEspecificaciones, tituloCurvas, tituloSecuencias, tituloVisor, tituloPlanos, tituloManuales, tituloEspecificaciones FROM proyectos WHERE activo = 1 LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, linkCurvas, linkSecuencias, linkVisor, linkPlanos, linkManuales, linkEspecificaciones, tituloCurvas, tituloSecuencias, tituloVisor, tituloPlanos, tituloManuales, tituloEspecificaciones FROM proyectos WHERE activo = 1 LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "nombre": "Hidalma ",
+      "linkCurvas": "https://docs.google.com/presentation/d/e/2PACX-1vRS1GwWBvs-V6qkKWYPp1IrYIHRkMrue_y519dMrzVyqwchoiGqgCLpq5Eu79MUtXrOJctkJSCEY3zL/pub?start=false&loop=false&delayms=10000&slide=id.g3a78bffa5d2_0_48",
+      "linkSecuencias": "https://www.appsheet.com/start/bad5370e-61b3-4a42-8347-643e96d15f32?platform=desktop#appName=Secuencias-226234876&vss=H4sIAAAAAAAAA6WQwU7EIBCG32XOYADb7ZaretgYPejGg-KBFpoQW2iAqpuGdxd0jR68qMf5Z74vf2aFZ6NfbqPsn4A_rF_TpT4Ah1XA_jBrAVzAmbPRu1EAEnAtp2O46BCNs9IbJyBBekSfjqgD8PX3Cv7_FgiM0jaawWhffIXOniOb14UswTcOEoJpibIb9Xv5wh2Bn64R3DgXczo4P-XpXEaZuWnOESOsxpRhQveM8YpyUp1UrKkZq-9Lt7CzF8rEK6eyNvpFI4he2iD7ot-prOi3XUNOhy1WVLa4aliLO8IoZq3qN5SQtt_UkFLuPLh-CVrd5Zf98VWlzussrfooNMgx6PQGxeoKAhkCAAA=&view=Cuestionario",
+      "linkVisor": "https://docs.google.com/spreadsheets/d/1QhfpVCXE2SwpTazhH96wrc2Q0HIFMS3SpO6GXvS2DJA/edit?gid=464225867#gid=464225867",
+      "linkPlanos": "https://drive.google.com/drive/folders/1BsaAtPcfOmmGkJMgtLw_zJujxFQmfiro",
+      "linkManuales": "NULL",
+      "linkEspecificaciones": "NULL",
+      "tituloCurvas": "NULL",
+      "tituloSecuencias": "NULL",
+      "tituloVisor": "NULL",
+      "tituloPlanos": "NULL",
+      "tituloManuales": "NULL",
+      "tituloEspecificaciones": "NULL"
+    },
+    {
+      "id": "150001",
+      "nombre": "Mayas Habitat",
+      "linkCurvas": "NULL",
+      "linkSecuencias": "NULL",
+      "linkVisor": "NULL",
+      "linkPlanos": "NULL",
+      "linkManuales": "NULL",
+      "linkEspecificaciones": "NULL",
+      "tituloCurvas": "NULL",
+      "tituloSecuencias": "NULL",
+      "tituloVisor": "NULL",
+      "tituloPlanos": "NULL",
+      "tituloManuales": "NULL",
+      "tituloEspecificaciones": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tlinkCurvas\tlinkSecuencias\tlinkVisor\tlinkPlanos\tlinkManuales\tlinkEspecificaciones\ttituloCurvas\ttituloSecuencias\ttituloVisor\ttituloPlanos\ttituloManuales\ttituloEspecificaciones\n1\tHidalma \thttps://docs.google.com/presentation/d/e/2PACX-1vRS1GwWBvs-V6qkKWYPp1IrYIHRkMrue_y519dMrzVyqwchoiGqgCLpq5Eu79MUtXrOJctkJSCEY3zL/pub?start=false&loop=false&delayms=10000&slide=id.g3a78bffa5d2_0_48\thttps://www.appsheet.com/start/bad5370e-61b3-4a42-8347-643e96d15f32?platform=desktop#appName=Secuencias-226234876&vss=H4sIAAAAAAAAA6WQwU7EIBCG32XOYADb7ZaretgYPejGg-KBFpoQW2iAqpuGdxd0jR68qMf5Z74vf2aFZ6NfbqPsn4A_rF_TpT4Ah1XA_jBrAVzAmbPRu1EAEnAtp2O46BCNs9IbJyBBekSfjqgD8PX3Cv7_FgiM0jaawWhffIXOniOb14UswTcOEoJpibIb9Xv5wh2Bn64R3DgXczo4P-XpXEaZuWnOESOsxpRhQveM8YpyUp1UrKkZq-9Lt7CzF8rEK6eyNvpFI4he2iD7ot-prOi3XUNOhy1WVLa4aliLO8IoZq3qN5SQtt_UkFLuPLh-CVrd5Zf98VWlzussrfooNMgx6PQGxeoKAhkCAAA=&view=Cuestionario\thttps://docs.google.com/spreadsheets/d/1QhfpVCXE2SwpTazhH96wrc2Q0HIFMS3SpO6GXvS2DJA/edit?gid=464225867#gid=464225867\thttps://drive.google.com/drive/folders/1BsaAtPcfOmmGkJMgtLw_zJujxFQmfiro\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n150001\tMayas Habitat\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 132
+}

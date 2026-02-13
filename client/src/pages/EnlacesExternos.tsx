@@ -256,14 +256,15 @@ export default function EnlacesExternos() {
                       className="flex-1"
                     />
                     {enlaces[linkKey] && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => window.open(enlaces[linkKey], '_blank')}
+                      <a
+                        href={enlaces[linkKey]}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         title="Abrir enlace"
+                        className="inline-flex items-center justify-center h-10 w-10 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground shrink-0"
                       >
                         <ExternalLink className="h-4 w-4" />
-                      </Button>
+                      </a>
                     )}
                   </div>
                 </div>

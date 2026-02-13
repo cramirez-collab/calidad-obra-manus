@@ -331,17 +331,35 @@ function DashboardLayoutContent({
     }
 
     // Item normal
+    if (item.external) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <a
+              href={item.path}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`
+                flex items-center justify-center h-10 w-10 rounded-lg transition-all relative
+                text-muted-foreground hover:bg-accent hover:text-foreground
+              `}
+            >
+              <item.icon className="h-5 w-5" />
+              <ExternalLink className="h-2.5 w-2.5 absolute top-1 right-1 opacity-50" />
+            </a>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="font-medium">
+            {item.label}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
     return (
       <Tooltip>
         <TooltipTrigger asChild>
           <button
-            onClick={() => {
-              if (item.external) {
-                window.open(item.path, '_blank');
-              } else {
-                setLocation(item.path);
-              }
-            }}
+            onClick={() => setLocation(item.path)}
             className={`
               flex items-center justify-center h-10 w-10 rounded-lg transition-all relative
               ${isActive 
@@ -351,9 +369,6 @@ function DashboardLayoutContent({
             `}
           >
             <item.icon className="h-5 w-5" />
-            {item.external && (
-              <ExternalLink className="h-2.5 w-2.5 absolute top-1 right-1 opacity-50" />
-            )}
           </button>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="font-medium">
@@ -439,14 +454,29 @@ function DashboardLayoutContent({
       );
     }
 
+    if (item.external) {
+      return (
+        <a
+          href={item.path}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setMobileMenuOpen(false)}
+          className={`
+            w-full flex items-center gap-3 px-4 py-3 text-left transition-colors
+            hover:bg-accent
+          `}
+        >
+          <item.icon className="h-5 w-5 shrink-0" />
+          <span className="flex-1 font-medium">{item.label}</span>
+          <ExternalLink className="h-4 w-4 opacity-50" />
+        </a>
+      );
+    }
+
     return (
       <button
         onClick={() => {
-          if (item.external) {
-            window.open(item.path, '_blank');
-          } else {
-            setLocation(item.path);
-          }
+          setLocation(item.path);
           setMobileMenuOpen(false);
         }}
         className={`
@@ -459,9 +489,6 @@ function DashboardLayoutContent({
       >
         <item.icon className="h-5 w-5 shrink-0" />
         <span className="flex-1 font-medium">{item.label}</span>
-        {item.external && (
-          <ExternalLink className="h-4 w-4 opacity-50" />
-        )}
       </button>
     );
   };

@@ -3893,3 +3893,5 @@
 - [x] CRITICAL: Flujo completo: Creador crea y asigna → Asignado arregla el detalle → Aprueba → Supervisor da click definitivo
 - [x] CRITICAL: Auditar backend items.create para garantizar que creadoPorId = ctx.user.id siempre
 - [x] CRITICAL: Auditar CapturaRapida y NuevoItem para que envíen residenteId correcto al backend
+- [x] BUG: Enlace externo (Avances Graficas / Google Sheets pubhtml) no abre al hacer click - cambiado window.open a <a target=_blank> en sidebar, mobile menu y EnlacesExternos
+- [x] FEATURE: Trazabilidad (Creó, Asignado, Aprobó) completamente visible y responsiva en tarjetas de ítems - iconos compactos en móvil, info completa siempre

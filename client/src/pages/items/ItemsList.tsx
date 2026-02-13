@@ -30,7 +30,11 @@ import {
   XCircle,
   QrCode,
   Plus,
-  Download
+  Download,
+  UserPlus,
+  UserCog,
+  ShieldCheck,
+  Lock
 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -535,40 +539,44 @@ export default function ItemsList() {
                           )}
                         </div>
 
-                        {/* Información de usuarios */}
-                        <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-1 text-xs">
+                        {/* Trazabilidad - Responsiva */}
+                        <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
                           {/* Creado por */}
-                          <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">Creó:</span>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <UserPlus className="h-3 w-3 text-blue-500 shrink-0" />
+                            <span className="text-muted-foreground shrink-0 hidden sm:inline">Creó:</span>
                             <span className="font-medium text-blue-600 truncate">
                               {getUsuarioNombre((item as any).creadoPorId) || '-'}
                             </span>
                           </div>
                           {/* Asignado a */}
-                          <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">Asignado:</span>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <UserCog className="h-3 w-3 text-amber-500 shrink-0" />
+                            <span className="text-muted-foreground shrink-0 hidden sm:inline">Asignado:</span>
                             <span className="font-medium text-amber-600 truncate">
                               {getUsuarioNombre((item as any).asignadoAId) || '-'}
                             </span>
                           </div>
                           {/* Aprobado por */}
-                          <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">Aprobó:</span>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <ShieldCheck className="h-3 w-3 text-emerald-500 shrink-0" />
+                            <span className="text-muted-foreground shrink-0 hidden sm:inline">Aprobó:</span>
                             <span className="font-medium text-emerald-600 truncate">
                               {getUsuarioNombre((item as any).aprobadoPorId) || '-'}
                             </span>
                           </div>
                           {/* Cerrado por */}
-                          <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">Cerró:</span>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Lock className="h-3 w-3 text-purple-500 shrink-0" />
+                            <span className="text-muted-foreground shrink-0 hidden sm:inline">Cerró:</span>
                             <span className="font-medium text-purple-600 truncate">
                               {getUsuarioNombre((item as any).cerradoPorId) || '-'}
                             </span>
                           </div>
                         </div>
 
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Creado: {formatDate(item.fechaCreacion)}
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          {formatDate(item.fechaCreacion)}
                         </p>
                       </div>
                     </div>
