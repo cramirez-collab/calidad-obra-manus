@@ -37,42 +37,10 @@ export default function SeleccionProyecto() {
     utils.planos.pinCount.prefetch({ proyectoId });
   }, [utils]);
   
-  /** LIMPIEZA TOTAL AGRESIVA al cambiar de proyecto — aislamiento 100% */
-  const handleSelectProject = async (proyecto: { id: number; nombre: string }) => {
-    // 1. Limpiar TODAS las caches del Service Worker
-    if ('caches' in window) {
-      try {
-        const names = await caches.keys();
-        await Promise.all(names.map(n => caches.delete(n)));
-      } catch (e) {}
-    }
-    // 2. Limpiar IndexedDB (excepto offline pendientes)
-    if ('indexedDB' in window) {
-      try {
-        const dbs = await indexedDB.databases();
-        for (const db of dbs) {
-          if (db.name && db.name !== 'objetiva-qc-offline' && db.name !== 'oqc-offline-storage') {
-            indexedDB.deleteDatabase(db.name);
-          }
-        }
-      } catch (e) {}
-    }
-    // 3. Limpiar sessionStorage
-    try {
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < sessionStorage.length; i++) {
-        const key = sessionStorage.key(i);
-        if (key && !key.startsWith('auth') && key !== 'theme') keysToRemove.push(key);
-      }
-      keysToRemove.forEach(k => sessionStorage.removeItem(k));
-    } catch (e) {}
-    // 4. Notificar SW
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
-    }
-    
-    setSelectedProjectId(proyecto.id);
+  /** CAMBIO INSTANTÁNEO — navegar primero, limpieza en background (ProjectContext se encarga) */
+  const handleSelectProject = (proyecto: { id: number; nombre: string }) => {
     navigate('/bienvenida');
+    setSelectedProjectId(proyecto.id);
   };
   
   const handleCreateProject = () => navigate('/proyectos/nuevo');

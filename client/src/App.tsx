@@ -154,7 +154,7 @@ function App() {
         <ProjectProvider>
           <TooltipProvider>
             <ErrorBoundary>
-              <Suspense fallback={<PageLoader />}>
+              <Suspense fallback={null}>
                 <Toaster />
                 <ConnectionStatus />
                 <PWAInstallPrompt />

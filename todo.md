@@ -3846,3 +3846,7 @@
 - [x] Hacer preview del plano zoomeable y responsivo en el modal de subir plano
 - [x] CRÍTICO: Planos y pines NO deben mostrarse entre proyectos - filtrar por proyectoId
 - [x] Cambio de proyecto instantáneo - invalidar caché agresivamente al cambiar
+- [x] RENDIMIENTO: Navegación entre secciones/módulos exageradamente instantánea
+- [x] RENDIMIENTO: Cambio de proyecto instantáneo sin bloqueo visual
+- [x] RENDIMIENTO: Prefetch agresivo de datos al entrar al proyecto
+- [x] RENDIMIENTO: Caché larga para datos que no cambian frecuentemente

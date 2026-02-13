@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef, startTransition } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 
@@ -20,27 +20,12 @@ async function purgeAllProjectCache(utils: ReturnType<typeof trpc.useUtils>) {
   // 1. Invalidar ABSOLUTAMENTE TODOS los queries de tRPC
   await utils.invalidate();
   
-  // 2. Limpiar TODAS las caches del Service Worker
+  // 2. Limpiar TODAS las caches del Service Worker (en background, no bloquear)
   if ('caches' in window) {
-    try {
-      const cacheNames = await caches.keys();
-      await Promise.all(cacheNames.map(name => caches.delete(name)));
-    } catch (e) {}
+    caches.keys().then(names => names.forEach(n => caches.delete(n))).catch(() => {});
   }
   
-  // 3. Limpiar IndexedDB (excepto offline pendientes)
-  if ('indexedDB' in window) {
-    try {
-      const databases = await indexedDB.databases();
-      for (const db of databases) {
-        if (db.name && db.name !== 'objetiva-qc-offline' && db.name !== 'oqc-offline-storage') {
-          indexedDB.deleteDatabase(db.name);
-        }
-      }
-    } catch (e) {}
-  }
-  
-  // 4. Limpiar sessionStorage
+  // 3. Limpiar sessionStorage (no bloquear)
   try {
     const keysToRemove: string[] = [];
     for (let i = 0; i < sessionStorage.length; i++) {
@@ -50,7 +35,7 @@ async function purgeAllProjectCache(utils: ReturnType<typeof trpc.useUtils>) {
     keysToRemove.forEach(k => sessionStorage.removeItem(k));
   } catch (e) {}
   
-  // 5. Notificar al Service Worker
+  // 4. Notificar al Service Worker (fire & forget)
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
   }
@@ -75,8 +60,6 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       setSelectedProjectIdState(data.proyectoId);
       setIsChangingProject(false);
       isChangingRef.current = false;
-      // LIMPIEZA TOTAL al completar cambio de proyecto
-      await purgeAllProjectCache(utils);
     },
     onError: () => {
       setIsChangingProject(false);
@@ -107,22 +90,27 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     return null;
   };
 
+  /** PREFETCH AGRESIVO E INMEDIATO — sin delays, todo en paralelo */
   const prefetchCatalogos = useCallback((proyectoId: number) => {
     if (hasPrefetched.current) return;
     hasPrefetched.current = true;
     
-    setTimeout(() => {
-      utils.empresas.list.prefetch({ proyectoId });
-      utils.unidades.list.prefetch({ proyectoId });
-      utils.especialidades.list.prefetch({ proyectoId });
-    }, 500);
+    // ONDA 1: Inmediato — datos que TODAS las páginas necesitan
+    utils.empresas.list.prefetch({ proyectoId });
+    utils.unidades.list.prefetch({ proyectoId });
+    utils.especialidades.list.prefetch({ proyectoId });
+    utils.users.list.prefetch({ proyectoId });
+    utils.users.listForMentions.prefetch({ proyectoId });
+    utils.items.list.prefetch({ proyectoId, limit: 100, offset: 0 });
     
+    // ONDA 2: 200ms — datos secundarios
     setTimeout(() => {
       utils.empresas.getAllResidentesConEmpresas.prefetch({ proyectoId });
       utils.espacios.plantilla.prefetch({ proyectoId });
       utils.planos.listar.prefetch({ proyectoId });
-      utils.users.list.prefetch({ proyectoId });
-    }, 2000);
+      utils.defectos.list.prefetch({ proyectoId });
+      utils.badges.me.prefetch();
+    }, 200);
   }, [utils]);
 
   useEffect(() => {
@@ -144,7 +132,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
   }, [selectedProjectId, userProjects, isSuperadmin, isAdmin, isLoadingProjects, isChangingProject]);
 
-  /** Cambiar proyecto — LIMPIEZA TOTAL AGRESIVA E INSTANTÁNEA */
+  /** Cambiar proyecto — INSTANTÁNEO: primero UI, luego limpieza en background */
   const setSelectedProjectId = useCallback(async (id: number | null) => {
     const previousId = previousProjectRef.current;
     
@@ -155,14 +143,25 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     hasPrefetched.current = false;
     previousProjectRef.current = id;
     
-    // SIEMPRE limpiar caché al cambiar de proyecto — sin excepciones
-    await purgeAllProjectCache(utils);
+    // 1. PRIMERO: Actualizar UI inmediatamente — el usuario ve el cambio al instante
+    startTransition(() => {
+      setSelectedProjectIdState(id);
+    });
     
-    // Actualizar estado DESPUÉS de limpiar caché
-    setSelectedProjectIdState(id);
+    // 2. Limpiar caché en background (no bloquear la UI)
+    purgeAllProjectCache(utils);
     
+    // 3. Persistir en servidor (fire & forget)
     setProyectoActivoMutation.mutate({ proyectoId: id });
+    
+    // 4. Prefetch del nuevo proyecto inmediatamente
     if (id) prefetchCatalogos(id);
+    
+    // 5. Terminar cambio rápido
+    setTimeout(() => {
+      setIsChangingProject(false);
+      isChangingRef.current = false;
+    }, 100);
   }, [setProyectoActivoMutation, prefetchCatalogos, utils]);
 
   const canAccessProject = (projectId: number): boolean => {
