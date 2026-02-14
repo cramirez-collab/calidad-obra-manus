@@ -3947,3 +3947,12 @@
 - [x] FEATURE: Resumen por nivel con conteos
 - [x] RULE: NO eliminar ningún pin, NO filtrar niveles - todos los pines históricos y actuales se mantienen
 - [x] RULE: Pines solo cambian de color según estatus, forma gota con iniciales del asignado
+
+## v4.20 - Auditoría completa PDF: pines por nivel correctos
+- [ ] AUDIT: Verificar que backend reportePines agrupa pines por planoId correcto
+- [ ] AUDIT: Verificar que frontend mapea cada plano con sus pines exclusivos
+- [ ] AUDIT: Consultar DB para obtener conteo real de pines por nivel
+- [ ] AUDIT: Confirmar que total de pines en PDF = total en DB
+- [ ] FIX: Corregir cualquier problema de asignación pin-nivel
+- [ ] VERIFY: Colores correctos (azul, naranja, verde, gris) por estatus
+- [ ] VERIFY: Estructura PDF: resumen + 2 planos/hoja + todos los niveles incluidos

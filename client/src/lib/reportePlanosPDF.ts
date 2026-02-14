@@ -24,11 +24,11 @@ const C = {
 
 // Colores por estatus (matching ZoomablePlano)
 const STATUS_COLORS: Record<string, { rgb: [number, number, number]; label: string }> = {
-  pendiente_foto_despues: { rgb: [59, 130, 246], label: "Pend. Foto" },
-  pendiente_aprobacion: { rgb: [245, 158, 11], label: "Pend. Aprob." },
-  aprobado: { rgb: [34, 197, 94], label: "Aprobado" },
-  rechazado: { rgb: [239, 68, 68], label: "Rechazado" },
-  sin_item: { rgb: [107, 114, 128], label: "Sin item" },
+  pendiente_foto_despues: { rgb: [245, 158, 11], label: "Pend. Foto" },   // Naranja (matches app)
+  pendiente_aprobacion: { rgb: [59, 130, 246], label: "Pend. Aprob." },   // Azul (matches app)
+  aprobado: { rgb: [16, 185, 129], label: "Aprobado" },                   // Verde (matches app #10b981)
+  rechazado: { rgb: [239, 68, 68], label: "Rechazado" },                  // Rojo (matches app)
+  sin_item: { rgb: [107, 114, 128], label: "Sin item" },                  // Gris (matches app)
 };
 
 const STATUS_ORDER = ["pendiente_foto_despues", "pendiente_aprobacion", "aprobado", "rechazado", "sin_item"];
@@ -42,11 +42,11 @@ function hexToRgb(hex: string): [number, number, number] {
 
 function getStatusColorRgb(status?: string | null): [number, number, number] {
   switch (status) {
-    case "aprobado": return hexToRgb("#22c55e");
-    case "rechazado": return hexToRgb("#ef4444");
-    case "pendiente_aprobacion": return hexToRgb("#f59e0b");
-    case "pendiente_foto_despues": return hexToRgb("#3b82f6");
-    default: return hexToRgb("#6b7280");
+    case "pendiente_foto_despues": return hexToRgb("#f59e0b"); // Naranja (matches app)
+    case "pendiente_aprobacion": return hexToRgb("#3b82f6");   // Azul (matches app)
+    case "aprobado": return hexToRgb("#10b981");               // Verde (matches app)
+    case "rechazado": return hexToRgb("#ef4444");              // Rojo (matches app)
+    default: return hexToRgb("#6b7280");                       // Gris (matches app)
   }
 }
 

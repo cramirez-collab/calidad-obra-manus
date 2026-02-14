@@ -5520,10 +5520,13 @@ export async function deletePlano(id: number) {
 // PINES SOBRE PLANOS
 // ==========================================
 
+// MERGED: plano_pines + items.pinPlanoId (deduplicado por itemId)
 export async function getPinesByPlano(planoId: number) {
   const db = await getDb();
   if (!db) return [];
-  const result = await db
+
+  // Source 1: plano_pines table (standalone pins, some linked to items)
+  const ppResult = await db
     .select({
       id: planoPines.id,
       planoId: planoPines.planoId,
@@ -5533,7 +5536,6 @@ export async function getPinesByPlano(planoId: number) {
       nota: planoPines.nota,
       creadoPorId: planoPines.creadoPorId,
       createdAt: planoPines.createdAt,
-      // Datos del ítem vinculado
       itemCodigo: items.codigo,
       itemEstado: items.status,
       itemDescripcion: items.descripcion,
@@ -5541,7 +5543,6 @@ export async function getPinesByPlano(planoId: number) {
       itemFotoDespues: items.fotoDespuesUrl,
       itemConsecutivo: items.numeroInterno,
       itemTitulo: items.titulo,
-      // Datos relacionados
       residenteNombre: users.name,
       empresaId: items.empresaId,
       unidadId: items.unidadId,
@@ -5555,35 +5556,107 @@ export async function getPinesByPlano(planoId: number) {
     .where(and(eq(planoPines.planoId, planoId), eq(planoPines.activo, true)))
     .orderBy(desc(planoPines.createdAt));
 
-  // Enriquecer con nombres de empresa, unidad, especialidad, defecto
-  const empresaIds = Array.from(new Set(result.filter(r => r.empresaId).map(r => r.empresaId!)));
-  const unidadIds = Array.from(new Set(result.filter(r => r.unidadId).map(r => r.unidadId!)));
-  const espIds = Array.from(new Set(result.filter(r => r.especialidadId).map(r => r.especialidadId!)));
-  const defectoIds = Array.from(new Set(result.filter(r => r.defectoId).map(r => r.defectoId!)));
+  // Source 2: items with pinPlanoId pointing to this plano (legacy/primary source)
+  const itemsResult = await db
+    .select({
+      id: items.id,
+      codigo: items.codigo,
+      status: items.status,
+      pinPosX: items.pinPosX,
+      pinPosY: items.pinPosY,
+      titulo: items.titulo,
+      descripcion: items.descripcion,
+      fotoAntesUrl: items.fotoAntesUrl,
+      fotoDespuesUrl: items.fotoDespuesUrl,
+      numeroInterno: items.numeroInterno,
+      empresaId: items.empresaId,
+      unidadId: items.unidadId,
+      especialidadId: items.especialidadId,
+      defectoId: items.defectoId,
+      asignadoAId: items.asignadoAId,
+      createdAt: items.createdAt,
+    })
+    .from(items)
+    .where(and(
+      eq(items.pinPlanoId, planoId),
+      isNotNull(items.pinPosX),
+      isNotNull(items.pinPosY)
+    ))
+    .orderBy(items.id);
+
+  // Merge: items.pinPlanoId is PRIMARY, plano_pines adds extras not already covered
+  const seenItemIds = new Set<number>();
+  const merged: typeof ppResult = [];
+
+  // First add all items with pinPlanoId (these have correct positions from item creation)
+  for (const item of itemsResult) {
+    seenItemIds.add(item.id);
+    let residenteNombre: string | null = null;
+    if (item.asignadoAId) {
+      const [u] = await db.select({ name: users.name }).from(users).where(eq(users.id, item.asignadoAId));
+      residenteNombre = u?.name || null;
+    }
+    merged.push({
+      id: item.id * -1, // Negative to distinguish from planoPines ids
+      planoId,
+      itemId: item.id,
+      posX: item.pinPosX!,
+      posY: item.pinPosY!,
+      nota: null,
+      creadoPorId: null,
+      createdAt: item.createdAt,
+      itemCodigo: item.codigo,
+      itemEstado: item.status,
+      itemDescripcion: item.descripcion,
+      itemFotoAntes: item.fotoAntesUrl,
+      itemFotoDespues: item.fotoDespuesUrl,
+      itemConsecutivo: item.numeroInterno,
+      itemTitulo: item.titulo,
+      residenteNombre,
+      empresaId: item.empresaId,
+      unidadId: item.unidadId,
+      especialidadId: item.especialidadId,
+      defectoId: item.defectoId,
+      itemCreatedAt: item.createdAt,
+    });
+  }
+
+  // Then add plano_pines that are NOT already covered by items.pinPlanoId
+  for (const pp of ppResult) {
+    if (pp.itemId && seenItemIds.has(pp.itemId)) continue;
+    if (pp.itemId) seenItemIds.add(pp.itemId);
+    merged.push(pp);
+  }
+
+  // Enrich with empresa, unidad, especialidad, defecto names
+  const allEmpresaIds = Array.from(new Set(merged.filter(r => r.empresaId).map(r => r.empresaId!)));
+  const allUnidadIds = Array.from(new Set(merged.filter(r => r.unidadId).map(r => r.unidadId!)));
+  const allEspIds = Array.from(new Set(merged.filter(r => r.especialidadId).map(r => r.especialidadId!)));
+  const allDefectoIds = Array.from(new Set(merged.filter(r => r.defectoId).map(r => r.defectoId!)));
 
   const empresasMap = new Map<number, string>();
   const unidadesMap = new Map<number, string>();
   const espMap = new Map<number, string>();
   const defectosMap = new Map<number, string>();
 
-  if (empresaIds.length > 0) {
-    const emps = await db.select({ id: empresas.id, nombre: empresas.nombre }).from(empresas).where(inArray(empresas.id, empresaIds));
+  if (allEmpresaIds.length > 0) {
+    const emps = await db.select({ id: empresas.id, nombre: empresas.nombre }).from(empresas).where(inArray(empresas.id, allEmpresaIds));
     emps.forEach(e => empresasMap.set(e.id, e.nombre));
   }
-  if (unidadIds.length > 0) {
-    const unis = await db.select({ id: unidades.id, nombre: unidades.nombre }).from(unidades).where(inArray(unidades.id, unidadIds));
+  if (allUnidadIds.length > 0) {
+    const unis = await db.select({ id: unidades.id, nombre: unidades.nombre }).from(unidades).where(inArray(unidades.id, allUnidadIds));
     unis.forEach(u => unidadesMap.set(u.id, u.nombre));
   }
-  if (espIds.length > 0) {
-    const esps = await db.select({ id: especialidades.id, nombre: especialidades.nombre }).from(especialidades).where(inArray(especialidades.id, espIds));
+  if (allEspIds.length > 0) {
+    const esps = await db.select({ id: especialidades.id, nombre: especialidades.nombre }).from(especialidades).where(inArray(especialidades.id, allEspIds));
     esps.forEach(e => espMap.set(e.id, e.nombre));
   }
-  if (defectoIds.length > 0) {
-    const defs = await db.select({ id: defectos.id, nombre: defectos.nombre }).from(defectos).where(inArray(defectos.id, defectoIds));
+  if (allDefectoIds.length > 0) {
+    const defs = await db.select({ id: defectos.id, nombre: defectos.nombre }).from(defectos).where(inArray(defectos.id, allDefectoIds));
     defs.forEach(d => defectosMap.set(d.id, d.nombre));
   }
 
-  return result.map(r => ({
+  return merged.map(r => ({
     ...r,
     empresaNombre: r.empresaId ? empresasMap.get(r.empresaId) || null : null,
     unidadNombre: r.unidadId ? unidadesMap.get(r.unidadId) || null : null,

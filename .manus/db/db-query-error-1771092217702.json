@@ -1,0 +1,8 @@
+{
+  "query": "SELECT p.id AS plano_id, p.nombre, p.nivel, p.proyecto_id, COUNT(pp.id) AS pin_count FROM planos p LEFT JOIN plano_pines pp ON pp.plano_id = p.id AND pp.activo = 1 WHERE p.activo = 1 GROUP BY p.id, p.nombre, p.nivel, p.proyecto_id ORDER BY p.proyecto_id, p.nivel;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT p.id AS plano_id, p.nombre, p.nivel, p.proyecto_id, COUNT(pp.id) AS pin_count FROM planos p LEFT JOIN plano_pines pp ON pp.plano_id = p.id AND pp.activo = 1 WHERE p.activo = 1 GROUP BY p.id, p.nombre, p.nivel, p.proyecto_id ORDER BY p.proyecto_id, p.nivel;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'pp.plano_id' in 'on clause'"
+  ]
+}
