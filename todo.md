@@ -3983,3 +3983,12 @@
 - [ ] Leyenda de colores en cada pagina de plano del PDF
 - [ ] Reemplazar carrusel de thumbnails por grid seleccionable de planos
 - [ ] Opcion para asignar pin a items sin ubicacion en plano
+
+## v4.25 - Plan de mejoras PDF + UI planos (7 cambios)
+- [x] 1. PDF: Duplicar tamaño de TODAS las fuentes (x2), mantener jerarquía tipográfica, ajustar layout si se cortan textos
+- [x] 2. PDF: Mismos pines por nivel que la app (consistencia total, source of truth = getPinesByPlano merge)
+- [x] 3. PDF: Items sin pin manejados correctamente (no inventar pin, estado claro)
+- [x] 4. UI Planos: Eliminar leyenda flotante/bounce (FAB "MANTÉN 2s"), dejar solo leyenda superior estable
+- [x] 5. UI Planos: Pinch zoom (2 dedos) en modo pin para precisión al colocar pin, con pan y límites
+- [x] 6. UI: Icono de plano en item list/card para navegar a la captura/vista del plano correspondiente
+- [x] 7. UI Bienvenida: CTA para asignar pin desde página de inicio cuando item no tiene pin, ir directo al plano del nivel

@@ -16,7 +16,7 @@ import {
 import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlanosPDF";
 import CapturaRapida from "@/components/CapturaRapida";
 import DashboardLayout from "@/components/DashboardLayout";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 
@@ -43,6 +43,7 @@ type CaptureMode = "pin" | "nuevo" | "qr";
 export default function Planos() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const searchString = useSearch();
   const isAdmin = user?.role === "superadmin" || user?.role === "admin";
   const { selectedProjectId } = useProject();
 
@@ -163,6 +164,8 @@ export default function Planos() {
 
   // State para filtro por nivel
   const [filterNivel, setFilterNivel] = useState<number | null>(null);
+  // URL param handling: planoId (open viewer on that plano) / assignPin (assign pin mode for item)
+  const urlParamsProcessed = useRef(false);
 
   // ─── Query pines del plano actual ───
   const planos = planosData || [];
@@ -329,9 +332,20 @@ export default function Planos() {
   useEffect(() => {
     if (!autoOpened && planos.length > 0 && !showViewer && !isLoading) {
       setAutoOpened(true);
+      // Check URL params before auto-opening
+      const params = new URLSearchParams(searchString);
+      const planoIdParam = params.get('planoId');
+      if (planoIdParam) {
+        const idx = planos.findIndex((p: any) => p.id === parseInt(planoIdParam));
+        if (idx >= 0) {
+          openViewer(idx);
+          urlParamsProcessed.current = true;
+          return;
+        }
+      }
       openViewer(0);
     }
-  }, [planos.length, isLoading, autoOpened, showViewer]);
+  }, [planos.length, isLoading, autoOpened, showViewer, searchString]);
 
   // Limpiar timers al desmontar
   useEffect(() => {
@@ -476,11 +490,29 @@ export default function Planos() {
     setIsDragging(false);
   }, [cancelLongPress]);
 
-  // Touch handlers
+  // Touch handlers (with pinch zoom support)
   const touchStartPosRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const lastPinchDistRef = useRef<number | null>(null);
+  const lastPinchZoomRef = useRef<number>(1);
+  const isPinchingRef = useRef(false);
+
+  const getTouchDistance = (t1: React.Touch, t2: React.Touch) => {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
+    if (e.touches.length === 2) {
+      // Start pinch zoom
+      cancelLongPress();
+      setIsDragging(false);
+      isPinchingRef.current = true;
+      lastPinchDistRef.current = getTouchDistance(e.touches[0], e.touches[1]);
+      lastPinchZoomRef.current = zoom;
+      return;
+    }
+    if (e.touches.length === 1 && !isPinchingRef.current) {
       const touch = e.touches[0];
       touchStartPosRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
       if (isPinMode) {
@@ -490,10 +522,21 @@ export default function Planos() {
         setDragStart({ x: touch.clientX - pan.x, y: touch.clientY - pan.y });
       }
     }
-  }, [isPinMode, startLongPress, pan]);
+  }, [isPinMode, startLongPress, pan, zoom, cancelLongPress]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return;
+    if (e.touches.length === 2) {
+      // Pinch zoom
+      cancelLongPress();
+      const dist = getTouchDistance(e.touches[0], e.touches[1]);
+      if (lastPinchDistRef.current !== null) {
+        const scale = dist / lastPinchDistRef.current;
+        const newZoom = Math.max(0.2, Math.min(5, lastPinchZoomRef.current * scale));
+        setZoom(newZoom);
+      }
+      return;
+    }
+    if (e.touches.length !== 1 || isPinchingRef.current) return;
     const touch = e.touches[0];
     if (isPinMode) {
       if (planoTouchStart.current) {
@@ -508,7 +551,12 @@ export default function Planos() {
     }
   }, [isPinMode, isDragging, dragStart, cancelLongPress]);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 0) {
+      // All fingers lifted
+      isPinchingRef.current = false;
+      lastPinchDistRef.current = null;
+    }
     cancelLongPress();
     setIsDragging(false);
     touchStartPosRef.current = null;
@@ -1067,10 +1115,10 @@ export default function Planos() {
           {/* Pin mode banner */}
           {isPinMode && (
             <div className="flex-shrink-0 bg-emerald-600 text-white text-center py-2 text-xs sm:text-sm font-bold flex items-center justify-center gap-2">
-              <MapPin className="w-4 h-4 animate-bounce" />
+              <MapPin className="w-4 h-4" />
               <span className="hidden sm:inline">MANTÉN PRESIONADO 2 SEGUNDOS PARA COLOCAR PIN</span>
               <span className="sm:hidden">MANTÉN 2s = NUEVO PIN</span>
-              <MapPin className="w-4 h-4 animate-bounce" />
+              <MapPin className="w-4 h-4" />
             </div>
           )}
 
@@ -1204,13 +1252,7 @@ export default function Planos() {
             </div>
           </div>
 
-          {/* FAB: Indicador modo pin */}
-          {isPinMode && !showPinModal && !showCapturaRapida && !showItemSelector && (
-            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-[120] flex items-center gap-2 px-6 py-3 rounded-full bg-emerald-600 text-white font-bold text-sm shadow-2xl shadow-emerald-500/50 animate-bounce pointer-events-none">
-              <MapPin className="w-5 h-5" />
-              <span>MANTÉN 2s = NUEVO PIN</span>
-            </div>
-          )}
+          {/* FAB removido - la instrucción ya está en el banner superior */}
 
           {/* Navigation arrows */}
           {planos.length > 1 && (

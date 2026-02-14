@@ -2046,6 +2046,8 @@ export async function getPendientesByUsuario(userId: number, role: string, proye
       asignadoAId: items.asignadoAId,
       aprobadoPorId: items.aprobadoPorId,
       cerradoPorId: items.cerradoPorId,
+      // Pin en plano
+      pinPlanoId: items.pinPlanoId,
     })
     .from(items)
     .leftJoin(users, eq(items.residenteId, users.id))

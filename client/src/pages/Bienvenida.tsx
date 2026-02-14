@@ -886,12 +886,22 @@ export default function Bienvenida() {
                         )}
                       </div>
 
-                      {/* Indicador de pin - si no tiene pin, mostrar botón para asignar */}
+                      {/* Icono plano: si tiene pin, navegar al visor del plano */}
+                      {item.pinPlanoId && !selectionMode && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setLocation(`/planos?planoId=${item.pinPlanoId}`); }}
+                          className="h-7 w-7 rounded-full border-2 border-emerald-400 bg-emerald-50 flex items-center justify-center shrink-0 flex-none hover:bg-emerald-100 transition-colors"
+                          title="Ver en plano"
+                        >
+                          <Layers className="h-3 w-3 text-emerald-600" />
+                        </button>
+                      )}
+                      {/* Indicador de pin - si no tiene pin, navegar a planos para asignar */}
                       {!item.pinPlanoId && !selectionMode && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); setLocation(`/items/${item.id}`); }}
+                          onClick={(e) => { e.stopPropagation(); setLocation(`/planos?assignPin=${item.id}`); }}
                           className="h-7 w-7 rounded-full border-2 border-dashed border-amber-400 flex items-center justify-center shrink-0 flex-none hover:bg-amber-50 transition-colors"
-                          title="Sin pin - Toca para asignar ubicación"
+                          title="Sin pin - Toca para asignar ubicación en plano"
                         >
                           <MapPin className="h-3 w-3 text-amber-400" />
                         </button>
