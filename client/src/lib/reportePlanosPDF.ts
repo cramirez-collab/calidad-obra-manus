@@ -1,9 +1,11 @@
 /**
  * Reporte PDF de Pines por Plano - ObjetivaQC
  * =============================================
+ * - Pagina resumen al inicio con estadisticas globales
  * - 2 planos por pagina (vertical / portrait)
  * - Pines tipo gota (teardrop) con iniciales del residente, color por estatus
  * - Estadisticas por estatus debajo de cada plano
+ * - TODOS los pines se mantienen (historicos + actuales), solo cambia color por estatus
  */
 import jsPDF from "jspdf";
 import { downloadPDFBestMethod } from "./pdfDownload";
@@ -28,6 +30,8 @@ const STATUS_COLORS: Record<string, { rgb: [number, number, number]; label: stri
   rechazado: { rgb: [239, 68, 68], label: "Rechazado" },
   sin_item: { rgb: [107, 114, 128], label: "Sin item" },
 };
+
+const STATUS_ORDER = ["pendiente_foto_despues", "pendiente_aprobacion", "aprobado", "rechazado", "sin_item"];
 
 function hexToRgb(hex: string): [number, number, number] {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -154,14 +158,8 @@ function drawTeardropPin(
   initials: string,
   pinSize: number = 3.5,
 ) {
-  // Teardrop: circle on top, pointed tip at bottom
   const circleR = pinSize * 0.47;
   const circleY = tipY - pinSize * 0.88;
-
-  // Draw teardrop shape using bezier curves
-  // Start from left side of circle, go down to tip, then back up right side
-  const startAngle = Math.PI * 0.2;
-  const endAngle = Math.PI * 0.8;
 
   // White border (slightly larger)
   doc.setFillColor(255, 255, 255);
@@ -174,6 +172,7 @@ function drawTeardropPin(
   doc.circle(cx, circleY, circleR, "F");
 
   // Draw the pointed tip using triangles
+  const startAngle = Math.PI * 0.2;
   const tipLeftX = cx - circleR * Math.sin(startAngle) * 0.6;
   const tipRightX = cx + circleR * Math.sin(startAngle) * 0.6;
   const tipTopY = circleY + circleR * 0.5;
@@ -247,6 +246,321 @@ function drawFooters(doc: jsPDF) {
       { align: "center" }
     );
     doc.text("www.objetiva.com", PAGE_W - MARGIN, PAGE_H - 7, { align: "right" });
+  }
+}
+
+// ─── Summary page ───
+function drawSummaryPage(doc: jsPDF, proyectoNombre: string, planos: PlanoReportData[]) {
+  drawHeader(doc, proyectoNombre);
+
+  let y = HEADER_H + 6;
+
+  // Title
+  doc.setTextColor(...C.AZUL);
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text(sinAcentos("RESUMEN GENERAL"), PAGE_W / 2, y, { align: "center" });
+  y += 8;
+
+  // Date/time
+  const now = new Date();
+  const fechaStr = now.toLocaleDateString("es-MX", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+  const horaStr = now.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+  doc.setTextColor(...C.GRIS);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.text(sinAcentos(`Generado: ${fechaStr}, ${horaStr}`), PAGE_W / 2, y, { align: "center" });
+  y += 10;
+
+  // ─── Global statistics ───
+  const globalCounts: Record<string, number> = {};
+  let totalPines = 0;
+  let nivelesConPines = 0;
+  let nivelesSinPines = 0;
+
+  for (const plano of planos) {
+    if (plano.pines.length > 0) nivelesConPines++;
+    else nivelesSinPines++;
+    for (const pin of plano.pines) {
+      const estado = pin.itemEstado || "sin_item";
+      globalCounts[estado] = (globalCounts[estado] || 0) + 1;
+      totalPines++;
+    }
+  }
+
+  // ─── Big number cards ───
+  const cardW = 34;
+  const cardH = 32;
+  const cardGap = 3;
+  const totalCardsW = STATUS_ORDER.length * cardW + (STATUS_ORDER.length - 1) * cardGap;
+  let cardX = (PAGE_W - totalCardsW) / 2;
+
+  for (const key of STATUS_ORDER) {
+    const sc = STATUS_COLORS[key];
+    const count = globalCounts[key] || 0;
+    const pct = totalPines > 0 ? ((count / totalPines) * 100).toFixed(1) : "0.0";
+
+    // Card background
+    doc.setFillColor(...sc.rgb);
+    doc.roundedRect(cardX, y, cardW, cardH, 2, 2, "F");
+
+    // Count number
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text(String(count), cardX + cardW / 2, y + 13, { align: "center" });
+
+    // Percentage
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${pct}%`, cardX + cardW / 2, y + 20, { align: "center" });
+
+    // Label
+    doc.setFontSize(6);
+    doc.text(sinAcentos(sc.label), cardX + cardW / 2, y + 27, { align: "center" });
+
+    cardX += cardW + cardGap;
+  }
+
+  y += cardH + 8;
+
+  // ─── Total bar ───
+  doc.setFillColor(...C.AZUL);
+  doc.roundedRect(MARGIN + 20, y, CONTENT_W - 40, 10, 2, 2, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text(`TOTAL: ${totalPines} pines en ${planos.length} niveles`, PAGE_W / 2, y + 6.5, { align: "center" });
+  y += 16;
+
+  // ─── Progress bar (stacked horizontal) ───
+  const barX = MARGIN + 10;
+  const barW = CONTENT_W - 20;
+  const barH = 8;
+
+  doc.setFillColor(230, 230, 230);
+  doc.roundedRect(barX, y, barW, barH, 2, 2, "F");
+
+  if (totalPines > 0) {
+    let offsetX = barX;
+    for (const key of STATUS_ORDER) {
+      const count = globalCounts[key] || 0;
+      if (count === 0) continue;
+      const segW = (count / totalPines) * barW;
+      const sc = STATUS_COLORS[key];
+      doc.setFillColor(...sc.rgb);
+      if (offsetX === barX) {
+        // First segment - round left corners
+        doc.roundedRect(offsetX, y, segW, barH, 2, 2, "F");
+      } else {
+        doc.rect(offsetX, y, segW, barH, "F");
+      }
+      offsetX += segW;
+    }
+  }
+  y += barH + 4;
+
+  // Legend for progress bar
+  const legendW = 28;
+  const legendGap = 2;
+  const totalLegendW = STATUS_ORDER.length * legendW + (STATUS_ORDER.length - 1) * legendGap;
+  let legendX = (PAGE_W - totalLegendW) / 2;
+  for (const key of STATUS_ORDER) {
+    const sc = STATUS_COLORS[key];
+    const count = globalCounts[key] || 0;
+    doc.setFillColor(...sc.rgb);
+    doc.circle(legendX + 2, y + 2, 1.5, "F");
+    doc.setTextColor(...C.NEGRO);
+    doc.setFontSize(5.5);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${sinAcentos(sc.label)} (${count})`, legendX + 5, y + 3);
+    legendX += legendW + legendGap;
+  }
+  y += 12;
+
+  // ─── Additional stats ───
+  doc.setFillColor(...C.BG_CARD);
+  doc.setDrawColor(...C.GRIS_CLARO);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(MARGIN + 10, y, CONTENT_W - 20, 28, 2, 2, "FD");
+
+  const statsInnerY = y + 4;
+  const col1X = MARGIN + 16;
+  const col2X = PAGE_W / 2 + 5;
+
+  doc.setTextColor(...C.AZUL);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.text(sinAcentos("Estadisticas Adicionales"), MARGIN + 15, y + 2, { baseline: "top" });
+
+  doc.setTextColor(...C.NEGRO);
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+
+  const aprobados = globalCounts["aprobado"] || 0;
+  const rechazados = globalCounts["rechazado"] || 0;
+  const pendFoto = globalCounts["pendiente_foto_despues"] || 0;
+  const pendAprob = globalCounts["pendiente_aprobacion"] || 0;
+  const sinItem = globalCounts["sin_item"] || 0;
+  const tasaAprobacion = totalPines > 0 ? ((aprobados / totalPines) * 100).toFixed(1) : "0.0";
+  const tasaRechazo = totalPines > 0 ? ((rechazados / totalPines) * 100).toFixed(1) : "0.0";
+  const pendientesTotal = pendFoto + pendAprob;
+  const tasaPendientes = totalPines > 0 ? ((pendientesTotal / totalPines) * 100).toFixed(1) : "0.0";
+  const resueltos = aprobados + rechazados;
+  const tasaResolucion = totalPines > 0 ? ((resueltos / totalPines) * 100).toFixed(1) : "0.0";
+
+  const sY = statsInnerY + 6;
+  doc.text(sinAcentos(`Tasa de aprobacion: ${tasaAprobacion}%`), col1X, sY);
+  doc.text(sinAcentos(`Tasa de rechazo: ${tasaRechazo}%`), col2X, sY);
+  doc.text(sinAcentos(`Pendientes totales: ${pendientesTotal} (${tasaPendientes}%)`), col1X, sY + 6);
+  doc.text(sinAcentos(`Tasa de resolucion: ${tasaResolucion}%`), col2X, sY + 6);
+  doc.text(sinAcentos(`Niveles con pines: ${nivelesConPines} de ${planos.length}`), col1X, sY + 12);
+  doc.text(sinAcentos(`Items sin vincular: ${sinItem}`), col2X, sY + 12);
+
+  y += 34;
+
+  // ─── Table: breakdown by level ───
+  doc.setTextColor(...C.AZUL);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text(sinAcentos("Desglose por Nivel"), PAGE_W / 2, y, { align: "center" });
+  y += 6;
+
+  // Table header
+  const tableX = MARGIN + 5;
+  const tableW = CONTENT_W - 10;
+  const colWidths = [35, 22, 22, 22, 22, 22, 22, 19]; // nivel, pend.foto, pend.aprob, aprobado, rechazado, sin_item, total, %aprob
+  const rowH = 6.5;
+
+  doc.setFillColor(...C.AZUL);
+  doc.rect(tableX, y, tableW, rowH + 1, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(5.5);
+  doc.setFont("helvetica", "bold");
+
+  const headers = ["Nivel", "Pend. Foto", "Pend. Aprob.", "Aprobado", "Rechazado", "Sin Item", "Total", "% Aprob."];
+  let hx = tableX + 2;
+  for (let i = 0; i < headers.length; i++) {
+    doc.text(sinAcentos(headers[i]), hx + (i === 0 ? 0 : colWidths[i] / 2 - 2), y + 4.5, { align: i === 0 ? "left" : "center" });
+    hx += colWidths[i];
+  }
+  y += rowH + 1;
+
+  // Table rows
+  const sortedPlanos = [...planos].sort((a, b) => (a.nivel ?? 0) - (b.nivel ?? 0));
+  for (let ri = 0; ri < sortedPlanos.length; ri++) {
+    const plano = sortedPlanos[ri];
+
+    // Check if we need a new page
+    if (y + rowH > PAGE_H - FOOTER_H - 5) {
+      doc.addPage();
+      drawHeader(doc, proyectoNombre);
+      y = HEADER_H + 6;
+    }
+
+    const counts: Record<string, number> = {};
+    let planoTotal = 0;
+    for (const pin of plano.pines) {
+      const estado = pin.itemEstado || "sin_item";
+      counts[estado] = (counts[estado] || 0) + 1;
+      planoTotal++;
+    }
+
+    const rowBg = ri % 2 === 0 ? C.BG_LIGHT : C.BLANCO;
+    doc.setFillColor(...rowBg);
+    doc.rect(tableX, y, tableW, rowH, "F");
+
+    // Light grid lines
+    doc.setDrawColor(...C.GRIS_CLARO);
+    doc.setLineWidth(0.15);
+    doc.line(tableX, y + rowH, tableX + tableW, y + rowH);
+
+    doc.setTextColor(...C.NEGRO);
+    doc.setFontSize(5.5);
+    doc.setFont("helvetica", "normal");
+
+    const planoAprobados = counts["aprobado"] || 0;
+    const pctAprob = planoTotal > 0 ? ((planoAprobados / planoTotal) * 100).toFixed(0) : "-";
+
+    const vals = [
+      sinAcentos(plano.nombre),
+      String(counts["pendiente_foto_despues"] || 0),
+      String(counts["pendiente_aprobacion"] || 0),
+      String(counts["aprobado"] || 0),
+      String(counts["rechazado"] || 0),
+      String(counts["sin_item"] || 0),
+      String(planoTotal),
+      planoTotal > 0 ? `${pctAprob}%` : "-",
+    ];
+
+    let vx = tableX + 2;
+    for (let i = 0; i < vals.length; i++) {
+      // Color the count cells
+      if (i >= 1 && i <= 5) {
+        const statusKey = STATUS_ORDER[i - 1];
+        const count = parseInt(vals[i]);
+        if (count > 0) {
+          doc.setTextColor(...STATUS_COLORS[statusKey].rgb);
+          doc.setFont("helvetica", "bold");
+        } else {
+          doc.setTextColor(180, 180, 180);
+          doc.setFont("helvetica", "normal");
+        }
+      } else if (i === 6) {
+        // Total column
+        doc.setTextColor(...C.AZUL);
+        doc.setFont("helvetica", "bold");
+      } else if (i === 7) {
+        // % approval
+        const pctVal = parseInt(pctAprob);
+        if (!isNaN(pctVal)) {
+          if (pctVal >= 70) doc.setTextColor(34, 197, 94);
+          else if (pctVal >= 40) doc.setTextColor(245, 158, 11);
+          else doc.setTextColor(239, 68, 68);
+          doc.setFont("helvetica", "bold");
+        } else {
+          doc.setTextColor(180, 180, 180);
+          doc.setFont("helvetica", "normal");
+        }
+      } else {
+        doc.setTextColor(...C.NEGRO);
+        doc.setFont("helvetica", planoTotal > 0 ? "bold" : "normal");
+      }
+      doc.text(vals[i], vx + (i === 0 ? 0 : colWidths[i] / 2 - 2), y + 4.5, { align: i === 0 ? "left" : "center" });
+      vx += colWidths[i];
+    }
+    y += rowH;
+  }
+
+  // Table totals row
+  if (y + rowH + 2 > PAGE_H - FOOTER_H - 5) {
+    doc.addPage();
+    drawHeader(doc, proyectoNombre);
+    y = HEADER_H + 6;
+  }
+
+  doc.setFillColor(...C.AZUL);
+  doc.rect(tableX, y, tableW, rowH + 1, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(5.5);
+  doc.setFont("helvetica", "bold");
+
+  const totalAprobPct = totalPines > 0 ? ((aprobados / totalPines) * 100).toFixed(0) : "-";
+  const totals = [
+    "TOTAL",
+    String(pendFoto),
+    String(pendAprob),
+    String(aprobados),
+    String(rechazados),
+    String(sinItem),
+    String(totalPines),
+    totalPines > 0 ? `${totalAprobPct}%` : "-",
+  ];
+
+  let tx = tableX + 2;
+  for (let i = 0; i < totals.length; i++) {
+    doc.text(totals[i], tx + (i === 0 ? 0 : colWidths[i] / 2 - 2), y + 4.5, { align: i === 0 ? "left" : "center" });
+    tx += colWidths[i];
   }
 }
 
@@ -391,18 +705,17 @@ export async function generarReportePlanosPDF(config: PlanoReportConfig): Promis
 
   progress("Generando PDF...");
 
-  // Layout: 2 planos per page
-  let pageStarted = false;
+  // ─── Page 1: Summary ───
+  drawSummaryPage(doc, proyectoNombre, sorted);
+
+  // ─── Plano pages: 2 planos per page ───
   const startY = HEADER_H + 4;
 
   for (let i = 0; i < sorted.length; i++) {
     const slotIndex = i % 2;
 
     if (slotIndex === 0) {
-      if (pageStarted) {
-        doc.addPage();
-      }
-      pageStarted = true;
+      doc.addPage();
       drawHeader(doc, proyectoNombre);
     }
 

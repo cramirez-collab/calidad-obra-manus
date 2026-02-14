@@ -3939,3 +3939,11 @@
 - [x] FIX: Eliminar merge de dual sources, usar una sola fuente de verdad (plano_pines table)
 - [x] FIX: Agregar campos empresaNombre, unidadNombre, especialidadNombre al reporte (disponibles desde getPinesByPlano)
 - [x] TEST: Vitest tests para consistencia de datos, mapeo de campos, conteo por estatus, iniciales y colores
+## v4.19 - Página resumen al inicio del PDF + mantener todos los pines
+- [x] FEATURE: Página resumen al inicio del PDF con estadísticas completas
+- [x] FEATURE: Conteos por estatus (pendiente foto, pendiente aprobación, aprobado, rechazado, sin ítem)
+- [x] FEATURE: Porcentajes por estatus
+- [x] FEATURE: Fecha de creación del PDF
+- [x] FEATURE: Resumen por nivel con conteos
+- [x] RULE: NO eliminar ningún pin, NO filtrar niveles - todos los pines históricos y actuales se mantienen
+- [x] RULE: Pines solo cambian de color según estatus, forma gota con iniciales del asignado

@@ -210,4 +210,81 @@ describe("reportePines - Consistencia de datos con vista de planos", () => {
       expect(y).toBeLessThanOrEqual(100);
     });
   });
+
+  it("debe calcular estadísticas globales correctamente para página resumen", () => {
+    const planos = [
+      {
+        nombre: "N1", nivel: 1, pines: [
+          { itemEstado: "aprobado" },
+          { itemEstado: "aprobado" },
+          { itemEstado: "rechazado" },
+        ],
+      },
+      {
+        nombre: "N2", nivel: 2, pines: [
+          { itemEstado: "pendiente_foto_despues" },
+          { itemEstado: "pendiente_aprobacion" },
+          { itemEstado: null },
+        ],
+      },
+      {
+        nombre: "N3", nivel: 3, pines: [],
+      },
+    ];
+
+    const globalCounts: Record<string, number> = {};
+    let totalPines = 0;
+    let nivelesConPines = 0;
+    let nivelesSinPines = 0;
+
+    for (const plano of planos) {
+      if (plano.pines.length > 0) nivelesConPines++;
+      else nivelesSinPines++;
+      for (const pin of plano.pines) {
+        const estado = pin.itemEstado || "sin_item";
+        globalCounts[estado] = (globalCounts[estado] || 0) + 1;
+        totalPines++;
+      }
+    }
+
+    expect(totalPines).toBe(6);
+    expect(nivelesConPines).toBe(2);
+    expect(nivelesSinPines).toBe(1);
+    expect(globalCounts["aprobado"]).toBe(2);
+    expect(globalCounts["rechazado"]).toBe(1);
+    expect(globalCounts["pendiente_foto_despues"]).toBe(1);
+    expect(globalCounts["pendiente_aprobacion"]).toBe(1);
+    expect(globalCounts["sin_item"]).toBe(1);
+
+    // Porcentajes
+    const tasaAprobacion = ((globalCounts["aprobado"] / totalPines) * 100).toFixed(1);
+    expect(tasaAprobacion).toBe("33.3");
+
+    const tasaRechazo = ((globalCounts["rechazado"] / totalPines) * 100).toFixed(1);
+    expect(tasaRechazo).toBe("16.7");
+
+    const pendientesTotal = (globalCounts["pendiente_foto_despues"] || 0) + (globalCounts["pendiente_aprobacion"] || 0);
+    expect(pendientesTotal).toBe(2);
+
+    const tasaResolucion = (((globalCounts["aprobado"] + globalCounts["rechazado"]) / totalPines) * 100).toFixed(1);
+    expect(tasaResolucion).toBe("50.0");
+  });
+
+  it("debe incluir TODOS los niveles en el resumen, incluso sin pines", () => {
+    const planos = [
+      { nombre: "S1", nivel: -1, pines: [] },
+      { nombre: "N1", nivel: 1, pines: [{ itemEstado: "aprobado" }] },
+      { nombre: "N2", nivel: 2, pines: [] },
+      { nombre: "N3", nivel: 3, pines: [{ itemEstado: "rechazado" }, { itemEstado: "aprobado" }] },
+    ];
+
+    // ALL levels must appear in the summary table - no filtering
+    expect(planos.length).toBe(4);
+    const nivelesConPines = planos.filter(p => p.pines.length > 0).length;
+    const nivelesSinPines = planos.filter(p => p.pines.length === 0).length;
+    expect(nivelesConPines).toBe(2);
+    expect(nivelesSinPines).toBe(2);
+    // Total count includes ALL levels
+    expect(nivelesConPines + nivelesSinPines).toBe(planos.length);
+  });
 });
