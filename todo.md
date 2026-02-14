@@ -4019,3 +4019,8 @@
 ## v4.30 - Flujo directo post-longpress + items existentes
 - [x] 1. Quitar modal intermedio al completar 2s longpress, ir directo a CapturaRapida
 - [x] 2. Mostrar lista de items existentes para vincular al pin (tab "Vincular Existente" en CapturaRapida)
+
+## v4.31 - PDF planos: imágenes sin deformación + pines visibles
+- [x] 1. Imágenes de planos en PDF: preservar aspect ratio (object-fit contain), sin deformación
+- [x] 2. Pines dibujados ENCIMA de la imagen del plano con colores reales (azul, verde, naranja, rojo, gris)
+- [x] 3. Todos los pines de items deben aparecer, posicionados relativo a la imagen real (no al contenedor)

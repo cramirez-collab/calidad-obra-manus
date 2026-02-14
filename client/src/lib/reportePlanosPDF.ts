@@ -92,8 +92,39 @@ function sinAcentos(str: string): string {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-async function loadImageForPDF(url: string): Promise<string | null> {
+interface LoadedImage {
+  dataUrl: string;
+  naturalWidth: number;
+  naturalHeight: number;
+}
+
+async function loadImageForPDF(url: string): Promise<LoadedImage | null> {
   if (!url) return null;
+  
+  const loadViaImg = (src: string): Promise<LoadedImage | null> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      const tid = setTimeout(() => { resolve(null); }, 15000);
+      img.onload = () => {
+        clearTimeout(tid);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve(null); return; }
+        ctx.drawImage(img, 0, 0);
+        resolve({
+          dataUrl: canvas.toDataURL("image/jpeg", 0.85),
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+        });
+      };
+      img.onerror = () => { clearTimeout(tid); resolve(null); };
+      img.src = src;
+    });
+  };
+
   try {
     const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(url)}`;
     const controller = new AbortController();
@@ -103,31 +134,13 @@ async function loadImageForPDF(url: string): Promise<string | null> {
     if (!response.ok) throw new Error(`status ${response.status}`);
     const blob = await response.blob();
     if (blob.size === 0) throw new Error("empty");
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
+    const blobUrl = URL.createObjectURL(blob);
+    const result = await loadViaImg(blobUrl);
+    URL.revokeObjectURL(blobUrl);
+    return result;
   } catch {
     try {
-      return await new Promise<string | null>((resolve) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        const tid = setTimeout(() => { resolve(null); }, 15000);
-        img.onload = () => {
-          clearTimeout(tid);
-          const canvas = document.createElement("canvas");
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) { resolve(null); return; }
-          ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL("image/jpeg", 0.85));
-        };
-        img.onerror = () => { clearTimeout(tid); resolve(null); };
-        img.src = url;
-      });
+      return await loadViaImg(url);
     } catch {
       return null;
     }
@@ -579,7 +592,7 @@ function drawSummaryPage(doc: jsPDF, proyectoNombre: string, planos: PlanoReport
 function drawPlanoSlot(
   doc: jsPDF,
   plano: PlanoReportData,
-  planoImg: string | null,
+  planoImg: LoadedImage | null,
   slotX: number,
   slotY: number,
   slotW: number,
@@ -614,18 +627,42 @@ function drawPlanoSlot(
   doc.roundedRect(slotX, imgY, slotW, imgH, 1, 1, "FD");
 
   if (planoImg) {
-    const fmt = getImageFormat(planoImg);
+    const fmt = getImageFormat(planoImg.dataUrl);
     const padding = 1;
-    doc.addImage(planoImg, fmt, slotX + padding, imgY + padding, slotW - padding * 2, imgH - padding * 2);
+    const containerW = slotW - padding * 2;
+    const containerH = imgH - padding * 2;
 
-    // ─── Draw teardrop pins on top of image ───
+    // Preserve aspect ratio: fit image inside container without deformation
+    const imgAspect = planoImg.naturalWidth / planoImg.naturalHeight;
+    const containerAspect = containerW / containerH;
+
+    let drawW: number, drawH: number, drawX: number, drawY: number;
+
+    if (imgAspect > containerAspect) {
+      // Image is wider than container: fit by width
+      drawW = containerW;
+      drawH = containerW / imgAspect;
+      drawX = slotX + padding;
+      drawY = imgY + padding + (containerH - drawH) / 2;
+    } else {
+      // Image is taller than container: fit by height
+      drawH = containerH;
+      drawW = containerH * imgAspect;
+      drawX = slotX + padding + (containerW - drawW) / 2;
+      drawY = imgY + padding;
+    }
+
+    doc.addImage(planoImg.dataUrl, fmt, drawX, drawY, drawW, drawH);
+
+    // ─── Draw teardrop pins on top of image (positioned relative to actual image area) ───
     for (const pin of plano.pines) {
       const px = parseFloat(pin.posX);
       const py = parseFloat(pin.posY);
       if (isNaN(px) || isNaN(py)) continue;
 
-      const pinX = slotX + padding + (px / 100) * (slotW - padding * 2);
-      const pinY = imgY + padding + (py / 100) * (imgH - padding * 2);
+      // Pin position is relative to the actual drawn image, not the container
+      const pinX = drawX + (px / 100) * drawW;
+      const pinY = drawY + (py / 100) * drawH;
 
       const color = getStatusColorRgb(pin.itemEstado);
       const label = getInitials(pin.residenteNombre);
@@ -633,7 +670,6 @@ function drawPlanoSlot(
     }
   } else {
     doc.setTextColor(...C.GRIS);
-    // 9→18
     doc.setFontSize(18);
     doc.text("Sin imagen", slotX + slotW / 2, imgY + imgH / 2, { align: "center" });
   }
@@ -724,7 +760,7 @@ export async function generarReportePlanosPDF(config: PlanoReportConfig): Promis
 
   // Pre-load all images
   progress("Cargando imagenes...");
-  const imageCache: Map<number, string | null> = new Map();
+  const imageCache: Map<number, LoadedImage | null> = new Map();
   for (let i = 0; i < sorted.length; i++) {
     const p = sorted[i];
     progress(`Cargando plano ${i + 1}/${sorted.length}...`);
