@@ -3927,3 +3927,7 @@
 - [x] Ficha PDF: campo Fecha Terminación Unidad agregado
 - [x] Ficha PDF: paso 2b (Foto después) en trazabilidad
 - [x] Ficha PDF: todos los campos siempre presentes (sin nulls/blanks)
+## v4.16 - Fix PDF pines: mostrar TODOS los pines de cada nivel (matching app)
+- [x] BUG: PDF usaba plano_pines (8 registros) en vez de items.pinPlanoId (27+ registros)
+- [x] Corregir endpoint reportePines para usar items.pinPlanoId/pinPosX/pinPosY
+- [x] PDF muestra exactamente los mismos pines que la app

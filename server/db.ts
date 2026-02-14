@@ -112,6 +112,7 @@ const itemFieldsWithoutBase64 = {
   updatedAt: items.updatedAt,
 };
 
+export async function getDbInstance() { return getDb(); }
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
