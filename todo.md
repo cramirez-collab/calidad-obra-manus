@@ -4024,3 +4024,10 @@
 - [x] 1. Imágenes de planos en PDF: preservar aspect ratio (object-fit contain), sin deformación
 - [x] 2. Pines dibujados ENCIMA de la imagen del plano con colores reales (azul, verde, naranja, rojo, gris)
 - [x] 3. Todos los pines de items deben aparecer, posicionados relativo a la imagen real (no al contenedor)
+
+## v4.32 - Rediseño PDF planos: premium visual
+- [x] 1. Rediseño completo PDF: 1 plano por hoja, imagen sin distorsión (aspect ratio)
+- [x] 2. Tabla detallada de pines debajo de cada plano (#, código, título, empresa, residente, estado)
+- [x] 3. Diseño visual premium: gradientes, sombras, cards, barra horizontal, colores Objetiva
+- [x] 4. Pines dibujados encima de la imagen con colores reales y posición relativa correcta
+- [x] 5. Página portada con KPI cards, barra proporcional, indicadores clave, tabla desglose por nivel

@@ -1,54 +1,47 @@
 /**
  * Reporte PDF de Pines por Plano - ObjetivaQC
  * =============================================
- * v4.25: TODAS las fuentes x2 (doble tamaño), layout ajustado
- * - Pagina resumen al inicio con estadisticas globales
- * - 1 plano por pagina (para acomodar fuentes x2 sin cortar)
- * - Pines tipo gota (teardrop) con iniciales del residente, color por estatus
- * - Estadisticas por estatus debajo de cada plano
- * - TODOS los pines se mantienen (historicos + actuales), solo cambia color por estatus
+ * v4.32: Rediseño premium visual
+ * - Página portada con resumen ejecutivo y gráfico de barras
+ * - 1 plano por página: imagen sin distorsión + pines encima + tabla detallada
+ * - Diseño corporativo Objetiva con gradientes, bordes suaves, tipografía elegante
+ * - Tabla de desglose por nivel en resumen
  */
 import jsPDF from "jspdf";
 import { openPDFPreview } from "./pdfDownload";
 
-// ─── Colores corporativos ───
+// ─── Paleta Objetiva ───
 const C = {
-  AZUL: [0, 44, 99] as [number, number, number],
-  VERDE: [2, 179, 129] as [number, number, number],
-  GRIS: [128, 128, 128] as [number, number, number],
-  GRIS_CLARO: [220, 220, 220] as [number, number, number],
-  NEGRO: [30, 30, 30] as [number, number, number],
-  BLANCO: [255, 255, 255] as [number, number, number],
-  BG_LIGHT: [248, 250, 252] as [number, number, number],
-  BG_CARD: [241, 245, 249] as [number, number, number],
+  AZUL:       [0, 44, 99]    as [number, number, number],
+  AZUL_DARK:  [0, 30, 70]    as [number, number, number],
+  VERDE:      [2, 179, 129]  as [number, number, number],
+  VERDE_LIGHT:[220, 252, 241] as [number, number, number],
+  GRIS:       [107, 114, 128] as [number, number, number],
+  GRIS_CLARO: [226, 232, 240] as [number, number, number],
+  GRIS_MUY_CLARO: [248, 250, 252] as [number, number, number],
+  NEGRO:      [15, 23, 42]   as [number, number, number],
+  BLANCO:     [255, 255, 255] as [number, number, number],
+  BG_CARD:    [241, 245, 249] as [number, number, number],
 };
 
-// Colores por estatus (matching ZoomablePlano)
-const STATUS_COLORS: Record<string, { rgb: [number, number, number]; label: string }> = {
-  pendiente_foto_despues: { rgb: [245, 158, 11], label: "Pend. Foto" },
-  pendiente_aprobacion: { rgb: [59, 130, 246], label: "Pend. Aprob." },
-  aprobado: { rgb: [16, 185, 129], label: "Aprobado" },
-  rechazado: { rgb: [239, 68, 68], label: "Rechazado" },
-  sin_item: { rgb: [107, 114, 128], label: "Sin item" },
+const STATUS_COLORS: Record<string, { rgb: [number, number, number]; label: string; labelShort: string }> = {
+  pendiente_foto_despues: { rgb: [245, 158, 11],  label: "Pend. Foto",   labelShort: "P.Foto" },
+  pendiente_aprobacion:   { rgb: [59, 130, 246],   label: "Pend. Aprob.", labelShort: "P.Aprob" },
+  aprobado:               { rgb: [16, 185, 129],   label: "Aprobado",     labelShort: "Aprob." },
+  rechazado:              { rgb: [239, 68, 68],    label: "Rechazado",    labelShort: "Rechaz." },
+  sin_item:               { rgb: [107, 114, 128],  label: "Sin Item",     labelShort: "S/Item" },
 };
 
 const STATUS_ORDER = ["pendiente_foto_despues", "pendiente_aprobacion", "aprobado", "rechazado", "sin_item"];
 
-function hexToRgb(hex: string): [number, number, number] {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return [r, g, b];
+function getStatusColorRgb(status?: string | null): [number, number, number] {
+  const s = STATUS_COLORS[status || "sin_item"];
+  return s ? s.rgb : [107, 114, 128];
 }
 
-function getStatusColorRgb(status?: string | null): [number, number, number] {
-  switch (status) {
-    case "pendiente_foto_despues": return hexToRgb("#f59e0b");
-    case "pendiente_aprobacion": return hexToRgb("#3b82f6");
-    case "aprobado": return hexToRgb("#10b981");
-    case "rechazado": return hexToRgb("#ef4444");
-    default: return hexToRgb("#6b7280");
-  }
+function getStatusLabel(status?: string | null): string {
+  const s = STATUS_COLORS[status || "sin_item"];
+  return s ? s.label : "Sin Item";
 }
 
 function getInitials(name: string | null | undefined): string {
@@ -56,6 +49,10 @@ function getInitials(name: string | null | undefined): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   return parts[0].substring(0, 2).toUpperCase();
+}
+
+function sinAcentos(str: string): string {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 // ─── Interfaces ───
@@ -87,11 +84,7 @@ export interface PlanoReportConfig {
   onProgress?: (msg: string) => void;
 }
 
-// ─── Utilidades ───
-function sinAcentos(str: string): string {
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
+// ─── Image loader ───
 interface LoadedImage {
   dataUrl: string;
   naturalWidth: number;
@@ -100,7 +93,7 @@ interface LoadedImage {
 
 async function loadImageForPDF(url: string): Promise<LoadedImage | null> {
   if (!url) return null;
-  
+
   const loadViaImg = (src: string): Promise<LoadedImage | null> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -139,162 +132,169 @@ async function loadImageForPDF(url: string): Promise<LoadedImage | null> {
     URL.revokeObjectURL(blobUrl);
     return result;
   } catch {
-    try {
-      return await loadViaImg(url);
-    } catch {
-      return null;
-    }
+    try { return await loadViaImg(url); } catch { return null; }
   }
 }
 
 function getImageFormat(dataUrl: string): "JPEG" | "PNG" {
-  if (dataUrl.includes("image/png")) return "PNG";
-  return "JPEG";
+  return dataUrl.includes("image/png") ? "PNG" : "JPEG";
 }
 
-// ─── Layout constants (adjusted for x2 fonts) ───
-const PAGE_W = 210;
-const PAGE_H = 297;
-const MARGIN = 12;
-const HEADER_H = 34;  // Increased for larger header text
-const FOOTER_H = 14;
-const CONTENT_W = PAGE_W - MARGIN * 2;
-// 1 plano per page to accommodate x2 fonts
-const PLANO_IMG_H = 140; // Larger image area since 1 per page
-const STATS_H = 40;      // Taller stats area for x2 fonts
-const GAP = 6;
+// ─── Layout ───
+const PW = 210;   // page width
+const PH = 297;   // page height
+const M = 10;      // margin
+const CW = PW - M * 2; // content width
+const HEADER_H = 28;
+const FOOTER_H = 12;
 
-// ─── Draw teardrop pin on jsPDF ───
-function drawTeardropPin(
-  doc: jsPDF,
-  cx: number,
-  tipY: number,
-  color: [number, number, number],
-  initials: string,
-  pinSize: number = 4.0,
+// ─── Drawing primitives ───
+
+/** Gradient-like header bar: dark blue → blue with green accent line */
+function drawHeader(doc: jsPDF, proyectoNombre: string) {
+  // Dark blue bar
+  doc.setFillColor(...C.AZUL_DARK);
+  doc.rect(0, 0, PW, HEADER_H, "F");
+  // Lighter blue overlay on right half for depth
+  doc.setFillColor(...C.AZUL);
+  doc.rect(PW * 0.4, 0, PW * 0.6, HEADER_H, "F");
+  // Green accent line
+  doc.setFillColor(...C.VERDE);
+  doc.rect(0, HEADER_H, PW, 1.5, "F");
+
+  // Logo text
+  doc.setTextColor(...C.BLANCO);
+  doc.setFontSize(22);
+  doc.setFont("helvetica", "bold");
+  doc.text("OBJETIVA", M + 1, 13);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(180, 210, 240);
+  doc.text("Quality Control", M + 1, 19);
+
+  // Right: report title + project
+  doc.setTextColor(...C.BLANCO);
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text(sinAcentos("Reporte de Planos"), PW - M - 1, 12, { align: "right" });
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(sinAcentos(proyectoNombre), PW - M - 1, 19, { align: "right" });
+  doc.setFontSize(8);
+  doc.setTextColor(180, 210, 240);
+  const fecha = new Date().toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric" });
+  doc.text(sinAcentos(fecha), PW - M - 1, 25, { align: "right" });
+}
+
+function drawFooter(doc: jsPDF, pageNum: number, totalPages: number) {
+  const y = PH - FOOTER_H;
+  doc.setDrawColor(...C.VERDE);
+  doc.setLineWidth(0.4);
+  doc.line(M, y, PW - M, y);
+  doc.setFontSize(8);
+  doc.setTextColor(...C.GRIS);
+  doc.text(`OQC - Control de Calidad  |  Pagina ${pageNum} de ${totalPages}`, PW / 2, y + 7, { align: "center" });
+  doc.setFontSize(7);
+  doc.text("objetiva.com", PW - M, y + 7, { align: "right" });
+}
+
+/** Teardrop pin marker */
+function drawPin(
+  doc: jsPDF, cx: number, tipY: number,
+  color: [number, number, number], initials: string, size = 3.5,
 ) {
-  const circleR = pinSize * 0.47;
-  const circleY = tipY - pinSize * 0.88;
+  const r = size * 0.47;
+  const cy = tipY - size * 0.88;
 
+  // White outline
   doc.setFillColor(255, 255, 255);
   doc.setDrawColor(255, 255, 255);
-  doc.setLineWidth(0.6);
-  doc.circle(cx, circleY, circleR + 0.5, "FD");
+  doc.setLineWidth(0.5);
+  doc.circle(cx, cy, r + 0.4, "FD");
 
+  // Colored circle
   doc.setFillColor(...color);
-  doc.circle(cx, circleY, circleR, "F");
+  doc.circle(cx, cy, r, "F");
 
-  const startAngle = Math.PI * 0.2;
-  const tipLeftX = cx - circleR * Math.sin(startAngle) * 0.6;
-  const tipRightX = cx + circleR * Math.sin(startAngle) * 0.6;
-  const tipTopY = circleY + circleR * 0.5;
-
+  // Tail
+  const angle = Math.PI * 0.2;
+  const lx = cx - r * Math.sin(angle) * 0.6;
+  const rx = cx + r * Math.sin(angle) * 0.6;
+  const topY = cy + r * 0.5;
   doc.setFillColor(255, 255, 255);
-  doc.triangle(tipLeftX - 0.3, tipTopY, tipRightX + 0.3, tipTopY, cx, tipY + 0.3, "F");
-
+  doc.triangle(lx - 0.2, topY, rx + 0.2, topY, cx, tipY + 0.2, "F");
   doc.setFillColor(...color);
-  doc.triangle(tipLeftX, tipTopY, tipRightX, tipTopY, cx, tipY, "F");
-
+  doc.triangle(lx, topY, rx, topY, cx, tipY, "F");
+  // Fill gap
   doc.setFillColor(...color);
-  doc.rect(cx - circleR * 0.55, circleY + circleR * 0.3, circleR * 1.1, circleR * 0.4, "F");
+  doc.rect(cx - r * 0.55, cy + r * 0.3, r * 1.1, r * 0.4, "F");
 
-  const innerR = circleR * 0.72;
+  // Inner lighter circle
   doc.setFillColor(
-    Math.min(255, color[0] + 30),
-    Math.min(255, color[1] + 30),
-    Math.min(255, color[2] + 30),
+    Math.min(255, color[0] + 35),
+    Math.min(255, color[1] + 35),
+    Math.min(255, color[2] + 35),
   );
-  doc.circle(cx, circleY, innerR, "F");
+  doc.circle(cx, cy, r * 0.7, "F");
 
+  // Initials
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(pinSize * 1.8);
+  doc.setFontSize(size * 1.6);
   doc.setFont("helvetica", "bold");
-  doc.text(initials, cx, circleY + 0.5, { align: "center", baseline: "middle" });
+  doc.text(initials, cx, cy + 0.4, { align: "center", baseline: "middle" });
 }
 
-// ─── Draw functions ───
-function drawHeader(doc: jsPDF, proyectoNombre: string) {
-  doc.setFillColor(...C.AZUL);
-  doc.rect(0, 0, PAGE_W, HEADER_H - 3, "F");
-  doc.setFillColor(...C.VERDE);
-  doc.rect(0, HEADER_H - 3, PAGE_W, 3, "F");
-
-  doc.setTextColor(...C.BLANCO);
-  // OBJETIVA: 16→32
-  doc.setFontSize(32);
-  doc.setFont("helvetica", "bold");
-  doc.text("OBJETIVA", MARGIN + 2, 16);
-  // Quality Control: 8→16
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "normal");
-  doc.text("Quality Control", MARGIN + 2, 25);
-
-  // Right side: title 10→20
-  doc.setFontSize(20);
-  doc.setFont("helvetica", "bold");
-  doc.text(sinAcentos("Reporte de Pines"), PAGE_W - MARGIN - 2, 14, { align: "right" });
-  // Project name: 8→16
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(16);
-  doc.text(sinAcentos(proyectoNombre), PAGE_W - MARGIN - 2, 22, { align: "right" });
-  // Date: 8→14 (slightly less than x2 to fit)
-  doc.setFontSize(14);
-  const fecha = new Date().toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric" });
-  doc.text(sinAcentos(fecha), PAGE_W - MARGIN - 2, 29, { align: "right" });
+/** Rounded rect with subtle shadow effect */
+function drawCardBg(doc: jsPDF, x: number, y: number, w: number, h: number, radius = 2) {
+  // Shadow
+  doc.setFillColor(200, 200, 210);
+  doc.roundedRect(x + 0.4, y + 0.4, w, h, radius, radius, "F");
+  // Card
+  doc.setFillColor(...C.BLANCO);
+  doc.setDrawColor(...C.GRIS_CLARO);
+  doc.setLineWidth(0.2);
+  doc.roundedRect(x, y, w, h, radius, radius, "FD");
 }
 
-function drawFooters(doc: jsPDF) {
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setDrawColor(...C.VERDE);
-    doc.setLineWidth(0.5);
-    doc.line(MARGIN, PAGE_H - FOOTER_H, PAGE_W - MARGIN, PAGE_H - FOOTER_H);
-    // Footer: 6.5→13
-    doc.setFontSize(13);
-    doc.setTextColor(...C.GRIS);
-    doc.text(
-      `OQC - Control de Calidad  |  Pagina ${i} de ${pageCount}`,
-      PAGE_W / 2,
-      PAGE_H - 5,
-      { align: "center" }
-    );
-    doc.text("objetiva.com", PAGE_W - MARGIN, PAGE_H - 5, { align: "right" });
-  }
-}
+// ═══════════════════════════════════════════════════════════════
+// PORTADA / RESUMEN
+// ═══════════════════════════════════════════════════════════════
 
-// ─── Summary page ───
-function drawSummaryPage(doc: jsPDF, proyectoNombre: string, planos: PlanoReportData[]) {
+function drawCoverPage(doc: jsPDF, proyectoNombre: string, planos: PlanoReportData[]) {
   drawHeader(doc, proyectoNombre);
 
-  let y = HEADER_H + 8;
+  let y = HEADER_H + 12;
 
-  // Title: 14→28
+  // ─── Title ───
   doc.setTextColor(...C.AZUL);
-  doc.setFontSize(28);
+  doc.setFontSize(26);
   doc.setFont("helvetica", "bold");
-  doc.text(sinAcentos("RESUMEN GENERAL"), PAGE_W / 2, y, { align: "center" });
-  y += 12;
+  doc.text(sinAcentos("RESUMEN EJECUTIVO"), PW / 2, y, { align: "center" });
+  y += 8;
 
-  // Date/time: 8→16
+  // Subtitle line
+  doc.setDrawColor(...C.VERDE);
+  doc.setLineWidth(1);
+  doc.line(PW / 2 - 30, y, PW / 2 + 30, y);
+  y += 8;
+
+  // Date
   const now = new Date();
   const fechaStr = now.toLocaleDateString("es-MX", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
   const horaStr = now.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
   doc.setTextColor(...C.GRIS);
-  doc.setFontSize(16);
+  doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
-  doc.text(sinAcentos(`Generado: ${fechaStr}, ${horaStr}`), PAGE_W / 2, y, { align: "center" });
+  doc.text(sinAcentos(`${fechaStr} - ${horaStr}`), PW / 2, y, { align: "center" });
   y += 14;
 
-  // ─── Global statistics ───
+  // ─── Global counts ───
   const globalCounts: Record<string, number> = {};
   let totalPines = 0;
   let nivelesConPines = 0;
-  let nivelesSinPines = 0;
 
   for (const plano of planos) {
     if (plano.pines.length > 0) nivelesConPines++;
-    else nivelesSinPines++;
     for (const pin of plano.pines) {
       const estado = pin.itemEstado || "sin_item";
       globalCounts[estado] = (globalCounts[estado] || 0) + 1;
@@ -302,213 +302,191 @@ function drawSummaryPage(doc: jsPDF, proyectoNombre: string, planos: PlanoReport
     }
   }
 
-  // ─── Big number cards (x2 fonts) ───
-  const cardW = 34;
-  const cardH = 38; // Taller for x2 fonts
-  const cardGap = 3;
-  const totalCardsW = STATUS_ORDER.length * cardW + (STATUS_ORDER.length - 1) * cardGap;
-  let cardX = (PAGE_W - totalCardsW) / 2;
+  // ─── KPI Cards row ───
+  const cardW = 32;
+  const cardH = 32;
+  const cardGap = 4;
+  const allCards = STATUS_ORDER.map(k => ({
+    key: k,
+    count: globalCounts[k] || 0,
+    ...STATUS_COLORS[k],
+  }));
+  const totalCardsW = allCards.length * cardW + (allCards.length - 1) * cardGap;
+  let cx = (PW - totalCardsW) / 2;
 
-  for (const key of STATUS_ORDER) {
-    const sc = STATUS_COLORS[key];
-    const count = globalCounts[key] || 0;
-    const pct = totalPines > 0 ? ((count / totalPines) * 100).toFixed(1) : "0.0";
+  for (const card of allCards) {
+    drawCardBg(doc, cx, y, cardW, cardH, 3);
 
-    doc.setFillColor(...sc.rgb);
-    doc.roundedRect(cardX, y, cardW, cardH, 2, 2, "F");
+    // Color dot
+    doc.setFillColor(...card.rgb);
+    doc.circle(cx + cardW / 2, y + 8, 3, "F");
 
-    // Count: 18→36
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(36);
-    doc.setFont("helvetica", "bold");
-    doc.text(String(count), cardX + cardW / 2, y + 16, { align: "center" });
-
-    // Percentage: 8→16
+    // Number
+    doc.setTextColor(...C.NEGRO);
     doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text(String(card.count), cx + cardW / 2, y + 19, { align: "center" });
+
+    // Label
+    doc.setTextColor(...C.GRIS);
+    doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
-    doc.text(`${pct}%`, cardX + cardW / 2, y + 26, { align: "center" });
+    doc.text(sinAcentos(card.labelShort), cx + cardW / 2, y + 26, { align: "center" });
 
-    // Label: 6→12
-    doc.setFontSize(12);
-    doc.text(sinAcentos(sc.label), cardX + cardW / 2, y + 34, { align: "center" });
-
-    cardX += cardW + cardGap;
+    cx += cardW + cardGap;
   }
+  y += cardH + 6;
 
-  y += cardH + 10;
-
-  // ─── Total bar ───
+  // ─── Total badge ───
+  const badgeW = 50;
+  const badgeH = 14;
+  const badgeX = (PW - badgeW) / 2;
   doc.setFillColor(...C.AZUL);
-  doc.roundedRect(MARGIN + 10, y, CONTENT_W - 20, 14, 2, 2, "F");
-  doc.setTextColor(255, 255, 255);
-  // 10→20
-  doc.setFontSize(20);
+  doc.roundedRect(badgeX, y, badgeW, badgeH, 4, 4, "F");
+  doc.setTextColor(...C.BLANCO);
+  doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text(`TOTAL: ${totalPines} pines en ${planos.length} niveles`, PAGE_W / 2, y + 10, { align: "center" });
-  y += 20;
+  doc.text(`TOTAL: ${totalPines} pines`, PW / 2, y + 9.5, { align: "center" });
+  y += badgeH + 6;
 
-  // ─── Progress bar (stacked horizontal) ───
-  const barX = MARGIN + 10;
-  const barW = CONTENT_W - 20;
-  const barH = 10;
-
-  doc.setFillColor(230, 230, 230);
-  doc.roundedRect(barX, y, barW, barH, 2, 2, "F");
+  // ─── Horizontal bar chart ───
+  const barChartH = 16;
+  const barX = M + 5;
+  const barW = CW - 10;
+  doc.setFillColor(...C.GRIS_MUY_CLARO);
+  doc.roundedRect(barX, y, barW, barChartH, 3, 3, "F");
 
   if (totalPines > 0) {
-    let offsetX = barX;
+    let bx = barX;
     for (const key of STATUS_ORDER) {
       const count = globalCounts[key] || 0;
       if (count === 0) continue;
-      const segW = (count / totalPines) * barW;
-      const sc = STATUS_COLORS[key];
-      doc.setFillColor(...sc.rgb);
-      if (offsetX === barX) {
-        doc.roundedRect(offsetX, y, segW, barH, 2, 2, "F");
+      const w = (count / totalPines) * barW;
+      doc.setFillColor(...STATUS_COLORS[key].rgb);
+      if (bx === barX) {
+        // First segment: round left corners
+        doc.roundedRect(bx, y, w + 1, barChartH, 3, 3, "F");
       } else {
-        doc.rect(offsetX, y, segW, barH, "F");
+        doc.rect(bx, y, w, barChartH, "F");
       }
-      offsetX += segW;
+      // Percentage text inside bar if wide enough
+      if (w > 12) {
+        const pct = ((count / totalPines) * 100).toFixed(0);
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${pct}%`, bx + w / 2, y + barChartH / 2 + 1, { align: "center" });
+      }
+      bx += w;
     }
   }
-  y += barH + 6;
+  y += barChartH + 4;
 
-  // Legend for progress bar: 5.5→11
-  const legendW = 34;
-  const legendGap = 2;
-  const totalLegendW = STATUS_ORDER.length * legendW + (STATUS_ORDER.length - 1) * legendGap;
-  let legendX = (PAGE_W - totalLegendW) / 2;
-  for (const key of STATUS_ORDER) {
+  // Legend row for bar chart
+  const legendW = CW / STATUS_ORDER.length;
+  for (let i = 0; i < STATUS_ORDER.length; i++) {
+    const key = STATUS_ORDER[i];
     const sc = STATUS_COLORS[key];
-    const count = globalCounts[key] || 0;
+    const lx = M + i * legendW + legendW / 2;
     doc.setFillColor(...sc.rgb);
-    doc.circle(legendX + 2, y + 3, 2, "F");
+    doc.circle(lx - 12, y + 3, 2, "F");
     doc.setTextColor(...C.NEGRO);
-    doc.setFontSize(11);
+    doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    doc.text(`${sinAcentos(sc.label)} (${count})`, legendX + 6, y + 5);
-    legendX += legendW + legendGap;
+    doc.text(sinAcentos(sc.label), lx - 8, y + 4.5);
   }
-  y += 14;
+  y += 12;
 
   // ─── Additional stats ───
   const aprobados = globalCounts["aprobado"] || 0;
   const rechazados = globalCounts["rechazado"] || 0;
-  const pendFoto = globalCounts["pendiente_foto_despues"] || 0;
-  const pendAprob = globalCounts["pendiente_aprobacion"] || 0;
-  const sinItem = globalCounts["sin_item"] || 0;
-  const tasaAprobacion = totalPines > 0 ? ((aprobados / totalPines) * 100).toFixed(1) : "0.0";
-  const tasaRechazo = totalPines > 0 ? ((rechazados / totalPines) * 100).toFixed(1) : "0.0";
-  const pendientesTotal = pendFoto + pendAprob;
-  const tasaPendientes = totalPines > 0 ? ((pendientesTotal / totalPines) * 100).toFixed(1) : "0.0";
-  const resueltos = aprobados + rechazados;
-  const tasaResolucion = totalPines > 0 ? ((resueltos / totalPines) * 100).toFixed(1) : "0.0";
+  const pendTotal = (globalCounts["pendiente_foto_despues"] || 0) + (globalCounts["pendiente_aprobacion"] || 0);
+  const tasaAprob = totalPines > 0 ? ((aprobados / totalPines) * 100).toFixed(1) : "0";
+  const tasaRechazo = totalPines > 0 ? ((rechazados / totalPines) * 100).toFixed(1) : "0";
+  const tasaResolucion = totalPines > 0 ? (((aprobados + rechazados) / totalPines) * 100).toFixed(1) : "0";
 
-  doc.setFillColor(...C.BG_CARD);
-  doc.setDrawColor(...C.GRIS_CLARO);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(MARGIN + 5, y, CONTENT_W - 10, 42, 2, 2, "FD");
-
-  const statsInnerY = y + 5;
-  const col1X = MARGIN + 12;
-  const col2X = PAGE_W / 2 + 5;
-
-  // Stats title: 8→16
-  doc.setTextColor(...C.AZUL);
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text(sinAcentos("Estadisticas Adicionales"), MARGIN + 12, statsInnerY, { baseline: "top" });
-
-  // Stats values: 7→14
-  doc.setTextColor(...C.NEGRO);
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "normal");
-
-  const sY = statsInnerY + 10;
-  doc.text(sinAcentos(`Tasa de aprobacion: ${tasaAprobacion}%`), col1X, sY);
-  doc.text(sinAcentos(`Tasa de rechazo: ${tasaRechazo}%`), col2X, sY);
-  doc.text(sinAcentos(`Pendientes totales: ${pendientesTotal} (${tasaPendientes}%)`), col1X, sY + 8);
-  doc.text(sinAcentos(`Tasa de resolucion: ${tasaResolucion}%`), col2X, sY + 8);
-  doc.text(sinAcentos(`Niveles con pines: ${nivelesConPines} de ${planos.length}`), col1X, sY + 16);
-  doc.text(sinAcentos(`Items sin vincular: ${sinItem}`), col2X, sY + 16);
-
-  y += 50;
-
-  // ─── Table: breakdown by level ───
-  // Check if table fits on this page
-  if (y + 20 > PAGE_H - FOOTER_H - 10) {
-    doc.addPage();
-    drawHeader(doc, proyectoNombre);
-    y = HEADER_H + 8;
-  }
-
-  doc.setTextColor(...C.AZUL);
-  // 10→20
-  doc.setFontSize(20);
-  doc.setFont("helvetica", "bold");
-  doc.text(sinAcentos("Desglose por Nivel"), PAGE_W / 2, y, { align: "center" });
-  y += 10;
-
-  // Table header
-  const tableX = MARGIN + 2;
-  const tableW = CONTENT_W - 4;
-  const colWidths = [38, 22, 22, 22, 22, 22, 22, 16];
-  // Row height: ~6.5→10
-  const rowH = 10;
-
-  doc.setFillColor(...C.AZUL);
-  doc.rect(tableX, y, tableW, rowH + 2, "F");
-  doc.setTextColor(255, 255, 255);
-  // 5.5→11
+  drawCardBg(doc, M, y, CW, 30, 3);
+  const statsY = y + 8;
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
+  doc.setTextColor(...C.AZUL);
+  doc.text(sinAcentos("Indicadores Clave"), M + 5, statsY);
 
-  const headers = ["Nivel", "P.Foto", "P.Aprob.", "Aprob.", "Rechaz.", "Sin Item", "Total", "%"];
-  let hx = tableX + 2;
-  for (let i = 0; i < headers.length; i++) {
-    doc.text(sinAcentos(headers[i]), hx + (i === 0 ? 0 : colWidths[i] / 2 - 2), y + 7, { align: i === 0 ? "left" : "center" });
-    hx += colWidths[i];
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...C.NEGRO);
+  const col1 = M + 5;
+  const col2 = PW / 2 + 5;
+  const sRow = statsY + 8;
+  doc.text(sinAcentos(`Tasa de aprobacion: ${tasaAprob}%`), col1, sRow);
+  doc.text(sinAcentos(`Tasa de rechazo: ${tasaRechazo}%`), col2, sRow);
+  doc.text(sinAcentos(`Pendientes: ${pendTotal} items`), col1, sRow + 6);
+  doc.text(sinAcentos(`Tasa de resolucion: ${tasaResolucion}%`), col2, sRow + 6);
+  y += 36;
+
+  // ─── Table: Desglose por Nivel ───
+  if (y + 16 > PH - FOOTER_H - 10) {
+    doc.addPage();
+    drawHeader(doc, proyectoNombre);
+    y = HEADER_H + 10;
   }
-  y += rowH + 2;
 
-  // Table rows
+  doc.setTextColor(...C.AZUL);
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text(sinAcentos("Desglose por Nivel"), PW / 2, y, { align: "center" });
+  y += 8;
+
+  // Table
+  const tX = M;
+  const tW = CW;
+  const colW = [42, 20, 20, 20, 20, 20, 20, 18];
+  const rowH = 8;
+
+  // Header row
+  doc.setFillColor(...C.AZUL);
+  doc.roundedRect(tX, y, tW, rowH + 1, 1.5, 1.5, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  const headers = ["Nivel", "P.Foto", "P.Aprob.", "Aprob.", "Rechaz.", "Sin Item", "Total", "%"];
+  let hx = tX + 2;
+  for (let i = 0; i < headers.length; i++) {
+    doc.text(sinAcentos(headers[i]), hx + (i === 0 ? 0 : colW[i] / 2), y + 6, { align: i === 0 ? "left" : "center" });
+    hx += colW[i];
+  }
+  y += rowH + 1;
+
   const sortedPlanos = [...planos].sort((a, b) => (a.nivel ?? 0) - (b.nivel ?? 0));
   for (let ri = 0; ri < sortedPlanos.length; ri++) {
-    const plano = sortedPlanos[ri];
-
-    if (y + rowH > PAGE_H - FOOTER_H - 5) {
+    if (y + rowH > PH - FOOTER_H - 5) {
       doc.addPage();
       drawHeader(doc, proyectoNombre);
-      y = HEADER_H + 8;
+      y = HEADER_H + 10;
     }
 
+    const plano = sortedPlanos[ri];
     const counts: Record<string, number> = {};
     let planoTotal = 0;
     for (const pin of plano.pines) {
-      const estado = pin.itemEstado || "sin_item";
-      counts[estado] = (counts[estado] || 0) + 1;
+      const e = pin.itemEstado || "sin_item";
+      counts[e] = (counts[e] || 0) + 1;
       planoTotal++;
     }
 
-    const rowBg = ri % 2 === 0 ? C.BG_LIGHT : C.BLANCO;
-    doc.setFillColor(...rowBg);
-    doc.rect(tableX, y, tableW, rowH, "F");
+    // Alternating row bg
+    doc.setFillColor(ri % 2 === 0 ? 248 : 255, ri % 2 === 0 ? 250 : 255, ri % 2 === 0 ? 252 : 255);
+    doc.rect(tX, y, tW, rowH, "F");
+    doc.setDrawColor(230, 230, 235);
+    doc.setLineWidth(0.1);
+    doc.line(tX, y + rowH, tX + tW, y + rowH);
 
-    doc.setDrawColor(...C.GRIS_CLARO);
-    doc.setLineWidth(0.15);
-    doc.line(tableX, y + rowH, tableX + tableW, y + rowH);
-
-    doc.setTextColor(...C.NEGRO);
-    // 5.5→11
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-
-    const planoAprobados = counts["aprobado"] || 0;
-    const pctAprob = planoTotal > 0 ? ((planoAprobados / planoTotal) * 100).toFixed(0) : "-";
-
-    // Truncate long names
+    doc.setFontSize(8);
     let nivelName = sinAcentos(plano.nombre);
-    if (nivelName.length > 18) nivelName = nivelName.substring(0, 16) + "..";
+    if (nivelName.length > 22) nivelName = nivelName.substring(0, 20) + "..";
+
+    const planoAprob = counts["aprobado"] || 0;
+    const pct = planoTotal > 0 ? ((planoAprob / planoTotal) * 100).toFixed(0) : "-";
 
     const vals = [
       nivelName,
@@ -518,233 +496,296 @@ function drawSummaryPage(doc: jsPDF, proyectoNombre: string, planos: PlanoReport
       String(counts["rechazado"] || 0),
       String(counts["sin_item"] || 0),
       String(planoTotal),
-      planoTotal > 0 ? `${pctAprob}%` : "-",
+      planoTotal > 0 ? `${pct}%` : "-",
     ];
 
-    let vx = tableX + 2;
+    let vx = tX + 2;
     for (let i = 0; i < vals.length; i++) {
       if (i >= 1 && i <= 5) {
-        const statusKey = STATUS_ORDER[i - 1];
-        const count = parseInt(vals[i]);
-        if (count > 0) {
-          doc.setTextColor(...STATUS_COLORS[statusKey].rgb);
+        const sKey = STATUS_ORDER[i - 1];
+        const cnt = parseInt(vals[i]);
+        if (cnt > 0) {
+          doc.setTextColor(...STATUS_COLORS[sKey].rgb);
           doc.setFont("helvetica", "bold");
         } else {
-          doc.setTextColor(180, 180, 180);
+          doc.setTextColor(200, 200, 200);
           doc.setFont("helvetica", "normal");
         }
       } else if (i === 6) {
         doc.setTextColor(...C.AZUL);
         doc.setFont("helvetica", "bold");
       } else if (i === 7) {
-        const pctVal = parseInt(pctAprob);
+        const pctVal = parseInt(pct);
         if (!isNaN(pctVal)) {
-          if (pctVal >= 70) doc.setTextColor(34, 197, 94);
-          else if (pctVal >= 40) doc.setTextColor(245, 158, 11);
-          else doc.setTextColor(239, 68, 68);
+          doc.setTextColor(pctVal >= 70 ? 16 : pctVal >= 40 ? 245 : 239, pctVal >= 70 ? 185 : pctVal >= 40 ? 158 : 68, pctVal >= 70 ? 129 : pctVal >= 40 ? 11 : 68);
           doc.setFont("helvetica", "bold");
         } else {
-          doc.setTextColor(180, 180, 180);
+          doc.setTextColor(200, 200, 200);
           doc.setFont("helvetica", "normal");
         }
       } else {
         doc.setTextColor(...C.NEGRO);
         doc.setFont("helvetica", planoTotal > 0 ? "bold" : "normal");
       }
-      doc.text(vals[i], vx + (i === 0 ? 0 : colWidths[i] / 2 - 2), y + 7, { align: i === 0 ? "left" : "center" });
-      vx += colWidths[i];
+      doc.text(vals[i], vx + (i === 0 ? 0 : colW[i] / 2), y + 5.5, { align: i === 0 ? "left" : "center" });
+      vx += colW[i];
     }
     y += rowH;
   }
 
-  // Table totals row
-  if (y + rowH + 2 > PAGE_H - FOOTER_H - 5) {
+  // Totals row
+  if (y + rowH + 1 > PH - FOOTER_H - 5) {
     doc.addPage();
     drawHeader(doc, proyectoNombre);
-    y = HEADER_H + 8;
+    y = HEADER_H + 10;
   }
-
   doc.setFillColor(...C.AZUL);
-  doc.rect(tableX, y, tableW, rowH + 2, "F");
+  doc.roundedRect(tX, y, tW, rowH + 1, 1.5, 1.5, "F");
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
+  doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
 
   const totalAprobPct = totalPines > 0 ? ((aprobados / totalPines) * 100).toFixed(0) : "-";
   const totals = [
     "TOTAL",
-    String(pendFoto),
-    String(pendAprob),
+    String(globalCounts["pendiente_foto_despues"] || 0),
+    String(globalCounts["pendiente_aprobacion"] || 0),
     String(aprobados),
     String(rechazados),
-    String(sinItem),
+    String(globalCounts["sin_item"] || 0),
     String(totalPines),
     totalPines > 0 ? `${totalAprobPct}%` : "-",
   ];
-
-  let tx = tableX + 2;
+  let ttx = tX + 2;
   for (let i = 0; i < totals.length; i++) {
-    doc.text(totals[i], tx + (i === 0 ? 0 : colWidths[i] / 2 - 2), y + 7, { align: i === 0 ? "left" : "center" });
-    tx += colWidths[i];
+    doc.text(totals[i], ttx + (i === 0 ? 0 : colW[i] / 2), y + 6, { align: i === 0 ? "left" : "center" });
+    ttx += colW[i];
   }
 }
 
-function drawPlanoSlot(
+// ═══════════════════════════════════════════════════════════════
+// PLANO PAGE: imagen + pines + tabla detallada
+// ═══════════════════════════════════════════════════════════════
+
+function drawPlanoPage(
   doc: jsPDF,
   plano: PlanoReportData,
   planoImg: LoadedImage | null,
-  slotX: number,
-  slotY: number,
-  slotW: number,
+  proyectoNombre: string,
 ) {
-  const nombre = sinAcentos(plano.nombre);
-  const nivelStr = plano.nivel !== null ? `N${plano.nivel}` : "";
+  drawHeader(doc, proyectoNombre);
 
-  // ─── Title bar ───
-  const titleBarH = 20;
+  let y = HEADER_H + 5;
+
+  // ─── Nivel title bar ───
+  const titleH = 14;
   doc.setFillColor(...C.AZUL);
-  doc.roundedRect(slotX, slotY, slotW, titleBarH, 2, 2, "F");
+  doc.roundedRect(M, y, CW, titleH, 2, 2, "F");
+  // Green accent on left
+  doc.setFillColor(...C.VERDE);
+  doc.roundedRect(M, y, 4, titleH, 2, 0, "F");
+  doc.rect(M + 2, y, 2, titleH, "F");
+
   doc.setTextColor(...C.BLANCO);
-
-  // Nivel name: 24pt (user-requested)
-  doc.setFontSize(24);
+  doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  const fullNivel = nivelStr ? `${nivelStr} - ${nombre}` : nombre;
-  doc.text(sinAcentos(fullNivel), slotX + 5, slotY + 14);
+  const nivelStr = plano.nivel !== null ? `N${plano.nivel}` : "";
+  const fullNivel = nivelStr ? `${nivelStr} - ${sinAcentos(plano.nombre)}` : sinAcentos(plano.nombre);
+  doc.text(fullNivel, M + 8, y + 10);
 
-  // Pin count right side: 14pt
-  doc.setFontSize(14);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(`${plano.pines.length} pines`, slotX + slotW - 5, slotY + 14, { align: "right" });
+  doc.text(`${plano.pines.length} pines`, M + CW - 4, y + 10, { align: "right" });
+  y += titleH + 3;
 
-  const imgY = slotY + titleBarH + 2;
-  const imgH = PLANO_IMG_H;
-
-  // ─── Image container ───
-  doc.setFillColor(...C.BG_CARD);
-  doc.setDrawColor(...C.GRIS_CLARO);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(slotX, imgY, slotW, imgH, 1, 1, "FD");
+  // ─── Image area ───
+  const imgAreaH = 110;
+  drawCardBg(doc, M, y, CW, imgAreaH, 2);
 
   if (planoImg) {
     const fmt = getImageFormat(planoImg.dataUrl);
-    const padding = 1;
-    const containerW = slotW - padding * 2;
-    const containerH = imgH - padding * 2;
-
-    // Preserve aspect ratio: fit image inside container without deformation
+    const pad = 2;
+    const cW = CW - pad * 2;
+    const cH = imgAreaH - pad * 2;
     const imgAspect = planoImg.naturalWidth / planoImg.naturalHeight;
-    const containerAspect = containerW / containerH;
+    const containerAspect = cW / cH;
 
-    let drawW: number, drawH: number, drawX: number, drawY: number;
-
+    let dW: number, dH: number, dX: number, dY: number;
     if (imgAspect > containerAspect) {
-      // Image is wider than container: fit by width
-      drawW = containerW;
-      drawH = containerW / imgAspect;
-      drawX = slotX + padding;
-      drawY = imgY + padding + (containerH - drawH) / 2;
+      dW = cW;
+      dH = cW / imgAspect;
+      dX = M + pad;
+      dY = y + pad + (cH - dH) / 2;
     } else {
-      // Image is taller than container: fit by height
-      drawH = containerH;
-      drawW = containerH * imgAspect;
-      drawX = slotX + padding + (containerW - drawW) / 2;
-      drawY = imgY + padding;
+      dH = cH;
+      dW = cH * imgAspect;
+      dX = M + pad + (cW - dW) / 2;
+      dY = y + pad;
     }
 
-    doc.addImage(planoImg.dataUrl, fmt, drawX, drawY, drawW, drawH);
+    doc.addImage(planoImg.dataUrl, fmt, dX, dY, dW, dH);
 
-    // ─── Draw teardrop pins on top of image (positioned relative to actual image area) ───
+    // Draw pins on top
     for (const pin of plano.pines) {
       const px = parseFloat(pin.posX);
       const py = parseFloat(pin.posY);
       if (isNaN(px) || isNaN(py)) continue;
-
-      // Pin position is relative to the actual drawn image, not the container
-      const pinX = drawX + (px / 100) * drawW;
-      const pinY = drawY + (py / 100) * drawH;
-
+      const pinX = dX + (px / 100) * dW;
+      const pinY = dY + (py / 100) * dH;
       const color = getStatusColorRgb(pin.itemEstado);
       const label = getInitials(pin.residenteNombre);
-      drawTeardropPin(doc, pinX, pinY, color, label, 4.0);
+      drawPin(doc, pinX, pinY, color, label, 3.2);
     }
   } else {
     doc.setTextColor(...C.GRIS);
-    doc.setFontSize(18);
-    doc.text("Sin imagen", slotX + slotW / 2, imgY + imgH / 2, { align: "center" });
+    doc.setFontSize(14);
+    doc.text("Sin imagen de plano", M + CW / 2, y + imgAreaH / 2, { align: "center" });
   }
+  y += imgAreaH + 3;
 
-  // ─── Color legend row (x2 fonts) ───
-  const legendY = imgY + imgH + 2;
-  const legendH = 7;
-  const legendItems = STATUS_ORDER.map(k => ({ key: k, ...STATUS_COLORS[k] }));
-  const legendItemW = (slotW - 4) / legendItems.length;
-  for (let i = 0; i < legendItems.length; i++) {
-    const li = legendItems[i];
-    const lx = slotX + 2 + i * legendItemW;
-    doc.setFillColor(...li.rgb);
-    doc.circle(lx + 3, legendY + legendH / 2, 2, "F");
+  // ─── Legend row ───
+  const legendH = 6;
+  const legendItemW = CW / STATUS_ORDER.length;
+  for (let i = 0; i < STATUS_ORDER.length; i++) {
+    const key = STATUS_ORDER[i];
+    const sc = STATUS_COLORS[key];
+    const lx = M + i * legendItemW;
+    doc.setFillColor(...sc.rgb);
+    doc.circle(lx + 5, y + legendH / 2, 1.8, "F");
     doc.setTextColor(80, 80, 80);
-    // Legend text under colors: 12pt (user-requested)
-    doc.setFontSize(12);
+    doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    doc.text(sinAcentos(li.label), lx + 7, legendY + legendH / 2 + 1.5);
+    doc.text(sinAcentos(sc.label), lx + 9, y + legendH / 2 + 1);
   }
+  y += legendH + 3;
 
-  // ─── Stats bar below legend ───
-  const statsY = legendY + legendH + 2;
-  const statsBarH = STATS_H;
-
-  doc.setFillColor(...C.BG_LIGHT);
-  doc.setDrawColor(...C.GRIS_CLARO);
-  doc.setLineWidth(0.2);
-  doc.roundedRect(slotX, statsY, slotW, statsBarH, 1, 1, "FD");
-
-  // Count by status
+  // ─── Stats pills ───
   const counts: Record<string, number> = {};
   let total = 0;
   for (const pin of plano.pines) {
-    const estado = pin.itemEstado || "sin_item";
-    counts[estado] = (counts[estado] || 0) + 1;
+    const e = pin.itemEstado || "sin_item";
+    counts[e] = (counts[e] || 0) + 1;
     total++;
   }
 
-  // Draw stats as colored pills (x2 fonts)
-  const statuses = Object.keys(STATUS_COLORS);
-  const pillW = (slotW - 6) / statuses.length;
-  const pillH = 14;
-  const pillY = statsY + 4;
-
-  for (let i = 0; i < statuses.length; i++) {
-    const key = statuses[i];
+  const pillW = (CW - 8) / STATUS_ORDER.length;
+  const pillH = 10;
+  for (let i = 0; i < STATUS_ORDER.length; i++) {
+    const key = STATUS_ORDER[i];
     const sc = STATUS_COLORS[key];
     const count = counts[key] || 0;
-    const px = slotX + 3 + i * pillW;
-
+    const px = M + 4 + i * pillW;
     doc.setFillColor(...sc.rgb);
-    doc.roundedRect(px + 0.5, pillY, pillW - 1, pillH, 2, 2, "F");
-
+    doc.roundedRect(px + 0.5, y, pillW - 1, pillH, 2, 2, "F");
     doc.setTextColor(255, 255, 255);
-    // 7→14
-    doc.setFontSize(14);
+    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text(String(count), px + pillW / 2, pillY + 9, { align: "center" });
-
-    doc.setTextColor(...C.GRIS);
-    // Stats pill labels: 12pt (user-requested)
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(sinAcentos(sc.label), px + pillW / 2, pillY + pillH + 6, { align: "center" });
+    doc.text(String(count), px + pillW / 2, y + 7, { align: "center" });
   }
+  y += pillH + 2;
 
-  doc.setTextColor(...C.AZUL);
-  // 6→12
-  doc.setFontSize(12);
+  // Total badge
+  doc.setFillColor(...C.AZUL);
+  doc.roundedRect(M + CW - 36, y, 36, 7, 2, 2, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
-  doc.text(`Total: ${total}`, slotX + slotW - 4, statsY + statsBarH - 3, { align: "right" });
+  doc.text(`Total: ${total}`, M + CW - 18, y + 5, { align: "center" });
+  y += 10;
+
+  // ─── Detailed table of pins ───
+  if (plano.pines.length > 0) {
+    const tableStartY = y;
+    const tblX = M;
+    const tblW = CW;
+    // Columns: #, Código, Título, Empresa, Residente, Estado
+    const tColW = [10, 22, 52, 36, 32, 28];
+    const tRowH = 7;
+
+    // Table header
+    doc.setFillColor(...C.AZUL_DARK);
+    doc.roundedRect(tblX, y, tblW, tRowH + 0.5, 1.5, 1.5, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "bold");
+    const tHeaders = ["#", "Codigo", "Titulo", "Empresa", "Residente", "Estado"];
+    let thx = tblX + 1.5;
+    for (let i = 0; i < tHeaders.length; i++) {
+      doc.text(sinAcentos(tHeaders[i]), thx + 1, y + 5);
+      thx += tColW[i];
+    }
+    y += tRowH + 0.5;
+
+    // Table rows
+    const sortedPines = [...plano.pines].sort((a, b) => (a.itemConsecutivo ?? 999) - (b.itemConsecutivo ?? 999));
+    for (let pi = 0; pi < sortedPines.length; pi++) {
+      // Check page break
+      if (y + tRowH > PH - FOOTER_H - 5) {
+        doc.addPage();
+        drawHeader(doc, proyectoNombre);
+        y = HEADER_H + 8;
+        // Re-draw table header
+        doc.setFillColor(...C.AZUL_DARK);
+        doc.roundedRect(tblX, y, tblW, tRowH + 0.5, 1.5, 1.5, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "bold");
+        let rhx = tblX + 1.5;
+        for (let i = 0; i < tHeaders.length; i++) {
+          doc.text(sinAcentos(tHeaders[i]), rhx + 1, y + 5);
+          rhx += tColW[i];
+        }
+        y += tRowH + 0.5;
+      }
+
+      const pin = sortedPines[pi];
+      // Row bg
+      doc.setFillColor(pi % 2 === 0 ? 248 : 255, pi % 2 === 0 ? 250 : 255, pi % 2 === 0 ? 252 : 255);
+      doc.rect(tblX, y, tblW, tRowH, "F");
+      doc.setDrawColor(235, 235, 240);
+      doc.setLineWidth(0.1);
+      doc.line(tblX, y + tRowH, tblX + tblW, y + tRowH);
+
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+
+      // Status color dot at start
+      const statusColor = getStatusColorRgb(pin.itemEstado);
+
+      // Row values
+      const num = pin.itemConsecutivo ? String(pin.itemConsecutivo) : "-";
+      const codigo = sinAcentos(pin.itemCodigo || "-");
+      let titulo = sinAcentos(pin.itemTitulo || "-");
+      if (titulo.length > 30) titulo = titulo.substring(0, 28) + "..";
+      let empresa = sinAcentos(pin.empresaNombre || "-");
+      if (empresa.length > 20) empresa = empresa.substring(0, 18) + "..";
+      let residente = sinAcentos(pin.residenteNombre || "-");
+      if (residente.length > 18) residente = residente.substring(0, 16) + "..";
+      const estado = sinAcentos(getStatusLabel(pin.itemEstado));
+
+      const rowVals = [num, codigo, titulo, empresa, residente, estado];
+      let rvx = tblX + 1.5;
+      for (let i = 0; i < rowVals.length; i++) {
+        if (i === 5) {
+          // Estado column: colored text
+          doc.setTextColor(...statusColor);
+          doc.setFont("helvetica", "bold");
+        } else {
+          doc.setTextColor(...C.NEGRO);
+          doc.setFont("helvetica", "normal");
+        }
+        doc.text(rowVals[i], rvx + 1, y + 5);
+        rvx += tColW[i];
+      }
+      y += tRowH;
+    }
+  }
 }
 
-// ─── Main export ───
+// ═══════════════════════════════════════════════════════════════
+// MAIN EXPORT
+// ═══════════════════════════════════════════════════════════════
+
 export async function generarReportePlanosPDF(config: PlanoReportConfig): Promise<void> {
   const { proyectoNombre, planos, onProgress } = config;
 
@@ -755,46 +796,41 @@ export async function generarReportePlanosPDF(config: PlanoReportConfig): Promis
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const progress = onProgress || (() => {});
 
-  // Sort planos by nivel
   const sorted = [...planos].sort((a, b) => (a.nivel ?? 0) - (b.nivel ?? 0));
 
-  // Pre-load all images
+  // Pre-load images
   progress("Cargando imagenes...");
   const imageCache: Map<number, LoadedImage | null> = new Map();
   for (let i = 0; i < sorted.length; i++) {
-    const p = sorted[i];
     progress(`Cargando plano ${i + 1}/${sorted.length}...`);
-    if (p.imagenUrl) {
-      const img = await loadImageForPDF(p.imagenUrl);
-      imageCache.set(p.id, img);
+    if (sorted[i].imagenUrl) {
+      imageCache.set(sorted[i].id, await loadImageForPDF(sorted[i].imagenUrl!));
     } else {
-      imageCache.set(p.id, null);
+      imageCache.set(sorted[i].id, null);
     }
   }
 
   progress("Generando PDF...");
 
-  // ─── Page 1: Summary ───
-  drawSummaryPage(doc, proyectoNombre, sorted);
+  // Page 1: Cover / Summary
+  drawCoverPage(doc, proyectoNombre, sorted);
 
-  // ─── Plano pages: 1 plano per page (x2 fonts need more space) ───
+  // Plano pages: 1 per page with image + table
   for (let i = 0; i < sorted.length; i++) {
     doc.addPage();
-    drawHeader(doc, proyectoNombre);
-
-    const slotY = HEADER_H + 6;
     const plano = sorted[i];
     const img = imageCache.get(plano.id) ?? null;
-
-    drawPlanoSlot(doc, plano, img, MARGIN, slotY, CONTENT_W);
-
-    progress(`Dibujando plano ${i + 1}/${sorted.length}...`);
+    drawPlanoPage(doc, plano, img, proyectoNombre);
+    progress(`Plano ${i + 1}/${sorted.length}...`);
   }
 
-  // Add footers to all pages
-  drawFooters(doc);
+  // Add footers
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    drawFooter(doc, i, totalPages);
+  }
 
-  // Vista previa: abrir PDF en nueva pestaña para que el usuario decida descargar
   progress("Abriendo vista previa...");
   openPDFPreview(doc);
 }
