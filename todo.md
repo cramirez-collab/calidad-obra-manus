@@ -3904,3 +3904,12 @@
 - [x] FEATURE: Recuadro de estadísticas por plano (por estatus y colores del app) en reporte PDF
 - [x] FEATURE: Botón de descarga "Reporte PDF" en módulo Planos
 - [x] FEATURE: Endpoint backend reportePines para obtener todos los planos con pines del proyecto
+
+## Fixes Reporte PDF Planos con Pines v4.12
+- [x] FIX: Posición de pines incorrecta en PDF - posX/posY son 0-100, dividir entre 100
+- [x] FIX: Nombre del proyecto mostraba "Proyecto" genérico - usar proyectoActual.nombre
+- [x] FIX: Nombre del archivo con doble guion bajo - limpiar underscores duplicados
+- [x] FIX: tRPC fetch format incorrecto (400 Invalid input) - usar batch=1 con json wrapper
+- [x] IMPROVE: Pines más grandes y visibles (radio 2.5mm con borde blanco de 3mm)
+- [x] FEATURE: Botón PDF Planos (FileText) en Bienvenida header junto a Ver Pines
+- [x] FIX: Mismo fix de tRPC batch format aplicado en Planos.tsx

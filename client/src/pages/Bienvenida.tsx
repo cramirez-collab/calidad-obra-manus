@@ -28,7 +28,8 @@ import {
   Check,
   XCircle,
   Megaphone,
-  Layers
+  Layers,
+  FileText
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ZoomablePlano from "@/components/ZoomablePlano";
@@ -47,6 +48,7 @@ import {
 import { useLocation, Redirect } from "wouter";
 import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
+import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlanosPDF";
 // jsPDF se importa dinámicamente para evitar conflicto con React context
 // Heartbeat via tRPC en vez de socket para usuarios en línea
 
@@ -58,7 +60,10 @@ export default function Bienvenida() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { selectedProjectId, isLoadingProjects } = useProject();
+  const { data: proyectosList } = trpc.proyectos.list.useQuery(undefined, { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 });
+  const proyectoActual = proyectosList?.find((p: any) => p.id === selectedProjectId) || null;
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const [generandoPDF, setGenerandoPDF] = useState(false);
 
   // Heartbeat: registra actividad cada 3 min (throttled en servidor a 1/min)
   const heartbeatMut = trpc.avisos.heartbeat.useMutation();
@@ -122,6 +127,36 @@ export default function Bienvenida() {
     });
     
     doc.save(`usuarios_en_linea_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  // Generar reporte PDF de planos con pines
+  const handleGenerarReportePlanos = async () => {
+    if (!selectedProjectId || generandoPDF) return;
+    setGenerandoPDF(true);
+    try {
+      toast.info("Generando reporte de planos...");
+      const inputPayload = { "0": { json: { proyectoId: selectedProjectId } } };
+      const res = await fetch(`/api/trpc/planos.pines.reportePines?batch=1&input=${encodeURIComponent(JSON.stringify(inputPayload))}`, { credentials: 'include' });
+      const json = await res.json();
+      const batchResult = Array.isArray(json) ? json[0] : json;
+      const planosReport: PlanoReportData[] = batchResult?.result?.data?.json || batchResult?.result?.data || [];
+      if (planosReport.length === 0) {
+        toast.error("No hay planos con pines");
+        return;
+      }
+      const nombre = proyectoActual?.nombre || "Proyecto";
+      await generarReportePlanosPDF({
+        proyectoNombre: nombre,
+        planos: planosReport,
+        onProgress: (msg) => toast.info(msg),
+      });
+      toast.success("Reporte PDF descargado");
+    } catch (err) {
+      console.error("Error reporte planos:", err);
+      toast.error("Error al generar reporte");
+    } finally {
+      setGenerandoPDF(false);
+    }
   };
   
   // Avisos no leídos
@@ -489,6 +524,21 @@ export default function Bienvenida() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Ver Pines</TooltipContent>
+            </Tooltip>
+            {/* Botón PDF Reporte Planos con Pines */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-10 w-10 border-slate-300 hover:bg-slate-50"
+                  onClick={handleGenerarReportePlanos}
+                  disabled={generandoPDF}
+                >
+                  {generandoPDF ? <Loader2 className="h-5 w-5 text-[#002C63] animate-spin" /> : <FileText className="h-5 w-5 text-[#002C63]" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>PDF Planos</TooltipContent>
             </Tooltip>
             {/* Botón Avisos con badge rojo */}
             <Tooltip>

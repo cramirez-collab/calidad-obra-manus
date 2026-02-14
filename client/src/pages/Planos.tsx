@@ -737,10 +737,12 @@ export default function Planos() {
     setGenerandoPDF(true);
     setPdfProgress("Obteniendo datos...");
     try {
-      const reportData = await fetch(`/api/trpc/planos.pines.reportePines?input=${encodeURIComponent(JSON.stringify({ proyectoId: selectedProjectId }))}`, {
+      const inputPayload = { "0": { json: { proyectoId: selectedProjectId } } };
+      const reportData = await fetch(`/api/trpc/planos.pines.reportePines?batch=1&input=${encodeURIComponent(JSON.stringify(inputPayload))}`, {
         credentials: 'include',
       }).then(r => r.json());
-      const planosData: PlanoReportData[] = reportData?.result?.data || [];
+      const batchResult = Array.isArray(reportData) ? reportData[0] : reportData;
+      const planosData: PlanoReportData[] = batchResult?.result?.data?.json || batchResult?.result?.data || [];
       if (planosData.length === 0) {
         toast.error("No hay planos con pines para generar el reporte");
         return;

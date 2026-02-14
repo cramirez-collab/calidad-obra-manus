@@ -212,25 +212,27 @@ function drawPlanoSlot(
       const py = parseFloat(pin.posY);
       if (isNaN(px) || isNaN(py)) continue;
 
-      const pinX = slotX + padding + px * (slotW - padding * 2);
-      const pinY = imgY + padding + py * (imgH - padding * 2);
+      // posX/posY are 0-100 percentages
+      const pinX = slotX + padding + (px / 100) * (slotW - padding * 2);
+      const pinY = imgY + padding + (py / 100) * (imgH - padding * 2);
 
       const estado = pin.itemEstado || "sin_item";
       const color = STATUS_COLORS[estado]?.rgb || STATUS_COLORS.sin_item.rgb;
 
-      // Pin circle with border
+      // White border circle
+      doc.setFillColor(255, 255, 255);
+      doc.circle(pinX, pinY, 3, "F");
+      // Colored circle
       doc.setFillColor(...color);
-      doc.setDrawColor(255, 255, 255);
-      doc.setLineWidth(0.3);
-      doc.circle(pinX, pinY, 2, "FD");
+      doc.circle(pinX, pinY, 2.5, "F");
 
       // Pin number
       const num = pin.itemCodigo ? pin.itemCodigo.replace(/\D/g, "").replace(/^0+/, "") : String(pin.id);
       const shortNum = num.length > 3 ? num.slice(-3) : num;
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(4);
+      doc.setFontSize(4.5);
       doc.setFont("helvetica", "bold");
-      doc.text(shortNum, pinX, pinY + 1.2, { align: "center" });
+      doc.text(shortNum, pinX, pinY + 1.3, { align: "center" });
     }
   } else {
     doc.setTextColor(...C.GRIS);
@@ -351,6 +353,7 @@ export async function generarReportePlanosPDF(config: PlanoReportConfig): Promis
 
   // Download
   progress("Descargando...");
-  const filename = `Pines_${sinAcentos(proyectoNombre).replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`;
+  const safeName = sinAcentos(proyectoNombre).replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
+  const filename = `Planos_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`;
   downloadPDFBestMethod(doc, filename);
 }
