@@ -3956,3 +3956,8 @@
 - [ ] FIX: Corregir cualquier problema de asignación pin-nivel
 - [ ] VERIFY: Colores correctos (azul, naranja, verde, gris) por estatus
 - [ ] VERIFY: Estructura PDF: resumen + 2 planos/hoja + todos los niveles incluidos
+
+## v4.21 - Fix PDF pines por nivel + tamaño nivel
+- [x] PDF muestra solo 2 pines en N2 pero app muestra 12 - verificar merge funciona
+- [x] Aumentar tamaño del número de nivel al doble en el PDF para identificación rápida
+

@@ -3134,6 +3134,7 @@ export const appRouter = router({
                 itemCodigo: p.itemCodigo || null,
                 itemEstado: p.itemEstado || null,
                 itemTitulo: p.itemTitulo || null,
+                itemConsecutivo: p.itemConsecutivo ?? null,
                 residenteNombre: p.residenteNombre || null,
                 empresaNombre: p.empresaNombre || null,
                 unidadNombre: p.unidadNombre || null,
