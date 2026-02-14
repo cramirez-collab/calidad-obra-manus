@@ -145,10 +145,10 @@ const MARGIN = 12;
 const HEADER_H = 28;
 const FOOTER_H = 12;
 const CONTENT_W = PAGE_W - MARGIN * 2;
-const PLANO_SLOT_H = 128; // 16(title) + 88(img) + 24(stats)
-const PLANO_IMG_H = 88;
+const PLANO_SLOT_H = 130; // 20(title) + 86(img) + 24(stats)
+const PLANO_IMG_H = 86;
 const STATS_H = 24;
-const GAP = 8;
+const GAP = 4;
 
 // ─── Draw teardrop pin on jsPDF ───
 function drawTeardropPin(
@@ -575,31 +575,24 @@ function drawPlanoSlot(
 ) {
   const nombre = sinAcentos(plano.nombre);
   const nivelStr = plano.nivel !== null ? `N${plano.nivel}` : "";
-  // ─── Title bar (EXTRA TALL for DOUBLE nivel text) ───
-  const titleBarH = 16;
+  // ─── Title bar (TRIPLE nivel text ~30pt) ───
+  const titleBarH = 20;
   doc.setFillColor(...C.AZUL);
   doc.roundedRect(slotX, slotY, slotW, titleBarH, 1.5, 1.5, "F");
   doc.setTextColor(...C.BLANCO);
-  // Nivel number - DOUBLE SIZE (22pt bold) for instant identification
+  // Nivel number - TRIPLE SIZE (30pt bold) for instant identification
   if (nivelStr) {
-    doc.setFontSize(22);
+    doc.setFontSize(30);
     doc.setFont("helvetica", "bold");
-    doc.text(nivelStr, slotX + 4, slotY + 12);
+    doc.text(nivelStr, slotX + 4, slotY + 16);
   }
-  // Plano name - medium
+  // Plano name + pin count - right side
   doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
-  doc.text(nombre, slotX + (nivelStr ? 30 : 3), slotY + 7);
-  // Pin count
+  doc.text(nombre, slotX + slotW - 4, slotY + 8, { align: "right" });
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
-  doc.text(`${plano.pines.length} pines`, slotX + slotW / 2, slotY + 12, { align: "center" });
-  // Nivel label right side - also LARGE
-  if (plano.nivel !== null) {
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Nivel ${plano.nivel}`, slotX + slotW - 4, slotY + 12, { align: "right" });
-  };
+  doc.text(`${plano.pines.length} pines`, slotX + slotW - 4, slotY + 14, { align: "right" });
 
   const imgY = slotY + titleBarH + 1;
   const imgH = PLANO_IMG_H;

@@ -3968,3 +3968,13 @@
 - [ ] Cambiar fondo del visor de planos a blanco siempre
 - [ ] Aumentar nivel font size al doble real (18pt) en PDF
 
+
+## v4.23 - Fixes críticos PDF + Visor
+- [ ] PDF: Triplicar número de nivel (30pt+)
+- [ ] PDF: TODOS los pines de TODOS los niveles sin excepción
+- [ ] PDF: Página 1 = resumen ejecutivo completo
+- [ ] Visor: Quitar botón rojo pin mode y banner rojo
+- [ ] Visor: Reemplazar carrusel por grid de planos
+- [ ] Visor: Al colocar pin ir directo a captura rápida
+- [ ] Bienvenida: Icono de plano en barra de acciones
+

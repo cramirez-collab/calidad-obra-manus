@@ -835,11 +835,11 @@ export default function Planos() {
               onClick={() => { setCaptureMode("pin"); if (!showViewer && planos.length > 0) openViewer(0); }}
               className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border-2 ${
                 captureMode === "pin"
-                  ? "bg-red-50 border-red-500 text-red-700 shadow-md shadow-red-100"
+                  ? "bg-emerald-50 border-emerald-600 text-emerald-700 shadow-md shadow-emerald-100"
                   : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
-              <MapPin className={`w-4 h-4 ${captureMode === "pin" ? "text-red-500" : ""}`} />
+              <MapPin className={`w-4 h-4 ${captureMode === "pin" ? "text-emerald-600" : ""}`} />
               <span className="hidden xs:inline">Pin en Plano</span>
               <span className="xs:hidden">Pin</span>
             </button>
@@ -1046,7 +1046,7 @@ export default function Planos() {
               </button>
               {/* Indicador de modo pin activo */}
               {isPinMode && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 rounded-lg text-xs font-bold text-white animate-pulse shadow-lg shadow-red-500/30">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 rounded-lg text-xs font-bold text-white animate-pulse shadow-lg shadow-emerald-500/30">
                   <MapPin className="w-4 h-4" />
                   <span className="hidden sm:inline">Mantén 2s</span>
                   <span className="sm:hidden">2s</span>
@@ -1066,7 +1066,7 @@ export default function Planos() {
 
           {/* Pin mode banner */}
           {isPinMode && (
-            <div className="flex-shrink-0 bg-red-600 text-white text-center py-2 text-xs sm:text-sm font-bold flex items-center justify-center gap-2">
+            <div className="flex-shrink-0 bg-emerald-600 text-white text-center py-2 text-xs sm:text-sm font-bold flex items-center justify-center gap-2">
               <MapPin className="w-4 h-4 animate-bounce" />
               <span className="hidden sm:inline">MANTÉN PRESIONADO 2 SEGUNDOS PARA COLOCAR PIN</span>
               <span className="sm:hidden">MANTÉN 2s = NUEVO PIN</span>
@@ -1206,7 +1206,7 @@ export default function Planos() {
 
           {/* FAB: Indicador modo pin */}
           {isPinMode && !showPinModal && !showCapturaRapida && !showItemSelector && (
-            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-[120] flex items-center gap-2 px-6 py-3 rounded-full bg-red-600 text-white font-bold text-sm shadow-2xl shadow-red-500/50 animate-bounce pointer-events-none">
+            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-[120] flex items-center gap-2 px-6 py-3 rounded-full bg-emerald-600 text-white font-bold text-sm shadow-2xl shadow-emerald-500/50 animate-bounce pointer-events-none">
               <MapPin className="w-5 h-5" />
               <span>MANTÉN 2s = NUEVO PIN</span>
             </div>
