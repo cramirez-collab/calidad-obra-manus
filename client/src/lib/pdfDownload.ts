@@ -106,6 +106,17 @@ export function savePDFToDevice(doc: jsPDF, filename: string): void {
 }
 
 /**
+ * Abre el PDF en vista previa (nueva pestaña) sin descargar automáticamente.
+ * El usuario decide si descarga desde el visor del navegador.
+ */
+export function openPDFPreview(doc: jsPDF, _filename?: string): void {
+  const pdfBlob = doc.output('blob');
+  const blobUrl = URL.createObjectURL(new Blob([pdfBlob], { type: 'application/pdf' }));
+  window.open(blobUrl, '_blank');
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 120_000);
+}
+
+/**
  * Descarga PDF con máxima compatibilidad
  * Detecta el dispositivo y usa el mejor método
  */

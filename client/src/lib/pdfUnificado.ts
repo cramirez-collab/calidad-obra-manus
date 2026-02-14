@@ -11,7 +11,7 @@
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { downloadPDFBestMethod } from "./pdfDownload";
+import { openPDFPreview } from "./pdfDownload";
 
 // Colores corporativos Objetiva
 export const COLORES = {
@@ -103,7 +103,7 @@ export function descargarPDFUnificado(
   const fecha = new Date().toISOString().split('T')[0];
   const nombreArchivo = `${tipo}_${nombreLimpio}_${fecha}.pdf`;
   
-  downloadPDFBestMethod(doc, nombreArchivo);
+  openPDFPreview(doc);
 }
 
 /**

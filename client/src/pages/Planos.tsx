@@ -1035,10 +1035,12 @@ export default function Planos() {
                     )}
                   </>
                 )}
-                <button onClick={handleDownloadPlano} className="px-2.5 sm:px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-[11px] sm:text-xs font-medium flex items-center gap-1 sm:gap-1.5 transition-colors" title="Descargar plano con pines">
-                  <Download className="w-4 h-4" />
-                  <span className="hidden sm:inline">Descargar</span>
-                </button>
+                {isAdmin && (
+                  <button onClick={handleDownloadPlano} className="px-2.5 sm:px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-[11px] sm:text-xs font-medium flex items-center gap-1 sm:gap-1.5 transition-colors" title="Descargar plano con pines">
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline">Descargar</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>

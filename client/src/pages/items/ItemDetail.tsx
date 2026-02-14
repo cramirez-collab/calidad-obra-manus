@@ -39,7 +39,8 @@ import {
   Trash,
   X,
   MapPinPlus,
-  DollarSign
+  DollarSign,
+  AlertCircle
 } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import {
@@ -59,7 +60,7 @@ import { toast } from "sonner";
 import QRCode from "qrcode";
 import jsPDF from "jspdf";
 import { format } from "date-fns";
-import { downloadPDFBestMethod } from "@/lib/pdfDownload";
+import { openPDFPreview } from "@/lib/pdfDownload";
 import { Input } from "@/components/ui/input";
 import ZoomablePlano from "@/components/ZoomablePlano";
 import { subirConRetry } from "@/lib/uploadQueue";
@@ -962,7 +963,7 @@ export default function ItemDetail() {
       
       // Descargar
       const filename = `Ficha_${item.codigo}_${item.numeroInterno || 'item'}.pdf`;
-      downloadPDFBestMethod(doc, filename);
+      openPDFPreview(doc);
       
       toast.success('PDF descargado correctamente');
     } catch (error) {
@@ -1140,6 +1141,44 @@ export default function ItemDetail() {
           </div>
         </div>
 
+        {/* === INDICADOR DE COMPLETITUD DE FICHA (MANDATORIO) === */}
+        {(() => {
+          const itemAny = item as any;
+          const hasFotoAntes = !!(item.fotoAntesMarcadaUrl || item.fotoAntesUrl);
+          const hasFotoDespues = !!item.fotoDespuesUrl;
+          const hasPlanoUbicacion = !!(itemAny.pinPlanoId && itemAny.pinPosX);
+          const isComplete = hasFotoAntes && hasFotoDespues && hasPlanoUbicacion;
+          const missing: string[] = [];
+          if (!hasFotoAntes) missing.push('Foto Antes');
+          if (!hasFotoDespues) missing.push('Foto Despu\u00e9s');
+          if (!hasPlanoUbicacion) missing.push('Plano de Ubicaci\u00f3n');
+          
+          return (
+            <div className={`rounded-lg border p-3 flex items-center gap-3 ${
+              isComplete 
+                ? 'bg-emerald-50 border-emerald-200' 
+                : 'bg-amber-50 border-amber-300 animate-pulse'
+            }`}>
+              {isComplete ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-semibold ${isComplete ? 'text-emerald-800' : 'text-amber-800'}`}>
+                  {isComplete ? 'Ficha Completa' : 'Ficha Incompleta'}
+                </p>
+                {!isComplete && (
+                  <p className="text-xs text-amber-700">Falta: {missing.join(', ')}</p>
+                )}
+              </div>
+              {!isComplete && (
+                <span className="text-[10px] font-bold text-amber-700 bg-amber-200 px-2 py-0.5 rounded-full flex-shrink-0">OBLIGATORIO</span>
+              )}
+            </div>
+          );
+        })()}
+
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Columna principal - Fotos */}
           <div className="lg:col-span-2 space-y-6">
@@ -1309,21 +1348,23 @@ export default function ItemDetail() {
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                           </button>
                         ) : null}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingPin(true);
-                            setShowPlanoModal(true);
-                            if (hasPin) {
-                              setTempPinPos({ x: String(itemAny.pinPosX), y: String(itemAny.pinPosY) });
-                            }
-                          }}
-                          className="flex flex-col items-center justify-center w-16 h-16 rounded-lg border border-dashed border-emerald-400 hover:bg-emerald-50 transition-colors text-emerald-600"
-                        >
-                          <MapPin className="w-4 h-4" />
-                          <span className="text-[9px] font-medium mt-0.5">{hasPin ? 'Editar' : 'Agregar'}</span>
-                          <span className="text-[9px] font-medium">Pin</span>
-                        </button>
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingPin(true);
+                              setShowPlanoModal(true);
+                              if (hasPin) {
+                                setTempPinPos({ x: String(itemAny.pinPosX), y: String(itemAny.pinPosY) });
+                              }
+                            }}
+                            className="flex flex-col items-center justify-center w-16 h-16 rounded-lg border border-dashed border-emerald-400 hover:bg-emerald-50 transition-colors text-emerald-600"
+                          >
+                            <MapPin className="w-4 h-4" />
+                            <span className="text-[9px] font-medium mt-0.5">{hasPin ? 'Editar' : 'Agregar'}</span>
+                            <span className="text-[9px] font-medium">Pin</span>
+                          </button>
+                        )}
                       </div>
                     );
                   })()}

@@ -9,7 +9,7 @@
  * - TODOS los pines se mantienen (historicos + actuales), solo cambia color por estatus
  */
 import jsPDF from "jspdf";
-import { downloadPDFBestMethod } from "./pdfDownload";
+import { openPDFPreview } from "./pdfDownload";
 
 // ─── Colores corporativos ───
 const C = {
@@ -758,9 +758,7 @@ export async function generarReportePlanosPDF(config: PlanoReportConfig): Promis
   // Add footers to all pages
   drawFooters(doc);
 
-  // Download
-  progress("Descargando...");
-  const safeName = sinAcentos(proyectoNombre).replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
-  const filename = `Planos_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`;
-  downloadPDFBestMethod(doc, filename);
+  // Vista previa: abrir PDF en nueva pestaña para que el usuario decida descargar
+  progress("Abriendo vista previa...");
+  openPDFPreview(doc);
 }

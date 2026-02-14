@@ -3998,3 +3998,15 @@
 - [x] Diagnosticar diferencia entre listar y reportePines
 - [x] PDF: Nombre del nivel = 24pt
 - [x] PDF: Textos bajo colores de leyenda = 12pt
+
+## v4.27 - Reestructuración módulo Captura + Roles planos + PDF preview
+- [x] 1. Renombrar "Pines" → "Captura" en sidebar/menú hamburguesa, sacarlo de Configuración
+- [x] 2. Agregar icono "Pines" (pin sobre plano) en pantalla de inicio (Bienvenida) con acceso directo a captura
+- [x] 3. Flujo directo: al tocar plano para crear pin/item, ir directo al formulario sin menú intermedio (ya implementado: long press 2s → CapturaRapida directa)
+- [x] 4. PDF vista previa antes de descarga (no descarga automática) - todos los PDFs ahora abren en nueva pestaña
+- [x] 5. Restricciones de planos por rol: backend ya usa adminProcedure para crear/actualizar/eliminar; frontend ya oculta upload/reemplazar/eliminar + descarga solo admin
+
+## v4.28 - Campo ubicación editable + Validación mandatoria fichas
+- [x] 1. Campo ubicación (plano + pin) editable en ItemDetail para admin/superadmin (botón Editar/Agregar Pin restringido a canEdit)
+- [x] 2. Validación mandatoria permanente: foto antes, foto después, plano de ubicación en TODAS las fichas
+- [x] 3. Indicador visual de ficha incompleta (falta foto antes/después/plano) en listas y detalle - banner en ItemDetail + badge ! en Bienvenida

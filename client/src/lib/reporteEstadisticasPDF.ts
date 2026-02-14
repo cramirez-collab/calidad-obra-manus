@@ -17,7 +17,7 @@
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { downloadPDFBestMethod } from "./pdfDownload";
+import { openPDFPreview } from "./pdfDownload";
 
 // ─── Colores corporativos Objetiva ───
 const C = {
@@ -1610,5 +1610,5 @@ export async function generarReporteEstadisticasPDF(data: ReporteData) {
 
   const nombreLimpio = proyectoNombre.replace(/[^a-zA-Z0-9]/g, "_");
   const fecha = new Date().toISOString().split("T")[0];
-  downloadPDFBestMethod(doc, `Reporte_Estadisticas_${nombreLimpio}_${fecha}.pdf`);
+  openPDFPreview(doc);
 }

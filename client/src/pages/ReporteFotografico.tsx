@@ -34,7 +34,7 @@ import { useProject } from "@/contexts/ProjectContext";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { downloadPDFBestMethod } from "@/lib/pdfDownload";
+import { openPDFPreview } from "@/lib/pdfDownload";
 import { Switch } from "@/components/ui/switch";
 
 const statusLabels: Record<string, string> = {
@@ -526,7 +526,7 @@ export default function ReporteFotografico() {
       // Descargar PDF
       const nombreProyecto = proyectoSeleccionado?.nombre?.replace(/[^a-zA-Z0-9]/g, '_') || 'reporte';
       const suffix = incluirFotos ? '_con_fotos' : '';
-      downloadPDFBestMethod(doc, `reporte_fotografico_${nombreProyecto}${suffix}_${format(new Date(), 'yyyy-MM-dd_HHmm')}.pdf`);
+      openPDFPreview(doc);
       
       toast.success(`PDF generado con ${totalPages} paginas`);
     } catch (error) {

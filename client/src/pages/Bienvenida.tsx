@@ -29,7 +29,8 @@ import {
   XCircle,
   Megaphone,
   Layers,
-  FileText
+  FileText,
+  Crosshair
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ZoomablePlano from "@/components/ZoomablePlano";
@@ -49,6 +50,7 @@ import { useLocation, Redirect } from "wouter";
 import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
 import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlanosPDF";
+import { openPDFPreview } from "@/lib/pdfDownload";
 // jsPDF se importa dinámicamente para evitar conflicto con React context
 // Heartbeat via tRPC en vez de socket para usuarios en línea
 
@@ -126,7 +128,7 @@ export default function Bienvenida() {
       y += 8;
     });
     
-    doc.save(`usuarios_en_linea_${new Date().toISOString().slice(0, 10)}.pdf`);
+    openPDFPreview(doc);
   };
 
   // Generar reporte PDF de planos con pines
@@ -458,9 +460,10 @@ export default function Bienvenida() {
     corregir: pendientes?.filter((i: any) => i.status === "rechazado").length || 0,
   };
 
-  // Solo dos acciones: Nuevo y Stats
+  // Acciones rápidas: Nuevo, Pines (captura), Stats
   const quickActions = [
     { icon: Plus, label: "Nuevo", path: "/nuevo-item", color: "bg-[#02B381]", roles: ['superadmin', 'admin', 'residente', 'jefe_residente'] },
+    { icon: Crosshair, label: "Pines", path: "/planos", color: "bg-[#4A90D9]", roles: ['superadmin', 'admin', 'residente', 'jefe_residente', 'supervisor'] },
     { icon: BarChart3, label: "Stats", path: "/estadisticas", color: "bg-[#002C63]", roles: ['superadmin', 'admin', 'supervisor'] },
   ];
 
@@ -804,9 +807,9 @@ export default function Bienvenida() {
                       
                       {/* Miniatura de foto antes */}
                       <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg overflow-hidden shrink-0 bg-slate-100">
-                        {item.fotoAntes ? (
-                          <img 
-                            src={getImageUrl(item.fotoAntes)} 
+                        {item.fotoAntesUrl ? (
+                          <img
+                            src={getImageUrl(item.fotoAntesUrl)}
                             alt="Foto antes" 
                             className="h-full w-full object-cover"
                             loading="lazy"
@@ -829,6 +832,23 @@ export default function Bienvenida() {
                           <span className={`text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded ${config.bg} ${config.color}`}>
                             {config.label}
                           </span>
+                          {/* Indicador de completitud de ficha */}
+                          {(() => {
+                            const hasAntes = !!(item.fotoAntesUrl || (item as any).fotoAntesMarcadaUrl);
+                            const hasDespues = !!(item as any).fotoDespuesUrl;
+                            const hasPlano = !!item.pinPlanoId;
+                            const fichaCompleta = hasAntes && hasDespues && hasPlano;
+                            if (fichaCompleta) return null;
+                            const faltan: string[] = [];
+                            if (!hasAntes) faltan.push('foto antes');
+                            if (!hasDespues) faltan.push('foto despu\u00e9s');
+                            if (!hasPlano) faltan.push('plano');
+                            return (
+                              <span className="text-[9px] px-1 py-0.5 rounded bg-red-100 text-red-700 font-bold" title={`Falta: ${faltan.join(', ')}`}>
+                                !
+                              </span>
+                            );
+                          })()}
                         </div>
                         <p className="text-xs sm:text-sm truncate mt-0.5 text-[#2E2E2E]">{item.titulo}</p>
                         <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-[#6E6E6E] mt-1 flex-wrap">

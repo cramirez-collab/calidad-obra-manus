@@ -46,7 +46,8 @@ import {
   RefreshCw,
   Wifi,
   WifiOff,
-  Mail
+  Mail,
+  Crosshair
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -95,7 +96,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
   const baseItems: MenuItem[] = [
     { icon: LayoutDashboard, label: "Inicio", path: "/bienvenida" },
     { icon: Camera, label: "Nuevo", path: "/nuevo-item" },
-    { icon: MapPin, label: "Pines", path: "/planos" },
+    { icon: Crosshair, label: "Captura", path: "/planos" },
     { icon: ClipboardCheck, label: "Ítems", path: "/items" },
     { icon: Clock, label: "Mis Tareas", path: "/mis-tareas" },
   ];
@@ -138,7 +139,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: FolderKanban, label: "Proyectos", path: "/proyectos", group: "Sistema" },
     { icon: Link2, label: "Enlaces", path: "/enlaces-externos", group: "Sistema" },
     { icon: QrCode, label: "QR", path: "/generar-qr", group: "Sistema" },
-    { icon: MapPin, label: "Pines", path: "/planos", group: "Sistema" },
+
     // Catálogos
     { icon: Building2, label: "Empresas", path: "/empresas", group: "Catálogos" },
     { icon: MapPin, label: "Unidades", path: "/unidades", group: "Catálogos" },
