@@ -496,16 +496,16 @@ export default function Bienvenida() {
             </div>
           </div>
           {/* Iconos de acceso rápido - SIEMPRE A LA DERECHA */}
-          <div className="flex gap-2 ml-auto">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 ml-auto justify-end">
             {visibleActions.map(action => (
               <Tooltip key={action.path}>
                 <TooltipTrigger asChild>
                   <Button
                     size="icon"
-                    className={`h-10 w-10 ${action.color} hover:opacity-90 shadow-md`}
+                    className={`h-8 w-8 sm:h-10 sm:w-10 ${action.color} hover:opacity-90 shadow-md`}
                     onClick={() => setLocation(action.path)}
                   >
-                    <action.icon className="h-5 w-5 text-white" />
+                    <action.icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{action.label}</TooltipContent>
@@ -517,10 +517,10 @@ export default function Bienvenida() {
                 <Button
                   size="icon"
                   variant="outline"
-                  className="h-10 w-10 border-slate-300 hover:bg-slate-50"
+                  className="h-8 w-8 sm:h-10 sm:w-10 border-slate-300 hover:bg-slate-50"
                   onClick={() => setShowPlanoSelector(true)}
                 >
-                  <MapPin className="h-5 w-5 text-[#002C63]" />
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63]" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Ver Pines</TooltipContent>
@@ -531,11 +531,11 @@ export default function Bienvenida() {
                 <Button
                   size="icon"
                   variant="outline"
-                  className="h-10 w-10 border-slate-300 hover:bg-slate-50"
+                  className="h-8 w-8 sm:h-10 sm:w-10 border-slate-300 hover:bg-slate-50"
                   onClick={handleGenerarReportePlanos}
                   disabled={generandoPDF}
                 >
-                  {generandoPDF ? <Loader2 className="h-5 w-5 text-[#002C63] animate-spin" /> : <FileText className="h-5 w-5 text-[#002C63]" />}
+                  {generandoPDF ? <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63] animate-spin" /> : <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63]" />}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>PDF Planos</TooltipContent>
@@ -546,10 +546,10 @@ export default function Bienvenida() {
                 <Button
                   size="icon"
                   variant="outline"
-                  className="h-10 w-10 relative border-slate-300 hover:bg-slate-50"
+                  className="h-8 w-8 sm:h-10 sm:w-10 relative border-slate-300 hover:bg-slate-50"
                   onClick={() => setLocation('/avisos')}
                 >
-                  <Megaphone className="h-5 w-5 text-[#002C63]" />
+                  <Megaphone className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63]" />
                   {(avisosNoLeidos ?? 0) > 0 && (
                     <span className="absolute -top-1 -right-1 z-50 h-5 min-w-[20px] px-1 flex items-center justify-center text-[11px] font-bold text-white bg-red-600 rounded-full shadow-lg border-2 border-white animate-pulse">
                       {avisosNoLeidos}

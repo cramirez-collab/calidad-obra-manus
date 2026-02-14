@@ -3913,3 +3913,8 @@
 - [x] IMPROVE: Pines más grandes y visibles (radio 2.5mm con borde blanco de 3mm)
 - [x] FEATURE: Botón PDF Planos (FileText) en Bienvenida header junto a Ver Pines
 - [x] FIX: Mismo fix de tRPC batch format aplicado en Planos.tsx
+
+## Ajustes PDF pines + botón Avisos móvil v4.13
+- [x] PDF: Pines del mismo color por nivel (no por estatus), puntos más pequeños y brillantes
+- [x] Bienvenida: Botón de Avisos no visible en móvil - se corta por overflow
+- [x] Bienvenida: Ajustar layout de botones header para que quepan en móvil

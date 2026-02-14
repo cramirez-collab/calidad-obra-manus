@@ -206,7 +206,9 @@ function drawPlanoSlot(
     const padding = 1;
     doc.addImage(planoImg, fmt, slotX + padding, imgY + padding, slotW - padding * 2, imgH - padding * 2);
 
-    // ─── Draw pins on top of image ───
+    // ─── Draw pins on top of image (same bright color per plano) ───
+    // Bright vivid color for all pins in this plano
+    const PIN_COLOR: [number, number, number] = [255, 30, 60]; // bright red
     for (const pin of plano.pines) {
       const px = parseFloat(pin.posX);
       const py = parseFloat(pin.posY);
@@ -216,23 +218,12 @@ function drawPlanoSlot(
       const pinX = slotX + padding + (px / 100) * (slotW - padding * 2);
       const pinY = imgY + padding + (py / 100) * (imgH - padding * 2);
 
-      const estado = pin.itemEstado || "sin_item";
-      const color = STATUS_COLORS[estado]?.rgb || STATUS_COLORS.sin_item.rgb;
-
-      // White border circle
+      // White border
       doc.setFillColor(255, 255, 255);
-      doc.circle(pinX, pinY, 3, "F");
-      // Colored circle
-      doc.setFillColor(...color);
-      doc.circle(pinX, pinY, 2.5, "F");
-
-      // Pin number
-      const num = pin.itemCodigo ? pin.itemCodigo.replace(/\D/g, "").replace(/^0+/, "") : String(pin.id);
-      const shortNum = num.length > 3 ? num.slice(-3) : num;
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(4.5);
-      doc.setFont("helvetica", "bold");
-      doc.text(shortNum, pinX, pinY + 1.3, { align: "center" });
+      doc.circle(pinX, pinY, 1.8, "F");
+      // Bright colored dot
+      doc.setFillColor(...PIN_COLOR);
+      doc.circle(pinX, pinY, 1.3, "F");
     }
   } else {
     doc.setTextColor(...C.GRIS);
