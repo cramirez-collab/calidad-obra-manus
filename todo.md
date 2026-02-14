@@ -3899,3 +3899,8 @@
 - [x] CRITICAL: Integrar cola de retry en todos los flujos de foto: crear ítem, foto después, foto antes
 - [x] FEATURE: Indicador visual de fotos pendientes de subir (badge/banner) - SyncManager muestra toast con conteo
 - [x] FEATURE: Botón manual de reintentar subida si el auto-retry no funciona - SyncManager reintenta cada 15s + al detectar conexión
+- [x] FEATURE: Reporte PDF de pines por plano - 2 planos por página vertical, contenedores iguales, retícula alineada
+- [x] FEATURE: Logo Objetiva en header del reporte PDF de planos
+- [x] FEATURE: Recuadro de estadísticas por plano (por estatus y colores del app) en reporte PDF
+- [x] FEATURE: Botón de descarga "Reporte PDF" en módulo Planos
+- [x] FEATURE: Endpoint backend reportePines para obtener todos los planos con pines del proyecto

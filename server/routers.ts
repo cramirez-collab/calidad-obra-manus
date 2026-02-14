@@ -3111,6 +3111,35 @@ export const appRouter = router({
           await db.deletePlanoPin(input.id);
           return { ok: true };
         }),
+
+      reportePines: protectedProcedure
+        .input(z.object({ proyectoId: z.number() }))
+        .query(async ({ input }) => {
+          const allPlanos = await db.getPlanosByProyecto(input.proyectoId);
+          const result = [];
+          for (const plano of allPlanos) {
+            const pines = await db.getPinesByPlano(plano.id);
+            result.push({
+              id: plano.id,
+              nombre: plano.nombre,
+              nivel: plano.nivel,
+              imagenUrl: plano.imagenUrl,
+              pines: pines.map((p: any) => ({
+                id: p.id,
+                posX: p.posX,
+                posY: p.posY,
+                itemId: p.itemId,
+                itemCodigo: p.itemCodigo || null,
+                itemEstado: p.itemEstado || null,
+                itemTitulo: p.itemTitulo || null,
+                empresaNombre: p.empresaNombre || null,
+                unidadNombre: p.unidadNombre || null,
+                especialidadNombre: p.especialidadNombre || null,
+              })),
+            });
+          }
+          return result;
+        }),
     }),
   }),
 

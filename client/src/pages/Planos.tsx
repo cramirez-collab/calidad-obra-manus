@@ -11,8 +11,9 @@ import {
   Plus, PlusCircle, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers,
   Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff,
   Eye, Search, Filter, Download, Maximize, Minimize, ExternalLink, Users,
-  ListChecks, QrCode, Keyboard, Camera, RefreshCw
+  ListChecks, QrCode, Keyboard, Camera, RefreshCw, FileText
 } from "lucide-react";
+import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlanosPDF";
 import CapturaRapida from "@/components/CapturaRapida";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useLocation } from "wouter";
@@ -139,6 +140,10 @@ export default function Planos() {
   const qrCodeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   const qrStreamRef = useRef<MediaStream | null>(null);
   const qrControlsRef = useRef<{ stop: () => void } | null>(null);
+
+  // PDF Report
+  const [generandoPDF, setGenerandoPDF] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState("");
 
   // Long press 2s en plano para colocar pin
   const planoLongPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -726,6 +731,36 @@ export default function Planos() {
     }
   }, [currentPlano]);
 
+  // ─── Generar Reporte PDF de todos los planos ───
+  const handleGenerarReportePDF = useCallback(async () => {
+    if (!selectedProjectId || generandoPDF) return;
+    setGenerandoPDF(true);
+    setPdfProgress("Obteniendo datos...");
+    try {
+      const reportData = await fetch(`/api/trpc/planos.pines.reportePines?input=${encodeURIComponent(JSON.stringify({ proyectoId: selectedProjectId }))}`, {
+        credentials: 'include',
+      }).then(r => r.json());
+      const planosData: PlanoReportData[] = reportData?.result?.data || [];
+      if (planosData.length === 0) {
+        toast.error("No hay planos con pines para generar el reporte");
+        return;
+      }
+      const proyectoNombre = proyectoData?.nombre || "Proyecto";
+      await generarReportePlanosPDF({
+        proyectoNombre,
+        planos: planosData,
+        onProgress: (msg) => setPdfProgress(msg),
+      });
+      toast.success("Reporte PDF descargado");
+    } catch (err) {
+      console.error("Error generando PDF:", err);
+      toast.error("Error al generar el reporte PDF");
+    } finally {
+      setGenerandoPDF(false);
+      setPdfProgress("");
+    }
+  }, [selectedProjectId, generandoPDF, proyectoData]);
+
   // Toggle fullscreen
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -778,6 +813,10 @@ export default function Planos() {
                 ))}
               </div>
             )}
+            <Button onClick={handleGenerarReportePDF} disabled={generandoPDF || !planos?.length} size="sm" variant="outline" className="gap-1 text-xs border-slate-300 text-slate-700 hover:bg-slate-100">
+              {generandoPDF ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">{generandoPDF ? pdfProgress || "Generando..." : "Reporte PDF"}</span>
+            </Button>
             {isAdmin && (
               <Button onClick={() => { resetForm(); setShowAddDialog(true); }} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1 text-xs">
                 <Plus className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Subir Plano</span>
