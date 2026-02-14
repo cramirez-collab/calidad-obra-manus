@@ -3992,3 +3992,9 @@
 - [x] 5. UI Planos: Pinch zoom (2 dedos) en modo pin para precisión al colocar pin, con pan y límites
 - [x] 6. UI: Icono de plano en item list/card para navegar a la captura/vista del plano correspondiente
 - [x] 7. UI Bienvenida: CTA para asignar pin desde página de inicio cuando item no tiene pin, ir directo al plano del nivel
+
+## v4.26 - Fix discrepancia pines PDF vs visor + fuentes PDF
+- [x] FIX: PDF reportePines debe usar EXACTAMENTE la misma query que planos.pines.listar (el visor)
+- [x] Diagnosticar diferencia entre listar y reportePines
+- [x] PDF: Nombre del nivel = 24pt
+- [x] PDF: Textos bajo colores de leyenda = 12pt

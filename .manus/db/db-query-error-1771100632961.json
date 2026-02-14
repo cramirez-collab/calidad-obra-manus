@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT \n  p.id, p.nombre, p.nivel,\n  (SELECT COUNT(*) FROM plano_pines pp WHERE pp.planoId = p.id AND pp.activo = 1) as plano_pines_count,\n  (SELECT COUNT(*) FROM items i WHERE i.pin_plano_id = p.id AND i.pin_pos_x IS NOT NULL AND i.pin_pos_y IS NOT NULL) as items_pin_count,\n  (SELECT COUNT(*) FROM plano_pines pp INNER JOIN items i ON pp.itemId = i.id WHERE pp.planoId = p.id AND pp.activo = 1 AND i.pin_plano_id = p.id) as overlap_count\nFROM planos p \nWHERE p.proyecto_id = 1 AND p.activo = 1 \nORDER BY p.nivel, p.orden\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute \nSELECT \n  p.id, p.nombre, p.nivel,\n  (SELECT COUNT(*) FROM plano_pines pp WHERE pp.planoId = p.id AND pp.activo = 1) as plano_pines_count,\n  (SELECT COUNT(*) FROM items i WHERE i.pin_plano_id = p.id AND i.pin_pos_x IS NOT NULL AND i.pin_pos_y IS NOT NULL) as items_pin_count,\n  (SELECT COUNT(*) FROM plano_pines pp INNER JOIN items i ON pp.itemId = i.id WHERE pp.planoId = p.id AND pp.activo = 1 AND i.pin_plano_id = p.id) as overlap_count\nFROM planos p \nWHERE p.proyecto_id = 1 AND p.activo = 1 \nORDER BY p.nivel, p.orden\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'p.proyecto_id' in 'where clause'"
+  ]
+}

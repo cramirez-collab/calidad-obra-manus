@@ -3116,29 +3116,32 @@ export const appRouter = router({
       reportePines: protectedProcedure
         .input(z.object({ proyectoId: z.number() }))
         .query(async ({ input }) => {
-          // Use ONLY getPinesByPlano - the EXACT same data source as the app's floor plan viewer
+          // EXACT same data source as the app's floor plan viewer (planos.pines.listar)
+          // No mapping/filtering - pass through ALL data from getPinesByPlano
           const allPlanos = await db.getPlanosByProyecto(input.proyectoId);
           const result = [];
           for (const plano of allPlanos) {
-            const pinesData = await db.getPinesByPlano(plano.id);
+            // This is the SAME call that planos.pines.listar uses
+            const pinesRaw = await db.getPinesByPlano(plano.id);
             result.push({
               id: plano.id,
               nombre: plano.nombre,
               nivel: plano.nivel,
               imagenUrl: plano.imagenUrl,
-              pines: pinesData.map(p => ({
+              // Pass ALL pin data without filtering - exact same as visor
+              pines: pinesRaw.map(p => ({
                 id: p.id,
-                posX: p.posX,
-                posY: p.posY,
-                itemId: p.itemId,
-                itemCodigo: p.itemCodigo || null,
-                itemEstado: p.itemEstado || null,
-                itemTitulo: p.itemTitulo || null,
+                posX: String(p.posX),
+                posY: String(p.posY),
+                itemId: p.itemId ?? null,
+                itemCodigo: p.itemCodigo ?? null,
+                itemEstado: p.itemEstado ?? null,
+                itemTitulo: p.itemTitulo ?? null,
                 itemConsecutivo: p.itemConsecutivo ?? null,
-                residenteNombre: p.residenteNombre || null,
-                empresaNombre: p.empresaNombre || null,
-                unidadNombre: p.unidadNombre || null,
-                especialidadNombre: p.especialidadNombre || null,
+                residenteNombre: p.residenteNombre ?? null,
+                empresaNombre: p.empresaNombre ?? null,
+                unidadNombre: p.unidadNombre ?? null,
+                especialidadNombre: p.especialidadNombre ?? null,
               })),
             });
           }

@@ -587,27 +587,22 @@ function drawPlanoSlot(
   const nombre = sinAcentos(plano.nombre);
   const nivelStr = plano.nivel !== null ? `N${plano.nivel}` : "";
 
-  // ─── Title bar (nivel number x2 = 60pt) ───
-  const titleBarH = 28;
+  // ─── Title bar ───
+  const titleBarH = 20;
   doc.setFillColor(...C.AZUL);
   doc.roundedRect(slotX, slotY, slotW, titleBarH, 2, 2, "F");
   doc.setTextColor(...C.BLANCO);
 
-  // Nivel number: 30→60
-  if (nivelStr) {
-    doc.setFontSize(60);
-    doc.setFont("helvetica", "bold");
-    doc.text(nivelStr, slotX + 5, slotY + 22);
-  }
-
-  // Plano name: 8→16
-  doc.setFontSize(16);
+  // Nivel name: 24pt (user-requested)
+  doc.setFontSize(24);
   doc.setFont("helvetica", "bold");
-  doc.text(nombre, slotX + slotW - 5, slotY + 12, { align: "right" });
-  // Pin count: 7→14
+  const fullNivel = nivelStr ? `${nivelStr} - ${nombre}` : nombre;
+  doc.text(sinAcentos(fullNivel), slotX + 5, slotY + 14);
+
+  // Pin count right side: 14pt
   doc.setFontSize(14);
   doc.setFont("helvetica", "normal");
-  doc.text(`${plano.pines.length} pines`, slotX + slotW - 5, slotY + 22, { align: "right" });
+  doc.text(`${plano.pines.length} pines`, slotX + slotW - 5, slotY + 14, { align: "right" });
 
   const imgY = slotY + titleBarH + 2;
   const imgH = PLANO_IMG_H;
@@ -654,8 +649,8 @@ function drawPlanoSlot(
     doc.setFillColor(...li.rgb);
     doc.circle(lx + 3, legendY + legendH / 2, 2, "F");
     doc.setTextColor(80, 80, 80);
-    // 4→8
-    doc.setFontSize(8);
+    // Legend text under colors: 12pt (user-requested)
+    doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     doc.text(sinAcentos(li.label), lx + 7, legendY + legendH / 2 + 1.5);
   }
@@ -700,8 +695,8 @@ function drawPlanoSlot(
     doc.text(String(count), px + pillW / 2, pillY + 9, { align: "center" });
 
     doc.setTextColor(...C.GRIS);
-    // 4.5→9
-    doc.setFontSize(9);
+    // Stats pill labels: 12pt (user-requested)
+    doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     doc.text(sinAcentos(sc.label), px + pillW / 2, pillY + pillH + 6, { align: "center" });
   }
