@@ -3978,3 +3978,8 @@
 - [ ] Visor: Al colocar pin ir directo a captura rápida
 - [ ] Bienvenida: Icono de plano en barra de acciones
 
+
+## v4.24 - 3 mejoras sugeridas
+- [ ] Leyenda de colores en cada pagina de plano del PDF
+- [ ] Reemplazar carrusel de thumbnails por grid seleccionable de planos
+- [ ] Opcion para asignar pin a items sin ubicacion en plano

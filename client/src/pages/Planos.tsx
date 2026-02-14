@@ -1224,14 +1224,18 @@ export default function Planos() {
             </>
           )}
 
-          {/* Bottom thumbnails */}
+          {/* Bottom plano grid selector */}
           {planos.length > 1 && (
-            <div className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 bg-slate-100 overflow-x-auto border-t border-slate-200">
-              {planos.map((p: any, i: number) => (
-                <button key={p.id} onClick={() => { setViewerIndex(i); resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); setTempPin(null); }} className={`flex-shrink-0 w-14 h-10 rounded-md overflow-hidden border-2 transition-all ${i === viewerIndex ? "border-emerald-500 opacity-100" : "border-transparent opacity-50 hover:opacity-80"}`}>
-                  <img src={p.imagenUrl} alt={p.nombre} className="w-full h-full object-cover" />
-                </button>
-              ))}
+            <div className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1.5 bg-slate-100 overflow-x-auto border-t border-slate-200">
+              {planos.map((p: any, i: number) => {
+                const pinCount = pinesData?.filter((pin: any) => pin.planoId === p.id).length || 0;
+                return (
+                  <button key={p.id} onClick={() => { setViewerIndex(i); resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); setTempPin(null); }} className={`flex-shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border-2 whitespace-nowrap ${i === viewerIndex ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50"}`}>
+                    <span className="block font-bold">{p.nombre}</span>
+                    {pinCount > 0 && <span className={`block text-[10px] ${i === viewerIndex ? "text-emerald-500" : "text-slate-400"}`}>{pinCount} pin{pinCount !== 1 ? "es" : ""}</span>}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

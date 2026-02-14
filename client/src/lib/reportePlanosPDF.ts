@@ -145,8 +145,8 @@ const MARGIN = 12;
 const HEADER_H = 28;
 const FOOTER_H = 12;
 const CONTENT_W = PAGE_W - MARGIN * 2;
-const PLANO_SLOT_H = 130; // 20(title) + 86(img) + 24(stats)
-const PLANO_IMG_H = 86;
+const PLANO_SLOT_H = 130; // 20(title) + 80(img) + 6(legend) + 24(stats)
+const PLANO_IMG_H = 80;
 const STATS_H = 24;
 const GAP = 4;
 
@@ -630,7 +630,25 @@ function drawPlanoSlot(
   }
 
   // ─── Stats bar below image ───
-  const statsY = imgY + imgH + 2;
+  // ─── Color legend row ───
+  const legendY = imgY + imgH + 1;
+  const legendH = 4;
+  const legendItems = STATUS_ORDER.map(k => ({ key: k, ...STATUS_COLORS[k] }));
+  const legendItemW = (slotW - 4) / legendItems.length;
+  for (let i = 0; i < legendItems.length; i++) {
+    const li = legendItems[i];
+    const lx = slotX + 2 + i * legendItemW;
+    // Color dot
+    doc.setFillColor(...li.rgb);
+    doc.circle(lx + 2, legendY + legendH / 2, 1.2, "F");
+    // Label
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(4);
+    doc.setFont("helvetica", "normal");
+    doc.text(sinAcentos(li.label), lx + 4.5, legendY + legendH / 2 + 1);
+  }
+
+  const statsY = legendY + legendH + 1;
   const statsBarH = STATS_H;
 
   doc.setFillColor(...C.BG_LIGHT);

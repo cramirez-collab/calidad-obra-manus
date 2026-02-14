@@ -886,6 +886,17 @@ export default function Bienvenida() {
                         )}
                       </div>
 
+                      {/* Indicador de pin - si no tiene pin, mostrar botón para asignar */}
+                      {!item.pinPlanoId && !selectionMode && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setLocation(`/items/${item.id}`); }}
+                          className="h-7 w-7 rounded-full border-2 border-dashed border-amber-400 flex items-center justify-center shrink-0 flex-none hover:bg-amber-50 transition-colors"
+                          title="Sin pin - Toca para asignar ubicación"
+                        >
+                          <MapPin className="h-3 w-3 text-amber-400" />
+                        </button>
+                      )}
+
                       {/* Botón eliminar para superadmin/admin (solo si no está en modo selección) */}
                       {isSuperadmin && !selectionMode && (
                         <Button
