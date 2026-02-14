@@ -540,7 +540,7 @@ function drawCoverPage(doc: jsPDF, proyectoNombre: string, planos: PlanoReportDa
     y = HEADER_H + 10;
   }
   doc.setFillColor(...C.AZUL);
-  doc.roundedRect(tX, y, tW, rowH + 1, 1.5, 1.5, "F");
+  doc.roundedRect(tX, y, tW, rowH, 1.5, 1.5, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
@@ -558,7 +558,7 @@ function drawCoverPage(doc: jsPDF, proyectoNombre: string, planos: PlanoReportDa
   ];
   let ttx = tX + 2;
   for (let i = 0; i < totals.length; i++) {
-    doc.text(totals[i], ttx + (i === 0 ? 0 : colW[i] / 2), y + 6, { align: i === 0 ? "left" : "center" });
+    doc.text(totals[i], ttx + (i === 0 ? 0 : colW[i] / 2), y + 5.5, { align: i === 0 ? "left" : "center" });
     ttx += colW[i];
   }
 }

@@ -4031,3 +4031,7 @@
 - [x] 3. Diseño visual premium: gradientes, sombras, cards, barra horizontal, colores Objetiva
 - [x] 4. Pines dibujados encima de la imagen con colores reales y posición relativa correcta
 - [x] 5. Página portada con KPI cards, barra proporcional, indicadores clave, tabla desglose por nivel
+
+## v4.33 - Fix context menu + PDF total alignment
+- [x] 1. Bloquear menú contextual nativo del navegador al hacer long press en imagen del plano (onContextMenu + WebkitTouchCallout)
+- [x] 2. Alinear fila TOTAL en tabla del PDF (mismo rowH y textY que filas de datos)

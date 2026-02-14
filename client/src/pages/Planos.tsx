@@ -1147,6 +1147,7 @@ export default function Planos() {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             onWheel={handleWheel}
+            onContextMenu={(e) => e.preventDefault()}
           >
             <div className="w-full h-full flex items-center justify-center relative" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transition: isDragging ? "none" : "transform 0.1s" }}>
               <div ref={planoContainerRef} className="relative">
@@ -1155,8 +1156,8 @@ export default function Planos() {
                   src={currentPlano.imagenUrl}
                   alt={currentPlano.nombre}
                   className="max-w-none"
-                  style={{ maxHeight: "calc(100vh - 140px)", maxWidth: "100vw", objectFit: "contain" }}
                   draggable={false}
+                  style={{ maxHeight: "calc(100vh - 140px)", maxWidth: "100vw", objectFit: "contain", WebkitTouchCallout: "none", WebkitUserSelect: "none" } as React.CSSProperties}
                 />
 
                 {/* Long press progress indicator */}
