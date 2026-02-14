@@ -145,6 +145,11 @@ export default function Planos() {
   // PDF Report
   const [generandoPDF, setGenerandoPDF] = useState(false);
   const [pdfProgress, setPdfProgress] = useState("");
+  const [showPdfFilterDialog, setShowPdfFilterDialog] = useState(false);
+  const [pdfFilterType, setPdfFilterType] = useState<"total" | "nivel" | "especialidad">("total");
+  const [pdfFilterNivel, setPdfFilterNivel] = useState<number | null>(null);
+  const [pdfFilterEspecialidad, setPdfFilterEspecialidad] = useState<string | null>(null);
+  const [planosDataCache, setPlanosDataCache] = useState<PlanoReportData[] | null>(null);
 
   // Long press 2s en plano para colocar pin
   const planoLongPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -798,8 +803,8 @@ export default function Planos() {
     }
   }, [currentPlano]);
 
-  // ─── Generar Reporte PDF de todos los planos ───
-  const handleGenerarReportePDF = useCallback(async () => {
+  // ─── Generar Reporte PDF: abrir dialog de filtros ───
+  const handleOpenPdfFilter = useCallback(async () => {
     if (!selectedProjectId || generandoPDF) return;
     setGenerandoPDF(true);
     setPdfProgress("Obteniendo datos...");
@@ -814,13 +819,43 @@ export default function Planos() {
         toast.error("No hay planos con pines para generar el reporte");
         return;
       }
+      setPlanosDataCache(planosData);
+      setPdfFilterType("total");
+      setPdfFilterNivel(null);
+      setPdfFilterEspecialidad(null);
+      setShowPdfFilterDialog(true);
+    } catch (err) {
+      console.error("Error obteniendo datos PDF:", err);
+      toast.error("Error al obtener datos para el reporte");
+    } finally {
+      setGenerandoPDF(false);
+      setPdfProgress("");
+    }
+  }, [selectedProjectId, generandoPDF]);
+
+  const handleGenerarReportePDF = useCallback(async () => {
+    if (!planosDataCache) return;
+    setShowPdfFilterDialog(false);
+    setGenerandoPDF(true);
+    setPdfProgress("Generando PDF...");
+    try {
       const proyectoNombre = proyectoData?.nombre || "Proyecto";
+      let filterLabel: string | null = null;
+      if (pdfFilterType === "nivel" && pdfFilterNivel !== null) {
+        const p = planosDataCache.find(pl => pl.nivel === pdfFilterNivel);
+        filterLabel = `Nivel: N${pdfFilterNivel}${p ? " - " + p.nombre : ""}`;
+      } else if (pdfFilterType === "especialidad" && pdfFilterEspecialidad) {
+        filterLabel = `Especialidad: ${pdfFilterEspecialidad}`;
+      }
       await generarReportePlanosPDF({
         proyectoNombre,
-        planos: planosData,
+        planos: planosDataCache,
+        filterNivel: pdfFilterType === "nivel" ? pdfFilterNivel : null,
+        filterEspecialidad: pdfFilterType === "especialidad" ? pdfFilterEspecialidad : null,
+        filterLabel,
         onProgress: (msg) => setPdfProgress(msg),
       });
-      toast.success("Reporte PDF descargado");
+      toast.success("Reporte PDF generado");
     } catch (err) {
       console.error("Error generando PDF:", err);
       toast.error("Error al generar el reporte PDF");
@@ -828,7 +863,7 @@ export default function Planos() {
       setGenerandoPDF(false);
       setPdfProgress("");
     }
-  }, [selectedProjectId, generandoPDF, proyectoData]);
+  }, [planosDataCache, proyectoData, pdfFilterType, pdfFilterNivel, pdfFilterEspecialidad]);
 
   // Toggle fullscreen
   const toggleFullscreen = useCallback(() => {
@@ -882,7 +917,7 @@ export default function Planos() {
                 ))}
               </div>
             )}
-            <Button onClick={handleGenerarReportePDF} disabled={generandoPDF || !planos?.length} size="sm" variant="outline" className="gap-1 text-xs border-slate-300 text-slate-700 hover:bg-slate-100">
+            <Button onClick={handleOpenPdfFilter} disabled={generandoPDF || !planos?.length} size="sm" variant="outline" className="gap-1 text-xs border-slate-300 text-slate-700 hover:bg-slate-100">
               {generandoPDF ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">{generandoPDF ? pdfProgress || "Generando..." : "Reporte PDF"}</span>
             </Button>
@@ -1648,6 +1683,125 @@ export default function Planos() {
             <div><label className="text-xs font-medium text-slate-600">Número de nivel</label><Input type="number" value={editNivel} onChange={e => setEditNivel(e.target.value)} /></div>
             <div><label className="text-xs font-medium text-slate-600">Descripción</label><Input value={editDescripcion} onChange={e => setEditDescripcion(e.target.value)} /></div>
           </div>
+        </DialogContent>
+      </Dialog>
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* PDF FILTER DIALOG                                           */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <Dialog open={showPdfFilterDialog} onOpenChange={setShowPdfFilterDialog}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-emerald-600" />
+              Generar Reporte PDF
+            </DialogTitle>
+            <DialogDescription>
+              Selecciona el alcance del reporte
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {/* Filter type selector */}
+            <div className="grid grid-cols-3 gap-2">
+              {(["total", "nivel", "especialidad"] as const).map(ft => (
+                <button
+                  key={ft}
+                  onClick={() => { setPdfFilterType(ft); setPdfFilterNivel(null); setPdfFilterEspecialidad(null); }}
+                  className={`px-3 py-2 rounded-lg text-xs font-medium border transition-all ${
+                    pdfFilterType === ft
+                      ? "bg-emerald-50 border-emerald-500 text-emerald-700"
+                      : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  {ft === "total" ? "Todos" : ft === "nivel" ? "Por Piso" : "Especialidad"}
+                </button>
+              ))}
+            </div>
+
+            {/* Nivel selector */}
+            {pdfFilterType === "nivel" && planosDataCache && (
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                <p className="text-xs text-slate-500 font-medium">Selecciona un piso:</p>
+                {Array.from(new Set(planosDataCache.map(p => p.nivel))).sort((a, b) => (a ?? 0) - (b ?? 0)).map(niv => {
+                  const p = planosDataCache.find(pl => pl.nivel === niv);
+                  const pinCount = p?.pines?.length || 0;
+                  return (
+                    <button
+                      key={niv}
+                      onClick={() => setPdfFilterNivel(niv)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm border transition-all ${
+                        pdfFilterNivel === niv
+                          ? "bg-emerald-50 border-emerald-500 text-emerald-700"
+                          : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                      }`}
+                    >
+                      <span>N{niv} - {p?.nombre || ""}</span>
+                      <span className="text-xs text-slate-400">{pinCount} pines</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Especialidad selector */}
+            {pdfFilterType === "especialidad" && planosDataCache && (
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                <p className="text-xs text-slate-500 font-medium">Selecciona una especialidad:</p>
+                {(() => {
+                  const espMap = new Map<string, number>();
+                  for (const p of planosDataCache) {
+                    for (const pin of p.pines) {
+                      if (pin.especialidadNombre) {
+                        espMap.set(pin.especialidadNombre, (espMap.get(pin.especialidadNombre) || 0) + 1);
+                      }
+                    }
+                  }
+                  return Array.from(espMap.entries()).sort((a, b) => b[1] - a[1]).map(([esp, count]) => (
+                    <button
+                      key={esp}
+                      onClick={() => setPdfFilterEspecialidad(esp)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm border transition-all ${
+                        pdfFilterEspecialidad === esp
+                          ? "bg-emerald-50 border-emerald-500 text-emerald-700"
+                          : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                      }`}
+                    >
+                      <span>{esp}</span>
+                      <span className="text-xs text-slate-400">{count} pines</span>
+                    </button>
+                  ));
+                })()}
+              </div>
+            )}
+
+            {/* Summary */}
+            {planosDataCache && (
+              <div className="bg-slate-50 rounded-lg p-3 text-xs text-slate-600">
+                {pdfFilterType === "total" && (
+                  <span>Se generará el reporte completo: {planosDataCache.length} planos, {planosDataCache.reduce((s, p) => s + p.pines.length, 0)} pines</span>
+                )}
+                {pdfFilterType === "nivel" && pdfFilterNivel !== null && (
+                  <span>Reporte del piso N{pdfFilterNivel}: {planosDataCache.find(p => p.nivel === pdfFilterNivel)?.pines?.length || 0} pines</span>
+                )}
+                {pdfFilterType === "especialidad" && pdfFilterEspecialidad && (
+                  <span>Reporte de {pdfFilterEspecialidad}: {planosDataCache.reduce((s, p) => s + p.pines.filter(pin => pin.especialidadNombre === pdfFilterEspecialidad).length, 0)} pines</span>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowPdfFilterDialog(false)}>Cancelar</Button>
+            <Button
+              onClick={handleGenerarReportePDF}
+              disabled={
+                (pdfFilterType === "nivel" && pdfFilterNivel === null) ||
+                (pdfFilterType === "especialidad" && !pdfFilterEspecialidad)
+              }
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+            >
+              <FileText className="w-4 h-4" />
+              Generar PDF
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

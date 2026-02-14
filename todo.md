@@ -4035,3 +4035,7 @@
 ## v4.33 - Fix context menu + PDF total alignment
 - [x] 1. Bloquear menú contextual nativo del navegador al hacer long press en imagen del plano (onContextMenu + WebkitTouchCallout)
 - [x] 2. Alinear fila TOTAL en tabla del PDF (mismo rowH y textY que filas de datos)
+
+## v4.34 - PDF pines numerados + filtros descarga
+- [x] 1. PDF: Pines con número secuencial (no iniciales) correlacionado con # en tabla detallada
+- [x] 2. UI: Filtros de descarga PDF: total, por especialidad, por piso individual (dialog con 3 tabs + selector)

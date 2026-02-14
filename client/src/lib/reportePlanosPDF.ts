@@ -82,6 +82,12 @@ export interface PlanoReportConfig {
   planos: PlanoReportData[];
   fechaGeneracion?: string;
   onProgress?: (msg: string) => void;
+  /** Filter: only include specific nivel */
+  filterNivel?: number | null;
+  /** Filter: only include specific especialidad name */
+  filterEspecialidad?: string | null;
+  /** Label for the filter applied (shown in cover) */
+  filterLabel?: string | null;
 }
 
 // ─── Image loader ───
@@ -260,7 +266,7 @@ function drawCardBg(doc: jsPDF, x: number, y: number, w: number, h: number, radi
 // PORTADA / RESUMEN
 // ═══════════════════════════════════════════════════════════════
 
-function drawCoverPage(doc: jsPDF, proyectoNombre: string, planos: PlanoReportData[]) {
+function drawCoverPage(doc: jsPDF, proyectoNombre: string, planos: PlanoReportData[], filterLabel?: string | null) {
   drawHeader(doc, proyectoNombre);
 
   let y = HEADER_H + 12;
@@ -271,6 +277,18 @@ function drawCoverPage(doc: jsPDF, proyectoNombre: string, planos: PlanoReportDa
   doc.setFont("helvetica", "bold");
   doc.text(sinAcentos("RESUMEN EJECUTIVO"), PW / 2, y, { align: "center" });
   y += 8;
+
+  // Filter label if applied
+  if (filterLabel) {
+    doc.setFillColor(...C.VERDE);
+    const flW = doc.getTextWidth(sinAcentos(filterLabel)) + 16;
+    doc.roundedRect((PW - flW) / 2, y - 3, flW, 8, 2, 2, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(sinAcentos(filterLabel), PW / 2, y + 2.5, { align: "center" });
+    y += 10;
+  }
 
   // Subtitle line
   doc.setDrawColor(...C.VERDE);
@@ -625,16 +643,18 @@ function drawPlanoPage(
 
     doc.addImage(planoImg.dataUrl, fmt, dX, dY, dW, dH);
 
-    // Draw pins on top
-    for (const pin of plano.pines) {
+    // Draw pins on top - numbered to correlate with table below
+    const sortedForDraw = [...plano.pines].sort((a, b) => (a.itemConsecutivo ?? 999) - (b.itemConsecutivo ?? 999));
+    for (let pi = 0; pi < sortedForDraw.length; pi++) {
+      const pin = sortedForDraw[pi];
       const px = parseFloat(pin.posX);
       const py = parseFloat(pin.posY);
       if (isNaN(px) || isNaN(py)) continue;
       const pinX = dX + (px / 100) * dW;
       const pinY = dY + (py / 100) * dH;
       const color = getStatusColorRgb(pin.itemEstado);
-      const label = getInitials(pin.residenteNombre);
-      drawPin(doc, pinX, pinY, color, label, 3.2);
+      const pinNumber = String(pi + 1);
+      drawPin(doc, pinX, pinY, color, pinNumber, 3.2);
     }
   } else {
     doc.setTextColor(...C.GRIS);
@@ -753,7 +773,7 @@ function drawPlanoPage(
       const statusColor = getStatusColorRgb(pin.itemEstado);
 
       // Row values
-      const num = pin.itemConsecutivo ? String(pin.itemConsecutivo) : "-";
+      const num = String(pi + 1); // Sequential number matching pin on image
       const codigo = sinAcentos(pin.itemCodigo || "-");
       let titulo = sinAcentos(pin.itemTitulo || "-");
       if (titulo.length > 30) titulo = titulo.substring(0, 28) + "..";
@@ -787,7 +807,22 @@ function drawPlanoPage(
 // ═══════════════════════════════════════════════════════════════
 
 export async function generarReportePlanosPDF(config: PlanoReportConfig): Promise<void> {
-  const { proyectoNombre, planos, onProgress } = config;
+  const { proyectoNombre, onProgress, filterNivel, filterEspecialidad, filterLabel } = config;
+
+  // Apply filters
+  let planos = [...config.planos];
+  if (filterNivel !== undefined && filterNivel !== null) {
+    planos = planos.map(p => ({
+      ...p,
+      pines: p.nivel === filterNivel ? p.pines : [],
+    })).filter(p => p.nivel === filterNivel);
+  }
+  if (filterEspecialidad) {
+    planos = planos.map(p => ({
+      ...p,
+      pines: p.pines.filter(pin => pin.especialidadNombre === filterEspecialidad),
+    })).filter(p => p.pines.length > 0);
+  }
 
   if (planos.length === 0) {
     throw new Error("No hay planos para generar el reporte");
@@ -813,7 +848,7 @@ export async function generarReportePlanosPDF(config: PlanoReportConfig): Promis
   progress("Generando PDF...");
 
   // Page 1: Cover / Summary
-  drawCoverPage(doc, proyectoNombre, sorted);
+  drawCoverPage(doc, proyectoNombre, sorted, filterLabel);
 
   // Plano pages: 1 per page with image + table
   for (let i = 0; i < sorted.length; i++) {
