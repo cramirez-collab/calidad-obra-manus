@@ -4039,3 +4039,10 @@
 ## v4.34 - PDF pines numerados + filtros descarga
 - [x] 1. PDF: Pines con número secuencial (no iniciales) correlacionado con # en tabla detallada
 - [x] 2. UI: Filtros de descarga PDF: total, por especialidad, por piso individual (dialog con 3 tabs + selector)
+
+## v4.35 - Nuevo flujo de colocación de pin
+- [x] 1. Eliminar long press 2s con círculo de progreso, reemplazar por tap inmediato
+- [x] 2. Al tocar en modo pin: colocar pin normal (icono gota) inmediatamente en la posición tocada
+- [x] 3. Pin draggable: usuario puede arrastrar el pin para ajustar posición exacta
+- [x] 4. Botón confirmar posición: al presionar se abre CapturaRapida/formulario de nuevo ítem
+- [x] 5. Botón cancelar: descarta el pin temporal

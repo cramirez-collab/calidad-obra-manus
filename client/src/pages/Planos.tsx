@@ -11,7 +11,7 @@ import {
   Plus, PlusCircle, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers,
   Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff,
   Eye, Search, Filter, Download, Maximize, Minimize, ExternalLink, Users,
-  ListChecks, QrCode, Keyboard, Camera, RefreshCw, FileText
+  ListChecks, QrCode, Keyboard, Camera, RefreshCw, FileText, Check
 } from "lucide-react";
 import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlanosPDF";
 import CapturaRapida from "@/components/CapturaRapida";
@@ -151,15 +151,10 @@ export default function Planos() {
   const [pdfFilterEspecialidad, setPdfFilterEspecialidad] = useState<string | null>(null);
   const [planosDataCache, setPlanosDataCache] = useState<PlanoReportData[] | null>(null);
 
-  // Long press 2s en plano para colocar pin
-  const planoLongPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const planoLongPressTriggered = useRef(false);
-  const planoTouchStart = useRef<{ x: number; y: number } | null>(null);
-  // Pin temporal rojo antes de confirmar
+  // Pin temporal rojo antes de confirmar (tap inmediato + draggable)
   const [tempPin, setTempPin] = useState<{ x: number; y: number } | null>(null);
-  // Visual feedback for long press progress
-  const [longPressProgress, setLongPressProgress] = useState(false);
-  const longPressProgressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isDraggingTempPin, setIsDraggingTempPin] = useState(false);
+  const tempPinDragStart = useRef<{ x: number; y: number; pinX: number; pinY: number } | null>(null);
 
   // State para fullscreen del plano
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -356,8 +351,6 @@ export default function Planos() {
   useEffect(() => {
     return () => {
       if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current);
-      if (planoLongPressRef.current) clearTimeout(planoLongPressRef.current);
-      if (longPressProgressRef.current) clearTimeout(longPressProgressRef.current);
     };
   }, []);
 
@@ -412,88 +405,115 @@ export default function Planos() {
   }, []);
 
   // ═══════════════════════════════════════════════════════════
-  // MODO PIN EN PLANO: Long press 2s → coloca pin rojo → abre CapturaRapida
+  // MODO PIN EN PLANO: Tap inmediato → coloca pin rojo draggable → confirmar → CapturaRapida
   // ═══════════════════════════════════════════════════════════
   const isPinMode = captureMode === "pin" && isAdmin;
 
-  const cancelLongPress = useCallback(() => {
-    if (planoLongPressRef.current) {
-      clearTimeout(planoLongPressRef.current);
-      planoLongPressRef.current = null;
-    }
-    if (longPressProgressRef.current) {
-      clearTimeout(longPressProgressRef.current);
-      longPressProgressRef.current = null;
-    }
-    planoLongPressTriggered.current = false;
-    setLongPressProgress(false);
-  }, []);
-
-  const startLongPress = useCallback((clientX: number, clientY: number) => {
+  const placePinAtPosition = useCallback((clientX: number, clientY: number) => {
     if (!isPinMode) return;
-    planoTouchStart.current = { x: clientX, y: clientY };
-    planoLongPressTriggered.current = false;
+    const img = imgRef.current;
+    if (!img) return;
+    const rect = img.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    const y = ((clientY - rect.top) / rect.height) * 100;
+    if (x < 0 || x > 100 || y < 0 || y > 100) return;
 
-    // Start visual feedback after 300ms
-    longPressProgressRef.current = setTimeout(() => {
-      setLongPressProgress(true);
-    }, 300);
+    // Vibrate for feedback
+    if ("vibrate" in navigator) {
+      (navigator as any).vibrate(50);
+    }
 
-    // Trigger at 2000ms
-    planoLongPressRef.current = setTimeout(() => {
-      planoLongPressTriggered.current = true;
-      setLongPressProgress(false);
-
-      const img = imgRef.current;
-      if (!img) return;
-      const rect = img.getBoundingClientRect();
-      const x = ((clientX - rect.left) / rect.width) * 100;
-      const y = ((clientY - rect.top) / rect.height) * 100;
-      if (x < 0 || x > 100 || y < 0 || y > 100) return;
-
-      // Vibrate for feedback
-      if ("vibrate" in navigator) {
-        (navigator as any).vibrate(100);
-      }
-
-      const pos = { x, y };
-      setTempPin(pos);
-      setPendingPinPos(pos);
-      setCapturaRapidaPinPos(pos);
-      setShowCapturaRapida(true);
-    }, 2000);
+    const pos = { x, y };
+    setTempPin(pos);
+    setPendingPinPos(pos);
   }, [isPinMode]);
 
+  const confirmTempPin = useCallback(() => {
+    if (!tempPin) return;
+    setCapturaRapidaPinPos(tempPin);
+    setShowCapturaRapida(true);
+  }, [tempPin]);
+
+  const cancelTempPin = useCallback(() => {
+    setTempPin(null);
+    setPendingPinPos(null);
+    setIsDraggingTempPin(false);
+    tempPinDragStart.current = null;
+  }, []);
+
+  // Drag handlers for temp pin
+  const handleTempPinDragStart = useCallback((clientX: number, clientY: number) => {
+    if (!tempPin) return;
+    setIsDraggingTempPin(true);
+    tempPinDragStart.current = { x: clientX, y: clientY, pinX: tempPin.x, pinY: tempPin.y };
+  }, [tempPin]);
+
+  const handleTempPinDragMove = useCallback((clientX: number, clientY: number) => {
+    if (!isDraggingTempPin || !tempPinDragStart.current) return;
+    const img = imgRef.current;
+    if (!img) return;
+    const rect = img.getBoundingClientRect();
+    const dx = ((clientX - tempPinDragStart.current.x) / rect.width) * 100;
+    const dy = ((clientY - tempPinDragStart.current.y) / rect.height) * 100;
+    const newX = Math.max(0, Math.min(100, tempPinDragStart.current.pinX + dx));
+    const newY = Math.max(0, Math.min(100, tempPinDragStart.current.pinY + dy));
+    setTempPin({ x: newX, y: newY });
+    setPendingPinPos({ x: newX, y: newY });
+  }, [isDraggingTempPin]);
+
+  const handleTempPinDragEnd = useCallback(() => {
+    setIsDraggingTempPin(false);
+    tempPinDragStart.current = null;
+  }, []);
+
   // Desktop: mousedown on plano container
+  const mouseDownPosRef = useRef<{ x: number; y: number } | null>(null);
+
   const handlePlanoMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (isPinMode) {
-      startLongPress(e.clientX, e.clientY);
+      // Track mouse start for tap detection
+      mouseDownPosRef.current = { x: e.clientX, y: e.clientY };
     } else {
       // Pan mode
       setIsDragging(true);
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
-  }, [isPinMode, startLongPress, pan]);
+  }, [isPinMode, pan]);
 
   const handlePlanoMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (isPinMode) {
-      // If moved too far, cancel long press
-      if (planoTouchStart.current) {
-        const dx = Math.abs(e.clientX - planoTouchStart.current.x);
-        const dy = Math.abs(e.clientY - planoTouchStart.current.y);
+      // If dragging temp pin, handle that
+      if (isDraggingTempPin) {
+        handleTempPinDragMove(e.clientX, e.clientY);
+        return;
+      }
+      // If moved too far from click start, it's not a tap
+      if (mouseDownPosRef.current) {
+        const dx = Math.abs(e.clientX - mouseDownPosRef.current.x);
+        const dy = Math.abs(e.clientY - mouseDownPosRef.current.y);
         if (dx > 10 || dy > 10) {
-          cancelLongPress();
+          mouseDownPosRef.current = null; // cancel tap
         }
       }
     } else if (isDragging) {
       setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
     }
-  }, [isPinMode, isDragging, dragStart, cancelLongPress]);
+  }, [isPinMode, isDragging, dragStart, isDraggingTempPin, handleTempPinDragMove]);
 
-  const handlePlanoMouseUp = useCallback(() => {
-    cancelLongPress();
+  const handlePlanoMouseUp = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (isPinMode) {
+      if (isDraggingTempPin) {
+        handleTempPinDragEnd();
+        return;
+      }
+      // If it was a tap (didn't move far), place pin
+      if (mouseDownPosRef.current && !tempPin) {
+        placePinAtPosition(e.clientX, e.clientY);
+      }
+      mouseDownPosRef.current = null;
+    }
     setIsDragging(false);
-  }, [cancelLongPress]);
+  }, [isPinMode, isDraggingTempPin, handleTempPinDragEnd, tempPin, placePinAtPosition]);
 
   // Touch handlers (with pinch zoom support)
   const touchStartPosRef = useRef<{ x: number; y: number; time: number } | null>(null);
@@ -510,7 +530,6 @@ export default function Planos() {
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       // Start pinch zoom
-      cancelLongPress();
       setIsDragging(false);
       isPinchingRef.current = true;
       lastPinchDistRef.current = getTouchDistance(e.touches[0], e.touches[1]);
@@ -521,18 +540,18 @@ export default function Planos() {
       const touch = e.touches[0];
       touchStartPosRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
       if (isPinMode) {
-        startLongPress(touch.clientX, touch.clientY);
+        // In pin mode: if dragging temp pin, start drag; otherwise just track for tap
+        // (tap detection happens in touchEnd)
       } else {
         setIsDragging(true);
         setDragStart({ x: touch.clientX - pan.x, y: touch.clientY - pan.y });
       }
     }
-  }, [isPinMode, startLongPress, pan, zoom, cancelLongPress]);
+  }, [isPinMode, pan, zoom]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       // Pinch zoom
-      cancelLongPress();
       const dist = getTouchDistance(e.touches[0], e.touches[1]);
       if (lastPinchDistRef.current !== null) {
         const scale = dist / lastPinchDistRef.current;
@@ -544,17 +563,23 @@ export default function Planos() {
     if (e.touches.length !== 1 || isPinchingRef.current) return;
     const touch = e.touches[0];
     if (isPinMode) {
-      if (planoTouchStart.current) {
-        const dx = Math.abs(touch.clientX - planoTouchStart.current.x);
-        const dy = Math.abs(touch.clientY - planoTouchStart.current.y);
+      // If dragging temp pin
+      if (isDraggingTempPin) {
+        handleTempPinDragMove(touch.clientX, touch.clientY);
+        return;
+      }
+      // Mark as moved (not a tap) if moved too far
+      if (touchStartPosRef.current) {
+        const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+        const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
         if (dx > 10 || dy > 10) {
-          cancelLongPress();
+          touchStartPosRef.current = null; // cancel tap
         }
       }
     } else if (isDragging) {
       setPan({ x: touch.clientX - dragStart.x, y: touch.clientY - dragStart.y });
     }
-  }, [isPinMode, isDragging, dragStart, cancelLongPress]);
+  }, [isPinMode, isDragging, dragStart, isDraggingTempPin, handleTempPinDragMove]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 0) {
@@ -562,7 +587,19 @@ export default function Planos() {
       isPinchingRef.current = false;
       lastPinchDistRef.current = null;
     }
-    cancelLongPress();
+
+    if (isPinMode) {
+      if (isDraggingTempPin) {
+        handleTempPinDragEnd();
+      } else if (touchStartPosRef.current && !tempPin) {
+        // It was a tap (didn't move far) → place pin
+        const touch = e.changedTouches?.[0];
+        if (touch) {
+          placePinAtPosition(touch.clientX, touch.clientY);
+        }
+      }
+    }
+
     setIsDragging(false);
     // Swipe detection for plano navigation (only when not in pin mode and zoom <= 1)
     if (!isPinMode && touchStartPosRef.current && planos.length > 1 && zoom <= 1.05) {
@@ -584,7 +621,7 @@ export default function Planos() {
       }
     }
     touchStartPosRef.current = null;
-  }, [cancelLongPress, isPinMode, planos.length, zoom]);
+  }, [isPinMode, isDraggingTempPin, handleTempPinDragEnd, tempPin, placePinAtPosition, planos.length, zoom]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -1054,7 +1091,7 @@ export default function Planos() {
           <div className="flex-shrink-0 bg-[#002C63] text-white border-b border-[#002C63] z-50">
             <div className="flex items-center justify-between px-2 sm:px-3 py-2 gap-2">
               <div className="flex items-center gap-2 min-w-0">
-                <button onClick={() => { setShowViewer(false); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); setTempPin(null); cancelLongPress(); if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current); }} className="p-2 hover:bg-white/10 rounded-lg flex-shrink-0">
+                <button onClick={() => { setShowViewer(false); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); cancelTempPin(); if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current); }} className="p-2 hover:bg-white/10 rounded-lg flex-shrink-0">
                   <X className="w-5 h-5" />
                 </button>
                 <div className="min-w-0">
@@ -1152,8 +1189,8 @@ export default function Planos() {
               {isPinMode && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 border-2 border-emerald-500 bg-white rounded-lg text-xs font-bold text-emerald-600">
                   <MapPin className="w-4 h-4" />
-                  <span className="hidden sm:inline">Mantén 2s</span>
-                  <span className="sm:hidden">2s</span>
+                  <span className="hidden sm:inline">Toca para colocar pin</span>
+                  <span className="sm:hidden">Toca</span>
                 </div>
               )}
             </div>
@@ -1195,35 +1232,36 @@ export default function Planos() {
                   style={{ maxHeight: "calc(100vh - 140px)", maxWidth: "100vw", objectFit: "contain", WebkitTouchCallout: "none", WebkitUserSelect: "none" } as React.CSSProperties}
                 />
 
-                {/* Long press progress indicator */}
-                {longPressProgress && planoTouchStart.current && (
-                  <div
-                    className="absolute pointer-events-none z-40"
-                    style={{
-                      left: `${((planoTouchStart.current.x - (imgRef.current?.getBoundingClientRect().left || 0)) / (imgRef.current?.getBoundingClientRect().width || 1)) * 100}%`,
-                      top: `${((planoTouchStart.current.y - (imgRef.current?.getBoundingClientRect().top || 0)) / (imgRef.current?.getBoundingClientRect().height || 1)) * 100}%`,
-                      transform: "translate(-50%, -50%)",
-                    }}
-                  >
-                    <div className="w-12 h-12 rounded-full border-4 border-red-500 border-t-transparent animate-spin" />
-                  </div>
-                )}
 
-                {/* Pin temporal rojo (antes de confirmar) */}
+
+                {/* Pin temporal rojo draggable (antes de confirmar) */}
                 {tempPin && (
                   <div
-                    className="absolute z-30 pointer-events-none"
+                    className="absolute z-40"
                     style={{
                       left: `${tempPin.x}%`,
                       top: `${tempPin.y}%`,
                       transform: "translate(-50%, -100%)",
+                      cursor: "grab",
+                      touchAction: "none",
                     }}
+                    onMouseDown={(e) => { e.stopPropagation(); handleTempPinDragStart(e.clientX, e.clientY); }}
+                    onTouchStart={(e) => { e.stopPropagation(); const t = e.touches[0]; if (t) handleTempPinDragStart(t.clientX, t.clientY); }}
+                    onTouchMove={(e) => { e.stopPropagation(); const t = e.touches[0]; if (t) handleTempPinDragMove(t.clientX, t.clientY); }}
+                    onTouchEnd={(e) => { e.stopPropagation(); handleTempPinDragEnd(); }}
                   >
-                    <svg width={36} height={48} viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: "drop-shadow(0 2px 4px rgba(239,68,68,0.5))" }}>
-                      <path d="M15 38C15 38 28 22 28 14C28 6.82 22.18 1 15 1C7.82 1 2 6.82 2 14C2 22 15 38 15 38Z" fill="#ef4444" stroke="#dc2626" strokeWidth="1.5" />
-                      <circle cx="15" cy="14" r="9" fill="white" fillOpacity="0.3" />
-                      <text x="15" y="14" textAnchor="middle" dominantBaseline="central" fill="white" fontWeight="700" fontSize="12" fontFamily="system-ui">+</text>
-                    </svg>
+                    {/* Animated bounce pin */}
+                    <div className={isDraggingTempPin ? "" : "animate-bounce"} style={{ animationDuration: "1.5s" }}>
+                      <svg width={40} height={52} viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: "drop-shadow(0 3px 6px rgba(239,68,68,0.6))" }}>
+                        <path d="M15 38C15 38 28 22 28 14C28 6.82 22.18 1 15 1C7.82 1 2 6.82 2 14C2 22 15 38 15 38Z" fill="#ef4444" stroke="#dc2626" strokeWidth="1.5" />
+                        <circle cx="15" cy="14" r="9" fill="white" fillOpacity="0.3" />
+                        <text x="15" y="14" textAnchor="middle" dominantBaseline="central" fill="white" fontWeight="700" fontSize="12" fontFamily="system-ui">+</text>
+                      </svg>
+                    </div>
+                    {/* Drag hint label */}
+                    <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-900/80 text-white text-[10px] px-2 py-0.5 rounded-full pointer-events-none">
+                      Arrastra para ajustar
+                    </div>
                   </div>
                 )}
 
@@ -1301,7 +1339,25 @@ export default function Planos() {
             </div>
           </div>
 
-          {/* FAB removido - la instrucción ya está en el banner superior */}
+          {/* Floating confirm/cancel buttons for temp pin */}
+          {tempPin && isPinMode && (
+            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-[120] flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-200">
+              <button
+                onClick={cancelTempPin}
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-white hover:bg-red-50 border-2 border-red-300 text-red-600 rounded-full shadow-lg text-sm font-bold transition-all active:scale-95"
+              >
+                <X className="w-4 h-4" />
+                Cancelar
+              </button>
+              <button
+                onClick={confirmTempPin}
+                className="flex items-center gap-1.5 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg text-sm font-bold transition-all active:scale-95"
+              >
+                <Check className="w-4 h-4" />
+                Confirmar
+              </button>
+            </div>
+          )}
 
           {/* Carousel arrows removed - users swipe left/right natively */}
 
