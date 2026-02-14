@@ -1416,6 +1416,22 @@ export default function Planos() {
           pinPos={capturaRapidaPinPos}
           planoId={currentPlano.id}
           planoNivel={currentPlano.nivel}
+          existingItems={allItems}
+          onLinkExistingItem={(itemId) => {
+            // Vincular item existente al pin
+            if (capturaRapidaPinPos && currentPlano) {
+              crearPin.mutate({
+                planoId: currentPlano.id,
+                itemId: itemId,
+                posX: capturaRapidaPinPos.x.toFixed(4),
+                posY: capturaRapidaPinPos.y.toFixed(4),
+              });
+            }
+            setShowCapturaRapida(false);
+            setCapturaRapidaPinPos(null);
+            setPendingPinPos(null);
+            setTempPin(null);
+          }}
           onClose={() => {
             setShowCapturaRapida(false);
             setCapturaRapidaPinPos(null);

@@ -4015,3 +4015,7 @@
 - [x] 1. Quitar flechas de carrusel izq/der del visor de planos (swipe nativo con detección dx>60px en <400ms)
 - [x] 2. Quitar barra verde "MANTÉN 2s = NUEVO PIN" 
 - [x] 3. Botones de pin mode: solo contorno border-emerald-500, fondo blanco, texto emerald-600
+
+## v4.30 - Flujo directo post-longpress + items existentes
+- [x] 1. Quitar modal intermedio al completar 2s longpress, ir directo a CapturaRapida
+- [x] 2. Mostrar lista de items existentes para vincular al pin (tab "Vincular Existente" en CapturaRapida)

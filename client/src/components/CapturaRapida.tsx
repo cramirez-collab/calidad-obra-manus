@@ -42,6 +42,8 @@ interface CapturaRapidaProps {
   onClose: () => void;
   onItemCreated: (item: any) => void;
   onContinuePin?: () => void;
+  onLinkExistingItem?: (itemId: number) => void;
+  existingItems?: any[];
   headerTitle?: string;
   headerSubtitle?: string;
 }
@@ -53,6 +55,8 @@ export default function CapturaRapida({
   onClose,
   onItemCreated,
   onContinuePin,
+  onLinkExistingItem,
+  existingItems,
   headerTitle,
   headerSubtitle,
 }: CapturaRapidaProps) {
@@ -60,6 +64,19 @@ export default function CapturaRapida({
   const { selectedProjectId } = useProject();
   const [, navigate] = useLocation();
   const hasPin = !!pinPos;
+  const [activeTab, setActiveTab] = useState<"crear" | "vincular">("crear");
+  const [linkSearch, setLinkSearch] = useState("");
+
+  const filteredExistingItems = useMemo(() => {
+    if (!existingItems) return [];
+    if (!linkSearch.trim()) return existingItems.slice(0, 30);
+    const q = linkSearch.toLowerCase();
+    return existingItems.filter((it: any) =>
+      it.codigo?.toLowerCase().includes(q) ||
+      it.titulo?.toLowerCase().includes(q) ||
+      String(it.numeroInterno || "").includes(q)
+    ).slice(0, 30);
+  }, [existingItems, linkSearch]);
 
   // Form state
   const [residenteId, setResidenteId] = useState("");
@@ -299,8 +316,60 @@ export default function CapturaRapida({
           </button>
         </div>
 
-        {/* Scrollable form */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        {/* Tabs: Crear / Vincular */}
+        {onLinkExistingItem && existingItems && (
+          <div className="flex border-b flex-shrink-0">
+            <button
+              onClick={() => setActiveTab("crear")}
+              className={`flex-1 py-2 text-xs font-semibold transition-colors ${activeTab === "crear" ? "text-emerald-600 border-b-2 border-emerald-500 bg-emerald-50/50" : "text-slate-400 hover:text-slate-600"}`}
+            >
+              Crear Nuevo Ítem
+            </button>
+            <button
+              onClick={() => setActiveTab("vincular")}
+              className={`flex-1 py-2 text-xs font-semibold transition-colors ${activeTab === "vincular" ? "text-blue-600 border-b-2 border-blue-500 bg-blue-50/50" : "text-slate-400 hover:text-slate-600"}`}
+            >
+              <span className="flex items-center justify-center gap-1"><ListChecks className="w-3 h-3" /> Vincular Existente</span>
+            </button>
+          </div>
+        )}
+
+        {/* Vincular tab */}
+        {activeTab === "vincular" && onLinkExistingItem && existingItems && (
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+            <div className="relative">
+              <Eye className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                value={linkSearch}
+                onChange={e => setLinkSearch(e.target.value)}
+                placeholder="Buscar por código, título o #consecutivo..."
+                className="w-full pl-8 pr-3 h-9 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+              />
+            </div>
+            <div className="border rounded-lg divide-y max-h-[50vh] overflow-y-auto">
+              {filteredExistingItems.map((item: any) => (
+                <button
+                  key={item.id}
+                  onClick={() => onLinkExistingItem(item.id)}
+                  className="w-full text-left px-3 py-2.5 hover:bg-blue-50 transition-colors flex items-center gap-2"
+                >
+                  {item.fotoAntesUrl && <img src={item.fotoAntesUrl} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-slate-800 truncate">{item.codigo}</p>
+                    <p className="text-[10px] text-slate-500 truncate">{item.titulo}</p>
+                  </div>
+                  <span className="text-[10px] font-mono font-semibold text-slate-500">#{item.numeroInterno}</span>
+                </button>
+              ))}
+              {filteredExistingItems.length === 0 && (
+                <div className="text-center py-6 text-xs text-slate-400">No se encontraron ítems</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Scrollable form (crear tab) */}
+        <div className={`flex-1 overflow-y-auto px-4 py-3 space-y-3 ${activeTab === "vincular" ? "hidden" : ""}`}>
           {/* Inputs ocultos */}
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
           <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} className="hidden" />
@@ -461,32 +530,39 @@ export default function CapturaRapida({
         </div>
 
         {/* Footer con botones de acción */}
-        <div className="flex-shrink-0 border-t bg-slate-50 px-4 py-3 flex gap-2">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="flex-1 h-11"
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className="flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Creando...
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4" />
-                Crear Ítem
-              </div>
-            )}
-          </Button>
-        </div>
+        {activeTab === "crear" && (
+          <div className="flex-shrink-0 border-t bg-slate-50 px-4 py-3 flex gap-2">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="flex-1 h-11"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className="flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Creando...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4" />
+                  Crear Ítem
+                </div>
+              )}
+            </Button>
+          </div>
+        )}
+        {activeTab === "vincular" && (
+          <div className="flex-shrink-0 border-t bg-slate-50 px-4 py-3">
+            <Button variant="outline" onClick={onClose} className="w-full h-11">Cancelar</Button>
+          </div>
+        )}
       </div>
     </div>
   );
