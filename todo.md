@@ -4010,3 +4010,8 @@
 - [x] 1. Campo ubicación (plano + pin) editable en ItemDetail para admin/superadmin (botón Editar/Agregar Pin restringido a canEdit)
 - [x] 2. Validación mandatoria permanente: foto antes, foto después, plano de ubicación en TODAS las fichas
 - [x] 3. Indicador visual de ficha incompleta (falta foto antes/después/plano) en listas y detalle - banner en ItemDetail + badge ! en Bienvenida
+
+## v4.29 - UI Planos: quitar flechas, barra verde, botones contorno
+- [x] 1. Quitar flechas de carrusel izq/der del visor de planos (swipe nativo con detección dx>60px en <400ms)
+- [x] 2. Quitar barra verde "MANTÉN 2s = NUEVO PIN" 
+- [x] 3. Botones de pin mode: solo contorno border-emerald-500, fondo blanco, texto emerald-600

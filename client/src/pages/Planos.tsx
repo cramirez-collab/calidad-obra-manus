@@ -559,8 +559,27 @@ export default function Planos() {
     }
     cancelLongPress();
     setIsDragging(false);
+    // Swipe detection for plano navigation (only when not in pin mode and zoom <= 1)
+    if (!isPinMode && touchStartPosRef.current && planos.length > 1 && zoom <= 1.05) {
+      const endX = e.changedTouches?.[0]?.clientX;
+      const startX = touchStartPosRef.current.x;
+      const elapsed = Date.now() - touchStartPosRef.current.time;
+      if (endX !== undefined && elapsed < 400) {
+        const dx = endX - startX;
+        if (Math.abs(dx) > 60) {
+          if (dx < 0) {
+            // Swipe left → next plano
+            setViewerIndex(i => (i + 1) % planos.length);
+          } else {
+            // Swipe right → prev plano
+            setViewerIndex(i => (i - 1 + planos.length) % planos.length);
+          }
+          resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); setTempPin(null);
+        }
+      }
+    }
     touchStartPosRef.current = null;
-  }, [cancelLongPress]);
+  }, [cancelLongPress, isPinMode, planos.length, zoom]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -1094,9 +1113,9 @@ export default function Planos() {
               <button onClick={() => setShowPins(p => !p)} className={`p-1.5 rounded-lg transition-colors ${showPins ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "hover:bg-slate-200"}`} title={showPins ? "Ocultar pines" : "Mostrar pines"}>
                 {showPins ? <MapPin className="w-4 h-4" /> : <MapPinOff className="w-4 h-4" />}
               </button>
-              {/* Indicador de modo pin activo */}
+              {/* Indicador de modo pin activo - solo contorno, fondo blanco */}
               {isPinMode && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 rounded-lg text-xs font-bold text-white animate-pulse shadow-lg shadow-emerald-500/30">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 border-2 border-emerald-500 bg-white rounded-lg text-xs font-bold text-emerald-600">
                   <MapPin className="w-4 h-4" />
                   <span className="hidden sm:inline">Mantén 2s</span>
                   <span className="sm:hidden">2s</span>
@@ -1114,15 +1133,7 @@ export default function Planos() {
             </div>
           </div>
 
-          {/* Pin mode banner */}
-          {isPinMode && (
-            <div className="flex-shrink-0 bg-emerald-600 text-white text-center py-2 text-xs sm:text-sm font-bold flex items-center justify-center gap-2">
-              <MapPin className="w-4 h-4" />
-              <span className="hidden sm:inline">MANTÉN PRESIONADO 2 SEGUNDOS PARA COLOCAR PIN</span>
-              <span className="sm:hidden">MANTÉN 2s = NUEVO PIN</span>
-              <MapPin className="w-4 h-4" />
-            </div>
-          )}
+          {/* Green banner removed - pin mode indicator is in the toolbar */}
 
           {/* === ÁREA DEL PLANO === */}
           <div
@@ -1256,17 +1267,7 @@ export default function Planos() {
 
           {/* FAB removido - la instrucción ya está en el banner superior */}
 
-          {/* Navigation arrows */}
-          {planos.length > 1 && (
-            <>
-              <button onClick={() => { setViewerIndex(i => (i - 1 + planos.length) % planos.length); resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); setTempPin(null); }} className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-slate-600/70 hover:bg-slate-700/80 rounded-full text-white z-20">
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button onClick={() => { setViewerIndex(i => (i + 1) % planos.length); resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); setTempPin(null); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-slate-600/70 hover:bg-slate-700/80 rounded-full text-white z-20">
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </>
-          )}
+          {/* Carousel arrows removed - users swipe left/right natively */}
 
           {/* Bottom plano grid selector */}
           {planos.length > 1 && (
