@@ -6,8 +6,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as db from "./db";
-import { eq, and, asc, isNotNull } from "drizzle-orm";
-import { planos, items, users } from "../drizzle/schema";
+// Schema tables accessed via db.* helpers only
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { sendEmail, getAprobadoEmailTemplate, getRechazadoEmailTemplate, getPendienteAprobacionEmailTemplate } from "./emailService";
@@ -3117,84 +3116,30 @@ export const appRouter = router({
       reportePines: protectedProcedure
         .input(z.object({ proyectoId: z.number() }))
         .query(async ({ input }) => {
-          const database = await db.getDbInstance();
-          if (!database) return [];
-          // Get ALL planos (including inactive ones that may have pins)
-          const allPlanosActive = await db.getPlanosByProyecto(input.proyectoId);
-          const allPlanosInactive = await database
-            .select()
-            .from(planos)
-            .where(and(eq(planos.proyectoId, input.proyectoId), eq(planos.activo, false)))
-            .orderBy(asc(planos.nivel), asc(planos.orden));
-          const allPlanos = [...allPlanosActive, ...allPlanosInactive];
+          // Use ONLY getPinesByPlano - the EXACT same data source as the app's floor plan viewer
+          const allPlanos = await db.getPlanosByProyecto(input.proyectoId);
           const result = [];
           for (const plano of allPlanos) {
-            // Source 1: items with pinPlanoId pointing to this plano
-            const itemsWithPin = await database
-              .select({
-                id: items.id,
-                codigo: items.codigo,
-                status: items.status,
-                pinPosX: items.pinPosX,
-                pinPosY: items.pinPosY,
-                titulo: items.titulo,
-                empresaId: items.empresaId,
-                unidadId: items.unidadId,
-                especialidadId: items.especialidadId,
-                asignadoAId: items.asignadoAId,
-                numeroInterno: items.numeroInterno,
-              })
-              .from(items)
-              .where(and(eq(items.pinPlanoId, plano.id), isNotNull(items.pinPosX), isNotNull(items.pinPosY)));
-            // Source 2: plano_pines records for items that DON'T have pinPlanoId set
-            const planoPinesData = await db.getPinesByPlano(plano.id);
-            // Merge: use items.pinPlanoId as primary, add plano_pines only for items not already covered
-            const seenItemIds = new Set(itemsWithPin.map(i => i.id));
-            const mergedPins: any[] = [];
-            // Add all items with pinPlanoId
-            for (const item of itemsWithPin) {
-              // Get residente name
-              let residenteNombre: string | null = null;
-              if (item.asignadoAId) {
-                const [u] = await database.select({ name: users.name }).from(users).where(eq(users.id, item.asignadoAId));
-                residenteNombre = u?.name || null;
-              }
-              mergedPins.push({
-                id: item.id,
-                posX: item.pinPosX,
-                posY: item.pinPosY,
-                itemId: item.id,
-                itemCodigo: item.codigo || null,
-                itemEstado: item.status || null,
-                itemTitulo: item.titulo || null,
-                residenteNombre,
-                numeroInterno: item.numeroInterno || null,
-              });
-            }
-            // Add plano_pines that are not already covered by items.pinPlanoId
-            for (const pp of planoPinesData) {
-              if (pp.itemId && seenItemIds.has(pp.itemId)) continue;
-              mergedPins.push({
-                id: pp.id,
-                posX: pp.posX,
-                posY: pp.posY,
-                itemId: pp.itemId,
-                itemCodigo: pp.itemCodigo || null,
-                itemEstado: pp.itemEstado || null,
-                itemTitulo: pp.itemTitulo || null,
-                residenteNombre: pp.residenteNombre || null,
-                numeroInterno: pp.itemConsecutivo || null,
-              });
-            }
-            if (mergedPins.length > 0 || allPlanosActive.some(p => p.id === plano.id)) {
-              result.push({
-                id: plano.id,
-                nombre: plano.nombre,
-                nivel: plano.nivel,
-                imagenUrl: plano.imagenUrl,
-                pines: mergedPins,
-              });
-            }
+            const pinesData = await db.getPinesByPlano(plano.id);
+            result.push({
+              id: plano.id,
+              nombre: plano.nombre,
+              nivel: plano.nivel,
+              imagenUrl: plano.imagenUrl,
+              pines: pinesData.map(p => ({
+                id: p.id,
+                posX: p.posX,
+                posY: p.posY,
+                itemId: p.itemId,
+                itemCodigo: p.itemCodigo || null,
+                itemEstado: p.itemEstado || null,
+                itemTitulo: p.itemTitulo || null,
+                residenteNombre: p.residenteNombre || null,
+                empresaNombre: p.empresaNombre || null,
+                unidadNombre: p.unidadNombre || null,
+                especialidadNombre: p.especialidadNombre || null,
+              })),
+            });
           }
           return result;
         }),

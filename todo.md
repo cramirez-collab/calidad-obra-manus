@@ -3933,3 +3933,9 @@
 - [x] PDF muestra exactamente los mismos pines que la app
 ## v4.17 - Verificar conteo de pines en PDF vs ítems en Bienvenida
 - [x] Verificar que conteo total de pines en PDF coincida con total de ítems del proyecto (29 pines = todos los items con pinPlanoId)
+## v4.18 - CRITICAL FIX: PDF pines usa EXACTAMENTE la misma fuente de datos que la vista del app
+- [x] BUG CRÍTICO: PDF reportePines mezclaba 2 fuentes (items.pinPlanoId + plano_pines) causando conteos incorrectos (ej: N2 mostraba 13 en PDF vs 12 en app)
+- [x] FIX: Reescribir reportePines para usar SOLO getPinesByPlano() - la misma función que usa la vista interactiva del plano
+- [x] FIX: Eliminar merge de dual sources, usar una sola fuente de verdad (plano_pines table)
+- [x] FIX: Agregar campos empresaNombre, unidadNombre, especialidadNombre al reporte (disponibles desde getPinesByPlano)
+- [x] TEST: Vitest tests para consistencia de datos, mapeo de campos, conteo por estatus, iniciales y colores
