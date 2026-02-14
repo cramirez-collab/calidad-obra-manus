@@ -1,0 +1,16 @@
+{
+  "query": "SELECT \n  (SELECT COUNT(*) FROM items WHERE proyectoId = 1) AS total_items,\n  (SELECT COUNT(*) FROM items WHERE proyectoId = 1 AND pinPlanoId IS NOT NULL) AS items_with_pin,\n  (SELECT COUNT(*) FROM items WHERE proyectoId = 1 AND pinPlanoId IS NULL) AS items_without_pin,\n  (SELECT COUNT(*) FROM plano_pines WHERE planoId IN (SELECT id FROM planos WHERE proyectoId = 1) AND activo = 1) AS standalone_pines",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT \n  (SELECT COUNT(*) FROM items WHERE proyectoId = 1) AS total_items,\n  (SELECT COUNT(*) FROM items WHERE proyectoId = 1 AND pinPlanoId IS NOT NULL) AS items_with_pin,\n  (SELECT COUNT(*) FROM items WHERE proyectoId = 1 AND pinPlanoId IS NULL) AS items_without_pin,\n  (SELECT COUNT(*) FROM plano_pines WHERE planoId IN (SELECT id FROM planos WHERE proyectoId = 1) AND activo = 1) AS standalone_pines",
+  "rows": [
+    {
+      "total_items": "50",
+      "items_with_pin": "27",
+      "items_without_pin": "23",
+      "standalone_pines": "8"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_items\titems_with_pin\titems_without_pin\tstandalone_pines\n50\t27\t23\t8\n",
+  "stderr": "",
+  "execution_time_ms": 93
+}

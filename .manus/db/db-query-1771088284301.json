@@ -1,0 +1,94 @@
+{
+  "query": "SELECT p.nombre, p.nivel, p.id as planoId, COUNT(i.id) as itemCount FROM planos p LEFT JOIN items i ON i.pinPlanoId = p.id AND i.pinPosX IS NOT NULL AND i.pinPosY IS NOT NULL WHERE p.proyectoId = 1 AND p.activo = 1 GROUP BY p.id, p.nombre, p.nivel ORDER BY p.nivel",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT p.nombre, p.nivel, p.id as planoId, COUNT(i.id) as itemCount FROM planos p LEFT JOIN items i ON i.pinPlanoId = p.id AND i.pinPosX IS NOT NULL AND i.pinPosY IS NOT NULL WHERE p.proyectoId = 1 AND p.activo = 1 GROUP BY p.id, p.nombre, p.nivel ORDER BY p.nivel",
+  "rows": [
+    {
+      "nombre": "Sotano -5",
+      "nivel": "-5",
+      "planoId": "2",
+      "itemCount": "0"
+    },
+    {
+      "nombre": "Sotano -4",
+      "nivel": "-4",
+      "planoId": "30001",
+      "itemCount": "0"
+    },
+    {
+      "nombre": "Sotano -3",
+      "nivel": "-3",
+      "planoId": "30002",
+      "itemCount": "0"
+    },
+    {
+      "nombre": "Sotano -2",
+      "nivel": "-2",
+      "planoId": "30003",
+      "itemCount": "0"
+    },
+    {
+      "nombre": "Sotano -1",
+      "nivel": "-1",
+      "planoId": "30004",
+      "itemCount": "0"
+    },
+    {
+      "nombre": "N1",
+      "nivel": "1",
+      "planoId": "30005",
+      "itemCount": "1"
+    },
+    {
+      "nombre": "N2",
+      "nivel": "2",
+      "planoId": "30006",
+      "itemCount": "12"
+    },
+    {
+      "nombre": "N3",
+      "nivel": "3",
+      "planoId": "30007",
+      "itemCount": "12"
+    },
+    {
+      "nombre": "N4",
+      "nivel": "4",
+      "planoId": "30008",
+      "itemCount": "1"
+    },
+    {
+      "nombre": "N5",
+      "nivel": "5",
+      "planoId": "60001",
+      "itemCount": "0"
+    },
+    {
+      "nombre": "N7",
+      "nivel": "7",
+      "planoId": "60002",
+      "itemCount": "0"
+    },
+    {
+      "nombre": "N9",
+      "nivel": "9",
+      "planoId": "60003",
+      "itemCount": "0"
+    },
+    {
+      "nombre": "N11",
+      "nivel": "11",
+      "planoId": "60004",
+      "itemCount": "0"
+    },
+    {
+      "nombre": "N13",
+      "nivel": "13",
+      "planoId": "60005",
+      "itemCount": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "nombre\tnivel\tplanoId\titemCount\nSotano -5\t-5\t2\t0\nSotano -4\t-4\t30001\t0\nSotano -3\t-3\t30002\t0\nSotano -2\t-2\t30003\t0\nSotano -1\t-1\t30004\t0\nN1\t1\t30005\t1\nN2\t2\t30006\t12\nN3\t3\t30007\t12\nN4\t4\t30008\t1\nN5\t5\t60001\t0\nN7\t7\t60002\t0\nN9\t9\t60003\t0\nN11\t11\t60004\t0\nN13\t13\t60005\t0\n",
+  "stderr": "",
+  "execution_time_ms": 21926
+}

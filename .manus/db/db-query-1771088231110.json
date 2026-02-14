@@ -1,0 +1,106 @@
+{
+  "query": "SELECT id, codigo, status, pinPosX, pinPosY, numeroInterno FROM items WHERE pinPlanoId=30006 AND pinPosX IS NOT NULL AND pinPosY IS NOT NULL ORDER BY id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, status, pinPosX, pinPosY, numeroInterno FROM items WHERE pinPlanoId=30006 AND pinPosX IS NOT NULL AND pinPosY IS NOT NULL ORDER BY id",
+  "rows": [
+    {
+      "id": "2070001",
+      "codigo": "Hidalma-BYD8SH",
+      "status": "pendiente_foto_despues",
+      "pinPosX": "3.6269",
+      "pinPosY": "95.7900",
+      "numeroInterno": "24"
+    },
+    {
+      "id": "2310001",
+      "codigo": "Hidalma-N8MR9Y",
+      "status": "aprobado",
+      "pinPosX": "19.9422",
+      "pinPosY": "45.0203",
+      "numeroInterno": "27"
+    },
+    {
+      "id": "2370002",
+      "codigo": "Hidalma-VK4LHP",
+      "status": "pendiente_aprobacion",
+      "pinPosX": "28.1211",
+      "pinPosY": "37.1091",
+      "numeroInterno": "31"
+    },
+    {
+      "id": "2370003",
+      "codigo": "Hidalma-99B2LX",
+      "status": "pendiente_foto_despues",
+      "pinPosX": "26.3697",
+      "pinPosY": "29.1102",
+      "numeroInterno": "32"
+    },
+    {
+      "id": "2370004",
+      "codigo": "Hidalma-2UYZGX",
+      "status": "pendiente_foto_despues",
+      "pinPosX": "26.9965",
+      "pinPosY": "11.1097",
+      "numeroInterno": "33"
+    },
+    {
+      "id": "2370005",
+      "codigo": "Hidalma-PTXRH9",
+      "status": "pendiente_foto_despues",
+      "pinPosX": "26.0096",
+      "pinPosY": "6.2871",
+      "numeroInterno": "34"
+    },
+    {
+      "id": "2370006",
+      "codigo": "Hidalma-QQJHYQ",
+      "status": "pendiente_foto_despues",
+      "pinPosX": "37.0572",
+      "pinPosY": "9.5099",
+      "numeroInterno": "35"
+    },
+    {
+      "id": "2370007",
+      "codigo": "Hidalma-LRZPUR",
+      "status": "pendiente_foto_despues",
+      "pinPosX": "31.4982",
+      "pinPosY": "33.7979",
+      "numeroInterno": "36"
+    },
+    {
+      "id": "2370008",
+      "codigo": "Hidalma-7KZEZ5",
+      "status": "pendiente_foto_despues",
+      "pinPosX": "29.5066",
+      "pinPosY": "30.0147",
+      "numeroInterno": "37"
+    },
+    {
+      "id": "2370009",
+      "codigo": "Hidalma-39E2EJ",
+      "status": "pendiente_foto_despues",
+      "pinPosX": "31.7227",
+      "pinPosY": "46.1419",
+      "numeroInterno": "38"
+    },
+    {
+      "id": "2370010",
+      "codigo": "Hidalma-JW8M96",
+      "status": "pendiente_foto_despues",
+      "pinPosX": "22.3427",
+      "pinPosY": "46.5987",
+      "numeroInterno": "39"
+    },
+    {
+      "id": "2490001",
+      "codigo": "Hidalma-S5E28Q",
+      "status": "pendiente_foto_despues",
+      "pinPosX": "96.3833",
+      "pinPosY": "9.9920",
+      "numeroInterno": "53"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\tstatus\tpinPosX\tpinPosY\tnumeroInterno\n2070001\tHidalma-BYD8SH\tpendiente_foto_despues\t3.6269\t95.7900\t24\n2310001\tHidalma-N8MR9Y\taprobado\t19.9422\t45.0203\t27\n2370002\tHidalma-VK4LHP\tpendiente_aprobacion\t28.1211\t37.1091\t31\n2370003\tHidalma-99B2LX\tpendiente_foto_despues\t26.3697\t29.1102\t32\n2370004\tHidalma-2UYZGX\tpendiente_foto_despues\t26.9965\t11.1097\t33\n2370005\tHidalma-PTXRH9\tpendiente_foto_despues\t26.0096\t6.2871\t34\n2370006\tHidalma-QQJHYQ\tpendiente_foto_despues\t37.0572\t9.5099\t35\n2370007\tHidalma-LRZPUR\tpendiente_foto_despues\t31.4982\t33.7979\t36\n2370008\tHidalma-7KZEZ5\tpendiente_foto_despues\t29.5066\t30.0147\t37\n2370009\tHidalma-39E2EJ\tpendiente_foto_despues\t31.7227\t46.1419\t38\n2370010\tHidalma-JW8M96\tpendiente_foto_despues\t22.3427\t46.5987\t39\n2490001\tHidalma-S5E28Q\tpendiente_foto_despues\t96.3833\t9.9920\t53\n",
+  "stderr": "",
+  "execution_time_ms": 466
+}

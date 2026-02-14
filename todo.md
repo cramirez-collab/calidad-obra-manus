@@ -3931,3 +3931,5 @@
 - [x] BUG: PDF usaba plano_pines (8 registros) en vez de items.pinPlanoId (27+ registros)
 - [x] Corregir endpoint reportePines para usar items.pinPlanoId/pinPosX/pinPosY
 - [x] PDF muestra exactamente los mismos pines que la app
+## v4.17 - Verificar conteo de pines en PDF vs ítems en Bienvenida
+- [x] Verificar que conteo total de pines en PDF coincida con total de ítems del proyecto (29 pines = todos los items con pinPlanoId)
