@@ -679,13 +679,20 @@ export default function ItemDetail() {
       doc.setTextColor(60, 60, 60);
       doc.setFont('helvetica', 'normal');
       
+      const espacioNombre = item.espacioId ? (espacios?.find((e: any) => e.id === item.espacioId)?.nombre || '-') : '-';
+      const residenteNombre = getUserName(item.residenteId);
+      const fechaTermUnidad = getUnidadFechaFin(item.unidadId);
+      
       const infoItems = [
         ['Empresa:', getEmpresaNombre(item.empresaId)],
         ['Unidad:', getUnidadNombre(item.unidadId)],
         ['Especialidad:', especialidad?.nombre || '-'],
-        ['Defecto:', defectos?.find(d => d.id === item.defectoId)?.nombre || '-'],
-        ['Ubicación:', item.ubicacionDetalle || '-'],
-        ['Fecha Creación:', formatDate(item.fechaCreacion)],
+        ['Defecto:', defectos?.find((d: any) => d.id === item.defectoId)?.nombre || '-'],
+        ['Espacio:', espacioNombre],
+        ['Ubicacion:', item.ubicacionDetalle || '-'],
+        ['Residente:', residenteNombre],
+        ['Fecha Creacion:', formatDate(item.fechaCreacion)],
+        ...(fechaTermUnidad ? [['Fecha Term. Unidad:', formatDate(fechaTermUnidad)]] : []),
       ];
       
       infoItems.forEach(([label, value]) => {
@@ -714,9 +721,11 @@ export default function ItemDetail() {
       doc.setTextColor(60, 60, 60);
       doc.setFont('helvetica', 'normal');
       
+      const asignadoNombre = item.asignadoAId ? getUserName(item.asignadoAId) : (especialidad?.residenteId ? getUserName(especialidad.residenteId) : '-');
       const trazabilidadItems = [
-        ['1. Creado por:', getUserName(item.creadoPorId), formatDate(item.fechaCreacion)],
-        ['2. Asignado a:', getUserName(item.asignadoAId || item.residenteId), '-'],
+        ['1. Creado por:', item.creadoPorId ? getUserName(item.creadoPorId) : getUserName(item.residenteId), formatDate(item.fechaCreacion)],
+        ['2. Asignado a:', asignadoNombre, '-'],
+        ...(item.jefeResidenteId && item.fechaFotoDespues ? [['2b. Foto despues:', getUserName(item.jefeResidenteId), formatDate(item.fechaFotoDespues)]] : []),
         ['3. Aprobado por:', getUserName(item.aprobadoPorId), item.fechaAprobacion ? formatDate(item.fechaAprobacion) : '-'],
         ['4. Cerrado por:', getUserName(item.cerradoPorId), item.fechaCierre ? formatDate(item.fechaCierre) : '-'],
       ];

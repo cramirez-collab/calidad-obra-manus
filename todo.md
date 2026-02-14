@@ -3918,3 +3918,12 @@
 - [x] PDF: Pines del mismo color por nivel (no por estatus), puntos más pequeños y brillantes
 - [x] Bienvenida: Botón de Avisos no visible en móvil - se corta por overflow
 - [x] Bienvenida: Ajustar layout de botones header para que quepan en móvil
+## v4.15 - Pines estilo app + Ficha PDF completa
+- [x] PDF Planos: pines estilo gota azul con iniciales (matching app ZoomablePlano)
+- [x] PDF Planos: colores por estatus (azul pendiente_foto, naranja pendiente_aprob, verde aprobado, rojo rechazado, gris sin_item)
+- [x] PDF Planos: residenteNombre agregado al endpoint reportePines
+- [x] Ficha PDF: campo Espacio agregado
+- [x] Ficha PDF: campo Residente agregado
+- [x] Ficha PDF: campo Fecha Terminación Unidad agregado
+- [x] Ficha PDF: paso 2b (Foto después) en trazabilidad
+- [x] Ficha PDF: todos los campos siempre presentes (sin nulls/blanks)

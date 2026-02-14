@@ -3135,6 +3135,7 @@ export const appRouter = router({
                 empresaNombre: p.empresaNombre || null,
                 unidadNombre: p.unidadNombre || null,
                 especialidadNombre: p.especialidadNombre || null,
+                residenteNombre: p.residenteNombre || null,
               })),
             });
           }

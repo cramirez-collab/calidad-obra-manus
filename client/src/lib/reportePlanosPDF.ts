@@ -2,10 +2,8 @@
  * Reporte PDF de Pines por Plano - ObjetivaQC
  * =============================================
  * - 2 planos por pagina (vertical / portrait)
- * - Contenedores del mismo tamano, reticula alineada
- * - Logo Objetiva en header
- * - Recuadro de estadisticas por plano (por estatus y colores)
- * - Pines dibujados sobre la imagen del plano con numero y color por estatus
+ * - Pines tipo gota (teardrop) con iniciales del residente, color por estatus
+ * - Estadisticas por estatus debajo de cada plano
  */
 import jsPDF from "jspdf";
 import { downloadPDFBestMethod } from "./pdfDownload";
@@ -22,13 +20,38 @@ const C = {
   BG_CARD: [241, 245, 249] as [number, number, number],
 };
 
+// Colores por estatus (matching ZoomablePlano)
 const STATUS_COLORS: Record<string, { rgb: [number, number, number]; label: string }> = {
-  pendiente_foto_despues: { rgb: [245, 158, 11], label: "Pend. Foto" },
-  pendiente_aprobacion: { rgb: [59, 130, 246], label: "Pend. Aprob." },
-  aprobado: { rgb: [16, 185, 129], label: "Aprobado" },
+  pendiente_foto_despues: { rgb: [59, 130, 246], label: "Pend. Foto" },
+  pendiente_aprobacion: { rgb: [245, 158, 11], label: "Pend. Aprob." },
+  aprobado: { rgb: [34, 197, 94], label: "Aprobado" },
   rechazado: { rgb: [239, 68, 68], label: "Rechazado" },
   sin_item: { rgb: [107, 114, 128], label: "Sin item" },
 };
+
+function hexToRgb(hex: string): [number, number, number] {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return [r, g, b];
+}
+
+function getStatusColorRgb(status?: string | null): [number, number, number] {
+  switch (status) {
+    case "aprobado": return hexToRgb("#22c55e");
+    case "rechazado": return hexToRgb("#ef4444");
+    case "pendiente_aprobacion": return hexToRgb("#f59e0b");
+    case "pendiente_foto_despues": return hexToRgb("#3b82f6");
+    default: return hexToRgb("#6b7280");
+  }
+}
+
+function getInitials(name: string | null | undefined): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return parts[0].substring(0, 2).toUpperCase();
+}
 
 // ─── Interfaces ───
 export interface PlanoReportData {
@@ -47,6 +70,7 @@ export interface PlanoReportData {
     empresaNombre: string | null;
     unidadNombre: string | null;
     especialidadNombre: string | null;
+    residenteNombre: string | null;
   }>;
 }
 
@@ -110,16 +134,77 @@ function getImageFormat(dataUrl: string): "JPEG" | "PNG" {
 }
 
 // ─── Layout constants ───
-const PAGE_W = 210; // A4 portrait width mm
-const PAGE_H = 297; // A4 portrait height mm
+const PAGE_W = 210;
+const PAGE_H = 297;
 const MARGIN = 12;
 const HEADER_H = 28;
 const FOOTER_H = 12;
 const CONTENT_W = PAGE_W - MARGIN * 2;
-const PLANO_SLOT_H = 120; // Fixed height for each plano slot
-const PLANO_IMG_H = 88;   // Height for the plano image
-const STATS_H = 24;       // Height for the stats bar
-const GAP = 8;             // Gap between two plano slots
+const PLANO_SLOT_H = 120;
+const PLANO_IMG_H = 88;
+const STATS_H = 24;
+const GAP = 8;
+
+// ─── Draw teardrop pin on jsPDF ───
+function drawTeardropPin(
+  doc: jsPDF,
+  cx: number,
+  tipY: number,
+  color: [number, number, number],
+  initials: string,
+  pinSize: number = 3.5,
+) {
+  // Teardrop: circle on top, pointed tip at bottom
+  const circleR = pinSize * 0.47;
+  const circleY = tipY - pinSize * 0.88;
+
+  // Draw teardrop shape using bezier curves
+  // Start from left side of circle, go down to tip, then back up right side
+  const startAngle = Math.PI * 0.2;
+  const endAngle = Math.PI * 0.8;
+
+  // White border (slightly larger)
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.6);
+  doc.circle(cx, circleY, circleR + 0.5, "FD");
+
+  // Main colored circle
+  doc.setFillColor(...color);
+  doc.circle(cx, circleY, circleR, "F");
+
+  // Draw the pointed tip using triangles
+  const tipLeftX = cx - circleR * Math.sin(startAngle) * 0.6;
+  const tipRightX = cx + circleR * Math.sin(startAngle) * 0.6;
+  const tipTopY = circleY + circleR * 0.5;
+
+  // White border for tip
+  doc.setFillColor(255, 255, 255);
+  doc.triangle(tipLeftX - 0.3, tipTopY, tipRightX + 0.3, tipTopY, cx, tipY + 0.3, "F");
+
+  // Colored tip
+  doc.setFillColor(...color);
+  doc.triangle(tipLeftX, tipTopY, tipRightX, tipTopY, cx, tipY, "F");
+
+  // Fill gap between circle and tip
+  doc.setFillColor(...color);
+  doc.rect(cx - circleR * 0.55, circleY + circleR * 0.3, circleR * 1.1, circleR * 0.4, "F");
+
+  // Inner circle (subtle highlight)
+  const innerR = circleR * 0.72;
+  doc.setFillColor(
+    Math.min(255, color[0] + 30),
+    Math.min(255, color[1] + 30),
+    Math.min(255, color[2] + 30),
+  );
+  doc.circle(cx, circleY, innerR, "F");
+
+  // Initials text
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(pinSize * 1.8);
+  doc.setFont("helvetica", "bold");
+  doc.text(initials, cx, circleY + 0.5, { align: "center", baseline: "middle" });
+}
 
 // ─── Draw functions ───
 function drawHeader(doc: jsPDF, proyectoNombre: string) {
@@ -188,7 +273,6 @@ function drawPlanoSlot(
     doc.setFont("helvetica", "normal");
     doc.text(nivelStr, slotX + slotW - 3, slotY + 5.5, { align: "right" });
   }
-  // Pin count in title
   doc.setFontSize(6.5);
   doc.text(`${plano.pines.length} pines`, slotX + slotW / 2, slotY + 5.5, { align: "center" });
 
@@ -206,9 +290,7 @@ function drawPlanoSlot(
     const padding = 1;
     doc.addImage(planoImg, fmt, slotX + padding, imgY + padding, slotW - padding * 2, imgH - padding * 2);
 
-    // ─── Draw pins on top of image (same bright color per plano) ───
-    // Bright vivid color for all pins in this plano
-    const PIN_COLOR: [number, number, number] = [255, 30, 60]; // bright red
+    // ─── Draw teardrop pins on top of image ───
     for (const pin of plano.pines) {
       const px = parseFloat(pin.posX);
       const py = parseFloat(pin.posY);
@@ -218,12 +300,10 @@ function drawPlanoSlot(
       const pinX = slotX + padding + (px / 100) * (slotW - padding * 2);
       const pinY = imgY + padding + (py / 100) * (imgH - padding * 2);
 
-      // White border
-      doc.setFillColor(255, 255, 255);
-      doc.circle(pinX, pinY, 1.8, "F");
-      // Bright colored dot
-      doc.setFillColor(...PIN_COLOR);
-      doc.circle(pinX, pinY, 1.3, "F");
+      const color = getStatusColorRgb(pin.itemEstado);
+      const initials = getInitials(pin.residenteNombre);
+
+      drawTeardropPin(doc, pinX, pinY, color, initials, 3.2);
     }
   } else {
     doc.setTextColor(...C.GRIS);
@@ -261,24 +341,20 @@ function drawPlanoSlot(
     const count = counts[key] || 0;
     const px = slotX + 3 + i * pillW;
 
-    // Pill background
     doc.setFillColor(...sc.rgb);
     doc.roundedRect(px + 0.5, pillY, pillW - 1, pillH, 1.5, 1.5, "F");
 
-    // Pill text - count
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(7);
     doc.setFont("helvetica", "bold");
     doc.text(String(count), px + pillW / 2, pillY + 5, { align: "center" });
 
-    // Label below pill
     doc.setTextColor(...C.GRIS);
     doc.setFontSize(4.5);
     doc.setFont("helvetica", "normal");
     doc.text(sinAcentos(sc.label), px + pillW / 2, pillY + pillH + 4, { align: "center" });
   }
 
-  // Total at the right
   doc.setTextColor(...C.AZUL);
   doc.setFontSize(6);
   doc.setFont("helvetica", "bold");
@@ -320,7 +396,7 @@ export async function generarReportePlanosPDF(config: PlanoReportConfig): Promis
   const startY = HEADER_H + 4;
 
   for (let i = 0; i < sorted.length; i++) {
-    const slotIndex = i % 2; // 0 = top, 1 = bottom
+    const slotIndex = i % 2;
 
     if (slotIndex === 0) {
       if (pageStarted) {
