@@ -3961,3 +3961,10 @@
 - [x] PDF muestra solo 2 pines en N2 pero app muestra 12 - verificar merge funciona
 - [x] Aumentar tamaño del número de nivel al doble en el PDF para identificación rápida
 
+
+## v4.22 - Mover PDF planos a barra principal + fondo blanco visor
+- [ ] Agregar icono PDF planos en barra de acciones de Bienvenida (entre planos y clipboard)
+- [ ] Agregar PDF planos en menú hamburguesa debajo de Nuevo y antes de Items
+- [ ] Cambiar fondo del visor de planos a blanco siempre
+- [ ] Aumentar nivel font size al doble real (18pt) en PDF
+

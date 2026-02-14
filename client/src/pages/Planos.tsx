@@ -947,9 +947,9 @@ export default function Planos() {
       {/* VISOR FULLSCREEN CON PINES                                 */}
       {/* ═══════════════════════════════════════════════════════════ */}
       {showViewer && currentPlano && (
-        <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col">
+        <div className="fixed inset-0 z-[100] bg-white flex flex-col">
           {/* === BARRA SUPERIOR FIJA === */}
-          <div className="flex-shrink-0 bg-slate-900 text-white border-b border-slate-700 z-50">
+          <div className="flex-shrink-0 bg-[#002C63] text-white border-b border-[#002C63] z-50">
             <div className="flex items-center justify-between px-2 sm:px-3 py-2 gap-2">
               <div className="flex items-center gap-2 min-w-0">
                 <button onClick={() => { setShowViewer(false); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); setTempPin(null); cancelLongPress(); if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current); }} className="p-2 hover:bg-white/10 rounded-lg flex-shrink-0">
@@ -996,20 +996,20 @@ export default function Planos() {
           </div>
 
           {/* === BARRA DE HERRAMIENTAS === */}
-          <div className="flex-shrink-0 flex items-center justify-between px-2 py-1 bg-black/80 text-white gap-1">
+          <div className="flex-shrink-0 flex items-center justify-between px-2 py-1 bg-slate-100 text-slate-800 gap-1">
             <div className="flex items-center gap-0.5 flex-shrink-0">
               {/* Filtro por estado */}
               <div className="relative">
-                <button onClick={() => setShowFilterMenu(f => !f)} className={`p-1.5 rounded-lg transition-colors ${pinFilter ? "bg-emerald-600" : "hover:bg-white/10"}`} title="Filtrar pines">
+                <button onClick={() => setShowFilterMenu(f => !f)} className={`p-1.5 rounded-lg transition-colors ${pinFilter ? "bg-emerald-600 text-white" : "hover:bg-slate-200"}`} title="Filtrar pines">
                   <Filter className="w-4 h-4" />
                 </button>
                 {showFilterMenu && (
-                  <div className="absolute top-full left-0 mt-1 bg-slate-900 rounded-lg shadow-xl border border-slate-700 py-1 min-w-[160px] z-50">
-                    <button onClick={() => { setPinFilter(null); setShowFilterMenu(false); }} className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/10 ${!pinFilter ? "text-emerald-400 font-bold" : "text-white"}`}>
+                  <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-xl border border-slate-200 py-1 min-w-[160px] z-50">
+                    <button onClick={() => { setPinFilter(null); setShowFilterMenu(false); }} className={`w-full text-left px-3 py-1.5 text-xs hover:bg-slate-100 ${!pinFilter ? "text-emerald-600 font-bold" : "text-slate-700"}`}>
                       Todos ({pines.length})
                     </button>
                     {Object.entries(PIN_COLORS).map(([key, colors]) => (
-                      <button key={key} onClick={() => { setPinFilter(key); setShowFilterMenu(false); }} className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/10 flex items-center gap-2 ${pinFilter === key ? "font-bold" : ""}`}>
+                      <button key={key} onClick={() => { setPinFilter(key); setShowFilterMenu(false); }} className={`w-full text-left px-3 py-1.5 text-xs hover:bg-slate-100 flex items-center gap-2 text-slate-700 ${pinFilter === key ? "font-bold" : ""}`}>
                         <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bg }} />
                         <span>{STATUS_LABELS[key]} ({pinCounts[key] || 0})</span>
                       </button>
@@ -1019,19 +1019,19 @@ export default function Planos() {
               </div>
               {/* Filtro por residente */}
               <div className="relative">
-                <button onClick={() => { setShowResidenteMenu(f => !f); setShowFilterMenu(false); }} className={`p-1.5 rounded-lg transition-colors ${residenteFilter ? "bg-blue-600" : "hover:bg-white/10"}`} title="Filtrar por residente">
+                <button onClick={() => { setShowResidenteMenu(f => !f); setShowFilterMenu(false); }} className={`p-1.5 rounded-lg transition-colors ${residenteFilter ? "bg-blue-600 text-white" : "hover:bg-slate-200"}`} title="Filtrar por residente">
                   <Users className="w-4 h-4" />
                 </button>
                 {showResidenteMenu && (
-                  <div className="absolute top-full left-0 mt-1 bg-slate-900 rounded-lg shadow-xl border border-slate-700 py-1 min-w-[180px] z-50 max-h-[250px] overflow-y-auto">
-                    <button onClick={() => { setResidenteFilter(null); setShowResidenteMenu(false); }} className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/10 ${!residenteFilter ? "text-blue-400 font-bold" : "text-white"}`}>
+                  <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-xl border border-slate-200 py-1 min-w-[180px] z-50 max-h-[250px] overflow-y-auto">
+                    <button onClick={() => { setResidenteFilter(null); setShowResidenteMenu(false); }} className={`w-full text-left px-3 py-1.5 text-xs hover:bg-slate-100 ${!residenteFilter ? "text-blue-600 font-bold" : "text-slate-700"}`}>
                       Todos los residentes
                     </button>
                     {residentesUnicos.map((nombre) => {
                       const count = pines.filter((p: any) => p.residenteNombre === nombre).length;
                       const getInit = (n: string) => { const p = n.trim().split(/\s+/); return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : p[0].substring(0,2).toUpperCase(); };
                       return (
-                        <button key={nombre} onClick={() => { setResidenteFilter(nombre); setShowResidenteMenu(false); }} className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/10 flex items-center gap-2 ${residenteFilter === nombre ? "text-blue-400 font-bold" : "text-white"}`}>
+                        <button key={nombre} onClick={() => { setResidenteFilter(nombre); setShowResidenteMenu(false); }} className={`w-full text-left px-3 py-1.5 text-xs hover:bg-slate-100 flex items-center gap-2 ${residenteFilter === nombre ? "text-blue-600 font-bold" : "text-slate-700"}`}>
                           <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[8px] font-bold flex items-center justify-center flex-shrink-0">{getInit(nombre)}</span>
                           <span className="truncate">{nombre} ({count})</span>
                         </button>
@@ -1041,7 +1041,7 @@ export default function Planos() {
                 )}
               </div>
               {/* Toggle pines */}
-              <button onClick={() => setShowPins(p => !p)} className={`p-1.5 rounded-lg transition-colors ${showPins ? "bg-emerald-600 hover:bg-emerald-700" : "hover:bg-white/10"}`} title={showPins ? "Ocultar pines" : "Mostrar pines"}>
+              <button onClick={() => setShowPins(p => !p)} className={`p-1.5 rounded-lg transition-colors ${showPins ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "hover:bg-slate-200"}`} title={showPins ? "Ocultar pines" : "Mostrar pines"}>
                 {showPins ? <MapPin className="w-4 h-4" /> : <MapPinOff className="w-4 h-4" />}
               </button>
               {/* Indicador de modo pin activo */}
@@ -1054,13 +1054,13 @@ export default function Planos() {
               )}
             </div>
             <div className="flex items-center gap-0.5 flex-shrink-0">
-              <button onClick={() => setZoom(z => Math.max(0.2, z - 0.2))} className="p-1.5 hover:bg-white/10 rounded-lg"><ZoomOut className="w-4 h-4" /></button>
-              <span className="text-[10px] text-white/50 w-8 text-center">{Math.round(zoom * 100)}%</span>
-              <button onClick={() => setZoom(z => Math.min(5, z + 0.2))} className="p-1.5 hover:bg-white/10 rounded-lg"><ZoomIn className="w-4 h-4" /></button>
-              <button onClick={toggleFullscreen} className="p-1.5 hover:bg-white/10 rounded-lg" title="Pantalla completa">
+              <button onClick={() => setZoom(z => Math.max(0.2, z - 0.2))} className="p-1.5 hover:bg-slate-200 rounded-lg"><ZoomOut className="w-4 h-4" /></button>
+              <span className="text-[10px] text-slate-500 w-8 text-center">{Math.round(zoom * 100)}%</span>
+              <button onClick={() => setZoom(z => Math.min(5, z + 0.2))} className="p-1.5 hover:bg-slate-200 rounded-lg"><ZoomIn className="w-4 h-4" /></button>
+              <button onClick={toggleFullscreen} className="p-1.5 hover:bg-slate-200 rounded-lg" title="Pantalla completa">
                 {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
               </button>
-              <button onClick={resetView} className="p-1.5 hover:bg-white/10 rounded-lg" title="Restablecer vista"><RotateCcw className="w-4 h-4" /></button>
+              <button onClick={resetView} className="p-1.5 hover:bg-slate-200 rounded-lg" title="Restablecer vista"><RotateCcw className="w-4 h-4" /></button>
             </div>
           </div>
 
@@ -1186,7 +1186,7 @@ export default function Planos() {
           </div>
 
           {/* Leyenda de estados */}
-          <div className="flex-shrink-0 flex items-center justify-between px-3 py-1 bg-black/80 text-white text-[10px] gap-2 overflow-x-auto">
+          <div className="flex-shrink-0 flex items-center justify-between px-3 py-1 bg-slate-100 text-slate-700 text-[10px] gap-2 overflow-x-auto border-t border-slate-200">
             <div className="flex items-center gap-3">
               {Object.entries(PIN_COLORS).map(([key, colors]) => {
                 const count = pinCounts[key] || 0;
@@ -1199,7 +1199,7 @@ export default function Planos() {
                 );
               })}
             </div>
-            <div className="flex items-center gap-2 text-white/60 flex-shrink-0">
+            <div className="flex items-center gap-2 text-slate-500 flex-shrink-0">
               <span>{filteredPines.length} pin{filteredPines.length !== 1 ? "es" : ""}</span>
             </div>
           </div>
@@ -1215,10 +1215,10 @@ export default function Planos() {
           {/* Navigation arrows */}
           {planos.length > 1 && (
             <>
-              <button onClick={() => { setViewerIndex(i => (i - 1 + planos.length) % planos.length); resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); setTempPin(null); }} className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white z-20">
+              <button onClick={() => { setViewerIndex(i => (i - 1 + planos.length) % planos.length); resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); setTempPin(null); }} className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-slate-600/70 hover:bg-slate-700/80 rounded-full text-white z-20">
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <button onClick={() => { setViewerIndex(i => (i + 1) % planos.length); resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); setTempPin(null); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white z-20">
+              <button onClick={() => { setViewerIndex(i => (i + 1) % planos.length); resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); setTempPin(null); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-slate-600/70 hover:bg-slate-700/80 rounded-full text-white z-20">
                 <ChevronRight className="w-5 h-5" />
               </button>
             </>
@@ -1226,7 +1226,7 @@ export default function Planos() {
 
           {/* Bottom thumbnails */}
           {planos.length > 1 && (
-            <div className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 bg-black/80 overflow-x-auto">
+            <div className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 bg-slate-100 overflow-x-auto border-t border-slate-200">
               {planos.map((p: any, i: number) => (
                 <button key={p.id} onClick={() => { setViewerIndex(i); resetView(); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); setTempPin(null); }} className={`flex-shrink-0 w-14 h-10 rounded-md overflow-hidden border-2 transition-all ${i === viewerIndex ? "border-emerald-500 opacity-100" : "border-transparent opacity-50 hover:opacity-80"}`}>
                   <img src={p.imagenUrl} alt={p.nombre} className="w-full h-full object-cover" />

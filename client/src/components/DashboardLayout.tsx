@@ -95,6 +95,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
   const baseItems: MenuItem[] = [
     { icon: LayoutDashboard, label: "Inicio", path: "/bienvenida" },
     { icon: Camera, label: "Nuevo", path: "/nuevo-item" },
+    { icon: MapPin, label: "Pines", path: "/planos" },
     { icon: ClipboardCheck, label: "Ítems", path: "/items" },
     { icon: Clock, label: "Mis Tareas", path: "/mis-tareas" },
   ];

@@ -145,7 +145,7 @@ const MARGIN = 12;
 const HEADER_H = 28;
 const FOOTER_H = 12;
 const CONTENT_W = PAGE_W - MARGIN * 2;
-const PLANO_SLOT_H = 124; // 12(title) + 88(img) + 24(stats)
+const PLANO_SLOT_H = 128; // 16(title) + 88(img) + 24(stats)
 const PLANO_IMG_H = 88;
 const STATS_H = 24;
 const GAP = 8;
@@ -575,30 +575,30 @@ function drawPlanoSlot(
 ) {
   const nombre = sinAcentos(plano.nombre);
   const nivelStr = plano.nivel !== null ? `N${plano.nivel}` : "";
-  // ─── Title bar (taller for bigger nivel text) ───
-  const titleBarH = 12;
+  // ─── Title bar (EXTRA TALL for DOUBLE nivel text) ───
+  const titleBarH = 16;
   doc.setFillColor(...C.AZUL);
   doc.roundedRect(slotX, slotY, slotW, titleBarH, 1.5, 1.5, "F");
   doc.setTextColor(...C.BLANCO);
-  // Nivel number - LARGE (14pt bold) for quick identification
+  // Nivel number - DOUBLE SIZE (22pt bold) for instant identification
   if (nivelStr) {
-    doc.setFontSize(14);
+    doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text(nivelStr, slotX + 4, slotY + 8.5);
+    doc.text(nivelStr, slotX + 4, slotY + 12);
   }
   // Plano name - medium
   doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
-  doc.text(nombre, slotX + (nivelStr ? 22 : 3), slotY + 5.5);
+  doc.text(nombre, slotX + (nivelStr ? 30 : 3), slotY + 7);
   // Pin count
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
-  doc.text(`${plano.pines.length} pines`, slotX + slotW / 2, slotY + 8.5, { align: "center" });
-  // Nivel label right side - also large
+  doc.text(`${plano.pines.length} pines`, slotX + slotW / 2, slotY + 12, { align: "center" });
+  // Nivel label right side - also LARGE
   if (plano.nivel !== null) {
-    doc.setFontSize(10);
+    doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text(`Nivel ${plano.nivel}`, slotX + slotW - 4, slotY + 8.5, { align: "right" });
+    doc.text(`Nivel ${plano.nivel}`, slotX + slotW - 4, slotY + 12, { align: "right" });
   };
 
   const imgY = slotY + titleBarH + 1;
