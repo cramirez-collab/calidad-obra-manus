@@ -3244,5 +3244,190 @@ export const appRouter = router({
         return { correos, total };
       }),
   }),
+
+  // ==================== ANÁLISIS IA ====================
+  analisisIA: router({
+    // Generar análisis profundo con IA
+    generarAnalisis: adminProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        // 1. Recopilar todos los datos del proyecto
+        const datos = await db.getDatosCompletosParaAnalisisIA(input.proyectoId);
+        
+        // 2. Construir prompt para análisis profundo
+        const systemPrompt = `Eres un consultor senior de control de calidad en construcción. Analiza rigurosamente los datos del proyecto y genera un análisis profundo.
+
+REGLAS:
+- Sustenta CADA hallazgo con datos específicos (números, porcentajes, nombres)
+- Identifica problemas críticos y oportunidades de mejora
+- Evalúa participación de usuarios y empresas
+- Analiza tendencias semanales
+- Prioriza hallazgos por impacto
+- Usa formato Markdown con secciones claras
+- Incluye referencias explícitas: "Según los datos, la empresa X tiene Y ítems con Z% de aprobación"
+- Sé directo, sin relleno
+- Escribe en español profesional`;
+
+        const userPrompt = `Analiza a profundidad los siguientes datos del proyecto "${datos.proyecto.nombre}":
+
+## DATOS DEL PROYECTO
+${JSON.stringify(datos, null, 2)}
+
+Genera un análisis profundo que incluya:
+1. **Resumen Ejecutivo** (2-3 párrafos con hallazgos clave)
+2. **Estado General del Proyecto** (métricas principales, tasa de aprobación, tendencia)
+3. **Análisis por Empresa** (rendimiento, problemas, ranking)
+4. **Análisis por Especialidad** (distribución de defectos, áreas críticas)
+5. **Análisis por Nivel/Unidad** (concentración de problemas)
+6. **Defectos Más Frecuentes** (patrones, severidad)
+7. **Participación de Usuarios** (activos vs inactivos, productividad)
+8. **Análisis de Tiempos** (resolución promedio, tendencia semanal)
+9. **Problemas Críticos Identificados** (prioridad alta)
+10. **Recomendaciones Accionables** (qué hacer, quién, cuándo)
+
+Cada sección debe referenciar datos específicos del proyecto.`;
+
+        const response = await invokeLLM({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+        });
+
+        const contenido = typeof response.choices[0]?.message?.content === 'string'
+          ? response.choices[0].message.content
+          : 'Error al generar análisis';
+
+        // 3. Obtener versión
+        const version = await db.getNextReporteVersion(input.proyectoId);
+
+        // 4. Guardar en BD
+        const { id } = await db.createReporteIA({
+          proyectoId: input.proyectoId,
+          tipo: 'analisis_profundo',
+          titulo: `Análisis Profundo v${version} - ${datos.proyecto.nombre}`,
+          contenido,
+          datosAnalizados: JSON.stringify(datos),
+          version,
+          creadoPorId: ctx.user.id,
+        });
+
+        return { id, contenido, version };
+      }),
+
+    // Generar resumen ejecutivo (máx 1 cuartilla)
+    generarResumen: adminProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const datos = await db.getDatosCompletosParaAnalisisIA(input.proyectoId);
+
+        const systemPrompt = `Eres un director de calidad en construcción. Genera un resumen ejecutivo conciso y estratégico.
+
+REGLAS:
+- Máximo 1 cuartilla (400-500 palabras)
+- Enfoque estratégico y accionable
+- Cada conclusión debe referenciar datos específicos
+- Prioriza problemas críticos
+- Incluye instrucciones claras para el equipo
+- Formato Markdown limpio
+- Español profesional, tono ejecutivo`;
+
+        const userPrompt = `Genera un RESUMEN EJECUTIVO del proyecto "${datos.proyecto.nombre}" basado en estos datos:
+
+${JSON.stringify(datos, null, 2)}
+
+Estructura obligatoria:
+1. **Estado del Proyecto** (1 párrafo: métricas clave, tendencia general)
+2. **Hallazgos Críticos** (3-5 bullets con datos específicos)
+3. **Empresas con Atención Prioritaria** (ranking por rendimiento)
+4. **Acciones Inmediatas Requeridas** (instrucciones concretas para el equipo)
+5. **Indicadores a Monitorear** (KPIs clave para la próxima semana)
+
+Máximo 500 palabras. Cada punto debe incluir números y referencias a datos reales.`;
+
+        const response = await invokeLLM({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+        });
+
+        const resumen = typeof response.choices[0]?.message?.content === 'string'
+          ? response.choices[0].message.content
+          : 'Error al generar resumen';
+
+        const version = await db.getNextReporteVersion(input.proyectoId);
+
+        const { id } = await db.createReporteIA({
+          proyectoId: input.proyectoId,
+          tipo: 'resumen_ejecutivo',
+          titulo: `Resumen Ejecutivo v${version} - ${datos.proyecto.nombre}`,
+          contenido: resumen,
+          resumenEjecutivo: resumen,
+          datosAnalizados: JSON.stringify(datos),
+          version,
+          creadoPorId: ctx.user.id,
+        });
+
+        return { id, resumen, version };
+      }),
+
+    // Obtener historial de reportes
+    historial: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        tipo: z.string().optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const [reportes, total] = await Promise.all([
+          db.getReportesIA(input.proyectoId, {
+            tipo: input.tipo,
+            limit: input.limit,
+            offset: input.offset,
+          }),
+          db.countReportesIA(input.proyectoId),
+        ]);
+        return { reportes, total };
+      }),
+
+    // Obtener un reporte por ID
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getReporteIAById(input.id);
+      }),
+
+    // Marcar reporte como enviado
+    marcarEnviado: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        destinatarios: z.array(z.string()),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateReporteIA(input.id, {
+          enviado: true,
+          fechaEnvio: new Date(),
+          destinatariosEnvio: JSON.stringify(input.destinatarios),
+        });
+        return { success: true };
+      }),
+
+    // Actualizar URL del PDF generado
+    actualizarPdf: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        pdfUrl: z.string(),
+        pdfKey: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateReporteIA(input.id, {
+          pdfUrl: input.pdfUrl,
+          pdfKey: input.pdfKey,
+        });
+        return { success: true };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

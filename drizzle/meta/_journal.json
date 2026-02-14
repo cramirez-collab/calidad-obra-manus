@@ -428,6 +428,13 @@
       "when": 1770952311152,
       "tag": "0060_cold_nextwave",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "5",
+      "when": 1771109559065,
+      "tag": "0061_fair_valeria_richards",
+      "breakpoints": true
     }
   ]
 }

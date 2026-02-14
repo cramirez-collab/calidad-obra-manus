@@ -4046,3 +4046,25 @@
 - [x] 3. Pin draggable: usuario puede arrastrar el pin para ajustar posición exacta
 - [x] 4. Botón confirmar posición: al presionar se abre CapturaRapida/formulario de nuevo ítem
 - [x] 5. Botón cancelar: descarta el pin temporal
+
+## v4.36 - Análisis Profundo IA + Resumen Ejecutivo + Envío Automático
+
+### Selector de Proyecto para Superadmin
+- [x] 1. Mejorar visibilidad del selector de proyecto activo en header/sidebar para superadmin
+- [x] 2. Dropdown con búsqueda para cambiar de proyecto rápidamente
+
+### Botón Análisis Profundo con IA
+- [x] 3. Backend: Procedimiento tRPC que recopila datos completos del proyecto (estadísticas, pines, defectos, participación usuarios, niveles, espacios)
+- [x] 4. Backend: Invocación LLM con datos agregados para generar análisis profundo con referencias a datos
+- [x] 5. UI: Botón "Análisis IA" en dashboard con modal de resultados (markdown renderizado)
+- [x] 6. Análisis incluye: hallazgos, conclusiones, problemas críticos, oportunidades de mejora
+
+### Resumen Ejecutivo PDF
+- [x] 7. Generación de resumen ejecutivo (máx 1 cuartilla) con enfoque estratégico y accionable
+- [x] 8. Generación PDF del resumen ejecutivo con branding Objetiva
+- [x] 9. Descarga manual de PDF desde la plataformaa
+
+### Automatización y Distribución
+- [x] 10. Envío automático del resumen por email cada miércoles a las 6pm a todos los usuarios del proyecto
+- [x] 11. Historial de reportes anteriores por fecha y versión
+- [x] 12. Visualización del historial de reportes en la plataforma

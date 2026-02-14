@@ -47,7 +47,8 @@ import {
   Wifi,
   WifiOff,
   Mail,
-  Crosshair
+  Crosshair,
+  BrainCircuit
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -155,6 +156,11 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
 
   // Todos los usuarios ven los items base y de análisis
   let items: MenuItem[] = [...baseItems, ...analysisItems];
+
+  // Solo admin y superadmin ven Análisis IA
+  if (role === 'admin' || role === 'superadmin') {
+    items.push({ icon: BrainCircuit, label: "Análisis IA", path: "/analisis-ia" });
+  }
 
   // Solo admin y superadmin ven Configuración
   if (role === 'admin' || role === 'superadmin') {
@@ -535,7 +541,11 @@ function DashboardLayoutContent({
             <div className="flex-1 flex justify-center items-center gap-2 min-w-0">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-accent/50 transition-colors focus:outline-none min-w-0 max-w-[200px] sm:max-w-[300px]">
+                  <button 
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-[#002C63]/20 hover:border-[#02B381]/50 hover:bg-[#02B381]/5 transition-all focus:outline-none focus:ring-2 focus:ring-[#02B381]/30 min-w-0 max-w-[220px] sm:max-w-[320px] group"
+                    title="Click para cambiar de proyecto"
+                  >
+                    <FolderKanban className="h-4 w-4 shrink-0 text-[#02B381] group-hover:scale-110 transition-transform" />
                     {stableProjectName ? (
                       <span className="font-bold text-sm sm:text-lg md:text-xl tracking-wide truncate" style={{ color: '#002C63' }}>
                         {stableProjectName}
@@ -543,11 +553,14 @@ function DashboardLayoutContent({
                     ) : (
                       <span className="font-bold text-lg sm:text-2xl md:text-3xl tracking-wide" style={{ color: '#002C63' }}>OQC</span>
                     )}
-                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <ChevronDown className="h-3.5 w-3.5 text-[#002C63]/50 shrink-0 group-hover:text-[#02B381] transition-colors" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="w-64">
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">Cambiar Proyecto</DropdownMenuLabel>
+                <DropdownMenuContent align="center" className="w-72">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <FolderKanban className="h-3.5 w-3.5" />
+                    Cambiar Proyecto
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {userProjects.map((p: any) => {
                     const pId = p.id || p.proyecto?.id || p.proyectoId;
@@ -562,14 +575,26 @@ function DashboardLayoutContent({
                             setLocation('/bienvenida');
                           }
                         }}
-                        className={`cursor-pointer flex items-center gap-2 ${isActive ? 'bg-primary/10 text-primary font-semibold' : ''}`}
+                        className={`cursor-pointer flex items-center gap-2 py-2.5 ${isActive ? 'bg-[#02B381]/10 text-[#002C63] font-semibold border-l-2 border-[#02B381]' : 'hover:bg-slate-50'}`}
                       >
-                        <Building2 className="h-4 w-4 shrink-0" />
+                        <Building2 className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#02B381]' : 'text-slate-400'}`} />
                         <span className="truncate">{pName}</span>
-                        {isActive && <span className="ml-auto text-xs text-primary">✓</span>}
+                        {isActive && <span className="ml-auto text-[10px] bg-[#02B381] text-white px-1.5 py-0.5 rounded-full">Activo</span>}
                       </DropdownMenuItem>
                     );
                   })}
+                  {(user?.role === 'superadmin' || user?.role === 'admin') && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => setLocation('/proyectos')}
+                        className="cursor-pointer flex items-center gap-2 text-[#002C63] hover:bg-slate-50"
+                      >
+                        <Settings className="h-4 w-4 shrink-0" />
+                        <span>Gestionar Proyectos</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
               <span className="text-[10px] font-mono bg-blue-100 px-1.5 py-0.5 rounded shrink-0" style={{ color: '#002C63' }}>{(window as any).OQC_DISPLAY_VERSION || 'v2.13'}</span>

@@ -686,3 +686,28 @@ export const bitacoraCorreos = mysqlTable("bitacora_correos", {
 });
 export type BitacoraCorreo = typeof bitacoraCorreos.$inferSelect;
 export type InsertBitacoraCorreo = typeof bitacoraCorreos.$inferInsert;
+
+
+/**
+ * Tabla de reportes de análisis IA - almacena análisis profundos y resúmenes ejecutivos generados por IA
+ */
+export const reportesIA = mysqlTable("reportes_ia", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  tipo: mysqlEnum("tipo_reporte", ["analisis_profundo", "resumen_ejecutivo"]).default("analisis_profundo").notNull(),
+  titulo: varchar("titulo", { length: 500 }).notNull(),
+  contenido: text("contenido").notNull(), // Markdown del análisis completo
+  resumenEjecutivo: text("resumenEjecutivo"), // Resumen ejecutivo (max 1 cuartilla)
+  datosAnalizados: text("datosAnalizados"), // JSON con snapshot de datos usados para el análisis
+  pdfUrl: text("pdfUrl"), // URL del PDF generado en S3
+  pdfKey: varchar("pdfKey", { length: 500 }), // Key del PDF en S3
+  enviado: boolean("enviado").default(false).notNull(), // Si ya fue enviado por email
+  fechaEnvio: timestamp("fechaEnvio"), // Fecha del envío automático
+  destinatariosEnvio: text("destinatariosEnvio"), // JSON array de emails a los que se envió
+  version: int("version").default(1).notNull(), // Versión del reporte (incrementa cada semana)
+  creadoPorId: int("creadoPorId"), // null = generado automáticamente, con valor = generado manualmente
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ReporteIA = typeof reportesIA.$inferSelect;
+export type InsertReporteIA = typeof reportesIA.$inferInsert;

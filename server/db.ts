@@ -31,7 +31,8 @@ import {
   planos, InsertPlano,
   planoPines, InsertPlanoPin,
   firmasReporte, InsertFirmaReporte,
-  bitacoraCorreos, InsertBitacoraCorreo
+  bitacoraCorreos, InsertBitacoraCorreo,
+  reportesIA, InsertReporteIA
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -5846,4 +5847,321 @@ export async function countBitacoraCorreos(proyectoId: number, tipo?: string) {
   if (tipo) conditions.push(eq(bitacoraCorreos.tipo, tipo));
   const [result] = await db.select({ count: sql<number>`COUNT(*)` }).from(bitacoraCorreos).where(and(...conditions));
   return result?.count || 0;
+}
+
+
+// ==================== REPORTES IA ====================
+
+/**
+ * Recopilar datos completos del proyecto para análisis IA
+ * Devuelve un snapshot agregado de todas las métricas relevantes
+ */
+export async function getDatosCompletosParaAnalisisIA(proyectoId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+
+  // 1. Proyecto base
+  const [proyecto] = await db.select().from(proyectos).where(eq(proyectos.id, proyectoId));
+  if (!proyecto) throw new Error("Proyecto no encontrado");
+
+  // 2. Items con estadísticas detalladas
+  const todosItems = await db.select({
+    id: items.id,
+    codigo: items.codigo,
+    titulo: items.titulo,
+    status: items.status,
+    empresaId: items.empresaId,
+    unidadId: items.unidadId,
+    especialidadId: items.especialidadId,
+    defectoId: items.defectoId,
+    espacioId: items.espacioId,
+    residenteId: items.residenteId,
+    fechaCreacion: items.fechaCreacion,
+    fechaFotoDespues: items.fechaFotoDespues,
+    fechaAprobacion: items.fechaAprobacion,
+    fechaCierre: items.fechaCierre,
+  }).from(items).where(eq(items.proyectoId, proyectoId));
+
+  const totalItems = todosItems.length;
+  const aprobados = todosItems.filter(i => i.status === 'aprobado').length;
+  const rechazados = todosItems.filter(i => i.status === 'rechazado').length;
+  const pendientesFoto = todosItems.filter(i => i.status === 'pendiente_foto_despues').length;
+  const pendientesAprobacion = todosItems.filter(i => i.status === 'pendiente_aprobacion').length;
+
+  // Tiempos promedio de resolución (items aprobados con fechas completas)
+  const itemsConTiempos = todosItems.filter(i => i.status === 'aprobado' && i.fechaCreacion && i.fechaAprobacion);
+  const tiemposResolucion = itemsConTiempos.map(i => {
+    const diff = new Date(i.fechaAprobacion!).getTime() - new Date(i.fechaCreacion).getTime();
+    return diff / (1000 * 60 * 60 * 24); // días
+  });
+  const tiempoPromedioResolucion = tiemposResolucion.length > 0
+    ? tiemposResolucion.reduce((a, b) => a + b, 0) / tiemposResolucion.length
+    : 0;
+
+  // 3. Empresas con conteos
+  const todasEmpresas = await db.select().from(empresas)
+    .where(and(eq(empresas.proyectoId, proyectoId), eq(empresas.activo, true)));
+  const empresasConItems = todasEmpresas.map(emp => {
+    const itemsEmpresa = todosItems.filter(i => i.empresaId === emp.id);
+    const aprobadosEmp = itemsEmpresa.filter(i => i.status === 'aprobado').length;
+    return {
+      id: emp.id,
+      nombre: emp.nombre,
+      totalItems: itemsEmpresa.length,
+      aprobados: aprobadosEmp,
+      rechazados: itemsEmpresa.filter(i => i.status === 'rechazado').length,
+      pendientes: itemsEmpresa.filter(i => i.status !== 'aprobado' && i.status !== 'rechazado').length,
+      tasaAprobacion: itemsEmpresa.length > 0 ? Math.round((aprobadosEmp / itemsEmpresa.length) * 100) : 0,
+    };
+  });
+
+  // 4. Unidades (niveles) con conteos
+  const todasUnidades = await db.select().from(unidades)
+    .where(and(eq(unidades.proyectoId, proyectoId), eq(unidades.activo, true)));
+  const unidadesConItems = todasUnidades.map(uni => {
+    const itemsUnidad = todosItems.filter(i => i.unidadId === uni.id);
+    return {
+      id: uni.id,
+      nombre: uni.nombre,
+      nivel: uni.nivel,
+      totalItems: itemsUnidad.length,
+      aprobados: itemsUnidad.filter(i => i.status === 'aprobado').length,
+      pendientes: itemsUnidad.filter(i => i.status !== 'aprobado' && i.status !== 'rechazado').length,
+    };
+  });
+
+  // 5. Especialidades con conteos
+  const todasEspecialidades = await db.select().from(especialidades)
+    .where(and(eq(especialidades.proyectoId, proyectoId), eq(especialidades.activo, true)));
+  const especialidadesConItems = todasEspecialidades.map(esp => {
+    const itemsEsp = todosItems.filter(i => i.especialidadId === esp.id);
+    return {
+      id: esp.id,
+      nombre: esp.nombre,
+      totalItems: itemsEsp.length,
+      aprobados: itemsEsp.filter(i => i.status === 'aprobado').length,
+      rechazados: itemsEsp.filter(i => i.status === 'rechazado').length,
+    };
+  });
+
+  // 6. Defectos con frecuencia
+  const todosDefectos = await db.select().from(defectos)
+    .where(and(eq(defectos.proyectoId, proyectoId), eq(defectos.activo, true)));
+  const defectosConFrecuencia = todosDefectos.map(def => {
+    const itemsDef = todosItems.filter(i => i.defectoId === def.id);
+    return {
+      id: def.id,
+      nombre: def.nombre,
+      severidad: def.severidad,
+      frecuencia: itemsDef.length,
+    };
+  }).sort((a, b) => b.frecuencia - a.frecuencia);
+
+  // 7. Espacios con conteos
+  const todosEspacios = await db.select().from(espacios)
+    .where(and(eq(espacios.proyectoId, proyectoId), eq(espacios.activo, true)));
+  const espaciosConItems = todosEspacios.map(esp => {
+    const itemsEsp = todosItems.filter(i => i.espacioId === esp.id);
+    return {
+      id: esp.id,
+      nombre: esp.nombre,
+      totalItems: itemsEsp.length,
+    };
+  }).sort((a, b) => b.totalItems - a.totalItems);
+
+  // 8. Usuarios y participación
+  const usuariosProyecto = await db.select().from(proyectoUsuarios)
+    .where(and(eq(proyectoUsuarios.proyectoId, proyectoId), eq(proyectoUsuarios.activo, true)));
+  const userIds = usuariosProyecto.map(pu => pu.usuarioId);
+  const todosUsuarios = userIds.length > 0
+    ? await db.select({ id: users.id, name: users.name, role: users.role, lastActiveAt: users.lastActiveAt }).from(users).where(inArray(users.id, userIds))
+    : [];
+
+  const participacionUsuarios = todosUsuarios.map(usr => {
+    const itemsCreados = todosItems.filter(i => i.residenteId === usr.id).length;
+    const diasSinActividad = usr.lastActiveAt
+      ? Math.floor((Date.now() - new Date(usr.lastActiveAt).getTime()) / (1000 * 60 * 60 * 24))
+      : 999;
+    return {
+      id: usr.id,
+      nombre: usr.name || 'Sin nombre',
+      rol: usr.role,
+      itemsCreados,
+      activo: diasSinActividad <= 7,
+      diasSinActividad,
+    };
+  });
+
+  const usuariosActivos = participacionUsuarios.filter(u => u.activo).length;
+  const usuariosInactivos = participacionUsuarios.filter(u => !u.activo).length;
+
+  // 9. Pines en planos
+  const planosProyecto = await db.select().from(planos)
+    .where(and(eq(planos.proyectoId, proyectoId), eq(planos.activo, true)));
+  const planoIds = planosProyecto.map(p => p.id);
+  let totalPines = 0;
+  if (planoIds.length > 0) {
+    const [pinesCount] = await db.select({ count: sql<number>`COUNT(*)` }).from(planoPines)
+      .where(and(inArray(planoPines.planoId, planoIds), eq(planoPines.activo, true)));
+    totalPines = pinesCount?.count || 0;
+  }
+
+  // 10. Tendencia semanal (últimas 4 semanas)
+  const ahora = new Date();
+  const tendenciaSemanal = [];
+  for (let i = 3; i >= 0; i--) {
+    const inicioSemana = new Date(ahora);
+    inicioSemana.setDate(ahora.getDate() - (i * 7) - ahora.getDay());
+    inicioSemana.setHours(0, 0, 0, 0);
+    const finSemana = new Date(inicioSemana);
+    finSemana.setDate(inicioSemana.getDate() + 7);
+
+    const itemsSemana = todosItems.filter(item => {
+      const fecha = new Date(item.fechaCreacion);
+      return fecha >= inicioSemana && fecha < finSemana;
+    });
+    const aprobadosSemana = itemsSemana.filter(i => i.status === 'aprobado').length;
+
+    tendenciaSemanal.push({
+      semana: `Semana ${4 - i}`,
+      inicio: inicioSemana.toISOString().split('T')[0],
+      fin: finSemana.toISOString().split('T')[0],
+      creados: itemsSemana.length,
+      aprobados: aprobadosSemana,
+    });
+  }
+
+  // 11. Metas del proyecto
+  const metasProyecto = await db.select().from(metas)
+    .where(and(eq(metas.proyectoId, proyectoId), eq(metas.activo, true)));
+
+  return {
+    proyecto: {
+      id: proyecto.id,
+      nombre: proyecto.nombre,
+      codigo: proyecto.codigo,
+      cliente: proyecto.cliente,
+      fechaInicio: proyecto.fechaInicio,
+      fechaFin: proyecto.fechaFin,
+      diasCorreccion: proyecto.diasCorreccion,
+    },
+    resumenGeneral: {
+      totalItems,
+      aprobados,
+      rechazados,
+      pendientesFoto,
+      pendientesAprobacion,
+      tasaAprobacion: totalItems > 0 ? Math.round((aprobados / totalItems) * 100) : 0,
+      tasaRechazo: totalItems > 0 ? Math.round((rechazados / totalItems) * 100) : 0,
+      tiempoPromedioResolucionDias: Math.round(tiempoPromedioResolucion * 10) / 10,
+    },
+    empresas: empresasConItems,
+    unidades: unidadesConItems,
+    especialidades: especialidadesConItems,
+    defectos: defectosConFrecuencia.slice(0, 20), // Top 20
+    espacios: espaciosConItems.slice(0, 20), // Top 20
+    participacionUsuarios,
+    resumenUsuarios: {
+      total: participacionUsuarios.length,
+      activos: usuariosActivos,
+      inactivos: usuariosInactivos,
+    },
+    planos: {
+      totalPlanos: planosProyecto.length,
+      totalPines,
+    },
+    tendenciaSemanal,
+    metas: metasProyecto.map(m => ({
+      nombre: m.nombre,
+      tipo: m.tipo,
+      valorObjetivo: m.valorObjetivo,
+      unidadMedida: m.unidadMedida,
+    })),
+    fechaAnalisis: new Date().toISOString(),
+  };
+}
+
+/**
+ * Crear un reporte IA
+ */
+export async function createReporteIA(data: InsertReporteIA) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [result] = await db.insert(reportesIA).values(data);
+  return { id: result.insertId };
+}
+
+/**
+ * Obtener reportes IA por proyecto (historial)
+ */
+export async function getReportesIA(proyectoId: number, opts?: { limit?: number; offset?: number; tipo?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const conditions = [eq(reportesIA.proyectoId, proyectoId)];
+  if (opts?.tipo) conditions.push(eq(reportesIA.tipo, opts.tipo as any));
+  const results = await db.select().from(reportesIA)
+    .where(and(...conditions))
+    .orderBy(desc(reportesIA.createdAt))
+    .limit(opts?.limit || 50)
+    .offset(opts?.offset || 0);
+  return results;
+}
+
+/**
+ * Obtener un reporte IA por ID
+ */
+export async function getReporteIAById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [result] = await db.select().from(reportesIA).where(eq(reportesIA.id, id));
+  return result || null;
+}
+
+/**
+ * Actualizar un reporte IA (ej: agregar PDF URL, marcar como enviado)
+ */
+export async function updateReporteIA(id: number, data: Partial<InsertReporteIA>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(reportesIA).set(data).where(eq(reportesIA.id, id));
+}
+
+/**
+ * Contar reportes IA por proyecto
+ */
+export async function countReportesIA(proyectoId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [result] = await db.select({ count: sql<number>`COUNT(*)` }).from(reportesIA)
+    .where(eq(reportesIA.proyectoId, proyectoId));
+  return result?.count || 0;
+}
+
+/**
+ * Obtener la siguiente versión de reporte para un proyecto
+ */
+export async function getNextReporteVersion(proyectoId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [result] = await db.select({ maxVersion: sql<number>`COALESCE(MAX(version), 0)` }).from(reportesIA)
+    .where(eq(reportesIA.proyectoId, proyectoId));
+  return (result?.maxVersion || 0) + 1;
+}
+
+/**
+ * Obtener emails de todos los usuarios activos de un proyecto
+ */
+export async function getEmailsUsuariosProyecto(proyectoId: number): Promise<{ email: string; nombre: string }[]> {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const puList = await db.select().from(proyectoUsuarios)
+    .where(and(eq(proyectoUsuarios.proyectoId, proyectoId), eq(proyectoUsuarios.activo, true)));
+  const userIds = puList.map(pu => pu.usuarioId);
+  if (userIds.length === 0) return [];
+  const usrs = await db.select({ id: users.id, name: users.name, email: users.email })
+    .from(users)
+    .where(and(inArray(users.id, userIds), eq(users.activo, true)));
+  return usrs
+    .filter(u => u.email && u.email.trim().length > 0)
+    .map(u => ({ email: u.email!, nombre: u.name || 'Usuario' }));
 }

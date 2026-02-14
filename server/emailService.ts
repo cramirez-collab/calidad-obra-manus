@@ -140,3 +140,64 @@ export function getPendienteAprobacionEmailTemplate(itemTitulo: string, itemCodi
 </html>
   `.trim();
 }
+
+
+/**
+ * Plantilla HTML para el resumen ejecutivo semanal
+ */
+export function getResumenEjecutivoEmailTemplate(
+  proyectoNombre: string,
+  resumenMarkdown: string,
+  version: number,
+  fecha: string
+): string {
+  // Convertir markdown básico a HTML para email
+  const htmlContent = resumenMarkdown
+    .replace(/^### (.*$)/gm, '<h3 style="color: #002C63; font-size: 16px; margin: 20px 0 8px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2 style="color: #002C63; font-size: 18px; margin: 24px 0 10px 0; border-bottom: 2px solid #02B381; padding-bottom: 6px;">$1</h2>')
+    .replace(/^# (.*$)/gm, '<h1 style="color: #002C63; font-size: 22px; margin: 24px 0 12px 0;">$1</h1>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #002C63;">$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^- (.*$)/gm, '<li style="margin: 4px 0; padding-left: 4px;">$1</li>')
+    .replace(/(<li.*<\/li>\n?)+/g, (match) => `<ul style="margin: 8px 0; padding-left: 20px;">${match}</ul>`)
+    .replace(/\n\n/g, '</p><p style="margin: 8px 0; line-height: 1.6; color: #374151;">')
+    .replace(/\n/g, '<br/>');
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resumen Ejecutivo Semanal - ${proyectoNombre}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 700px; margin: 0 auto; padding: 20px; background: #f3f4f6;">
+  <div style="background: linear-gradient(135deg, #002C63 0%, #1e40af 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 20px; letter-spacing: 1px;">OBJETIVA QUALITY CONTROL</h1>
+    <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0 0; font-size: 14px;">Resumen Ejecutivo Semanal v${version}</p>
+  </div>
+  
+  <div style="background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
+    <div style="background: #f0fdf4; border-left: 4px solid #02B381; padding: 12px 16px; margin-bottom: 20px; border-radius: 0 8px 8px 0;">
+      <p style="margin: 0; font-size: 14px; color: #166534;">
+        <strong>Proyecto:</strong> ${proyectoNombre}<br/>
+        <strong>Fecha:</strong> ${fecha}<br/>
+        <strong>Versión:</strong> v${version}
+      </p>
+    </div>
+    
+    <div style="font-size: 14px;">
+      <p style="margin: 8px 0; line-height: 1.6; color: #374151;">${htmlContent}</p>
+    </div>
+  </div>
+  
+  <div style="background: #f9fafb; padding: 20px; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb; border-top: none; text-align: center;">
+    <p style="margin: 0; color: #6b7280; font-size: 12px;">
+      Este resumen fue generado automáticamente por el sistema de Análisis IA.<br/>
+      Objetiva Quality Control &bull; ${fecha}
+    </p>
+  </div>
+</body>
+</html>
+  `.trim();
+}
