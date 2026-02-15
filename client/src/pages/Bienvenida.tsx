@@ -191,6 +191,15 @@ export default function Bienvenida() {
   const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
   const [showPlanoViewer, setShowPlanoViewer] = useState(false);
 
+  // Estado para Reporte IA
+  const [showReporteIA, setShowReporteIA] = useState(false);
+  const [generandoAnalisis, setGenerandoAnalisis] = useState(false);
+  const [analisisResultado, setAnalisisResultado] = useState<string | null>(null);
+  const [resumenResultado, setResumenResultado] = useState<string | null>(null);
+  const [generandoResumen, setGenerandoResumen] = useState(false);
+  const [generandoPDFIA, setGenerandoPDFIA] = useState(false);
+  const [reporteTab, setReporteTab] = useState<'analisis' | 'resumen' | 'historial'>('analisis');
+
   // Pin count por plano
   const { data: pinCountData } = trpc.planos.pinCount.useQuery(
     { proyectoId: selectedProjectId! },
@@ -264,6 +273,154 @@ export default function Bienvenida() {
     },
   });
   
+  // Mutaciones para Reporte IA
+  const analisisMut = trpc.analisisIA.generarAnalisis.useMutation({
+    onSuccess: (data: any) => {
+      setAnalisisResultado(data.contenido);
+      setGenerandoAnalisis(false);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Error al generar análisis');
+      setGenerandoAnalisis(false);
+    },
+  });
+  const resumenMut = trpc.analisisIA.generarResumen.useMutation({
+    onSuccess: (data: any) => {
+      setResumenResultado(data.resumen);
+      setGenerandoResumen(false);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Error al generar resumen');
+      setGenerandoResumen(false);
+    },
+  });
+  const historialQuery = trpc.analisisIA.historial.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId && showReporteIA && reporteTab === 'historial', staleTime: 60_000 }
+  );
+
+  const handleGenerarAnalisis = () => {
+    if (!selectedProjectId || generandoAnalisis) return;
+    setGenerandoAnalisis(true);
+    setAnalisisResultado(null);
+    analisisMut.mutate({ proyectoId: selectedProjectId });
+  };
+
+  const handleGenerarResumen = () => {
+    if (!selectedProjectId || generandoResumen) return;
+    setGenerandoResumen(true);
+    setResumenResultado(null);
+    resumenMut.mutate({ proyectoId: selectedProjectId });
+  };
+
+  const handleDescargarPDFIA = async (contenido: string, titulo: string) => {
+    setGenerandoPDFIA(true);
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      const pageW = doc.internal.pageSize.getWidth();
+      const margin = 20;
+      const maxW = pageW - margin * 2;
+      let y = 20;
+
+      // Header
+      doc.setFillColor(0, 44, 99);
+      doc.rect(0, 0, pageW, 35, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.text('OBJETIVA', margin, 15);
+      doc.setFontSize(10);
+      doc.text('Reporte de Análisis de Calidad', margin, 25);
+      doc.text(new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }), pageW - margin - 60, 25);
+      y = 45;
+
+      // Title
+      doc.setTextColor(0, 44, 99);
+      doc.setFontSize(14);
+      doc.text(titulo, margin, y);
+      y += 10;
+
+      // Proyecto
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Proyecto: ${proyectoActual?.nombre || 'N/A'}`, margin, y);
+      y += 8;
+
+      // Content - parse markdown lines
+      doc.setTextColor(50, 50, 50);
+      const lines = contenido.split('\n');
+      for (const line of lines) {
+        if (y > 270) { doc.addPage(); y = 20; }
+        const trimmed = line.trim();
+        if (trimmed.startsWith('# ')) {
+          y += 4;
+          doc.setFontSize(14); doc.setTextColor(0, 44, 99);
+          doc.text(trimmed.replace(/^#+\s*/, ''), margin, y);
+          y += 8;
+        } else if (trimmed.startsWith('## ')) {
+          y += 3;
+          doc.setFontSize(12); doc.setTextColor(0, 44, 99);
+          doc.text(trimmed.replace(/^#+\s*/, ''), margin, y);
+          y += 7;
+        } else if (trimmed.startsWith('### ')) {
+          y += 2;
+          doc.setFontSize(11); doc.setTextColor(0, 80, 140);
+          doc.text(trimmed.replace(/^#+\s*/, ''), margin, y);
+          y += 6;
+        } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          doc.setFontSize(9); doc.setTextColor(50, 50, 50);
+          const bulletText = trimmed.replace(/^[-*]\s*/, '').replace(/\*\*/g, '');
+          const wrapped = doc.splitTextToSize(`\u2022 ${bulletText}`, maxW - 5);
+          for (const wl of wrapped) {
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(wl, margin + 5, y);
+            y += 5;
+          }
+        } else if (trimmed.match(/^\d+\.\s/)) {
+          doc.setFontSize(9); doc.setTextColor(50, 50, 50);
+          const numText = trimmed.replace(/\*\*/g, '');
+          const wrapped = doc.splitTextToSize(numText, maxW - 5);
+          for (const wl of wrapped) {
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(wl, margin + 3, y);
+            y += 5;
+          }
+        } else if (trimmed.length > 0) {
+          doc.setFontSize(9); doc.setTextColor(50, 50, 50);
+          const cleanText = trimmed.replace(/\*\*/g, '');
+          const wrapped = doc.splitTextToSize(cleanText, maxW);
+          for (const wl of wrapped) {
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(wl, margin, y);
+            y += 5;
+          }
+        } else {
+          y += 3;
+        }
+      }
+
+      // Footer on each page
+      const totalPages = doc.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFillColor(0, 44, 99);
+        doc.rect(0, 287, pageW, 10, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(7);
+        doc.text('Objetiva - Control de Calidad de Obra', margin, 293);
+        doc.text(`Página ${i} de ${totalPages}`, pageW - margin - 25, 293);
+      }
+
+      openPDFPreview(doc);
+      toast.success('PDF generado');
+    } catch (err) {
+      console.error('Error PDF:', err);
+      toast.error('Error al generar PDF');
+    } finally {
+      setGenerandoPDFIA(false);
+    }
+  };
+
   const resetSwipe = () => {
     setSwipingItemId(null);
     setSwipeOffset(0);
@@ -528,6 +685,27 @@ export default function Bienvenida() {
               </TooltipTrigger>
               <TooltipContent>Ver Pines</TooltipContent>
             </Tooltip>
+            {/* Botón R - Reporte IA Análisis Profundo */}
+            {isAdmin && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8 sm:h-10 sm:w-10 border-slate-300 hover:bg-slate-50 relative"
+                    onClick={() => setShowReporteIA(true)}
+                    disabled={generandoAnalisis}
+                  >
+                    {generandoAnalisis ? (
+                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63] animate-spin" />
+                    ) : (
+                      <span className="text-sm sm:text-base font-bold text-[#002C63]">R</span>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Reporte IA</TooltipContent>
+              </Tooltip>
+            )}
             {/* Botón PDF Reporte Planos con Pines */}
             <Tooltip>
               <TooltipTrigger asChild>
@@ -1128,6 +1306,200 @@ export default function Bienvenida() {
           </Dialog>
         );
       })()}
+
+      {/* Dialog Reporte IA */}
+      <Dialog open={showReporteIA} onOpenChange={setShowReporteIA}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="px-4 pt-4 pb-2 border-b">
+            <DialogTitle className="text-[#002C63] flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-[#002C63] text-white flex items-center justify-center font-bold text-sm">R</span>
+              Reporte IA - {proyectoActual?.nombre || 'Proyecto'}
+            </DialogTitle>
+          </DialogHeader>
+          {/* Tabs */}
+          <div className="flex border-b px-4">
+            {(['analisis', 'resumen', 'historial'] as const).map(tab => (
+              <button
+                key={tab}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  reporteTab === tab
+                    ? 'border-[#02B381] text-[#02B381]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setReporteTab(tab)}
+              >
+                {tab === 'analisis' ? 'An\u00e1lisis Profundo' : tab === 'resumen' ? 'Resumen Ejecutivo' : 'Historial'}
+              </button>
+            ))}
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Tab An\u00e1lisis */}
+            {reporteTab === 'analisis' && (
+              <div className="space-y-4">
+                {!analisisResultado && !generandoAnalisis && (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#002C63]/10 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-[#002C63]">IA</span>
+                    </div>
+                    <h3 className="text-lg font-semibold text-[#002C63] mb-2">An\u00e1lisis Profundo del Proyecto</h3>
+                    <p className="text-sm text-gray-500 mb-4 max-w-md mx-auto">
+                      Genera un reporte integral con resumen ejecutivo, desarrollo detallado, evidencias, metodolog\u00eda, hallazgos, riesgos, oportunidades, conclusiones y l\u00edneas de acci\u00f3n.
+                    </p>
+                    <Button
+                      className="bg-[#002C63] hover:bg-[#001d42] text-white px-6"
+                      onClick={handleGenerarAnalisis}
+                    >
+                      Generar An\u00e1lisis Completo
+                    </Button>
+                  </div>
+                )}
+                {generandoAnalisis && (
+                  <div className="text-center py-12">
+                    <Loader2 className="h-10 w-10 animate-spin text-[#02B381] mx-auto mb-4" />
+                    <p className="text-sm text-gray-500">Analizando datos del proyecto...</p>
+                    <p className="text-xs text-gray-400 mt-1">Esto puede tomar 30-60 segundos</p>
+                  </div>
+                )}
+                {analisisResultado && (
+                  <div>
+                    <div className="flex justify-end gap-2 mb-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDescargarPDFIA(analisisResultado, 'An\u00e1lisis Profundo')}
+                        disabled={generandoPDFIA}
+                      >
+                        {generandoPDFIA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}
+                        Descargar PDF
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-[#002C63] hover:bg-[#001d42] text-white"
+                        onClick={handleGenerarAnalisis}
+                      >
+                        Regenerar
+                      </Button>
+                    </div>
+                    <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4">
+                      {analisisResultado.split('\n').map((line, i) => {
+                        const t = line.trim();
+                        if (t.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-[#002C63] mt-4 mb-2">{t.replace(/^#+\s*/, '')}</h1>;
+                        if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1">{t.replace(/^#+\s*/, '')}</h2>;
+                        if (t.startsWith('### ')) return <h3 key={i} className="text-base font-semibold text-[#004080] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h3>;
+                        if (t.startsWith('- ') || t.startsWith('* ')) {
+                          const bullet = t.replace(/^[-*]\s*/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                          return <div key={i} className="flex gap-2 ml-4 text-sm text-gray-700 mb-1"><span>\u2022</span><span dangerouslySetInnerHTML={{ __html: bullet }} /></div>;
+                        }
+                        if (t.match(/^\d+\./)) {
+                          const num = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                          return <div key={i} className="ml-2 text-sm text-gray-700 mb-1" dangerouslySetInnerHTML={{ __html: num }} />;
+                        }
+                        if (t.length === 0) return <div key={i} className="h-2" />;
+                        const para = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                        return <p key={i} className="text-sm text-gray-700 mb-1" dangerouslySetInnerHTML={{ __html: para }} />;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Tab Resumen */}
+            {reporteTab === 'resumen' && (
+              <div className="space-y-4">
+                {!resumenResultado && !generandoResumen && (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#02B381]/10 flex items-center justify-center">
+                      <FileText className="h-8 w-8 text-[#02B381]" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-[#002C63] mb-2">Resumen Ejecutivo</h3>
+                    <p className="text-sm text-gray-500 mb-4">M\u00e1ximo 1 cuartilla, enfoque estrat\u00e9gico y accionable.</p>
+                    <Button
+                      className="bg-[#02B381] hover:bg-[#029a6e] text-white px-6"
+                      onClick={handleGenerarResumen}
+                    >
+                      Generar Resumen
+                    </Button>
+                  </div>
+                )}
+                {generandoResumen && (
+                  <div className="text-center py-12">
+                    <Loader2 className="h-10 w-10 animate-spin text-[#02B381] mx-auto mb-4" />
+                    <p className="text-sm text-gray-500">Generando resumen ejecutivo...</p>
+                  </div>
+                )}
+                {resumenResultado && (
+                  <div>
+                    <div className="flex justify-end gap-2 mb-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDescargarPDFIA(resumenResultado, 'Resumen Ejecutivo')}
+                        disabled={generandoPDFIA}
+                      >
+                        {generandoPDFIA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}
+                        Descargar PDF
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-[#02B381] hover:bg-[#029a6e] text-white"
+                        onClick={handleGenerarResumen}
+                      >
+                        Regenerar
+                      </Button>
+                    </div>
+                    <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4">
+                      {resumenResultado.split('\n').map((line, i) => {
+                        const t = line.trim();
+                        if (t.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-[#002C63] mt-4 mb-2">{t.replace(/^#+\s*/, '')}</h1>;
+                        if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1">{t.replace(/^#+\s*/, '')}</h2>;
+                        if (t.startsWith('### ')) return <h3 key={i} className="text-base font-semibold text-[#004080] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h3>;
+                        if (t.startsWith('- ') || t.startsWith('* ')) {
+                          const bullet = t.replace(/^[-*]\s*/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                          return <div key={i} className="flex gap-2 ml-4 text-sm text-gray-700 mb-1"><span>\u2022</span><span dangerouslySetInnerHTML={{ __html: bullet }} /></div>;
+                        }
+                        if (t.length === 0) return <div key={i} className="h-2" />;
+                        const para = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                        return <p key={i} className="text-sm text-gray-700 mb-1" dangerouslySetInnerHTML={{ __html: para }} />;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Tab Historial */}
+            {reporteTab === 'historial' && (
+              <div className="space-y-3">
+                {historialQuery.isLoading && (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#02B381] mx-auto" />
+                  </div>
+                )}
+                {historialQuery.data?.reportes?.length === 0 && (
+                  <div className="text-center py-8 text-gray-400">
+                    <p>No hay reportes generados a\u00fan.</p>
+                  </div>
+                )}
+                {historialQuery.data?.reportes?.map((r: any) => (
+                  <div key={r.id} className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer" onClick={() => {
+                    setAnalisisResultado(r.contenido);
+                    setReporteTab('analisis');
+                  }}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm text-[#002C63]">{r.titulo}</p>
+                        <p className="text-xs text-gray-500">
+                          v{r.version} \u00b7 {r.tipo === 'analisis_profundo' ? 'An\u00e1lisis' : 'Resumen'} \u00b7 {new Date(r.creadoEn).toLocaleDateString('es-MX')}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-gray-400" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

@@ -4075,3 +4075,12 @@
 - [x] 2. Mover botón Análisis IA a la toolbar de Planos como icono con letra "R"
 - [x] 3. Eliminar envío automático por correo del cron job
 - [x] 4. Eliminar nav item "Análisis IA" del sidebar (queda solo en toolbar Planos)
+
+## v4.38 - Botón R en Dashboard + Reporte IA Profesional Completo
+
+- [x] 1. Agregar botón R (Reporte IA) en la fila de iconos de acción rápida del dashboard Bienvenida, en la posición marcada en rojo
+- [x] 2. Al tocar R en dashboard: abrir dialog completo de Reporte IA (análisis + resumen + historial)
+- [x] 3. Mantener R también en toolbar de Planos (ambas ubicaciones)
+- [x] 4. Mejorar prompt LLM para generar reporte profesional completo con: resumen ejecutivo, desarrollo detallado, evidencias, metodología, hallazgos clave, riesgos, oportunidades, conclusiones, líneas de acción priorizadas, enfoque estratégico
+- [x] 5. Mejorar generación PDF con estructura profesional: títulos, subtítulos, numeración, sección de recomendaciones obligatorias
+- [x] 6. Verificar TS y tests

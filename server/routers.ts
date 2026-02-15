@@ -3255,37 +3255,93 @@ export const appRouter = router({
         const datos = await db.getDatosCompletosParaAnalisisIA(input.proyectoId);
         
         // 2. Construir prompt para análisis profundo
-        const systemPrompt = `Eres un consultor senior de control de calidad en construcción. Analiza rigurosamente los datos del proyecto y genera un análisis profundo.
+        const systemPrompt = `Eres un Director de Calidad y Consultor Estratégico senior en control de calidad de obra civil y edificación. Tu especialidad es generar reportes profesionales de nivel ejecutivo para directores de construcción.
 
-REGLAS:
-- Sustenta CADA hallazgo con datos específicos (números, porcentajes, nombres)
-- Identifica problemas críticos y oportunidades de mejora
-- Evalúa participación de usuarios y empresas
-- Analiza tendencias semanales
-- Prioriza hallazgos por impacto
-- Usa formato Markdown con secciones claras
-- Incluye referencias explícitas: "Según los datos, la empresa X tiene Y ítems con Z% de aprobación"
-- Sé directo, sin relleno
-- Escribe en español profesional`;
+REGLAS OBLIGATORIAS:
+- Cada afirmación DEBE estar respaldada por datos específicos (cifras, porcentajes, nombres de empresas, códigos de ítems)
+- Usa referencias explícitas: "Según los datos, la empresa X registra Y ítems con Z% de aprobación"
+- Redacción formal, técnica y sólida, sin relleno ni generalidades
+- Formato Markdown profesional con numeración jerárquica (1., 1.1., 1.1.1.)
+- Español profesional, tono ejecutivo y directo
+- Cada conclusión debe tener evidencia que la respalde
+- Las líneas de acción deben ser específicas, medibles y accionables`;
 
-        const userPrompt = `Analiza a profundidad los siguientes datos del proyecto "${datos.proyecto.nombre}":
+        const fechaReporte = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+        const userPrompt = `Genera un REPORTE INTEGRAL PROFESIONAL del proyecto "${datos.proyecto.nombre}" con fecha ${fechaReporte}.
 
-## DATOS DEL PROYECTO
+## DATOS COMPLETOS DEL PROYECTO
 ${JSON.stringify(datos, null, 2)}
 
-Genera un análisis profundo que incluya:
-1. **Resumen Ejecutivo** (2-3 párrafos con hallazgos clave)
-2. **Estado General del Proyecto** (métricas principales, tasa de aprobación, tendencia)
-3. **Análisis por Empresa** (rendimiento, problemas, ranking)
-4. **Análisis por Especialidad** (distribución de defectos, áreas críticas)
-5. **Análisis por Nivel/Unidad** (concentración de problemas)
-6. **Defectos Más Frecuentes** (patrones, severidad)
-7. **Participación de Usuarios** (activos vs inactivos, productividad)
-8. **Análisis de Tiempos** (resolución promedio, tendencia semanal)
-9. **Problemas Críticos Identificados** (prioridad alta)
-10. **Recomendaciones Accionables** (qué hacer, quién, cuándo)
+ESTRUCTURA OBLIGATORIA DEL REPORTE (no omitir ninguna sección):
 
-Cada sección debe referenciar datos específicos del proyecto.`;
+# REPORTE INTEGRAL DE ANÁLISIS DE CALIDAD
+
+## 1. RESUMEN EJECUTIVO
+- 3-4 párrafos con los hallazgos más críticos, métricas clave y estado general
+- Debe permitir a un director entender la situación en 2 minutos
+
+## 2. METODOLOGÍA UTILIZADA
+- Describir brevemente cómo se recopilaron y analizaron los datos
+- Fuentes de información: ítems registrados, pines en planos, historial de actividad, participación de usuarios
+- Período de análisis y alcance
+
+## 3. DESARROLLO DETALLADO DEL ANÁLISIS
+### 3.1. Estado General del Proyecto
+- Métricas principales: total ítems, tasa de aprobación, tasa de rechazo, pendientes
+- Tendencia general (mejorando/empeorando/estable)
+### 3.2. Análisis por Empresa Contratista
+- Ranking de rendimiento por empresa
+- Empresas con mejor y peor desempeño (con datos específicos)
+### 3.3. Análisis por Especialidad
+- Distribución de defectos por especialidad
+- Áreas críticas que requieren atención inmediata
+### 3.4. Análisis por Nivel y Unidad
+- Concentración de problemas por nivel del edificio
+- Unidades con mayor incidencia
+### 3.5. Defectos Más Frecuentes
+- Top 10 defectos recurrentes con frecuencia y severidad
+- Patrones identificados
+### 3.6. Participación de Usuarios
+- Usuarios activos vs inactivos
+- Productividad por usuario (capturas, revisiones)
+### 3.7. Análisis de Tiempos
+- Tiempo promedio de resolución
+- Tendencia semanal de actividad
+
+## 4. EVIDENCIAS CONCRETAS
+- Listar las evidencias más relevantes que sustentan cada hallazgo principal
+- Referenciar códigos de ítems, nombres de empresas, fechas específicas
+
+## 5. HALLAZGOS CLAVE
+- Enumerar los 5-8 hallazgos más importantes, cada uno con su evidencia
+
+## 6. RIESGOS DETECTADOS
+- Identificar riesgos operativos, de calidad y de cronograma
+- Clasificar por severidad: CRÍTICO, ALTO, MEDIO, BAJO
+- Incluir probabilidad de impacto
+
+## 7. OPORTUNIDADES IDENTIFICADAS
+- Áreas donde se puede mejorar eficiencia, reducir costos o acelerar procesos
+
+## 8. CONCLUSIONES
+- Conclusiones contundentes basadas en el análisis
+- Cada conclusión debe estar respaldada por datos del análisis previo
+
+## 9. LÍNEAS DE ACCIÓN PRIORIZADAS
+- Acciones específicas, medibles y accionables
+- Para cada línea de acción incluir:
+  - Descripción de la acción
+  - Responsable sugerido
+  - Prioridad (URGENTE/ALTA/MEDIA)
+  - Plazo recomendado
+  - Enfoque estratégico (por qué esta acción es prioritaria)
+  - Métrica de éxito esperada
+
+## 10. RECOMENDACIONES OBLIGATORIAS
+- Recomendaciones que DEBEN implementarse para mantener o mejorar la calidad
+- Incluir recomendaciones de proceso, de personal y de seguimiento
+
+CADA sección debe referenciar datos específicos. No usar generalidades.`;
 
         const response = await invokeLLM({
           messages: [
