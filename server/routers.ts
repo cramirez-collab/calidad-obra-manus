@@ -3324,7 +3324,13 @@ Para cada acción, en formato de párrafo numerado: descripción, responsable su
 ## 10. RECOMENDACIONES OBLIGATORIAS
 Recomendaciones de proceso, de personal y de seguimiento que deben implementarse.
 
-RECUERDA: Escribe en párrafos fluidos, NO en listas con guiones. Usa nombres propios, NO códigos. Tono directo y formal.`;
+REGLAS DE FORMATO ABSOLUTAS:
+- Escribe en párrafos fluidos y narrativos. NO uses listas con guiones (-) ni viñetas.
+- Usa nombres propios, NO códigos internos ni IDs.
+- NO incluyas caracteres unicode escapados como \\u00e1, \\u00ed, \\u00f3. Escribe directamente: á, é, í, ó, ú, ñ.
+- NO pongas códigos, números sueltos ni caracteres extraños en el margen izquierdo.
+- Cada sección numerada (1., 1.1., etc.) debe ir seguida de su texto en el mismo párrafo o en el siguiente, sin códigos intermedios.
+- Tono directo, formal, ejecutivo.`;
 
         const response = await invokeLLM({
           messages: [
@@ -3377,7 +3383,7 @@ ${JSON.stringify(datos, null, 2)}
 
 Estructura obligatoria:
 1. **Estado del Proyecto** (1 párrafo: métricas clave, tendencia general)
-2. **Hallazgos Críticos** (3-5 bullets con datos específicos)
+2. **Hallazgos Críticos** (3-5 puntos numerados con datos específicos)
 3. **Empresas con Atención Prioritaria** (ranking por rendimiento)
 4. **Acciones Inmediatas Requeridas** (instrucciones concretas para el equipo)
 5. **Indicadores a Monitorear** (KPIs clave para la próxima semana)

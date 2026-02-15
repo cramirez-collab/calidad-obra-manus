@@ -4093,3 +4093,9 @@
 - [x] 4. Eliminar códigos del margen izquierdo en renderizado de reportes
 - [x] 5. Tono del reporte: más directo, formal, fluido, consistente
 - [x] 6. Usar nombres de usuarios en lugar de IDs en los reportes
+
+## v4.40 - Fix unicode + tabs + gráficas
+- [x] 1. Fix unicode escaping en dialog (An\u00e1lisis → Análisis, metodología, etc.)
+- [x] 2. Fix tabs truncados: nombres completos "Análisis", "Resumen", "Historial"
+- [x] 3. Eliminar códigos del margen izquierdo en reporte LLM generado
+- [x] 4. Agregar 3 gráficas pequeñas representativas al dialog de análisis

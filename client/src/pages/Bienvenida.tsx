@@ -47,6 +47,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useLocation, Redirect } from "wouter";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip } from "recharts";
 import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
 import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlanosPDF";
@@ -199,6 +200,12 @@ export default function Bienvenida() {
   const [generandoResumen, setGenerandoResumen] = useState(false);
   const [generandoPDFIA, setGenerandoPDFIA] = useState(false);
   const [reporteTab, setReporteTab] = useState<'analisis' | 'resumen' | 'historial'>('analisis');
+
+  // Estadísticas para mini gráficas del Reporte IA
+  const { data: statsData } = trpc.estadisticas.general.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId && showReporteIA, staleTime: 60_000 }
+  );
 
   // Pin count por plano
   const { data: pinCountData } = trpc.planos.pinCount.useQuery(
@@ -1327,7 +1334,7 @@ export default function Bienvenida() {
                 }`}
                 onClick={() => setReporteTab(tab)}
               >
-                {tab === 'analisis' ? 'An\u00e1lisis Profundo' : tab === 'resumen' ? 'Resumen Ejecutivo' : 'Historial'}
+                {tab === 'analisis' ? 'Análisis' : tab === 'resumen' ? 'Resumen' : 'Historial'}
               </button>
             ))}
           </div>
@@ -1336,20 +1343,92 @@ export default function Bienvenida() {
             {reporteTab === 'analisis' && (
               <div className="space-y-4">
                 {!analisisResultado && !generandoAnalisis && (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#002C63]/10 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-[#002C63]">IA</span>
+                  <div className="py-4">
+                    <div className="text-center mb-4">
+                      <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-[#002C63]/10 flex items-center justify-center">
+                        <span className="text-lg font-bold text-[#002C63]">IA</span>
+                      </div>
+                      <h3 className="text-base font-semibold text-[#002C63]">Análisis Profundo</h3>
                     </div>
-                    <h3 className="text-lg font-semibold text-[#002C63] mb-2">An\u00e1lisis Profundo del Proyecto</h3>
-                    <p className="text-sm text-gray-500 mb-4 max-w-md mx-auto">
-                      Genera un reporte integral con resumen ejecutivo, desarrollo detallado, evidencias, metodolog\u00eda, hallazgos, riesgos, oportunidades, conclusiones y l\u00edneas de acci\u00f3n.
-                    </p>
-                    <Button
-                      className="bg-[#002C63] hover:bg-[#001d42] text-white px-6"
-                      onClick={handleGenerarAnalisis}
-                    >
-                      Generar An\u00e1lisis Completo
-                    </Button>
+
+                    {/* 3 Mini Gráficas */}
+                    {statsData && (
+                      <div className="grid grid-cols-3 gap-2 mb-4">
+                        {/* 1. Pie: Status */}
+                        {(() => {
+                          const STATUS_COLORS: Record<string, string> = { aprobado: '#02B381', rechazado: '#ef4444', pendiente_foto: '#f59e0b', pendiente_aprobacion: '#3b82f6', sin_item: '#94a3b8' };
+                          const STATUS_LABELS: Record<string, string> = { aprobado: 'Aprob.', rechazado: 'Rech.', pendiente_foto: 'P.Foto', pendiente_aprobacion: 'P.Apr.', sin_item: 'Sin Ítem' };
+                          const pieData = (statsData.porStatus || []).map((s: any) => ({ name: STATUS_LABELS[s.status] || s.status, value: Number(s.count), color: STATUS_COLORS[s.status] || '#94a3b8' }));
+                          return (
+                            <div className="bg-gray-50 rounded-lg p-2 text-center">
+                              <p className="text-[10px] font-semibold text-gray-500 mb-1">Por Estado</p>
+                              <ResponsiveContainer width="100%" height={80}>
+                                <PieChart>
+                                  <Pie data={pieData} dataKey="value" cx="50%" cy="50%" outerRadius={30} innerRadius={15} strokeWidth={1}>
+                                    {pieData.map((d: any, i: number) => <Cell key={i} fill={d.color} />)}
+                                  </Pie>
+                                  <RTooltip formatter={(v: any, n: any) => [v, n]} />
+                                </PieChart>
+                              </ResponsiveContainer>
+                              <p className="text-[10px] text-gray-400">{statsData.total} ítems</p>
+                            </div>
+                          );
+                        })()}
+
+                        {/* 2. Bar: Top 5 Empresas */}
+                        {(() => {
+                          const COLORS = ['#002C63', '#02B381', '#3b82f6', '#f59e0b', '#ef4444'];
+                          const barData = (statsData.porEmpresa || []).slice(0, 5).map((e: any, i: number) => ({ name: `E${i+1}`, value: Number(e.count), fill: COLORS[i % COLORS.length] }));
+                          return (
+                            <div className="bg-gray-50 rounded-lg p-2 text-center">
+                              <p className="text-[10px] font-semibold text-gray-500 mb-1">Top Empresas</p>
+                              <ResponsiveContainer width="100%" height={80}>
+                                <BarChart data={barData} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
+                                  <XAxis dataKey="name" tick={{ fontSize: 8 }} />
+                                  <YAxis tick={{ fontSize: 8 }} />
+                                  <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+                                    {barData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
+                                  </Bar>
+                                  <RTooltip formatter={(v: any) => [v, 'Ítems']} />
+                                </BarChart>
+                              </ResponsiveContainer>
+                              <p className="text-[10px] text-gray-400">{(statsData.porEmpresa || []).length} empresas</p>
+                            </div>
+                          );
+                        })()}
+
+                        {/* 3. Bar: Top 5 Especialidades */}
+                        {(() => {
+                          const COLORS = ['#6366f1', '#ec4899', '#14b8a6', '#f97316', '#8b5cf6'];
+                          const barData = (statsData.porEspecialidad || []).slice(0, 5).map((e: any, i: number) => ({ name: `Esp${i+1}`, value: Number(e.count), fill: COLORS[i % COLORS.length] }));
+                          return (
+                            <div className="bg-gray-50 rounded-lg p-2 text-center">
+                              <p className="text-[10px] font-semibold text-gray-500 mb-1">Top Especialidades</p>
+                              <ResponsiveContainer width="100%" height={80}>
+                                <BarChart data={barData} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
+                                  <XAxis dataKey="name" tick={{ fontSize: 8 }} />
+                                  <YAxis tick={{ fontSize: 8 }} />
+                                  <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+                                    {barData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
+                                  </Bar>
+                                  <RTooltip formatter={(v: any) => [v, 'Ítems']} />
+                                </BarChart>
+                              </ResponsiveContainer>
+                              <p className="text-[10px] text-gray-400">{(statsData.porEspecialidad || []).length} espec.</p>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+
+                    <div className="text-center">
+                      <Button
+                        className="bg-[#002C63] hover:bg-[#001d42] text-white px-6"
+                        onClick={handleGenerarAnalisis}
+                      >
+                        Generar Análisis Completo
+                      </Button>
+                    </div>
                   </div>
                 )}
                 {generandoAnalisis && (
@@ -1365,7 +1444,7 @@ export default function Bienvenida() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDescargarPDFIA(analisisResultado, 'An\u00e1lisis Profundo')}
+                        onClick={() => handleDescargarPDFIA(analisisResultado, 'Análisis Profundo')}
                         disabled={generandoPDFIA}
                       >
                         {generandoPDFIA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}
@@ -1419,7 +1498,7 @@ export default function Bienvenida() {
                       <FileText className="h-8 w-8 text-[#02B381]" />
                     </div>
                     <h3 className="text-lg font-semibold text-[#002C63] mb-2">Resumen Ejecutivo</h3>
-                    <p className="text-sm text-gray-500 mb-4">M\u00e1ximo 1 cuartilla, enfoque estrat\u00e9gico y accionable.</p>
+                    <p className="text-sm text-gray-500 mb-4">Máximo 1 cuartilla, enfoque estratégico y accionable.</p>
                     <Button
                       className="bg-[#02B381] hover:bg-[#029a6e] text-white px-6"
                       onClick={handleGenerarResumen}
@@ -1487,14 +1566,14 @@ export default function Bienvenida() {
                 )}
                 {historialQuery.data?.reportes?.length === 0 && (
                   <div className="text-center py-8 text-gray-400">
-                    <p>No hay reportes generados a\u00fan.</p>
+                    <p>No hay reportes generados aún.</p>
                   </div>
                 )}
                 {historialQuery.data?.reportes?.map((r: any) => {
                   const d = new Date(r.creadoEn);
                   const pad = (n: number) => String(n).padStart(2, '0');
                   const fechaMx = `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-                  const tipoLabel = r.tipo === 'analisis_profundo' ? 'An\u00e1lisis Profundo' : 'Resumen Ejecutivo';
+                  const tipoLabel = r.tipo === 'analisis_profundo' ? 'Análisis Profundo' : 'Resumen Ejecutivo';
                   return (
                     <div key={r.id} className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer" onClick={() => {
                       setAnalisisResultado(r.contenido);

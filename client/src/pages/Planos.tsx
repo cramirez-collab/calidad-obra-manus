@@ -1916,8 +1916,8 @@ export default function Planos() {
 
         {/* Tabs */}
         <div className="flex items-center gap-1 px-5 py-2 border-b border-slate-100 flex-shrink-0">
-          <button onClick={() => setReporteIATab("analisis")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${reporteIATab === "analisis" ? "bg-[#002C63] text-white" : "text-slate-600 hover:bg-slate-100"}`}>Análisis Profundo</button>
-          <button onClick={() => setReporteIATab("resumen")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${reporteIATab === "resumen" ? "bg-[#002C63] text-white" : "text-slate-600 hover:bg-slate-100"}`}>Resumen Ejecutivo</button>
+          <button onClick={() => setReporteIATab("analisis")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${reporteIATab === "analisis" ? "bg-[#002C63] text-white" : "text-slate-600 hover:bg-slate-100"}`}>Análisis</button>
+          <button onClick={() => setReporteIATab("resumen")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${reporteIATab === "resumen" ? "bg-[#002C63] text-white" : "text-slate-600 hover:bg-slate-100"}`}>Resumen</button>
           <button onClick={() => setReporteIATab("historial")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${reporteIATab === "historial" ? "bg-[#002C63] text-white" : "text-slate-600 hover:bg-slate-100"}`}>Historial</button>
         </div>
 
@@ -2084,7 +2084,7 @@ export default function Planos() {
                   const d = new Date(r.creadoEn);
                   const pad = (n: number) => String(n).padStart(2, '0');
                   const fechaMx = `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-                  const tipoLabel = r.tipo === 'analisis_profundo' ? 'An\u00e1lisis Profundo' : 'Resumen Ejecutivo';
+                  const tipoLabel = r.tipo === 'analisis_profundo' ? 'Análisis Profundo' : 'Resumen Ejecutivo';
                   return (
                   <div key={r.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
                     <div className="min-w-0 flex-1">
