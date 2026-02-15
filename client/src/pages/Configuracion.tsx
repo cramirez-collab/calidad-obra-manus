@@ -1286,7 +1286,7 @@ function PinesManager({ proyectoId }: { proyectoId: number }) {
                           </div>
                           <div className="flex items-center gap-1 mt-2 pt-2 border-t border-slate-100">
                             {pin.itemId && (
-                              <button onClick={() => navigate(`/item/${pin.itemId}`)} className="flex-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 rounded px-2 py-1 font-medium flex items-center justify-center gap-1">
+                              <button onClick={() => navigate(`/items/${pin.itemId}`)} className="flex-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 rounded px-2 py-1 font-medium flex items-center justify-center gap-1">
                                 <Eye className="w-3 h-3" /> Ver ítem
                               </button>
                             )}

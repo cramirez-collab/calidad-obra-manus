@@ -4191,3 +4191,4 @@
 - [x] 4. Preparar documentación de exportación fullstack
 
 - [x] Fix "Asignar Plano" button: debe navegar al módulo Planos del nivel correcto del ítem y activar modo colocación de pin (solo admin/superadmin)
+- [x] Fix 404 al navegar desde Asignar Plano: corregido /item/ a /items/ en Planos.tsx y Configuracion.tsx
