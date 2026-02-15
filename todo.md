@@ -4177,3 +4177,15 @@
 
 ## v4.52 - Fix íconos de status truncados en lista de ítems
 - [x] 1. Corregir layout de íconos de status (palomita, crucecita, OK, Foto) para que se vean completos sin truncarse en móvil
+
+## v4.53 - Ajustar PDF ficha de ítem a tamaño carta
+- [ ] 1. Ajustar layout PDF para que toda la información quepa en tamaño carta (216x279mm)
+- [ ] 2. Reducir tamaño de fotos para que no se desborden
+- [ ] 3. Asegurar que QR code no se corte al final de la página
+- [ ] 4. Mejorar distribución de contenedores
+
+## v4.53 - PDF carta, editar ubicación plano, exportación fullstack
+- [x] 1. Ajustar PDF ficha de ítem a tamaño carta sin cortar info ni QR
+- [x] 2. Reducir fotos y optimizar distribución en PDF
+- [x] 3. Permitir editar ubicación en plano de ítems existentes sin plano
+- [x] 4. Preparar documentación de exportación fullstack

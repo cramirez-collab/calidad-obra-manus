@@ -597,51 +597,52 @@ export default function ItemDetail() {
     
     try {
       const doc = new jsPDF('p', 'mm', 'letter');
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 15;
-      let yPos = 20;
+      const pageWidth = doc.internal.pageSize.getWidth(); // 215.9
+      const pageHeight = doc.internal.pageSize.getHeight(); // 279.4
+      const margin = 12;
+      let yPos = 16;
       
       // Colores corporativos
       const VERDE_OBJETIVA: [number, number, number] = [2, 179, 129];
       const AZUL_OBJETIVA: [number, number, number] = [0, 44, 99];
       
-      // Header
+      // Header compacto
       doc.setFillColor(...AZUL_OBJETIVA);
-      doc.rect(0, 0, pageWidth, 25, 'F');
+      doc.rect(0, 0, pageWidth, 20, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16);
+      doc.setFontSize(13);
       doc.setFont('helvetica', 'bold');
-      doc.text('FICHA DE ITEM DE CALIDAD', pageWidth / 2, 12, { align: 'center' });
-      doc.setFontSize(10);
+      doc.text('FICHA DE ITEM DE CALIDAD', pageWidth / 2, 9, { align: 'center' });
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Generado: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, pageWidth / 2, 20, { align: 'center' });
+      doc.text(`Generado: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, pageWidth / 2, 16, { align: 'center' });
       
-      yPos = 35;
+      yPos = 27;
       
-      // Código y estado prominentes
+      // Código y estado compactos
       doc.setFillColor(245, 245, 245);
-      doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 20, 3, 3, 'F');
+      doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 16, 2, 2, 'F');
       
-      doc.setFontSize(14);
+      doc.setFontSize(12);
       doc.setTextColor(...AZUL_OBJETIVA);
       doc.setFont('helvetica', 'bold');
-      doc.text(`${item.codigo} #${item.numeroInterno || '-'}`, margin + 5, yPos + 8);
+      doc.text(`${item.codigo} #${item.numeroInterno || '-'}`, margin + 4, yPos + 6);
       
       // Estado con color
       const statusColor = item.status === 'aprobado' ? VERDE_OBJETIVA 
         : item.status === 'rechazado' ? [220, 38, 38] as [number, number, number]
         : AZUL_OBJETIVA;
       doc.setFillColor(...statusColor);
-      doc.roundedRect(pageWidth - margin - 45, yPos + 3, 40, 8, 2, 2, 'F');
-      doc.setFontSize(8);
+      doc.roundedRect(pageWidth - margin - 42, yPos + 2, 38, 7, 2, 2, 'F');
+      doc.setFontSize(7);
       doc.setTextColor(255, 255, 255);
-      doc.text(statusLabels[item.status] || item.status, pageWidth - margin - 25, yPos + 8, { align: 'center' });
+      doc.text(statusLabels[item.status] || item.status, pageWidth - margin - 23, yPos + 6.5, { align: 'center' });
       
-      doc.setFontSize(10);
+      doc.setFontSize(9);
       doc.setTextColor(80, 80, 80);
-      doc.text(item.titulo || 'Sin descripción', margin + 5, yPos + 16);
+      doc.text(item.titulo || 'Sin descripción', margin + 4, yPos + 13);
       
-      yPos += 28;
+      yPos += 22;
       
       // --- Cargar imagen del plano con pin (si existe) ---
       const itemAny = item as any;
@@ -662,22 +663,22 @@ export default function ItemDetail() {
         }
       }
       
-      // Definir ancho de columna izquierda (info) y derecha (plano)
+      // Definir ancho de columna izquierda (info) y derecha (plano) - más compacto
       const contentWidth = pageWidth - 2 * margin;
-      const planoBoxWidth = 70; // ancho de la caja del plano
-      const planoBoxHeight = 75; // alto de la caja del plano
-      const infoColumnWidth = planoBase64 ? (contentWidth - planoBoxWidth - 8) : contentWidth;
-      const planoBoxX = margin + infoColumnWidth + 8;
-      const planoBoxY = yPos; // mismo nivel que INFORMACIÓN DEL ÍTEM
+      const planoBoxWidth = 62;
+      const planoBoxHeight = 60;
+      const infoColumnWidth = planoBase64 ? (contentWidth - planoBoxWidth - 6) : contentWidth;
+      const planoBoxX = margin + infoColumnWidth + 6;
+      const planoBoxY = yPos;
       
       // Información del ítem en tabla
-      doc.setFontSize(11);
+      doc.setFontSize(9);
       doc.setTextColor(...AZUL_OBJETIVA);
       doc.setFont('helvetica', 'bold');
       doc.text('INFORMACIÓN DEL ÍTEM', margin, yPos);
-      yPos += 6;
+      yPos += 5;
       
-      doc.setFontSize(9);
+      doc.setFontSize(8);
       doc.setTextColor(60, 60, 60);
       doc.setFont('helvetica', 'normal');
       
@@ -701,25 +702,24 @@ export default function ItemDetail() {
         doc.setFont('helvetica', 'bold');
         doc.text(label, margin, yPos);
         doc.setFont('helvetica', 'normal');
-        // Truncar valor si es muy largo para no sobrepasar la columna
-        const maxTextWidth = infoColumnWidth - 40;
+        const maxTextWidth = infoColumnWidth - 35;
         const truncatedValue = doc.getTextWidth(value) > maxTextWidth 
           ? value.substring(0, Math.floor(value.length * maxTextWidth / doc.getTextWidth(value))) + '...'
           : value;
-        doc.text(truncatedValue, margin + 35, yPos);
-        yPos += 5;
+        doc.text(truncatedValue, margin + 30, yPos);
+        yPos += 4.2;
       });
       
-      yPos += 5;
+      yPos += 3;
       
       // Trazabilidad
-      doc.setFontSize(11);
+      doc.setFontSize(9);
       doc.setTextColor(...VERDE_OBJETIVA);
       doc.setFont('helvetica', 'bold');
       doc.text('TRAZABILIDAD', margin, yPos);
-      yPos += 6;
+      yPos += 5;
       
-      doc.setFontSize(9);
+      doc.setFontSize(8);
       doc.setTextColor(60, 60, 60);
       doc.setFont('helvetica', 'normal');
       
@@ -737,12 +737,12 @@ export default function ItemDetail() {
         doc.text(step, margin, yPos);
         doc.setFont('helvetica', 'normal');
         const trazText = `${name} - ${fecha}`;
-        const maxTrazWidth = infoColumnWidth - 40;
+        const maxTrazWidth = infoColumnWidth - 35;
         const truncatedTraz = doc.getTextWidth(trazText) > maxTrazWidth
           ? trazText.substring(0, Math.floor(trazText.length * maxTrazWidth / doc.getTextWidth(trazText))) + '...'
           : trazText;
-        doc.text(truncatedTraz, margin + 35, yPos);
-        yPos += 5;
+        doc.text(truncatedTraz, margin + 30, yPos);
+        yPos += 4.2;
       });
       
       // --- Dibujar caja del plano con pin en el lado derecho ---
@@ -832,25 +832,27 @@ export default function ItemDetail() {
       
       // Asegurar que yPos no se solape con la caja del plano
       if (planoBase64) {
-        const planoBottomY = planoBoxY + planoBoxHeight + 5;
+        const planoBottomY = planoBoxY + planoBoxHeight + 3;
         if (yPos < planoBottomY) {
           yPos = planoBottomY;
         } else {
-          yPos += 10;
+          yPos += 4;
         }
       } else {
-        yPos += 10;
+        yPos += 4;
       }
       
       // Fotos
-      doc.setFontSize(11);
+      doc.setFontSize(9);
       doc.setTextColor(...AZUL_OBJETIVA);
       doc.setFont('helvetica', 'bold');
       doc.text('EVIDENCIA FOTOGRÁFICA', margin, yPos);
-      yPos += 8;
+      yPos += 5;
       
-      const fotoWidth = (pageWidth - 2 * margin - 10) / 2;
-      const fotoHeight = 70;
+      // Calcular espacio disponible para fotos: reservar 35mm para QR+footer al final
+      const spaceForPhotos = pageHeight - yPos - 40;
+      const fotoWidth = (pageWidth - 2 * margin - 8) / 2;
+      const fotoHeight = Math.min(55, Math.max(35, spaceForPhotos - 10));
       
       // Cargar fotos desde el servidor (BD base64 o S3 firmado)
       let fotoAntesData: string | null = null;
@@ -887,79 +889,90 @@ export default function ItemDetail() {
       
       // Foto ANTES
       doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.5);
-      doc.roundedRect(margin, yPos, fotoWidth, fotoHeight + 12, 3, 3, 'S');
+      doc.setLineWidth(0.3);
+      doc.roundedRect(margin, yPos, fotoWidth, fotoHeight + 8, 2, 2, 'S');
       
-      doc.setFillColor(255, 193, 7); // Amarillo
-      doc.roundedRect(margin, yPos, fotoWidth, 8, 3, 3, 'F');
-      doc.setFontSize(9);
+      doc.setFillColor(255, 193, 7);
+      doc.roundedRect(margin, yPos, fotoWidth, 6, 2, 2, 'F');
+      doc.rect(margin, yPos + 3, fotoWidth, 3, 'F');
+      doc.setFontSize(7);
       doc.setTextColor(0, 0, 0);
-      doc.text('FOTO ANTES', margin + fotoWidth / 2, yPos + 5.5, { align: 'center' });
+      doc.setFont('helvetica', 'bold');
+      doc.text('FOTO ANTES', margin + fotoWidth / 2, yPos + 4.5, { align: 'center' });
       
       if (fotoAntesData) {
         try {
-          doc.addImage(fotoAntesData, 'JPEG', margin + 2, yPos + 10, fotoWidth - 4, fotoHeight - 2, undefined, 'MEDIUM');
+          doc.addImage(fotoAntesData, 'JPEG', margin + 1, yPos + 7, fotoWidth - 2, fotoHeight - 1, undefined, 'MEDIUM');
         } catch {
-          doc.setFontSize(8);
+          doc.setFontSize(7);
           doc.setTextColor(150, 150, 150);
-          doc.text('Error al cargar imagen', margin + fotoWidth / 2, yPos + fotoHeight / 2 + 8, { align: 'center' });
+          doc.text('Error al cargar imagen', margin + fotoWidth / 2, yPos + fotoHeight / 2 + 6, { align: 'center' });
         }
       } else {
-        doc.setFontSize(8);
+        doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
-        doc.text('Sin foto', margin + fotoWidth / 2, yPos + fotoHeight / 2 + 8, { align: 'center' });
+        doc.setFont('helvetica', 'normal');
+        doc.text('Sin foto', margin + fotoWidth / 2, yPos + fotoHeight / 2 + 6, { align: 'center' });
       }
       
       // Foto DESPUÉS
-      const fotoDespuesX = margin + fotoWidth + 10;
+      const fotoDespuesX = margin + fotoWidth + 8;
       doc.setDrawColor(200, 200, 200);
-      doc.roundedRect(fotoDespuesX, yPos, fotoWidth, fotoHeight + 12, 3, 3, 'S');
+      doc.roundedRect(fotoDespuesX, yPos, fotoWidth, fotoHeight + 8, 2, 2, 'S');
       
       doc.setFillColor(...VERDE_OBJETIVA);
-      doc.roundedRect(fotoDespuesX, yPos, fotoWidth, 8, 3, 3, 'F');
-      doc.setFontSize(9);
+      doc.roundedRect(fotoDespuesX, yPos, fotoWidth, 6, 2, 2, 'F');
+      doc.rect(fotoDespuesX, yPos + 3, fotoWidth, 3, 'F');
+      doc.setFontSize(7);
       doc.setTextColor(255, 255, 255);
-      doc.text('FOTO DESPUÉS', fotoDespuesX + fotoWidth / 2, yPos + 5.5, { align: 'center' });
+      doc.setFont('helvetica', 'bold');
+      doc.text('FOTO DESPUÉS', fotoDespuesX + fotoWidth / 2, yPos + 4.5, { align: 'center' });
       
       if (fotoDespuesData) {
         try {
-          doc.addImage(fotoDespuesData, 'JPEG', fotoDespuesX + 2, yPos + 10, fotoWidth - 4, fotoHeight - 2, undefined, 'MEDIUM');
+          doc.addImage(fotoDespuesData, 'JPEG', fotoDespuesX + 1, yPos + 7, fotoWidth - 2, fotoHeight - 1, undefined, 'MEDIUM');
         } catch {
-          doc.setFontSize(8);
+          doc.setFontSize(7);
           doc.setTextColor(150, 150, 150);
-          doc.text('Error al cargar imagen', fotoDespuesX + fotoWidth / 2, yPos + fotoHeight / 2 + 8, { align: 'center' });
+          doc.text('Error al cargar imagen', fotoDespuesX + fotoWidth / 2, yPos + fotoHeight / 2 + 6, { align: 'center' });
         }
       } else {
-        doc.setFontSize(8);
+        doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
-        doc.text('Sin foto', fotoDespuesX + fotoWidth / 2, yPos + fotoHeight / 2 + 8, { align: 'center' });
+        doc.setFont('helvetica', 'normal');
+        doc.text('Sin foto', fotoDespuesX + fotoWidth / 2, yPos + fotoHeight / 2 + 6, { align: 'center' });
       }
       
-      yPos += fotoHeight + 20;
+      yPos += fotoHeight + 12;
       
-      // QR Code si está disponible
+      // QR Code + Footer en la misma línea al final
       if (qrCodeUrl) {
-        doc.setFontSize(11);
+        // Asegurar que QR no se salga de la página
+        if (yPos + 25 > pageHeight - 10) {
+          yPos = pageHeight - 35;
+        }
+        doc.setFontSize(8);
         doc.setTextColor(...AZUL_OBJETIVA);
         doc.setFont('helvetica', 'bold');
         doc.text('CÓDIGO QR', margin, yPos);
-        yPos += 5;
+        yPos += 3;
         
         try {
-          doc.addImage(qrCodeUrl, 'PNG', margin, yPos, 30, 30);
-          doc.setFontSize(8);
+          doc.addImage(qrCodeUrl, 'PNG', margin, yPos, 22, 22);
+          doc.setFontSize(7);
           doc.setTextColor(100, 100, 100);
           doc.setFont('helvetica', 'normal');
-          doc.text('Escanear para ver seguimiento en línea', margin + 35, yPos + 15);
+          doc.text('Escanear para ver seguimiento en línea', margin + 26, yPos + 11);
         } catch {
           // Ignorar error de QR
         }
       }
       
       // Footer
-      const footerY = doc.internal.pageSize.getHeight() - 10;
-      doc.setFontSize(8);
+      const footerY = pageHeight - 6;
+      doc.setFontSize(7);
       doc.setTextColor(150, 150, 150);
+      doc.setFont('helvetica', 'normal');
       doc.text('ObjetivaQC - Control de Calidad de Obra', pageWidth / 2, footerY, { align: 'center' });
       
       // Descargar
@@ -1195,7 +1208,18 @@ export default function ItemDetail() {
                 )}
               </div>
               {!isComplete && (
-                <span className="text-[10px] font-bold text-amber-700 bg-amber-200 px-2 py-0.5 rounded-full flex-shrink-0">OBLIGATORIO</span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {!hasPlanoUbicacion && (
+                    <button
+                      onClick={() => setShowPlanoModal(true)}
+                      className="text-[10px] font-semibold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md flex items-center gap-1 transition-colors"
+                    >
+                      <MapPin className="h-3 w-3" />
+                      Asignar Plano
+                    </button>
+                  )}
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-200 px-2 py-0.5 rounded-full">OBLIGATORIO</span>
+                </div>
               )}
             </div>
           );
