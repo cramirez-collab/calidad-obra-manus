@@ -385,7 +385,11 @@ export default function Bienvenida() {
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(logoImg, 0, 0);
           const logoDataUrl = canvas.toDataURL('image/jpeg');
-          doc.addImage(logoDataUrl, 'JPEG', margin, 5, 25, 25);
+          // Mantener aspect ratio del logo
+          const logoMaxH = 25;
+          const logoRatio = logoImg.naturalWidth / logoImg.naturalHeight;
+          const logoW = logoMaxH * logoRatio;
+          doc.addImage(logoDataUrl, 'JPEG', margin, 5, logoW, logoMaxH);
         }
       } catch (e) { /* logo fallback */ }
       doc.setTextColor(255, 255, 255);
@@ -538,7 +542,11 @@ export default function Bienvenida() {
           const ctx2 = canvas.getContext('2d');
           ctx2?.drawImage(logoImg, 0, 0);
           const logoDataUrl = canvas.toDataURL('image/jpeg');
-          doc.addImage(logoDataUrl, 'JPEG', margin, 2, 18, 18);
+          // Mantener aspect ratio del logo
+          const logoMaxH2 = 18;
+          const logoRatio2 = logoImg.naturalWidth / logoImg.naturalHeight;
+          const logoW2 = logoMaxH2 * logoRatio2;
+          doc.addImage(logoDataUrl, 'JPEG', margin, 3, logoW2, logoMaxH2);
         }
       } catch (e) { /* logo fallback */ }
       doc.setTextColor(255, 255, 255);
@@ -1764,22 +1772,32 @@ export default function Bienvenida() {
                       </div>
                     )}
 
-                    {/* 5 Fotos de Evidencia - SIEMPRE se muestra */}
+                    {/* Top Defectos Recurrentes - Evidencia Fotográfica */}
                     <div className="mb-4">
-                      <p className="text-xs font-bold text-[#002C63] mb-2">Evidencia Fotográfica ({fotosEvidenciaIA.length} ítems)</p>
+                      <p className="text-xs font-bold text-[#002C63] mb-2">
+                        {fotosEvidenciaIA.some((f: any) => f.defectoNombre) ? `Top ${fotosEvidenciaIA.length} Defectos Recurrentes` : `Evidencia Fotográfica (${fotosEvidenciaIA.length} ítems)`}
+                      </p>
                       {fotosEvidenciaIA.length > 0 ? (
                         <div className="grid grid-cols-5 gap-1.5">
                           {fotosEvidenciaIA.slice(0, 5).map((foto: any) => (
                             <div key={foto.id} className="rounded-lg overflow-hidden border bg-gray-50">
                               {foto.fotoUrl ? (
-                                <img src={getImageUrl(foto.fotoUrl)} alt={foto.codigo} className="w-full h-20 object-cover" onError={(e) => { (e.target as HTMLImageElement).src = ''; (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                <img src={getImageUrl(foto.fotoUrl)} alt={foto.defectoNombre || foto.codigo} className="w-full h-20 object-cover" onError={(e) => { (e.target as HTMLImageElement).src = ''; (e.target as HTMLImageElement).style.display = 'none'; }} />
                               ) : (
-                                <div className="w-full h-20 bg-gray-200 flex items-center justify-center"><span className="text-[8px] text-gray-400">Sin foto</span></div>
+                                <div className="w-full h-20 bg-gray-200 flex items-center justify-center"><span className="text-[8px] text-gray-400">Foto pendiente</span></div>
                               )}
                               <div className="p-1">
-                                <p className="text-[8px] font-bold text-[#002C63] truncate">{foto.codigo}</p>
-                                <p className="text-[7px] text-gray-500 truncate">{foto.empresa}</p>
-                                <span className={`text-[7px] px-1 rounded ${foto.status === 'rechazado' ? 'bg-red-100 text-red-700' : foto.status === 'aprobado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{foto.status}</span>
+                                {foto.defectoNombre ? (
+                                  <>
+                                    <p className="text-[8px] font-bold text-[#002C63] truncate">{foto.defectoNombre}</p>
+                                    <span className="text-[7px] px-1 rounded bg-red-100 text-red-700">{foto.defectoCount} ocurrencias</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <p className="text-[8px] font-bold text-[#002C63] truncate">{foto.codigo}</p>
+                                    <span className={`text-[7px] px-1 rounded ${foto.status === 'rechazado' ? 'bg-red-100 text-red-700' : foto.status === 'aprobado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{foto.status}</span>
+                                  </>
+                                )}
                               </div>
                             </div>
                           ))}
@@ -1984,21 +2002,32 @@ export default function Bienvenida() {
                       </div>
                     )}
 
-                    {/* 5 Fotos de Evidencia - SIEMPRE se muestra */}
+                    {/* Top Defectos Recurrentes - Evidencia Fotográfica */}
                     <div className="mb-3">
-                      <p className="text-xs font-bold text-[#002C63] mb-1.5">Evidencia Fotográfica ({fotosEvidenciaIA.length} ítems)</p>
+                      <p className="text-xs font-bold text-[#002C63] mb-1.5">
+                        {fotosEvidenciaIA.some((f: any) => f.defectoNombre) ? `Top ${fotosEvidenciaIA.length} Defectos Recurrentes` : `Evidencia Fotográfica (${fotosEvidenciaIA.length} ítems)`}
+                      </p>
                       {fotosEvidenciaIA.length > 0 ? (
                         <div className="grid grid-cols-5 gap-1.5">
                           {fotosEvidenciaIA.slice(0, 5).map((foto: any) => (
                             <div key={foto.id} className="rounded-lg overflow-hidden border bg-gray-50">
                               {foto.fotoUrl ? (
-                                <img src={getImageUrl(foto.fotoUrl)} alt={foto.codigo} className="w-full h-16 object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                <img src={getImageUrl(foto.fotoUrl)} alt={foto.defectoNombre || foto.codigo} className="w-full h-16 object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                               ) : (
-                                <div className="w-full h-16 bg-gray-200 flex items-center justify-center"><span className="text-[7px] text-gray-400">Sin foto</span></div>
+                                <div className="w-full h-16 bg-gray-200 flex items-center justify-center"><span className="text-[7px] text-gray-400">Foto pendiente</span></div>
                               )}
                               <div className="p-1">
-                                <p className="text-[7px] font-bold text-[#002C63] truncate">{foto.codigo}</p>
-                                <span className={`text-[7px] px-1 rounded ${foto.status === 'rechazado' ? 'bg-red-100 text-red-700' : foto.status === 'aprobado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{foto.status}</span>
+                                {foto.defectoNombre ? (
+                                  <>
+                                    <p className="text-[7px] font-bold text-[#002C63] truncate">{foto.defectoNombre}</p>
+                                    <span className="text-[7px] px-1 rounded bg-red-100 text-red-700">{foto.defectoCount} ocurrencias</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <p className="text-[7px] font-bold text-[#002C63] truncate">{foto.codigo}</p>
+                                    <span className={`text-[7px] px-1 rounded ${foto.status === 'rechazado' ? 'bg-red-100 text-red-700' : foto.status === 'aprobado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{foto.status}</span>
+                                  </>
+                                )}
                               </div>
                             </div>
                           ))}

@@ -16,6 +16,8 @@ interface FotoEvidencia {
   codigo: string;
   fotoUrl: string;
   status: string;
+  defectoNombre?: string;
+  defectoCount?: number;
 }
 
 const COLORS = {
@@ -327,7 +329,9 @@ export async function drawPhotosOnPDF(doc: jsPDF, fotos: FotoEvidencia[], startX
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.navy);
-  doc.text(`Evidencia Fotogr\u00e1fica (${fotos.length} \u00edtems)`, startX, startY);
+  const hasDefectos = fotos.some((f: any) => f.defectoNombre);
+  const photoTitle = hasDefectos ? `Top ${fotos.length} Defectos Recurrentes - Evidencia Fotogr\u00e1fica` : `Evidencia Fotogr\u00e1fica (${fotos.length} \u00edtems)`;
+  doc.text(photoTitle, startX, startY);
   doc.setDrawColor(...COLORS.navy);
   doc.setLineWidth(0.3);
   doc.line(startX, startY + 1, startX + 40, startY + 1);
@@ -411,25 +415,43 @@ export async function drawPhotosOnPDF(doc: jsPDF, fotos: FotoEvidencia[], startX
       doc.text('Foto no disponible', px + pw / 2, py + photoH / 2, { align: 'center' });
     }
     
-    // Caption: code + empresa
+    // Caption: defecto name + count (or code as fallback)
     doc.setFontSize(5);
     doc.setTextColor(...COLORS.navy);
     doc.setFont('helvetica', 'bold');
-    const code = (foto.codigo || '').length > 14 ? foto.codigo.substring(0, 14) + '..' : (foto.codigo || 'S/C');
-    doc.text(code, px + 1.5, py + photoH + 2);
+    if (foto.defectoNombre) {
+      const defName = foto.defectoNombre.length > 18 ? foto.defectoNombre.substring(0, 18) + '..' : foto.defectoNombre;
+      doc.text(defName, px + 1.5, py + photoH + 2);
+    } else {
+      const code = (foto.codigo || '').length > 14 ? foto.codigo.substring(0, 14) + '..' : (foto.codigo || 'S/C');
+      doc.text(code, px + 1.5, py + photoH + 2);
+    }
     doc.setFont('helvetica', 'normal');
     
-    // Status badge
-    const isRejected = foto.status === 'rechazado';
-    const isPending = (foto.status || '').includes('pendiente');
-    const badgeColor = isRejected ? COLORS.red : isPending ? COLORS.amber : COLORS.green;
-    const badgeLabel = isRejected ? 'Rechazado' : isPending ? 'Pendiente' : 'Aprobado';
-    doc.setFillColor(badgeColor[0], badgeColor[1], badgeColor[2]);
-    doc.roundedRect(px + 1.5, py + photoH + 3.5, 13, 3, 0.8, 0.8, 'F');
-    doc.setFontSize(4);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.text(badgeLabel, px + 8, py + photoH + 5.7, { align: 'center' });
+    // Badge: show defecto count or status
+    if (foto.defectoCount && foto.defectoCount > 0) {
+      // Show occurrence count badge
+      doc.setFillColor(...COLORS.red);
+      const countLabel = `${foto.defectoCount} ocurrencias`;
+      const badgeW = Math.max(15, doc.getTextWidth(countLabel) * 1.2 + 4);
+      doc.roundedRect(px + 1.5, py + photoH + 3.5, badgeW, 3, 0.8, 0.8, 'F');
+      doc.setFontSize(4);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.text(countLabel, px + 1.5 + badgeW / 2, py + photoH + 5.7, { align: 'center' });
+    } else {
+      // Fallback: status badge
+      const isRejected = foto.status === 'rechazado';
+      const isPending = (foto.status || '').includes('pendiente');
+      const badgeColor = isRejected ? COLORS.red : isPending ? COLORS.amber : COLORS.green;
+      const badgeLabel = isRejected ? 'Rechazado' : isPending ? 'Pendiente' : 'Aprobado';
+      doc.setFillColor(badgeColor[0], badgeColor[1], badgeColor[2]);
+      doc.roundedRect(px + 1.5, py + photoH + 3.5, 13, 3, 0.8, 0.8, 'F');
+      doc.setFontSize(4);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.text(badgeLabel, px + 8, py + photoH + 5.7, { align: 'center' });
+    }
   }
   
   // Row 1: first 3 photos

@@ -4194,3 +4194,6 @@
 - [x] Fix 404 al navegar desde Asignar Plano: corregido /item/ a /items/ en Planos.tsx y Configuracion.tsx
 - [x] Fix fotos no aparecen en PDF del ítem (resolución aumentada de 275px a 800px, S3 priorizado sobre base64)
 - [x] Suavizar texto OBLIGATORIO en pantalla de notificaciones (menos agresivo)
+- [x] Fix logo Objetiva en Resumen Ejecutivo: no deformar, mantener aspect ratio
+- [x] Fix Evidencia Fotográfica en Resumen Ejecutivo: mostrar fotos de los defectos más recurrentes (Top 5), no ítems aleatorios
+- [x] Forzar impresión obligatoria de fotos en Resumen Ejecutivo (fotos de top defectos recurrentes con conteo)
