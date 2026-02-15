@@ -330,6 +330,7 @@ export default function Bienvenida() {
     setGenerandoPDFIA(true);
     try {
       const { jsPDF } = await import('jspdf');
+      const { drawChartsOnPDF, drawPhotosOnPDF } = await import('@/lib/pdfCharts');
       const doc = new jsPDF();
       const pageW = doc.internal.pageSize.getWidth();
       const margin = 20;
@@ -382,13 +383,23 @@ export default function Bienvenida() {
       doc.setTextColor(0, 44, 99);
       doc.setFontSize(14);
       doc.text(titulo, margin, y);
-      y += 10;
-
-      // Proyecto
-      doc.setFontSize(9);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Proyecto: ${proyectoActual?.nombre || 'N/A'}`, margin, y);
       y += 8;
+
+      // 4 Gráficas en PDF
+      if (chartDataIA) {
+        y = drawChartsOnPDF(doc, chartDataIA, margin, y, maxW);
+      }
+
+      // 3 Fotos evidencia en PDF
+      if (fotosEvidenciaIA.length > 0) {
+        y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, margin, y, maxW, getImageUrl);
+      }
+
+      // Separador
+      doc.setDrawColor(0, 44, 99);
+      doc.setLineWidth(0.3);
+      doc.line(margin, y, pageW - margin, y);
+      y += 5;
 
       // Content - parse markdown lines
       doc.setTextColor(50, 50, 50);
@@ -470,6 +481,7 @@ export default function Bienvenida() {
     setGenerandoPDFIA(true);
     try {
       const { jsPDF } = await import('jspdf');
+      const { drawChartsOnPDF, drawPhotosOnPDF } = await import('@/lib/pdfCharts');
       const doc = new jsPDF();
       const pageW = doc.internal.pageSize.getWidth();
       const margin = 15;
@@ -550,6 +562,16 @@ export default function Bienvenida() {
         doc.setTextColor(100, 100, 100);
         doc.text(`Avance: ${pct}%`, margin + maxW / 2, y + 3, { align: 'center' });
         y += 8;
+      }
+
+      // 4 Gráficas en PDF Resumen
+      if (chartDataIA) {
+        y = drawChartsOnPDF(doc, chartDataIA, margin, y, maxW);
+      }
+
+      // 3 Fotos evidencia en PDF Resumen
+      if (fotosEvidenciaIA.length > 0) {
+        y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, margin, y, maxW, getImageUrl);
       }
 
       // Separador
@@ -1506,12 +1528,12 @@ export default function Bienvenida() {
       {/* Dialog Reporte IA */}
       <Dialog open={showReporteIA} onOpenChange={setShowReporteIA}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-          <DialogHeader className="px-4 pt-3 pb-2 border-b bg-gradient-to-r from-[#002C63] to-[#003d8a]">
-            <DialogTitle className="text-white flex items-center gap-3">
-              <img src="/logo-objetiva.jpg" alt="Objetiva" className="h-8 rounded" />
+          <DialogHeader className="px-4 pt-3 pb-2 border-b">
+            <DialogTitle className="text-[#002C63] flex items-center gap-2">
+              <FileText className="w-5 h-5" />
               <div>
                 <span className="text-sm font-bold">Reporte IA</span>
-                <span className="text-xs text-white/70 block">{proyectoActual?.nombre || 'Proyecto'}</span>
+                <span className="text-xs text-slate-500 block">{proyectoActual?.nombre || 'Proyecto'}</span>
               </div>
             </DialogTitle>
           </DialogHeader>
@@ -1643,7 +1665,7 @@ export default function Bienvenida() {
 
                     {/* 5 Gráficas Relevantes */}
                     {chartDataIA && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
                         {/* 1. Pie: Estado */}
                         <div className="bg-gray-50 rounded-lg p-2 text-center border">
                           <p className="text-[10px] font-bold text-[#002C63] mb-1">Estado</p>
@@ -1682,20 +1704,7 @@ export default function Bienvenida() {
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
-                        {/* 4. Line: Tendencia Semanal */}
-                        <div className="bg-gray-50 rounded-lg p-2 text-center border">
-                          <p className="text-[10px] font-bold text-[#002C63] mb-1">Tendencia</p>
-                          <ResponsiveContainer width="100%" height={90}>
-                            <LineChart data={chartDataIA.tendencia} margin={{ top: 2, right: 8, left: -20, bottom: 0 }}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                              <XAxis dataKey="name" tick={{ fontSize: 7 }} />
-                              <YAxis tick={{ fontSize: 7 }} />
-                              <Line type="monotone" dataKey="creados" stroke="#002C63" strokeWidth={2} dot={{ r: 2 }} />
-                              <Line type="monotone" dataKey="aprobados" stroke="#02B381" strokeWidth={2} dot={{ r: 2 }} />
-                              <RTooltip />
-                            </LineChart>
-                          </ResponsiveContainer>
-                        </div>
+
                         {/* 5. Bar: Defectos */}
                         <div className="bg-gray-50 rounded-lg p-2 text-center border">
                           <p className="text-[10px] font-bold text-[#002C63] mb-1">Defectos</p>
@@ -1872,7 +1881,7 @@ export default function Bienvenida() {
 
                     {/* 5 Gráficas Relevantes en Resumen */}
                     {chartDataIA && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 mb-3">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
                         <div className="bg-gray-50 rounded-lg p-2 text-center border">
                           <p className="text-[10px] font-bold text-[#002C63] mb-1">Estado</p>
                           <ResponsiveContainer width="100%" height={80}>
@@ -1908,19 +1917,7 @@ export default function Bienvenida() {
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-2 text-center border">
-                          <p className="text-[10px] font-bold text-[#002C63] mb-1">Tendencia</p>
-                          <ResponsiveContainer width="100%" height={80}>
-                            <LineChart data={chartDataIA.tendencia} margin={{ top: 2, right: 8, left: -20, bottom: 0 }}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                              <XAxis dataKey="name" tick={{ fontSize: 6 }} />
-                              <YAxis tick={{ fontSize: 6 }} />
-                              <Line type="monotone" dataKey="creados" stroke="#002C63" strokeWidth={1.5} dot={{ r: 1.5 }} />
-                              <Line type="monotone" dataKey="aprobados" stroke="#02B381" strokeWidth={1.5} dot={{ r: 1.5 }} />
-                              <RTooltip />
-                            </LineChart>
-                          </ResponsiveContainer>
-                        </div>
+
                         <div className="bg-gray-50 rounded-lg p-2 text-center border">
                           <p className="text-[10px] font-bold text-[#002C63] mb-1">Defectos</p>
                           <ResponsiveContainer width="100%" height={80}>

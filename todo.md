@@ -4122,3 +4122,11 @@
 - [x] 4. 5 gráficas relevantes (Estado, Empresas, Especialidades, Tendencia, Defectos) en tabs Análisis y Resumen
 - [x] 5. 3 fotos de evidencia del proyecto integradas al reporte
 - [x] 6. Backend: getFotosEvidenciaParaReporte + chartData en generarAnalisis y generarResumen
+
+## v4.45 - Gráficas y fotos en PDF, quitar logo del dialog
+- [x] 1. Quitar logo Objetiva del dialog header (Bienvenida + Planos)
+- [x] 2. Integrar 4 gráficas (Estado, Empresas, Especialidades, Defectos) como canvas en PDF Análisis
+- [x] 3. Integrar 4 gráficas en PDF Resumen
+- [x] 4. Integrar 3 fotos evidencia en PDFs
+- [x] 5. Quitar gráfica de Tendencia del dialog y PDF
+- [x] 6. Ajustar escalas de gráficas por tipo de reporte
