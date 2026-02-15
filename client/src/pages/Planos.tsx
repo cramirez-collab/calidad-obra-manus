@@ -11,7 +11,7 @@ import {
   Plus, PlusCircle, Trash2, Edit2, ZoomIn, ZoomOut, RotateCcw, Layers,
   Image as ImageIcon, X, Upload, ChevronLeft, ChevronRight, MapPin, MapPinOff,
   Eye, Search, Filter, Download, Maximize, Minimize, ExternalLink, Users,
-  ListChecks, QrCode, Keyboard, Camera, RefreshCw, FileText, Check
+  ListChecks, QrCode, Keyboard, Camera, RefreshCw, FileText, Check, Loader2
 } from "lucide-react";
 import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlanosPDF";
 import CapturaRapida from "@/components/CapturaRapida";
@@ -156,6 +156,12 @@ export default function Planos() {
   const [isDraggingTempPin, setIsDraggingTempPin] = useState(false);
   const tempPinDragStart = useRef<{ x: number; y: number; pinX: number; pinY: number } | null>(null);
 
+  // State para Reporte IA
+  const [showReporteIA, setShowReporteIA] = useState(false);
+  const [reporteIAContent, setReporteIAContent] = useState("");
+  const [reporteIATitulo, setReporteIATitulo] = useState("");
+  const [reporteIATab, setReporteIATab] = useState<"analisis" | "resumen" | "historial">("analisis");
+
   // State para fullscreen del plano
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pendingImageBase64, setPendingImageBase64] = useState("");
@@ -184,6 +190,30 @@ export default function Planos() {
     onSuccess: () => { refetchPines(); toast.success("Pin eliminado"); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); },
     onError: (e: any) => toast.error(e.message),
   });
+
+  // ─── Análisis IA mutations ───
+  const generarAnalisisIA = trpc.analisisIA.generarAnalisis.useMutation({
+    onSuccess: (data) => {
+      setReporteIAContent(data.contenido);
+      setReporteIATitulo(`Análisis Profundo v${data.version}`);
+      setShowReporteIA(true);
+      toast.success("Análisis profundo generado");
+    },
+    onError: (err) => toast.error(`Error: ${err.message}`),
+  });
+  const generarResumenIA = trpc.analisisIA.generarResumen.useMutation({
+    onSuccess: (data) => {
+      setReporteIAContent(data.resumen);
+      setReporteIATitulo(`Resumen Ejecutivo v${data.version}`);
+      setShowReporteIA(true);
+      toast.success("Resumen ejecutivo generado");
+    },
+    onError: (err) => toast.error(`Error: ${err.message}`),
+  });
+  const { data: historialIA } = trpc.analisisIA.historial.useQuery(
+    { proyectoId: selectedProjectId!, limit: 20 },
+    { enabled: !!selectedProjectId }
+  );
 
   const pines = pinesData || [];
 
@@ -1195,6 +1225,16 @@ export default function Planos() {
               )}
             </div>
             <div className="flex items-center gap-0.5 flex-shrink-0">
+              {/* Botón Reporte IA */}
+              {isAdmin && (
+                <button
+                  onClick={() => setShowReporteIA(true)}
+                  className="p-1.5 hover:bg-slate-200 rounded-lg relative"
+                  title="Reporte IA"
+                >
+                  <div className="w-4 h-4 rounded-sm bg-[#002C63] text-white flex items-center justify-center text-[10px] font-black leading-none">R</div>
+                </button>
+              )}
               <button onClick={() => setZoom(z => Math.max(0.2, z - 0.2))} className="p-1.5 hover:bg-slate-200 rounded-lg"><ZoomOut className="w-4 h-4" /></button>
               <span className="text-[10px] text-slate-500 w-8 text-center">{Math.round(zoom * 100)}%</span>
               <button onClick={() => setZoom(z => Math.min(5, z + 0.2))} className="p-1.5 hover:bg-slate-200 rounded-lg"><ZoomIn className="w-4 h-4" /></button>
@@ -1250,12 +1290,11 @@ export default function Planos() {
                     onTouchMove={(e) => { e.stopPropagation(); const t = e.touches[0]; if (t) handleTempPinDragMove(t.clientX, t.clientY); }}
                     onTouchEnd={(e) => { e.stopPropagation(); handleTempPinDragEnd(); }}
                   >
-                    {/* Animated bounce pin */}
-                    <div className={isDraggingTempPin ? "" : "animate-bounce"} style={{ animationDuration: "1.5s" }}>
-                      <svg width={40} height={52} viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: "drop-shadow(0 3px 6px rgba(239,68,68,0.6))" }}>
+                    {/* Small static pin */}
+                    <div>
+                      <svg width={12} height={16} viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: "drop-shadow(0 2px 4px rgba(239,68,68,0.5))" }}>
                         <path d="M15 38C15 38 28 22 28 14C28 6.82 22.18 1 15 1C7.82 1 2 6.82 2 14C2 22 15 38 15 38Z" fill="#ef4444" stroke="#dc2626" strokeWidth="1.5" />
-                        <circle cx="15" cy="14" r="9" fill="white" fillOpacity="0.3" />
-                        <text x="15" y="14" textAnchor="middle" dominantBaseline="central" fill="white" fontWeight="700" fontSize="12" fontFamily="system-ui">+</text>
+                        <circle cx="15" cy="14" r="6" fill="white" fillOpacity="0.3" />
                       </svg>
                     </div>
                     {/* Drag hint label */}
@@ -1861,6 +1900,206 @@ export default function Planos() {
         </DialogContent>
       </Dialog>
     </div>
+
+    {/* ═══════════════════════════════════════════════════════════ */}
+    {/* DIALOG: Reporte IA (Análisis Profundo + Resumen Ejecutivo)  */}
+    {/* ═══════════════════════════════════════════════════════════ */}
+    <Dialog open={showReporteIA} onOpenChange={setShowReporteIA}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-5 pt-4 pb-3 border-b border-slate-200 flex-shrink-0">
+          <DialogTitle className="flex items-center gap-2 text-[#002C63]">
+            <div className="w-7 h-7 rounded-md bg-[#002C63] text-white flex items-center justify-center text-sm font-black">R</div>
+            Reporte IA
+          </DialogTitle>
+          <DialogDescription className="text-xs text-slate-500">Análisis profundo y resumen ejecutivo con inteligencia artificial</DialogDescription>
+        </DialogHeader>
+
+        {/* Tabs */}
+        <div className="flex items-center gap-1 px-5 py-2 border-b border-slate-100 flex-shrink-0">
+          <button onClick={() => setReporteIATab("analisis")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${reporteIATab === "analisis" ? "bg-[#002C63] text-white" : "text-slate-600 hover:bg-slate-100"}`}>Análisis Profundo</button>
+          <button onClick={() => setReporteIATab("resumen")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${reporteIATab === "resumen" ? "bg-[#002C63] text-white" : "text-slate-600 hover:bg-slate-100"}`}>Resumen Ejecutivo</button>
+          <button onClick={() => setReporteIATab("historial")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${reporteIATab === "historial" ? "bg-[#002C63] text-white" : "text-slate-600 hover:bg-slate-100"}`}>Historial</button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          {/* Tab: Análisis Profundo */}
+          {reporteIATab === "analisis" && (
+            <div className="space-y-4">
+              {!reporteIAContent || reporteIATitulo.includes("Resumen") ? (
+                <div className="text-center py-8 space-y-4">
+                  <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#002C63] to-[#4A90D9] flex items-center justify-center">
+                    <div className="text-white text-2xl font-black">R</div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[#002C63]">Análisis Profundo</h3>
+                    <p className="text-sm text-slate-500 mt-1">Recopila todos los datos del proyecto y genera un análisis exhaustivo con IA</p>
+                  </div>
+                  <Button
+                    onClick={() => { if (selectedProjectId) generarAnalisisIA.mutate({ proyectoId: selectedProjectId }); }}
+                    disabled={generarAnalisisIA.isPending || !selectedProjectId}
+                    className="bg-[#002C63] hover:bg-[#001d42] text-white gap-2"
+                  >
+                    {generarAnalisisIA.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Analizando...</> : <>Generar Análisis</>}
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-[#002C63]">{reporteIATitulo}</h3>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={async () => {
+                        try {
+                          const { default: jsPDF } = await import("jspdf");
+                          const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
+                          const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight(), m = 20, mw = pw - m * 2;
+                          let y = m;
+                          doc.setFillColor(0, 44, 99); doc.rect(0, 0, pw, 25, "F");
+                          doc.setTextColor(255, 255, 255); doc.setFontSize(10); doc.text("OBJETIVA QUALITY CONTROL", m, 10);
+                          doc.setFontSize(14); doc.text(reporteIATitulo, m, 19); y = 35;
+                          doc.setTextColor(100, 100, 100); doc.setFontSize(8);
+                          doc.text(`Generado: ${new Date().toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}`, m, y); y += 8;
+                          doc.setDrawColor(0, 44, 99); doc.setLineWidth(0.5); doc.line(m, y, pw - m, y); y += 6;
+                          for (const line of reporteIAContent.split("\n")) {
+                            if (y > ph - 25) { doc.addPage(); y = m; }
+                            const t = line.trim(); if (!t) { y += 3; continue; }
+                            if (t.startsWith("### ")) { y += 3; doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(0, 44, 99); const s = doc.splitTextToSize(t.replace(/^### /, "").replace(/\*\*/g, ""), mw); doc.text(s, m, y); y += s.length * 5 + 2; continue; }
+                            if (t.startsWith("## ")) { y += 5; doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0, 44, 99); const s = doc.splitTextToSize(t.replace(/^## /, "").replace(/\*\*/g, ""), mw); doc.text(s, m, y); y += s.length * 5.5 + 2; doc.setDrawColor(2, 179, 129); doc.setLineWidth(0.3); doc.line(m, y, pw - m, y); y += 3; continue; }
+                            if (t.startsWith("- ") || t.startsWith("* ")) { doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50); const s = doc.splitTextToSize(t.replace(/^[-*] /, "").replace(/\*\*(.*?)\*\*/g, "$1"), mw - 8); doc.setFillColor(2, 179, 129); doc.circle(m + 2, y - 1, 0.8, "F"); doc.text(s, m + 6, y); y += s.length * 4 + 1.5; continue; }
+                            doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50); const s = doc.splitTextToSize(t.replace(/\*\*(.*?)\*\*/g, "$1"), mw); doc.text(s, m, y); y += s.length * 4 + 2;
+                          }
+                          const tp = doc.getNumberOfPages(); for (let i = 1; i <= tp; i++) { doc.setPage(i); doc.setFontSize(7); doc.setTextColor(150, 150, 150); doc.text(`Objetiva QC — ${reporteIATitulo}`, m, ph - 8); doc.text(`Página ${i}/${tp}`, pw - m - 20, ph - 8); }
+                          const blob = doc.output("blob"); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `${reporteIATitulo.replace(/\s+/g, "_")}.pdf`; a.click(); URL.revokeObjectURL(url);
+                          toast.success("PDF descargado");
+                        } catch { toast.error("Error al generar PDF"); }
+                      }}>
+                        <Download className="w-3 h-3 mr-1" />PDF
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { setReporteIAContent(""); setReporteIATitulo(""); }}>
+                        Nuevo
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="prose prose-slate max-w-none text-sm" dangerouslySetInnerHTML={{ __html: reporteIAContent
+                    .replace(/^### (.*$)/gm, '<h3 class="text-base font-bold mt-4 mb-2 text-[#002C63]">$1</h3>')
+                    .replace(/^## (.*$)/gm, '<h2 class="text-lg font-bold mt-6 mb-2 text-[#002C63] border-b pb-1">$1</h2>')
+                    .replace(/^# (.*$)/gm, '<h1 class="text-xl font-bold mt-6 mb-3 text-[#002C63]">$1</h1>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-[#002C63]">$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/^- (.*$)/gm, '<li class="ml-4 mb-1 list-disc text-slate-700">$1</li>')
+                    .replace(/\n\n/g, '</p><p class="mb-2 leading-relaxed text-slate-700">')
+                    .replace(/\n/g, '<br/>')
+                  }} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab: Resumen Ejecutivo */}
+          {reporteIATab === "resumen" && (
+            <div className="space-y-4">
+              {!reporteIAContent || reporteIATitulo.includes("Análisis") ? (
+                <div className="text-center py-8 space-y-4">
+                  <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-400 flex items-center justify-center">
+                    <FileText className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[#002C63]">Resumen Ejecutivo</h3>
+                    <p className="text-sm text-slate-500 mt-1">Genera un resumen estratégico de máximo 1 cuartilla con acciones concretas</p>
+                  </div>
+                  <Button
+                    onClick={() => { if (selectedProjectId) generarResumenIA.mutate({ proyectoId: selectedProjectId }); }}
+                    disabled={generarResumenIA.isPending || !selectedProjectId}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                  >
+                    {generarResumenIA.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Generando...</> : <>Generar Resumen</>}
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-[#002C63]">{reporteIATitulo}</h3>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={async () => {
+                        try {
+                          const { default: jsPDF } = await import("jspdf");
+                          const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
+                          const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight(), m = 20, mw = pw - m * 2;
+                          let y = m;
+                          doc.setFillColor(0, 44, 99); doc.rect(0, 0, pw, 25, "F");
+                          doc.setTextColor(255, 255, 255); doc.setFontSize(10); doc.text("OBJETIVA QUALITY CONTROL", m, 10);
+                          doc.setFontSize(14); doc.text(reporteIATitulo, m, 19); y = 35;
+                          doc.setTextColor(100, 100, 100); doc.setFontSize(8);
+                          doc.text(`Generado: ${new Date().toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}`, m, y); y += 8;
+                          doc.setDrawColor(0, 44, 99); doc.setLineWidth(0.5); doc.line(m, y, pw - m, y); y += 6;
+                          for (const line of reporteIAContent.split("\n")) {
+                            if (y > ph - 25) { doc.addPage(); y = m; }
+                            const t = line.trim(); if (!t) { y += 3; continue; }
+                            if (t.startsWith("### ")) { y += 3; doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(0, 44, 99); const s = doc.splitTextToSize(t.replace(/^### /, "").replace(/\*\*/g, ""), mw); doc.text(s, m, y); y += s.length * 5 + 2; continue; }
+                            if (t.startsWith("## ")) { y += 5; doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(0, 44, 99); const s = doc.splitTextToSize(t.replace(/^## /, "").replace(/\*\*/g, ""), mw); doc.text(s, m, y); y += s.length * 5.5 + 2; doc.setDrawColor(2, 179, 129); doc.setLineWidth(0.3); doc.line(m, y, pw - m, y); y += 3; continue; }
+                            if (t.startsWith("- ") || t.startsWith("* ")) { doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50); const s = doc.splitTextToSize(t.replace(/^[-*] /, "").replace(/\*\*(.*?)\*\*/g, "$1"), mw - 8); doc.setFillColor(2, 179, 129); doc.circle(m + 2, y - 1, 0.8, "F"); doc.text(s, m + 6, y); y += s.length * 4 + 1.5; continue; }
+                            doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50); const s = doc.splitTextToSize(t.replace(/\*\*(.*?)\*\*/g, "$1"), mw); doc.text(s, m, y); y += s.length * 4 + 2;
+                          }
+                          const tp = doc.getNumberOfPages(); for (let i = 1; i <= tp; i++) { doc.setPage(i); doc.setFontSize(7); doc.setTextColor(150, 150, 150); doc.text(`Objetiva QC — ${reporteIATitulo}`, m, ph - 8); doc.text(`Página ${i}/${tp}`, pw - m - 20, ph - 8); }
+                          const blob = doc.output("blob"); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `${reporteIATitulo.replace(/\s+/g, "_")}.pdf`; a.click(); URL.revokeObjectURL(url);
+                          toast.success("PDF descargado");
+                        } catch { toast.error("Error al generar PDF"); }
+                      }}>
+                        <Download className="w-3 h-3 mr-1" />PDF
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { setReporteIAContent(""); setReporteIATitulo(""); }}>
+                        Nuevo
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="prose prose-slate max-w-none text-sm" dangerouslySetInnerHTML={{ __html: reporteIAContent
+                    .replace(/^### (.*$)/gm, '<h3 class="text-base font-bold mt-4 mb-2 text-[#002C63]">$1</h3>')
+                    .replace(/^## (.*$)/gm, '<h2 class="text-lg font-bold mt-6 mb-2 text-[#002C63] border-b pb-1">$1</h2>')
+                    .replace(/^# (.*$)/gm, '<h1 class="text-xl font-bold mt-6 mb-3 text-[#002C63]">$1</h1>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-[#002C63]">$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/^- (.*$)/gm, '<li class="ml-4 mb-1 list-disc text-slate-700">$1</li>')
+                    .replace(/\n\n/g, '</p><p class="mb-2 leading-relaxed text-slate-700">')
+                    .replace(/\n/g, '<br/>')
+                  }} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab: Historial */}
+          {reporteIATab === "historial" && (
+            <div className="space-y-3">
+              {(historialIA?.reportes || []).length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-slate-400">No hay reportes generados aún</p>
+                </div>
+              ) : (
+                (historialIA?.reportes || []).map((r: any) => (
+                  <div key={r.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-slate-800 truncate">{r.titulo}</p>
+                      <p className="text-xs text-slate-500">{new Date(r.creadoEn).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${r.tipo === "analisis_profundo" ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"}`}>
+                        {r.tipo === "analisis_profundo" ? "Análisis" : "Resumen"}
+                      </span>
+                      <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => {
+                        setReporteIAContent(r.tipo === "resumen_ejecutivo" ? (r.resumenEjecutivo || r.contenido) : r.contenido);
+                        setReporteIATitulo(r.titulo);
+                        setReporteIATab(r.tipo === "analisis_profundo" ? "analisis" : "resumen");
+                      }}>
+                        Ver
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
     </DashboardLayout>
   );
 }

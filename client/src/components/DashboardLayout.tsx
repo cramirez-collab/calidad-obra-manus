@@ -157,11 +157,6 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
   // Todos los usuarios ven los items base y de análisis
   let items: MenuItem[] = [...baseItems, ...analysisItems];
 
-  // Solo admin y superadmin ven Análisis IA
-  if (role === 'admin' || role === 'superadmin') {
-    items.push({ icon: BrainCircuit, label: "Análisis IA", path: "/analisis-ia" });
-  }
-
   // Solo admin y superadmin ven Configuración
   if (role === 'admin' || role === 'superadmin') {
     items.push({

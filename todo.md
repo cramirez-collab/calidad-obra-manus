@@ -4068,3 +4068,10 @@
 - [x] 10. Envío automático del resumen por email cada miércoles a las 6pm a todos los usuarios del proyecto
 - [x] 11. Historial de reportes anteriores por fecha y versión
 - [x] 12. Visualización del historial de reportes en la plataforma
+
+## v4.37 - Fixes pin + Reporte IA en toolbar Planos
+
+- [x] 1. Pin temporal: eliminar animación bounce, reducir tamaño 70%
+- [x] 2. Mover botón Análisis IA a la toolbar de Planos como icono con letra "R"
+- [x] 3. Eliminar envío automático por correo del cron job
+- [x] 4. Eliminar nav item "Análisis IA" del sidebar (queda solo en toolbar Planos)
