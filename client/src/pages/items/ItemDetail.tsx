@@ -650,7 +650,7 @@ export default function ItemDetail() {
       const planoDelPin = hasPin ? (planosData as any[])?.find((p: any) => p.id === itemAny.pinPlanoId) : null;
       const planoDelNivel = !planoDelPin ? (planosData as any[])?.find((p: any) => {
         const unidad = unidades?.find((u: any) => u.id === item.unidadId);
-        return unidad && p.nombre === unidad.nivel;
+        return unidad && p.nivel === unidad.nivel;
       }) : null;
       const planoParaPDF = planoDelPin || planoDelNivel;
       let planoBase64: string | null = null;
@@ -1209,15 +1209,30 @@ export default function ItemDetail() {
               </div>
               {!isComplete && (
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {!hasPlanoUbicacion && (
-                    <button
-                      onClick={() => setShowPlanoModal(true)}
-                      className="text-[10px] font-semibold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md flex items-center gap-1 transition-colors"
-                    >
-                      <MapPin className="h-3 w-3" />
-                      Asignar Plano
-                    </button>
-                  )}
+                  {!hasPlanoUbicacion && canEdit && (() => {
+                    // Buscar plano del nivel de la unidad del ítem
+                    const unidad = unidades?.find((u: any) => u.id === item.unidadId);
+                    const unidadNivel = unidad?.nivel;
+                    const planoDelNivel = (planosData as any[])?.find((p: any) => p.nivel === unidadNivel);
+                    return (
+                      <button
+                        onClick={() => {
+                          if (planoDelNivel) {
+                            setLocation(`/planos?assignItemId=${item.id}&planoId=${planoDelNivel.id}`);
+                          } else if ((planosData as any[])?.length > 0) {
+                            // Si no hay plano del nivel, ir al primero disponible
+                            setLocation(`/planos?assignItemId=${item.id}`);
+                          } else {
+                            toast.error("No hay planos subidos en el proyecto. Sube un plano primero.");
+                          }
+                        }}
+                        className="text-[10px] font-semibold text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-md flex items-center gap-1 transition-colors"
+                      >
+                        <MapPin className="h-3 w-3" />
+                        Asignar Plano
+                      </button>
+                    );
+                  })()}
                   <span className="text-[10px] font-bold text-amber-700 bg-amber-200 px-2 py-0.5 rounded-full">OBLIGATORIO</span>
                 </div>
               )}
@@ -1370,7 +1385,7 @@ export default function ItemDetail() {
                     const planoDelPin = hasPin ? (planosData as any[])?.find((p: any) => p.id === itemAny.pinPlanoId) : null;
                     const planoDelNivel = !hasPin ? (planosData as any[])?.find((p: any) => {
                       const unidad = unidades?.find((u: any) => u.id === item.unidadId);
-                      return unidad && p.nombre === unidad.nivel;
+                      return unidad && p.nivel === unidad.nivel;
                     }) : null;
                     const planoDisponible = planoDelPin || planoDelNivel;
                     
@@ -1947,7 +1962,7 @@ export default function ItemDetail() {
         const planoDelPin = hasPin ? (planosData as any[])?.find((p: any) => p.id === itemAny.pinPlanoId) : null;
         const planoDelNivel = !planoDelPin ? (planosData as any[])?.find((p: any) => {
           const unidad = unidades?.find((u: any) => u.id === item.unidadId);
-          return unidad && p.nombre === unidad.nivel;
+          return unidad && p.nivel === unidad.nivel;
         }) : null;
         const plano = planoDelPin || planoDelNivel;
         if (!plano) { setShowPlanoModal(false); return null; }

@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, nombre, nivel, proyectoId FROM planos WHERE activo = 1 ORDER BY nivel LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, nivel, proyectoId FROM planos WHERE activo = 1 ORDER BY nivel LIMIT 10;",
+  "rows": [
+    {
+      "id": "2",
+      "nombre": "Sotano -5",
+      "nivel": "-5",
+      "proyectoId": "1"
+    },
+    {
+      "id": "30001",
+      "nombre": "Sotano -4",
+      "nivel": "-4",
+      "proyectoId": "1"
+    },
+    {
+      "id": "30002",
+      "nombre": "Sotano -3",
+      "nivel": "-3",
+      "proyectoId": "1"
+    },
+    {
+      "id": "30003",
+      "nombre": "Sotano -2",
+      "nivel": "-2",
+      "proyectoId": "1"
+    },
+    {
+      "id": "90001",
+      "nombre": "Sotano 1",
+      "nivel": "-1",
+      "proyectoId": "150001"
+    },
+    {
+      "id": "30004",
+      "nombre": "Sotano -1",
+      "nivel": "-1",
+      "proyectoId": "1"
+    },
+    {
+      "id": "120001",
+      "nombre": "N1",
+      "nivel": "1",
+      "proyectoId": "150001"
+    },
+    {
+      "id": "30005",
+      "nombre": "N1",
+      "nivel": "1",
+      "proyectoId": "1"
+    },
+    {
+      "id": "30006",
+      "nombre": "N2",
+      "nivel": "2",
+      "proyectoId": "1"
+    },
+    {
+      "id": "120002",
+      "nombre": "N2",
+      "nivel": "2",
+      "proyectoId": "150001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tnivel\tproyectoId\n2\tSotano -5\t-5\t1\n30001\tSotano -4\t-4\t1\n30002\tSotano -3\t-3\t1\n30003\tSotano -2\t-2\t1\n90001\tSotano 1\t-1\t150001\n30004\tSotano -1\t-1\t1\n120001\tN1\t1\t150001\n30005\tN1\t1\t1\n30006\tN2\t2\t1\n120002\tN2\t2\t150001\n",
+  "stderr": "",
+  "execution_time_ms": 510
+}

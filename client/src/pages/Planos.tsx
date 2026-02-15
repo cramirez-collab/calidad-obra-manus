@@ -176,8 +176,13 @@ export default function Planos() {
 
   // State para filtro por nivel
   const [filterNivel, setFilterNivel] = useState<number | null>(null);
-  // URL param handling: planoId (open viewer on that plano) / assignPin (assign pin mode for item)
+  // URL param handling: planoId (open viewer on that plano) / assignItemId (assign pin mode for item)
   const urlParamsProcessed = useRef(false);
+  const [assignItemId, setAssignItemId] = useState<number | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const val = params.get('assignItemId');
+    return val ? parseInt(val) : null;
+  });
 
   // ─── Query pines del plano actual ───
   const planos = planosData || [];
@@ -391,15 +396,28 @@ export default function Planos() {
       // Check URL params before auto-opening
       const params = new URLSearchParams(searchString);
       const planoIdParam = params.get('planoId');
+      const assignParam = params.get('assignItemId');
+      if (assignParam) {
+        setAssignItemId(parseInt(assignParam));
+      }
       if (planoIdParam) {
         const idx = planos.findIndex((p: any) => p.id === parseInt(planoIdParam));
         if (idx >= 0) {
           openViewer(idx);
+          // If assignItemId, force pin mode
+          if (assignParam) {
+            setCaptureMode("pin");
+            toast.info("Toca el plano para colocar el pin de ubicaci\u00f3n del \u00edtem", { duration: 5000 });
+          }
           urlParamsProcessed.current = true;
           return;
         }
       }
       openViewer(0);
+      if (assignParam) {
+        setCaptureMode("pin");
+        toast.info("Toca el plano para colocar el pin de ubicaci\u00f3n del \u00edtem", { duration: 5000 });
+      }
     }
   }, [planos.length, isLoading, autoOpened, showViewer, searchString]);
 
@@ -484,11 +502,44 @@ export default function Planos() {
     setPendingPinPos(pos);
   }, [isPinMode]);
 
+  // Mutation para actualizar pin del ítem (items.updatePin)
+  const updateItemPin = trpc.items.updatePin.useMutation({
+    onSuccess: () => {
+      toast.success("Pin de ubicaci\u00f3n asignado al \u00edtem");
+      setAssignItemId(null);
+      setTempPin(null);
+      setPendingPinPos(null);
+      setShowViewer(false);
+      // Navigate back to the item
+      const itemId = assignItemId;
+      if (itemId) navigate(`/item/${itemId}`);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const confirmTempPin = useCallback(() => {
     if (!tempPin) return;
+    // Si estamos en modo asignar plano a ítem existente
+    if (assignItemId && currentPlano) {
+      // 1. Crear pin en plano_pines
+      crearPin.mutate({
+        planoId: currentPlano.id,
+        itemId: assignItemId,
+        posX: tempPin.x.toFixed(4),
+        posY: tempPin.y.toFixed(4),
+      });
+      // 2. Actualizar pinPlanoId/pinPosX/pinPosY en el ítem
+      updateItemPin.mutate({
+        itemId: assignItemId,
+        pinPlanoId: currentPlano.id,
+        pinPosX: tempPin.x.toFixed(4),
+        pinPosY: tempPin.y.toFixed(4),
+      });
+      return;
+    }
     setCapturaRapidaPinPos(tempPin);
     setShowCapturaRapida(true);
-  }, [tempPin]);
+  }, [tempPin, assignItemId, currentPlano, crearPin, updateItemPin]);
 
   const cancelTempPin = useCallback(() => {
     setTempPin(null);
@@ -1168,7 +1219,17 @@ export default function Planos() {
           <div className="flex-shrink-0 bg-[#002C63] text-white border-b border-[#002C63] z-50">
             <div className="flex items-center justify-between px-2 sm:px-3 py-2 gap-2">
               <div className="flex items-center gap-2 min-w-0">
-                <button onClick={() => { setShowViewer(false); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); cancelTempPin(); if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current); }} className="p-2 hover:bg-white/10 rounded-lg flex-shrink-0">
+                <button onClick={() => {
+                  if (assignItemId) {
+                    setAssignItemId(null);
+                    setTempPin(null);
+                    setPendingPinPos(null);
+                    setShowViewer(false);
+                    navigate(`/item/${assignItemId}`);
+                    return;
+                  }
+                  setShowViewer(false); setSelectedPin(null); setTappedPin(null); setShowPinModal(false); cancelTempPin(); if (pinModalTimerRef.current) clearTimeout(pinModalTimerRef.current);
+                }} className="p-2 hover:bg-white/10 rounded-lg flex-shrink-0">
                   <X className="w-5 h-5" />
                 </button>
                 <div className="min-w-0">
@@ -1292,9 +1353,29 @@ export default function Planos() {
             </div>
           </div>
 
-          {/* Green banner removed - pin mode indicator is in the toolbar */}
+          {/* Banner de asignación de plano a ítem */}
+          {assignItemId && (
+            <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 bg-blue-600 text-white text-xs font-semibold gap-2">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 animate-pulse" />
+                <span>Asignando ubicaci\u00f3n al \u00edtem — Toca el plano para colocar el pin</span>
+              </div>
+              <button
+                onClick={() => {
+                  setAssignItemId(null);
+                  setTempPin(null);
+                  setPendingPinPos(null);
+                  setShowViewer(false);
+                  navigate(`/item/${assignItemId}`);
+                }}
+                className="px-2 py-1 bg-white/20 hover:bg-white/30 rounded text-[10px] font-bold transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          )}
 
-          {/* === ÁREA DEL PLANO === */}
+          {/* === \u00c1REA DEL PLANO === */}
           <div
             ref={viewerRef}
             className={`flex-1 min-h-0 overflow-hidden select-none ${isPinMode ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"}`}
@@ -1437,10 +1518,11 @@ export default function Planos() {
               </button>
               <button
                 onClick={confirmTempPin}
-                className="flex items-center gap-1.5 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg text-sm font-bold transition-all active:scale-95"
+                disabled={updateItemPin.isPending}
+                className="flex items-center gap-1.5 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg text-sm font-bold transition-all active:scale-95 disabled:opacity-50"
               >
                 <Check className="w-4 h-4" />
-                Confirmar
+                {assignItemId ? (updateItemPin.isPending ? "Guardando..." : "Asignar Pin") : "Confirmar"}
               </button>
             </div>
           )}

@@ -4189,3 +4189,5 @@
 - [x] 2. Reducir fotos y optimizar distribución en PDF
 - [x] 3. Permitir editar ubicación en plano de ítems existentes sin plano
 - [x] 4. Preparar documentación de exportación fullstack
+
+- [x] Fix "Asignar Plano" button: debe navegar al módulo Planos del nivel correcto del ítem y activar modo colocación de pin (solo admin/superadmin)
