@@ -330,6 +330,17 @@ export default function Bienvenida() {
       const maxW = pageW - margin * 2;
       let y = 20;
 
+      // Limpiar unicode del contenido antes de generar PDF
+      const cleanContent = contenido
+        .replace(/\\u[0-9a-fA-F]{4}/g, '')
+        .replace(/\\u00e1/g, 'á').replace(/\\u00e9/g, 'é').replace(/\\u00ed/g, 'í').replace(/\\u00f3/g, 'ó').replace(/\\u00fa/g, 'ú')
+        .replace(/\\u00f1/g, 'ñ').replace(/\\u00c1/g, 'Á').replace(/\\u00c9/g, 'É').replace(/\\u00cd/g, 'Í').replace(/\\u00d3/g, 'Ó')
+        .replace(/\\u00da/g, 'Ú').replace(/\\u00d1/g, 'Ñ')
+        .replace(/[\u2022\u2023\u25E6\u2043\u2219\u00B7]/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      contenido = cleanContent;
+
       // Header
       doc.setFillColor(0, 44, 99);
       doc.rect(0, 0, pageW, 35, 'F');
@@ -377,7 +388,7 @@ export default function Bienvenida() {
         } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
           doc.setFontSize(9); doc.setTextColor(50, 50, 50);
           const bulletText = trimmed.replace(/^[-*]\s*/, '').replace(/\*\*/g, '');
-          const wrapped = doc.splitTextToSize(`\u2022 ${bulletText}`, maxW - 5);
+          const wrapped = doc.splitTextToSize(`- ${bulletText}`, maxW - 5);
           for (const wl of wrapped) {
             if (y > 270) { doc.addPage(); y = 20; }
             doc.text(wl, margin + 5, y);
@@ -422,6 +433,141 @@ export default function Bienvenida() {
       toast.success('PDF generado');
     } catch (err) {
       console.error('Error PDF:', err);
+      toast.error('Error al generar PDF');
+    } finally {
+      setGenerandoPDFIA(false);
+    }
+  };
+
+  // PDF Resumen Ejecutivo compacto (1 cuartilla con gráficas)
+  const handleDescargarPDFResumen = async (contenido: string) => {
+    setGenerandoPDFIA(true);
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      const pageW = doc.internal.pageSize.getWidth();
+      const margin = 15;
+      const maxW = pageW - margin * 2;
+      let y = 12;
+
+      // Limpiar unicode
+      const clean = contenido
+        .replace(/\\u[0-9a-fA-F]{4}/g, '')
+        .replace(/[\u2022\u2023\u25E6\u2043\u2219\u00B7]/g, '')
+        .replace(/\s{2,}/g, ' ').trim();
+
+      // Header compacto
+      doc.setFillColor(0, 44, 99);
+      doc.rect(0, 0, pageW, 22, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(12);
+      doc.text('OBJETIVA - Resumen Ejecutivo', margin, 10);
+      doc.setFontSize(8);
+      doc.text(`${proyectoActual?.nombre || 'Proyecto'} | ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}`, margin, 18);
+      y = 28;
+
+      // Mini KPI row si hay stats
+      if (statsData) {
+        const total = Number(statsData.total || 0);
+        const aprobados = (statsData.porStatus || []).find((s: any) => s.status === 'aprobado');
+        const rechazados = (statsData.porStatus || []).find((s: any) => s.status === 'rechazado');
+        const nAprob = Number(aprobados?.count || 0);
+        const nRech = Number(rechazados?.count || 0);
+        const pct = total > 0 ? Math.round((nAprob / total) * 100) : 0;
+
+        // KPI boxes
+        const kpiW = (maxW - 6) / 4;
+        const kpis = [
+          { label: 'Total', value: String(total), color: [0, 44, 99] },
+          { label: 'Aprobados', value: `${nAprob} (${pct}%)`, color: [2, 179, 129] },
+          { label: 'Rechazados', value: String(nRech), color: [239, 68, 68] },
+          { label: 'Empresas', value: String((statsData.porEmpresa || []).length), color: [59, 130, 246] },
+        ];
+        kpis.forEach((kpi, idx) => {
+          const kx = margin + idx * (kpiW + 2);
+          doc.setFillColor(kpi.color[0], kpi.color[1], kpi.color[2]);
+          doc.roundedRect(kx, y, kpiW, 12, 2, 2, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(10);
+          doc.text(kpi.value, kx + kpiW / 2, y + 5, { align: 'center' });
+          doc.setFontSize(6);
+          doc.text(kpi.label, kx + kpiW / 2, y + 10, { align: 'center' });
+        });
+        y += 16;
+
+        // Progress bar
+        doc.setFillColor(230, 230, 230);
+        doc.roundedRect(margin, y, maxW, 4, 1, 1, 'F');
+        if (pct > 0) {
+          doc.setFillColor(2, 179, 129);
+          doc.roundedRect(margin, y, maxW * (pct / 100), 4, 1, 1, 'F');
+        }
+        doc.setFontSize(6);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Avance: ${pct}%`, margin + maxW / 2, y + 3, { align: 'center' });
+        y += 8;
+      }
+
+      // Separador
+      doc.setDrawColor(0, 44, 99);
+      doc.setLineWidth(0.3);
+      doc.line(margin, y, pageW - margin, y);
+      y += 4;
+
+      // Content - parse markdown lines compacto
+      const lines = clean.split('\n');
+      for (const line of lines) {
+        if (y > 275) break; // Forzar 1 página
+        const trimmed = line.trim();
+        if (trimmed.startsWith('## ')) {
+          y += 2;
+          doc.setFontSize(9); doc.setTextColor(0, 44, 99);
+          doc.setFont('helvetica', 'bold');
+          doc.text(trimmed.replace(/^#+\s*/, ''), margin, y);
+          doc.setFont('helvetica', 'normal');
+          y += 5;
+        } else if (trimmed.startsWith('# ')) {
+          y += 2;
+          doc.setFontSize(10); doc.setTextColor(0, 44, 99);
+          doc.setFont('helvetica', 'bold');
+          doc.text(trimmed.replace(/^#+\s*/, ''), margin, y);
+          doc.setFont('helvetica', 'normal');
+          y += 5;
+        } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          doc.setFontSize(7.5); doc.setTextColor(50, 50, 50);
+          const bulletText = trimmed.replace(/^[-*]\s*/, '').replace(/\*\*/g, '');
+          const wrapped = doc.splitTextToSize(`\u2022 ${bulletText}`, maxW - 4);
+          for (const wl of wrapped) {
+            if (y > 275) break;
+            doc.text(wl, margin + 3, y);
+            y += 3.8;
+          }
+        } else if (trimmed.length > 0) {
+          doc.setFontSize(7.5); doc.setTextColor(50, 50, 50);
+          const cleanText = trimmed.replace(/\*\*/g, '');
+          const wrapped = doc.splitTextToSize(cleanText, maxW);
+          for (const wl of wrapped) {
+            if (y > 275) break;
+            doc.text(wl, margin, y);
+            y += 3.8;
+          }
+        } else {
+          y += 2;
+        }
+      }
+
+      // Footer
+      doc.setFillColor(0, 44, 99);
+      doc.rect(0, 287, pageW, 10, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(6);
+      doc.text('Objetiva - Resumen Ejecutivo de Calidad', margin, 292);
+      doc.text('P\u00e1gina 1 de 1', pageW - margin - 20, 292);
+
+      openPDFPreview(doc);
+      toast.success('PDF resumen generado');
+    } catch (err) {
+      console.error('Error PDF resumen:', err);
       toast.error('Error al generar PDF');
     } finally {
       setGenerandoPDFIA(false);
@@ -1461,9 +1607,10 @@ export default function Bienvenida() {
                     <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4">
                       {analisisResultado
                         .replace(/\\u[0-9a-fA-F]{4}/g, '')
+                        .replace(/\\u\d{4}/g, '')
                         .replace(/[•·‣◦⁃∙–—―‘’“”]/g, '')
                         .split('\n').map((line, i) => {
-                        const cleaned = line.replace(/\\u[0-9a-fA-F]{4}/g, '');
+                        const cleaned = line.replace(/\\u[0-9a-fA-F]{4}/g, '').replace(/\\u\d{4}/g, '');
                         const t = cleaned.trim();
                         if (t.startsWith('### ')) return <h3 key={i} className="text-base font-semibold text-[#004080] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h3>;
                         if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1 border-b pb-1">{t.replace(/^#+\s*/, '')}</h2>;
@@ -1497,18 +1644,88 @@ export default function Bienvenida() {
             {reporteTab === 'resumen' && (
               <div className="space-y-4">
                 {!resumenResultado && !generandoResumen && (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#02B381]/10 flex items-center justify-center">
-                      <FileText className="h-8 w-8 text-[#02B381]" />
+                  <div className="py-4">
+                    <div className="text-center mb-3">
+                      <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-[#02B381]/10 flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-[#02B381]" />
+                      </div>
+                      <h3 className="text-base font-semibold text-[#002C63]">Resumen Ejecutivo</h3>
+                      <p className="text-xs text-gray-500">1 cuartilla, estratégico y accionable</p>
                     </div>
-                    <h3 className="text-lg font-semibold text-[#002C63] mb-2">Resumen Ejecutivo</h3>
-                    <p className="text-sm text-gray-500 mb-4">Máximo 1 cuartilla, enfoque estratégico y accionable.</p>
-                    <Button
-                      className="bg-[#02B381] hover:bg-[#029a6e] text-white px-6"
-                      onClick={handleGenerarResumen}
-                    >
-                      Generar Resumen
-                    </Button>
+
+                    {/* Mini gráficas en el resumen también */}
+                    {statsData && (
+                      <div className="grid grid-cols-3 gap-2 mb-4">
+                        {(() => {
+                          const STATUS_COLORS: Record<string, string> = { aprobado: '#02B381', rechazado: '#ef4444', pendiente_foto: '#f59e0b', pendiente_aprobacion: '#3b82f6', sin_item: '#94a3b8' };
+                          const STATUS_LABELS: Record<string, string> = { aprobado: 'Aprob.', rechazado: 'Rech.', pendiente_foto: 'P.Foto', pendiente_aprobacion: 'P.Apr.', sin_item: 'Sin Ítem' };
+                          const pieData = (statsData.porStatus || []).map((s: any) => ({ name: STATUS_LABELS[s.status] || s.status, value: Number(s.count), color: STATUS_COLORS[s.status] || '#94a3b8' }));
+                          return (
+                            <div className="bg-gray-50 rounded-lg p-2 text-center">
+                              <p className="text-[10px] font-semibold text-gray-500 mb-1">Por Estado</p>
+                              <ResponsiveContainer width="100%" height={80}>
+                                <PieChart>
+                                  <Pie data={pieData} dataKey="value" cx="50%" cy="50%" outerRadius={30} innerRadius={15} strokeWidth={1}>
+                                    {pieData.map((d: any, i: number) => <Cell key={i} fill={d.color} />)}
+                                  </Pie>
+                                  <RTooltip formatter={(v: any, n: any) => [v, n]} />
+                                </PieChart>
+                              </ResponsiveContainer>
+                              <p className="text-[10px] text-gray-400">{statsData.total} ítems</p>
+                            </div>
+                          );
+                        })()}
+                        {(() => {
+                          const COLORS = ['#002C63', '#02B381', '#3b82f6', '#f59e0b', '#ef4444'];
+                          const barData = (statsData.porEmpresa || []).slice(0, 5).map((e: any, i: number) => ({ name: `E${i+1}`, value: Number(e.count), fill: COLORS[i % COLORS.length] }));
+                          return (
+                            <div className="bg-gray-50 rounded-lg p-2 text-center">
+                              <p className="text-[10px] font-semibold text-gray-500 mb-1">Top Empresas</p>
+                              <ResponsiveContainer width="100%" height={80}>
+                                <BarChart data={barData} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
+                                  <XAxis dataKey="name" tick={{ fontSize: 8 }} />
+                                  <YAxis tick={{ fontSize: 8 }} />
+                                  <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+                                    {barData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
+                                  </Bar>
+                                  <RTooltip formatter={(v: any) => [v, 'Ítems']} />
+                                </BarChart>
+                              </ResponsiveContainer>
+                              <p className="text-[10px] text-gray-400">{(statsData.porEmpresa || []).length} empresas</p>
+                            </div>
+                          );
+                        })()}
+                        {(() => {
+                          const COLORS = ['#6366f1', '#ec4899', '#14b8a6', '#f97316', '#8b5cf6'];
+                          const barData = (statsData.porEspecialidad || []).slice(0, 5).map((e: any, i: number) => ({ name: `Esp${i+1}`, value: Number(e.count), fill: COLORS[i % COLORS.length] }));
+                          return (
+                            <div className="bg-gray-50 rounded-lg p-2 text-center">
+                              <p className="text-[10px] font-semibold text-gray-500 mb-1">Top Especialidades</p>
+                              <ResponsiveContainer width="100%" height={80}>
+                                <BarChart data={barData} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
+                                  <XAxis dataKey="name" tick={{ fontSize: 8 }} />
+                                  <YAxis tick={{ fontSize: 8 }} />
+                                  <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+                                    {barData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
+                                  </Bar>
+                                  <RTooltip formatter={(v: any) => [v, 'Ítems']} />
+                                </BarChart>
+                              </ResponsiveContainer>
+                              <p className="text-[10px] text-gray-400">{(statsData.porEspecialidad || []).length} espec.</p>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+
+                    <div className="text-center">
+                      <Button
+                        className="bg-[#02B381] hover:bg-[#029a6e] text-white px-6"
+                        onClick={handleGenerarResumen}
+                      >
+                        Generar Resumen
+                      </Button>
+                    </div>
                   </div>
                 )}
                 {generandoResumen && (
@@ -1523,11 +1740,11 @@ export default function Bienvenida() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDescargarPDFIA(resumenResultado, 'Resumen Ejecutivo')}
+                        onClick={() => handleDescargarPDFResumen(resumenResultado)}
                         disabled={generandoPDFIA}
                       >
                         {generandoPDFIA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}
-                        Descargar PDF
+                        PDF Resumen
                       </Button>
                       <Button
                         size="sm"
@@ -1537,26 +1754,94 @@ export default function Bienvenida() {
                         Regenerar
                       </Button>
                     </div>
-                    <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4">
+
+                    {/* Mini gráficas inline con el resultado */}
+                    {statsData && (
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        {(() => {
+                          const STATUS_COLORS: Record<string, string> = { aprobado: '#02B381', rechazado: '#ef4444', pendiente_foto: '#f59e0b', pendiente_aprobacion: '#3b82f6', sin_item: '#94a3b8' };
+                          const STATUS_LABELS: Record<string, string> = { aprobado: 'Aprob.', rechazado: 'Rech.', pendiente_foto: 'P.Foto', pendiente_aprobacion: 'P.Apr.', sin_item: 'Sin Ítem' };
+                          const pieData = (statsData.porStatus || []).map((s: any) => ({ name: STATUS_LABELS[s.status] || s.status, value: Number(s.count), color: STATUS_COLORS[s.status] || '#94a3b8' }));
+                          const total = pieData.reduce((a: number, d: any) => a + d.value, 0);
+                          const aprobados = pieData.find((d: any) => d.name === 'Aprob.')?.value || 0;
+                          const pctAprob = total > 0 ? Math.round((aprobados / total) * 100) : 0;
+                          return (
+                            <div className="bg-gray-50 rounded-lg p-2 text-center">
+                              <p className="text-[10px] font-semibold text-gray-500 mb-1">Estado</p>
+                              <ResponsiveContainer width="100%" height={70}>
+                                <PieChart>
+                                  <Pie data={pieData} dataKey="value" cx="50%" cy="50%" outerRadius={26} innerRadius={14} strokeWidth={1}>
+                                    {pieData.map((d: any, i: number) => <Cell key={i} fill={d.color} />)}
+                                  </Pie>
+                                  <RTooltip formatter={(v: any, n: any) => [v, n]} />
+                                </PieChart>
+                              </ResponsiveContainer>
+                              <p className="text-[10px] font-bold text-[#02B381]">{pctAprob}% aprob.</p>
+                            </div>
+                          );
+                        })()}
+                        {(() => {
+                          const COLORS = ['#002C63', '#02B381', '#3b82f6', '#f59e0b', '#ef4444'];
+                          const barData = (statsData.porEmpresa || []).slice(0, 5).map((e: any, i: number) => ({ name: (e.empresa || '').substring(0, 4), value: Number(e.count), fill: COLORS[i % COLORS.length] }));
+                          return (
+                            <div className="bg-gray-50 rounded-lg p-2 text-center">
+                              <p className="text-[10px] font-semibold text-gray-500 mb-1">Empresas</p>
+                              <ResponsiveContainer width="100%" height={70}>
+                                <BarChart data={barData} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
+                                  <XAxis dataKey="name" tick={{ fontSize: 7 }} />
+                                  <YAxis tick={{ fontSize: 7 }} />
+                                  <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+                                    {barData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
+                                  </Bar>
+                                  <RTooltip formatter={(v: any) => [v, 'Ítems']} />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </div>
+                          );
+                        })()}
+                        {(() => {
+                          const COLORS = ['#6366f1', '#ec4899', '#14b8a6', '#f97316', '#8b5cf6'];
+                          const barData = (statsData.porEspecialidad || []).slice(0, 5).map((e: any, i: number) => ({ name: (e.especialidad || '').substring(0, 4), value: Number(e.count), fill: COLORS[i % COLORS.length] }));
+                          return (
+                            <div className="bg-gray-50 rounded-lg p-2 text-center">
+                              <p className="text-[10px] font-semibold text-gray-500 mb-1">Especialidades</p>
+                              <ResponsiveContainer width="100%" height={70}>
+                                <BarChart data={barData} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
+                                  <XAxis dataKey="name" tick={{ fontSize: 7 }} />
+                                  <YAxis tick={{ fontSize: 7 }} />
+                                  <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+                                    {barData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
+                                  </Bar>
+                                  <RTooltip formatter={(v: any) => [v, 'Ítems']} />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+
+                    <div className="prose prose-sm max-w-none bg-white rounded-lg border p-3">
                       {resumenResultado
                         .replace(/\\u[0-9a-fA-F]{4}/g, '')
-                        .replace(/[•·‣◦⁃∙–—―‘’“”]/g, '')
+                        .replace(/\\u\d{4}/g, '')
+                        .replace(/[•·‣◦⁃∙–—―''""]/g, '')
                         .split('\n').map((line, i) => {
-                        const t = line.replace(/\\u[0-9a-fA-F]{4}/g, '').trim();
-                        if (t.startsWith('### ')) return <h3 key={i} className="text-base font-semibold text-[#004080] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h3>;
-                        if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1 border-b pb-1">{t.replace(/^#+\s*/, '')}</h2>;
-                        if (t.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-[#002C63] mt-4 mb-2">{t.replace(/^#+\s*/, '')}</h1>;
+                        const t = line.replace(/\\u[0-9a-fA-F]{4}/g, '').replace(/\\u\d{4}/g, '').trim();
+                        if (t.startsWith('### ')) return <h3 key={i} className="text-sm font-semibold text-[#004080] mt-1.5 mb-0.5">{t.replace(/^#+\s*/, '')}</h3>;
+                        if (t.startsWith('## ')) return <h2 key={i} className="text-sm font-bold text-[#002C63] mt-2 mb-0.5 border-b pb-0.5">{t.replace(/^#+\s*/, '')}</h2>;
+                        if (t.startsWith('# ')) return <h1 key={i} className="text-base font-bold text-[#002C63] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h1>;
                         if (t.startsWith('- ') || t.startsWith('* ')) {
                           const bullet = t.replace(/^[-*]\s*/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                          return <div key={i} className="flex gap-2 ml-4 text-sm text-gray-700 mb-1"><span>\u2022</span><span dangerouslySetInnerHTML={{ __html: bullet }} /></div>;
+                          return <div key={i} className="flex gap-1.5 ml-3 text-xs text-gray-700 mb-0.5 leading-tight"><span className="text-[#02B381] font-bold mt-0.5">•</span><span dangerouslySetInnerHTML={{ __html: bullet }} /></div>;
                         }
                         if (t.match(/^\d+\./)) {
                           const num = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                          return <div key={i} className="text-sm font-medium text-gray-800 mb-1" dangerouslySetInnerHTML={{ __html: num }} />;
+                          return <div key={i} className="text-xs font-medium text-gray-800 mb-0.5" dangerouslySetInnerHTML={{ __html: num }} />;
                         }
-                        if (t.length === 0) return <div key={i} className="h-2" />;
+                        if (t.length === 0) return <div key={i} className="h-1" />;
                         const para = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                        return <p key={i} className="text-sm text-gray-700 mb-1" dangerouslySetInnerHTML={{ __html: para }} />;
+                        return <p key={i} className="text-xs text-gray-700 mb-0.5 leading-tight" dangerouslySetInnerHTML={{ __html: para }} />;
                       })}
                     </div>
                   </div>

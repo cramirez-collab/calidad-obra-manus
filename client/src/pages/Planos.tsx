@@ -1968,8 +1968,8 @@ export default function Planos() {
                             doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50); const s = doc.splitTextToSize(t.replace(/\*\*(.*?)\*\*/g, "$1"), mw); doc.text(s, m, y); y += s.length * 4 + 2;
                           }
                           const tp = doc.getNumberOfPages(); for (let i = 1; i <= tp; i++) { doc.setPage(i); doc.setFontSize(7); doc.setTextColor(150, 150, 150); doc.text(`Objetiva QC — ${reporteIATitulo}`, m, ph - 8); doc.text(`Página ${i}/${tp}`, pw - m - 20, ph - 8); }
-                          const blob = doc.output("blob"); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `${reporteIATitulo.replace(/\s+/g, "_")}.pdf`; a.click(); URL.revokeObjectURL(url);
-                          toast.success("PDF descargado");
+                          const blob = doc.output("blob"); const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' })); window.open(blobUrl, '_blank'); setTimeout(() => URL.revokeObjectURL(blobUrl), 120000);
+                          toast.success("PDF generado");
                         } catch { toast.error("Error al generar PDF"); }
                       }}>
                         <Download className="w-3 h-3 mr-1" />PDF
@@ -1981,6 +1981,7 @@ export default function Planos() {
                   </div>
                   <div className="prose prose-slate max-w-none text-sm [&_li]:list-none [&_li]:pl-0" dangerouslySetInnerHTML={{ __html: reporteIAContent
                     .replace(/\\u[0-9a-fA-F]{4}/g, '')
+                    .replace(/\\u\d{4}/g, '')
                     .replace(/[•·‣◦⁃∙–—―‘’“”]/g, '')
                     .replace(/^### (.*$)/gm, '<h3 class="text-base font-bold mt-4 mb-2 text-[#002C63]">$1</h3>')
                     .replace(/^## (.*$)/gm, '<h2 class="text-lg font-bold mt-6 mb-2 text-[#002C63] border-b pb-1">$1</h2>')
@@ -2045,8 +2046,8 @@ export default function Planos() {
                             doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50); const s = doc.splitTextToSize(t.replace(/\*\*(.*?)\*\*/g, "$1"), mw); doc.text(s, m, y); y += s.length * 4 + 2;
                           }
                           const tp = doc.getNumberOfPages(); for (let i = 1; i <= tp; i++) { doc.setPage(i); doc.setFontSize(7); doc.setTextColor(150, 150, 150); doc.text(`Objetiva QC — ${reporteIATitulo}`, m, ph - 8); doc.text(`Página ${i}/${tp}`, pw - m - 20, ph - 8); }
-                          const blob = doc.output("blob"); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `${reporteIATitulo.replace(/\s+/g, "_")}.pdf`; a.click(); URL.revokeObjectURL(url);
-                          toast.success("PDF descargado");
+                          const blob = doc.output("blob"); const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' })); window.open(blobUrl, '_blank'); setTimeout(() => URL.revokeObjectURL(blobUrl), 120000);
+                          toast.success("PDF generado");
                         } catch { toast.error("Error al generar PDF"); }
                       }}>
                         <Download className="w-3 h-3 mr-1" />PDF
@@ -2058,6 +2059,7 @@ export default function Planos() {
                   </div>
                   <div className="prose prose-slate max-w-none text-sm [&_li]:list-none [&_li]:pl-0" dangerouslySetInnerHTML={{ __html: reporteIAContent
                     .replace(/\\u[0-9a-fA-F]{4}/g, '')
+                    .replace(/\\u\d{4}/g, '')
                     .replace(/[•·‣◦⁃∙–—―‘’“”]/g, '')
                     .replace(/^### (.*$)/gm, '<h3 class="text-base font-bold mt-4 mb-2 text-[#002C63]">$1</h3>')
                     .replace(/^## (.*$)/gm, '<h2 class="text-lg font-bold mt-6 mb-2 text-[#002C63] border-b pb-1">$1</h2>')

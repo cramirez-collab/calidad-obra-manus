@@ -3385,38 +3385,39 @@ REGLAS:
       .mutation(async ({ input, ctx }) => {
         const datos = await db.getDatosCompletosParaAnalisisIA(input.proyectoId);
 
-        const systemPrompt = `Director de calidad en construcción. Resumen ejecutivo conciso.
+        const systemPrompt = `Director de calidad en construcción. Resumen ejecutivo ultra-compacto.
 
-REGLAS:
-- Máximo 400 palabras. Bullets con * al inicio. Directo al punto.
-- NUNCA uses \\u2022, \\u00b7 ni códigos unicode. Solo * para bullets.
-- Caracteres directos: áéíóúñ. NUNCA \\u00XX.
-- Nombres de personas y empresas. NUNCA IDs ni códigos.
-- Máximo 2 oraciones por bullet.`;
+REGLAS ABSOLUTAS:
+- Máximo 300 palabras total. Cada bullet = 1 oración corta con dato.
+- Usa SOLO el carácter * al inicio de línea para bullets.
+- PROHIBIDO: cualquier secuencia que empiece con barra invertida seguida de u (como barra-u-2-0-2-2). Solo texto plano.
+- Escribe acentos directamente: áéíóúñ. Nunca códigos.
+- Usa nombres de personas y empresas, nunca IDs.
+- Sin introducciones ni cierres. Solo datos y acciones.`;
 
-        const userPrompt = `Resumen ejecutivo del proyecto "${datos.proyecto.nombre}".
+        const userPrompt = `Proyecto: "${datos.proyecto.nombre}"
 
 DATOS:
 ${JSON.stringify(datos, null, 2)}
 
-Estructura (usa * para cada bullet):
+Escribe EXACTAMENTE esta estructura. Cada bullet inicia con * y espacio:
 
-## Estado del Proyecto
-* Métricas clave en 2-3 bullets
+## Estado
+* (2-3 bullets: total ítems, tasa aprobación, pendientes foto)
 
-## Hallazgos Críticos
-* 3-5 bullets directos con datos
+## Crítico
+* (3-4 bullets: problemas principales con cifra)
 
-## Empresas Prioritarias
-* Un bullet por empresa crítica con cifras
+## Empresas
+* (1 bullet por empresa crítica: nombre + cifra)
 
-## Acciones Inmediatas
-* Instrucciones concretas, un bullet cada una
+## Acciones
+* (3-5 bullets: acción concreta + responsable + plazo)
 
-## Indicadores a Monitorear
-* KPIs clave, un bullet cada uno
+## KPIs
+* (3-4 bullets: indicador + meta + actual)
 
-REGLAS: Solo * para bullets. NUNCA \\u2022 ni códigos unicode. Nombres, no IDs. Máx 400 palabras.`;
+IMPORTANTE: Solo * para bullets. Texto plano sin códigos. Máx 300 palabras.`;
 
         const response = await invokeLLM({
           messages: [

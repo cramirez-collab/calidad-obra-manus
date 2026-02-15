@@ -4108,3 +4108,9 @@
 ## v4.42 - Eliminar códigos unicode de reportes definitivamente
 - [x] 1. Servidor: limpiar output LLM de códigos unicode literales antes de guardar en DB
 - [x] 2. Frontend: limpieza agresiva en renderers de Bienvenida y Planos para eliminar cualquier residuo
+
+## v4.43 - PDF abre en pestaña + limpiar códigos + resumen compacto
+- [x] 1. PDF se abre en nueva pestaña (window.open) en vez de descarga directa
+- [x] 2. Limpiar códigos unicode del contenido PDF generado
+- [x] 3. Limpiar códigos unicode definitivamente en renderers frontend (Bienvenida + Planos)
+- [x] 4. Resumen ejecutivo compacto: bullets + mini gráficas, máximo 1 cuartilla
