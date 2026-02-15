@@ -3255,82 +3255,74 @@ export const appRouter = router({
         const datos = await db.getDatosCompletosParaAnalisisIA(input.proyectoId);
         
         // 2. Construir prompt para análisis profundo
-        const systemPrompt = `Eres un Director de Calidad y Consultor Estratégico senior en control de calidad de obra civil y edificación. Generas reportes ejecutivos para directores de construcción.
+        const systemPrompt = `Eres un Director de Calidad senior en control de calidad de obra. Generas reportes ejecutivos concisos.
 
-REGLAS DE REDACCIÓN:
-- Tono directo, formal y fluido. Sin rodeos, sin frases de relleno ("es importante mencionar", "cabe señalar", "en general").
-- Cada párrafo aporta información concreta. Si no agrega valor, no se incluye.
-- Respalda cada afirmación con datos específicos: cifras, porcentajes, nombres de empresas, nombres de personas.
-- Usa NOMBRES COMPLETOS de usuarios (no IDs ni códigos internos). Ejemplo: "Juan Pérez registró 15 ítems" en lugar de "El usuario #42".
-- Usa NOMBRES de empresas, especialidades, niveles y espacios. NUNCA muestres IDs numéricos ni códigos internos del sistema.
-- NO incluyas códigos de ítems (como "Hidalma-RFTFJA") en el cuerpo del reporte. Usa descripciones: "el ítem de pasta descuadre en N2".
-- Formato Markdown con numeración jerárquica (1., 1.1., 1.1.1.). SIN viñetas con guión al inicio de línea.
-- Español profesional mexicano. Consistencia en terminología a lo largo del documento.
-- Transiciones fluidas entre secciones. El reporte se lee como un documento cohesivo, no como una lista.
-- Las conclusiones tienen evidencia directa. Las líneas de acción son específicas, medibles y accionables.`;
+REGLAS ABSOLUTAS:
+- Formato: Markdown con encabezados (#, ##, ###) y BULLETS con asterisco (* texto). Cada punto es una línea con *.
+- Sé DIRECTO. Máximo 2 oraciones por bullet. Sin relleno, sin introducciones largas.
+- Datos concretos: cifras, porcentajes, nombres de personas y empresas.
+- Usa NOMBRES de personas, empresas, niveles. NUNCA IDs, códigos ni identificadores internos.
+- NO uses códigos de ítems como "Hidalma-RFTFJA". Describe: "pasta descuadre en N2".
+- Escribe caracteres directos: á, é, í, ó, ú, ñ. NUNCA secuencias \\u00XX.
+- NUNCA pongas \\u2022 ni ningún código unicode. Solo usa * para bullets.
+- Español mexicano profesional. Tono ejecutivo.`;
 
         const fechaReporte = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
-        const userPrompt = `Genera un REPORTE INTEGRAL PROFESIONAL del proyecto "${datos.proyecto.nombre}" con fecha ${fechaReporte}.
+        const userPrompt = `Genera un REPORTE del proyecto "${datos.proyecto.nombre}" (${fechaReporte}).
 
-## DATOS COMPLETOS DEL PROYECTO
+DATOS:
 ${JSON.stringify(datos, null, 2)}
 
-ESTRUCTURA OBLIGATORIA DEL REPORTE:
+ESTRUCTURA (usa # para títulos y * para cada punto):
 
-IMPORTANTE: NO uses guión (-) para viñetas. Usa párrafos narrativos con numeración jerárquica. NO incluyas IDs numéricos, códigos de sistema ni identificadores internos. Usa siempre nombres propios de personas, empresas, niveles y espacios.
+# Reporte de Calidad - ${datos.proyecto.nombre}
 
-# REPORTE INTEGRAL DE ANÁLISIS DE CALIDAD
+## 1. Resumen Ejecutivo
+3-5 bullets con * resumiendo estado, métricas clave y situación crítica.
 
-## 1. RESUMEN EJECUTIVO
-3-4 párrafos narrativos con hallazgos críticos, métricas clave y estado general. Un director debe entender la situación en 2 minutos.
+## 2. Metodología
+2-3 bullets describiendo fuentes de datos y alcance.
 
-## 2. METODOLOGÍA
-Descripción breve de fuentes de datos (registros de ítems, pines en planos, actividad de usuarios), período y alcance del análisis.
+## 3. Análisis
+### 3.1 Estado General
+* Total ítems, tasas, tendencia (cada dato un bullet con *)
+### 3.2 Por Empresa
+* Ranking con cifras (un bullet por empresa relevante)
+### 3.3 Por Especialidad
+* Distribución de defectos (un bullet por especialidad crítica)
+### 3.4 Por Nivel
+* Concentración por nivel (un bullet por nivel problemático)
+### 3.5 Defectos Recurrentes
+* Top defectos con frecuencia (un bullet cada uno)
+### 3.6 Equipo
+* Productividad por persona con nombre y cifras
+### 3.7 Tiempos
+* Promedio y tendencia
 
-## 3. DESARROLLO DEL ANÁLISIS
-### 3.1. Estado General del Proyecto
-Métricas principales en párrafos: total ítems, tasas de aprobación/rechazo, tendencia.
-### 3.2. Análisis por Empresa Contratista
-Ranking de rendimiento. Nombrar empresas con mejor y peor desempeño con cifras concretas.
-### 3.3. Análisis por Especialidad
-Distribución de defectos. Áreas críticas que requieren atención inmediata.
-### 3.4. Análisis por Nivel y Unidad
-Concentración de problemas por nivel del edificio. Nombrar niveles y unidades específicas.
-### 3.5. Defectos Recurrentes
-Top 10 defectos con frecuencia y severidad. Patrones identificados.
-### 3.6. Participación del Equipo
-Nombrar usuarios activos e inactivos por nombre. Productividad individual con cifras.
-### 3.7. Tiempos de Resolución
-Tiempo promedio. Tendencia semanal.
+## 4. Hallazgos Clave
+5-8 bullets con * cada uno. Directo, con evidencia en la misma línea.
 
-## 4. EVIDENCIAS
-Evidencias que sustentan cada hallazgo. Referenciar nombres de empresas, personas, niveles y fechas (NO códigos internos).
+## 5. Riesgos
+* Cada riesgo un bullet: [CRÍTICO/ALTO/MEDIO] + descripción + impacto
 
-## 5. HALLAZGOS CLAVE
-5-8 hallazgos numerados, cada uno con su evidencia en párrafo.
+## 6. Oportunidades
+* Cada oportunidad un bullet directo
 
-## 6. RIESGOS DETECTADOS
-Riesgos operativos, de calidad y cronograma. Clasificar: CRÍTICO, ALTO, MEDIO, BAJO. Incluir impacto.
+## 7. Conclusiones
+* Cada conclusión un bullet respaldado por dato
 
-## 7. OPORTUNIDADES
-Áreas de mejora en eficiencia, costos o procesos.
+## 8. Líneas de Acción
+* Cada acción: qué hacer, quién (nombre), prioridad, plazo
 
-## 8. CONCLUSIONES
-Conclusiones contundentes. Cada una respaldada por datos del análisis.
+## 9. Recomendaciones
+* Cada recomendación un bullet accionable
 
-## 9. LÍNEAS DE ACCIÓN PRIORIZADAS
-Para cada acción, en formato de párrafo numerado: descripción, responsable sugerido (por nombre), prioridad (URGENTE/ALTA/MEDIA), plazo, enfoque estratégico, métrica de éxito.
-
-## 10. RECOMENDACIONES OBLIGATORIAS
-Recomendaciones de proceso, de personal y de seguimiento que deben implementarse.
-
-REGLAS DE FORMATO ABSOLUTAS:
-- Escribe en párrafos fluidos y narrativos. NO uses listas con guiones (-) ni viñetas.
-- Usa nombres propios, NO códigos internos ni IDs.
-- NO incluyas caracteres unicode escapados como \\u00e1, \\u00ed, \\u00f3. Escribe directamente: á, é, í, ó, ú, ñ.
-- NO pongas códigos, números sueltos ni caracteres extraños en el margen izquierdo.
-- Cada sección numerada (1., 1.1., etc.) debe ir seguida de su texto en el mismo párrafo o en el siguiente, sin códigos intermedios.
-- Tono directo, formal, ejecutivo.`;
+REGLAS:
+- SOLO usa * para bullets. NUNCA \\u2022, \\u00b7, \\u2013 ni ningún código unicode.
+- NUNCA guión (-) como viñeta. Solo * al inicio de línea.
+- Caracteres directos: áéíóúñ. NUNCA \\u00XX.
+- Nombres de personas y empresas. NUNCA IDs ni códigos.
+- Máximo 2 oraciones por bullet. Directo al punto.`;
 
         const response = await invokeLLM({
           messages: [
@@ -3366,29 +3358,38 @@ REGLAS DE FORMATO ABSOLUTAS:
       .mutation(async ({ input, ctx }) => {
         const datos = await db.getDatosCompletosParaAnalisisIA(input.proyectoId);
 
-        const systemPrompt = `Eres un director de calidad en construcción. Genera un resumen ejecutivo conciso y estratégico.
+        const systemPrompt = `Director de calidad en construcción. Resumen ejecutivo conciso.
 
 REGLAS:
-- Máximo 1 cuartilla (400-500 palabras)
-- Enfoque estratégico y accionable
-- Cada conclusión debe referenciar datos específicos
-- Prioriza problemas críticos
-- Incluye instrucciones claras para el equipo
-- Formato Markdown limpio
-- Español profesional, tono ejecutivo`;
+- Máximo 400 palabras. Bullets con * al inicio. Directo al punto.
+- NUNCA uses \\u2022, \\u00b7 ni códigos unicode. Solo * para bullets.
+- Caracteres directos: áéíóúñ. NUNCA \\u00XX.
+- Nombres de personas y empresas. NUNCA IDs ni códigos.
+- Máximo 2 oraciones por bullet.`;
 
-        const userPrompt = `Genera un RESUMEN EJECUTIVO del proyecto "${datos.proyecto.nombre}" basado en estos datos:
+        const userPrompt = `Resumen ejecutivo del proyecto "${datos.proyecto.nombre}".
 
+DATOS:
 ${JSON.stringify(datos, null, 2)}
 
-Estructura obligatoria:
-1. **Estado del Proyecto** (1 párrafo: métricas clave, tendencia general)
-2. **Hallazgos Críticos** (3-5 puntos numerados con datos específicos)
-3. **Empresas con Atención Prioritaria** (ranking por rendimiento)
-4. **Acciones Inmediatas Requeridas** (instrucciones concretas para el equipo)
-5. **Indicadores a Monitorear** (KPIs clave para la próxima semana)
+Estructura (usa * para cada bullet):
 
-Máximo 500 palabras. Cada punto debe incluir números y referencias a datos reales.`;
+## Estado del Proyecto
+* Métricas clave en 2-3 bullets
+
+## Hallazgos Críticos
+* 3-5 bullets directos con datos
+
+## Empresas Prioritarias
+* Un bullet por empresa crítica con cifras
+
+## Acciones Inmediatas
+* Instrucciones concretas, un bullet cada una
+
+## Indicadores a Monitorear
+* KPIs clave, un bullet cada uno
+
+REGLAS: Solo * para bullets. NUNCA \\u2022 ni códigos unicode. Nombres, no IDs. Máx 400 palabras.`;
 
         const response = await invokeLLM({
           messages: [

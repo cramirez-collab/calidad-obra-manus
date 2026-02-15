@@ -4099,3 +4099,8 @@
 - [x] 2. Fix tabs truncados: nombres completos "Análisis", "Resumen", "Historial"
 - [x] 3. Eliminar códigos del margen izquierdo en reporte LLM generado
 - [x] 4. Agregar 3 gráficas pequeñas representativas al dialog de análisis
+
+## v4.41 - Reportes directos tipo bullets + limpiar unicode
+- [x] 1. LLM prompt análisis: cambiar a formato bullets con asterisco (*), más directo, menos párrafos
+- [x] 2. LLM prompt resumen: mismo tratamiento, bullets directos
+- [x] 3. Markdown renderer: limpiar \u2022 y cualquier unicode escapado antes de renderizar

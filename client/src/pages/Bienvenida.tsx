@@ -1459,7 +1459,11 @@ export default function Bienvenida() {
                       </Button>
                     </div>
                     <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4">
-                      {analisisResultado.split('\n').map((line, i) => {
+                      {analisisResultado
+                        .replace(/\\u[0-9a-fA-F]{4}/g, '')
+                        .replace(/\u2022|\u00b7|\u2013|\u2014|\u2018|\u2019|\u201c|\u201d/g, '')
+                        .replace(/[•·]/g, '*')
+                        .split('\n').map((line, i) => {
                         const t = line.trim();
                         if (t.startsWith('### ')) return <h3 key={i} className="text-base font-semibold text-[#004080] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h3>;
                         if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1 border-b pb-1">{t.replace(/^#+\s*/, '')}</h2>;
@@ -1534,7 +1538,11 @@ export default function Bienvenida() {
                       </Button>
                     </div>
                     <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4">
-                      {resumenResultado.split('\n').map((line, i) => {
+                      {resumenResultado
+                        .replace(/\\u[0-9a-fA-F]{4}/g, '')
+                        .replace(/\u2022|\u00b7|\u2013|\u2014|\u2018|\u2019|\u201c|\u201d/g, '')
+                        .replace(/[•·]/g, '*')
+                        .split('\n').map((line, i) => {
                         const t = line.trim();
                         if (t.startsWith('### ')) return <h3 key={i} className="text-base font-semibold text-[#004080] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h3>;
                         if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1 border-b pb-1">{t.replace(/^#+\s*/, '')}</h2>;

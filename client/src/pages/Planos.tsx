@@ -1980,15 +1980,17 @@ export default function Planos() {
                     </div>
                   </div>
                   <div className="prose prose-slate max-w-none text-sm [&_li]:list-none [&_li]:pl-0" dangerouslySetInnerHTML={{ __html: reporteIAContent
+                    .replace(/\\u[0-9a-fA-F]{4}/g, '')
+                    .replace(/[\u2022\u00b7\u2013\u2014]/g, '*')
                     .replace(/^### (.*$)/gm, '<h3 class="text-base font-bold mt-4 mb-2 text-[#002C63]">$1</h3>')
                     .replace(/^## (.*$)/gm, '<h2 class="text-lg font-bold mt-6 mb-2 text-[#002C63] border-b pb-1">$1</h2>')
                     .replace(/^# (.*$)/gm, '<h1 class="text-xl font-bold mt-6 mb-3 text-[#002C63]">$1</h1>')
                     .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-[#002C63]">$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/^\* (.*$)/gm, '<p class="ml-4 mb-1 text-slate-700 flex gap-2"><span class="text-[#02B381]">&#9679;</span><span>$1</span></p>')
+                    .replace(/^- (.*$)/gm, '<p class="ml-4 mb-1 text-slate-700 flex gap-2"><span class="text-[#02B381]">&#9679;</span><span>$1</span></p>')
                     .replace(/^\d+\.\d+\.\d+\. (.*$)/gm, '<p class="ml-8 mb-1 text-slate-700">$&</p>')
                     .replace(/^\d+\.\d+\. (.*$)/gm, '<p class="ml-4 mb-1 font-medium text-slate-800">$&</p>')
                     .replace(/^\d+\. (.*$)/gm, '<p class="mb-1 font-medium text-slate-800">$&</p>')
-                    .replace(/^- (.*$)/gm, '<p class="ml-4 mb-1 text-slate-700">• $1</p>')
                     .replace(/\n\n/g, '</p><p class="mb-2 leading-relaxed text-slate-700">')
                     .replace(/\n/g, '<br/>')
                   }} />
@@ -2055,15 +2057,17 @@ export default function Planos() {
                     </div>
                   </div>
                   <div className="prose prose-slate max-w-none text-sm [&_li]:list-none [&_li]:pl-0" dangerouslySetInnerHTML={{ __html: reporteIAContent
+                    .replace(/\\u[0-9a-fA-F]{4}/g, '')
+                    .replace(/[\u2022\u00b7\u2013\u2014]/g, '*')
                     .replace(/^### (.*$)/gm, '<h3 class="text-base font-bold mt-4 mb-2 text-[#002C63]">$1</h3>')
                     .replace(/^## (.*$)/gm, '<h2 class="text-lg font-bold mt-6 mb-2 text-[#002C63] border-b pb-1">$1</h2>')
                     .replace(/^# (.*$)/gm, '<h1 class="text-xl font-bold mt-6 mb-3 text-[#002C63]">$1</h1>')
                     .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-[#002C63]">$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/^\* (.*$)/gm, '<p class="ml-4 mb-1 text-slate-700 flex gap-2"><span class="text-[#02B381]">&#9679;</span><span>$1</span></p>')
+                    .replace(/^- (.*$)/gm, '<p class="ml-4 mb-1 text-slate-700 flex gap-2"><span class="text-[#02B381]">&#9679;</span><span>$1</span></p>')
                     .replace(/^\d+\.\d+\.\d+\. (.*$)/gm, '<p class="ml-8 mb-1 text-slate-700">$&</p>')
                     .replace(/^\d+\.\d+\. (.*$)/gm, '<p class="ml-4 mb-1 font-medium text-slate-800">$&</p>')
                     .replace(/^\d+\. (.*$)/gm, '<p class="mb-1 font-medium text-slate-800">$&</p>')
-                    .replace(/^- (.*$)/gm, '<p class="ml-4 mb-1 text-slate-700">• $1</p>')
                     .replace(/\n\n/g, '</p><p class="mb-2 leading-relaxed text-slate-700">')
                     .replace(/\n/g, '<br/>')
                   }} />
