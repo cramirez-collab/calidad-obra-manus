@@ -4197,3 +4197,7 @@
 - [x] Fix logo Objetiva en Resumen Ejecutivo: no deformar, mantener aspect ratio
 - [x] Fix Evidencia Fotográfica en Resumen Ejecutivo: mostrar fotos de los defectos más recurrentes (Top 5), no ítems aleatorios
 - [x] Forzar impresión obligatoria de fotos en Resumen Ejecutivo (fotos de top defectos recurrentes con conteo)
+- [x] Fix PDF Resumen Ejecutivo: incrustar fotos como base64 dentro del PDF (endpoint /api/fotos-evidencia-base64)
+- [x] Fix PDF Resumen Ejecutivo: habilitar descarga automática del PDF (forceDownloadPDF)
+- [x] Fix PDF Resumen Ejecutivo: redirigir al menú de inicio después de la descarga (setTimeout + setLocation)
+- [x] Fix PDF Resumen Ejecutivo: manejar errores si una imagen no carga (placeholder en vez de vacío)

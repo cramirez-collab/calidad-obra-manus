@@ -52,7 +52,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, 
 import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
 import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlanosPDF";
-import { openPDFPreview } from "@/lib/pdfDownload";
+import { openPDFPreview, forceDownloadPDF } from "@/lib/pdfDownload";
 // jsPDF se importa dinámicamente para evitar conflicto con React context
 // Heartbeat via tRPC en vez de socket para usuarios en línea
 
@@ -413,8 +413,30 @@ export default function Bienvenida() {
         y = drawChartsOnPDF(doc, chartDataIA, margin, y, maxW);
       }
 
-      // 5 Fotos evidencia en PDF (siempre)
-      y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, margin, y, maxW, getImageUrl);
+      // 5 Fotos evidencia en PDF (siempre) - Pre-cargar fotos como base64 desde el servidor
+      let fotosConBase64 = fotosEvidenciaIA;
+      if (fotosEvidenciaIA.length > 0) {
+        try {
+          const itemIds = fotosEvidenciaIA.map((f: any) => f.id).filter(Boolean);
+          if (itemIds.length > 0) {
+            const resp = await fetch('/api/fotos-evidencia-base64', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ itemIds }),
+            });
+            if (resp.ok) {
+              const { fotos: fotosMap } = await resp.json();
+              fotosConBase64 = fotosEvidenciaIA.map((f: any) => ({
+                ...f,
+                fotoBase64: fotosMap[f.id] || null,
+              }));
+            }
+          }
+        } catch (e) {
+          console.warn('Error pre-cargando fotos base64 para PDF:', e);
+        }
+      }
+      y = await drawPhotosOnPDF(doc, fotosConBase64, margin, y, maxW, getImageUrl);
 
       // Responsables e indices de desempeno
       if (responsablesIA.length > 0) {
@@ -496,8 +518,11 @@ export default function Bienvenida() {
         doc.text(`Página ${i} de ${totalPages}`, pageW - margin - 25, 293);
       }
 
-      openPDFPreview(doc);
-      toast.success('PDF generado');
+      const pdfName = `Analisis_${proyectoActual?.nombre || 'Proyecto'}_${new Date().toISOString().slice(0,10)}.pdf`;
+      forceDownloadPDF(doc, pdfName);
+      toast.success('PDF descargado');
+      // Redirigir al inicio después de la descarga
+      setTimeout(() => setLocation('/'), 1500);
     } catch (err) {
       console.error('Error PDF:', err);
       toast.error('Error al generar PDF');
@@ -603,8 +628,30 @@ export default function Bienvenida() {
         y = drawChartsOnPDF(doc, chartDataIA, margin, y, maxW);
       }
 
-      // 5 Fotos evidencia en PDF Resumen (siempre)
-      y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, margin, y, maxW, getImageUrl);
+      // 5 Fotos evidencia en PDF Resumen (siempre) - Pre-cargar fotos como base64 desde el servidor
+      let fotosConBase64R = fotosEvidenciaIA;
+      if (fotosEvidenciaIA.length > 0) {
+        try {
+          const itemIds = fotosEvidenciaIA.map((f: any) => f.id).filter(Boolean);
+          if (itemIds.length > 0) {
+            const resp = await fetch('/api/fotos-evidencia-base64', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ itemIds }),
+            });
+            if (resp.ok) {
+              const { fotos: fotosMap } = await resp.json();
+              fotosConBase64R = fotosEvidenciaIA.map((f: any) => ({
+                ...f,
+                fotoBase64: fotosMap[f.id] || null,
+              }));
+            }
+          }
+        } catch (e) {
+          console.warn('Error pre-cargando fotos base64 para PDF resumen:', e);
+        }
+      }
+      y = await drawPhotosOnPDF(doc, fotosConBase64R, margin, y, maxW, getImageUrl);
 
       // Responsables e indices de desempeno
       if (responsablesIA.length > 0) {
@@ -671,8 +718,11 @@ export default function Bienvenida() {
       doc.text('Objetiva - Resumen Ejecutivo de Calidad', margin, 292);
       doc.text('P\u00e1gina 1 de 1', pageW - margin - 20, 292);
 
-      openPDFPreview(doc);
-      toast.success('PDF resumen generado');
+      const pdfName = `Resumen_${proyectoActual?.nombre || 'Proyecto'}_${new Date().toISOString().slice(0,10)}.pdf`;
+      forceDownloadPDF(doc, pdfName);
+      toast.success('PDF resumen descargado');
+      // Redirigir al inicio después de la descarga
+      setTimeout(() => setLocation('/'), 1500);
     } catch (err) {
       console.error('Error PDF resumen:', err);
       toast.error('Error al generar PDF');

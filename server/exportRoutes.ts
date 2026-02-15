@@ -427,6 +427,102 @@ router.get("/api/items/:id/fotos-pdf", async (req, res) => {
   }
 });
 
+// ==================== FOTOS EVIDENCIA BASE64 PARA PDF ====================
+
+/**
+ * Endpoint que recibe IDs de ítems y devuelve sus fotos como data URIs base64.
+ * Esto evita problemas de CORS al generar PDFs en el frontend.
+ * Las fotos se descargan server-side desde S3 y se convierten a base64.
+ */
+router.post("/api/fotos-evidencia-base64", async (req, res) => {
+  try {
+    const { itemIds } = req.body as { itemIds: number[] };
+    if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
+      return res.json({ fotos: {} });
+    }
+
+    const dbInstance = await db.getDb();
+    if (!dbInstance) {
+      return res.status(500).json({ error: "Error de base de datos" });
+    }
+
+    const { items } = await import("../drizzle/schema");
+    const { inArray } = await import("drizzle-orm");
+
+    // Obtener datos de fotos de todos los ítems solicitados
+    const rows = await dbInstance.select({
+      id: items.id,
+      fotoAntesUrl: items.fotoAntesUrl,
+      fotoAntesKey: items.fotoAntesKey,
+      fotoAntesBase64: items.fotoAntesBase64,
+      fotoAntesMarcadaUrl: items.fotoAntesMarcadaUrl,
+      fotoAntesMarcadaKey: items.fotoAntesMarcadaKey,
+      fotoAntesMarcadaBase64: items.fotoAntesMarcadaBase64,
+      fotoDespuesUrl: items.fotoDespuesUrl,
+      fotoDespuesKey: items.fotoDespuesKey,
+      fotoDespuesBase64: items.fotoDespuesBase64,
+    }).from(items).where(inArray(items.id, itemIds));
+
+    // Helper: descargar imagen de S3 y convertir a base64 data URI
+    const downloadAsBase64 = async (key: string | null, url: string | null): Promise<string | null> => {
+      try {
+        if (key) {
+          const { url: signedUrl } = await storageGet(key);
+          const response = await fetch(signedUrl);
+          if (response.ok) {
+            const buffer = await response.arrayBuffer();
+            const base64 = Buffer.from(buffer).toString('base64');
+            const contentType = response.headers.get('content-type') || 'image/jpeg';
+            return `data:${contentType};base64,${base64}`;
+          }
+        }
+        if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+          const response = await fetch(url);
+          if (response.ok) {
+            const buffer = await response.arrayBuffer();
+            const base64 = Buffer.from(buffer).toString('base64');
+            const contentType = response.headers.get('content-type') || 'image/jpeg';
+            return `data:${contentType};base64,${base64}`;
+          }
+        }
+      } catch (e) {
+        console.error('Error descargando imagen para PDF:', e);
+      }
+      return null;
+    };
+
+    // Procesar cada ítem en paralelo
+    const fotosMap: Record<number, string | null> = {};
+    await Promise.all(rows.map(async (row) => {
+      // Prioridad: marcada > antes > después
+      // Intentar S3 primero (alta resolución)
+      let dataUri = await downloadAsBase64(row.fotoAntesMarcadaKey, row.fotoAntesMarcadaUrl);
+      if (!dataUri) {
+        dataUri = await downloadAsBase64(row.fotoAntesKey, row.fotoAntesUrl);
+      }
+      if (!dataUri) {
+        dataUri = await downloadAsBase64(row.fotoDespuesKey, row.fotoDespuesUrl);
+      }
+      // Fallback: base64 de BD (thumbnail)
+      if (!dataUri && row.fotoAntesMarcadaBase64 && row.fotoAntesMarcadaBase64.length > 100) {
+        dataUri = row.fotoAntesMarcadaBase64.startsWith('data:') ? row.fotoAntesMarcadaBase64 : `data:image/jpeg;base64,${row.fotoAntesMarcadaBase64}`;
+      }
+      if (!dataUri && row.fotoAntesBase64 && row.fotoAntesBase64.length > 100) {
+        dataUri = row.fotoAntesBase64.startsWith('data:') ? row.fotoAntesBase64 : `data:image/jpeg;base64,${row.fotoAntesBase64}`;
+      }
+      if (!dataUri && row.fotoDespuesBase64 && row.fotoDespuesBase64.length > 100) {
+        dataUri = row.fotoDespuesBase64.startsWith('data:') ? row.fotoDespuesBase64 : `data:image/jpeg;base64,${row.fotoDespuesBase64}`;
+      }
+      fotosMap[row.id] = dataUri;
+    }));
+
+    res.json({ fotos: fotosMap });
+  } catch (error) {
+    console.error("Error obteniendo fotos evidencia base64:", error);
+    res.status(500).json({ error: "Error al obtener fotos" });
+  }
+});
+
 // ==================== TRACKING DE APERTURA DE CORREOS ====================
 
 // Pixel de tracking 1x1 transparente - se incrusta en emails como <img src="/api/track/open?t=TOKEN">

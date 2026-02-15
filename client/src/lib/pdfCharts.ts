@@ -18,6 +18,7 @@ interface FotoEvidencia {
   status: string;
   defectoNombre?: string;
   defectoCount?: number;
+  fotoBase64?: string | null; // Pre-loaded base64 data URI from server
 }
 
 const COLORS = {
@@ -365,26 +366,36 @@ export async function drawPhotosOnPDF(doc: jsPDF, fotos: FotoEvidencia[], startX
     
     let imageLoaded = false;
     
-    if (foto.fotoUrl) {
+    // PRIORITY 1: Use pre-loaded base64 from server (no CORS issues)
+    if (foto.fotoBase64 && foto.fotoBase64.startsWith('data:')) {
       try {
-        // Check if it's base64 data
+        doc.addImage(foto.fotoBase64, 'JPEG', px + 0.5, py + 0.5, pw - 1, photoH - 1);
+        imageLoaded = true;
+      } catch (e) {
+        console.warn('Error adding pre-loaded base64 image:', e);
+      }
+    }
+    
+    // PRIORITY 2: Try fotoUrl if pre-loaded base64 failed
+    if (!imageLoaded && foto.fotoUrl) {
+      try {
+        // Check if fotoUrl itself is base64 data
         const isBase64 = foto.fotoUrl.startsWith('data:') || foto.fotoUrl.length > 500;
         let dataUrl: string;
         
         if (isBase64) {
-          // Direct base64 - ensure it has proper prefix
           dataUrl = foto.fotoUrl.startsWith('data:') ? foto.fotoUrl : `data:image/jpeg;base64,${foto.fotoUrl}`;
           try {
             doc.addImage(dataUrl, 'JPEG', px + 0.5, py + 0.5, pw - 1, photoH - 1);
             imageLoaded = true;
           } catch { /* fallback below */ }
         } else {
-          // URL-based image - load via Image element
+          // URL-based image - load via Image element (may fail due to CORS)
           const imgUrl = getImageUrl(foto.fotoUrl);
           const img = new Image();
           img.crossOrigin = 'anonymous';
           await new Promise<void>((resolve) => {
-            const timeout = setTimeout(() => resolve(), 5000); // 5s timeout
+            const timeout = setTimeout(() => resolve(), 5000);
             img.onload = () => { clearTimeout(timeout); resolve(); };
             img.onerror = () => { clearTimeout(timeout); resolve(); };
             img.src = imgUrl;
