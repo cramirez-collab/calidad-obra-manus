@@ -57,6 +57,7 @@ import { Button } from "./ui/button";
 import { NotificationBell } from "./NotificationBell";
 import OnlineUsers from "./OnlineUsers";
 import { QRScannerButton } from "./QRScanner";
+import { FloatingCaptureButton } from "./FloatingCaptureButton";
 import { ProjectSelector } from "./ProjectSelector";
 import { useRealTimeItems } from "@/hooks/useRealTimeData";
 import { useProject } from "@/contexts/ProjectContext";
@@ -1078,7 +1079,8 @@ function DashboardLayoutContent({
           </div>
         </main>
         
-        {/* Botón flotante de escáner QR */}
+        {/* Botones flotantes: Captura por Plano (arriba) + QR (abajo) */}
+        <FloatingCaptureButton />
         <QRScannerButton />
         
         {/* Modal de Términos y Condiciones */}

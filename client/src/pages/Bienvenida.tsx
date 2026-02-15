@@ -325,6 +325,18 @@ export default function Bienvenida() {
     analisisMut.mutate({ proyectoId: selectedProjectId });
   };
 
+  // Auto-generar análisis al abrir el dialog de Reporte IA
+  const [autoGenTriggered, setAutoGenTriggered] = useState(false);
+  useEffect(() => {
+    if (showReporteIA && selectedProjectId && !analisisResultado && !generandoAnalisis && !autoGenTriggered) {
+      setAutoGenTriggered(true);
+      handleGenerarAnalisis();
+    }
+    if (!showReporteIA) {
+      setAutoGenTriggered(false);
+    }
+  }, [showReporteIA, selectedProjectId]);
+
   const handleGenerarResumen = () => {
     if (!selectedProjectId || generandoResumen) return;
     setGenerandoResumen(true);

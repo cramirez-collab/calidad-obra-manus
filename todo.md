@@ -4139,3 +4139,10 @@
 - [x] 5. Agregar fotos y nombres de residentes/supervisores en reportes IA
 - [x] 6. Incluir nombres de quién falta aprobar e índices de desempeño en reportes
 - [x] 7. Verificar consistencia de datos entre pantalla y PDF
+
+## v4.47 - Auto-reporte IA, botón flotante captura por plano
+- [x] 1. Auto-generar reporte IA al entrar al módulo Reportes (sin que usuario lo pida)
+- [x] 2. Botón flotante de captura por plano junto al QR flotante
+- [x] 3. Ambos botones flotantes al 70% de tamaño, en vertical (uno arriba del otro)
+- [x] 4. Icono azul para captura por plano
+- [x] 5. Estética cuidada en contenedores flotantes

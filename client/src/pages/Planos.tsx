@@ -229,6 +229,18 @@ export default function Planos() {
     { enabled: !!selectedProjectId }
   );
 
+  // Auto-generar análisis al abrir el dialog de Reporte IA
+  const [autoGenTriggeredPlanos, setAutoGenTriggeredPlanos] = useState(false);
+  useEffect(() => {
+    if (showReporteIA && selectedProjectId && !reporteIAContent && !generarAnalisisIA.isPending && !autoGenTriggeredPlanos) {
+      setAutoGenTriggeredPlanos(true);
+      generarAnalisisIA.mutate({ proyectoId: selectedProjectId });
+    }
+    if (!showReporteIA) {
+      setAutoGenTriggeredPlanos(false);
+    }
+  }, [showReporteIA, selectedProjectId]);
+
   const pines = pinesData || [];
 
   // ─── Filtrar pines ───
