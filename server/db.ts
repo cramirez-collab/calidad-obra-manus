@@ -6165,3 +6165,67 @@ export async function getEmailsUsuariosProyecto(proyectoId: number): Promise<{ e
     .filter(u => u.email && u.email.trim().length > 0)
     .map(u => ({ email: u.email!, nombre: u.name || 'Usuario' }));
 }
+
+
+/**
+ * Obtener fotos de evidencia relevantes para reportes IA
+ * Prioriza: rechazados con foto marcada > rechazados con foto antes > recientes con fotos
+ */
+export async function getFotosEvidenciaParaReporte(proyectoId: number, limit: number = 3) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const results = await db.select({
+    id: items.id,
+    codigo: items.codigo,
+    titulo: items.titulo,
+    status: items.status,
+    fotoAntesUrl: items.fotoAntesUrl,
+    fotoDespuesUrl: items.fotoDespuesUrl,
+    fotoAntesMarcadaUrl: items.fotoAntesMarcadaUrl,
+    empresaId: items.empresaId,
+    especialidadId: items.especialidadId,
+    fechaCreacion: items.fechaCreacion,
+  })
+    .from(items)
+    .where(and(
+      eq(items.proyectoId, proyectoId),
+      sql`(${items.fotoAntesUrl} IS NOT NULL OR ${items.fotoDespuesUrl} IS NOT NULL)`
+    ))
+    .orderBy(
+      sql`CASE WHEN ${items.status} = 'rechazado' AND ${items.fotoAntesMarcadaUrl} IS NOT NULL THEN 0
+           WHEN ${items.status} = 'rechazado' THEN 1
+           WHEN ${items.fotoAntesMarcadaUrl} IS NOT NULL THEN 2
+           ELSE 3 END`,
+      desc(items.fechaCreacion)
+    )
+    .limit(limit);
+
+  const empresaIds = Array.from(new Set(results.map(r => r.empresaId).filter(Boolean)));
+  const espIds = Array.from(new Set(results.map(r => r.especialidadId).filter(Boolean)));
+
+  let empresasMap: Record<number, string> = {};
+  let espMap: Record<number, string> = {};
+
+  if (empresaIds.length > 0) {
+    const emps = await db.select({ id: empresas.id, nombre: empresas.nombre }).from(empresas).where(inArray(empresas.id, empresaIds as number[]));
+    empresasMap = Object.fromEntries(emps.map(e => [e.id, e.nombre]));
+  }
+  if (espIds.length > 0) {
+    const esps = await db.select({ id: especialidades.id, nombre: especialidades.nombre }).from(especialidades).where(inArray(especialidades.id, espIds as number[]));
+    espMap = Object.fromEntries(esps.map(e => [e.id, e.nombre]));
+  }
+
+  return results.map(r => ({
+    id: r.id,
+    codigo: r.codigo,
+    titulo: r.titulo,
+    status: r.status,
+    fotoUrl: r.fotoAntesMarcadaUrl || r.fotoAntesUrl || r.fotoDespuesUrl,
+    fotoAntesUrl: r.fotoAntesUrl,
+    fotoDespuesUrl: r.fotoDespuesUrl,
+    fotoMarcadaUrl: r.fotoAntesMarcadaUrl,
+    empresa: empresasMap[r.empresaId!] || 'Sin empresa',
+    especialidad: espMap[r.especialidadId!] || 'Sin especialidad',
+  }));
+}

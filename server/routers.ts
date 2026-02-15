@@ -3376,7 +3376,30 @@ REGLAS:
           creadoPorId: ctx.user.id,
         });
 
-        return { id, contenido, version };
+        // Fotos de evidencia y datos para gráficas
+        const fotosEvidencia = await db.getFotosEvidenciaParaReporte(input.proyectoId, 3);
+        const chartData = {
+          porStatus: [
+            { name: 'Aprobados', value: datos.resumenGeneral.aprobados, color: '#02B381' },
+            { name: 'Rechazados', value: datos.resumenGeneral.rechazados, color: '#ef4444' },
+            { name: 'P. Foto', value: datos.resumenGeneral.pendientesFoto, color: '#f59e0b' },
+            { name: 'P. Aprob.', value: datos.resumenGeneral.pendientesAprobacion, color: '#3b82f6' },
+          ].filter(d => d.value > 0),
+          porEmpresa: datos.empresas.sort((a, b) => b.totalItems - a.totalItems).slice(0, 6).map(e => ({
+            name: e.nombre.substring(0, 12), total: e.totalItems, aprobados: e.aprobados, rechazados: e.rechazados,
+          })),
+          porEspecialidad: datos.especialidades.sort((a, b) => b.totalItems - a.totalItems).slice(0, 6).map(e => ({
+            name: e.nombre.substring(0, 12), total: e.totalItems, aprobados: e.aprobados, rechazados: e.rechazados,
+          })),
+          tendencia: datos.tendenciaSemanal.map(s => ({
+            name: s.semana, creados: s.creados, aprobados: s.aprobados,
+          })),
+          defectos: datos.defectos.slice(0, 6).map(d => ({
+            name: d.nombre.substring(0, 15), frecuencia: d.frecuencia, severidad: d.severidad,
+          })),
+        };
+
+        return { id, contenido, version, fotosEvidencia, chartData };
       }),
 
     // Generar resumen ejecutivo (máx 1 cuartilla)
@@ -3470,7 +3493,30 @@ IMPORTANTE: Solo * para bullets. Texto plano sin códigos. Máx 300 palabras.`;
           creadoPorId: ctx.user.id,
         });
 
-        return { id, resumen, version };
+        // Fotos de evidencia y datos para gráficas
+        const fotosEvidencia = await db.getFotosEvidenciaParaReporte(input.proyectoId, 3);
+        const chartData = {
+          porStatus: [
+            { name: 'Aprobados', value: datos.resumenGeneral.aprobados, color: '#02B381' },
+            { name: 'Rechazados', value: datos.resumenGeneral.rechazados, color: '#ef4444' },
+            { name: 'P. Foto', value: datos.resumenGeneral.pendientesFoto, color: '#f59e0b' },
+            { name: 'P. Aprob.', value: datos.resumenGeneral.pendientesAprobacion, color: '#3b82f6' },
+          ].filter(d => d.value > 0),
+          porEmpresa: datos.empresas.sort((a, b) => b.totalItems - a.totalItems).slice(0, 6).map(e => ({
+            name: e.nombre.substring(0, 12), total: e.totalItems, aprobados: e.aprobados, rechazados: e.rechazados,
+          })),
+          porEspecialidad: datos.especialidades.sort((a, b) => b.totalItems - a.totalItems).slice(0, 6).map(e => ({
+            name: e.nombre.substring(0, 12), total: e.totalItems, aprobados: e.aprobados, rechazados: e.rechazados,
+          })),
+          tendencia: datos.tendenciaSemanal.map(s => ({
+            name: s.semana, creados: s.creados, aprobados: s.aprobados,
+          })),
+          defectos: datos.defectos.slice(0, 6).map(d => ({
+            name: d.nombre.substring(0, 15), frecuencia: d.frecuencia, severidad: d.severidad,
+          })),
+        };
+
+        return { id, resumen, version, fotosEvidencia, chartData };
       }),
 
     // Obtener historial de reportes

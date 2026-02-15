@@ -4114,3 +4114,11 @@
 - [x] 2. Limpiar códigos unicode del contenido PDF generado
 - [x] 3. Limpiar códigos unicode definitivamente en renderers frontend (Bienvenida + Planos)
 - [x] 4. Resumen ejecutivo compacto: bullets + mini gráficas, máximo 1 cuartilla
+
+## v4.44 - Reportes IA mejorados: logo, gráficas, fotos, interlineado
+- [x] 1. Logo Objetiva en header del dialog de reportes IA (Bienvenida + Planos)
+- [x] 2. Logo Objetiva en header de PDFs generados (Análisis + Resumen)
+- [x] 3. Interlineado mejorado en PDFs y renderers frontend
+- [x] 4. 5 gráficas relevantes (Estado, Empresas, Especialidades, Tendencia, Defectos) en tabs Análisis y Resumen
+- [x] 5. 3 fotos de evidencia del proyecto integradas al reporte
+- [x] 6. Backend: getFotosEvidenciaParaReporte + chartData en generarAnalisis y generarResumen

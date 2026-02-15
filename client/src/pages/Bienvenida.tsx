@@ -47,7 +47,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useLocation, Redirect } from "wouter";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip, LineChart, Line, Legend, CartesianGrid } from "recharts";
 import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
 import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlanosPDF";
@@ -200,6 +200,8 @@ export default function Bienvenida() {
   const [generandoResumen, setGenerandoResumen] = useState(false);
   const [generandoPDFIA, setGenerandoPDFIA] = useState(false);
   const [reporteTab, setReporteTab] = useState<'analisis' | 'resumen' | 'historial'>('analisis');
+  const [chartDataIA, setChartDataIA] = useState<any>(null);
+  const [fotosEvidenciaIA, setFotosEvidenciaIA] = useState<any[]>([]);
 
   // Estadísticas para mini gráficas del Reporte IA
   const { data: statsData } = trpc.estadisticas.general.useQuery(
@@ -284,6 +286,8 @@ export default function Bienvenida() {
   const analisisMut = trpc.analisisIA.generarAnalisis.useMutation({
     onSuccess: (data: any) => {
       setAnalisisResultado(data.contenido);
+      if (data.chartData) setChartDataIA(data.chartData);
+      if (data.fotosEvidencia) setFotosEvidenciaIA(data.fotosEvidencia);
       setGenerandoAnalisis(false);
     },
     onError: (err: any) => {
@@ -294,6 +298,8 @@ export default function Bienvenida() {
   const resumenMut = trpc.analisisIA.generarResumen.useMutation({
     onSuccess: (data: any) => {
       setResumenResultado(data.resumen);
+      if (data.chartData) setChartDataIA(data.chartData);
+      if (data.fotosEvidencia) setFotosEvidenciaIA(data.fotosEvidencia);
       setGenerandoResumen(false);
     },
     onError: (err: any) => {
@@ -341,16 +347,36 @@ export default function Bienvenida() {
         .trim();
       contenido = cleanContent;
 
-      // Header
+      // Header con logo
       doc.setFillColor(0, 44, 99);
       doc.rect(0, 0, pageW, 35, 'F');
+      try {
+        const logoImg = new Image();
+        logoImg.crossOrigin = 'anonymous';
+        await new Promise<void>((resolve) => {
+          logoImg.onload = () => resolve();
+          logoImg.onerror = () => resolve();
+          logoImg.src = '/logo-objetiva.jpg';
+        });
+        if (logoImg.complete && logoImg.naturalWidth > 0) {
+          const canvas = document.createElement('canvas');
+          canvas.width = logoImg.naturalWidth;
+          canvas.height = logoImg.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(logoImg, 0, 0);
+          const logoDataUrl = canvas.toDataURL('image/jpeg');
+          doc.addImage(logoDataUrl, 'JPEG', margin, 5, 25, 25);
+        }
+      } catch (e) { /* logo fallback */ }
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16);
-      doc.text('OBJETIVA', margin, 15);
-      doc.setFontSize(10);
-      doc.text('Reporte de Análisis de Calidad', margin, 25);
-      doc.text(new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }), pageW - margin - 60, 25);
-      y = 45;
+      doc.setFontSize(14);
+      doc.text('OBJETIVA', margin + 28, 15);
+      doc.setFontSize(9);
+      doc.text('Reporte de Análisis de Calidad', margin + 28, 23);
+      doc.setFontSize(8);
+      doc.text(new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }), pageW - margin - 50, 15);
+      doc.text(proyectoActual?.nombre || 'Proyecto', pageW - margin - 50, 22);
+      y = 42;
 
       // Title
       doc.setTextColor(0, 44, 99);
@@ -392,7 +418,7 @@ export default function Bienvenida() {
           for (const wl of wrapped) {
             if (y > 270) { doc.addPage(); y = 20; }
             doc.text(wl, margin + 5, y);
-            y += 5;
+            y += 5.5;
           }
         } else if (trimmed.match(/^\d+\.\s/)) {
           doc.setFontSize(9); doc.setTextColor(50, 50, 50);
@@ -401,7 +427,7 @@ export default function Bienvenida() {
           for (const wl of wrapped) {
             if (y > 270) { doc.addPage(); y = 20; }
             doc.text(wl, margin + 3, y);
-            y += 5;
+            y += 5.5;
           }
         } else if (trimmed.length > 0) {
           doc.setFontSize(9); doc.setTextColor(50, 50, 50);
@@ -410,10 +436,10 @@ export default function Bienvenida() {
           for (const wl of wrapped) {
             if (y > 270) { doc.addPage(); y = 20; }
             doc.text(wl, margin, y);
-            y += 5;
+            y += 5.5;
           }
         } else {
-          y += 3;
+          y += 4;
         }
       }
 
@@ -456,14 +482,32 @@ export default function Bienvenida() {
         .replace(/[\u2022\u2023\u25E6\u2043\u2219\u00B7]/g, '')
         .replace(/\s{2,}/g, ' ').trim();
 
-      // Header compacto
+      // Header compacto con logo
       doc.setFillColor(0, 44, 99);
-      doc.rect(0, 0, pageW, 22, 'F');
+      doc.rect(0, 0, pageW, 24, 'F');
+      try {
+        const logoImg = new Image();
+        logoImg.crossOrigin = 'anonymous';
+        await new Promise<void>((resolve) => {
+          logoImg.onload = () => resolve();
+          logoImg.onerror = () => resolve();
+          logoImg.src = '/logo-objetiva.jpg';
+        });
+        if (logoImg.complete && logoImg.naturalWidth > 0) {
+          const canvas = document.createElement('canvas');
+          canvas.width = logoImg.naturalWidth;
+          canvas.height = logoImg.naturalHeight;
+          const ctx2 = canvas.getContext('2d');
+          ctx2?.drawImage(logoImg, 0, 0);
+          const logoDataUrl = canvas.toDataURL('image/jpeg');
+          doc.addImage(logoDataUrl, 'JPEG', margin, 2, 18, 18);
+        }
+      } catch (e) { /* logo fallback */ }
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(12);
-      doc.text('OBJETIVA - Resumen Ejecutivo', margin, 10);
-      doc.setFontSize(8);
-      doc.text(`${proyectoActual?.nombre || 'Proyecto'} | ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}`, margin, 18);
+      doc.setFontSize(11);
+      doc.text('OBJETIVA - Resumen Ejecutivo', margin + 21, 10);
+      doc.setFontSize(7);
+      doc.text(`${proyectoActual?.nombre || 'Proyecto'} | ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}`, margin + 21, 18);
       y = 28;
 
       // Mini KPI row si hay stats
@@ -540,7 +584,7 @@ export default function Bienvenida() {
           for (const wl of wrapped) {
             if (y > 275) break;
             doc.text(wl, margin + 3, y);
-            y += 3.8;
+            y += 4.2;
           }
         } else if (trimmed.length > 0) {
           doc.setFontSize(7.5); doc.setTextColor(50, 50, 50);
@@ -549,10 +593,10 @@ export default function Bienvenida() {
           for (const wl of wrapped) {
             if (y > 275) break;
             doc.text(wl, margin, y);
-            y += 3.8;
+            y += 4.2;
           }
         } else {
-          y += 2;
+          y += 2.5;
         }
       }
 
@@ -1462,10 +1506,13 @@ export default function Bienvenida() {
       {/* Dialog Reporte IA */}
       <Dialog open={showReporteIA} onOpenChange={setShowReporteIA}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-          <DialogHeader className="px-4 pt-4 pb-2 border-b">
-            <DialogTitle className="text-[#002C63] flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-[#002C63] text-white flex items-center justify-center font-bold text-sm">R</span>
-              Reporte IA - {proyectoActual?.nombre || 'Proyecto'}
+          <DialogHeader className="px-4 pt-3 pb-2 border-b bg-gradient-to-r from-[#002C63] to-[#003d8a]">
+            <DialogTitle className="text-white flex items-center gap-3">
+              <img src="/logo-objetiva.jpg" alt="Objetiva" className="h-8 rounded" />
+              <div>
+                <span className="text-sm font-bold">Reporte IA</span>
+                <span className="text-xs text-white/70 block">{proyectoActual?.nombre || 'Proyecto'}</span>
+              </div>
             </DialogTitle>
           </DialogHeader>
           {/* Tabs */}
@@ -1587,53 +1634,132 @@ export default function Bienvenida() {
                 {analisisResultado && (
                   <div>
                     <div className="flex justify-end gap-2 mb-3">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDescargarPDFIA(analisisResultado, 'Análisis Profundo')}
-                        disabled={generandoPDFIA}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => handleDescargarPDFIA(analisisResultado, 'Análisis Profundo')} disabled={generandoPDFIA}>
                         {generandoPDFIA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}
-                        Descargar PDF
+                        Abrir PDF
                       </Button>
-                      <Button
-                        size="sm"
-                        className="bg-[#002C63] hover:bg-[#001d42] text-white"
-                        onClick={handleGenerarAnalisis}
-                      >
-                        Regenerar
-                      </Button>
+                      <Button size="sm" className="bg-[#002C63] hover:bg-[#001d42] text-white" onClick={handleGenerarAnalisis}>Regenerar</Button>
                     </div>
-                    <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4">
+
+                    {/* 5 Gráficas Relevantes */}
+                    {chartDataIA && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
+                        {/* 1. Pie: Estado */}
+                        <div className="bg-gray-50 rounded-lg p-2 text-center border">
+                          <p className="text-[10px] font-bold text-[#002C63] mb-1">Estado</p>
+                          <ResponsiveContainer width="100%" height={90}>
+                            <PieChart>
+                              <Pie data={chartDataIA.porStatus} dataKey="value" cx="50%" cy="50%" outerRadius={32} innerRadius={16} strokeWidth={1}>
+                                {chartDataIA.porStatus.map((d: any, i: number) => <Cell key={i} fill={d.color} />)}
+                              </Pie>
+                              <RTooltip formatter={(v: any, n: any) => [v, n]} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                        {/* 2. Bar: Empresas */}
+                        <div className="bg-gray-50 rounded-lg p-2 text-center border">
+                          <p className="text-[10px] font-bold text-[#002C63] mb-1">Empresas</p>
+                          <ResponsiveContainer width="100%" height={90}>
+                            <BarChart data={chartDataIA.porEmpresa} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
+                              <XAxis dataKey="name" tick={{ fontSize: 7 }} />
+                              <YAxis tick={{ fontSize: 7 }} />
+                              <Bar dataKey="total" fill="#002C63" radius={[2,2,0,0]} />
+                              <Bar dataKey="rechazados" fill="#ef4444" radius={[2,2,0,0]} />
+                              <RTooltip />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        {/* 3. Bar: Especialidades */}
+                        <div className="bg-gray-50 rounded-lg p-2 text-center border">
+                          <p className="text-[10px] font-bold text-[#002C63] mb-1">Especialidades</p>
+                          <ResponsiveContainer width="100%" height={90}>
+                            <BarChart data={chartDataIA.porEspecialidad} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
+                              <XAxis dataKey="name" tick={{ fontSize: 7 }} />
+                              <YAxis tick={{ fontSize: 7 }} />
+                              <Bar dataKey="total" fill="#6366f1" radius={[2,2,0,0]} />
+                              <Bar dataKey="rechazados" fill="#ef4444" radius={[2,2,0,0]} />
+                              <RTooltip />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        {/* 4. Line: Tendencia Semanal */}
+                        <div className="bg-gray-50 rounded-lg p-2 text-center border">
+                          <p className="text-[10px] font-bold text-[#002C63] mb-1">Tendencia</p>
+                          <ResponsiveContainer width="100%" height={90}>
+                            <LineChart data={chartDataIA.tendencia} margin={{ top: 2, right: 8, left: -20, bottom: 0 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                              <XAxis dataKey="name" tick={{ fontSize: 7 }} />
+                              <YAxis tick={{ fontSize: 7 }} />
+                              <Line type="monotone" dataKey="creados" stroke="#002C63" strokeWidth={2} dot={{ r: 2 }} />
+                              <Line type="monotone" dataKey="aprobados" stroke="#02B381" strokeWidth={2} dot={{ r: 2 }} />
+                              <RTooltip />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                        {/* 5. Bar: Defectos */}
+                        <div className="bg-gray-50 rounded-lg p-2 text-center border">
+                          <p className="text-[10px] font-bold text-[#002C63] mb-1">Defectos</p>
+                          <ResponsiveContainer width="100%" height={90}>
+                            <BarChart data={chartDataIA.defectos} layout="vertical" margin={{ top: 2, right: 8, left: 0, bottom: 0 }}>
+                              <XAxis type="number" tick={{ fontSize: 7 }} />
+                              <YAxis type="category" dataKey="name" tick={{ fontSize: 6 }} width={50} />
+                              <Bar dataKey="frecuencia" fill="#f59e0b" radius={[0,2,2,0]} />
+                              <RTooltip />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 3 Fotos de Evidencia */}
+                    {fotosEvidenciaIA.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-xs font-bold text-[#002C63] mb-2">Evidencia Fotográfica</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {fotosEvidenciaIA.map((foto: any) => (
+                            <div key={foto.id} className="rounded-lg overflow-hidden border bg-gray-50">
+                              <img src={getImageUrl(foto.fotoUrl)} alt={foto.codigo} className="w-full h-24 object-cover" />
+                              <div className="p-1.5">
+                                <p className="text-[9px] font-bold text-[#002C63] truncate">{foto.codigo}</p>
+                                <p className="text-[8px] text-gray-500 truncate">{foto.empresa} - {foto.especialidad}</p>
+                                <span className={`text-[8px] px-1 rounded ${foto.status === 'rechazado' ? 'bg-red-100 text-red-700' : foto.status === 'aprobado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{foto.status}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Contenido del análisis con interlineado mejorado */}
+                    <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4" style={{ lineHeight: '1.7' }}>
                       {analisisResultado
                         .replace(/\\u[0-9a-fA-F]{4}/g, '')
                         .replace(/\\u\d{4}/g, '')
-                        .replace(/[•·‣◦⁃∙–—―‘’“”]/g, '')
+                        .replace(/[•·‣◦⁃∙–—―''""]/g, '')
                         .split('\n').map((line, i) => {
-                        const cleaned = line.replace(/\\u[0-9a-fA-F]{4}/g, '').replace(/\\u\d{4}/g, '');
-                        const t = cleaned.trim();
-                        if (t.startsWith('### ')) return <h3 key={i} className="text-base font-semibold text-[#004080] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h3>;
-                        if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1 border-b pb-1">{t.replace(/^#+\s*/, '')}</h2>;
-                        if (t.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-[#002C63] mt-4 mb-2">{t.replace(/^#+\s*/, '')}</h1>;
+                        const t = line.replace(/\\u[0-9a-fA-F]{4}/g, '').replace(/\\u\d{4}/g, '').trim();
+                        if (t.startsWith('### ')) return <h3 key={i} className="text-base font-semibold text-[#004080] mt-3 mb-1.5">{t.replace(/^#+\s*/, '')}</h3>;
+                        if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-4 mb-1.5 border-b pb-1">{t.replace(/^#+\s*/, '')}</h2>;
+                        if (t.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-[#002C63] mt-5 mb-2">{t.replace(/^#+\s*/, '')}</h1>;
                         if (t.startsWith('- ') || t.startsWith('* ')) {
                           const bullet = t.replace(/^[-*]\s*/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                          return <div key={i} className="flex gap-2 ml-4 text-sm text-gray-700 mb-1"><span className="text-[#02B381] font-bold">•</span><span dangerouslySetInnerHTML={{ __html: bullet }} /></div>;
+                          return <div key={i} className="flex gap-2 ml-4 text-sm text-gray-700 mb-1.5 leading-relaxed"><span className="text-[#02B381] font-bold mt-0.5">•</span><span dangerouslySetInnerHTML={{ __html: bullet }} /></div>;
                         }
                         if (t.match(/^\d+\.\d+\.\d+\./)) {
                           const num = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                          return <div key={i} className="ml-8 text-sm text-gray-700 mb-1" dangerouslySetInnerHTML={{ __html: num }} />;
+                          return <div key={i} className="ml-8 text-sm text-gray-700 mb-1.5 leading-relaxed" dangerouslySetInnerHTML={{ __html: num }} />;
                         }
                         if (t.match(/^\d+\.\d+\./)) {
                           const num = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                          return <div key={i} className="ml-4 text-sm font-medium text-gray-800 mb-1" dangerouslySetInnerHTML={{ __html: num }} />;
+                          return <div key={i} className="ml-4 text-sm font-medium text-gray-800 mb-1.5 leading-relaxed" dangerouslySetInnerHTML={{ __html: num }} />;
                         }
                         if (t.match(/^\d+\./)) {
                           const num = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                          return <div key={i} className="text-sm font-medium text-gray-800 mb-1" dangerouslySetInnerHTML={{ __html: num }} />;
+                          return <div key={i} className="text-sm font-medium text-gray-800 mb-1.5 leading-relaxed" dangerouslySetInnerHTML={{ __html: num }} />;
                         }
-                        if (t.length === 0) return <div key={i} className="h-2" />;
+                        if (t.length === 0) return <div key={i} className="h-3" />;
                         const para = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                        return <p key={i} className="text-sm text-gray-700 mb-1" dangerouslySetInnerHTML={{ __html: para }} />;
+                        return <p key={i} className="text-sm text-gray-700 mb-1.5 leading-relaxed" dangerouslySetInnerHTML={{ __html: para }} />;
                       })}
                     </div>
                   </div>
@@ -1737,111 +1863,117 @@ export default function Bienvenida() {
                 {resumenResultado && (
                   <div>
                     <div className="flex justify-end gap-2 mb-3">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDescargarPDFResumen(resumenResultado)}
-                        disabled={generandoPDFIA}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => handleDescargarPDFResumen(resumenResultado)} disabled={generandoPDFIA}>
                         {generandoPDFIA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}
-                        PDF Resumen
+                        Abrir PDF
                       </Button>
-                      <Button
-                        size="sm"
-                        className="bg-[#02B381] hover:bg-[#029a6e] text-white"
-                        onClick={handleGenerarResumen}
-                      >
-                        Regenerar
-                      </Button>
+                      <Button size="sm" className="bg-[#02B381] hover:bg-[#029a6e] text-white" onClick={handleGenerarResumen}>Regenerar</Button>
                     </div>
 
-                    {/* Mini gráficas inline con el resultado */}
-                    {statsData && (
-                      <div className="grid grid-cols-3 gap-2 mb-3">
-                        {(() => {
-                          const STATUS_COLORS: Record<string, string> = { aprobado: '#02B381', rechazado: '#ef4444', pendiente_foto: '#f59e0b', pendiente_aprobacion: '#3b82f6', sin_item: '#94a3b8' };
-                          const STATUS_LABELS: Record<string, string> = { aprobado: 'Aprob.', rechazado: 'Rech.', pendiente_foto: 'P.Foto', pendiente_aprobacion: 'P.Apr.', sin_item: 'Sin Ítem' };
-                          const pieData = (statsData.porStatus || []).map((s: any) => ({ name: STATUS_LABELS[s.status] || s.status, value: Number(s.count), color: STATUS_COLORS[s.status] || '#94a3b8' }));
-                          const total = pieData.reduce((a: number, d: any) => a + d.value, 0);
-                          const aprobados = pieData.find((d: any) => d.name === 'Aprob.')?.value || 0;
-                          const pctAprob = total > 0 ? Math.round((aprobados / total) * 100) : 0;
-                          return (
-                            <div className="bg-gray-50 rounded-lg p-2 text-center">
-                              <p className="text-[10px] font-semibold text-gray-500 mb-1">Estado</p>
-                              <ResponsiveContainer width="100%" height={70}>
-                                <PieChart>
-                                  <Pie data={pieData} dataKey="value" cx="50%" cy="50%" outerRadius={26} innerRadius={14} strokeWidth={1}>
-                                    {pieData.map((d: any, i: number) => <Cell key={i} fill={d.color} />)}
-                                  </Pie>
-                                  <RTooltip formatter={(v: any, n: any) => [v, n]} />
-                                </PieChart>
-                              </ResponsiveContainer>
-                              <p className="text-[10px] font-bold text-[#02B381]">{pctAprob}% aprob.</p>
-                            </div>
-                          );
-                        })()}
-                        {(() => {
-                          const COLORS = ['#002C63', '#02B381', '#3b82f6', '#f59e0b', '#ef4444'];
-                          const barData = (statsData.porEmpresa || []).slice(0, 5).map((e: any, i: number) => ({ name: (e.empresa || '').substring(0, 4), value: Number(e.count), fill: COLORS[i % COLORS.length] }));
-                          return (
-                            <div className="bg-gray-50 rounded-lg p-2 text-center">
-                              <p className="text-[10px] font-semibold text-gray-500 mb-1">Empresas</p>
-                              <ResponsiveContainer width="100%" height={70}>
-                                <BarChart data={barData} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
-                                  <XAxis dataKey="name" tick={{ fontSize: 7 }} />
-                                  <YAxis tick={{ fontSize: 7 }} />
-                                  <Bar dataKey="value" radius={[2, 2, 0, 0]}>
-                                    {barData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
-                                  </Bar>
-                                  <RTooltip formatter={(v: any) => [v, 'Ítems']} />
-                                </BarChart>
-                              </ResponsiveContainer>
-                            </div>
-                          );
-                        })()}
-                        {(() => {
-                          const COLORS = ['#6366f1', '#ec4899', '#14b8a6', '#f97316', '#8b5cf6'];
-                          const barData = (statsData.porEspecialidad || []).slice(0, 5).map((e: any, i: number) => ({ name: (e.especialidad || '').substring(0, 4), value: Number(e.count), fill: COLORS[i % COLORS.length] }));
-                          return (
-                            <div className="bg-gray-50 rounded-lg p-2 text-center">
-                              <p className="text-[10px] font-semibold text-gray-500 mb-1">Especialidades</p>
-                              <ResponsiveContainer width="100%" height={70}>
-                                <BarChart data={barData} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
-                                  <XAxis dataKey="name" tick={{ fontSize: 7 }} />
-                                  <YAxis tick={{ fontSize: 7 }} />
-                                  <Bar dataKey="value" radius={[2, 2, 0, 0]}>
-                                    {barData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
-                                  </Bar>
-                                  <RTooltip formatter={(v: any) => [v, 'Ítems']} />
-                                </BarChart>
-                              </ResponsiveContainer>
-                            </div>
-                          );
-                        })()}
+                    {/* 5 Gráficas Relevantes en Resumen */}
+                    {chartDataIA && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 mb-3">
+                        <div className="bg-gray-50 rounded-lg p-2 text-center border">
+                          <p className="text-[10px] font-bold text-[#002C63] mb-1">Estado</p>
+                          <ResponsiveContainer width="100%" height={80}>
+                            <PieChart>
+                              <Pie data={chartDataIA.porStatus} dataKey="value" cx="50%" cy="50%" outerRadius={28} innerRadius={14} strokeWidth={1}>
+                                {chartDataIA.porStatus.map((d: any, i: number) => <Cell key={i} fill={d.color} />)}
+                              </Pie>
+                              <RTooltip formatter={(v: any, n: any) => [v, n]} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-2 text-center border">
+                          <p className="text-[10px] font-bold text-[#002C63] mb-1">Empresas</p>
+                          <ResponsiveContainer width="100%" height={80}>
+                            <BarChart data={chartDataIA.porEmpresa} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
+                              <XAxis dataKey="name" tick={{ fontSize: 6 }} />
+                              <YAxis tick={{ fontSize: 6 }} />
+                              <Bar dataKey="total" fill="#002C63" radius={[2,2,0,0]} />
+                              <Bar dataKey="rechazados" fill="#ef4444" radius={[2,2,0,0]} />
+                              <RTooltip />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-2 text-center border">
+                          <p className="text-[10px] font-bold text-[#002C63] mb-1">Especialidades</p>
+                          <ResponsiveContainer width="100%" height={80}>
+                            <BarChart data={chartDataIA.porEspecialidad} margin={{ top: 2, right: 2, left: -20, bottom: 0 }}>
+                              <XAxis dataKey="name" tick={{ fontSize: 6 }} />
+                              <YAxis tick={{ fontSize: 6 }} />
+                              <Bar dataKey="total" fill="#6366f1" radius={[2,2,0,0]} />
+                              <Bar dataKey="rechazados" fill="#ef4444" radius={[2,2,0,0]} />
+                              <RTooltip />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-2 text-center border">
+                          <p className="text-[10px] font-bold text-[#002C63] mb-1">Tendencia</p>
+                          <ResponsiveContainer width="100%" height={80}>
+                            <LineChart data={chartDataIA.tendencia} margin={{ top: 2, right: 8, left: -20, bottom: 0 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                              <XAxis dataKey="name" tick={{ fontSize: 6 }} />
+                              <YAxis tick={{ fontSize: 6 }} />
+                              <Line type="monotone" dataKey="creados" stroke="#002C63" strokeWidth={1.5} dot={{ r: 1.5 }} />
+                              <Line type="monotone" dataKey="aprobados" stroke="#02B381" strokeWidth={1.5} dot={{ r: 1.5 }} />
+                              <RTooltip />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-2 text-center border">
+                          <p className="text-[10px] font-bold text-[#002C63] mb-1">Defectos</p>
+                          <ResponsiveContainer width="100%" height={80}>
+                            <BarChart data={chartDataIA.defectos} layout="vertical" margin={{ top: 2, right: 8, left: 0, bottom: 0 }}>
+                              <XAxis type="number" tick={{ fontSize: 6 }} />
+                              <YAxis type="category" dataKey="name" tick={{ fontSize: 5 }} width={45} />
+                              <Bar dataKey="frecuencia" fill="#f59e0b" radius={[0,2,2,0]} />
+                              <RTooltip />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
                       </div>
                     )}
 
-                    <div className="prose prose-sm max-w-none bg-white rounded-lg border p-3">
+                    {/* 3 Fotos de Evidencia */}
+                    {fotosEvidenciaIA.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-xs font-bold text-[#002C63] mb-1.5">Evidencia Fotográfica</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {fotosEvidenciaIA.map((foto: any) => (
+                            <div key={foto.id} className="rounded-lg overflow-hidden border bg-gray-50">
+                              <img src={getImageUrl(foto.fotoUrl)} alt={foto.codigo} className="w-full h-20 object-cover" />
+                              <div className="p-1">
+                                <p className="text-[8px] font-bold text-[#002C63] truncate">{foto.codigo}</p>
+                                <span className={`text-[7px] px-1 rounded ${foto.status === 'rechazado' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{foto.status}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="prose prose-sm max-w-none bg-white rounded-lg border p-3" style={{ lineHeight: '1.65' }}>
                       {resumenResultado
                         .replace(/\\u[0-9a-fA-F]{4}/g, '')
                         .replace(/\\u\d{4}/g, '')
                         .replace(/[•·‣◦⁃∙–—―''""]/g, '')
                         .split('\n').map((line, i) => {
                         const t = line.replace(/\\u[0-9a-fA-F]{4}/g, '').replace(/\\u\d{4}/g, '').trim();
-                        if (t.startsWith('### ')) return <h3 key={i} className="text-sm font-semibold text-[#004080] mt-1.5 mb-0.5">{t.replace(/^#+\s*/, '')}</h3>;
-                        if (t.startsWith('## ')) return <h2 key={i} className="text-sm font-bold text-[#002C63] mt-2 mb-0.5 border-b pb-0.5">{t.replace(/^#+\s*/, '')}</h2>;
-                        if (t.startsWith('# ')) return <h1 key={i} className="text-base font-bold text-[#002C63] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h1>;
+                        if (t.startsWith('### ')) return <h3 key={i} className="text-sm font-semibold text-[#004080] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h3>;
+                        if (t.startsWith('## ')) return <h2 key={i} className="text-sm font-bold text-[#002C63] mt-2.5 mb-1 border-b pb-0.5">{t.replace(/^#+\s*/, '')}</h2>;
+                        if (t.startsWith('# ')) return <h1 key={i} className="text-base font-bold text-[#002C63] mt-3 mb-1">{t.replace(/^#+\s*/, '')}</h1>;
                         if (t.startsWith('- ') || t.startsWith('* ')) {
                           const bullet = t.replace(/^[-*]\s*/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                          return <div key={i} className="flex gap-1.5 ml-3 text-xs text-gray-700 mb-0.5 leading-tight"><span className="text-[#02B381] font-bold mt-0.5">•</span><span dangerouslySetInnerHTML={{ __html: bullet }} /></div>;
+                          return <div key={i} className="flex gap-1.5 ml-3 text-xs text-gray-700 mb-1 leading-relaxed"><span className="text-[#02B381] font-bold mt-0.5">•</span><span dangerouslySetInnerHTML={{ __html: bullet }} /></div>;
                         }
                         if (t.match(/^\d+\./)) {
                           const num = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                          return <div key={i} className="text-xs font-medium text-gray-800 mb-0.5" dangerouslySetInnerHTML={{ __html: num }} />;
+                          return <div key={i} className="text-xs font-medium text-gray-800 mb-1 leading-relaxed" dangerouslySetInnerHTML={{ __html: num }} />;
                         }
-                        if (t.length === 0) return <div key={i} className="h-1" />;
+                        if (t.length === 0) return <div key={i} className="h-1.5" />;
                         const para = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                        return <p key={i} className="text-xs text-gray-700 mb-0.5 leading-tight" dangerouslySetInnerHTML={{ __html: para }} />;
+                        return <p key={i} className="text-xs text-gray-700 mb-1 leading-relaxed" dangerouslySetInnerHTML={{ __html: para }} />;
                       })}
                     </div>
                   </div>
