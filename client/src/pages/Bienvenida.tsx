@@ -202,6 +202,8 @@ export default function Bienvenida() {
   const [reporteTab, setReporteTab] = useState<'analisis' | 'resumen' | 'historial'>('analisis');
   const [chartDataIA, setChartDataIA] = useState<any>(null);
   const [fotosEvidenciaIA, setFotosEvidenciaIA] = useState<any[]>([]);
+  const [responsablesIA, setResponsablesIA] = useState<any[]>([]);
+  const [pendientesAprobacionIA, setPendientesAprobacionIA] = useState<any[]>([]);
 
   // Estadísticas para mini gráficas del Reporte IA
   const { data: statsData } = trpc.estadisticas.general.useQuery(
@@ -288,6 +290,8 @@ export default function Bienvenida() {
       setAnalisisResultado(data.contenido);
       if (data.chartData) setChartDataIA(data.chartData);
       if (data.fotosEvidencia) setFotosEvidenciaIA(data.fotosEvidencia);
+      if (data.responsables) setResponsablesIA(data.responsables);
+      if (data.pendientesAprobacion) setPendientesAprobacionIA(data.pendientesAprobacion);
       setGenerandoAnalisis(false);
     },
     onError: (err: any) => {
@@ -300,6 +304,8 @@ export default function Bienvenida() {
       setResumenResultado(data.resumen);
       if (data.chartData) setChartDataIA(data.chartData);
       if (data.fotosEvidencia) setFotosEvidenciaIA(data.fotosEvidencia);
+      if (data.responsables) setResponsablesIA(data.responsables);
+      if (data.pendientesAprobacion) setPendientesAprobacionIA(data.pendientesAprobacion);
       setGenerandoResumen(false);
     },
     onError: (err: any) => {
@@ -330,7 +336,7 @@ export default function Bienvenida() {
     setGenerandoPDFIA(true);
     try {
       const { jsPDF } = await import('jspdf');
-      const { drawChartsOnPDF, drawPhotosOnPDF } = await import('@/lib/pdfCharts');
+      const { drawChartsOnPDF, drawPhotosOnPDF, drawResponsablesOnPDF, drawPendientesAprobacionOnPDF } = await import('@/lib/pdfCharts');
       const doc = new jsPDF();
       const pageW = doc.internal.pageSize.getWidth();
       const margin = 20;
@@ -393,6 +399,15 @@ export default function Bienvenida() {
       // 3 Fotos evidencia en PDF
       if (fotosEvidenciaIA.length > 0) {
         y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, margin, y, maxW, getImageUrl);
+      }
+
+      // Responsables e indices de desempeno
+      if (responsablesIA.length > 0) {
+        y = drawResponsablesOnPDF(doc, responsablesIA, margin, y, maxW);
+      }
+      // Pendientes de aprobacion
+      if (pendientesAprobacionIA.length > 0) {
+        y = drawPendientesAprobacionOnPDF(doc, pendientesAprobacionIA, margin, y, maxW);
       }
 
       // Separador
@@ -481,7 +496,7 @@ export default function Bienvenida() {
     setGenerandoPDFIA(true);
     try {
       const { jsPDF } = await import('jspdf');
-      const { drawChartsOnPDF, drawPhotosOnPDF } = await import('@/lib/pdfCharts');
+      const { drawChartsOnPDF, drawPhotosOnPDF, drawResponsablesOnPDF, drawPendientesAprobacionOnPDF } = await import('@/lib/pdfCharts');
       const doc = new jsPDF();
       const pageW = doc.internal.pageSize.getWidth();
       const margin = 15;
@@ -572,6 +587,15 @@ export default function Bienvenida() {
       // 3 Fotos evidencia en PDF Resumen
       if (fotosEvidenciaIA.length > 0) {
         y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, margin, y, maxW, getImageUrl);
+      }
+
+      // Responsables e indices de desempeno
+      if (responsablesIA.length > 0) {
+        y = drawResponsablesOnPDF(doc, responsablesIA, margin, y, maxW);
+      }
+      // Pendientes de aprobacion
+      if (pendientesAprobacionIA.length > 0) {
+        y = drawPendientesAprobacionOnPDF(doc, pendientesAprobacionIA, margin, y, maxW);
       }
 
       // Separador

@@ -3399,7 +3399,27 @@ REGLAS:
           })),
         };
 
-        return { id, contenido, version, fotosEvidencia, chartData };
+        // Ranking de responsables con índices de desempeño
+        const ranking = await db.getRankingRendimientoUsuarios(input.proyectoId);
+        const responsables = (ranking || []).slice(0, 10).map(r => ({
+          nombre: r.nombre || 'Sin nombre',
+          role: r.role,
+          empresa: r.empresa,
+          total: r.estadisticas.total,
+          aprobados: r.estadisticas.aprobados,
+          rechazados: r.estadisticas.rechazados,
+          pendientes: r.estadisticas.pendientes,
+          tasaAprobacion: r.estadisticas.tasaAprobacion,
+          tiempoPromedio: r.estadisticas.tiempoPromedio,
+          score: r.scoreRendimiento,
+        }));
+
+        // Pendientes de aprobación por persona
+        const pendientesAprobacion = datos.participacionUsuarios
+          .filter(u => u.rol === 'supervisor' || u.rol === 'jefe_residente' || u.rol === 'admin')
+          .map(u => ({ nombre: u.nombre, rol: u.rol, itemsCreados: u.itemsCreados, activo: u.activo, diasSinActividad: u.diasSinActividad }));
+
+        return { id, contenido, version, fotosEvidencia, chartData, responsables, pendientesAprobacion };
       }),
 
     // Generar resumen ejecutivo (máx 1 cuartilla)
@@ -3516,7 +3536,26 @@ IMPORTANTE: Solo * para bullets. Texto plano sin códigos. Máx 300 palabras.`;
           })),
         };
 
-        return { id, resumen, version, fotosEvidencia, chartData };
+        // Ranking de responsables con índices de desempeño
+        const ranking = await db.getRankingRendimientoUsuarios(input.proyectoId);
+        const responsables = (ranking || []).slice(0, 10).map(r => ({
+          nombre: r.nombre || 'Sin nombre',
+          role: r.role,
+          empresa: r.empresa,
+          total: r.estadisticas.total,
+          aprobados: r.estadisticas.aprobados,
+          rechazados: r.estadisticas.rechazados,
+          pendientes: r.estadisticas.pendientes,
+          tasaAprobacion: r.estadisticas.tasaAprobacion,
+          tiempoPromedio: r.estadisticas.tiempoPromedio,
+          score: r.scoreRendimiento,
+        }));
+
+        const pendientesAprobacion = datos.participacionUsuarios
+          .filter(u => u.rol === 'supervisor' || u.rol === 'jefe_residente' || u.rol === 'admin')
+          .map(u => ({ nombre: u.nombre, rol: u.rol, itemsCreados: u.itemsCreados, activo: u.activo, diasSinActividad: u.diasSinActividad }));
+
+        return { id, resumen, version, fotosEvidencia, chartData, responsables, pendientesAprobacion };
       }),
 
     // Obtener historial de reportes

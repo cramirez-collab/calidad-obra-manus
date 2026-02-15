@@ -165,6 +165,8 @@ export default function Planos() {
   const [reporteIATab, setReporteIATab] = useState<"analisis" | "resumen" | "historial">("analisis");
   const [chartDataIA, setChartDataIA] = useState<any>(null);
   const [fotosEvidenciaIA, setFotosEvidenciaIA] = useState<any[]>([]);
+  const [responsablesIA, setResponsablesIA] = useState<any[]>([]);
+  const [pendientesAprobacionIA, setPendientesAprobacionIA] = useState<any[]>([]);
 
   // State para fullscreen del plano
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -202,6 +204,8 @@ export default function Planos() {
       setReporteIATitulo(`Análisis Profundo v${data.version}`);
       if (data.chartData) setChartDataIA(data.chartData);
       if (data.fotosEvidencia) setFotosEvidenciaIA(data.fotosEvidencia);
+      if (data.responsables) setResponsablesIA(data.responsables);
+      if (data.pendientesAprobacion) setPendientesAprobacionIA(data.pendientesAprobacion);
       setShowReporteIA(true);
       toast.success("Análisis profundo generado");
     },
@@ -213,6 +217,8 @@ export default function Planos() {
       setReporteIATitulo(`Resumen Ejecutivo v${data.version}`);
       if (data.chartData) setChartDataIA(data.chartData);
       if (data.fotosEvidencia) setFotosEvidenciaIA(data.fotosEvidencia);
+      if (data.responsables) setResponsablesIA(data.responsables);
+      if (data.pendientesAprobacion) setPendientesAprobacionIA(data.pendientesAprobacion);
       setShowReporteIA(true);
       toast.success("Resumen ejecutivo generado");
     },
@@ -506,11 +512,15 @@ export default function Planos() {
 
   // Desktop: mousedown on plano container
   const mouseDownPosRef = useRef<{ x: number; y: number } | null>(null);
+  const isPanningInPinMode = useRef(false);
 
   const handlePlanoMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (isPinMode) {
-      // Track mouse start for tap detection
+      // Track mouse start for tap detection AND start pan
       mouseDownPosRef.current = { x: e.clientX, y: e.clientY };
+      isPanningInPinMode.current = false;
+      // Also prepare for pan (will activate if moved > 10px)
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     } else {
       // Pan mode
       setIsDragging(true);
@@ -525,13 +535,18 @@ export default function Planos() {
         handleTempPinDragMove(e.clientX, e.clientY);
         return;
       }
-      // If moved too far from click start, it's not a tap
+      // If moved too far from click start → activate pan instead of tap
       if (mouseDownPosRef.current) {
         const dx = Math.abs(e.clientX - mouseDownPosRef.current.x);
         const dy = Math.abs(e.clientY - mouseDownPosRef.current.y);
-        if (dx > 10 || dy > 10) {
+        if (dx > 8 || dy > 8) {
+          isPanningInPinMode.current = true;
           mouseDownPosRef.current = null; // cancel tap
         }
+      }
+      // Free pan in pin mode
+      if (isPanningInPinMode.current) {
+        setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
       }
     } else if (isDragging) {
       setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
@@ -542,13 +557,15 @@ export default function Planos() {
     if (isPinMode) {
       if (isDraggingTempPin) {
         handleTempPinDragEnd();
+        isPanningInPinMode.current = false;
         return;
       }
-      // If it was a tap (didn't move far), place pin
-      if (mouseDownPosRef.current && !tempPin) {
+      // If it was a tap (didn't move far and not panning), place pin
+      if (mouseDownPosRef.current && !tempPin && !isPanningInPinMode.current) {
         placePinAtPosition(e.clientX, e.clientY);
       }
       mouseDownPosRef.current = null;
+      isPanningInPinMode.current = false;
     }
     setIsDragging(false);
   }, [isPinMode, isDraggingTempPin, handleTempPinDragEnd, tempPin, placePinAtPosition]);
@@ -565,11 +582,14 @@ export default function Planos() {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
+  const isTouchPanningInPinMode = useRef(false);
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       // Start pinch zoom
       setIsDragging(false);
       isPinchingRef.current = true;
+      isTouchPanningInPinMode.current = false;
       lastPinchDistRef.current = getTouchDistance(e.touches[0], e.touches[1]);
       lastPinchZoomRef.current = zoom;
       return;
@@ -577,9 +597,10 @@ export default function Planos() {
     if (e.touches.length === 1 && !isPinchingRef.current) {
       const touch = e.touches[0];
       touchStartPosRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+      isTouchPanningInPinMode.current = false;
       if (isPinMode) {
-        // In pin mode: if dragging temp pin, start drag; otherwise just track for tap
-        // (tap detection happens in touchEnd)
+        // In pin mode: prepare for pan AND track for tap
+        setDragStart({ x: touch.clientX - pan.x, y: touch.clientY - pan.y });
       } else {
         setIsDragging(true);
         setDragStart({ x: touch.clientX - pan.x, y: touch.clientY - pan.y });
@@ -606,13 +627,18 @@ export default function Planos() {
         handleTempPinDragMove(touch.clientX, touch.clientY);
         return;
       }
-      // Mark as moved (not a tap) if moved too far
+      // If moved too far from start → activate pan instead of tap
       if (touchStartPosRef.current) {
         const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
         const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
-        if (dx > 10 || dy > 10) {
+        if (dx > 8 || dy > 8) {
+          isTouchPanningInPinMode.current = true;
           touchStartPosRef.current = null; // cancel tap
         }
+      }
+      // Free pan in pin mode
+      if (isTouchPanningInPinMode.current) {
+        setPan({ x: touch.clientX - dragStart.x, y: touch.clientY - dragStart.y });
       }
     } else if (isDragging) {
       setPan({ x: touch.clientX - dragStart.x, y: touch.clientY - dragStart.y });
@@ -629,13 +655,14 @@ export default function Planos() {
     if (isPinMode) {
       if (isDraggingTempPin) {
         handleTempPinDragEnd();
-      } else if (touchStartPosRef.current && !tempPin) {
-        // It was a tap (didn't move far) → place pin
+      } else if (touchStartPosRef.current && !tempPin && !isTouchPanningInPinMode.current) {
+        // It was a tap (didn't move far and not panning) → place pin
         const touch = e.changedTouches?.[0];
         if (touch) {
           placePinAtPosition(touch.clientX, touch.clientY);
         }
       }
+      isTouchPanningInPinMode.current = false;
     }
 
     setIsDragging(false);
@@ -1960,8 +1987,8 @@ export default function Planos() {
                       <Button size="sm" variant="outline" className="text-xs h-7" onClick={async () => {
                         try {
                           const { default: jsPDF } = await import("jspdf");
-                          const { drawChartsOnPDF, drawPhotosOnPDF } = await import('@/lib/pdfCharts');
-                          const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
+                          const { drawChartsOnPDF, drawPhotosOnPDF, drawResponsablesOnPDF, drawPendientesAprobacionOnPDF } = await import('@/lib/pdfCharts');
+                           const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
                           const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight(), m = 20, mw = pw - m * 2;
                           let y = m;
                           doc.setFillColor(0, 44, 99); doc.rect(0, 0, pw, 30, "F");
@@ -1982,7 +2009,9 @@ export default function Planos() {
                           if (chartDataIA) { y = drawChartsOnPDF(doc, chartDataIA, m, y, mw); }
                           // 3 Fotos evidencia en PDF
                           if (fotosEvidenciaIA.length > 0) { y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, m, y, mw, getImageUrl); }
-                          doc.setDrawColor(0, 44, 99); doc.setLineWidth(0.5); doc.line(m, y, pw - m, y); y += 6;
+                           if (responsablesIA.length > 0) { y = drawResponsablesOnPDF(doc, responsablesIA, m, y, mw); }
+                           if (pendientesAprobacionIA.length > 0) { y = drawPendientesAprobacionOnPDF(doc, pendientesAprobacionIA, m, y, mw); }
+                           doc.setDrawColor(0, 44, 99); doc.setLineWidth(0.5); doc.line(m, y, pw - m, y); y += 6;
                           for (const line of reporteIAContent.split("\n")) {
                             if (y > ph - 25) { doc.addPage(); y = m; }
                             const t = line.trim(); if (!t) { y += 4; continue; }
@@ -2120,9 +2149,11 @@ export default function Planos() {
                           doc.setTextColor(100, 100, 100); doc.setFontSize(8);
                           doc.text(`Generado: ${new Date().toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}`, m, y); y += 6;
                           // 4 Gr\u00e1ficas en PDF Resumen
-                          const { drawChartsOnPDF: drawCharts2, drawPhotosOnPDF: drawPhotos2 } = await import('@/lib/pdfCharts');
-                          if (chartDataIA) { y = drawCharts2(doc, chartDataIA, m, y, mw); }
-                          if (fotosEvidenciaIA.length > 0) { y = await drawPhotos2(doc, fotosEvidenciaIA, m, y, mw, getImageUrl); }
+                          const { drawChartsOnPDF: drawCharts2, drawPhotosOnPDF: drawPhotos2, drawResponsablesOnPDF: drawResp2, drawPendientesAprobacionOnPDF: drawPend2 } = await import('@/lib/pdfCharts');
+                           if (chartDataIA) { y = drawCharts2(doc, chartDataIA, m, y, mw); }
+                           if (fotosEvidenciaIA.length > 0) { y = await drawPhotos2(doc, fotosEvidenciaIA, m, y, mw, getImageUrl); }
+                           if (responsablesIA.length > 0) { y = drawResp2(doc, responsablesIA, m, y, mw); }
+                           if (pendientesAprobacionIA.length > 0) { y = drawPend2(doc, pendientesAprobacionIA, m, y, mw); }
                           doc.setDrawColor(0, 44, 99); doc.setLineWidth(0.5); doc.line(m, y, pw - m, y); y += 6;
                           for (const line of reporteIAContent.split("\n")) {
                             if (y > ph - 25) { doc.addPage(); y = m; }

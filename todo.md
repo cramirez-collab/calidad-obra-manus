@@ -4130,3 +4130,12 @@
 - [x] 4. Integrar 3 fotos evidencia en PDFs
 - [x] 5. Quitar gráfica de Tendencia del dialog y PDF
 - [x] 6. Ajustar escalas de gráficas por tipo de reporte
+
+## v4.46 - Paneo libre, consistencia datos, etiquetas PDF, fotos defectos, responsables en reportes
+- [x] 1. Paneo libre completo en captura por plano (pan+zoom+colocar pin exacto)
+- [x] 2. Unificar y corregir consistencia de conteos en toda la app (mismos números en dashboard, estadísticas, reportes, PDF)
+- [x] 3. Agregar etiquetas visibles en gráficas del PDF (nombres, valores, porcentajes)
+- [x] 4. Mostrar fotos de los 5 defectos más recurrentes en reportes
+- [x] 5. Agregar fotos y nombres de residentes/supervisores en reportes IA
+- [x] 6. Incluir nombres de quién falta aprobar e índices de desempeño en reportes
+- [x] 7. Verificar consistencia de datos entre pantalla y PDF
