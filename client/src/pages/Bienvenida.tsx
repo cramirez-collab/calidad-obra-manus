@@ -1461,16 +1461,16 @@ export default function Bienvenida() {
                     <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4">
                       {analisisResultado
                         .replace(/\\u[0-9a-fA-F]{4}/g, '')
-                        .replace(/\u2022|\u00b7|\u2013|\u2014|\u2018|\u2019|\u201c|\u201d/g, '')
-                        .replace(/[•·]/g, '*')
+                        .replace(/[•·‣◦⁃∙–—―‘’“”]/g, '')
                         .split('\n').map((line, i) => {
-                        const t = line.trim();
+                        const cleaned = line.replace(/\\u[0-9a-fA-F]{4}/g, '');
+                        const t = cleaned.trim();
                         if (t.startsWith('### ')) return <h3 key={i} className="text-base font-semibold text-[#004080] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h3>;
                         if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1 border-b pb-1">{t.replace(/^#+\s*/, '')}</h2>;
                         if (t.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-[#002C63] mt-4 mb-2">{t.replace(/^#+\s*/, '')}</h1>;
                         if (t.startsWith('- ') || t.startsWith('* ')) {
                           const bullet = t.replace(/^[-*]\s*/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                          return <div key={i} className="flex gap-2 ml-4 text-sm text-gray-700 mb-1"><span>\u2022</span><span dangerouslySetInnerHTML={{ __html: bullet }} /></div>;
+                          return <div key={i} className="flex gap-2 ml-4 text-sm text-gray-700 mb-1"><span className="text-[#02B381] font-bold">•</span><span dangerouslySetInnerHTML={{ __html: bullet }} /></div>;
                         }
                         if (t.match(/^\d+\.\d+\.\d+\./)) {
                           const num = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -1540,10 +1540,9 @@ export default function Bienvenida() {
                     <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4">
                       {resumenResultado
                         .replace(/\\u[0-9a-fA-F]{4}/g, '')
-                        .replace(/\u2022|\u00b7|\u2013|\u2014|\u2018|\u2019|\u201c|\u201d/g, '')
-                        .replace(/[•·]/g, '*')
+                        .replace(/[•·‣◦⁃∙–—―‘’“”]/g, '')
                         .split('\n').map((line, i) => {
-                        const t = line.trim();
+                        const t = line.replace(/\\u[0-9a-fA-F]{4}/g, '').trim();
                         if (t.startsWith('### ')) return <h3 key={i} className="text-base font-semibold text-[#004080] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h3>;
                         if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1 border-b pb-1">{t.replace(/^#+\s*/, '')}</h2>;
                         if (t.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-[#002C63] mt-4 mb-2">{t.replace(/^#+\s*/, '')}</h1>;

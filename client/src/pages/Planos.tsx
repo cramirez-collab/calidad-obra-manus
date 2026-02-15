@@ -1981,7 +1981,7 @@ export default function Planos() {
                   </div>
                   <div className="prose prose-slate max-w-none text-sm [&_li]:list-none [&_li]:pl-0" dangerouslySetInnerHTML={{ __html: reporteIAContent
                     .replace(/\\u[0-9a-fA-F]{4}/g, '')
-                    .replace(/[\u2022\u00b7\u2013\u2014]/g, '*')
+                    .replace(/[•·‣◦⁃∙–—―‘’“”]/g, '')
                     .replace(/^### (.*$)/gm, '<h3 class="text-base font-bold mt-4 mb-2 text-[#002C63]">$1</h3>')
                     .replace(/^## (.*$)/gm, '<h2 class="text-lg font-bold mt-6 mb-2 text-[#002C63] border-b pb-1">$1</h2>')
                     .replace(/^# (.*$)/gm, '<h1 class="text-xl font-bold mt-6 mb-3 text-[#002C63]">$1</h1>')
@@ -2058,7 +2058,7 @@ export default function Planos() {
                   </div>
                   <div className="prose prose-slate max-w-none text-sm [&_li]:list-none [&_li]:pl-0" dangerouslySetInnerHTML={{ __html: reporteIAContent
                     .replace(/\\u[0-9a-fA-F]{4}/g, '')
-                    .replace(/[\u2022\u00b7\u2013\u2014]/g, '*')
+                    .replace(/[•·‣◦⁃∙–—―‘’“”]/g, '')
                     .replace(/^### (.*$)/gm, '<h3 class="text-base font-bold mt-4 mb-2 text-[#002C63]">$1</h3>')
                     .replace(/^## (.*$)/gm, '<h2 class="text-lg font-bold mt-6 mb-2 text-[#002C63] border-b pb-1">$1</h2>')
                     .replace(/^# (.*$)/gm, '<h1 class="text-xl font-bold mt-6 mb-3 text-[#002C63]">$1</h1>')

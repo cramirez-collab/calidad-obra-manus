@@ -3331,9 +3331,36 @@ REGLAS:
           ],
         });
 
-        const contenido = typeof response.choices[0]?.message?.content === 'string'
+        const rawContenido = typeof response.choices[0]?.message?.content === 'string'
           ? response.choices[0].message.content
           : 'Error al generar análisis';
+        // Limpieza agresiva de códigos unicode literales
+        const contenido = rawContenido
+          .replace(/\\u[0-9a-fA-F]{4}/g, '')
+          .replace(/\\u00[a-fA-F0-9]{2}/g, '')
+          .replace(/\\u2[0-9a-fA-F]{3}/g, '')
+          .replace(/\u2022/g, '*')
+          .replace(/\u00b7/g, '*')
+          .replace(/\u2013/g, '-')
+          .replace(/\u2014/g, '-')
+          .replace(/\u00e1/g, 'á')
+          .replace(/\u00e9/g, 'é')
+          .replace(/\u00ed/g, 'í')
+          .replace(/\u00f3/g, 'ó')
+          .replace(/\u00fa/g, 'ú')
+          .replace(/\u00f1/g, 'ñ')
+          .replace(/\u00c1/g, 'Á')
+          .replace(/\u00c9/g, 'É')
+          .replace(/\u00cd/g, 'Í')
+          .replace(/\u00d3/g, 'Ó')
+          .replace(/\u00da/g, 'Ú')
+          .replace(/\u00d1/g, 'Ñ')
+          .replace(/\u00e0/g, 'à')
+          .replace(/[\u2022\u00b7\u2023\u25E6\u2043\u2219]/g, '*')
+          .replace(/[\u2013\u2014\u2015]/g, '-')
+          .replace(/^\s*[\-\•\·]\s*/gm, '* ')
+          .replace(/\n\s*\n\s*\n/g, '\n\n')
+          .trim();
 
         // 3. Obtener versión
         const version = await db.getNextReporteVersion(input.proyectoId);
@@ -3398,9 +3425,36 @@ REGLAS: Solo * para bullets. NUNCA \\u2022 ni códigos unicode. Nombres, no IDs.
           ],
         });
 
-        const resumen = typeof response.choices[0]?.message?.content === 'string'
+        const rawResumen = typeof response.choices[0]?.message?.content === 'string'
           ? response.choices[0].message.content
           : 'Error al generar resumen';
+        // Limpieza agresiva de códigos unicode literales
+        const resumen = rawResumen
+          .replace(/\\u[0-9a-fA-F]{4}/g, '')
+          .replace(/\\u00[a-fA-F0-9]{2}/g, '')
+          .replace(/\\u2[0-9a-fA-F]{3}/g, '')
+          .replace(/\u2022/g, '*')
+          .replace(/\u00b7/g, '*')
+          .replace(/\u2013/g, '-')
+          .replace(/\u2014/g, '-')
+          .replace(/\u00e1/g, 'á')
+          .replace(/\u00e9/g, 'é')
+          .replace(/\u00ed/g, 'í')
+          .replace(/\u00f3/g, 'ó')
+          .replace(/\u00fa/g, 'ú')
+          .replace(/\u00f1/g, 'ñ')
+          .replace(/\u00c1/g, 'Á')
+          .replace(/\u00c9/g, 'É')
+          .replace(/\u00cd/g, 'Í')
+          .replace(/\u00d3/g, 'Ó')
+          .replace(/\u00da/g, 'Ú')
+          .replace(/\u00d1/g, 'Ñ')
+          .replace(/\u00e0/g, 'à')
+          .replace(/[\u2022\u00b7\u2023\u25E6\u2043\u2219]/g, '*')
+          .replace(/[\u2013\u2014\u2015]/g, '-')
+          .replace(/^\s*[\-\•\·]\s*/gm, '* ')
+          .replace(/\n\s*\n\s*\n/g, '\n\n')
+          .trim();
 
         const version = await db.getNextReporteVersion(input.proyectoId);
 

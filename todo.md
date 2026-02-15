@@ -4104,3 +4104,7 @@
 - [x] 1. LLM prompt análisis: cambiar a formato bullets con asterisco (*), más directo, menos párrafos
 - [x] 2. LLM prompt resumen: mismo tratamiento, bullets directos
 - [x] 3. Markdown renderer: limpiar \u2022 y cualquier unicode escapado antes de renderizar
+
+## v4.42 - Eliminar códigos unicode de reportes definitivamente
+- [x] 1. Servidor: limpiar output LLM de códigos unicode literales antes de guardar en DB
+- [x] 2. Frontend: limpieza agresiva en renderers de Bienvenida y Planos para eliminar cualquier residuo
