@@ -2,6 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
 import { ItemChat } from "@/components/ItemChat";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -1064,80 +1065,101 @@ export default function ItemDetail() {
             </div>
           </div>
 
-          {/* Botones de acción - responsivos */}
-          <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          {/* Botones de acción - íconos con tooltip */}
+          <div className="flex gap-1.5 w-full md:w-auto">
             {canAddFotoDespues && (
-              <Button 
-                onClick={() => setShowFotoDespuesDialog(true)}
-                className="flex-1 md:flex-none min-w-0"
-                size="sm"
-              >
-                <Camera className="h-4 w-4 mr-1 md:mr-2 shrink-0" />
-                <span className="truncate">Foto Después</span>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    onClick={() => setShowFotoDespuesDialog(true)}
+                    size="sm"
+                    className="h-9 w-9 p-0"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Foto Después</TooltipContent>
+              </Tooltip>
             )}
             {canApprove && (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-600 border-red-200 hover:bg-red-50 flex-1 md:flex-none min-w-0"
-                  onClick={() => {
-                    setApprovalAction("rechazar");
-                    setShowApprovalDialog(true);
-                  }}
-                >
-                  <XCircle className="h-4 w-4 mr-1 md:mr-2 shrink-0" />
-                  <span className="truncate">Rechazar</span>
-                </Button>
-                <Button
-                  size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 flex-1 md:flex-none min-w-0"
-                  onClick={() => {
-                    setApprovalAction("aprobar");
-                    setShowApprovalDialog(true);
-                  }}
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-1 md:mr-2 shrink-0" />
-                  <span className="truncate">Aprobar</span>
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 w-9 p-0 border-red-200 hover:bg-red-50"
+                      onClick={() => {
+                        setApprovalAction("rechazar");
+                        setShowApprovalDialog(true);
+                      }}
+                    >
+                      <X className="h-5 w-5 text-red-600" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Rechazar</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      className="h-9 w-9 p-0 bg-emerald-600 hover:bg-emerald-700"
+                      onClick={() => {
+                        setApprovalAction("aprobar");
+                        setShowApprovalDialog(true);
+                      }}
+                    >
+                      <CheckCircle2 className="h-5 w-5 text-white" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Aprobar</TooltipContent>
+                </Tooltip>
               </>
             )}
             {canEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-blue-600 border-blue-200 hover:bg-blue-50 flex-1 md:flex-none min-w-0"
-                onClick={handleOpenEditDialog}
-                title="Editar ítem"
-              >
-                <Pencil className="h-4 w-4 mr-1 md:mr-2 shrink-0" />
-                <span className="truncate">Editar</span>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-9 p-0 border-blue-200 hover:bg-blue-50"
+                    onClick={handleOpenEditDialog}
+                  >
+                    <Pencil className="h-4 w-4 text-blue-600" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Editar</TooltipContent>
+              </Tooltip>
             )}
             {canDelete && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-red-600 border-red-200 hover:bg-red-50 flex-1 md:flex-none min-w-0"
-                onClick={() => setShowDeleteDialog(true)}
-                title="Eliminar ítem"
-              >
-                <Trash2 className="h-4 w-4 mr-1 md:mr-2 shrink-0" />
-                <span className="truncate">Eliminar</span>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-9 p-0 border-red-200 hover:bg-red-50"
+                    onClick={() => setShowDeleteDialog(true)}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Eliminar</TooltipContent>
+              </Tooltip>
             )}
-            {/* Botón de descarga PDF - siempre visible */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-[#002C63] border-[#002C63]/30 hover:bg-[#002C63]/10 flex-1 md:flex-none min-w-0"
-              onClick={handleDownloadPDF}
-              title="Descargar ficha PDF"
-            >
-              <Download className="h-4 w-4 mr-1 md:mr-2 shrink-0" />
-              <span className="truncate">PDF</span>
-            </Button>
+            {/* PDF - siempre visible */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 w-9 p-0 border-[#002C63]/30 hover:bg-[#002C63]/10"
+                  onClick={handleDownloadPDF}
+                >
+                  <Download className="h-4 w-4 text-[#002C63]" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Descargar PDF</TooltipContent>
+            </Tooltip>
           </div>
         </div>
 

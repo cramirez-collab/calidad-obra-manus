@@ -4171,3 +4171,6 @@
 - [x] 4. Badge "Foto" mantener con ícono Camera + tooltip
 - [x] 5. Limpiar DB: eliminar 193 ítems de prueba de Carlos Ramirez
 - [x] 6. Limpiar DB: eliminar registros huérfanos (3 pines, 20 msgs, 40 historial, 15 notif)
+
+## v4.51 - Íconos en botones de acción del detalle de ítem
+- [x] 1. Reemplazar botones truncados (Rechazar, Aprobar, Editar, Eliminar, PDF) por solo íconos con tooltip
