@@ -4174,3 +4174,6 @@
 
 ## v4.51 - Íconos en botones de acción del detalle de ítem
 - [x] 1. Reemplazar botones truncados (Rechazar, Aprobar, Editar, Eliminar, PDF) por solo íconos con tooltip
+
+## v4.52 - Fix íconos de status truncados en lista de ítems
+- [x] 1. Corregir layout de íconos de status (palomita, crucecita, OK, Foto) para que se vean completos sin truncarse en móvil

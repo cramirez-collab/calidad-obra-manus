@@ -1256,16 +1256,16 @@ export default function Bienvenida() {
                       </div>
 
                       {/* Contenido */}
-                      <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                           <span className="font-mono text-xs sm:text-sm font-bold text-[#002C63]">
                             {item.codigo} <span className="text-[#02B381]">#{item.numeroInterno || '-'}</span>
                           </span>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className={`inline-flex items-center gap-0.5 text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded font-bold cursor-default ${config.bg} ${config.color}`}>
-                                <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                {config.label !== "\u2713" && config.label !== "\u2717" && <span>{config.label}</span>}
+                              <span className={`shrink-0 inline-flex items-center gap-0.5 text-[11px] sm:text-xs px-1.5 py-0.5 rounded font-bold cursor-default ${config.bg} ${config.color}`}>
+                                <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                                {config.label !== "\u2713" && config.label !== "\u2717" && <span className="whitespace-nowrap">{config.label}</span>}
                               </span>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="text-xs">
