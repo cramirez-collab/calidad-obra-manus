@@ -1345,7 +1345,7 @@ export default function Planos() {
                       </svg>
                     </div>
                     {/* Drag hint label */}
-                    <div className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-900/80 text-white text-[10px] px-2 py-0.5 rounded-full pointer-events-none">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-[3px] font-semibold pointer-events-none" style={{ color: '#02B381' }}>
                       Arrastra para ajustar
                     </div>
                   </div>

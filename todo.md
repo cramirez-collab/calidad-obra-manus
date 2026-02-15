@@ -4153,3 +4153,6 @@
 - [x] 3. Corregir router para siempre incluir fotosEvidencia en respuesta (5 fotos)
 - [x] 4. Corregir frontend para siempre renderizar fotos en dialog y PDF (sin condicional)
 - [x] 5. Verificar que fotos aparecen en ambos tabs (Análisis y Resumen) + Planos.tsx
+
+## v4.49 - Ajuste texto pin en captura por plano
+- [x] 1. Texto "Arrastrar" al 30% del tamaño actual, verde Objetiva (#02B381), centrado arriba del pin
