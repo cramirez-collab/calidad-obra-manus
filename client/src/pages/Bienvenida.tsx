@@ -30,7 +30,8 @@ import {
   Megaphone,
   Layers,
   FileText,
-  Crosshair
+  Crosshair,
+  CircleCheckBig
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ZoomablePlano from "@/components/ZoomablePlano";
@@ -792,13 +793,16 @@ export default function Bienvenida() {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "pendiente_foto_despues":
-        return { icon: Camera, color: "text-[#002C63]", bg: "bg-[#002C63]/10", label: "Foto", filter: "foto" as FilterType };
+        return { icon: Camera, color: "text-[#002C63]", bg: "bg-[#002C63]/10", label: "Foto", tooltip: "Pendiente foto después", filter: "foto" as FilterType };
       case "pendiente_aprobacion":
-        return { icon: Clock, color: "text-[#002C63]", bg: "bg-[#002C63]/10", label: "Aprobar", filter: "aprobar" as FilterType };
+        return { icon: Check, color: "text-green-600", bg: "bg-green-50", label: "✓", tooltip: "Aprobar", filter: "aprobar" as FilterType };
       case "rechazado":
-        return { icon: AlertCircle, color: "text-red-600", bg: "bg-red-50", label: "Corregir", filter: "corregir" as FilterType };
+        return { icon: X, color: "text-red-600", bg: "bg-red-50", label: "✗", tooltip: "Rechazar / Corregir", filter: "corregir" as FilterType };
+      case "aprobado":
+      case "ok_supervisor":
+        return { icon: CircleCheckBig, color: "text-blue-600", bg: "bg-blue-50", label: "OK", tooltip: "Validado", filter: "todos" as FilterType };
       default:
-        return { icon: CheckCircle2, color: "text-[#02B381]", bg: "bg-[#02B381]/10", label: "OK", filter: "todos" as FilterType };
+        return { icon: CheckCircle2, color: "text-[#02B381]", bg: "bg-[#02B381]/10", label: "OK", tooltip: "Validado", filter: "todos" as FilterType };
     }
   };
 
@@ -1257,9 +1261,17 @@ export default function Bienvenida() {
                           <span className="font-mono text-xs sm:text-sm font-bold text-[#002C63]">
                             {item.codigo} <span className="text-[#02B381]">#{item.numeroInterno || '-'}</span>
                           </span>
-                          <span className={`text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded ${config.bg} ${config.color}`}>
-                            {config.label}
-                          </span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className={`inline-flex items-center gap-0.5 text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded font-bold cursor-default ${config.bg} ${config.color}`}>
+                                <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                {config.label !== "\u2713" && config.label !== "\u2717" && <span>{config.label}</span>}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">
+                              {config.tooltip}
+                            </TooltipContent>
+                          </Tooltip>
                           {/* Indicador de completitud de ficha */}
                           {(() => {
                             const hasAntes = !!(item.fotoAntesUrl || (item as any).fotoAntesMarcadaUrl);

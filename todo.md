@@ -4156,3 +4156,18 @@
 
 ## v4.49 - Ajuste texto pin en captura por plano
 - [x] 1. Texto "Arrastrar" al 30% del tamaño actual, verde Objetiva (#02B381), centrado arriba del pin
+
+## v4.50 - Limpieza de base de datos
+- [ ] 1. Identificar ítems de prueba y de Carlos Ramirez
+- [ ] 2. Identificar registros huérfanos sin liga directa
+- [ ] 3. Eliminar ítems de prueba con dependencias (mensajes, historial, pines, auditoría)
+- [ ] 4. Eliminar registros huérfanos
+- [ ] 5. Verificar integridad de datos restantes
+
+## v4.50 - Íconos de status + limpieza DB
+- [x] 1. Reemplazar badge "Aprobar" por palomita verde (✓) con tooltip "Aprobar"
+- [x] 2. Reemplazar badge "Rechazar" por crucecita roja (✗) con tooltip "Rechazar"
+- [x] 3. Badge OK/Validado azul con tooltip "Validado"
+- [x] 4. Badge "Foto" mantener con ícono Camera + tooltip
+- [x] 5. Limpiar DB: eliminar 193 ítems de prueba de Carlos Ramirez
+- [x] 6. Limpiar DB: eliminar registros huérfanos (3 pines, 20 msgs, 40 historial, 15 notif)
