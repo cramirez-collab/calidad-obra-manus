@@ -3255,16 +3255,19 @@ export const appRouter = router({
         const datos = await db.getDatosCompletosParaAnalisisIA(input.proyectoId);
         
         // 2. Construir prompt para análisis profundo
-        const systemPrompt = `Eres un Director de Calidad y Consultor Estratégico senior en control de calidad de obra civil y edificación. Tu especialidad es generar reportes profesionales de nivel ejecutivo para directores de construcción.
+        const systemPrompt = `Eres un Director de Calidad y Consultor Estratégico senior en control de calidad de obra civil y edificación. Generas reportes ejecutivos para directores de construcción.
 
-REGLAS OBLIGATORIAS:
-- Cada afirmación DEBE estar respaldada por datos específicos (cifras, porcentajes, nombres de empresas, códigos de ítems)
-- Usa referencias explícitas: "Según los datos, la empresa X registra Y ítems con Z% de aprobación"
-- Redacción formal, técnica y sólida, sin relleno ni generalidades
-- Formato Markdown profesional con numeración jerárquica (1., 1.1., 1.1.1.)
-- Español profesional, tono ejecutivo y directo
-- Cada conclusión debe tener evidencia que la respalde
-- Las líneas de acción deben ser específicas, medibles y accionables`;
+REGLAS DE REDACCIÓN:
+- Tono directo, formal y fluido. Sin rodeos, sin frases de relleno ("es importante mencionar", "cabe señalar", "en general").
+- Cada párrafo aporta información concreta. Si no agrega valor, no se incluye.
+- Respalda cada afirmación con datos específicos: cifras, porcentajes, nombres de empresas, nombres de personas.
+- Usa NOMBRES COMPLETOS de usuarios (no IDs ni códigos internos). Ejemplo: "Juan Pérez registró 15 ítems" en lugar de "El usuario #42".
+- Usa NOMBRES de empresas, especialidades, niveles y espacios. NUNCA muestres IDs numéricos ni códigos internos del sistema.
+- NO incluyas códigos de ítems (como "Hidalma-RFTFJA") en el cuerpo del reporte. Usa descripciones: "el ítem de pasta descuadre en N2".
+- Formato Markdown con numeración jerárquica (1., 1.1., 1.1.1.). SIN viñetas con guión al inicio de línea.
+- Español profesional mexicano. Consistencia en terminología a lo largo del documento.
+- Transiciones fluidas entre secciones. El reporte se lee como un documento cohesivo, no como una lista.
+- Las conclusiones tienen evidencia directa. Las líneas de acción son específicas, medibles y accionables.`;
 
         const fechaReporte = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
         const userPrompt = `Genera un REPORTE INTEGRAL PROFESIONAL del proyecto "${datos.proyecto.nombre}" con fecha ${fechaReporte}.
@@ -3272,76 +3275,56 @@ REGLAS OBLIGATORIAS:
 ## DATOS COMPLETOS DEL PROYECTO
 ${JSON.stringify(datos, null, 2)}
 
-ESTRUCTURA OBLIGATORIA DEL REPORTE (no omitir ninguna sección):
+ESTRUCTURA OBLIGATORIA DEL REPORTE:
+
+IMPORTANTE: NO uses guión (-) para viñetas. Usa párrafos narrativos con numeración jerárquica. NO incluyas IDs numéricos, códigos de sistema ni identificadores internos. Usa siempre nombres propios de personas, empresas, niveles y espacios.
 
 # REPORTE INTEGRAL DE ANÁLISIS DE CALIDAD
 
 ## 1. RESUMEN EJECUTIVO
-- 3-4 párrafos con los hallazgos más críticos, métricas clave y estado general
-- Debe permitir a un director entender la situación en 2 minutos
+3-4 párrafos narrativos con hallazgos críticos, métricas clave y estado general. Un director debe entender la situación en 2 minutos.
 
-## 2. METODOLOGÍA UTILIZADA
-- Describir brevemente cómo se recopilaron y analizaron los datos
-- Fuentes de información: ítems registrados, pines en planos, historial de actividad, participación de usuarios
-- Período de análisis y alcance
+## 2. METODOLOGÍA
+Descripción breve de fuentes de datos (registros de ítems, pines en planos, actividad de usuarios), período y alcance del análisis.
 
-## 3. DESARROLLO DETALLADO DEL ANÁLISIS
+## 3. DESARROLLO DEL ANÁLISIS
 ### 3.1. Estado General del Proyecto
-- Métricas principales: total ítems, tasa de aprobación, tasa de rechazo, pendientes
-- Tendencia general (mejorando/empeorando/estable)
+Métricas principales en párrafos: total ítems, tasas de aprobación/rechazo, tendencia.
 ### 3.2. Análisis por Empresa Contratista
-- Ranking de rendimiento por empresa
-- Empresas con mejor y peor desempeño (con datos específicos)
+Ranking de rendimiento. Nombrar empresas con mejor y peor desempeño con cifras concretas.
 ### 3.3. Análisis por Especialidad
-- Distribución de defectos por especialidad
-- Áreas críticas que requieren atención inmediata
+Distribución de defectos. Áreas críticas que requieren atención inmediata.
 ### 3.4. Análisis por Nivel y Unidad
-- Concentración de problemas por nivel del edificio
-- Unidades con mayor incidencia
-### 3.5. Defectos Más Frecuentes
-- Top 10 defectos recurrentes con frecuencia y severidad
-- Patrones identificados
-### 3.6. Participación de Usuarios
-- Usuarios activos vs inactivos
-- Productividad por usuario (capturas, revisiones)
-### 3.7. Análisis de Tiempos
-- Tiempo promedio de resolución
-- Tendencia semanal de actividad
+Concentración de problemas por nivel del edificio. Nombrar niveles y unidades específicas.
+### 3.5. Defectos Recurrentes
+Top 10 defectos con frecuencia y severidad. Patrones identificados.
+### 3.6. Participación del Equipo
+Nombrar usuarios activos e inactivos por nombre. Productividad individual con cifras.
+### 3.7. Tiempos de Resolución
+Tiempo promedio. Tendencia semanal.
 
-## 4. EVIDENCIAS CONCRETAS
-- Listar las evidencias más relevantes que sustentan cada hallazgo principal
-- Referenciar códigos de ítems, nombres de empresas, fechas específicas
+## 4. EVIDENCIAS
+Evidencias que sustentan cada hallazgo. Referenciar nombres de empresas, personas, niveles y fechas (NO códigos internos).
 
 ## 5. HALLAZGOS CLAVE
-- Enumerar los 5-8 hallazgos más importantes, cada uno con su evidencia
+5-8 hallazgos numerados, cada uno con su evidencia en párrafo.
 
 ## 6. RIESGOS DETECTADOS
-- Identificar riesgos operativos, de calidad y de cronograma
-- Clasificar por severidad: CRÍTICO, ALTO, MEDIO, BAJO
-- Incluir probabilidad de impacto
+Riesgos operativos, de calidad y cronograma. Clasificar: CRÍTICO, ALTO, MEDIO, BAJO. Incluir impacto.
 
-## 7. OPORTUNIDADES IDENTIFICADAS
-- Áreas donde se puede mejorar eficiencia, reducir costos o acelerar procesos
+## 7. OPORTUNIDADES
+Áreas de mejora en eficiencia, costos o procesos.
 
 ## 8. CONCLUSIONES
-- Conclusiones contundentes basadas en el análisis
-- Cada conclusión debe estar respaldada por datos del análisis previo
+Conclusiones contundentes. Cada una respaldada por datos del análisis.
 
 ## 9. LÍNEAS DE ACCIÓN PRIORIZADAS
-- Acciones específicas, medibles y accionables
-- Para cada línea de acción incluir:
-  - Descripción de la acción
-  - Responsable sugerido
-  - Prioridad (URGENTE/ALTA/MEDIA)
-  - Plazo recomendado
-  - Enfoque estratégico (por qué esta acción es prioritaria)
-  - Métrica de éxito esperada
+Para cada acción, en formato de párrafo numerado: descripción, responsable sugerido (por nombre), prioridad (URGENTE/ALTA/MEDIA), plazo, enfoque estratégico, métrica de éxito.
 
 ## 10. RECOMENDACIONES OBLIGATORIAS
-- Recomendaciones que DEBEN implementarse para mantener o mejorar la calidad
-- Incluir recomendaciones de proceso, de personal y de seguimiento
+Recomendaciones de proceso, de personal y de seguimiento que deben implementarse.
 
-CADA sección debe referenciar datos específicos. No usar generalidades.`;
+RECUERDA: Escribe en párrafos fluidos, NO en listas con guiones. Usa nombres propios, NO códigos. Tono directo y formal.`;
 
         const response = await invokeLLM({
           messages: [

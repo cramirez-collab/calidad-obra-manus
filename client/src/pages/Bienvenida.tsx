@@ -691,15 +691,14 @@ export default function Bienvenida() {
                 <TooltipTrigger asChild>
                   <Button
                     size="icon"
-                    variant="outline"
-                    className="h-8 w-8 sm:h-10 sm:w-10 border-slate-300 hover:bg-slate-50 relative"
+                    className="h-8 w-8 sm:h-10 sm:w-10 bg-[#002C63] hover:bg-[#001d42] text-white relative"
                     onClick={() => setShowReporteIA(true)}
                     disabled={generandoAnalisis}
                   >
                     {generandoAnalisis ? (
-                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63] animate-spin" />
+                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-white animate-spin" />
                     ) : (
-                      <span className="text-sm sm:text-base font-bold text-[#002C63]">R</span>
+                      <span className="text-sm sm:text-base font-bold text-white">R</span>
                     )}
                   </Button>
                 </TooltipTrigger>
@@ -1383,16 +1382,24 @@ export default function Bienvenida() {
                     <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4">
                       {analisisResultado.split('\n').map((line, i) => {
                         const t = line.trim();
-                        if (t.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-[#002C63] mt-4 mb-2">{t.replace(/^#+\s*/, '')}</h1>;
-                        if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1">{t.replace(/^#+\s*/, '')}</h2>;
                         if (t.startsWith('### ')) return <h3 key={i} className="text-base font-semibold text-[#004080] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h3>;
+                        if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1 border-b pb-1">{t.replace(/^#+\s*/, '')}</h2>;
+                        if (t.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-[#002C63] mt-4 mb-2">{t.replace(/^#+\s*/, '')}</h1>;
                         if (t.startsWith('- ') || t.startsWith('* ')) {
                           const bullet = t.replace(/^[-*]\s*/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
                           return <div key={i} className="flex gap-2 ml-4 text-sm text-gray-700 mb-1"><span>\u2022</span><span dangerouslySetInnerHTML={{ __html: bullet }} /></div>;
                         }
+                        if (t.match(/^\d+\.\d+\.\d+\./)) {
+                          const num = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                          return <div key={i} className="ml-8 text-sm text-gray-700 mb-1" dangerouslySetInnerHTML={{ __html: num }} />;
+                        }
+                        if (t.match(/^\d+\.\d+\./)) {
+                          const num = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                          return <div key={i} className="ml-4 text-sm font-medium text-gray-800 mb-1" dangerouslySetInnerHTML={{ __html: num }} />;
+                        }
                         if (t.match(/^\d+\./)) {
                           const num = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                          return <div key={i} className="ml-2 text-sm text-gray-700 mb-1" dangerouslySetInnerHTML={{ __html: num }} />;
+                          return <div key={i} className="text-sm font-medium text-gray-800 mb-1" dangerouslySetInnerHTML={{ __html: num }} />;
                         }
                         if (t.length === 0) return <div key={i} className="h-2" />;
                         const para = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -1450,12 +1457,16 @@ export default function Bienvenida() {
                     <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4">
                       {resumenResultado.split('\n').map((line, i) => {
                         const t = line.trim();
-                        if (t.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-[#002C63] mt-4 mb-2">{t.replace(/^#+\s*/, '')}</h1>;
-                        if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1">{t.replace(/^#+\s*/, '')}</h2>;
                         if (t.startsWith('### ')) return <h3 key={i} className="text-base font-semibold text-[#004080] mt-2 mb-1">{t.replace(/^#+\s*/, '')}</h3>;
+                        if (t.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-[#002C63] mt-3 mb-1 border-b pb-1">{t.replace(/^#+\s*/, '')}</h2>;
+                        if (t.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-[#002C63] mt-4 mb-2">{t.replace(/^#+\s*/, '')}</h1>;
                         if (t.startsWith('- ') || t.startsWith('* ')) {
                           const bullet = t.replace(/^[-*]\s*/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
                           return <div key={i} className="flex gap-2 ml-4 text-sm text-gray-700 mb-1"><span>\u2022</span><span dangerouslySetInnerHTML={{ __html: bullet }} /></div>;
+                        }
+                        if (t.match(/^\d+\./)) {
+                          const num = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                          return <div key={i} className="text-sm font-medium text-gray-800 mb-1" dangerouslySetInnerHTML={{ __html: num }} />;
                         }
                         if (t.length === 0) return <div key={i} className="h-2" />;
                         const para = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -1479,22 +1490,26 @@ export default function Bienvenida() {
                     <p>No hay reportes generados a\u00fan.</p>
                   </div>
                 )}
-                {historialQuery.data?.reportes?.map((r: any) => (
-                  <div key={r.id} className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer" onClick={() => {
-                    setAnalisisResultado(r.contenido);
-                    setReporteTab('analisis');
-                  }}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm text-[#002C63]">{r.titulo}</p>
-                        <p className="text-xs text-gray-500">
-                          v{r.version} \u00b7 {r.tipo === 'analisis_profundo' ? 'An\u00e1lisis' : 'Resumen'} \u00b7 {new Date(r.creadoEn).toLocaleDateString('es-MX')}
-                        </p>
+                {historialQuery.data?.reportes?.map((r: any) => {
+                  const d = new Date(r.creadoEn);
+                  const pad = (n: number) => String(n).padStart(2, '0');
+                  const fechaMx = `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                  const tipoLabel = r.tipo === 'analisis_profundo' ? 'An\u00e1lisis Profundo' : 'Resumen Ejecutivo';
+                  return (
+                    <div key={r.id} className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer" onClick={() => {
+                      setAnalisisResultado(r.contenido);
+                      setReporteTab('analisis');
+                    }}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-sm text-[#002C63]">{tipoLabel}</p>
+                          <p className="text-xs text-gray-500">{fechaMx}</p>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-gray-400" />
                       </div>
-                      <ArrowRight className="h-4 w-4 text-gray-400" />
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

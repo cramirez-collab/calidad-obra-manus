@@ -4084,3 +4084,12 @@
 - [x] 4. Mejorar prompt LLM para generar reporte profesional completo con: resumen ejecutivo, desarrollo detallado, evidencias, metodología, hallazgos clave, riesgos, oportunidades, conclusiones, líneas de acción priorizadas, enfoque estratégico
 - [x] 5. Mejorar generación PDF con estructura profesional: títulos, subtítulos, numeración, sección de recomendaciones obligatorias
 - [x] 6. Verificar TS y tests
+
+## v4.39 - Ajustes visuales Reporte IA
+
+- [x] 1. Botón R: fondo azul Objetiva (#002C63) + letra blanca en Bienvenida y Planos
+- [x] 2. Historial: fechas formato mexicano dd-mm-aa hh:mm:ss, códigos internos ocultos al usuario
+- [x] 3. Ocultar códigos/IDs internos en todas las vistas de reportes
+- [x] 4. Eliminar códigos del margen izquierdo en renderizado de reportes
+- [x] 5. Tono del reporte: más directo, formal, fluido, consistente
+- [x] 6. Usar nombres de usuarios en lugar de IDs en los reportes

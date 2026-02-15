@@ -1979,13 +1979,16 @@ export default function Planos() {
                       </Button>
                     </div>
                   </div>
-                  <div className="prose prose-slate max-w-none text-sm" dangerouslySetInnerHTML={{ __html: reporteIAContent
+                  <div className="prose prose-slate max-w-none text-sm [&_li]:list-none [&_li]:pl-0" dangerouslySetInnerHTML={{ __html: reporteIAContent
                     .replace(/^### (.*$)/gm, '<h3 class="text-base font-bold mt-4 mb-2 text-[#002C63]">$1</h3>')
                     .replace(/^## (.*$)/gm, '<h2 class="text-lg font-bold mt-6 mb-2 text-[#002C63] border-b pb-1">$1</h2>')
                     .replace(/^# (.*$)/gm, '<h1 class="text-xl font-bold mt-6 mb-3 text-[#002C63]">$1</h1>')
                     .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-[#002C63]">$1</strong>')
                     .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                    .replace(/^- (.*$)/gm, '<li class="ml-4 mb-1 list-disc text-slate-700">$1</li>')
+                    .replace(/^\d+\.\d+\.\d+\. (.*$)/gm, '<p class="ml-8 mb-1 text-slate-700">$&</p>')
+                    .replace(/^\d+\.\d+\. (.*$)/gm, '<p class="ml-4 mb-1 font-medium text-slate-800">$&</p>')
+                    .replace(/^\d+\. (.*$)/gm, '<p class="mb-1 font-medium text-slate-800">$&</p>')
+                    .replace(/^- (.*$)/gm, '<p class="ml-4 mb-1 text-slate-700">• $1</p>')
                     .replace(/\n\n/g, '</p><p class="mb-2 leading-relaxed text-slate-700">')
                     .replace(/\n/g, '<br/>')
                   }} />
@@ -2051,13 +2054,16 @@ export default function Planos() {
                       </Button>
                     </div>
                   </div>
-                  <div className="prose prose-slate max-w-none text-sm" dangerouslySetInnerHTML={{ __html: reporteIAContent
+                  <div className="prose prose-slate max-w-none text-sm [&_li]:list-none [&_li]:pl-0" dangerouslySetInnerHTML={{ __html: reporteIAContent
                     .replace(/^### (.*$)/gm, '<h3 class="text-base font-bold mt-4 mb-2 text-[#002C63]">$1</h3>')
                     .replace(/^## (.*$)/gm, '<h2 class="text-lg font-bold mt-6 mb-2 text-[#002C63] border-b pb-1">$1</h2>')
                     .replace(/^# (.*$)/gm, '<h1 class="text-xl font-bold mt-6 mb-3 text-[#002C63]">$1</h1>')
                     .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-[#002C63]">$1</strong>')
                     .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                    .replace(/^- (.*$)/gm, '<li class="ml-4 mb-1 list-disc text-slate-700">$1</li>')
+                    .replace(/^\d+\.\d+\.\d+\. (.*$)/gm, '<p class="ml-8 mb-1 text-slate-700">$&</p>')
+                    .replace(/^\d+\.\d+\. (.*$)/gm, '<p class="ml-4 mb-1 font-medium text-slate-800">$&</p>')
+                    .replace(/^\d+\. (.*$)/gm, '<p class="mb-1 font-medium text-slate-800">$&</p>')
+                    .replace(/^- (.*$)/gm, '<p class="ml-4 mb-1 text-slate-700">• $1</p>')
                     .replace(/\n\n/g, '</p><p class="mb-2 leading-relaxed text-slate-700">')
                     .replace(/\n/g, '<br/>')
                   }} />
@@ -2074,11 +2080,16 @@ export default function Planos() {
                   <p className="text-sm text-slate-400">No hay reportes generados aún</p>
                 </div>
               ) : (
-                (historialIA?.reportes || []).map((r: any) => (
+                (historialIA?.reportes || []).map((r: any) => {
+                  const d = new Date(r.creadoEn);
+                  const pad = (n: number) => String(n).padStart(2, '0');
+                  const fechaMx = `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                  const tipoLabel = r.tipo === 'analisis_profundo' ? 'An\u00e1lisis Profundo' : 'Resumen Ejecutivo';
+                  return (
                   <div key={r.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-slate-800 truncate">{r.titulo}</p>
-                      <p className="text-xs text-slate-500">{new Date(r.creadoEn).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                      <p className="text-sm font-semibold text-slate-800 truncate">{tipoLabel}</p>
+                      <p className="text-xs text-slate-500">{fechaMx}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${r.tipo === "analisis_profundo" ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"}`}>
@@ -2093,7 +2104,8 @@ export default function Planos() {
                       </Button>
                     </div>
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
           )}
