@@ -314,13 +314,12 @@ export function drawChartsOnPDF(doc: jsPDF, chartData: ChartData, startX: number
 }
 
 /**
- * Draw 3 evidence photos in a row on the PDF
+ * Draw up to 5 evidence photos on the PDF (row of 3 + row of 2)
+ * Handles base64, S3 URLs, and always shows placeholder if no image
  */
 export async function drawPhotosOnPDF(doc: jsPDF, fotos: FotoEvidencia[], startX: number, startY: number, totalWidth: number, getImageUrl: (url: string) => string): Promise<number> {
-  if (!fotos.length) return startY;
-  
   // Check if we need a new page
-  if (startY > 240) {
+  if (startY > 220) {
     doc.addPage();
     startY = 15;
   }
@@ -328,78 +327,136 @@ export async function drawPhotosOnPDF(doc: jsPDF, fotos: FotoEvidencia[], startX
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.navy);
-  doc.text('Evidencia Fotográfica', startX, startY);
+  doc.text(`Evidencia Fotogr\u00e1fica (${fotos.length} \u00edtems)`, startX, startY);
   doc.setDrawColor(...COLORS.navy);
   doc.setLineWidth(0.3);
   doc.line(startX, startY + 1, startX + 40, startY + 1);
   doc.setFont('helvetica', 'normal');
   
-  const py = startY + 4;
-  const photoW = (totalWidth - 6) / 3;
-  const photoH = 25;
+  if (!fotos.length) {
+    // Always show something even with no photos
+    const py = startY + 4;
+    doc.setFillColor(245, 245, 248);
+    doc.setDrawColor(220, 220, 225);
+    doc.roundedRect(startX, py, totalWidth, 12, 1.5, 1.5, 'FD');
+    doc.setFontSize(7);
+    doc.setTextColor(150, 150, 150);
+    doc.text('Sin evidencia fotogr\u00e1fica disponible en este proyecto', startX + totalWidth / 2, py + 7, { align: 'center' });
+    return py + 15;
+  }
   
-  for (let i = 0; i < Math.min(fotos.length, 3); i++) {
-    const px = startX + i * (photoW + 3);
-    
+  const photosToShow = fotos.slice(0, 5);
+  const cols = Math.min(photosToShow.length, 3);
+  const photoW = (totalWidth - (cols - 1) * 2) / cols;
+  const photoH = 22;
+  let currentY = startY + 4;
+  
+  // Helper to load and draw a single photo
+  async function drawSinglePhoto(foto: FotoEvidencia, px: number, py: number, pw: number) {
     // Photo frame
     doc.setFillColor(248, 248, 250);
     doc.setDrawColor(220, 220, 225);
     doc.setLineWidth(0.15);
-    doc.roundedRect(px, py, photoW, photoH + 10, 1.5, 1.5, 'FD');
+    doc.roundedRect(px, py, pw, photoH + 9, 1.5, 1.5, 'FD');
     
-    // Try to load and add image
-    try {
-      const imgUrl = getImageUrl(fotos[i].fotoUrl);
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      await new Promise<void>((resolve) => {
-        img.onload = () => resolve();
-        img.onerror = () => resolve();
-        img.src = imgUrl;
-      });
-      
-      if (img.complete && img.naturalWidth > 0) {
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.min(img.naturalWidth, 400);
-        canvas.height = Math.min(img.naturalHeight, 300);
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          doc.addImage(dataUrl, 'JPEG', px + 1, py + 1, photoW - 2, photoH - 2);
+    let imageLoaded = false;
+    
+    if (foto.fotoUrl) {
+      try {
+        // Check if it's base64 data
+        const isBase64 = foto.fotoUrl.startsWith('data:') || foto.fotoUrl.length > 500;
+        let dataUrl: string;
+        
+        if (isBase64) {
+          // Direct base64 - ensure it has proper prefix
+          dataUrl = foto.fotoUrl.startsWith('data:') ? foto.fotoUrl : `data:image/jpeg;base64,${foto.fotoUrl}`;
+          try {
+            doc.addImage(dataUrl, 'JPEG', px + 0.5, py + 0.5, pw - 1, photoH - 1);
+            imageLoaded = true;
+          } catch { /* fallback below */ }
+        } else {
+          // URL-based image - load via Image element
+          const imgUrl = getImageUrl(foto.fotoUrl);
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          await new Promise<void>((resolve) => {
+            const timeout = setTimeout(() => resolve(), 5000); // 5s timeout
+            img.onload = () => { clearTimeout(timeout); resolve(); };
+            img.onerror = () => { clearTimeout(timeout); resolve(); };
+            img.src = imgUrl;
+          });
+          
+          if (img.complete && img.naturalWidth > 0) {
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.min(img.naturalWidth, 400);
+            canvas.height = Math.min(img.naturalHeight, 300);
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+              doc.addImage(dataUrl, 'JPEG', px + 0.5, py + 0.5, pw - 1, photoH - 1);
+              imageLoaded = true;
+            }
+          }
         }
-      }
-    } catch (e) {
-      // Fallback: gray placeholder
-      doc.setFillColor(230, 230, 235);
-      doc.rect(px + 1, py + 1, photoW - 2, photoH - 2, 'F');
-      doc.setFontSize(5);
-      doc.setTextColor(150, 150, 150);
-      doc.text('Sin imagen', px + photoW / 2, py + photoH / 2, { align: 'center' });
+      } catch { /* fallback below */ }
     }
     
-    // Caption
-    doc.setFontSize(5.5);
+    if (!imageLoaded) {
+      // Placeholder with icon-like appearance
+      doc.setFillColor(235, 235, 240);
+      doc.rect(px + 0.5, py + 0.5, pw - 1, photoH - 1, 'F');
+      doc.setFontSize(5);
+      doc.setTextColor(160, 160, 165);
+      doc.text('Foto no disponible', px + pw / 2, py + photoH / 2, { align: 'center' });
+    }
+    
+    // Caption: code + empresa
+    doc.setFontSize(5);
     doc.setTextColor(...COLORS.navy);
     doc.setFont('helvetica', 'bold');
-    const code = fotos[i].codigo.length > 18 ? fotos[i].codigo.substring(0, 18) + '..' : fotos[i].codigo;
-    doc.text(code, px + 2, py + photoH + 2);
+    const code = (foto.codigo || '').length > 14 ? foto.codigo.substring(0, 14) + '..' : (foto.codigo || 'S/C');
+    doc.text(code, px + 1.5, py + photoH + 2);
     doc.setFont('helvetica', 'normal');
     
     // Status badge
-    const isRejected = fotos[i].status === 'rechazado';
-    const isPending = fotos[i].status.includes('pendiente');
+    const isRejected = foto.status === 'rechazado';
+    const isPending = (foto.status || '').includes('pendiente');
     const badgeColor = isRejected ? COLORS.red : isPending ? COLORS.amber : COLORS.green;
     const badgeLabel = isRejected ? 'Rechazado' : isPending ? 'Pendiente' : 'Aprobado';
     doc.setFillColor(badgeColor[0], badgeColor[1], badgeColor[2]);
-    doc.roundedRect(px + 2, py + photoH + 4, 14, 3.5, 0.8, 0.8, 'F');
-    doc.setFontSize(4.5);
+    doc.roundedRect(px + 1.5, py + photoH + 3.5, 13, 3, 0.8, 0.8, 'F');
+    doc.setFontSize(4);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.text(badgeLabel, px + 9, py + photoH + 6.3, { align: 'center' });
+    doc.text(badgeLabel, px + 8, py + photoH + 5.7, { align: 'center' });
   }
   
-  return py + photoH + 10;
+  // Row 1: first 3 photos
+  const row1 = photosToShow.slice(0, 3);
+  for (let i = 0; i < row1.length; i++) {
+    const px = startX + i * (photoW + 2);
+    await drawSinglePhoto(row1[i], px, currentY, photoW);
+  }
+  currentY += photoH + 11;
+  
+  // Row 2: remaining photos (4th and 5th)
+  const row2 = photosToShow.slice(3);
+  if (row2.length > 0) {
+    if (currentY > 250) {
+      doc.addPage();
+      currentY = 15;
+    }
+    const cols2 = row2.length;
+    const pw2 = (totalWidth - (cols2 - 1) * 2) / Math.max(cols2, 2); // min 2 cols width
+    for (let i = 0; i < row2.length; i++) {
+      const px = startX + i * (pw2 + 2);
+      await drawSinglePhoto(row2[i], px, currentY, pw2);
+    }
+    currentY += photoH + 11;
+  }
+  
+  return currentY;
 }
 
 interface Responsable {

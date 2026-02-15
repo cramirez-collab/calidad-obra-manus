@@ -3377,7 +3377,7 @@ REGLAS:
         });
 
         // Fotos de evidencia y datos para gráficas
-        const fotosEvidencia = await db.getFotosEvidenciaParaReporte(input.proyectoId, 3);
+        const fotosEvidencia = await db.getFotosEvidenciaParaReporte(input.proyectoId, 5);
         const chartData = {
           porStatus: [
             { name: 'Aprobados', value: datos.resumenGeneral.aprobados, color: '#02B381' },
@@ -3514,7 +3514,7 @@ IMPORTANTE: Solo * para bullets. Texto plano sin códigos. Máx 300 palabras.`;
         });
 
         // Fotos de evidencia y datos para gráficas
-        const fotosEvidencia = await db.getFotosEvidenciaParaReporte(input.proyectoId, 3);
+        const fotosEvidencia = await db.getFotosEvidenciaParaReporte(input.proyectoId, 5);
         const chartData = {
           porStatus: [
             { name: 'Aprobados', value: datos.resumenGeneral.aprobados, color: '#02B381' },

@@ -408,10 +408,8 @@ export default function Bienvenida() {
         y = drawChartsOnPDF(doc, chartDataIA, margin, y, maxW);
       }
 
-      // 3 Fotos evidencia en PDF
-      if (fotosEvidenciaIA.length > 0) {
-        y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, margin, y, maxW, getImageUrl);
-      }
+      // 5 Fotos evidencia en PDF (siempre)
+      y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, margin, y, maxW, getImageUrl);
 
       // Responsables e indices de desempeno
       if (responsablesIA.length > 0) {
@@ -596,10 +594,8 @@ export default function Bienvenida() {
         y = drawChartsOnPDF(doc, chartDataIA, margin, y, maxW);
       }
 
-      // 3 Fotos evidencia en PDF Resumen
-      if (fotosEvidenciaIA.length > 0) {
-        y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, margin, y, maxW, getImageUrl);
-      }
+      // 5 Fotos evidencia en PDF Resumen (siempre)
+      y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, margin, y, maxW, getImageUrl);
 
       // Responsables e indices de desempeno
       if (responsablesIA.length > 0) {
@@ -1756,24 +1752,32 @@ export default function Bienvenida() {
                       </div>
                     )}
 
-                    {/* 3 Fotos de Evidencia */}
-                    {fotosEvidenciaIA.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-xs font-bold text-[#002C63] mb-2">Evidencia Fotográfica</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {fotosEvidenciaIA.map((foto: any) => (
+                    {/* 5 Fotos de Evidencia - SIEMPRE se muestra */}
+                    <div className="mb-4">
+                      <p className="text-xs font-bold text-[#002C63] mb-2">Evidencia Fotográfica ({fotosEvidenciaIA.length} ítems)</p>
+                      {fotosEvidenciaIA.length > 0 ? (
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {fotosEvidenciaIA.slice(0, 5).map((foto: any) => (
                             <div key={foto.id} className="rounded-lg overflow-hidden border bg-gray-50">
-                              <img src={getImageUrl(foto.fotoUrl)} alt={foto.codigo} className="w-full h-24 object-cover" />
-                              <div className="p-1.5">
-                                <p className="text-[9px] font-bold text-[#002C63] truncate">{foto.codigo}</p>
-                                <p className="text-[8px] text-gray-500 truncate">{foto.empresa} - {foto.especialidad}</p>
-                                <span className={`text-[8px] px-1 rounded ${foto.status === 'rechazado' ? 'bg-red-100 text-red-700' : foto.status === 'aprobado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{foto.status}</span>
+                              {foto.fotoUrl ? (
+                                <img src={getImageUrl(foto.fotoUrl)} alt={foto.codigo} className="w-full h-20 object-cover" onError={(e) => { (e.target as HTMLImageElement).src = ''; (e.target as HTMLImageElement).style.display = 'none'; }} />
+                              ) : (
+                                <div className="w-full h-20 bg-gray-200 flex items-center justify-center"><span className="text-[8px] text-gray-400">Sin foto</span></div>
+                              )}
+                              <div className="p-1">
+                                <p className="text-[8px] font-bold text-[#002C63] truncate">{foto.codigo}</p>
+                                <p className="text-[7px] text-gray-500 truncate">{foto.empresa}</p>
+                                <span className={`text-[7px] px-1 rounded ${foto.status === 'rechazado' ? 'bg-red-100 text-red-700' : foto.status === 'aprobado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{foto.status}</span>
                               </div>
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="bg-gray-50 border rounded-lg p-3 text-center">
+                          <p className="text-xs text-gray-400">Sin evidencia fotográfica disponible</p>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Contenido del análisis con interlineado mejorado */}
                     <div className="prose prose-sm max-w-none bg-white rounded-lg border p-4" style={{ lineHeight: '1.7' }}>
@@ -1968,23 +1972,31 @@ export default function Bienvenida() {
                       </div>
                     )}
 
-                    {/* 3 Fotos de Evidencia */}
-                    {fotosEvidenciaIA.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-xs font-bold text-[#002C63] mb-1.5">Evidencia Fotográfica</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {fotosEvidenciaIA.map((foto: any) => (
+                    {/* 5 Fotos de Evidencia - SIEMPRE se muestra */}
+                    <div className="mb-3">
+                      <p className="text-xs font-bold text-[#002C63] mb-1.5">Evidencia Fotográfica ({fotosEvidenciaIA.length} ítems)</p>
+                      {fotosEvidenciaIA.length > 0 ? (
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {fotosEvidenciaIA.slice(0, 5).map((foto: any) => (
                             <div key={foto.id} className="rounded-lg overflow-hidden border bg-gray-50">
-                              <img src={getImageUrl(foto.fotoUrl)} alt={foto.codigo} className="w-full h-20 object-cover" />
+                              {foto.fotoUrl ? (
+                                <img src={getImageUrl(foto.fotoUrl)} alt={foto.codigo} className="w-full h-16 object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                              ) : (
+                                <div className="w-full h-16 bg-gray-200 flex items-center justify-center"><span className="text-[7px] text-gray-400">Sin foto</span></div>
+                              )}
                               <div className="p-1">
-                                <p className="text-[8px] font-bold text-[#002C63] truncate">{foto.codigo}</p>
-                                <span className={`text-[7px] px-1 rounded ${foto.status === 'rechazado' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{foto.status}</span>
+                                <p className="text-[7px] font-bold text-[#002C63] truncate">{foto.codigo}</p>
+                                <span className={`text-[7px] px-1 rounded ${foto.status === 'rechazado' ? 'bg-red-100 text-red-700' : foto.status === 'aprobado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{foto.status}</span>
                               </div>
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="bg-gray-50 border rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-gray-400">Sin evidencia fotográfica disponible</p>
+                        </div>
+                      )}
+                    </div>
 
                     <div className="prose prose-sm max-w-none bg-white rounded-lg border p-3" style={{ lineHeight: '1.65' }}>
                       {resumenResultado

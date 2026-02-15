@@ -6171,10 +6171,11 @@ export async function getEmailsUsuariosProyecto(proyectoId: number): Promise<{ e
  * Obtener fotos de evidencia relevantes para reportes IA
  * Prioriza: rechazados con foto marcada > rechazados con foto antes > recientes con fotos
  */
-export async function getFotosEvidenciaParaReporte(proyectoId: number, limit: number = 3) {
+export async function getFotosEvidenciaParaReporte(proyectoId: number, limit: number = 5) {
   const db = await getDb();
   if (!db) return [];
 
+  // Buscar items con CUALQUIER tipo de foto: URL, base64, o marcada
   const results = await db.select({
     id: items.id,
     codigo: items.codigo,
@@ -6183,6 +6184,8 @@ export async function getFotosEvidenciaParaReporte(proyectoId: number, limit: nu
     fotoAntesUrl: items.fotoAntesUrl,
     fotoDespuesUrl: items.fotoDespuesUrl,
     fotoAntesMarcadaUrl: items.fotoAntesMarcadaUrl,
+    fotoAntesBase64: items.fotoAntesBase64,
+    fotoAntesMarcadaBase64: items.fotoAntesMarcadaBase64,
     empresaId: items.empresaId,
     especialidadId: items.especialidadId,
     fechaCreacion: items.fechaCreacion,
@@ -6190,19 +6193,48 @@ export async function getFotosEvidenciaParaReporte(proyectoId: number, limit: nu
     .from(items)
     .where(and(
       eq(items.proyectoId, proyectoId),
-      sql`(${items.fotoAntesUrl} IS NOT NULL OR ${items.fotoDespuesUrl} IS NOT NULL)`
+      sql`(
+        ${items.fotoAntesUrl} IS NOT NULL AND ${items.fotoAntesUrl} != '' OR
+        ${items.fotoDespuesUrl} IS NOT NULL AND ${items.fotoDespuesUrl} != '' OR
+        ${items.fotoAntesMarcadaUrl} IS NOT NULL AND ${items.fotoAntesMarcadaUrl} != '' OR
+        ${items.fotoAntesBase64} IS NOT NULL AND ${items.fotoAntesBase64} != '' OR
+        ${items.fotoAntesMarcadaBase64} IS NOT NULL AND ${items.fotoAntesMarcadaBase64} != ''
+      )`
     ))
     .orderBy(
-      sql`CASE WHEN ${items.status} = 'rechazado' AND ${items.fotoAntesMarcadaUrl} IS NOT NULL THEN 0
+      sql`CASE WHEN ${items.status} = 'rechazado' AND (${items.fotoAntesMarcadaUrl} IS NOT NULL OR ${items.fotoAntesMarcadaBase64} IS NOT NULL) THEN 0
            WHEN ${items.status} = 'rechazado' THEN 1
-           WHEN ${items.fotoAntesMarcadaUrl} IS NOT NULL THEN 2
+           WHEN ${items.fotoAntesMarcadaUrl} IS NOT NULL OR ${items.fotoAntesMarcadaBase64} IS NOT NULL THEN 2
            ELSE 3 END`,
       desc(items.fechaCreacion)
     )
     .limit(limit);
 
-  const empresaIds = Array.from(new Set(results.map(r => r.empresaId).filter(Boolean)));
-  const espIds = Array.from(new Set(results.map(r => r.especialidadId).filter(Boolean)));
+  // Si no hay items con fotos, buscar los más recientes como fallback (siempre mostrar algo)
+  let finalResults = results;
+  if (finalResults.length === 0) {
+    finalResults = await db.select({
+      id: items.id,
+      codigo: items.codigo,
+      titulo: items.titulo,
+      status: items.status,
+      fotoAntesUrl: items.fotoAntesUrl,
+      fotoDespuesUrl: items.fotoDespuesUrl,
+      fotoAntesMarcadaUrl: items.fotoAntesMarcadaUrl,
+      fotoAntesBase64: items.fotoAntesBase64,
+      fotoAntesMarcadaBase64: items.fotoAntesMarcadaBase64,
+      empresaId: items.empresaId,
+      especialidadId: items.especialidadId,
+      fechaCreacion: items.fechaCreacion,
+    })
+      .from(items)
+      .where(eq(items.proyectoId, proyectoId))
+      .orderBy(desc(items.fechaCreacion))
+      .limit(limit);
+  }
+
+  const empresaIds = Array.from(new Set(finalResults.map(r => r.empresaId).filter(Boolean)));
+  const espIds = Array.from(new Set(finalResults.map(r => r.especialidadId).filter(Boolean)));
 
   let empresasMap: Record<number, string> = {};
   let espMap: Record<number, string> = {};
@@ -6216,16 +6248,21 @@ export async function getFotosEvidenciaParaReporte(proyectoId: number, limit: nu
     espMap = Object.fromEntries(esps.map(e => [e.id, e.nombre]));
   }
 
-  return results.map(r => ({
-    id: r.id,
-    codigo: r.codigo,
-    titulo: r.titulo,
-    status: r.status,
-    fotoUrl: r.fotoAntesMarcadaUrl || r.fotoAntesUrl || r.fotoDespuesUrl,
-    fotoAntesUrl: r.fotoAntesUrl,
-    fotoDespuesUrl: r.fotoDespuesUrl,
-    fotoMarcadaUrl: r.fotoAntesMarcadaUrl,
-    empresa: empresasMap[r.empresaId!] || 'Sin empresa',
-    especialidad: espMap[r.especialidadId!] || 'Sin especialidad',
-  }));
+  return finalResults.map(r => {
+    // Determinar la mejor foto disponible: marcada > antes URL > antes base64 > despues > marcada base64
+    const fotoUrl = r.fotoAntesMarcadaUrl || r.fotoAntesUrl || r.fotoAntesBase64 || r.fotoDespuesUrl || r.fotoAntesMarcadaBase64 || null;
+    return {
+      id: r.id,
+      codigo: r.codigo || `ITEM-${r.id}`,
+      titulo: r.titulo || 'Sin título',
+      status: r.status || 'pendiente_foto',
+      fotoUrl,
+      fotoAntesUrl: r.fotoAntesUrl || r.fotoAntesBase64 || null,
+      fotoDespuesUrl: r.fotoDespuesUrl || null,
+      fotoMarcadaUrl: r.fotoAntesMarcadaUrl || r.fotoAntesMarcadaBase64 || null,
+      empresa: empresasMap[r.empresaId!] || 'Sin empresa',
+      especialidad: espMap[r.especialidadId!] || 'Sin especialidad',
+      tieneFoto: !!fotoUrl,
+    };
+  });
 }

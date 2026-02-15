@@ -2019,8 +2019,8 @@ export default function Planos() {
                           doc.text(`Generado: ${new Date().toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })}`, m, y); y += 6;
                           // 4 Gr\u00e1ficas en PDF
                           if (chartDataIA) { y = drawChartsOnPDF(doc, chartDataIA, m, y, mw); }
-                          // 3 Fotos evidencia en PDF
-                          if (fotosEvidenciaIA.length > 0) { y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, m, y, mw, getImageUrl); }
+// 5 Fotos evidencia en PDF (siempre)
+                           y = await drawPhotosOnPDF(doc, fotosEvidenciaIA, m, y, mw, getImageUrl);
                            if (responsablesIA.length > 0) { y = drawResponsablesOnPDF(doc, responsablesIA, m, y, mw); }
                            if (pendientesAprobacionIA.length > 0) { y = drawPendientesAprobacionOnPDF(doc, pendientesAprobacionIA, m, y, mw); }
                            doc.setDrawColor(0, 44, 99); doc.setLineWidth(0.5); doc.line(m, y, pw - m, y); y += 6;
@@ -2076,23 +2076,29 @@ export default function Planos() {
                     </div>
                   )}
 
-                  {/* 3 Fotos de Evidencia */}
-                  {fotosEvidenciaIA.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-[10px] font-bold text-[#002C63] mb-1">Evidencia Fotográfica</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {fotosEvidenciaIA.map((foto: any) => (
-                          <div key={foto.id} className="rounded-lg overflow-hidden border bg-gray-50">
-                            <img src={getImageUrl(foto.fotoUrl)} alt={foto.codigo} className="w-full h-16 object-cover" />
-                            <div className="p-1">
-                              <p className="text-[8px] font-bold text-[#002C63] truncate">{foto.codigo}</p>
-                              <span className={`text-[7px] px-1 rounded ${foto.status === 'rechazado' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{foto.status}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                   {/* 5 Fotos de Evidencia - SIEMPRE */}
+                   <div className="mb-3">
+                     <p className="text-[10px] font-bold text-[#002C63] mb-1">Evidencia Fotográfica ({fotosEvidenciaIA.length} ítems)</p>
+                     {fotosEvidenciaIA.length > 0 ? (
+                       <div className="grid grid-cols-5 gap-1.5">
+                         {fotosEvidenciaIA.slice(0, 5).map((foto: any) => (
+                           <div key={foto.id} className="rounded-lg overflow-hidden border bg-gray-50">
+                             {foto.fotoUrl ? (
+                               <img src={getImageUrl(foto.fotoUrl)} alt={foto.codigo} className="w-full h-14 object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                             ) : (
+                               <div className="w-full h-14 bg-gray-200 flex items-center justify-center"><span className="text-[7px] text-gray-400">Sin foto</span></div>
+                             )}
+                             <div className="p-1">
+                               <p className="text-[7px] font-bold text-[#002C63] truncate">{foto.codigo}</p>
+                               <span className={`text-[7px] px-1 rounded ${foto.status === 'rechazado' ? 'bg-red-100 text-red-700' : foto.status === 'aprobado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{foto.status}</span>
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     ) : (
+                       <div className="bg-gray-50 border rounded-lg p-2 text-center"><p className="text-[9px] text-gray-400">Sin evidencia fotográfica</p></div>
+                     )}
+                   </div>
 
                   <div className="prose prose-slate max-w-none text-sm [&_li]:list-none [&_li]:pl-0" style={{ lineHeight: '1.7' }} dangerouslySetInnerHTML={{ __html: reporteIAContent
                     .replace(/\\u[0-9a-fA-F]{4}/g, '')
@@ -2163,7 +2169,7 @@ export default function Planos() {
                           // 4 Gr\u00e1ficas en PDF Resumen
                           const { drawChartsOnPDF: drawCharts2, drawPhotosOnPDF: drawPhotos2, drawResponsablesOnPDF: drawResp2, drawPendientesAprobacionOnPDF: drawPend2 } = await import('@/lib/pdfCharts');
                            if (chartDataIA) { y = drawCharts2(doc, chartDataIA, m, y, mw); }
-                           if (fotosEvidenciaIA.length > 0) { y = await drawPhotos2(doc, fotosEvidenciaIA, m, y, mw, getImageUrl); }
+                           y = await drawPhotos2(doc, fotosEvidenciaIA, m, y, mw, getImageUrl);
                            if (responsablesIA.length > 0) { y = drawResp2(doc, responsablesIA, m, y, mw); }
                            if (pendientesAprobacionIA.length > 0) { y = drawPend2(doc, pendientesAprobacionIA, m, y, mw); }
                           doc.setDrawColor(0, 44, 99); doc.setLineWidth(0.5); doc.line(m, y, pw - m, y); y += 6;
@@ -2199,20 +2205,26 @@ export default function Planos() {
                     </div>
                   )}
 
-                  {/* 3 Fotos Evidencia */}
-                  {fotosEvidenciaIA.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-[10px] font-bold text-[#002C63] mb-1">Evidencia</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {fotosEvidenciaIA.map((foto: any) => (
-                          <div key={foto.id} className="rounded-lg overflow-hidden border bg-gray-50">
-                            <img src={getImageUrl(foto.fotoUrl)} alt={foto.codigo} className="w-full h-14 object-cover" />
-                            <div className="p-1"><p className="text-[7px] font-bold text-[#002C63] truncate">{foto.codigo}</p></div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                   {/* 5 Fotos Evidencia - SIEMPRE */}
+                   <div className="mb-3">
+                     <p className="text-[10px] font-bold text-[#002C63] mb-1">Evidencia ({fotosEvidenciaIA.length} ítems)</p>
+                     {fotosEvidenciaIA.length > 0 ? (
+                       <div className="grid grid-cols-5 gap-1.5">
+                         {fotosEvidenciaIA.slice(0, 5).map((foto: any) => (
+                           <div key={foto.id} className="rounded-lg overflow-hidden border bg-gray-50">
+                             {foto.fotoUrl ? (
+                               <img src={getImageUrl(foto.fotoUrl)} alt={foto.codigo} className="w-full h-12 object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                             ) : (
+                               <div className="w-full h-12 bg-gray-200 flex items-center justify-center"><span className="text-[7px] text-gray-400">Sin foto</span></div>
+                             )}
+                             <div className="p-1"><p className="text-[7px] font-bold text-[#002C63] truncate">{foto.codigo}</p></div>
+                           </div>
+                         ))}
+                       </div>
+                     ) : (
+                       <div className="bg-gray-50 border rounded-lg p-2 text-center"><p className="text-[9px] text-gray-400">Sin evidencia fotográfica</p></div>
+                     )}
+                   </div>
 
                   <div className="prose prose-slate max-w-none text-sm [&_li]:list-none [&_li]:pl-0" style={{ lineHeight: '1.7' }} dangerouslySetInnerHTML={{ __html: reporteIAContent
                     .replace(/\\u[0-9a-fA-F]{4}/g, '')

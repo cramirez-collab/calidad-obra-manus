@@ -4146,3 +4146,10 @@
 - [x] 3. Ambos botones flotantes al 70% de tamaño, en vertical (uno arriba del otro)
 - [x] 4. Icono azul para captura por plano
 - [x] 5. Estética cuidada en contenedores flotantes
+
+## v4.48 - Fix fotos evidencia obligatorias en reportes IA
+- [x] 1. Diagnosticar flujo completo: DB query → router → frontend state → render → PDF
+- [x] 2. Corregir getFotosEvidenciaParaReporte para siempre devolver fotos (base64 + URL + fallback)
+- [x] 3. Corregir router para siempre incluir fotosEvidencia en respuesta (5 fotos)
+- [x] 4. Corregir frontend para siempre renderizar fotos en dialog y PDF (sin condicional)
+- [x] 5. Verificar que fotos aparecen en ambos tabs (Análisis y Resumen) + Planos.tsx

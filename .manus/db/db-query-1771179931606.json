@@ -1,0 +1,17 @@
+{
+  "query": "SELECT COUNT(*) as total, \n  SUM(CASE WHEN fotoAntesUrl IS NOT NULL AND fotoAntesUrl != '' THEN 1 ELSE 0 END) as con_foto_antes,\n  SUM(CASE WHEN fotoDespuesUrl IS NOT NULL AND fotoDespuesUrl != '' THEN 1 ELSE 0 END) as con_foto_despues,\n  SUM(CASE WHEN fotoAntesMarcadaUrl IS NOT NULL AND fotoAntesMarcadaUrl != '' THEN 1 ELSE 0 END) as con_foto_marcada,\n  SUM(CASE WHEN fotoAntesBase64 IS NOT NULL AND fotoAntesBase64 != '' THEN 1 ELSE 0 END) as con_base64\nFROM items\nLIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT COUNT(*) as total, \n  SUM(CASE WHEN fotoAntesUrl IS NOT NULL AND fotoAntesUrl != '' THEN 1 ELSE 0 END) as con_foto_antes,\n  SUM(CASE WHEN fotoDespuesUrl IS NOT NULL AND fotoDespuesUrl != '' THEN 1 ELSE 0 END) as con_foto_despues,\n  SUM(CASE WHEN fotoAntesMarcadaUrl IS NOT NULL AND fotoAntesMarcadaUrl != '' THEN 1 ELSE 0 END) as con_foto_marcada,\n  SUM(CASE WHEN fotoAntesBase64 IS NOT NULL AND fotoAntesBase64 != '' THEN 1 ELSE 0 END) as con_base64\nFROM items\nLIMIT 1;",
+  "rows": [
+    {
+      "total": "237",
+      "con_foto_antes": "112",
+      "con_foto_despues": "18",
+      "con_foto_marcada": "50",
+      "con_base64": "141"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tcon_foto_antes\tcon_foto_despues\tcon_foto_marcada\tcon_base64\n237\t112\t18\t50\t141\n",
+  "stderr": "",
+  "execution_time_ms": 372
+}
