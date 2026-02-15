@@ -120,11 +120,11 @@ function showNotificationBlocker(): void {
     <div style="text-align: center; max-width: 400px;">
       <div style="font-size: 80px; margin-bottom: 20px;">🔔</div>
       <h1 style="color: white; font-size: 24px; margin-bottom: 15px;">
-        NOTIFICACIONES REQUERIDAS
+        Activar Notificaciones
       </h1>
       <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
-        Para usar ObjetivaQC es <strong style="color: #ff6b6b;">OBLIGATORIO</strong> 
-        activar las notificaciones push.
+        Para recibir alertas de ítems y actualizaciones en tiempo real, 
+        es necesario activar las notificaciones.
       </p>
       <button id="enable-notifications-btn" style="
         background: #02B381;

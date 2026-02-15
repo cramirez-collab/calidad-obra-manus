@@ -1,0 +1,110 @@
+{
+  "query": "SELECT id, codigo, \n  CASE WHEN fotoAntesUrl IS NOT NULL AND fotoAntesUrl != '' THEN 'YES' ELSE 'NO' END as has_fotoAntesUrl,\n  CASE WHEN fotoAntesKey IS NOT NULL AND fotoAntesKey != '' THEN 'YES' ELSE 'NO' END as has_fotoAntesKey,\n  CASE WHEN fotoAntesBase64 IS NOT NULL AND LENGTH(fotoAntesBase64) > 10 THEN 'YES' ELSE 'NO' END as has_fotoAntesBase64,\n  CASE WHEN fotoDespuesUrl IS NOT NULL AND fotoDespuesUrl != '' THEN 'YES' ELSE 'NO' END as has_fotoDespuesUrl,\n  CASE WHEN fotoDespuesKey IS NOT NULL AND fotoDespuesKey != '' THEN 'YES' ELSE 'NO' END as has_fotoDespuesKey,\n  CASE WHEN fotoAntesMarcadaUrl IS NOT NULL AND fotoAntesMarcadaUrl != '' THEN 'YES' ELSE 'NO' END as has_fotoAntesMarcadaUrl\nFROM items \nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, \n  CASE WHEN fotoAntesUrl IS NOT NULL AND fotoAntesUrl != '' THEN 'YES' ELSE 'NO' END as has_fotoAntesUrl,\n  CASE WHEN fotoAntesKey IS NOT NULL AND fotoAntesKey != '' THEN 'YES' ELSE 'NO' END as has_fotoAntesKey,\n  CASE WHEN fotoAntesBase64 IS NOT NULL AND LENGTH(fotoAntesBase64) > 10 THEN 'YES' ELSE 'NO' END as has_fotoAntesBase64,\n  CASE WHEN fotoDespuesUrl IS NOT NULL AND fotoDespuesUrl != '' THEN 'YES' ELSE 'NO' END as has_fotoDespuesUrl,\n  CASE WHEN fotoDespuesKey IS NOT NULL AND fotoDespuesKey != '' THEN 'YES' ELSE 'NO' END as has_fotoDespuesKey,\n  CASE WHEN fotoAntesMarcadaUrl IS NOT NULL AND fotoAntesMarcadaUrl != '' THEN 'YES' ELSE 'NO' END as has_fotoAntesMarcadaUrl\nFROM items \nLIMIT 10;",
+  "rows": [
+    {
+      "id": "1290001",
+      "codigo": "Hidalma-F8XTCG",
+      "has_fotoAntesUrl": "YES",
+      "has_fotoAntesKey": "YES",
+      "has_fotoAntesBase64": "YES",
+      "has_fotoDespuesUrl": "YES",
+      "has_fotoDespuesKey": "YES",
+      "has_fotoAntesMarcadaUrl": "YES"
+    },
+    {
+      "id": "1290002",
+      "codigo": "Hidalma-RFTFJA",
+      "has_fotoAntesUrl": "YES",
+      "has_fotoAntesKey": "YES",
+      "has_fotoAntesBase64": "YES",
+      "has_fotoDespuesUrl": "YES",
+      "has_fotoDespuesKey": "YES",
+      "has_fotoAntesMarcadaUrl": "YES"
+    },
+    {
+      "id": "1290003",
+      "codigo": "Hidalma-F5DUKF",
+      "has_fotoAntesUrl": "YES",
+      "has_fotoAntesKey": "YES",
+      "has_fotoAntesBase64": "YES",
+      "has_fotoDespuesUrl": "YES",
+      "has_fotoDespuesKey": "YES",
+      "has_fotoAntesMarcadaUrl": "YES"
+    },
+    {
+      "id": "1290004",
+      "codigo": "Hidalma-DFRNLX",
+      "has_fotoAntesUrl": "YES",
+      "has_fotoAntesKey": "YES",
+      "has_fotoAntesBase64": "YES",
+      "has_fotoDespuesUrl": "NO",
+      "has_fotoDespuesKey": "NO",
+      "has_fotoAntesMarcadaUrl": "YES"
+    },
+    {
+      "id": "1290005",
+      "codigo": "Hidalma-GQLS7A",
+      "has_fotoAntesUrl": "YES",
+      "has_fotoAntesKey": "YES",
+      "has_fotoAntesBase64": "YES",
+      "has_fotoDespuesUrl": "YES",
+      "has_fotoDespuesKey": "YES",
+      "has_fotoAntesMarcadaUrl": "YES"
+    },
+    {
+      "id": "1290007",
+      "codigo": "Hidalma-4YKAYL",
+      "has_fotoAntesUrl": "YES",
+      "has_fotoAntesKey": "YES",
+      "has_fotoAntesBase64": "YES",
+      "has_fotoDespuesUrl": "YES",
+      "has_fotoDespuesKey": "YES",
+      "has_fotoAntesMarcadaUrl": "YES"
+    },
+    {
+      "id": "1290008",
+      "codigo": "Hidalma-L4ZLGK",
+      "has_fotoAntesUrl": "YES",
+      "has_fotoAntesKey": "YES",
+      "has_fotoAntesBase64": "YES",
+      "has_fotoDespuesUrl": "YES",
+      "has_fotoDespuesKey": "YES",
+      "has_fotoAntesMarcadaUrl": "YES"
+    },
+    {
+      "id": "1290009",
+      "codigo": "Hidalma-Z4GJN8",
+      "has_fotoAntesUrl": "YES",
+      "has_fotoAntesKey": "YES",
+      "has_fotoAntesBase64": "YES",
+      "has_fotoDespuesUrl": "NO",
+      "has_fotoDespuesKey": "NO",
+      "has_fotoAntesMarcadaUrl": "YES"
+    },
+    {
+      "id": "1290010",
+      "codigo": "Hidalma-6MTE5R",
+      "has_fotoAntesUrl": "YES",
+      "has_fotoAntesKey": "YES",
+      "has_fotoAntesBase64": "YES",
+      "has_fotoDespuesUrl": "NO",
+      "has_fotoDespuesKey": "NO",
+      "has_fotoAntesMarcadaUrl": "YES"
+    },
+    {
+      "id": "1290011",
+      "codigo": "Hidalma-H3G3H2",
+      "has_fotoAntesUrl": "YES",
+      "has_fotoAntesKey": "YES",
+      "has_fotoAntesBase64": "YES",
+      "has_fotoDespuesUrl": "NO",
+      "has_fotoDespuesKey": "NO",
+      "has_fotoAntesMarcadaUrl": "YES"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\thas_fotoAntesUrl\thas_fotoAntesKey\thas_fotoAntesBase64\thas_fotoDespuesUrl\thas_fotoDespuesKey\thas_fotoAntesMarcadaUrl\n1290001\tHidalma-F8XTCG\tYES\tYES\tYES\tYES\tYES\tYES\n1290002\tHidalma-RFTFJA\tYES\tYES\tYES\tYES\tYES\tYES\n1290003\tHidalma-F5DUKF\tYES\tYES\tYES\tYES\tYES\tYES\n1290004\tHidalma-DFRNLX\tYES\tYES\tYES\tNO\tNO\tYES\n1290005\tHidalma-GQLS7A\tYES\tYES\tYES\tYES\tYES\tYES\n1290007\tHidalma-4YKAYL\tYES\tYES\tYES\tYES\tYES\tYES\n1290008\tHidalma-L4ZLGK\tYES\tYES\tYES\tYES\tYES\tYES\n1290009\tHidalma-Z4GJN8\tYES\tYES\tYES\tNO\tNO\tYES\n1290010\tHidalma-6MTE5R\tYES\tYES\tYES\tNO\tNO\tYES\n1290011\tHidalma-H3G3H2\tYES\tYES\tYES\tNO\tNO\tYES\n",
+  "stderr": "",
+  "execution_time_ms": 402
+}

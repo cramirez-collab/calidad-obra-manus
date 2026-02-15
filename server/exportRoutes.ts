@@ -396,31 +396,28 @@ router.get("/api/items/:id/fotos-pdf", async (req, res) => {
       return null;
     };
 
-    // Foto ANTES: priorizar base64 de BD
-    if (item.fotoAntesBase64 && item.fotoAntesBase64.length > 10) {
+    // Foto ANTES: priorizar S3 (alta resolución) sobre base64 de BD (thumbnail)
+    fotos.fotoAntes = await downloadAsBase64(item.fotoAntesKey, item.fotoAntesUrl);
+    if (!fotos.fotoAntes && item.fotoAntesBase64 && item.fotoAntesBase64.length > 10) {
       fotos.fotoAntes = item.fotoAntesBase64.startsWith('data:')
         ? item.fotoAntesBase64
         : `data:image/jpeg;base64,${item.fotoAntesBase64}`;
-    } else {
-      fotos.fotoAntes = await downloadAsBase64(item.fotoAntesKey, item.fotoAntesUrl);
     }
 
-    // Foto ANTES MARCADA: priorizar base64 de BD
-    if (item.fotoAntesMarcadaBase64 && item.fotoAntesMarcadaBase64.length > 10) {
+    // Foto ANTES MARCADA: priorizar S3 sobre base64
+    fotos.fotoAntesMarcada = await downloadAsBase64(item.fotoAntesMarcadaKey, item.fotoAntesMarcadaUrl);
+    if (!fotos.fotoAntesMarcada && item.fotoAntesMarcadaBase64 && item.fotoAntesMarcadaBase64.length > 10) {
       fotos.fotoAntesMarcada = item.fotoAntesMarcadaBase64.startsWith('data:')
         ? item.fotoAntesMarcadaBase64
         : `data:image/jpeg;base64,${item.fotoAntesMarcadaBase64}`;
-    } else {
-      fotos.fotoAntesMarcada = await downloadAsBase64(item.fotoAntesMarcadaKey, item.fotoAntesMarcadaUrl);
     }
 
-    // Foto DESPUÉS: priorizar base64 de BD
-    if (item.fotoDespuesBase64 && item.fotoDespuesBase64.length > 10) {
+    // Foto DESPUÉS: priorizar S3 sobre base64
+    fotos.fotoDespues = await downloadAsBase64(item.fotoDespuesKey, item.fotoDespuesUrl);
+    if (!fotos.fotoDespues && item.fotoDespuesBase64 && item.fotoDespuesBase64.length > 10) {
       fotos.fotoDespues = item.fotoDespuesBase64.startsWith('data:')
         ? item.fotoDespuesBase64
         : `data:image/jpeg;base64,${item.fotoDespuesBase64}`;
-    } else {
-      fotos.fotoDespues = await downloadAsBase64(item.fotoDespuesKey, item.fotoDespuesUrl);
     }
 
     res.json(fotos);

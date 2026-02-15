@@ -4192,3 +4192,5 @@
 
 - [x] Fix "Asignar Plano" button: debe navegar al módulo Planos del nivel correcto del ítem y activar modo colocación de pin (solo admin/superadmin)
 - [x] Fix 404 al navegar desde Asignar Plano: corregido /item/ a /items/ en Planos.tsx y Configuracion.tsx
+- [x] Fix fotos no aparecen en PDF del ítem (resolución aumentada de 275px a 800px, S3 priorizado sobre base64)
+- [x] Suavizar texto OBLIGATORIO en pantalla de notificaciones (menos agresivo)

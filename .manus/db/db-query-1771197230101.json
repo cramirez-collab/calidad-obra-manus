@@ -1,0 +1,55 @@
+{
+  "query": "SELECT id, codigo, \n  LEFT(fotoAntesUrl, 80) as fotoAntesUrl,\n  LEFT(fotoAntesKey, 80) as fotoAntesKey,\n  LEFT(fotoDespuesUrl, 80) as fotoDespuesUrl,\n  LEFT(fotoDespuesKey, 80) as fotoDespuesKey,\n  CASE WHEN fotoAntesBase64 IS NOT NULL THEN LENGTH(fotoAntesBase64) ELSE 0 END as base64_len\nFROM items \nWHERE fotoAntesUrl IS NOT NULL AND fotoAntesUrl != ''\nLIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, \n  LEFT(fotoAntesUrl, 80) as fotoAntesUrl,\n  LEFT(fotoAntesKey, 80) as fotoAntesKey,\n  LEFT(fotoDespuesUrl, 80) as fotoDespuesUrl,\n  LEFT(fotoDespuesKey, 80) as fotoDespuesKey,\n  CASE WHEN fotoAntesBase64 IS NOT NULL THEN LENGTH(fotoAntesBase64) ELSE 0 END as base64_len\nFROM items \nWHERE fotoAntesUrl IS NOT NULL AND fotoAntesUrl != ''\nLIMIT 5;",
+  "rows": [
+    {
+      "id": "1290001",
+      "codigo": "Hidalma-F8XTCG",
+      "fotoAntesUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "fotoAntesKey": "items/Hidalma-F8XTCG/antes-USxKy22W.jpg",
+      "fotoDespuesUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "fotoDespuesKey": "items/Hidalma-F8XTCG/despues-wTSuzAwJ.jpg",
+      "base64_len": "6211"
+    },
+    {
+      "id": "1290002",
+      "codigo": "Hidalma-RFTFJA",
+      "fotoAntesUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "fotoAntesKey": "items/Hidalma-RFTFJA/antes-l0ADZE2Z.jpg",
+      "fotoDespuesUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "fotoDespuesKey": "items/Hidalma-RFTFJA/despues-N6VkWW8c.jpg",
+      "base64_len": "3419"
+    },
+    {
+      "id": "1290003",
+      "codigo": "Hidalma-F5DUKF",
+      "fotoAntesUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "fotoAntesKey": "items/Hidalma-F5DUKF/antes-aKSeiS2p.jpg",
+      "fotoDespuesUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "fotoDespuesKey": "items/Hidalma-F5DUKF/despues-HWPcShCe.jpg",
+      "base64_len": "4883"
+    },
+    {
+      "id": "1290004",
+      "codigo": "Hidalma-DFRNLX",
+      "fotoAntesUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "fotoAntesKey": "items/Hidalma-DFRNLX/antes-pcwdbjpV.jpg",
+      "fotoDespuesUrl": "NULL",
+      "fotoDespuesKey": "NULL",
+      "base64_len": "5551"
+    },
+    {
+      "id": "1290005",
+      "codigo": "Hidalma-GQLS7A",
+      "fotoAntesUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "fotoAntesKey": "items/Hidalma-GQLS7A/antes-mtRHD9qj.jpg",
+      "fotoDespuesUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/",
+      "fotoDespuesKey": "items/Hidalma-GQLS7A/despues-T4wZbO1Y.jpg",
+      "base64_len": "5775"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcodigo\tfotoAntesUrl\tfotoAntesKey\tfotoDespuesUrl\tfotoDespuesKey\tbase64_len\n1290001\tHidalma-F8XTCG\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\titems/Hidalma-F8XTCG/antes-USxKy22W.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\titems/Hidalma-F8XTCG/despues-wTSuzAwJ.jpg\t6211\n1290002\tHidalma-RFTFJA\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\titems/Hidalma-RFTFJA/antes-l0ADZE2Z.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\titems/Hidalma-RFTFJA/despues-N6VkWW8c.jpg\t3419\n1290003\tHidalma-F5DUKF\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\titems/Hidalma-F5DUKF/antes-aKSeiS2p.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\titems/Hidalma-F5DUKF/despues-HWPcShCe.jpg\t4883\n1290004\tHidalma-DFRNLX\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\titems/Hidalma-DFRNLX/antes-pcwdbjpV.jpg\tNULL\tNULL\t5551\n1290005\tHidalma-GQLS7A\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\titems/Hidalma-GQLS7A/antes-mtRHD9qj.jpg\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/\titems/Hidalma-GQLS7A/despues-T4wZbO1Y.jpg\t5775\n",
+  "stderr": "",
+  "execution_time_ms": 346
+}

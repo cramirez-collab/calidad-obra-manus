@@ -36,60 +36,60 @@ interface AdaptiveSettings {
 // ============================================
 
 // ============================================
-// CONFIGURACIÓN v53 - Resolución 275px
+// CONFIGURACIÓN v54 - Resolución 800px
 // ============================================
-// Resolución máxima: 275px (balance calidad/velocidad)
-// Prioridad: Balance entre calidad y velocidad
+// Resolución máxima: 800px (mejor calidad para PDF)
+// Prioridad: Calidad suficiente para impresión/PDF
 // ============================================
 const ADAPTIVE_SETTINGS: Record<ConnectionType, AdaptiveSettings> = {
   'slow-2g': { 
-    maxSizeKB: 40,    // Ultra pequeño para 2G lento
-    maxWidth: 275, 
-    quality: 0.40, 
-    connectionLabel: '2G Lento (40KB)',
-    estimatedUploadTime: '<4s'
+    maxSizeKB: 80,    // Pequeño para 2G lento
+    maxWidth: 600, 
+    quality: 0.50, 
+    connectionLabel: '2G Lento (80KB)',
+    estimatedUploadTime: '<8s'
   },
   '2g': { 
-    maxSizeKB: 50,    // Muy pequeño para 2G
-    maxWidth: 275, 
-    quality: 0.45, 
-    connectionLabel: '2G (50KB)',
-    estimatedUploadTime: '<5s'
+    maxSizeKB: 100,   // Moderado para 2G
+    maxWidth: 600, 
+    quality: 0.55, 
+    connectionLabel: '2G (100KB)',
+    estimatedUploadTime: '<6s'
   },
   '3g': { 
-    maxSizeKB: 70,    // Pequeño para 3G
-    maxWidth: 275, 
-    quality: 0.50, 
-    connectionLabel: '3G (70KB)',
-    estimatedUploadTime: '<2s'
+    maxSizeKB: 150,   // Bueno para 3G
+    maxWidth: 800, 
+    quality: 0.60, 
+    connectionLabel: '3G (150KB)',
+    estimatedUploadTime: '<3s'
   },
   '4g': { 
-    maxSizeKB: 90,    // Instantáneo en 4G
-    maxWidth: 275, 
-    quality: 0.55, 
-    connectionLabel: '4G (90KB)',
+    maxSizeKB: 250,   // Alta calidad en 4G
+    maxWidth: 800, 
+    quality: 0.70, 
+    connectionLabel: '4G (250KB)',
     estimatedUploadTime: 'Instantáneo'
   },
   'wifi': { 
-    maxSizeKB: 120,   // Instantáneo en WiFi
-    maxWidth: 275, 
-    quality: 0.60, 
-    connectionLabel: 'WiFi (120KB)',
+    maxSizeKB: 350,   // Máxima calidad en WiFi
+    maxWidth: 800, 
+    quality: 0.75, 
+    connectionLabel: 'WiFi (350KB)',
     estimatedUploadTime: 'Instantáneo'
   },
   'unknown': { 
-    maxSizeKB: 70,    // Por defecto como 3G
-    maxWidth: 275, 
-    quality: 0.50, 
-    connectionLabel: 'Auto (70KB)',
-    estimatedUploadTime: '<2s'
+    maxSizeKB: 150,   // Por defecto como 3G
+    maxWidth: 800, 
+    quality: 0.60, 
+    connectionLabel: 'Auto (150KB)',
+    estimatedUploadTime: '<3s'
   }
 };
 
 const DEFAULT_OPTIONS: CompressionOptions = {
-  maxWidth: 275,
-  maxHeight: 275,
-  quality: 0.50,
+  maxWidth: 800,
+  maxHeight: 800,
+  quality: 0.65,
   mimeType: 'image/jpeg'
 };
 
@@ -286,7 +286,7 @@ export async function compressAdaptive(base64: string): Promise<{
   const connectionType = detectConnectionType();
   const settings = ADAPTIVE_SETTINGS[connectionType];
   
-  console.log(`[Compresión Adaptativa v41] Conexión: ${connectionType}, Objetivo: ${settings.maxSizeKB}KB, Original: ${originalSizeKB}KB`);
+  console.log(`[Compresión Adaptativa v54] Conexión: ${connectionType}, Objetivo: ${settings.maxSizeKB}KB, Original: ${originalSizeKB}KB`);
   
   // Si ya es pequeña, no comprimir
   if (originalSizeKB <= settings.maxSizeKB) {
@@ -322,7 +322,7 @@ export async function compressAdaptive(base64: string): Promise<{
   
   // Si aún es grande, reducir dimensiones
   let maxWidth = settings.maxWidth;
-  while (compressedSizeKB > settings.maxSizeKB && maxWidth > 600) {
+  while (compressedSizeKB > settings.maxSizeKB && maxWidth > 400) {
     maxWidth -= 100;
     compressed = await compressImage(base64, { 
       ...options, 
@@ -333,7 +333,7 @@ export async function compressAdaptive(base64: string): Promise<{
     compressedSizeKB = getBase64SizeKB(compressed);
   }
   
-  console.log(`[Compresión Adaptativa v41] ${originalSizeKB}KB → ${compressedSizeKB}KB (${settings.connectionLabel})`);
+  console.log(`[Compresión Adaptativa v54] ${originalSizeKB}KB → ${compressedSizeKB}KB (${settings.connectionLabel})`);
   
   return {
     compressed,
