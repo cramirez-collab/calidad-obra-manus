@@ -279,10 +279,10 @@ export function QRScannerButton() {
           setIsOpen(true);
         }}
         size="icon"
-        className="fixed bottom-6 right-4 h-8 w-8 rounded-full shadow-lg z-50 bg-[#02B381] hover:bg-[#029970]"
+        className="fixed bottom-[1.75rem] right-3 h-6 w-6 min-h-0 min-w-0 rounded-full shadow-md z-50 bg-[#02B381] hover:bg-[#029970] p-0"
         title="Escanear QR"
       >
-        <QrCode className="h-[14px] w-[14px] text-white" />
+        <QrCode className="h-[11px] w-[11px] text-white" />
       </Button>
 
       {/* Modal del escáner */}

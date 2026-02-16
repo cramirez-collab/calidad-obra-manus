@@ -4206,3 +4206,4 @@
 - [x] Agregar botón flotante "+" para captura rápida de ítem desde cualquier página
 - [x] Agregar botón flotante "pin" para ir directo a Planos y elegir nivel/pin
 - [x] Reducir botones flotantes actuales un 20% y unificar tamaño con los nuevos (h-10→h-8, 18px→14px)
+- [x] Reducir botones flotantes al 60% del original (h-6 w-6, 11px iconos), separar con gap-2, ajustar estéticamente
