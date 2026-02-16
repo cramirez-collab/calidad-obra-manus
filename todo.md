@@ -4201,3 +4201,5 @@
 - [x] Fix PDF Resumen Ejecutivo: habilitar descarga automática del PDF (forceDownloadPDF)
 - [x] Fix PDF Resumen Ejecutivo: redirigir al menú de inicio después de la descarga (setTimeout + setLocation)
 - [x] Fix PDF Resumen Ejecutivo: manejar errores si una imagen no carga (placeholder en vez de vacío)
+- [x] Fix fotos deformadas en PDF: mantener aspect ratio al insertar imágenes (fitImageInBox)
+- [x] Fix texto encabezado PDF: recorrer texto dinámicamente según ancho real del logo

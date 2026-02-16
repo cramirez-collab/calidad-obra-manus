@@ -356,6 +356,36 @@ export async function drawPhotosOnPDF(doc: jsPDF, fotos: FotoEvidencia[], startX
   const photoH = 22;
   let currentY = startY + 4;
   
+  // Helper to calculate image dimensions preserving aspect ratio within a box
+  function fitImageInBox(imgW: number, imgH: number, boxW: number, boxH: number): { w: number; h: number; x: number; y: number } {
+    const imgRatio = imgW / imgH;
+    const boxRatio = boxW / boxH;
+    let w: number, h: number;
+    if (imgRatio > boxRatio) {
+      // Image is wider than box → fit by width
+      w = boxW;
+      h = boxW / imgRatio;
+    } else {
+      // Image is taller than box → fit by height
+      h = boxH;
+      w = boxH * imgRatio;
+    }
+    // Center within box
+    const x = (boxW - w) / 2;
+    const y = (boxH - h) / 2;
+    return { w, h, x, y };
+  }
+
+  // Helper to get image dimensions from a data URL
+  function getImageDimensions(dataUrl: string): Promise<{ width: number; height: number }> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      img.onerror = () => resolve({ width: 4, height: 3 }); // default 4:3
+      img.src = dataUrl;
+    });
+  }
+
   // Helper to load and draw a single photo
   async function drawSinglePhoto(foto: FotoEvidencia, px: number, py: number, pw: number) {
     // Photo frame
@@ -364,12 +394,25 @@ export async function drawPhotosOnPDF(doc: jsPDF, fotos: FotoEvidencia[], startX
     doc.setLineWidth(0.15);
     doc.roundedRect(px, py, pw, photoH + 9, 1.5, 1.5, 'FD');
     
+    // Fill photo area background
+    doc.setFillColor(240, 240, 242);
+    doc.rect(px + 0.5, py + 0.5, pw - 1, photoH - 1, 'F');
+    
     let imageLoaded = false;
+    const frameW = pw - 1;
+    const frameH = photoH - 1;
+    
+    // Helper to add image with correct aspect ratio
+    async function addImagePreservingRatio(dataUrl: string) {
+      const dims = await getImageDimensions(dataUrl);
+      const fit = fitImageInBox(dims.width, dims.height, frameW, frameH);
+      doc.addImage(dataUrl, 'JPEG', px + 0.5 + fit.x, py + 0.5 + fit.y, fit.w, fit.h);
+    }
     
     // PRIORITY 1: Use pre-loaded base64 from server (no CORS issues)
     if (foto.fotoBase64 && foto.fotoBase64.startsWith('data:')) {
       try {
-        doc.addImage(foto.fotoBase64, 'JPEG', px + 0.5, py + 0.5, pw - 1, photoH - 1);
+        await addImagePreservingRatio(foto.fotoBase64);
         imageLoaded = true;
       } catch (e) {
         console.warn('Error adding pre-loaded base64 image:', e);
@@ -386,7 +429,7 @@ export async function drawPhotosOnPDF(doc: jsPDF, fotos: FotoEvidencia[], startX
         if (isBase64) {
           dataUrl = foto.fotoUrl.startsWith('data:') ? foto.fotoUrl : `data:image/jpeg;base64,${foto.fotoUrl}`;
           try {
-            doc.addImage(dataUrl, 'JPEG', px + 0.5, py + 0.5, pw - 1, photoH - 1);
+            await addImagePreservingRatio(dataUrl);
             imageLoaded = true;
           } catch { /* fallback below */ }
         } else {
@@ -409,7 +452,7 @@ export async function drawPhotosOnPDF(doc: jsPDF, fotos: FotoEvidencia[], startX
             if (ctx) {
               ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
               dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-              doc.addImage(dataUrl, 'JPEG', px + 0.5, py + 0.5, pw - 1, photoH - 1);
+              await addImagePreservingRatio(dataUrl);
               imageLoaded = true;
             }
           }

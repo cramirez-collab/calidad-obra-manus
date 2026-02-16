@@ -370,6 +370,7 @@ export default function Bienvenida() {
       // Header con logo
       doc.setFillColor(0, 44, 99);
       doc.rect(0, 0, pageW, 35, 'F');
+      let logoW1 = 0;
       try {
         const logoImg = new Image();
         logoImg.crossOrigin = 'anonymous';
@@ -388,15 +389,17 @@ export default function Bienvenida() {
           // Mantener aspect ratio del logo
           const logoMaxH = 25;
           const logoRatio = logoImg.naturalWidth / logoImg.naturalHeight;
-          const logoW = logoMaxH * logoRatio;
-          doc.addImage(logoDataUrl, 'JPEG', margin, 5, logoW, logoMaxH);
+          logoW1 = logoMaxH * logoRatio;
+          doc.addImage(logoDataUrl, 'JPEG', margin, 5, logoW1, logoMaxH);
         }
       } catch (e) { /* logo fallback */ }
+      // Calculate text offset based on actual logo width to avoid overlap
+      const textOffsetX1 = logoW1 > 0 ? margin + logoW1 + 3 : margin + 28;
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(14);
-      doc.text('OBJETIVA', margin + 28, 15);
+      doc.text('OBJETIVA', textOffsetX1, 15);
       doc.setFontSize(9);
-      doc.text('Reporte de Análisis de Calidad', margin + 28, 23);
+      doc.text('Reporte de Análisis de Calidad', textOffsetX1, 23);
       doc.setFontSize(8);
       doc.text(new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }), pageW - margin - 50, 15);
       doc.text(proyectoActual?.nombre || 'Proyecto', pageW - margin - 50, 22);
@@ -552,6 +555,7 @@ export default function Bienvenida() {
       // Header compacto con logo
       doc.setFillColor(0, 44, 99);
       doc.rect(0, 0, pageW, 24, 'F');
+      let logoW2 = 0;
       try {
         const logoImg = new Image();
         logoImg.crossOrigin = 'anonymous';
@@ -570,15 +574,17 @@ export default function Bienvenida() {
           // Mantener aspect ratio del logo
           const logoMaxH2 = 18;
           const logoRatio2 = logoImg.naturalWidth / logoImg.naturalHeight;
-          const logoW2 = logoMaxH2 * logoRatio2;
+          logoW2 = logoMaxH2 * logoRatio2; // assigned to outer let
           doc.addImage(logoDataUrl, 'JPEG', margin, 3, logoW2, logoMaxH2);
         }
       } catch (e) { /* logo fallback */ }
+      // Calculate text offset based on actual logo width to avoid overlap
+      const textOffsetX2 = logoW2 > 0 ? margin + logoW2 + 3 : margin + 21;
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(11);
-      doc.text('OBJETIVA - Resumen Ejecutivo', margin + 21, 10);
+      doc.text('OBJETIVA - Resumen Ejecutivo', textOffsetX2, 10);
       doc.setFontSize(7);
-      doc.text(`${proyectoActual?.nombre || 'Proyecto'} | ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}`, margin + 21, 18);
+      doc.text(`${proyectoActual?.nombre || 'Proyecto'} | ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}`, textOffsetX2, 18);
       y = 28;
 
       // Mini KPI row si hay stats
