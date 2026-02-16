@@ -4,46 +4,47 @@ import { useLocation } from "wouter";
 
 /**
  * Floating action buttons stack (bottom-right):
- * 1. "+" → Captura rápida de nuevo ítem (/nuevo-item)
- * 2. "Pin" → Ir a Planos para elegir nivel y revisar pin (/planos)
- * 3. "Crosshair" → Captura por plano (/planos)
+ * 1. "+" verde → Nuevo ítem (/nuevo-item)
+ * 2. "Pin" naranja → Planos para elegir nivel (/planos)
+ * 3. "Crosshair" azul → Captura por plano (/planos)
  * 
- * Tamaño al 60% del original (40px → 24px), iconos (18px → 11px)
- * Separación vertical: 8px gap entre cada botón
+ * Tamaño: 20% menos que original (40px → 32px), iconos (18px → 15px)
+ * Todos en un solo flex container con gap-4 (16px) para separación clara
+ * QR se posiciona debajo por separado en QRScanner.tsx
  */
 export function FloatingCaptureButton() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="fixed bottom-14 right-3 z-50 flex flex-col-reverse items-center gap-2">
-      {/* Crosshair - Captura por plano */}
+    <div className="fixed bottom-16 right-4 z-50 flex flex-col items-center gap-4">
+      {/* Plus - Nuevo Ítem */}
       <Button
-        onClick={() => setLocation("/planos")}
+        onClick={() => setLocation("/nuevo-item")}
         size="icon"
-        className="h-6 w-6 min-h-0 min-w-0 rounded-full shadow-md bg-[#002C63] hover:bg-[#001d42] p-0"
-        title="Captura por Plano"
+        className="h-8 w-8 min-h-[32px] min-w-[32px] rounded-full shadow-lg bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
+        title="Nuevo Ítem"
       >
-        <Crosshair className="h-[11px] w-[11px] text-white" />
+        <Plus className="h-[15px] w-[15px] text-white" strokeWidth={3} />
       </Button>
 
       {/* Pin - Ver Planos / Pins */}
       <Button
         onClick={() => setLocation("/planos")}
         size="icon"
-        className="h-6 w-6 min-h-0 min-w-0 rounded-full shadow-md bg-[#E67E22] hover:bg-[#D35400] p-0"
+        className="h-8 w-8 min-h-[32px] min-w-[32px] rounded-full shadow-lg bg-[#E67E22] hover:bg-[#D35400] p-0 transition-transform active:scale-90"
         title="Ver Planos / Pins"
       >
-        <MapPin className="h-[11px] w-[11px] text-white" />
+        <MapPin className="h-[15px] w-[15px] text-white" />
       </Button>
 
-      {/* Plus - Nuevo Ítem */}
+      {/* Crosshair - Captura por plano */}
       <Button
-        onClick={() => setLocation("/nuevo-item")}
+        onClick={() => setLocation("/planos")}
         size="icon"
-        className="h-6 w-6 min-h-0 min-w-0 rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] p-0"
-        title="Nuevo Ítem"
+        className="h-8 w-8 min-h-[32px] min-w-[32px] rounded-full shadow-lg bg-[#002C63] hover:bg-[#001d42] p-0 transition-transform active:scale-90"
+        title="Captura por Plano"
       >
-        <Plus className="h-[11px] w-[11px] text-white" strokeWidth={3} />
+        <Crosshair className="h-[15px] w-[15px] text-white" />
       </Button>
     </div>
   );

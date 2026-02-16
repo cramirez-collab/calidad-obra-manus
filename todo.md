@@ -4207,3 +4207,4 @@
 - [x] Agregar botón flotante "pin" para ir directo a Planos y elegir nivel/pin
 - [x] Reducir botones flotantes actuales un 20% y unificar tamaño con los nuevos (h-10→h-8, 18px→14px)
 - [x] Reducir botones flotantes al 60% del original (h-6 w-6, 11px iconos), separar con gap-2, ajustar estéticamente
+- [x] Fix botones flotantes encimados: reducir 20% del original (32px), gap-4 (16px) equidistante, 4 botones en columna vertical
