@@ -201,6 +201,10 @@ export default function Bienvenida() {
   const [generandoResumen, setGenerandoResumen] = useState(false);
   const [generandoPDFIA, setGenerandoPDFIA] = useState(false);
   const [reporteTab, setReporteTab] = useState<'analisis' | 'resumen' | 'historial'>('analisis');
+  const [editandoReporteId, setEditandoReporteId] = useState<number | null>(null);
+  const [editTituloTemp, setEditTituloTemp] = useState('');
+  const [reporteAEliminar, setReporteAEliminar] = useState<number | null>(null);
+  const [mostrarArchivados, setMostrarArchivados] = useState(false);
   const [chartDataIA, setChartDataIA] = useState<any>(null);
   const [fotosEvidenciaIA, setFotosEvidenciaIA] = useState<any[]>([]);
   const [responsablesIA, setResponsablesIA] = useState<any[]>([]);
@@ -315,9 +319,45 @@ export default function Bienvenida() {
     },
   });
   const historialQuery = trpc.analisisIA.historial.useQuery(
-    { proyectoId: selectedProjectId! },
+    { proyectoId: selectedProjectId!, incluirArchivados: mostrarArchivados },
     { enabled: !!selectedProjectId && showReporteIA && reporteTab === 'historial', staleTime: 60_000 }
   );
+
+  // Mutations para gestión de reportes (admin/superadmin)
+  const editarTituloMut = trpc.analisisIA.editarTitulo.useMutation({
+    onSuccess: () => {
+      toast.success('Título actualizado');
+      setEditandoReporteId(null);
+      historialQuery.refetch();
+    },
+    onError: () => toast.error('Error al actualizar título'),
+  });
+  const archivarMut = trpc.analisisIA.archivar.useMutation({
+    onSuccess: (_data, vars) => {
+      toast.success(vars.archivado ? 'Reporte archivado' : 'Reporte desarchivado');
+      historialQuery.refetch();
+    },
+    onError: () => toast.error('Error al archivar reporte'),
+  });
+  const eliminarMut = trpc.analisisIA.eliminar.useMutation({
+    onSuccess: () => {
+      toast.success('Reporte eliminado');
+      setReporteAEliminar(null);
+      historialQuery.refetch();
+    },
+    onError: () => toast.error('Error al eliminar reporte'),
+  });
+
+  const handleGuardarTitulo = (id: number) => {
+    if (!editTituloTemp.trim()) return;
+    editarTituloMut.mutate({ id, titulo: editTituloTemp.trim() });
+  };
+  const handleArchivarReporte = (id: number, archivado: boolean) => {
+    archivarMut.mutate({ id, archivado });
+  };
+  const handleEliminarReporte = (id: number) => {
+    eliminarMut.mutate({ id });
+  };
 
   const handleGenerarAnalisis = () => {
     if (!selectedProjectId || generandoAnalisis) return;
@@ -2125,6 +2165,18 @@ export default function Bienvenida() {
             {/* Tab Historial */}
             {reporteTab === 'historial' && (
               <div className="space-y-3">
+                {isAdmin && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <Button
+                      variant={mostrarArchivados ? 'default' : 'outline'}
+                      size="sm"
+                      className="text-xs h-7"
+                      onClick={() => setMostrarArchivados(!mostrarArchivados)}
+                    >
+                      {mostrarArchivados ? 'Ocultar archivados' : 'Ver archivados'}
+                    </Button>
+                  </div>
+                )}
                 {historialQuery.isLoading && (
                   <div className="text-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-[#02B381] mx-auto" />
@@ -2136,27 +2188,101 @@ export default function Bienvenida() {
                   </div>
                 )}
                 {historialQuery.data?.reportes?.map((r: any) => {
-                  const d = new Date(r.creadoEn);
+                  const d = new Date(r.creadoEn || r.createdAt);
                   const pad = (n: number) => String(n).padStart(2, '0');
                   const fechaMx = `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
                   const tipoLabel = r.tipo === 'analisis_profundo' ? 'Análisis Profundo' : 'Resumen Ejecutivo';
+                  const esArchivado = r.archivado;
                   return (
-                    <div key={r.id} className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer" onClick={() => {
-                      setAnalisisResultado(r.contenido);
-                      setReporteTab('analisis');
-                    }}>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-sm text-[#002C63]">{tipoLabel}</p>
-                          <p className="text-xs text-gray-500">{fechaMx}</p>
+                    <div key={r.id} className={`border rounded-lg p-3 ${esArchivado ? 'bg-gray-100 opacity-70' : 'hover:bg-gray-50'}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => {
+                          setAnalisisResultado(r.contenido);
+                          setReporteTab('analisis');
+                        }}>
+                          {editandoReporteId === r.id ? (
+                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="text"
+                                value={editTituloTemp}
+                                onChange={(e) => setEditTituloTemp(e.target.value)}
+                                className="text-sm border rounded px-2 py-0.5 flex-1 min-w-0"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleGuardarTitulo(r.id);
+                                  if (e.key === 'Escape') setEditandoReporteId(null);
+                                }}
+                              />
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleGuardarTitulo(r.id)}>
+                                <Check className="h-3 w-3 text-green-600" />
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setEditandoReporteId(null)}>
+                                <X className="h-3 w-3 text-red-500" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="font-medium text-sm text-[#002C63] truncate">
+                                {r.titulo || tipoLabel}
+                                {esArchivado && <span className="ml-1 text-xs text-gray-400">(archivado)</span>}
+                              </p>
+                              <p className="text-xs text-gray-500">{tipoLabel} · {fechaMx}</p>
+                            </>
+                          )}
                         </div>
-                        <ArrowRight className="h-4 w-4 text-gray-400" />
+                        {isAdmin && editandoReporteId !== r.id && (
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Editar título" onClick={(e) => {
+                              e.stopPropagation();
+                              setEditandoReporteId(r.id);
+                              setEditTituloTemp(r.titulo || tipoLabel);
+                            }}>
+                              <FileText className="h-3.5 w-3.5 text-blue-500" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title={esArchivado ? 'Desarchivar' : 'Archivar'} onClick={(e) => {
+                              e.stopPropagation();
+                              handleArchivarReporte(r.id, !esArchivado);
+                            }}>
+                              <Layers className={`h-3.5 w-3.5 ${esArchivado ? 'text-green-500' : 'text-amber-500'}`} />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Eliminar" onClick={(e) => {
+                              e.stopPropagation();
+                              setReporteAEliminar(r.id);
+                            }}>
+                              <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                            </Button>
+                          </div>
+                        )}
+                        {!isAdmin && (
+                          <ArrowRight className="h-4 w-4 text-gray-400 shrink-0 cursor-pointer" onClick={() => {
+                            setAnalisisResultado(r.contenido);
+                            setReporteTab('analisis');
+                          }} />
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
             )}
+
+            {/* Dialog de confirmación para eliminar reporte */}
+            <AlertDialog open={reporteAEliminar !== null} onOpenChange={(open) => !open && setReporteAEliminar(null)}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Eliminar reporte</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta acción es permanente y no se puede deshacer. ¿Deseas eliminar este reporte?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => reporteAEliminar && handleEliminarReporte(reporteAEliminar)}>
+                    Eliminar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </DialogContent>
       </Dialog>

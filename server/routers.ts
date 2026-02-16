@@ -3565,6 +3565,7 @@ IMPORTANTE: Solo * para bullets. Texto plano sin códigos. Máx 300 palabras.`;
         tipo: z.string().optional(),
         limit: z.number().optional(),
         offset: z.number().optional(),
+        incluirArchivados: z.boolean().optional(),
       }))
       .query(async ({ input }) => {
         const [reportes, total] = await Promise.all([
@@ -3572,6 +3573,7 @@ IMPORTANTE: Solo * para bullets. Texto plano sin códigos. Máx 300 palabras.`;
             tipo: input.tipo,
             limit: input.limit,
             offset: input.offset,
+            incluirArchivados: input.incluirArchivados,
           }),
           db.countReportesIA(input.proyectoId),
         ]);
@@ -3612,6 +3614,36 @@ IMPORTANTE: Solo * para bullets. Texto plano sin códigos. Máx 300 palabras.`;
           pdfUrl: input.pdfUrl,
           pdfKey: input.pdfKey,
         });
+        return { success: true };
+      }),
+
+    // Editar título de un reporte
+    editarTitulo: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        titulo: z.string().min(1).max(500),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateReporteIA(input.id, { titulo: input.titulo });
+        return { success: true };
+      }),
+
+    // Archivar/desarchivar un reporte
+    archivar: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        archivado: z.boolean(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.updateReporteIA(input.id, { archivado: input.archivado });
+        return { success: true };
+      }),
+
+    // Eliminar un reporte permanentemente
+    eliminar: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteReporteIA(input.id);
         return { success: true };
       }),
   }),

@@ -1,0 +1,1 @@
+ALTER TABLE `reportes_ia` ADD `archivado` boolean DEFAULT false NOT NULL;

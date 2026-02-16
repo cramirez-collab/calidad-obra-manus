@@ -6094,11 +6094,12 @@ export async function createReporteIA(data: InsertReporteIA) {
 /**
  * Obtener reportes IA por proyecto (historial)
  */
-export async function getReportesIA(proyectoId: number, opts?: { limit?: number; offset?: number; tipo?: string }) {
+export async function getReportesIA(proyectoId: number, opts?: { limit?: number; offset?: number; tipo?: string; incluirArchivados?: boolean }) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   const conditions = [eq(reportesIA.proyectoId, proyectoId)];
   if (opts?.tipo) conditions.push(eq(reportesIA.tipo, opts.tipo as any));
+  if (!opts?.incluirArchivados) conditions.push(eq(reportesIA.archivado, false));
   const results = await db.select().from(reportesIA)
     .where(and(...conditions))
     .orderBy(desc(reportesIA.createdAt))
@@ -6124,6 +6125,15 @@ export async function updateReporteIA(id: number, data: Partial<InsertReporteIA>
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   await db.update(reportesIA).set(data).where(eq(reportesIA.id, id));
+}
+
+/**
+ * Eliminar un reporte IA permanentemente
+ */
+export async function deleteReporteIA(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(reportesIA).where(eq(reportesIA.id, id));
 }
 
 /**

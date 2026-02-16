@@ -435,6 +435,13 @@
       "when": 1771109559065,
       "tag": "0061_fair_valeria_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "5",
+      "when": 1771214085228,
+      "tag": "0062_rainy_wallop",
+      "breakpoints": true
     }
   ]
 }

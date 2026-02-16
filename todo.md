@@ -4209,3 +4209,6 @@
 - [x] Reducir botones flotantes al 60% del original (h-6 w-6, 11px iconos), separar con gap-2, ajustar estéticamente
 - [x] Fix botones flotantes encimados: reducir 20% del original (32px), gap-4 (16px) equidistante, 4 botones en columna vertical
 - [x] Fix QR encimado: unificado los 4 botones en un solo flex container con gap-3 (12px)
+- [x] Permitir admin/superadmin editar reportes del historial (R) - editar título inline
+- [x] Permitir admin/superadmin eliminar reportes del historial (R) - con confirmación AlertDialog
+- [x] Permitir admin/superadmin archivar reportes del historial (R) - toggle archivado con filtro

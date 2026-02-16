@@ -706,6 +706,7 @@ export const reportesIA = mysqlTable("reportes_ia", {
   destinatariosEnvio: text("destinatariosEnvio"), // JSON array de emails a los que se envió
   version: int("version").default(1).notNull(), // Versión del reporte (incrementa cada semana)
   creadoPorId: int("creadoPorId"), // null = generado automáticamente, con valor = generado manualmente
+  archivado: boolean("archivado").default(false).notNull(), // Si el reporte está archivado
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
