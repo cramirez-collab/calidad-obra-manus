@@ -297,7 +297,7 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
     return parts.map((part, i) => {
       if (part.startsWith("@")) {
         return (
-          <span key={i} className="text-primary font-medium bg-primary/10 px-1 rounded">
+          <span key={i} className="text-white italic font-semibold">
             {part}
           </span>
         );

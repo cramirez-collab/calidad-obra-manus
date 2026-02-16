@@ -4212,3 +4212,4 @@
 - [x] Permitir admin/superadmin editar reportes del historial (R) - editar título inline
 - [x] Permitir admin/superadmin eliminar reportes del historial (R) - con confirmación AlertDialog
 - [x] Permitir admin/superadmin archivar reportes del historial (R) - toggle archivado con filtro
+- [x] Cambiar estilo de @mentions en chat: letra blanca cursiva font-semibold
