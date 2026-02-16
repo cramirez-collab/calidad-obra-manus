@@ -121,17 +121,37 @@ export function SyncManager() {
     const handleOnline = () => {
       console.log('[SyncManager] Conexión restaurada');
       toast.info('Conexión restaurada. Sincronizando pendientes...');
-      setTimeout(sincronizar, 2000);
+      setTimeout(sincronizar, 1000);
+    };
+
+    // Sync when app regains focus (user switches back to the tab/app)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && navigator.onLine) {
+        console.log('[SyncManager] App visible, sincronizando...');
+        setTimeout(sincronizar, 500);
+      }
+    };
+
+    const handleFocus = () => {
+      if (navigator.onLine) {
+        console.log('[SyncManager] Ventana enfocada, sincronizando...');
+        setTimeout(sincronizar, 500);
+      }
     };
 
     window.addEventListener('online', handleOnline);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
 
+    // Sync every 5 seconds (was 15s)
     const interval = setInterval(() => {
       if (navigator.onLine) sincronizar();
-    }, 15000);
+    }, 5000);
 
     return () => {
       window.removeEventListener('online', handleOnline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
       clearInterval(interval);
     };
   }, [sincronizar]);

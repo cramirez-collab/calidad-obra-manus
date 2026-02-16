@@ -9,7 +9,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Plus, MapPin, Crosshair, QrCode, Camera, Search, Keyboard, RefreshCw } from "lucide-react";
+import { Plus, MapPin, Crosshair, QrCode, Camera, Search, Keyboard, RefreshCw, Loader2 } from "lucide-react";
+import { getPendingActions } from "@/lib/offlineStorage";
+import { contarPendientes } from "@/lib/uploadQueue";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 
@@ -23,6 +25,24 @@ type ScannerStatus = "idle" | "checking" | "ready" | "scanning" | "error" | "man
  */
 export function FloatingCaptureButton() {
   const [, setLocation] = useLocation();
+
+  // Sync state
+  const [isSyncingManual, setIsSyncingManual] = useState(false);
+  const [pendingTotal, setPendingTotal] = useState(0);
+
+  // Check pending count periodically
+  useEffect(() => {
+    const checkPending = async () => {
+      try {
+        const offlineActions = await getPendingActions();
+        const uploadCount = await contarPendientes();
+        setPendingTotal(offlineActions.length + uploadCount);
+      } catch { setPendingTotal(0); }
+    };
+    checkPending();
+    const interval = setInterval(checkPending, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // QR Scanner state
   const [isOpen, setIsOpen] = useState(false);
@@ -198,22 +218,22 @@ export function FloatingCaptureButton() {
           <Plus className="h-[15px] w-[15px] text-white" strokeWidth={3} />
         </Button>
 
-        {/* 2. Pin - Ver Planos / Pins */}
+        {/* 2. Pin - Ver Planos en modo Pin */}
         <Button
-          onClick={() => setLocation("/planos")}
+          onClick={() => setLocation("/planos?mode=pin")}
           size="icon"
           className="h-8 w-8 min-h-[32px] min-w-[32px] rounded-full shadow-lg bg-[#E67E22] hover:bg-[#D35400] p-0 transition-transform active:scale-90"
-          title="Ver Planos / Pins"
+          title="Pin en Plano"
         >
           <MapPin className="h-[15px] w-[15px] text-white" />
         </Button>
 
-        {/* 3. Crosshair - Captura por plano */}
+        {/* 3. Crosshair - Captura rápida (nuevo ítem) */}
         <Button
-          onClick={() => setLocation("/planos")}
+          onClick={() => setLocation("/planos?mode=nuevo")}
           size="icon"
           className="h-8 w-8 min-h-[32px] min-w-[32px] rounded-full shadow-lg bg-[#002C63] hover:bg-[#001d42] p-0 transition-transform active:scale-90"
-          title="Captura por Plano"
+          title="Captura Rápida"
         >
           <Crosshair className="h-[15px] w-[15px] text-white" />
         </Button>

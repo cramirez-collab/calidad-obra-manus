@@ -1,0 +1,130 @@
+{
+  "query": "SELECT id, nombre, codigo FROM especialidades WHERE activo = 1 ORDER BY nombre;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, codigo FROM especialidades WHERE activo = 1 ORDER BY nombre;",
+  "rows": [
+    {
+      "id": "90001",
+      "nombre": "Albañileria ",
+      "codigo": "ALB"
+    },
+    {
+      "id": "360002",
+      "nombre": "Albañilerías",
+      "codigo": "NULL"
+    },
+    {
+      "id": "150001",
+      "nombre": "Aluminio y Vidrio",
+      "codigo": "AYV"
+    },
+    {
+      "id": "240001",
+      "nombre": "Calidad",
+      "codigo": "NULL"
+    },
+    {
+      "id": "90002",
+      "nombre": "Ceramicos",
+      "codigo": "CER"
+    },
+    {
+      "id": "270002",
+      "nombre": "Cocinas",
+      "codigo": "NULL"
+    },
+    {
+      "id": "60001",
+      "nombre": "Desarrollador",
+      "codigo": "DES"
+    },
+    {
+      "id": "330001",
+      "nombre": "Ecoe",
+      "codigo": "Elec"
+    },
+    {
+      "id": "30005",
+      "nombre": "Electrica",
+      "codigo": "ELEC"
+    },
+    {
+      "id": "390001",
+      "nombre": "Especiales ",
+      "codigo": "ESP"
+    },
+    {
+      "id": "30004",
+      "nombre": "Estructura ",
+      "codigo": "EST"
+    },
+    {
+      "id": "30006",
+      "nombre": "Gas",
+      "codigo": "GAS"
+    },
+    {
+      "id": "270003",
+      "nombre": "Herrerias",
+      "codigo": "NULL"
+    },
+    {
+      "id": "30007",
+      "nombre": "Hidráulica ",
+      "codigo": "HID"
+    },
+    {
+      "id": "30008",
+      "nombre": "Hvac",
+      "codigo": "HVAC"
+    },
+    {
+      "id": "210001",
+      "nombre": "Pasta",
+      "codigo": "Novotile"
+    },
+    {
+      "id": "270001",
+      "nombre": "Puertas y closets",
+      "codigo": "NULL"
+    },
+    {
+      "id": "330002",
+      "nombre": "Qdt",
+      "codigo": "Hidráulica "
+    },
+    {
+      "id": "90003",
+      "nombre": "Sanitaria y Pluvial",
+      "codigo": "SYP"
+    },
+    {
+      "id": "30003",
+      "nombre": "Supervision",
+      "codigo": "SUP"
+    },
+    {
+      "id": "300001",
+      "nombre": "Supervision ",
+      "codigo": "Sup"
+    },
+    {
+      "id": "120001",
+      "nombre": "Tablaroca y Pintura",
+      "codigo": "TYP"
+    },
+    {
+      "id": "360001",
+      "nombre": "Tablaroca, pastas y pintura",
+      "codigo": "NULL"
+    },
+    {
+      "id": "90005",
+      "nombre": "Waller ",
+      "codigo": "WAL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tcodigo\n90001\tAlbañileria \tALB\n360002\tAlbañilerías\tNULL\n150001\tAluminio y Vidrio\tAYV\n240001\tCalidad\tNULL\n90002\tCeramicos\tCER\n270002\tCocinas\tNULL\n60001\tDesarrollador\tDES\n330001\tEcoe\tElec\n30005\tElectrica\tELEC\n390001\tEspeciales \tESP\n30004\tEstructura \tEST\n30006\tGas\tGAS\n270003\tHerrerias\tNULL\n30007\tHidráulica \tHID\n30008\tHvac\tHVAC\n210001\tPasta\tNovotile\n270001\tPuertas y closets\tNULL\n330002\tQdt\tHidráulica \n90003\tSanitaria y Pluvial\tSYP\n30003\tSupervision\tSUP\n300001\tSupervision \tSup\n120001\tTablaroca y Pintura\tTYP\n360001\tTablaroca, pastas y pintura\tNULL\n90005\tWaller \tWAL\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

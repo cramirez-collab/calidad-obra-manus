@@ -298,6 +298,10 @@ export default function CapturaRapida({
         className="relative bg-white rounded-t-2xl w-full max-w-lg max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-4 duration-300 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Force Select portals above this overlay */}
+        <style>{`
+          [data-radix-popper-content-wrapper] { z-index: 300 !important; }
+        `}</style>
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b bg-gradient-to-r from-emerald-50 to-white flex-shrink-0">
           <div className="flex items-center gap-2">

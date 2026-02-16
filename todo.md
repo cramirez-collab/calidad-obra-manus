@@ -4213,3 +4213,18 @@
 - [x] Permitir admin/superadmin eliminar reportes del historial (R) - con confirmación AlertDialog
 - [x] Permitir admin/superadmin archivar reportes del historial (R) - toggle archivado con filtro
 - [x] Cambiar estilo de @mentions en chat: letra blanca cursiva font-semibold
+- [ ] Investigar y limpiar 'Esp 90004' en gráfico de Ítems por Especialidad (dato basura o ID numérico)
+
+## Limpieza de Datos - Unidades Duplicadas
+- [x] Eliminar 26 registros duplicados de unidades sin ítems asociados
+- [x] Corregir nivel del depto 101 (ID=1) de null a 1
+- [x] Verificar que quedan 134 departamentos numéricos únicos sin duplicados (+ 17 áreas comunes = 151 total)
+
+## Sincronización y Captura por Pin
+- [x] Sincronización automática permanente para ítems offline que se quedan sin sincronizar
+- [x] Corregir flujo de captura por pin: formulario debe permitir seleccionar campos normalmente
+- [x] Fix botón naranja (Pin): ahora navega a /planos?mode=pin con modo pin activo
+- [x] Fix botón azul (Crosshair): ahora navega a /planos?mode=nuevo y abre CapturaRapida directamente
+- [x] Fix z-index de Select dropdowns en CapturaRapida (z-300 sobre overlay z-250)
+- [x] SyncManager: reducir intervalo de 15s a 5s, agregar visibilitychange y focus listeners
+- [x] SyncManager: sincronizar inmediatamente al volver a la app (visibilitychange + focus)

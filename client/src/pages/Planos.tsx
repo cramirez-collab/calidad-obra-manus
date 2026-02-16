@@ -397,6 +397,7 @@ export default function Planos() {
       const params = new URLSearchParams(searchString);
       const planoIdParam = params.get('planoId');
       const assignParam = params.get('assignItemId');
+      const modeParam = params.get('mode'); // "pin" | "nuevo" | "qr"
       if (assignParam) {
         setAssignItemId(parseInt(assignParam));
       }
@@ -417,6 +418,17 @@ export default function Planos() {
       if (assignParam) {
         setCaptureMode("pin");
         toast.info("Toca el plano para colocar el pin de ubicaci\u00f3n del \u00edtem", { duration: 5000 });
+      }
+      // Handle mode param from floating buttons
+      if (modeParam === "nuevo") {
+        setCaptureMode("nuevo");
+        setShowNuevoItemModal(true);
+      } else if (modeParam === "qr") {
+        setCaptureMode("qr");
+        setShowQrScanner(true);
+      } else if (modeParam === "pin") {
+        setCaptureMode("pin");
+        toast.info("Toca el plano para colocar un pin", { duration: 3000 });
       }
     }
   }, [planos.length, isLoading, autoOpened, showViewer, searchString]);
