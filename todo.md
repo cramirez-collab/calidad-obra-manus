@@ -4282,3 +4282,7 @@
 
 ## Acceso directo Pruebas en Bienvenida
 - [x] Agregar icono/botón de Pruebas en la pantalla de Bienvenida del proyecto (ShieldCheck, naranja #E67E22)
+
+## Pruebas adicionales: HVAC y Especiales
+- [x] Agregar pruebas de HVAC al catálogo (7 pruebas)
+- [x] Agregar pruebas de Especiales al catálogo (8 pruebas)
