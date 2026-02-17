@@ -1,5 +1,7 @@
 /**
- * Hook para detectar estado de conexión online/offline
+ * Hook para detectar estado de conexión online/offline.
+ * Usa navigator.onLine + eventos del browser.
+ * NO hace ping a endpoints — eso causaba falsos "sin conexión".
  */
 import { useState, useEffect, useCallback } from 'react';
 
@@ -35,35 +37,9 @@ export function useOnlineStatus(): OnlineStatus {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Verificar conexión real con un ping
-    const checkConnection = async () => {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        await fetch('/api/health', { 
-          method: 'HEAD',
-          signal: controller.signal,
-        });
-        
-        clearTimeout(timeoutId);
-        handleOnline();
-      } catch {
-        // Si falla el fetch, verificar navigator.onLine
-        if (!navigator.onLine) {
-          handleOffline();
-        }
-      }
-    };
-
-    // Verificar cada 30 segundos
-    const interval = setInterval(checkConnection, 30000);
-    checkConnection();
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      clearInterval(interval);
     };
   }, [handleOnline, handleOffline]);
 

@@ -9,7 +9,6 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import { OfflineSyncProvider } from "./contexts/OfflineSyncContext";
 import { SyncManager } from "./components/SyncManager";
-import { NetworkStatusBanner } from "./components/NetworkStatusBanner";
 import "./index.css";
 
 // ============================================
@@ -573,7 +572,6 @@ if (versionOK) {
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <OfflineSyncProvider>
-          <NetworkStatusBanner />
           <SyncManager />
           <App />
         </OfflineSyncProvider>

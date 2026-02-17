@@ -14,7 +14,6 @@ import {
   ListChecks, QrCode, Keyboard, Camera, RefreshCw, FileText, Check, Loader2
 } from "lucide-react";
 import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlanosPDF";
-import CapturaRapida from "@/components/CapturaRapida";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useLocation, useSearch } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
@@ -125,15 +124,14 @@ export default function Planos() {
   const [hoveredPin, setHoveredPin] = useState<number | null>(null);
 
   // State para captura rápida inline
-  const [showCapturaRapida, setShowCapturaRapida] = useState(false);
-  const [capturaRapidaPinPos, setCapturaRapidaPinPos] = useState<{ x: number; y: number } | null>(null);
+  // CapturaRapida overlay eliminado — ahora se usa /nuevo-item
   const [itemsCreadosSesion, setItemsCreadosSesion] = useState<any[]>([]);
   const [showSeguimiento, setShowSeguimiento] = useState(false);
 
   // ═══ 3 MODOS DE CAPTURA ═══
   const [captureMode, setCaptureMode] = useState<CaptureMode>("pin");
   // +Nuevo Ítem mode
-  const [showNuevoItemModal, setShowNuevoItemModal] = useState(false);
+  // showNuevoItemModal eliminado — ahora se usa navigate("/nuevo-item")
   // QR mode
   const [showQrScanner, setShowQrScanner] = useState(false);
   const [qrManualInput, setQrManualInput] = useState("");
@@ -421,8 +419,9 @@ export default function Planos() {
       }
       // Handle mode param from floating buttons
       if (modeParam === "nuevo") {
-        setCaptureMode("nuevo");
-        setShowNuevoItemModal(true);
+        // Navegar directo a /nuevo-item (página completa)
+        navigate("/nuevo-item");
+        return;
       } else if (modeParam === "qr") {
         setCaptureMode("qr");
         setShowQrScanner(true);
@@ -549,9 +548,19 @@ export default function Planos() {
       });
       return;
     }
-    setCapturaRapidaPinPos(tempPin);
-    setShowCapturaRapida(true);
-  }, [tempPin, assignItemId, currentPlano, crearPin, updateItemPin]);
+    // Navegar a /nuevo-item con datos del pin (página completa, funcional en móvil)
+    if (currentPlano) {
+      const params = new URLSearchParams();
+      params.set("pinPlanoId", currentPlano.id.toString());
+      params.set("pinPosX", tempPin.x.toFixed(4));
+      params.set("pinPosY", tempPin.y.toFixed(4));
+      if (currentPlano.nivel) params.set("nivel", currentPlano.nivel.toString());
+      setShowViewer(false);
+      setTempPin(null);
+      setPendingPinPos(null);
+      navigate(`/nuevo-item?${params.toString()}`);
+    }
+  }, [tempPin, assignItemId, currentPlano, crearPin, updateItemPin, navigate]);
 
   const cancelTempPin = useCallback(() => {
     setTempPin(null);
@@ -1125,7 +1134,7 @@ export default function Planos() {
 
             {/* +Nuevo Ítem */}
             <button
-              onClick={() => { setCaptureMode("nuevo"); setShowNuevoItemModal(true); }}
+              onClick={() => { navigate("/nuevo-item"); }}
               className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all border-2 ${
                 captureMode === "nuevo"
                   ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-md shadow-emerald-100"
@@ -1634,7 +1643,21 @@ export default function Planos() {
           </div>
           <div className="flex-1 overflow-y-auto">
             <div className="px-4 pt-4 pb-3">
-              <button onClick={() => { if (!pendingPinPos) return; setCapturaRapidaPinPos(pendingPinPos); setShowItemSelector(false); setShowCapturaRapida(true); }} className="w-full flex items-center gap-4 p-4 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-300 hover:border-emerald-500 rounded-xl transition-all group">
+              <button onClick={() => {
+                if (!pendingPinPos || !currentPlano) return;
+                const params = new URLSearchParams();
+                params.set("pinPlanoId", currentPlano.id.toString());
+                params.set("pinPosX", pendingPinPos.x.toFixed(4));
+                params.set("pinPosY", pendingPinPos.y.toFixed(4));
+                if (currentPlano.nivel) params.set("nivel", currentPlano.nivel.toString());
+                if (pinNota.trim()) params.set("pinNota", pinNota.trim());
+                setShowItemSelector(false);
+                setPendingPinPos(null);
+                setPinNota("");
+                setShowViewer(false);
+                setTempPin(null);
+                navigate(`/nuevo-item?${params.toString()}`);
+              }} className="w-full flex items-center gap-4 p-4 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-300 hover:border-emerald-500 rounded-xl transition-all group">
                 <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform"><PlusCircle className="w-6 h-6 text-white" /></div>
                 <div className="text-left flex-1"><p className="font-bold text-emerald-800 text-sm">Captura Rápida</p><p className="text-xs text-emerald-600 mt-0.5">Crear ítem aquí mismo sin salir del plano</p></div>
                 <ChevronRight className="w-5 h-5 text-emerald-400 group-hover:text-emerald-600 flex-shrink-0" />
@@ -1680,83 +1703,7 @@ export default function Planos() {
         </DialogContent>
       </Dialog>
 
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {/* CAPTURA RÁPIDA INLINE (Pin en Plano + Nuevo Ítem modes)    */}
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {showCapturaRapida && currentPlano && (
-        <CapturaRapida
-          pinPos={capturaRapidaPinPos}
-          planoId={currentPlano.id}
-          planoNivel={currentPlano.nivel}
-          existingItems={allItems}
-          onLinkExistingItem={(itemId) => {
-            // Vincular item existente al pin
-            if (capturaRapidaPinPos && currentPlano) {
-              crearPin.mutate({
-                planoId: currentPlano.id,
-                itemId: itemId,
-                posX: capturaRapidaPinPos.x.toFixed(4),
-                posY: capturaRapidaPinPos.y.toFixed(4),
-              });
-            }
-            setShowCapturaRapida(false);
-            setCapturaRapidaPinPos(null);
-            setPendingPinPos(null);
-            setTempPin(null);
-          }}
-          onClose={() => {
-            setShowCapturaRapida(false);
-            setCapturaRapidaPinPos(null);
-            setPendingPinPos(null);
-            setTempPin(null);
-          }}
-          onItemCreated={(item) => {
-            setItemsCreadosSesion(prev => [item, ...prev]);
-            // Crear el pin vinculado al ítem
-            if (capturaRapidaPinPos && currentPlano && item.id) {
-              crearPin.mutate({
-                planoId: currentPlano.id,
-                itemId: item.id,
-                posX: capturaRapidaPinPos.x.toFixed(4),
-                posY: capturaRapidaPinPos.y.toFixed(4),
-              });
-            }
-            setShowCapturaRapida(false);
-            setCapturaRapidaPinPos(null);
-            setPendingPinPos(null);
-            setTempPin(null);
-          }}
-          onContinuePin={() => {
-            setShowCapturaRapida(false);
-            setCapturaRapidaPinPos(null);
-            setPendingPinPos(null);
-            setTempPin(null);
-          }}
-        />
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {/* MODO +NUEVO ÍTEM: Modal sin pin                            */}
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {showNuevoItemModal && (
-        <CapturaRapida
-          pinPos={null}
-          planoId={undefined}
-          planoNivel={null}
-          headerTitle="+ Nuevo Ítem"
-          headerSubtitle="Crear ítem sin ubicación en plano"
-          onClose={() => {
-            setShowNuevoItemModal(false);
-            setCaptureMode("pin");
-          }}
-          onItemCreated={(item) => {
-            setItemsCreadosSesion(prev => [item, ...prev]);
-            setShowNuevoItemModal(false);
-            setCaptureMode("pin");
-            toast.success(`Ítem creado. Puedes asignarle ubicación en el plano después.`);
-          }}
-        />
-      )}
+      {/* CapturaRapida overlay ELIMINADO — ahora se usa /nuevo-item (página completa) */}
 
       {/* ═══════════════════════════════════════════════════════════ */}
       {/* MODO QR: Scanner Dialog                                    */}

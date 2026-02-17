@@ -45,20 +45,13 @@ export function useOfflineSync(): UseOfflineSyncReturn {
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      toast.success('Conexión restaurada', { 
-        description: 'Sincronizando datos pendientes...',
-        duration: 3000 
-      });
-      // Intentar sincronizar automáticamente
+      // SyncManager ya maneja la sincronización al reconectar
       syncNow();
     };
 
     const handleOffline = () => {
       setIsOnline(false);
-      toast.warning('Sin conexión', { 
-        description: 'Los cambios se guardarán localmente',
-        duration: 5000 
-      });
+      // No mostrar toast aquí — ConnectionStatus ya muestra banner
     };
 
     window.addEventListener('online', handleOnline);

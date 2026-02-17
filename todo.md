@@ -4228,3 +4228,15 @@
 - [x] Fix z-index de Select dropdowns en CapturaRapida (z-300 sobre overlay z-250)
 - [x] SyncManager: reducir intervalo de 15s a 5s, agregar visibilitychange y focus listeners
 - [x] SyncManager: sincronizar inmediatamente al volver a la app (visibilitychange + focus)
+
+## Fix CapturaRapida y Mensaje "Sin Conexión"
+- [x] Eliminar CapturaRapida overlay de Planos.tsx — todo flujo va a /nuevo-item (página completa)
+- [x] confirmTempPin navega a /nuevo-item con params del pin
+- [x] Botón "+Nuevo Ítem" en Planos navega a /nuevo-item
+- [x] Botón "Captura Rápida" en diálogo Pin Colocado navega a /nuevo-item con params
+- [x] Eliminar NetworkStatusBanner duplicado de main.tsx
+- [x] Simplificar useOnlineStatus: eliminar ping a /api/health (causaba falsos "sin conexión")
+- [x] Simplificar ConnectionStatus: solo muestra banner cuando navigator.onLine === false
+- [x] Eliminar toasts duplicados de useOfflineSync (ya los maneja ConnectionStatus)
+- [x] Fix drag & drop en Organizar: TouchSensor, card completa arrastrable, rectIntersection
+- [x] SyncManager reescrito: 2s intervalo, retry agresivo, visibilitychange + focus listeners
