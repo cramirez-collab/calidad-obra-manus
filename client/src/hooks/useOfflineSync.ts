@@ -128,13 +128,10 @@ export function useOfflineSync(): UseOfflineSyncReturn {
       await updatePendingCount();
 
       if (synced > 0) {
-        toast.success(`${synced} cambios sincronizados`, { duration: 3000 });
+        console.log(`[OfflineSync] ${synced} cambios sincronizados`);
       }
       if (failed > 0) {
-        toast.error(`${failed} cambios fallaron`, { 
-          description: 'Se reintentará más tarde',
-          duration: 5000 
-        });
+        console.warn(`[OfflineSync] ${failed} cambios fallaron — se reintentará`);
       }
     } catch (error) {
       console.error('Error en sincronización:', error);

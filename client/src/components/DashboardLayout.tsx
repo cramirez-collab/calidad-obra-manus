@@ -593,21 +593,7 @@ function DashboardLayoutContent({
                 </DropdownMenuContent>
               </DropdownMenu>
               <span className="text-[10px] font-mono bg-blue-100 px-1.5 py-0.5 rounded shrink-0" style={{ color: '#002C63' }}>{(window as any).OQC_DISPLAY_VERSION || 'v2.13'}</span>
-              {/* Indicador de conexión */}
-              <div className="flex items-center gap-1 shrink-0">
-                {online ? (
-                  <Wifi className="h-3.5 w-3.5 text-green-500" />
-                ) : (
-                  <>
-                    <WifiOff className="h-3.5 w-3.5 text-red-500" />
-                    {pendingCount > 0 && (
-                      <span className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded-full">
-                        {pendingCount}
-                      </span>
-                    )}
-                  </>
-                )}
-              </div>
+              {/* Indicador de conexión eliminado — sync opera silenciosamente */}
             </div>
 
             {/* Separador */}

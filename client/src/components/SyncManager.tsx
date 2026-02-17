@@ -4,7 +4,7 @@
  * Auto-limpia ítems que fallan >5 veces para evitar pendientes permanentes.
  */
 import { useEffect, useRef, useCallback } from 'react';
-import { toast } from 'sonner';
+// toast removed — sync opera 100% silencioso
 import { trpc } from '@/lib/trpc';
 import {
   obtenerPendientes,
@@ -172,10 +172,10 @@ export function SyncManager() {
         // offlineDB puede no estar disponible
       }
 
-      // 4. Notificar solo si se sincronizó algo
+      // 4. Invalidar queries si se sincronizó algo (sin toast)
       const total = syncedFotos + syncedItems;
       if (total > 0) {
-        toast.success(`${total} elemento(s) sincronizado(s)`);
+        console.log(`[SyncManager] ${total} elemento(s) sincronizado(s)`);
         utils.items.invalidate();
       }
     } catch (error) {

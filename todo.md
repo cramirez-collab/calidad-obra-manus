@@ -4257,3 +4257,11 @@
 - [x] SyncManager: auto-limpiar ítems que fallan más de 5 veces (MAX_RETRIES=5)
 - [x] Badge naranja solo visible cuando offline (no cuando online con pendientes)
 - [x] Rediseñar filtro de niveles en Planos: Select/dropdown compacto con conteo por nivel
+
+## Eliminar todos los indicadores de conexión
+- [x] Eliminar ConnectionStatus banner completamente (return null)
+- [x] Eliminar NetworkStatusBanner (return null)
+- [x] Eliminar badge naranja de pendientes del header (DashboardLayout)
+- [x] Eliminar toast de SyncManager (sync silencioso, solo console.log)
+- [x] Eliminar toast de useOfflineSync (sync silencioso)
+- [x] Sync opera 100% silencioso sin UI de estado de red
