@@ -712,3 +712,78 @@ export const reportesIA = mysqlTable("reportes_ia", {
 
 export type ReporteIA = typeof reportesIA.$inferSelect;
 export type InsertReporteIA = typeof reportesIA.$inferInsert;
+
+
+// ============================================================
+// MÓDULO DE PRUEBAS POR DEPARTAMENTO
+// ============================================================
+
+/**
+ * Catálogo de pruebas - define todas las pruebas que se aplican a departamentos
+ * Agrupadas por sistema (Eléctrico, Hidráulico, Gas, Acabados, etc.)
+ */
+export const catalogoPruebas = mysqlTable("catalogo_pruebas", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  sistema: varchar("sistema", { length: 100 }).notNull(), // Eléctrico, Hidráulico, Gas, Acabados, Carpintería, etc.
+  nombre: varchar("nombre", { length: 255 }).notNull(), // Nombre de la prueba
+  descripcion: text("descripcion"), // Descripción detallada de qué se evalúa
+  orden: int("orden").default(0).notNull(), // Orden dentro del sistema
+  requiereEvidencia: boolean("requiereEvidencia").default(true).notNull(), // Si la foto es obligatoria
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CatalogoPrueba = typeof catalogoPruebas.$inferSelect;
+export type InsertCatalogoPrueba = typeof catalogoPruebas.$inferInsert;
+
+/**
+ * Resultados de pruebas - estado actual de cada celda (unidad × prueba × intento)
+ * Estados: verde (pasa), rojo (no pasa), na (no aplica), pendiente (sin evaluar)
+ */
+export const pruebasResultado = mysqlTable("pruebas_resultado", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  unidadId: int("unidadId").notNull(), // Departamento evaluado
+  pruebaId: int("pruebaId").notNull(), // Referencia a catalogo_pruebas
+  intento: mysqlEnum("intento", ["intento_1", "intento_final"]).notNull(),
+  estado: mysqlEnum("estado_prueba", ["verde", "rojo", "na", "pendiente"]).default("pendiente").notNull(),
+  observacion: text("observacion"), // Obligatoria si estado = rojo
+  evidenciaUrl: text("evidenciaUrl"), // URL de foto de evidencia en S3
+  evidenciaKey: varchar("evidenciaKey", { length: 500 }),
+  evaluadoPorId: int("evaluadoPorId").notNull(), // Usuario que evaluó
+  evaluadoPorNombre: varchar("evaluadoPorNombre", { length: 255 }),
+  evaluadoAt: timestamp("evaluadoAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PruebaResultado = typeof pruebasResultado.$inferSelect;
+export type InsertPruebaResultado = typeof pruebasResultado.$inferInsert;
+
+/**
+ * Bitácora inmutable de pruebas - log de todas las acciones con hash SHA-256 encadenado
+ * Cada registro tiene el hash del registro anterior para garantizar integridad
+ */
+export const pruebasBitacora = mysqlTable("pruebas_bitacora", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  unidadId: int("unidadId").notNull(),
+  pruebaId: int("pruebaId").notNull(),
+  resultadoId: int("resultadoId"), // Referencia al resultado creado/modificado
+  accion: mysqlEnum("accion_bitacora", ["evaluacion", "correccion", "liberacion", "revocacion"]).notNull(),
+  intento: mysqlEnum("intento_bitacora", ["intento_1", "intento_final"]).notNull(),
+  estadoAnterior: varchar("estadoAnterior", { length: 20 }),
+  estadoNuevo: varchar("estadoNuevo", { length: 20 }).notNull(),
+  observacion: text("observacion"),
+  evidenciaUrl: text("evidenciaUrl"),
+  usuarioId: int("usuarioId").notNull(),
+  usuarioNombre: varchar("usuarioNombre", { length: 255 }).notNull(),
+  hashActual: varchar("hashActual", { length: 64 }).notNull(), // SHA-256 de este registro
+  hashAnterior: varchar("hashAnterior", { length: 64 }), // SHA-256 del registro anterior (null para el primero)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PruebaBitacora = typeof pruebasBitacora.$inferSelect;
+export type InsertPruebaBitacora = typeof pruebasBitacora.$inferInsert;

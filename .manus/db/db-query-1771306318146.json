@@ -1,0 +1,38 @@
+{
+  "query": "SELECT sistema, COUNT(*) as cnt FROM catalogo_pruebas WHERE proyectoId = 1 AND activo = 1 GROUP BY sistema ORDER BY sistema;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT sistema, COUNT(*) as cnt FROM catalogo_pruebas WHERE proyectoId = 1 AND activo = 1 GROUP BY sistema ORDER BY sistema;",
+  "rows": [
+    {
+      "sistema": "Acabados",
+      "cnt": "7"
+    },
+    {
+      "sistema": "Eléctrico",
+      "cnt": "7"
+    },
+    {
+      "sistema": "Gas",
+      "cnt": "3"
+    },
+    {
+      "sistema": "Herrería",
+      "cnt": "3"
+    },
+    {
+      "sistema": "Hidráulico",
+      "cnt": "6"
+    },
+    {
+      "sistema": "Impermeabilización",
+      "cnt": "2"
+    },
+    {
+      "sistema": "Sanitario",
+      "cnt": "6"
+    }
+  ],
+  "messages": [],
+  "stdout": "sistema\tcnt\nAcabados\t7\nEléctrico\t7\nGas\t3\nHerrería\t3\nHidráulico\t6\nImpermeabilización\t2\nSanitario\t6\n",
+  "stderr": "",
+  "execution_time_ms": 136
+}

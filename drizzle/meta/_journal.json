@@ -442,6 +442,13 @@
       "when": 1771214085228,
       "tag": "0062_rainy_wallop",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "5",
+      "when": 1771305150184,
+      "tag": "0063_stormy_warpath",
+      "breakpoints": true
     }
   ]
 }

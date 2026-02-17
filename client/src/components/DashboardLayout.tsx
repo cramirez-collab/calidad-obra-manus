@@ -48,6 +48,7 @@ import {
   WifiOff,
   Mail,
   Crosshair,
+  Shield,
   BrainCircuit
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -108,6 +109,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
   // Items de análisis (los enlaces externos dependen del proyecto)
   const analysisItems: MenuItem[] = [
     { icon: Layers, label: "Stacking", path: "/panoramica" },
+    { icon: Shield, label: "Pruebas", path: "/pruebas" },
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
     { icon: ListOrdered, label: "Especialidades", path: "/lista-especialidades" },
   ];

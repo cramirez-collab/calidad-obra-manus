@@ -4265,3 +4265,17 @@
 - [x] Eliminar toast de SyncManager (sync silencioso, solo console.log)
 - [x] Eliminar toast de useOfflineSync (sync silencioso)
 - [x] Sync opera 100% silencioso sin UI de estado de red
+
+## Módulo de Pruebas por Departamento
+- [x] Crear tabla catalogo_pruebas en schema (sistema, nombre, descripcion, activo)
+- [x] Crear tabla pruebas_resultado (unidadId, pruebaId, intento, estado, observacion, evidenciaUrl, userId, timestamp)
+- [x] Crear tabla pruebas_bitacora (log inmutable con hash SHA-256 encadenado)
+- [x] Migrar schema con pnpm db:push
+- [x] Seed catálogo de 34 pruebas en 7 sistemas para proyecto 1
+- [x] Procedimientos tRPC: catálogo, departamentos, detalle, evaluar, uploadEvidencia, bitácora, seedCatalogo
+- [x] UI: Lista de departamentos con semáforo (verde/amarillo/rojo/gris) y barra de progreso
+- [x] UI: Detalle de depto con pruebas agrupadas por sistema y estado por intento (1 y Final)
+- [x] UI: Modal de validación con resultado, observación, foto de evidencia
+- [x] UI: Concepto de "Depto Liberado" cuando 100% pruebas pasan en intento Final
+- [x] Integrar botón "Pruebas" (Shield icon) en navegación y rutas /pruebas y /pruebas/:id
+- [x] Filtros por nivel, sistema, estado y búsqueda por nombre de depto

@@ -32,7 +32,10 @@ import {
   planoPines, InsertPlanoPin,
   firmasReporte, InsertFirmaReporte,
   bitacoraCorreos, InsertBitacoraCorreo,
-  reportesIA, InsertReporteIA
+  reportesIA, InsertReporteIA,
+  catalogoPruebas, InsertCatalogoPrueba,
+  pruebasResultado, InsertPruebaResultado,
+  pruebasBitacora, InsertPruebaBitacora,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -6334,4 +6337,134 @@ async function getFotosEvidenciaFallback(proyectoId: number, limit: number) {
       tieneFoto: !!fotoUrl,
     };
   });
+}
+
+
+// ==================== MÓDULO DE PRUEBAS POR DEPARTAMENTO ====================
+
+// --- Catálogo de Pruebas ---
+
+export async function getCatalogoPruebas(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(catalogoPruebas)
+    .where(and(eq(catalogoPruebas.proyectoId, proyectoId), eq(catalogoPruebas.activo, true)))
+    .orderBy(asc(catalogoPruebas.sistema), asc(catalogoPruebas.orden));
+}
+
+export async function createCatalogoPrueba(data: InsertCatalogoPrueba) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.insert(catalogoPruebas).values(data);
+  return result.insertId;
+}
+
+export async function updateCatalogoPrueba(id: number, data: Partial<InsertCatalogoPrueba>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(catalogoPruebas).set(data).where(eq(catalogoPruebas.id, id));
+}
+
+export async function deleteCatalogoPrueba(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(catalogoPruebas).set({ activo: false }).where(eq(catalogoPruebas.id, id));
+}
+
+// --- Resultados de Pruebas ---
+
+export async function getResultadosPruebas(proyectoId: number, unidadId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(pruebasResultado.proyectoId, proyectoId)];
+  if (unidadId) conditions.push(eq(pruebasResultado.unidadId, unidadId));
+  return db.select().from(pruebasResultado).where(and(...conditions));
+}
+
+export async function getResultadoPrueba(proyectoId: number, unidadId: number, pruebaId: number, intento: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(pruebasResultado)
+    .where(and(
+      eq(pruebasResultado.proyectoId, proyectoId),
+      eq(pruebasResultado.unidadId, unidadId),
+      eq(pruebasResultado.pruebaId, pruebaId),
+      eq(pruebasResultado.intento, intento as any)
+    ))
+    .limit(1);
+  return rows[0] || null;
+}
+
+export async function upsertResultadoPrueba(data: InsertPruebaResultado) {
+  const db = await getDb();
+  if (!db) return null;
+  // Check if exists
+  const existing = await getResultadoPrueba(data.proyectoId, data.unidadId, data.pruebaId, data.intento);
+  if (existing) {
+    await db.update(pruebasResultado).set({
+      estado: data.estado,
+      observacion: data.observacion,
+      evidenciaUrl: data.evidenciaUrl,
+      evidenciaKey: data.evidenciaKey,
+      evaluadoPorId: data.evaluadoPorId,
+      evaluadoPorNombre: data.evaluadoPorNombre,
+      evaluadoAt: new Date(),
+    }).where(eq(pruebasResultado.id, existing.id));
+    return existing.id;
+  } else {
+    const [result] = await db.insert(pruebasResultado).values(data);
+    return result.insertId;
+  }
+}
+
+export async function getResumenPruebasPorUnidad(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  // Get all results grouped by unidad
+  return db.select().from(pruebasResultado)
+    .where(eq(pruebasResultado.proyectoId, proyectoId));
+}
+
+// --- Bitácora de Pruebas ---
+
+export async function createBitacoraPrueba(data: InsertPruebaBitacora) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.insert(pruebasBitacora).values(data);
+  return result.insertId;
+}
+
+export async function getUltimaBitacora(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(pruebasBitacora)
+    .where(eq(pruebasBitacora.proyectoId, proyectoId))
+    .orderBy(desc(pruebasBitacora.id))
+    .limit(1);
+  return rows[0] || null;
+}
+
+export async function getBitacoraPruebas(proyectoId: number, unidadId?: number, limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(pruebasBitacora.proyectoId, proyectoId)];
+  if (unidadId) conditions.push(eq(pruebasBitacora.unidadId, unidadId));
+  return db.select().from(pruebasBitacora)
+    .where(and(...conditions))
+    .orderBy(desc(pruebasBitacora.createdAt))
+    .limit(limit);
+}
+
+// --- Departamentos numéricos (para módulo de pruebas) ---
+
+export async function getDepartamentosNumericos(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(unidades)
+    .where(and(
+      eq(unidades.proyectoId, proyectoId),
+      eq(unidades.activo, true),
+      sql`${unidades.nombre} REGEXP '^[0-9]+$'`
+    ))
+    .orderBy(asc(unidades.nivel), asc(unidades.nombre));
 }

@@ -3647,5 +3647,280 @@ IMPORTANTE: Solo * para bullets. Texto plano sin códigos. Máx 300 palabras.`;
         return { success: true };
       }),
   }),
+
+  // ==================== PRUEBAS POR DEPARTAMENTO ====================
+  pruebas: router({
+    // Obtener catálogo de pruebas del proyecto
+    catalogo: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getCatalogoPruebas(input.proyectoId);
+      }),
+
+    // Crear prueba en catálogo (admin)
+    crearPrueba: adminProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        sistema: z.string().min(1),
+        nombre: z.string().min(1),
+        descripcion: z.string().optional(),
+        orden: z.number().default(0),
+        requiereEvidencia: z.boolean().default(true),
+      }))
+      .mutation(async ({ input }) => {
+        const id = await db.createCatalogoPrueba(input);
+        return { id };
+      }),
+
+    // Actualizar prueba en catálogo (admin)
+    actualizarPrueba: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        sistema: z.string().optional(),
+        nombre: z.string().optional(),
+        descripcion: z.string().optional(),
+        orden: z.number().optional(),
+        requiereEvidencia: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateCatalogoPrueba(id, data);
+        return { success: true };
+      }),
+
+    // Desactivar prueba (admin)
+    eliminarPrueba: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteCatalogoPrueba(input.id);
+        return { success: true };
+      }),
+
+    // Obtener departamentos numéricos con resumen de pruebas
+    departamentos: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        const [deptos, catalogo, resultados] = await Promise.all([
+          db.getDepartamentosNumericos(input.proyectoId),
+          db.getCatalogoPruebas(input.proyectoId),
+          db.getResumenPruebasPorUnidad(input.proyectoId),
+        ]);
+        const totalPruebas = catalogo.length;
+        return deptos.map(d => {
+          const resDepto = resultados.filter(r => r.unidadId === d.id);
+          const verdes = resDepto.filter(r => r.estado === 'verde').length;
+          const rojos = resDepto.filter(r => r.estado === 'rojo').length;
+          const na = resDepto.filter(r => r.estado === 'na').length;
+          const evaluados = verdes + rojos + na;
+          // Total posible: pruebas * 2 intentos, menos NA
+          const totalPosible = (totalPruebas * 2) - na;
+          const progreso = totalPosible > 0 ? Math.round((verdes / totalPosible) * 100) : 0;
+          // Liberado = todas las pruebas en intento_final son verde o na
+          const resultadosFinales = resDepto.filter(r => r.intento === 'intento_final');
+          const liberado = totalPruebas > 0 && resultadosFinales.length >= totalPruebas &&
+            resultadosFinales.every(r => r.estado === 'verde' || r.estado === 'na');
+          return {
+            ...d,
+            totalPruebas,
+            verdes,
+            rojos,
+            na,
+            evaluados,
+            progreso,
+            liberado,
+          };
+        });
+      }),
+
+    // Obtener detalle de pruebas de un departamento
+    detalleDepartamento: protectedProcedure
+      .input(z.object({ proyectoId: z.number(), unidadId: z.number() }))
+      .query(async ({ input }) => {
+        const [catalogo, resultados] = await Promise.all([
+          db.getCatalogoPruebas(input.proyectoId),
+          db.getResultadosPruebas(input.proyectoId, input.unidadId),
+        ]);
+        // Agrupar por sistema
+        const sistemas = new Map<string, any[]>();
+        for (const prueba of catalogo) {
+          if (!sistemas.has(prueba.sistema)) sistemas.set(prueba.sistema, []);
+          const intento1 = resultados.find(r => r.pruebaId === prueba.id && r.intento === 'intento_1');
+          const intentoFinal = resultados.find(r => r.pruebaId === prueba.id && r.intento === 'intento_final');
+          sistemas.get(prueba.sistema)!.push({
+            ...prueba,
+            intento1: intento1 || null,
+            intentoFinal: intentoFinal || null,
+          });
+        }
+        return Array.from(sistemas.entries()).map(([sistema, pruebas]) => ({
+          sistema,
+          pruebas,
+        }));
+      }),
+
+    // Evaluar una prueba (crear/actualizar resultado + bitácora con hash)
+    evaluar: supervisorProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        unidadId: z.number(),
+        pruebaId: z.number(),
+        intento: z.enum(['intento_1', 'intento_final']),
+        estado: z.enum(['verde', 'rojo', 'na']),
+        observacion: z.string().optional(),
+        evidenciaUrl: z.string().optional(),
+        evidenciaKey: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Validar: si rojo, observación obligatoria
+        if (input.estado === 'rojo' && !input.observacion?.trim()) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'La observación es obligatoria cuando la prueba no pasa.' });
+        }
+        // Obtener estado anterior
+        const existente = await db.getResultadoPrueba(input.proyectoId, input.unidadId, input.pruebaId, input.intento);
+        const estadoAnterior = existente?.estado || 'pendiente';
+        // Upsert resultado
+        const resultadoId = await db.upsertResultadoPrueba({
+          proyectoId: input.proyectoId,
+          unidadId: input.unidadId,
+          pruebaId: input.pruebaId,
+          intento: input.intento,
+          estado: input.estado,
+          observacion: input.observacion || null,
+          evidenciaUrl: input.evidenciaUrl || null,
+          evidenciaKey: input.evidenciaKey || null,
+          evaluadoPorId: ctx.user.id,
+          evaluadoPorNombre: ctx.user.name || ctx.user.email || 'Desconocido',
+          evaluadoAt: new Date(),
+        });
+        // Hash SHA-256 encadenado para bitácora inmutable
+        const crypto = await import('crypto');
+        const ultimaBitacora = await db.getUltimaBitacora(input.proyectoId);
+        const hashAnterior = ultimaBitacora?.hashActual || null;
+        const dataToHash = JSON.stringify({
+          proyectoId: input.proyectoId,
+          unidadId: input.unidadId,
+          pruebaId: input.pruebaId,
+          intento: input.intento,
+          estadoAnterior,
+          estadoNuevo: input.estado,
+          usuarioId: ctx.user.id,
+          timestamp: Date.now(),
+          hashAnterior,
+        });
+        const hashActual = crypto.createHash('sha256').update(dataToHash).digest('hex');
+        // Crear entrada en bitácora
+        await db.createBitacoraPrueba({
+          proyectoId: input.proyectoId,
+          unidadId: input.unidadId,
+          pruebaId: input.pruebaId,
+          resultadoId: resultadoId || undefined,
+          accion: 'evaluacion',
+          intento: input.intento,
+          estadoAnterior,
+          estadoNuevo: input.estado,
+          observacion: input.observacion || null,
+          evidenciaUrl: input.evidenciaUrl || null,
+          usuarioId: ctx.user.id,
+          usuarioNombre: ctx.user.name || ctx.user.email || 'Desconocido',
+          hashActual,
+          hashAnterior,
+        });
+        return { success: true, resultadoId, hashActual };
+      }),
+
+    // Subir evidencia fotográfica
+    subirEvidencia: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        unidadId: z.number(),
+        pruebaId: z.number(),
+        base64: z.string(),
+        mimeType: z.string().default('image/jpeg'),
+      }))
+      .mutation(async ({ input }) => {
+        const buffer = Buffer.from(input.base64, 'base64');
+        const ext = input.mimeType === 'image/png' ? 'png' : 'jpg';
+        const fileKey = `pruebas/${input.proyectoId}/${input.unidadId}/${input.pruebaId}-${nanoid(8)}.${ext}`;
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        return { url, key: fileKey };
+      }),
+
+    // Obtener bitácora de pruebas
+    bitacora: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        unidadId: z.number().optional(),
+        limit: z.number().default(50),
+      }))
+      .query(async ({ input }) => {
+        return db.getBitacoraPruebas(input.proyectoId, input.unidadId, input.limit);
+      }),
+
+    // Seed del catálogo inicial de pruebas
+    seedCatalogo: adminProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .mutation(async ({ input }) => {
+        // Verificar si ya existe catálogo
+        const existente = await db.getCatalogoPruebas(input.proyectoId);
+        if (existente.length > 0) {
+          throw new TRPCError({ code: 'CONFLICT', message: 'El catálogo ya tiene pruebas configuradas.' });
+        }
+        const pruebasDefault = [
+          // Eléctrico
+          { sistema: 'Eléctrico', nombre: 'Funcionamiento de apagadores', orden: 1 },
+          { sistema: 'Eléctrico', nombre: 'Funcionamiento de contactos', orden: 2 },
+          { sistema: 'Eléctrico', nombre: 'Funcionamiento de luminarias', orden: 3 },
+          { sistema: 'Eléctrico', nombre: 'Centro de carga / pastillas', orden: 4 },
+          { sistema: 'Eléctrico', nombre: 'Timbre / intercomunicador', orden: 5 },
+          { sistema: 'Eléctrico', nombre: 'Acometida eléctrica', orden: 6 },
+          // Hidráulico
+          { sistema: 'Hidráulico', nombre: 'Presión de agua fría', orden: 1 },
+          { sistema: 'Hidráulico', nombre: 'Presión de agua caliente', orden: 2 },
+          { sistema: 'Hidráulico', nombre: 'Funcionamiento de llaves mezcladoras', orden: 3 },
+          { sistema: 'Hidráulico', nombre: 'Funcionamiento de WC', orden: 4 },
+          { sistema: 'Hidráulico', nombre: 'Funcionamiento de regadera', orden: 5 },
+          { sistema: 'Hidráulico', nombre: 'Funcionamiento de lavabo', orden: 6 },
+          { sistema: 'Hidráulico', nombre: 'Funcionamiento de tarja', orden: 7 },
+          { sistema: 'Hidráulico', nombre: 'Prueba de hermeticidad', orden: 8 },
+          // Sanitario
+          { sistema: 'Sanitario', nombre: 'Desagüe de lavabo', orden: 1 },
+          { sistema: 'Sanitario', nombre: 'Desagüe de regadera', orden: 2 },
+          { sistema: 'Sanitario', nombre: 'Desagüe de tarja', orden: 3 },
+          { sistema: 'Sanitario', nombre: 'Desagüe de WC', orden: 4 },
+          { sistema: 'Sanitario', nombre: 'Coladeras', orden: 5 },
+          // Gas
+          { sistema: 'Gas', nombre: 'Prueba de hermeticidad gas', orden: 1 },
+          { sistema: 'Gas', nombre: 'Funcionamiento de calentador', orden: 2 },
+          { sistema: 'Gas', nombre: 'Funcionamiento de estufa', orden: 3 },
+          // Carpintería
+          { sistema: 'Carpintería', nombre: 'Puertas - apertura y cierre', orden: 1 },
+          { sistema: 'Carpintería', nombre: 'Puertas - chapas y cerraduras', orden: 2 },
+          { sistema: 'Carpintería', nombre: 'Closets - puertas y correderas', orden: 3 },
+          { sistema: 'Carpintería', nombre: 'Muebles de baño', orden: 4 },
+          { sistema: 'Carpintería', nombre: 'Cocina integral', orden: 5 },
+          // Acabados
+          { sistema: 'Acabados', nombre: 'Pintura muros', orden: 1 },
+          { sistema: 'Acabados', nombre: 'Pintura plafones', orden: 2 },
+          { sistema: 'Acabados', nombre: 'Piso - nivelación y adherencia', orden: 3 },
+          { sistema: 'Acabados', nombre: 'Azulejo - adherencia y cortes', orden: 4 },
+          { sistema: 'Acabados', nombre: 'Ventanas - apertura y hermeticidad', orden: 5 },
+          { sistema: 'Acabados', nombre: 'Cancel de baño', orden: 6 },
+          // Limpieza
+          { sistema: 'Limpieza', nombre: 'Limpieza gruesa', orden: 1 },
+          { sistema: 'Limpieza', nombre: 'Limpieza fina', orden: 2 },
+          { sistema: 'Limpieza', nombre: 'Limpieza de vidrios', orden: 3 },
+        ];
+        for (const p of pruebasDefault) {
+          await db.createCatalogoPrueba({
+            proyectoId: input.proyectoId,
+            sistema: p.sistema,
+            nombre: p.nombre,
+            orden: p.orden,
+            requiereEvidencia: true,
+          });
+        }
+        return { success: true, count: pruebasDefault.length };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
