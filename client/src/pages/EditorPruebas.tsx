@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { useProject } from "@/contexts/ProjectContext";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -40,29 +40,8 @@ import {
   Eye,
   EyeOff,
   GripVertical,
+  ArrowUpDown,
 } from "lucide-react";
-
-// @dnd-kit imports
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragStartEvent,
-  DragOverlay,
-  MeasuringStrategy,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
 const SISTEMAS_DEFAULT = [
   "Eléctrico",
@@ -76,55 +55,72 @@ const SISTEMAS_DEFAULT = [
   "Especiales",
 ];
 
-// ========== Sortable Item Component ==========
-function SortablePruebaItem({
+// ========== Prueba Row Component ==========
+function PruebaRow({
   prueba,
+  index,
   onEdit,
   onDelete,
   onReactivar,
   isDeleting,
   isReactivating,
+  dragState,
+  onDragStart,
+  onDragEnter,
+  onDragEnd,
 }: {
   prueba: any;
+  index: number;
   onEdit: (p: any) => void;
   onDelete: (id: number) => void;
   onReactivar: (id: number) => void;
   isDeleting: boolean;
   isReactivating: boolean;
+  dragState: { draggingId: number | null; overId: number | null };
+  onDragStart: (id: number) => void;
+  onDragEnter: (id: number) => void;
+  onDragEnd: () => void;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: prueba.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.3 : 1,
-    zIndex: isDragging ? 50 : "auto" as any,
-  };
+  const isDragging = dragState.draggingId === prueba.id;
+  const isDropTarget = dragState.overId === prueba.id && dragState.draggingId !== prueba.id;
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      className={`flex items-center gap-2 px-3 py-2.5 border-b border-gray-50 last:border-0 group ${
+      data-prueba-id={prueba.id}
+      className={`flex items-center gap-2 px-3 py-2.5 border-b border-gray-50 last:border-0 group transition-all duration-150 ${
         !prueba.activo ? "opacity-50 bg-gray-50" : "bg-white"
-      } ${isDragging ? "shadow-lg rounded-lg border border-[#02B381]/30" : ""}`}
+      } ${isDragging ? "opacity-30 bg-blue-50" : ""} ${
+        isDropTarget ? "bg-[#02B381]/5 border-l-2 border-l-[#02B381] shadow-inner" : ""
+      }`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      }}
+      onDragEnter={(e) => {
+        e.preventDefault();
+        onDragEnter(prueba.id);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        onDragEnd();
+      }}
     >
-      {/* Drag handle */}
-      <button
-        {...attributes}
-        {...listeners}
-        className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1 rounded hover:bg-gray-100 transition-colors"
-        tabIndex={-1}
+      {/* Drag handle - native HTML5 drag */}
+      <div
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("text/plain", String(prueba.id));
+          // Small delay so browser captures the element
+          requestAnimationFrame(() => onDragStart(prueba.id));
+        }}
+        onDragEnd={() => {
+          onDragEnd();
+        }}
+        className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1 rounded hover:bg-gray-100 transition-colors select-none"
       >
         <GripVertical className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
-      </button>
+      </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
@@ -201,23 +197,6 @@ function SortablePruebaItem({
   );
 }
 
-// ========== Drag Overlay Item (ghost) ==========
-function DragOverlayItem({ prueba }: { prueba: any }) {
-  return (
-    <div className="flex items-center gap-2 px-3 py-2.5 bg-white border-2 border-[#02B381] rounded-lg shadow-2xl">
-      <GripVertical className="w-4 h-4 text-[#02B381] shrink-0" />
-      <div className="flex-1 min-w-0">
-        <span className="text-sm font-medium text-foreground">
-          {prueba.nombre}
-        </span>
-      </div>
-      <span className="text-[10px] text-muted-foreground font-mono">
-        #{prueba.orden}
-      </span>
-    </div>
-  );
-}
-
 // ========== Main Component ==========
 export default function EditorPruebas() {
   const { selectedProjectId } = useProject();
@@ -230,7 +209,13 @@ export default function EditorPruebas() {
   const [showInactive, setShowInactive] = useState(false);
   const [editModal, setEditModal] = useState<any>(null);
   const [createModal, setCreateModal] = useState(false);
-  const [activeDragId, setActiveDragId] = useState<number | null>(null);
+
+  // Drag state: simple swap between dragging item and drop target
+  const [dragState, setDragState] = useState<{
+    draggingId: number | null;
+    overId: number | null;
+    sistema: string | null;
+  }>({ draggingId: null, overId: null, sistema: null });
 
   // Form state
   const [formNombre, setFormNombre] = useState("");
@@ -258,7 +243,7 @@ export default function EditorPruebas() {
       setCreateModal(false);
       resetForm();
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message),
   });
 
   const actualizarMut = trpc.pruebas.actualizarPrueba.useMutation({
@@ -268,7 +253,7 @@ export default function EditorPruebas() {
       setEditModal(null);
       resetForm();
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message),
   });
 
   const eliminarMut = trpc.pruebas.eliminarPrueba.useMutation({
@@ -276,7 +261,7 @@ export default function EditorPruebas() {
       toast.success("Prueba desactivada");
       refetch();
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message),
   });
 
   const reactivarMut = trpc.pruebas.reactivarPrueba.useMutation({
@@ -284,14 +269,14 @@ export default function EditorPruebas() {
       toast.success("Prueba reactivada");
       refetch();
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message),
   });
 
   const reordenarMut = trpc.pruebas.reordenarPruebas.useMutation({
     onSuccess: () => {
       refetch();
     },
-    onError: (e) => {
+    onError: (e: any) => {
       toast.error("Error al reordenar: " + e.message);
       refetch();
     },
@@ -365,7 +350,6 @@ export default function EditorPruebas() {
       if (!map.has(p.sistema)) map.set(p.sistema, []);
       map.get(p.sistema)!.push(p);
     }
-    // Sort each group by orden
     Array.from(map.entries()).forEach(([, items]) => {
       items.sort((a: any, b: any) => a.orden - b.orden);
     });
@@ -385,71 +369,56 @@ export default function EditorPruebas() {
     setExpandedSistemas(new Set(Array.from(grouped.keys())));
   };
 
-  // DnD sensors with activation constraint to prevent accidental drags
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  // ===== SWAP-only drag handlers =====
+  // When user drags A onto B, A takes B's orden and B takes A's orden.
+  // NO other items move. Pure swap.
 
-  const activeDragPrueba = useMemo(() => {
-    if (!activeDragId || !catalogo) return null;
-    return catalogo.find((p: any) => p.id === activeDragId) || null;
-  }, [activeDragId, catalogo]);
+  const handleDragStartItem = useCallback((id: number) => {
+    if (!catalogo) return;
+    const item = catalogo.find((p: any) => p.id === id);
+    if (!item) return;
+    setDragState({ draggingId: id, overId: null, sistema: item.sistema });
+  }, [catalogo]);
 
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    setActiveDragId(event.active.id as number);
-  }, []);
+  const handleDragEnterItem = useCallback((id: number) => {
+    setDragState((prev) => {
+      if (!prev.draggingId || prev.draggingId === id) return prev;
+      // Only allow drop within same sistema
+      if (!catalogo) return prev;
+      const overItem = catalogo.find((p: any) => p.id === id);
+      if (!overItem || overItem.sistema !== prev.sistema) return prev;
+      return { ...prev, overId: id };
+    });
+  }, [catalogo]);
 
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      setActiveDragId(null);
-      const { active, over } = event;
-      if (!over || active.id === over.id || !catalogo || !selectedProjectId) return;
+  const handleDragEndSwap = useCallback(() => {
+    const { draggingId, overId } = dragState;
+    // Reset drag state immediately
+    setDragState({ draggingId: null, overId: null, sistema: null });
 
-      // Find which sistema both items belong to
-      const activeItem = catalogo.find((p: any) => p.id === active.id);
-      const overItem = catalogo.find((p: any) => p.id === over.id);
-      if (!activeItem || !overItem || activeItem.sistema !== overItem.sistema) return;
+    if (!draggingId || !overId || draggingId === overId || !catalogo || !selectedProjectId) return;
 
-      const sistema = activeItem.sistema;
-      const sistemaItems = grouped.get(sistema);
-      if (!sistemaItems) return;
+    const itemA = catalogo.find((p: any) => p.id === draggingId);
+    const itemB = catalogo.find((p: any) => p.id === overId);
+    if (!itemA || !itemB) return;
+    if (itemA.sistema !== itemB.sistema) return;
 
-      const oldIndex = sistemaItems.findIndex((p: any) => p.id === active.id);
-      const newIndex = sistemaItems.findIndex((p: any) => p.id === over.id);
-      if (oldIndex === -1 || newIndex === -1) return;
+    // SWAP: A gets B's orden, B gets A's orden. Nothing else changes.
+    const updates = [
+      { id: itemA.id, orden: itemB.orden },
+      { id: itemB.id, orden: itemA.orden },
+    ];
 
-      // Reorder locally
-      const reordered = arrayMove(sistemaItems, oldIndex, newIndex);
+    reordenarMut.mutate({
+      proyectoId: selectedProjectId,
+      items: updates,
+    });
 
-      // Assign new orden values (1-based)
-      const updates = reordered.map((item: any, idx: number) => ({
-        id: item.id,
-        orden: idx + 1,
-      }));
-
-      // Persist to backend
-      reordenarMut.mutate({
-        proyectoId: selectedProjectId,
-        items: updates,
-      });
-
-      toast.success(`Prueba movida a posición ${newIndex + 1}`, {
-        duration: 1500,
-      });
-    },
-    [catalogo, grouped, selectedProjectId, reordenarMut]
-  );
-
-  const handleDragCancel = useCallback(() => {
-    setActiveDragId(null);
-  }, []);
+    toast.success(
+      `"${itemA.nombre}" ↔ "${itemB.nombre}"`,
+      { duration: 2000 }
+    );
+  }, [dragState, catalogo, selectedProjectId, reordenarMut]);
 
   const totalPruebas = catalogo?.length || 0;
   const activePruebas = catalogo?.filter((p: any) => p.activo).length || 0;
@@ -489,7 +458,7 @@ export default function EditorPruebas() {
             </h1>
             <p className="text-sm text-muted-foreground">
               {activePruebas} activas de {totalPruebas} · {sistemas.length}{" "}
-              sistemas · Arrastra para reordenar
+              sistemas
             </p>
           </div>
           <Button
@@ -499,6 +468,14 @@ export default function EditorPruebas() {
           >
             <Plus className="w-4 h-4 mr-1" /> Nueva
           </Button>
+        </div>
+
+        {/* Instruction banner */}
+        <div className="flex items-center gap-2 px-3 py-2 mb-4 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700">
+          <ArrowUpDown className="w-3.5 h-3.5 shrink-0" />
+          <span>
+            <strong>Arrastra</strong> una prueba sobre otra para <strong>intercambiar posiciones</strong>. Solo se mueven las 2 pruebas involucradas, las demás no cambian.
+          </span>
         </div>
 
         {/* Search + Filters */}
@@ -535,124 +512,100 @@ export default function EditorPruebas() {
           </Button>
         </div>
 
-        {/* Systems list with DnD */}
+        {/* Systems list */}
         {isLoading ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="w-6 h-6 animate-spin text-[#02B381]" />
           </div>
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-            measuring={{
-              droppable: {
-                strategy: MeasuringStrategy.Always,
-              },
-            }}
-          >
-            <div className="space-y-2">
-              {sistemas.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <ClipboardCheck className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  <p className="font-medium">Sin pruebas configuradas</p>
-                  <p className="text-sm">
-                    Agrega pruebas con el botón "Nueva".
-                  </p>
-                </div>
-              ) : (
-                sistemas.map((sistema) => {
-                  const pruebas = grouped.get(sistema) || [];
-                  const isExpanded = expandedSistemas.has(sistema);
-                  const activas = pruebas.filter(
-                    (p: any) => p.activo
-                  ).length;
-                  const pruebaIds = pruebas.map((p: any) => p.id);
+          <div className="space-y-2">
+            {sistemas.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <ClipboardCheck className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="font-medium">Sin pruebas configuradas</p>
+                <p className="text-sm">
+                  Agrega pruebas con el botón "Nueva".
+                </p>
+              </div>
+            ) : (
+              sistemas.map((sistema) => {
+                const pruebas = grouped.get(sistema) || [];
+                const isExpanded = expandedSistemas.has(sistema);
+                const activas = pruebas.filter(
+                  (p: any) => p.activo
+                ).length;
 
-                  return (
-                    <div
-                      key={sistema}
-                      className="bg-white border border-gray-100 rounded-xl overflow-hidden"
+                return (
+                  <div
+                    key={sistema}
+                    className="bg-white border border-gray-100 rounded-xl overflow-hidden"
+                  >
+                    {/* System header */}
+                    <button
+                      onClick={() => toggleSistema(sistema)}
+                      className="w-full flex items-center gap-3 p-3 sm:p-4 hover:bg-gray-50 transition-colors text-left"
                     >
-                      {/* System header */}
-                      <button
-                        onClick={() => toggleSistema(sistema)}
-                        className="w-full flex items-center gap-3 p-3 sm:p-4 hover:bg-gray-50 transition-colors text-left"
+                      <div className="w-8 h-8 rounded-lg bg-[#002C63]/10 flex items-center justify-center shrink-0">
+                        <Zap className="w-4 h-4 text-[#002C63]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-semibold text-[#002C63]">
+                          {sistema}
+                        </span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {activas} prueba
+                          {activas !== 1 ? "s" : ""} activa
+                          {activas !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openCreate(sistema);
+                        }}
                       >
-                        <div className="w-8 h-8 rounded-lg bg-[#002C63]/10 flex items-center justify-center shrink-0">
-                          <Zap className="w-4 h-4 text-[#002C63]" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="font-semibold text-[#002C63]">
-                            {sistema}
-                          </span>
-                          <span className="text-xs text-muted-foreground ml-2">
-                            {activas} prueba
-                            {activas !== 1 ? "s" : ""} activa
-                            {activas !== 1 ? "s" : ""}
-                          </span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openCreate(sistema);
-                          }}
-                        >
-                          <Plus className="w-4 h-4 text-[#02B381]" />
-                        </Button>
-                        {isExpanded ? (
-                          <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
-                        )}
-                      </button>
-
-                      {/* Pruebas list with sortable context */}
-                      {isExpanded && (
-                        <div className="border-t border-gray-100">
-                          <SortableContext
-                            items={pruebaIds}
-                            strategy={verticalListSortingStrategy}
-                          >
-                            {pruebas.map((prueba: any) => (
-                              <SortablePruebaItem
-                                key={prueba.id}
-                                prueba={prueba}
-                                onEdit={openEdit}
-                                onDelete={(id) =>
-                                  eliminarMut.mutate({ id })
-                                }
-                                onReactivar={(id) =>
-                                  reactivarMut.mutate({ id })
-                                }
-                                isDeleting={eliminarMut.isPending}
-                                isReactivating={reactivarMut.isPending}
-                              />
-                            ))}
-                          </SortableContext>
-                        </div>
+                        <Plus className="w-4 h-4 text-[#02B381]" />
+                      </Button>
+                      {isExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
                       )}
-                    </div>
-                  );
-                })
-              )}
-            </div>
+                    </button>
 
-            {/* Drag overlay - follows cursor precisely */}
-            <DragOverlay dropAnimation={{
-              duration: 200,
-              easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
-            }}>
-              {activeDragPrueba ? (
-                <DragOverlayItem prueba={activeDragPrueba} />
-              ) : null}
-            </DragOverlay>
-          </DndContext>
+                    {/* Pruebas list */}
+                    {isExpanded && (
+                      <div className="border-t border-gray-100">
+                        {pruebas.map((prueba: any, idx: number) => (
+                          <PruebaRow
+                            key={prueba.id}
+                            prueba={prueba}
+                            index={idx}
+                            onEdit={openEdit}
+                            onDelete={(id) =>
+                              eliminarMut.mutate({ id })
+                            }
+                            onReactivar={(id) =>
+                              reactivarMut.mutate({ id })
+                            }
+                            isDeleting={eliminarMut.isPending}
+                            isReactivating={reactivarMut.isPending}
+                            dragState={dragState}
+                            onDragStart={handleDragStartItem}
+                            onDragEnter={handleDragEnterItem}
+                            onDragEnd={handleDragEndSwap}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         )}
       </div>
 

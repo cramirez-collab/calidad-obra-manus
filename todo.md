@@ -4307,3 +4307,7 @@
 - [x] Solo admin/superadmin pueden reordenar (sin handles para otros roles)
 - [x] Trazabilidad: registrar cada cambio de orden (usuario, fecha, posición anterior/nueva)
 - [x] Eliminar botón "Organizar" si es redundante (drag directo)
+
+## Bug Fix: Drag & Drop sin desplazar otras pruebas
+- [x] Al arrastrar una prueba, solo intercambiar posición (orden) con la prueba destino — no desplazar ni reacomodar las demás
+- [x] Las pruebas que no participan en el drag NO deben moverse de su posición
