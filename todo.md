@@ -4251,3 +4251,9 @@
 - [x] Unificado: SyncManager es el ÚNICO sistema de sync (cubre offlineStorage + offlineDB + uploadQueue)
 - [x] useSyncManager convertido a hook de solo lectura (contadores, sin sync propio)
 - [x] Eliminados toasts de SyncManager (Conexión restaurada, pendientes al montar)
+
+## Badge naranja persistente y niveles en Planos
+- [x] Arreglar badge naranja de sync: forzar limpieza de ítems corruptos que no sincronizan
+- [x] SyncManager: auto-limpiar ítems que fallan más de 5 veces (MAX_RETRIES=5)
+- [x] Badge naranja solo visible cuando offline (no cuando online con pendientes)
+- [x] Rediseñar filtro de niveles en Planos: Select/dropdown compacto con conteo por nivel

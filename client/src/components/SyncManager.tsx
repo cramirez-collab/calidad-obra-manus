@@ -1,10 +1,7 @@
 /**
- * Componente de sincronización automática de fotos y acciones pendientes.
- * Se ejecuta en segundo plano y sincroniza todo lo guardado offline.
- *
- * Unifica las dos colas:
- * - uploadQueue (oqc_upload_queue): fotos pendientes
- * - offlineStorage (oqc_offline_db): ítems creados offline
+ * SyncManager — ÚNICO sistema de sincronización offline.
+ * Cubre: uploadQueue (fotos), offlineStorage (ítems), offlineDB (legacy).
+ * Auto-limpia ítems que fallan >5 veces para evitar pendientes permanentes.
  */
 import { useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
@@ -26,6 +23,25 @@ import {
   removePendingAction as removeOfflineDBAction,
 } from '@/lib/offlineDB';
 
+const MAX_RETRIES = 5;
+// Track failure counts in memory (resets on page reload — that's fine)
+const failureCounts = new Map<string, number>();
+
+function trackFailure(id: string): boolean {
+  const count = (failureCounts.get(id) || 0) + 1;
+  failureCounts.set(id, count);
+  if (count >= MAX_RETRIES) {
+    console.warn(`[SyncManager] Ítem ${id} falló ${count} veces — eliminando de cola`);
+    failureCounts.delete(id);
+    return true; // should be removed
+  }
+  return false;
+}
+
+function clearFailure(id: string) {
+  failureCounts.delete(id);
+}
+
 export function SyncManager() {
   const syncingRef = useRef(false);
   const utils = trpc.useUtils();
@@ -39,7 +55,7 @@ export function SyncManager() {
     try {
       syncingRef.current = true;
 
-      // 1. Limpiar fotos antiguas
+      // 1. Limpiar fotos antiguas (>48h)
       await limpiarAntiguos();
 
       // 2. Sincronizar cola de fotos (uploadQueue)
@@ -55,21 +71,25 @@ export function SyncManager() {
               comentario: upload.comentario,
             });
           }
-
           if (upload.id) {
             await eliminarDeCola(upload.id);
+            clearFailure(`foto-${upload.id}`);
             syncedFotos++;
-            console.log(`[SyncManager] Foto ${upload.id} sincronizada`);
           }
         } catch (error: any) {
           console.error(`[SyncManager] Error foto ${upload.id}:`, error.message);
           if (upload.id) {
-            await marcarFallo(upload.id, error.message);
+            const shouldRemove = trackFailure(`foto-${upload.id}`);
+            if (shouldRemove) {
+              await eliminarDeCola(upload.id);
+            } else {
+              await marcarFallo(upload.id, error.message);
+            }
           }
         }
       }
 
-      // 3. Sincronizar cola de ítems offline (offlineStorage — BD principal)
+      // 3. Sincronizar cola de ítems offline (offlineStorage)
       let syncedItems = 0;
       try {
         const offlineActions = await getPendingActions();
@@ -92,11 +112,17 @@ export function SyncManager() {
               syncedItems++;
             }
             await removePendingAction(action.id);
+            clearFailure(`os-${action.id}`);
           } catch (error: any) {
             if (error.message?.includes('duplicate') || error.message?.includes('DUPLICATE')) {
               await removePendingAction(action.id);
+              clearFailure(`os-${action.id}`);
               syncedItems++;
             } else {
+              const shouldRemove = trackFailure(`os-${action.id}`);
+              if (shouldRemove) {
+                await removePendingAction(action.id);
+              }
               console.error(`[SyncManager] Error ítem ${action.id}:`, error.message);
             }
           }
@@ -105,7 +131,7 @@ export function SyncManager() {
         // offlineStorage puede no estar disponible
       }
 
-      // 3b. Sincronizar cola de offlineDB (BD secundaria legacy)
+      // 3b. Sincronizar cola de offlineDB (legacy)
       try {
         const legacyActions = await getOfflineDBActions();
         for (const action of legacyActions) {
@@ -127,11 +153,17 @@ export function SyncManager() {
               syncedItems++;
             }
             await removeOfflineDBAction(action.id);
+            clearFailure(`db-${action.id}`);
           } catch (error: any) {
             if (error.message?.includes('duplicate') || error.message?.includes('DUPLICATE')) {
               await removeOfflineDBAction(action.id);
+              clearFailure(`db-${action.id}`);
               syncedItems++;
             } else {
+              const shouldRemove = trackFailure(`db-${action.id}`);
+              if (shouldRemove) {
+                await removeOfflineDBAction(action.id);
+              }
               console.error(`[SyncManager] Error legacy ítem ${action.id}:`, error.message);
             }
           }
@@ -140,7 +172,7 @@ export function SyncManager() {
         // offlineDB puede no estar disponible
       }
 
-      // 4. Notificar al usuario
+      // 4. Notificar solo si se sincronizó algo
       const total = syncedFotos + syncedItems;
       if (total > 0) {
         toast.success(`${total} elemento(s) sincronizado(s)`);
@@ -153,36 +185,30 @@ export function SyncManager() {
     }
   }, []);
 
-  // Sincronizar al montar + cuando vuelve la conexión + periódicamente
   useEffect(() => {
+    // Sincronizar inmediatamente al montar
     sincronizar();
 
     const handleOnline = () => {
       console.log('[SyncManager] Conexión restaurada');
-      // No mostrar toast — ConnectionStatus ya muestra banner de reconexion
       setTimeout(sincronizar, 1000);
     };
 
-    // Sync when app regains focus (user switches back to the tab/app)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && navigator.onLine) {
-        console.log('[SyncManager] App visible, sincronizando...');
         setTimeout(sincronizar, 500);
       }
     };
 
     const handleFocus = () => {
-      if (navigator.onLine) {
-        console.log('[SyncManager] Ventana enfocada, sincronizando...');
-        setTimeout(sincronizar, 500);
-      }
+      if (navigator.onLine) setTimeout(sincronizar, 500);
     };
 
     window.addEventListener('online', handleOnline);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
 
-    // Sync every 5 seconds (was 15s)
+    // Sync cada 5s
     const interval = setInterval(() => {
       if (navigator.onLine) sincronizar();
     }, 5000);
@@ -194,20 +220,6 @@ export function SyncManager() {
       clearInterval(interval);
     };
   }, [sincronizar]);
-
-  // Log pendientes al montar (sin toast para no molestar)
-  useEffect(() => {
-    const check = async () => {
-      const fotoCount = await contarPendientes();
-      let itemCount = 0;
-      try { itemCount = await countPendingActions(); } catch {}
-      const total = fotoCount + itemCount;
-      if (total > 0) {
-        console.log(`[SyncManager] ${total} elemento(s) pendiente(s) de sincronizar`);
-      }
-    };
-    check();
-  }, []);
 
   return null;
 }

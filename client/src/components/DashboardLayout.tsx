@@ -598,12 +598,14 @@ function DashboardLayoutContent({
                 {online ? (
                   <Wifi className="h-3.5 w-3.5 text-green-500" />
                 ) : (
-                  <WifiOff className="h-3.5 w-3.5 text-red-500" />
-                )}
-                {pendingCount > 0 && (
-                  <span className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded-full">
-                    {isSyncing ? '...' : pendingCount}
-                  </span>
+                  <>
+                    <WifiOff className="h-3.5 w-3.5 text-red-500" />
+                    {pendingCount > 0 && (
+                      <span className="text-[10px] bg-orange-500 text-white px-1.5 py-0.5 rounded-full">
+                        {pendingCount}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             </div>
