@@ -21,6 +21,10 @@ import {
   removePendingAction,
   countPendingActions,
 } from '@/lib/offlineStorage';
+import {
+  getPendingActions as getOfflineDBActions,
+  removePendingAction as removeOfflineDBAction,
+} from '@/lib/offlineDB';
 
 export function SyncManager() {
   const syncingRef = useRef(false);
@@ -65,7 +69,7 @@ export function SyncManager() {
         }
       }
 
-      // 3. Sincronizar cola de ítems offline (offlineStorage)
+      // 3. Sincronizar cola de ítems offline (offlineStorage — BD principal)
       let syncedItems = 0;
       try {
         const offlineActions = await getPendingActions();
@@ -101,6 +105,41 @@ export function SyncManager() {
         // offlineStorage puede no estar disponible
       }
 
+      // 3b. Sincronizar cola de offlineDB (BD secundaria legacy)
+      try {
+        const legacyActions = await getOfflineDBActions();
+        for (const action of legacyActions) {
+          try {
+            if (((action.type as string) === 'create_item' || action.type === 'createItem') && action.data) {
+              await createItemMutation.mutateAsync({
+                proyectoId: action.data.proyectoId,
+                empresaId: action.data.empresaId,
+                unidadId: action.data.unidadId,
+                especialidadId: action.data.especialidadId,
+                defectoId: action.data.defectoId,
+                espacioId: action.data.espacioId,
+                titulo: action.data.titulo,
+                fotoAntesBase64: action.data.fotoAntesBase64,
+                fotoAntesMarcadaBase64: action.data.fotoAntesMarcadaBase64,
+                clientId: action.data.clientId,
+                codigoQrPreasignado: action.data.codigoQrPreasignado,
+              });
+              syncedItems++;
+            }
+            await removeOfflineDBAction(action.id);
+          } catch (error: any) {
+            if (error.message?.includes('duplicate') || error.message?.includes('DUPLICATE')) {
+              await removeOfflineDBAction(action.id);
+              syncedItems++;
+            } else {
+              console.error(`[SyncManager] Error legacy ítem ${action.id}:`, error.message);
+            }
+          }
+        }
+      } catch (e) {
+        // offlineDB puede no estar disponible
+      }
+
       // 4. Notificar al usuario
       const total = syncedFotos + syncedItems;
       if (total > 0) {
@@ -120,7 +159,7 @@ export function SyncManager() {
 
     const handleOnline = () => {
       console.log('[SyncManager] Conexión restaurada');
-      toast.info('Conexión restaurada. Sincronizando pendientes...');
+      // No mostrar toast — ConnectionStatus ya muestra banner de reconexion
       setTimeout(sincronizar, 1000);
     };
 
@@ -156,7 +195,7 @@ export function SyncManager() {
     };
   }, [sincronizar]);
 
-  // Mostrar indicador de pendientes al montar
+  // Log pendientes al montar (sin toast para no molestar)
   useEffect(() => {
     const check = async () => {
       const fotoCount = await contarPendientes();
@@ -164,10 +203,7 @@ export function SyncManager() {
       try { itemCount = await countPendingActions(); } catch {}
       const total = fotoCount + itemCount;
       if (total > 0) {
-        toast.info(`${total} elemento(s) pendiente(s) de sincronizar`, {
-          duration: 4000,
-          id: 'sync-pending',
-        });
+        console.log(`[SyncManager] ${total} elemento(s) pendiente(s) de sincronizar`);
       }
     };
     check();

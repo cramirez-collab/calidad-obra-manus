@@ -1,46 +1,18 @@
 /**
- * Context para manejar sincronización offline
+ * Context para compatibilidad — la sincronización real la hace SyncManager.
+ * Este context ya NO ejecuta sync propio para evitar duplicación.
  */
-import { createContext, useContext, useEffect, ReactNode } from 'react';
-import { registerSyncHandler, startAutoSync } from '@/lib/syncService';
-import { trpc } from '@/lib/trpc';
-import { toast } from 'sonner';
+import { createContext, useContext, ReactNode } from 'react';
 
 interface OfflineSyncContextType {
-  // Placeholder para futuras funciones
+  // Placeholder para compatibilidad
 }
 
 const OfflineSyncContext = createContext<OfflineSyncContextType | null>(null);
 
 export function OfflineSyncProvider({ children }: { children: ReactNode }) {
-  const utils = trpc.useUtils();
-  const createItemMutation = trpc.items.create.useMutation();
-
-  useEffect(() => {
-    // Registrar handler para crear ítems
-    registerSyncHandler('createItem', async (action) => {
-      try {
-        await createItemMutation.mutateAsync(action.data);
-        // Invalidar lista de ítems
-        utils.items.list.invalidate();
-        toast.success('Ítem sincronizado correctamente');
-        return true;
-      } catch (error: any) {
-        // Si el error es de duplicado (ya existe), considerarlo exitoso
-        if (error.message?.includes('ya existe') || error.message?.includes('duplicate')) {
-          return true;
-        }
-        console.error('Error sincronizando ítem:', error);
-        return false;
-      }
-    });
-
-    // Iniciar sincronización automática cada 10 segundos
-    const cleanup = startAutoSync(10000);
-
-    return cleanup;
-  }, [createItemMutation, utils]);
-
+  // NO registrar handlers ni iniciar autoSync aquí.
+  // SyncManager (en main.tsx) es el ÚNICO sistema de sincronización.
   return (
     <OfflineSyncContext.Provider value={{}}>
       {children}

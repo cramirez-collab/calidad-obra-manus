@@ -4240,3 +4240,14 @@
 - [x] Eliminar toasts duplicados de useOfflineSync (ya los maneja ConnectionStatus)
 - [x] Fix drag & drop en Organizar: TouchSensor, card completa arrastrable, rectIntersection
 - [x] SyncManager reescrito: 2s intervalo, retry agresivo, visibilitychange + focus listeners
+
+## Fix definitivo "Sin conexión. Reintentando..."
+- [x] Diagnosticar y eliminar todas las fuentes del toast/banner "Sin conexión" que aparece con internet activo
+- [x] Eliminado toast nativo hardcodeado en main.tsx (showNetworkToast → handleNetworkError silencioso)
+- [x] Eliminado toast duplicado NetworkStatusBanner de main.tsx
+- [x] Simplificado ConnectionStatus: solo muestra banner cuando navigator.onLine === false
+- [x] Eliminado useOnlineStatus ping a /api/health inexistente
+- [x] Eliminado OfflineSyncContext como sistema de sync (era 3er sistema duplicado)
+- [x] Unificado: SyncManager es el ÚNICO sistema de sync (cubre offlineStorage + offlineDB + uploadQueue)
+- [x] useSyncManager convertido a hook de solo lectura (contadores, sin sync propio)
+- [x] Eliminados toasts de SyncManager (Conexión restaurada, pendientes al montar)
