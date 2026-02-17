@@ -4279,3 +4279,6 @@
 - [x] UI: Concepto de "Depto Liberado" cuando 100% pruebas pasan en intento Final
 - [x] Integrar botón "Pruebas" (Shield icon) en navegación y rutas /pruebas y /pruebas/:id
 - [x] Filtros por nivel, sistema, estado y búsqueda por nombre de depto
+
+## Acceso directo Pruebas en Bienvenida
+- [x] Agregar icono/botón de Pruebas en la pantalla de Bienvenida del proyecto (ShieldCheck, naranja #E67E22)

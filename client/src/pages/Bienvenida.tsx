@@ -31,7 +31,8 @@ import {
   Layers,
   FileText,
   Crosshair,
-  CircleCheckBig
+  CircleCheckBig,
+  ShieldCheck
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ZoomablePlano from "@/components/ZoomablePlano";
@@ -980,6 +981,7 @@ export default function Bienvenida() {
   const quickActions = [
     { icon: Plus, label: "Nuevo", path: "/nuevo-item", color: "bg-[#02B381]", roles: ['superadmin', 'admin', 'residente', 'jefe_residente'] },
     { icon: Crosshair, label: "Pines", path: "/planos", color: "bg-[#4A90D9]", roles: ['superadmin', 'admin', 'residente', 'jefe_residente', 'supervisor'] },
+    { icon: ShieldCheck, label: "Pruebas", path: "/pruebas", color: "bg-[#E67E22]", roles: ['superadmin', 'admin', 'supervisor', 'residente', 'jefe_residente'] },
     { icon: BarChart3, label: "Stats", path: "/estadisticas", color: "bg-[#002C63]", roles: ['superadmin', 'admin', 'supervisor'] },
   ];
 
