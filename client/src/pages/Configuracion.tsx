@@ -45,7 +45,8 @@ import {
   ZoomOut,
   RotateCcw,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ClipboardCheck
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
@@ -520,6 +521,32 @@ export default function Configuracion() {
           <div id="gestion-pines">
             <PinesManager proyectoId={selectedProjectId} />
           </div>
+        )}
+
+        {/* P - Pruebas (Editor de catálogo) */}
+        {isAdmin && (
+          <Card className="border-[#002C63]/20 bg-[#002C63]/5">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-[#002C63]/10 flex items-center justify-center shrink-0">
+                    <ClipboardCheck className="h-5 w-5 text-[#002C63]" />
+                  </div>
+                  <div>
+                    <span className="font-medium text-sm">Editor de Pruebas</span>
+                    <p className="text-xs text-muted-foreground">
+                      Administra el catálogo de pruebas por especialidad
+                    </p>
+                  </div>
+                </div>
+                <Link href="/editor-pruebas">
+                  <Button size="sm" className="bg-[#002C63] hover:bg-[#002C63]/90 text-white gap-1">
+                    <Pencil className="h-3.5 w-3.5" /> Editar
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Info y Versión */}

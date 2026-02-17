@@ -3688,11 +3688,26 @@ IMPORTANTE: Solo * para bullets. Texto plano sin códigos. Máx 300 palabras.`;
         return { success: true };
       }),
 
+    // Obtener catálogo completo (incluyendo inactivos) para editor
+    catalogoAll: adminProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getCatalogoPruebasAll(input.proyectoId);
+      }),
+
     // Desactivar prueba (admin)
     eliminarPrueba: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteCatalogoPrueba(input.id);
+        return { success: true };
+      }),
+
+    // Reactivar prueba (admin)
+    reactivarPrueba: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.updateCatalogoPrueba(input.id, { activo: true });
         return { success: true };
       }),
 
@@ -3920,6 +3935,111 @@ IMPORTANTE: Solo * para bullets. Texto plano sin códigos. Máx 300 palabras.`;
           });
         }
         return { success: true, count: pruebasDefault.length };
+      }),
+
+    // Generar reporte Protocolos con IA
+    generarProtocolo: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        unidadId: z.number().optional(), // Si no se pasa, genera resumen global
+        nivelFiltro: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Obtener datos
+        const catalogo = await db.getCatalogoPruebas(input.proyectoId);
+        const resultados = await db.getResultadosPruebas(input.proyectoId, input.unidadId);
+        const deptos = await db.getDepartamentosNumericos(input.proyectoId);
+
+        // Filtrar deptos por nivel si aplica
+        let deptsFiltrados = deptos;
+        if (input.nivelFiltro && input.nivelFiltro !== 'todos') {
+          deptsFiltrados = deptos.filter((d: any) => String(d.nivel) === input.nivelFiltro);
+        }
+        if (input.unidadId) {
+          deptsFiltrados = deptos.filter((d: any) => d.id === input.unidadId);
+        }
+
+        // Construir resumen de datos
+        const sistemas = Array.from(new Set(catalogo.map((c: any) => c.sistema)));
+        const totalPruebas = catalogo.length;
+
+        // Calcular estadísticas por depto
+        const statsDeptos = deptsFiltrados.map((dep: any) => {
+          const resDepto = resultados.filter((r: any) => r.unidadId === dep.id);
+          const aprobadas = resDepto.filter((r: any) => r.estado === 'aprobado' && r.intento === 'final').length;
+          const rechazadas = resDepto.filter((r: any) => r.estado === 'rechazado').length;
+          const pendientes = totalPruebas - aprobadas;
+          return { nombre: dep.nombre, nivel: dep.nivel, aprobadas, rechazadas, pendientes, total: totalPruebas };
+        });
+
+        const totalDeptos = statsDeptos.length;
+        const liberados = statsDeptos.filter(s => s.pendientes === 0).length;
+        const conRechazos = statsDeptos.filter(s => s.rechazadas > 0).length;
+        const sinIniciar = statsDeptos.filter(s => s.aprobadas === 0 && s.rechazadas === 0).length;
+
+        // Resumen por sistema
+        const statsSistemas = sistemas.map(sis => {
+          const pruebasSis = catalogo.filter((c: any) => c.sistema === sis);
+          const totalSis = pruebasSis.length;
+          const aprobados = resultados.filter((r: any) => {
+            const prueba = pruebasSis.find((p: any) => p.id === r.pruebaId);
+            return prueba && r.estado === 'aprobado' && r.intento === 'final';
+          }).length;
+          return { sistema: sis, totalPruebas: totalSis, aprobadosFinal: aprobados, totalCeldas: totalSis * totalDeptos };
+        });
+
+        const dataContext = `
+PROYECTO: Hidalma
+FECHA: ${new Date().toLocaleDateString('es-MX')}
+TOTAL DEPARTAMENTOS: ${totalDeptos}
+TOTAL PRUEBAS POR DEPTO: ${totalPruebas}
+SISTEMAS: ${sistemas.join(', ')}
+
+RESUMEN GENERAL:
+- Departamentos liberados (100% aprobado final): ${liberados}/${totalDeptos}
+- Departamentos con rechazos activos: ${conRechazos}
+- Departamentos sin iniciar: ${sinIniciar}
+
+RESUMEN POR SISTEMA:
+${statsSistemas.map(s => `- ${s.sistema}: ${s.totalPruebas} pruebas, ${s.aprobadosFinal}/${s.totalCeldas} celdas aprobadas en final`).join('\n')}
+
+DETALLE POR DEPARTAMENTO (top 20 con más pendientes):
+${statsDeptos.sort((a, b) => b.pendientes - a.pendientes).slice(0, 20).map(d => `- Depto ${d.nombre} (N${d.nivel}): ${d.aprobadas}/${d.total} aprobadas, ${d.rechazadas} rechazos, ${d.pendientes} pendientes`).join('\n')}
+`;
+
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: 'system',
+              content: `Eres un ingeniero de control de calidad de obra experto. Genera un PROTOCOLO DE PRUEBAS profesional en español.
+El reporte debe tener:
+1. ENCABEZADO con nombre del proyecto, fecha, responsable
+2. RESUMEN EJECUTIVO (2-3 párrafos con hallazgos clave)
+3. ESTADO POR SISTEMA (tabla markdown con % avance por sistema)
+4. DEPARTAMENTOS CRÍTICOS (los que tienen más rechazos o pendientes)
+5. DEPARTAMENTOS LIBERADOS (lista de los que ya pasaron todo)
+6. OBSERVACIONES Y RECOMENDACIONES (3-5 puntos accionables)
+7. CONCLUSIÓN
+
+Usa formato Markdown profesional con tablas, negritas y secciones claras.
+No inventes datos, usa SOLO los datos proporcionados.
+Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
+            },
+            {
+              role: 'user',
+              content: `Genera el Protocolo de Pruebas con estos datos:\n${dataContext}`
+            }
+          ],
+        });
+
+        const contenido = response.choices?.[0]?.message?.content || 'Error generando protocolo';
+
+        return {
+          contenido,
+          fecha: new Date().toISOString(),
+          generadoPor: ctx.user.name || ctx.user.openId,
+          stats: { totalDeptos, liberados, conRechazos, sinIniciar, totalPruebas, sistemas: sistemas.length },
+        };
       }),
   }),
 });

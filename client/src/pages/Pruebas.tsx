@@ -20,7 +20,9 @@ import {
   ClipboardCheck,
   AlertTriangle,
   Sparkles,
+  FileText,
 } from "lucide-react";
+import ProtocoloReport from "@/components/ProtocoloReport";
 
 type FilterStatus = "todos" | "liberado" | "en_proceso" | "sin_evaluar" | "con_rojos";
 
@@ -31,6 +33,7 @@ export default function Pruebas() {
   const [search, setSearch] = useState("");
   const [filterNivel, setFilterNivel] = useState<string>("todos");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("todos");
+  const [showProtocolo, setShowProtocolo] = useState(false);
 
   const { data: departamentos, isLoading } = trpc.pruebas.departamentos.useQuery(
     { proyectoId: selectedProjectId! },
@@ -125,12 +128,21 @@ export default function Pruebas() {
           <div className="w-10 h-10 rounded-xl bg-[#002C63] flex items-center justify-center shrink-0">
             <ClipboardCheck className="w-5 h-5 text-white" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="text-xl font-bold text-[#002C63] truncate">Pruebas por Departamento</h1>
             <p className="text-sm text-muted-foreground">
               {stats.total} departamentos · {stats.liberados} liberados
             </p>
           </div>
+          {hasCatalogo && (
+            <Button
+              size="sm"
+              onClick={() => setShowProtocolo(true)}
+              className="bg-gradient-to-r from-[#002C63] to-[#02B381] hover:opacity-90 text-white shrink-0"
+            >
+              <FileText className="w-4 h-4 mr-1" /> Protocolos
+            </Button>
+          )}
         </div>
 
         {/* Seed catalogo if empty */}
@@ -329,6 +341,13 @@ export default function Pruebas() {
           </div>
         ) : null}
       </div>
+
+      {/* Protocolo Report Modal */}
+      <ProtocoloReport
+        open={showProtocolo}
+        onClose={() => setShowProtocolo(false)}
+        nivelFiltro={filterNivel}
+      />
     </DashboardLayout>
   );
 }

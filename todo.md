@@ -4286,3 +4286,15 @@
 ## Pruebas adicionales: HVAC y Especiales
 - [x] Agregar pruebas de HVAC al catálogo (7 pruebas)
 - [x] Agregar pruebas de Especiales al catálogo (8 pruebas)
+
+## Reporte Protocolos AI en módulo Pruebas
+- [x] Procedimiento tRPC para generar reporte Protocolos con IA (resumen estado pruebas por depto)
+- [x] Botón "Protocolos" en página de Pruebas (general y por depto)
+- [x] Modal con generación AI, vista previa markdown y opciones copiar/descargar/compartir
+- [x] Generación de archivo Markdown descargable desde el reporte AI
+
+## Editor de Pruebas en Configuración
+- [x] Página EditorPruebas (/editor-pruebas) con enlace desde Configuración
+- [x] CRUD: agregar, editar nombre/descripción, activar/desactivar/reactivar pruebas
+- [x] Agrupado por sistema/especialidad con accordion expandible
+- [x] Solo admin/superadmin con adminProcedure

@@ -6468,3 +6468,12 @@ export async function getDepartamentosNumericos(proyectoId: number) {
     ))
     .orderBy(asc(unidades.nivel), asc(unidades.nombre));
 }
+
+// Get ALL catalog pruebas including inactive (for editor)
+export async function getCatalogoPruebasAll(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(catalogoPruebas)
+    .where(eq(catalogoPruebas.proyectoId, proyectoId))
+    .orderBy(asc(catalogoPruebas.sistema), asc(catalogoPruebas.orden));
+}

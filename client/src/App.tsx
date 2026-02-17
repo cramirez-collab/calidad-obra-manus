@@ -55,6 +55,7 @@ const Terminos = lazy(() => import("./pages/Terminos"));
 const Planos = lazy(() => import("./pages/Planos"));
 const Pruebas = lazy(() => import("./pages/Pruebas"));
 const PruebasDetalle = lazy(() => import("./pages/PruebasDetalle"));
+const EditorPruebas = lazy(() => import("./pages/EditorPruebas"));
 const AltaRapidaEmpresa = lazy(() => import("./pages/catalogos/AltaRapidaEmpresa"));
 const Notificaciones = lazy(() => import("./pages/Notificaciones"));
 const BitacoraCorreos = lazy(() => import("./pages/BitacoraCorreos"));
@@ -140,6 +141,7 @@ function AppRoutes() {
       {/* Pruebas por Departamento */}
       <Route path="/pruebas" component={Pruebas} />
       <Route path="/pruebas/:id" component={PruebasDetalle} />
+      <Route path="/editor-pruebas" component={EditorPruebas} />
       <Route path="/notificaciones" component={Notificaciones} />
       <Route path="/bitacora-correos" component={BitacoraCorreos} />
       

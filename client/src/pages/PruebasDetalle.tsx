@@ -23,7 +23,9 @@ import {
   History,
   Zap,
   ImageIcon,
+  FileText,
 } from "lucide-react";
+import ProtocoloReport from "@/components/ProtocoloReport";
 
 type Estado = "verde" | "rojo" | "na" | "pendiente";
 type Intento = "intento_1" | "intento_final";
@@ -49,6 +51,7 @@ export default function PruebasDetalle() {
   const [evidenciaPreview, setEvidenciaPreview] = useState<string | null>(null);
   const [showBitacora, setShowBitacora] = useState(false);
   const [showEvidencia, setShowEvidencia] = useState<string | null>(null);
+  const [showProtocolo, setShowProtocolo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: detalle, isLoading, refetch } = trpc.pruebas.detalleDepartamento.useQuery(
@@ -257,6 +260,14 @@ export default function PruebasDetalle() {
               </div>
             )}
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowProtocolo(true)}
+            className="shrink-0 text-xs"
+          >
+            <FileText className="w-3.5 h-3.5 mr-1" /> Protocolo
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -580,6 +591,14 @@ export default function PruebasDetalle() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Protocolo Report */}
+      <ProtocoloReport
+        open={showProtocolo}
+        onClose={() => setShowProtocolo(false)}
+        unidadId={unidadId}
+        unidadNombre={unidad?.nombre || id}
+      />
     </DashboardLayout>
   );
 }
