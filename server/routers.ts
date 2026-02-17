@@ -3937,6 +3937,29 @@ IMPORTANTE: Solo * para bullets. Texto plano sin códigos. Máx 300 palabras.`;
         return { success: true, count: pruebasDefault.length };
       }),
 
+    // Reordenar pruebas dentro de un sistema (drag & drop)
+    reordenarPruebas: adminProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        items: z.array(z.object({ id: z.number(), orden: z.number() })),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await db.reordenarPruebas(input.items);
+        // Registrar en bitácora
+        try {
+          await db.registrarActividad({
+            proyectoId: input.proyectoId,
+            usuarioId: ctx.user.id,
+            accion: 'reordenar_pruebas',
+            entidad: 'catalogo_pruebas',
+            entidadId: 0,
+            detalles: `Reordenó ${input.items.length} pruebas`,
+            ip: '',
+          });
+        } catch (e) { /* non-critical */ }
+        return { success: true };
+      }),
+
     // Generar reporte Protocolos con IA
     generarProtocolo: protectedProcedure
       .input(z.object({

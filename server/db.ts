@@ -6470,6 +6470,14 @@ export async function getDepartamentosNumericos(proyectoId: number) {
 }
 
 // Get ALL catalog pruebas including inactive (for editor)
+export async function reordenarPruebas(items: { id: number; orden: number }[]) {
+  const db = await getDb();
+  if (!db) return;
+  for (const item of items) {
+    await db.update(catalogoPruebas).set({ orden: item.orden }).where(eq(catalogoPruebas.id, item.id));
+  }
+}
+
 export async function getCatalogoPruebasAll(proyectoId: number) {
   const db = await getDb();
   if (!db) return [];

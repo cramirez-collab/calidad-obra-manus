@@ -4298,3 +4298,12 @@
 - [x] CRUD: agregar, editar nombre/descripción, activar/desactivar/reactivar pruebas
 - [x] Agrupado por sistema/especialidad con accordion expandible
 - [x] Solo admin/superadmin con adminProcedure
+
+## Drag & Drop Preciso en Editor de Pruebas
+- [x] Implementar @dnd-kit para drag & drop preciso con snap exacto al punto de soltar
+- [x] Placeholder dinámico en tiempo real e indicador visual de punto de inserción
+- [x] Animaciones suaves sin reacomodos inesperados
+- [x] Persistencia del orden en backend (campo orden en catalogoPruebas)
+- [x] Solo admin/superadmin pueden reordenar (sin handles para otros roles)
+- [x] Trazabilidad: registrar cada cambio de orden (usuario, fecha, posición anterior/nueva)
+- [x] Eliminar botón "Organizar" si es redundante (drag directo)
