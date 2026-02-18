@@ -4329,3 +4329,6 @@
 - [x] Mover botones WhatsApp a la derecha, arriba de los botones de captura
 - [x] Unificar TODOS los flotantes al 60% del tamaño original (todos iguales, 24px)
 - [x] Un solo contenedor flex-col con todos los botones flotantes (gap 10px equidistante)
+
+## Restaurar tamaño normal de iconos flotantes
+- [x] Restaurar todos los botones flotantes a tamaño original (40px botones, iconos 20px, gap-3)

@@ -207,8 +207,8 @@ export function FloatingCaptureButton() {
 
   return (
     <>
-      {/* SINGLE flex container for ALL floating buttons - right side, equidistant, all 60% size (24px) */}
-      <div className="fixed bottom-6 right-4 z-50 flex flex-col items-center gap-[10px]">
+      {/* SINGLE flex container for ALL floating buttons - right side */}
+      <div className="fixed bottom-6 right-4 z-50 flex flex-col items-center gap-3">
         {/* WhatsApp buttons (Contratistas + Seguridad) - solo Hidalma, arriba de todo */}
         <WhatsAppFloatingButtons />
 
@@ -216,40 +216,40 @@ export function FloatingCaptureButton() {
         <Button
           onClick={() => setLocation("/nuevo-item")}
           size="icon"
-          className="h-[24px] w-[24px] min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
+          className="h-10 w-10 rounded-full shadow-lg bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
           title="Nuevo Ítem"
         >
-          <Plus className="h-[11px] w-[11px] text-white" strokeWidth={3} />
+          <Plus className="h-5 w-5 text-white" strokeWidth={3} />
         </Button>
 
         {/* 2. Pin - Ver Planos en modo Pin */}
         <Button
           onClick={() => setLocation("/planos?mode=pin")}
           size="icon"
-          className="h-[24px] w-[24px] min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#E67E22] hover:bg-[#D35400] p-0 transition-transform active:scale-90"
+          className="h-10 w-10 rounded-full shadow-lg bg-[#E67E22] hover:bg-[#D35400] p-0 transition-transform active:scale-90"
           title="Pin en Plano"
         >
-          <MapPin className="h-[11px] w-[11px] text-white" />
+          <MapPin className="h-5 w-5 text-white" />
         </Button>
 
         {/* 3. Crosshair - Captura rápida (nuevo ítem) */}
         <Button
           onClick={() => setLocation("/planos?mode=nuevo")}
           size="icon"
-          className="h-[24px] w-[24px] min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#002C63] hover:bg-[#001d42] p-0 transition-transform active:scale-90"
+          className="h-10 w-10 rounded-full shadow-lg bg-[#002C63] hover:bg-[#001d42] p-0 transition-transform active:scale-90"
           title="Captura Rápida"
         >
-          <Crosshair className="h-[11px] w-[11px] text-white" />
+          <Crosshair className="h-5 w-5 text-white" />
         </Button>
 
         {/* 4. QR - Escanear QR */}
         <Button
           onClick={() => { setStatus("idle"); setIsOpen(true); }}
           size="icon"
-          className="h-[24px] w-[24px] min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
+          className="h-10 w-10 rounded-full shadow-lg bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
           title="Escanear QR"
         >
-          <QrCode className="h-[11px] w-[11px] text-white" />
+          <QrCode className="h-5 w-5 text-white" />
         </Button>
       </div>
 
