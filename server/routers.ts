@@ -67,6 +67,14 @@ const noDesarrolladorProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+// Middleware para excluir segurista de operaciones de escritura (solo lectura + WhatsApp)
+const noSeguristaProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role === 'segurista') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'El rol Segurista es de solo lectura. No puede crear, editar o eliminar registros.' });
+  }
+  return next({ ctx });
+});
+
 export const appRouter = router({
   system: systemRouter,
   
@@ -218,7 +226,7 @@ export const appRouter = router({
         name: z.string().min(1),
         email: z.string().email().optional(),
         password: z.string().min(6),
-        role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente', 'desarrollador']),
+        role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente', 'desarrollador', 'segurista']),
         empresaId: z.number().nullable().optional(),
         proyectoId: z.number().optional(),
       }))
@@ -243,7 +251,7 @@ export const appRouter = router({
         name: z.string().optional(),
         email: z.string().email().optional(),
         password: z.string().min(6).optional(),
-        role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente', 'desarrollador']).optional(),
+        role: z.enum(['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente', 'desarrollador', 'segurista']).optional(),
         empresaId: z.number().nullable().optional(),
         activo: z.boolean().optional(),
       }))
@@ -254,7 +262,7 @@ export const appRouter = router({
       }),
     
     updateRole: adminProcedure
-      .input(z.object({ userId: z.number(), role: z.enum(['admin', 'supervisor', 'jefe_residente', 'residente']) }))
+      .input(z.object({ userId: z.number(), role: z.enum(['admin', 'supervisor', 'jefe_residente', 'residente', 'segurista']) }))
       .mutation(async ({ input }) => {
         await db.updateUserRole(input.userId, input.role);
         return { success: true };

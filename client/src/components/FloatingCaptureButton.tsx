@@ -15,6 +15,7 @@ import { contarPendientes } from "@/lib/uploadQueue";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { WhatsAppFloatingButtons } from "./WhatsAppSeguridad";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 type ScannerStatus = "idle" | "checking" | "ready" | "scanning" | "error" | "manual";
 
@@ -26,6 +27,8 @@ type ScannerStatus = "idle" | "checking" | "ready" | "scanning" | "error" | "man
  */
 export function FloatingCaptureButton() {
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const isSegurista = user?.role === 'segurista';
 
   // Sync state
   const [isSyncingManual, setIsSyncingManual] = useState(false);
@@ -212,45 +215,50 @@ export function FloatingCaptureButton() {
         {/* WhatsApp buttons (Contratistas + Seguridad) - solo Hidalma, arriba de todo */}
         <WhatsAppFloatingButtons />
 
-        {/* 1. Plus - Nuevo Ítem */}
-        <Button
-          onClick={() => setLocation("/nuevo-item")}
-          size="icon"
-          className="h-10 w-10 rounded-full shadow-lg bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
-          title="Nuevo Ítem"
-        >
-          <Plus className="h-5 w-5 text-white" strokeWidth={3} />
-        </Button>
+        {/* Seguristas solo ven WhatsApp, no los botones de acción */}
+        {!isSegurista && (
+          <>
+            {/* 1. Plus - Nuevo Ítem */}
+            <Button
+              onClick={() => setLocation("/nuevo-item")}
+              size="icon"
+              className="h-10 w-10 rounded-full shadow-lg bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
+              title="Nuevo Ítem"
+            >
+              <Plus className="h-5 w-5 text-white" strokeWidth={3} />
+            </Button>
 
-        {/* 2. Pin - Ver Planos en modo Pin */}
-        <Button
-          onClick={() => setLocation("/planos?mode=pin")}
-          size="icon"
-          className="h-10 w-10 rounded-full shadow-lg bg-[#E67E22] hover:bg-[#D35400] p-0 transition-transform active:scale-90"
-          title="Pin en Plano"
-        >
-          <MapPin className="h-5 w-5 text-white" />
-        </Button>
+            {/* 2. Pin - Ver Planos en modo Pin */}
+            <Button
+              onClick={() => setLocation("/planos?mode=pin")}
+              size="icon"
+              className="h-10 w-10 rounded-full shadow-lg bg-[#E67E22] hover:bg-[#D35400] p-0 transition-transform active:scale-90"
+              title="Pin en Plano"
+            >
+              <MapPin className="h-5 w-5 text-white" />
+            </Button>
 
-        {/* 3. Crosshair - Captura rápida (nuevo ítem) */}
-        <Button
-          onClick={() => setLocation("/planos?mode=nuevo")}
-          size="icon"
-          className="h-10 w-10 rounded-full shadow-lg bg-[#002C63] hover:bg-[#001d42] p-0 transition-transform active:scale-90"
-          title="Captura Rápida"
-        >
-          <Crosshair className="h-5 w-5 text-white" />
-        </Button>
+            {/* 3. Crosshair - Captura rápida (nuevo ítem) */}
+            <Button
+              onClick={() => setLocation("/planos?mode=nuevo")}
+              size="icon"
+              className="h-10 w-10 rounded-full shadow-lg bg-[#002C63] hover:bg-[#001d42] p-0 transition-transform active:scale-90"
+              title="Captura Rápida"
+            >
+              <Crosshair className="h-5 w-5 text-white" />
+            </Button>
 
-        {/* 4. QR - Escanear QR */}
-        <Button
-          onClick={() => { setStatus("idle"); setIsOpen(true); }}
-          size="icon"
-          className="h-10 w-10 rounded-full shadow-lg bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
-          title="Escanear QR"
-        >
-          <QrCode className="h-5 w-5 text-white" />
-        </Button>
+            {/* 4. QR - Escanear QR */}
+            <Button
+              onClick={() => { setStatus("idle"); setIsOpen(true); }}
+              size="icon"
+              className="h-10 w-10 rounded-full shadow-lg bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
+              title="Escanear QR"
+            >
+              <QrCode className="h-5 w-5 text-white" />
+            </Button>
+          </>
+        )}
       </div>
 
       {/* QR Scanner Modal */}

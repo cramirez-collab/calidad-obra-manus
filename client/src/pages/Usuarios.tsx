@@ -45,6 +45,7 @@ const roleLabels: Record<string, string> = {
   jefe_residente: "Jefe de Residente",
   residente: "Residente",
   desarrollador: "Desarrollador",
+  segurista: "Segurista",
 };
 
 const roleColors: Record<string, string> = {
@@ -54,6 +55,7 @@ const roleColors: Record<string, string> = {
   jefe_residente: "bg-emerald-100 text-emerald-800",
   residente: "bg-slate-100 text-slate-800",
   desarrollador: "bg-amber-100 text-amber-800",
+  segurista: "bg-orange-100 text-orange-800",
 };
 
 interface UserFormData {
@@ -470,6 +472,7 @@ export default function Usuarios() {
                       <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
                       <SelectItem value="residente">Residente</SelectItem>
                       <SelectItem value="desarrollador">Desarrollador</SelectItem>
+                      <SelectItem value="segurista">Segurista</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -608,6 +611,7 @@ export default function Usuarios() {
                     <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
                     <SelectItem value="residente">Residente</SelectItem>
                     <SelectItem value="desarrollador">Desarrollador</SelectItem>
+                    <SelectItem value="segurista">Segurista</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={filterEmpresa} onValueChange={setFilterEmpresa}>
@@ -989,6 +993,7 @@ export default function Usuarios() {
                     <SelectItem value="jefe_residente">Jefe de Residente</SelectItem>
                     <SelectItem value="residente">Residente</SelectItem>
                     <SelectItem value="desarrollador">Desarrollador</SelectItem>
+                    <SelectItem value="segurista">Segurista</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -69,6 +69,7 @@ export default function Bienvenida() {
   const { data: proyectosList } = trpc.proyectos.list.useQuery(undefined, { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 });
   const proyectoActual = proyectosList?.find((p: any) => p.id === selectedProjectId) || null;
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const isSegurista = user?.role === 'segurista';
   const [generandoPDF, setGenerandoPDF] = useState(false);
 
   // Heartbeat: registra actividad cada 3 min (throttled en servidor a 1/min)
@@ -979,7 +980,8 @@ export default function Bienvenida() {
   };
 
   // Acciones rápidas: Nuevo, Pines (captura), Stats
-  const quickActions = [
+  // Seguristas no ven iconos de acción, solo WhatsApp
+  const quickActions = isSegurista ? [] : [
     { icon: Plus, label: "Nuevo", path: "/nuevo-item", color: "bg-[#02B381]", roles: ['superadmin', 'admin', 'residente', 'jefe_residente'] },
     { icon: Crosshair, label: "Pines", path: "/planos", color: "bg-[#4A90D9]", roles: ['superadmin', 'admin', 'residente', 'jefe_residente', 'supervisor'] },
     { icon: ShieldCheck, label: "Pruebas", path: "/pruebas", color: "bg-[#E67E22]", roles: ['superadmin', 'admin', 'supervisor', 'residente', 'jefe_residente'] },
@@ -1033,20 +1035,22 @@ export default function Bienvenida() {
                 <TooltipContent>{action.label}</TooltipContent>
               </Tooltip>
             ))}
-            {/* Botón Ver Planos con Pines */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-8 w-8 sm:h-10 sm:w-10 border-slate-300 hover:bg-slate-50"
-                  onClick={() => setShowPlanoSelector(true)}
-                >
-                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63]" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Ver Pines</TooltipContent>
-            </Tooltip>
+            {/* Botón Ver Planos con Pines - oculto para seguristas */}
+            {!isSegurista && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8 sm:h-10 sm:w-10 border-slate-300 hover:bg-slate-50"
+                    onClick={() => setShowPlanoSelector(true)}
+                  >
+                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63]" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Ver Pines</TooltipContent>
+              </Tooltip>
+            )}
             {/* Botón R - Reporte IA Análisis Profundo */}
             {isAdmin && (
               <Tooltip>
@@ -1067,40 +1071,44 @@ export default function Bienvenida() {
                 <TooltipContent>Reporte IA</TooltipContent>
               </Tooltip>
             )}
-            {/* Botón PDF Reporte Planos con Pines */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-8 w-8 sm:h-10 sm:w-10 border-slate-300 hover:bg-slate-50"
-                  onClick={handleGenerarReportePlanos}
-                  disabled={generandoPDF}
-                >
-                  {generandoPDF ? <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63] animate-spin" /> : <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63]" />}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>PDF Planos</TooltipContent>
-            </Tooltip>
-            {/* Botón Avisos con badge rojo */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-8 w-8 sm:h-10 sm:w-10 relative border-slate-300 hover:bg-slate-50"
-                  onClick={() => setLocation('/avisos')}
-                >
-                  <Megaphone className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63]" />
-                  {(avisosNoLeidos ?? 0) > 0 && (
-                    <span className="absolute -top-1 -right-1 z-50 h-5 min-w-[20px] px-1 flex items-center justify-center text-[11px] font-bold text-white bg-red-600 rounded-full shadow-lg border-2 border-white animate-pulse">
-                      {avisosNoLeidos}
-                    </span>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Avisos</TooltipContent>
-            </Tooltip>
+            {/* Botón PDF Reporte Planos con Pines - oculto para seguristas */}
+            {!isSegurista && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8 sm:h-10 sm:w-10 border-slate-300 hover:bg-slate-50"
+                    onClick={handleGenerarReportePlanos}
+                    disabled={generandoPDF}
+                  >
+                    {generandoPDF ? <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63] animate-spin" /> : <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63]" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>PDF Planos</TooltipContent>
+              </Tooltip>
+            )}
+            {/* Botón Avisos con badge rojo - oculto para seguristas */}
+            {!isSegurista && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8 sm:h-10 sm:w-10 relative border-slate-300 hover:bg-slate-50"
+                    onClick={() => setLocation('/avisos')}
+                  >
+                    <Megaphone className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63]" />
+                    {(avisosNoLeidos ?? 0) > 0 && (
+                      <span className="absolute -top-1 -right-1 z-50 h-5 min-w-[20px] px-1 flex items-center justify-center text-[11px] font-bold text-white bg-red-600 rounded-full shadow-lg border-2 border-white animate-pulse">
+                        {avisosNoLeidos}
+                      </span>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Avisos</TooltipContent>
+              </Tooltip>
+            )}
             {/* WhatsApp Seguridad - solo Hidalma */}
             <WhatsAppIconButton />
           </div>

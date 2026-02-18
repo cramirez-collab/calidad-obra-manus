@@ -156,7 +156,14 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: Mail, label: "Correos", path: "/bitacora-correos", group: "Usuarios" },
   ];
 
-  // Todos los usuarios ven los items base y de análisis
+  // Seguristas: solo Inicio (lectura) + WhatsApp flotante
+  if (role === 'segurista') {
+    return [
+      { icon: LayoutDashboard, label: "Inicio", path: "/bienvenida" },
+    ];
+  }
+
+  // Todos los demás usuarios ven los items base y de análisis
   let items: MenuItem[] = [...baseItems, ...analysisItems];
 
   // Solo admin y superadmin ven Configuración
@@ -179,6 +186,7 @@ const roleLabels: Record<string, string> = {
   jefe_residente: "Jefe Residente",
   residente: "Residente",
   desarrollador: "Desarrollador",
+  segurista: "Segurista",
 };
 
 const roleColors: Record<string, string> = {
@@ -188,6 +196,7 @@ const roleColors: Record<string, string> = {
   jefe_residente: "bg-orange-500",
   residente: "bg-gray-500",
   desarrollador: "bg-cyan-500",
+  segurista: "bg-orange-600",
 };
 
 export default function DashboardLayout({

@@ -4332,3 +4332,12 @@
 
 ## Restaurar tamaño normal de iconos flotantes
 - [x] Restaurar todos los botones flotantes a tamaño original (40px botones, iconos 20px, gap-3)
+
+## Rol Segurista
+- [x] Agregar 'segurista' al enum de roles en schema
+- [x] Migrar DB con pnpm db:push
+- [x] Backend: seguristas solo pueden leer (queries), no mutar (noSeguristaProcedure middleware)
+- [x] Frontend: ocultar iconos de acción en Bienvenida y navegación restringida a solo Inicio
+- [x] Seguristas solo ven WhatsApp flotantes (Seguridad + Contratistas), no los de captura
+- [x] Permitir dar de alta seguristas desde la página de Usuarios (crear, editar, filtrar)
+- [x] Seguristas ven solo Inicio en modo lectura + WhatsApp Seguridad
