@@ -14,6 +14,7 @@ import { getPendingActions } from "@/lib/offlineStorage";
 import { contarPendientes } from "@/lib/uploadQueue";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import { WhatsAppFloatingButtons } from "./WhatsAppSeguridad";
 
 type ScannerStatus = "idle" | "checking" | "ready" | "scanning" | "error" | "manual";
 
@@ -206,46 +207,49 @@ export function FloatingCaptureButton() {
 
   return (
     <>
-      {/* SINGLE flex container for ALL 4 floating buttons */}
-      <div className="fixed bottom-6 right-4 z-50 flex flex-col items-center gap-2.5">
+      {/* SINGLE flex container for ALL floating buttons - right side, equidistant, all 60% size (24px) */}
+      <div className="fixed bottom-6 right-4 z-50 flex flex-col items-center gap-[10px]">
+        {/* WhatsApp buttons (Contratistas + Seguridad) - solo Hidalma, arriba de todo */}
+        <WhatsAppFloatingButtons />
+
         {/* 1. Plus - Nuevo Ítem */}
         <Button
           onClick={() => setLocation("/nuevo-item")}
           size="icon"
-          className="h-6 w-6 min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
+          className="h-[24px] w-[24px] min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
           title="Nuevo Ítem"
         >
-          <Plus className="h-3 w-3 text-white" strokeWidth={3} />
+          <Plus className="h-[11px] w-[11px] text-white" strokeWidth={3} />
         </Button>
 
         {/* 2. Pin - Ver Planos en modo Pin */}
         <Button
           onClick={() => setLocation("/planos?mode=pin")}
           size="icon"
-          className="h-6 w-6 min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#E67E22] hover:bg-[#D35400] p-0 transition-transform active:scale-90"
+          className="h-[24px] w-[24px] min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#E67E22] hover:bg-[#D35400] p-0 transition-transform active:scale-90"
           title="Pin en Plano"
         >
-          <MapPin className="h-3 w-3 text-white" />
+          <MapPin className="h-[11px] w-[11px] text-white" />
         </Button>
 
         {/* 3. Crosshair - Captura rápida (nuevo ítem) */}
         <Button
           onClick={() => setLocation("/planos?mode=nuevo")}
           size="icon"
-          className="h-6 w-6 min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#002C63] hover:bg-[#001d42] p-0 transition-transform active:scale-90"
+          className="h-[24px] w-[24px] min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#002C63] hover:bg-[#001d42] p-0 transition-transform active:scale-90"
           title="Captura Rápida"
         >
-          <Crosshair className="h-3 w-3 text-white" />
+          <Crosshair className="h-[11px] w-[11px] text-white" />
         </Button>
 
         {/* 4. QR - Escanear QR */}
         <Button
           onClick={() => { setStatus("idle"); setIsOpen(true); }}
           size="icon"
-          className="h-6 w-6 min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
+          className="h-[24px] w-[24px] min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
           title="Escanear QR"
         >
-          <QrCode className="h-3 w-3 text-white" />
+          <QrCode className="h-[11px] w-[11px] text-white" />
         </Button>
       </div>
 

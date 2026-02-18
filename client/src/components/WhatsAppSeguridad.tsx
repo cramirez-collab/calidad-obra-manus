@@ -25,54 +25,57 @@ function useIsHidalma() {
 }
 
 /**
- * Botones flotantes de WhatsApp: Contratistas (verde, arriba) y Seguridad (rojo, abajo).
- * Solo visibles en proyecto Hidalma. Tamaño reducido al 50% (w-7 h-7).
- * Se posicionan a la izquierda de los botones de captura existentes.
+ * Botones flotantes WhatsApp que se renderizan DENTRO del contenedor
+ * unificado de FloatingCaptureButton. Retorna fragmento con los botones
+ * o null si no es Hidalma.
  */
-export function WhatsAppFloatingButton() {
+export function WhatsAppFloatingButtons() {
   const isHidalma = useIsHidalma();
   if (!isHidalma) return null;
 
   return (
-    <div className="fixed bottom-6 left-4 z-[9999] flex flex-col items-center gap-2.5">
-      {/* Contratistas - Verde (arriba) */}
+    <>
+      {/* Contratistas - Verde */}
       <Tooltip>
         <TooltipTrigger asChild>
           <a
             href={WHATSAPP_CONTRATISTAS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-7 h-7 rounded-full bg-[#02B381] hover:bg-[#029970] shadow-lg transition-all hover:scale-110 active:scale-95"
-            style={{ boxShadow: "0 2px 10px rgba(2, 179, 129, 0.4)" }}
+            className="flex items-center justify-center w-[24px] h-[24px] min-w-[24px] min-h-[24px] rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] transition-all hover:scale-110 active:scale-95"
+            style={{ boxShadow: "0 2px 8px rgba(2, 179, 129, 0.35)" }}
           >
-            <WhatsAppIcon className="w-3.5 h-3.5 text-white" />
+            <WhatsAppIcon className="w-[11px] h-[11px] text-white" />
           </a>
         </TooltipTrigger>
-        <TooltipContent side="right" className="bg-[#02B381] text-white border-[#029970]">
+        <TooltipContent side="left" className="bg-[#02B381] text-white border-[#029970]">
           Contratistas
         </TooltipContent>
       </Tooltip>
 
-      {/* Seguridad - Rojo (abajo) */}
+      {/* Seguridad - Rojo */}
       <Tooltip>
         <TooltipTrigger asChild>
           <a
             href={WHATSAPP_SEGURIDAD_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-7 h-7 rounded-full bg-red-600 hover:bg-red-700 shadow-lg transition-all hover:scale-110 active:scale-95"
-            style={{ boxShadow: "0 2px 10px rgba(220, 38, 38, 0.4)" }}
+            className="flex items-center justify-center w-[24px] h-[24px] min-w-[24px] min-h-[24px] rounded-full shadow-md bg-red-600 hover:bg-red-700 transition-all hover:scale-110 active:scale-95"
+            style={{ boxShadow: "0 2px 8px rgba(220, 38, 38, 0.35)" }}
           >
-            <WhatsAppIcon className="w-3.5 h-3.5 text-white" />
+            <WhatsAppIcon className="w-[11px] h-[11px] text-white" />
           </a>
         </TooltipTrigger>
-        <TooltipContent side="right" className="bg-red-600 text-white border-red-700">
+        <TooltipContent side="left" className="bg-red-600 text-white border-red-700">
           Seguridad
         </TooltipContent>
       </Tooltip>
-    </div>
+    </>
   );
 }
+
+// Keep backward compat export name
+export const WhatsAppFloatingButton = WhatsAppFloatingButtons;
 
 /**
  * Botones inline para la barra de iconos de Bienvenida.

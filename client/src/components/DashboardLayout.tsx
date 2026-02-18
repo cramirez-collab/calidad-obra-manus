@@ -58,7 +58,6 @@ import { Button } from "./ui/button";
 import { NotificationBell } from "./NotificationBell";
 import OnlineUsers from "./OnlineUsers";
 import { FloatingCaptureButton } from "./FloatingCaptureButton";
-import { WhatsAppFloatingButton } from "./WhatsAppSeguridad";
 import { ProjectSelector } from "./ProjectSelector";
 import { useRealTimeItems } from "@/hooks/useRealTimeData";
 import { useProject } from "@/contexts/ProjectContext";
@@ -1069,11 +1068,8 @@ function DashboardLayoutContent({
           </div>
         </main>
         
-        {/* Botones flotantes: +, Pin, Crosshair, QR - todos en un solo contenedor */}
+        {/* Botones flotantes: WhatsApp (Hidalma) + Captura + QR - todos en un solo contenedor derecha */}
         <FloatingCaptureButton />
-        
-        {/* WhatsApp Seguridad - solo visible en proyecto Hidalma */}
-        <WhatsAppFloatingButton />
         
         {/* Modal de Términos y Condiciones */}
         <TermsModal 

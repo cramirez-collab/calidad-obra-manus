@@ -4324,3 +4324,8 @@
 - [x] Reducir TODOS los iconos flotantes al 50% de tamaño (h-8→h-6 captura, h-7 WhatsApp)
 - [x] Distribuir todos los flotantes equidistantes entre sí (gap-2.5)
 - [x] Solo visible en proyecto Hidalma
+
+## Ajuste flotantes: todos a la derecha, todos al 60%
+- [x] Mover botones WhatsApp a la derecha, arriba de los botones de captura
+- [x] Unificar TODOS los flotantes al 60% del tamaño original (todos iguales, 24px)
+- [x] Un solo contenedor flex-col con todos los botones flotantes (gap 10px equidistante)
