@@ -4341,3 +4341,11 @@
 - [x] Seguristas solo ven WhatsApp flotantes (Seguridad + Contratistas), no los de captura
 - [x] Permitir dar de alta seguristas desde la página de Usuarios (crear, editar, filtrar)
 - [x] Seguristas ven solo Inicio en modo lectura + WhatsApp Seguridad
+
+## Fotos: Cámara + Galería en módulo de calidad
+- [x] Identificar todos los inputs de foto en el módulo de calidad (CapturaRapida, Seguimiento, PruebasDetalle)
+- [x] Patrón dual cámara/galería aplicado directamente en cada componente
+- [x] Aplicar en foto "antes" (CapturaRapida.tsx - ya tenía ambas opciones)
+- [x] Aplicar en foto "después" (Seguimiento.tsx - agregado grid cámara + galería)
+- [x] Aplicar en fotos de evidencia (PruebasDetalle.tsx - agregado grid cámara + galería)
+- [x] Funcional en móvil (Android/iOS) y desktop - capture="environment" para cámara, sin capture para galería

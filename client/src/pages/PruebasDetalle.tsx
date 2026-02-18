@@ -53,6 +53,7 @@ export default function PruebasDetalle() {
   const [showEvidencia, setShowEvidencia] = useState<string | null>(null);
   const [showProtocolo, setShowProtocolo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const { data: detalle, isLoading, refetch } = trpc.pruebas.detalleDepartamento.useQuery(
     { proyectoId: selectedProjectId!, unidadId },
@@ -110,6 +111,9 @@ export default function PruebasDetalle() {
 
   const handlePhoto = useCallback(() => {
     fileInputRef.current?.click();
+  }, []);
+  const handleGallery = useCallback(() => {
+    galleryInputRef.current?.click();
   }, []);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -533,6 +537,13 @@ export default function PruebasDetalle() {
                   onChange={onFileChange}
                   className="hidden"
                 />
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={onFileChange}
+                  className="hidden"
+                />
                 {evidenciaPreview ? (
                   <div className="relative">
                     <img
@@ -548,13 +559,22 @@ export default function PruebasDetalle() {
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={handlePhoto}
-                    className="w-full h-24 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-[#02B381] hover:text-[#02B381] transition-colors"
-                  >
-                    <Camera className="w-6 h-6" />
-                    <span className="text-xs">Tomar foto o seleccionar</span>
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={handlePhoto}
+                      className="h-20 border-2 border-dashed border-emerald-300 rounded-lg flex flex-col items-center justify-center gap-1 hover:bg-emerald-50 transition-colors"
+                    >
+                      <Camera className="w-6 h-6 text-emerald-500" />
+                      <span className="text-[10px] font-medium text-emerald-700">Tomar Foto</span>
+                    </button>
+                    <button
+                      onClick={handleGallery}
+                      className="h-20 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center gap-1 hover:bg-slate-50 transition-colors"
+                    >
+                      <ImageIcon className="w-6 h-6 text-slate-400" />
+                      <span className="text-[10px] font-medium text-slate-500">Subir de Galería</span>
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

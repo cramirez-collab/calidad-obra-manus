@@ -58,6 +58,7 @@ export default function Seguimiento() {
   const { user, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   // Redirigir a login si no está autenticado
   useEffect(() => {
@@ -366,6 +367,13 @@ export default function Seguimiento() {
                         capture="environment"
                         className="hidden"
                       />
+                      <input
+                        type="file"
+                        ref={galleryInputRef}
+                        onChange={handleFileSelect}
+                        accept="image/*"
+                        className="hidden"
+                      />
                       
                       {fotoDespues ? (
                         <div className="space-y-3">
@@ -395,16 +403,28 @@ export default function Seguimiento() {
                           </div>
                         </div>
                       ) : (
-                        <Button 
-                          variant="outline" 
-                          className="w-full h-24 border-dashed"
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          <div className="text-center">
-                            <Camera className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                            <span className="text-sm">Tomar o seleccionar foto</span>
-                          </div>
-                        </Button>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button 
+                            variant="outline" 
+                            className="h-24 border-dashed border-emerald-300 hover:bg-emerald-50"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <div className="text-center">
+                              <Camera className="h-7 w-7 mx-auto mb-1.5 text-emerald-500" />
+                              <span className="text-xs font-medium text-emerald-700">Tomar Foto</span>
+                            </div>
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            className="h-24 border-dashed border-slate-300 hover:bg-slate-50"
+                            onClick={() => galleryInputRef.current?.click()}
+                          >
+                            <div className="text-center">
+                              <Upload className="h-7 w-7 mx-auto mb-1.5 text-slate-400" />
+                              <span className="text-xs font-medium text-slate-500">Subir de Galería</span>
+                            </div>
+                          </Button>
+                        </div>
                       )}
                     </div>
                   )}
