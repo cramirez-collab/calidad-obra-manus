@@ -207,45 +207,45 @@ export function FloatingCaptureButton() {
   return (
     <>
       {/* SINGLE flex container for ALL 4 floating buttons */}
-      <div className="fixed bottom-6 right-4 z-50 flex flex-col items-center gap-3">
+      <div className="fixed bottom-6 right-4 z-50 flex flex-col items-center gap-2.5">
         {/* 1. Plus - Nuevo Ítem */}
         <Button
           onClick={() => setLocation("/nuevo-item")}
           size="icon"
-          className="h-8 w-8 min-h-[32px] min-w-[32px] rounded-full shadow-lg bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
+          className="h-6 w-6 min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
           title="Nuevo Ítem"
         >
-          <Plus className="h-[15px] w-[15px] text-white" strokeWidth={3} />
+          <Plus className="h-3 w-3 text-white" strokeWidth={3} />
         </Button>
 
         {/* 2. Pin - Ver Planos en modo Pin */}
         <Button
           onClick={() => setLocation("/planos?mode=pin")}
           size="icon"
-          className="h-8 w-8 min-h-[32px] min-w-[32px] rounded-full shadow-lg bg-[#E67E22] hover:bg-[#D35400] p-0 transition-transform active:scale-90"
+          className="h-6 w-6 min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#E67E22] hover:bg-[#D35400] p-0 transition-transform active:scale-90"
           title="Pin en Plano"
         >
-          <MapPin className="h-[15px] w-[15px] text-white" />
+          <MapPin className="h-3 w-3 text-white" />
         </Button>
 
         {/* 3. Crosshair - Captura rápida (nuevo ítem) */}
         <Button
           onClick={() => setLocation("/planos?mode=nuevo")}
           size="icon"
-          className="h-8 w-8 min-h-[32px] min-w-[32px] rounded-full shadow-lg bg-[#002C63] hover:bg-[#001d42] p-0 transition-transform active:scale-90"
+          className="h-6 w-6 min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#002C63] hover:bg-[#001d42] p-0 transition-transform active:scale-90"
           title="Captura Rápida"
         >
-          <Crosshair className="h-[15px] w-[15px] text-white" />
+          <Crosshair className="h-3 w-3 text-white" />
         </Button>
 
         {/* 4. QR - Escanear QR */}
         <Button
           onClick={() => { setStatus("idle"); setIsOpen(true); }}
           size="icon"
-          className="h-8 w-8 min-h-[32px] min-w-[32px] rounded-full shadow-lg bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
+          className="h-6 w-6 min-h-[24px] min-w-[24px] rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
           title="Escanear QR"
         >
-          <QrCode className="h-[15px] w-[15px] text-white" />
+          <QrCode className="h-3 w-3 text-white" />
         </Button>
       </div>
 

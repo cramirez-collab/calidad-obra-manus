@@ -2,7 +2,8 @@ import { useProject } from "@/contexts/ProjectContext";
 import { trpc } from "@/lib/trpc";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/BV52XnzehB6GK3XfACTFTh";
+const WHATSAPP_SEGURIDAD_URL = "https://chat.whatsapp.com/BV52XnzehB6GK3XfACTFTh";
+const WHATSAPP_CONTRATISTAS_URL = "https://chat.whatsapp.com/CBYjOPZU6z21FGKh6R49K5";
 
 // SVG del logo de WhatsApp
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -13,75 +14,105 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-/**
- * Botón flotante de WhatsApp para el grupo de Seguridad.
- * Solo visible cuando el proyecto seleccionado es "Hidalma" (case-insensitive match).
- */
-export function WhatsAppFloatingButton() {
+function useIsHidalma() {
   const { selectedProjectId } = useProject();
   const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, {
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
-
   const proyectoActual = proyectos?.find((p: any) => p.id === selectedProjectId);
-  const isHidalma = proyectoActual?.nombre?.toLowerCase().includes("hidalma");
+  return proyectoActual?.nombre?.toLowerCase().includes("hidalma") ?? false;
+}
 
+/**
+ * Botones flotantes de WhatsApp: Contratistas (verde, arriba) y Seguridad (rojo, abajo).
+ * Solo visibles en proyecto Hidalma. Tamaño reducido al 50% (w-7 h-7).
+ * Se posicionan a la izquierda de los botones de captura existentes.
+ */
+export function WhatsAppFloatingButton() {
+  const isHidalma = useIsHidalma();
   if (!isHidalma) return null;
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <a
-          href={WHATSAPP_GROUP_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-24 right-4 z-[9999] flex items-center justify-center w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 shadow-2xl transition-all hover:scale-110 active:scale-95 animate-in fade-in zoom-in duration-300"
-          style={{
-            boxShadow: "0 4px 20px rgba(220, 38, 38, 0.5)",
-          }}
-        >
-          <WhatsAppIcon className="w-7 h-7 text-white" />
-          {/* Pulse ring */}
-          <span className="absolute inset-0 rounded-full bg-red-500 opacity-30 animate-ping" />
-        </a>
-      </TooltipTrigger>
-      <TooltipContent side="left" className="bg-red-600 text-white border-red-700">
-        Seguridad - WhatsApp
-      </TooltipContent>
-    </Tooltip>
+    <div className="fixed bottom-6 left-4 z-[9999] flex flex-col items-center gap-2.5">
+      {/* Contratistas - Verde (arriba) */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <a
+            href={WHATSAPP_CONTRATISTAS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center w-7 h-7 rounded-full bg-[#02B381] hover:bg-[#029970] shadow-lg transition-all hover:scale-110 active:scale-95"
+            style={{ boxShadow: "0 2px 10px rgba(2, 179, 129, 0.4)" }}
+          >
+            <WhatsAppIcon className="w-3.5 h-3.5 text-white" />
+          </a>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="bg-[#02B381] text-white border-[#029970]">
+          Contratistas
+        </TooltipContent>
+      </Tooltip>
+
+      {/* Seguridad - Rojo (abajo) */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <a
+            href={WHATSAPP_SEGURIDAD_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center w-7 h-7 rounded-full bg-red-600 hover:bg-red-700 shadow-lg transition-all hover:scale-110 active:scale-95"
+            style={{ boxShadow: "0 2px 10px rgba(220, 38, 38, 0.4)" }}
+          >
+            <WhatsAppIcon className="w-3.5 h-3.5 text-white" />
+          </a>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="bg-red-600 text-white border-red-700">
+          Seguridad
+        </TooltipContent>
+      </Tooltip>
+    </div>
   );
 }
 
 /**
- * Botón inline para la barra de iconos de Bienvenida.
- * Solo visible cuando el proyecto seleccionado es "Hidalma".
+ * Botones inline para la barra de iconos de Bienvenida.
+ * Solo visibles en proyecto Hidalma.
  */
 export function WhatsAppIconButton() {
-  const { selectedProjectId } = useProject();
-  const { data: proyectos } = trpc.proyectos.list.useQuery(undefined, {
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-  });
-
-  const proyectoActual = proyectos?.find((p: any) => p.id === selectedProjectId);
-  const isHidalma = proyectoActual?.nombre?.toLowerCase().includes("hidalma");
-
+  const isHidalma = useIsHidalma();
   if (!isHidalma) return null;
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <a
-          href={WHATSAPP_GROUP_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-red-600 hover:bg-red-700 shadow-md transition-all active:scale-95"
-        >
-          <WhatsAppIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-        </a>
-      </TooltipTrigger>
-      <TooltipContent>Seguridad</TooltipContent>
-    </Tooltip>
+    <>
+      {/* Contratistas - Verde */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <a
+            href={WHATSAPP_CONTRATISTAS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-[#02B381] hover:bg-[#029970] shadow-md transition-all active:scale-95"
+          >
+            <WhatsAppIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+          </a>
+        </TooltipTrigger>
+        <TooltipContent>Contratistas</TooltipContent>
+      </Tooltip>
+
+      {/* Seguridad - Rojo */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <a
+            href={WHATSAPP_SEGURIDAD_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-red-600 hover:bg-red-700 shadow-md transition-all active:scale-95"
+          >
+            <WhatsAppIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+          </a>
+        </TooltipTrigger>
+        <TooltipContent>Seguridad</TooltipContent>
+      </Tooltip>
+    </>
   );
 }

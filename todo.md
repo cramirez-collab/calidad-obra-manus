@@ -4319,8 +4319,8 @@
 - [x] Solo visible cuando el proyecto seleccionado es Hidalma
 
 ## Botón Flotante WhatsApp Contratistas + Reducir flotantes
-- [ ] Botón flotante WhatsApp Contratistas (verde) enlace: https://chat.whatsapp.com/CBYjOPZU6z21FGKh6R49K5
-- [ ] Posicionar Contratistas arriba de Seguridad
-- [ ] Reducir TODOS los iconos flotantes al 50% de tamaño
-- [ ] Distribuir todos los flotantes equidistantes entre sí
-- [ ] Solo visible en proyecto Hidalma
+- [x] Botón flotante WhatsApp Contratistas (verde) enlace: https://chat.whatsapp.com/CBYjOPZU6z21FGKh6R49K5
+- [x] Posicionar Contratistas arriba de Seguridad
+- [x] Reducir TODOS los iconos flotantes al 50% de tamaño (h-8→h-6 captura, h-7 WhatsApp)
+- [x] Distribuir todos los flotantes equidistantes entre sí (gap-2.5)
+- [x] Solo visible en proyecto Hidalma
