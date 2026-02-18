@@ -4311,3 +4311,16 @@
 ## Bug Fix: Drag & Drop sin desplazar otras pruebas
 - [x] Al arrastrar una prueba, solo intercambiar posición (orden) con la prueba destino — no desplazar ni reacomodar las demás
 - [x] Las pruebas que no participan en el drag NO deben moverse de su posición
+
+## Botón Flotante WhatsApp Seguridad (solo proyecto Hidalma)
+- [x] Botón flotante WhatsApp con logo rojo, visible en todo lugar dentro del proyecto Hidalma
+- [x] Enlace al grupo: https://chat.whatsapp.com/BV52XnzehB6GK3XfACTFTh
+- [x] También agregar icono en la barra superior de iconos del dashboard
+- [x] Solo visible cuando el proyecto seleccionado es Hidalma
+
+## Botón Flotante WhatsApp Contratistas + Reducir flotantes
+- [ ] Botón flotante WhatsApp Contratistas (verde) enlace: https://chat.whatsapp.com/CBYjOPZU6z21FGKh6R49K5
+- [ ] Posicionar Contratistas arriba de Seguridad
+- [ ] Reducir TODOS los iconos flotantes al 50% de tamaño
+- [ ] Distribuir todos los flotantes equidistantes entre sí
+- [ ] Solo visible en proyecto Hidalma
