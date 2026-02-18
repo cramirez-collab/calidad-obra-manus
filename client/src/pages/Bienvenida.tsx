@@ -53,7 +53,7 @@ import { useLocation, Redirect } from "wouter";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip as RTooltip, LineChart, Line, Legend, CartesianGrid } from "recharts";
 import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
-import { WhatsAppIconButton } from "@/components/WhatsAppSeguridad";
+
 import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlanosPDF";
 import { openPDFPreview, forceDownloadPDF } from "@/lib/pdfDownload";
 // jsPDF se importa dinámicamente para evitar conflicto con React context
@@ -1113,8 +1113,7 @@ export default function Bienvenida() {
                 <TooltipContent>Avisos</TooltipContent>
               </Tooltip>
             )}
-            {/* WhatsApp Seguridad - solo Hidalma */}
-            <WhatsAppIconButton />
+
           </div>
         </div>
 

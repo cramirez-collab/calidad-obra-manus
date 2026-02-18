@@ -4376,3 +4376,8 @@
 - [x] Agregar Seguridad al menú lateral (todos los roles)
 - [x] Seguristas: acceso completo al módulo de seguridad (pueden crear/editar incidentes)
 - [x] Acceso rápido desde Bienvenida para seguristas y admin/supervisor
+
+## Foto Cámara + Galería en ItemDetail
+- [x] Agregar opciones cámara y galería en la sección "Foto Después" de ItemDetail
+- [x] Verificar si hay otros inputs de foto en ItemDetail que necesiten las dos opciones (NuevoItem ya tenía ambas)
+- [x] Eliminar iconos WhatsApp de la barra superior de Bienvenida (ya están como flotantes)

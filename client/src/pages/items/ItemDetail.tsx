@@ -1614,6 +1614,7 @@ export default function ItemDetail() {
           </DialogHeader>
           
           <div className="space-y-4">
+            {/* Input para cámara */}
             <input
               ref={fileInputRef}
               type="file"
@@ -1621,6 +1622,14 @@ export default function ItemDetail() {
               capture="environment"
               onChange={handleFileSelect}
               className="hidden"
+            />
+            {/* Input para galería */}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+              id="gallery-input-despues"
             />
 
             {fotoDespues ? (
@@ -1641,14 +1650,24 @@ export default function ItemDetail() {
                 </Button>
               </div>
             ) : (
-              <Button
-                variant="outline"
-                className="w-full h-32 flex-col gap-2"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-8 w-8" />
-                <span>Seleccionar o tomar foto</span>
-              </Button>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="h-28 flex-col gap-2"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Camera className="h-7 w-7 text-emerald-600" />
+                  <span className="text-xs">Tomar Foto</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-28 flex-col gap-2"
+                  onClick={() => document.getElementById('gallery-input-despues')?.click()}
+                >
+                  <Upload className="h-7 w-7 text-blue-600" />
+                  <span className="text-xs">Subir de Galería</span>
+                </Button>
+              </div>
             )}
 
             <div className="space-y-2">
