@@ -36,6 +36,9 @@ import {
   catalogoPruebas, InsertCatalogoPrueba,
   pruebasResultado, InsertPruebaResultado,
   pruebasBitacora, InsertPruebaBitacora,
+  incidentesSeguridad, InsertIncidenteSeguridad,
+  checklistsSeguridad, InsertChecklistSeguridad,
+  checklistItemsSeguridad, InsertChecklistItemSeguridad,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -6484,4 +6487,156 @@ export async function getCatalogoPruebasAll(proyectoId: number) {
   return db.select().from(catalogoPruebas)
     .where(eq(catalogoPruebas.proyectoId, proyectoId))
     .orderBy(asc(catalogoPruebas.sistema), asc(catalogoPruebas.orden));
+}
+
+// ==========================================
+// MÓDULO DE SEGURIDAD - DB HELPERS
+// ==========================================
+
+export async function crearIncidenteSeguridad(data: InsertIncidenteSeguridad) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const [result] = await db.insert(incidentesSeguridad).values(data);
+  return result.insertId;
+}
+
+export async function getIncidentesSeguridad(proyectoId: number, filtros?: {
+  tipo?: string;
+  severidad?: string;
+  estado?: string;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(incidentesSeguridad.proyectoId, proyectoId)];
+  if (filtros?.tipo) conditions.push(eq(incidentesSeguridad.tipo, filtros.tipo as any));
+  if (filtros?.severidad) conditions.push(eq(incidentesSeguridad.severidad, filtros.severidad as any));
+  if (filtros?.estado) conditions.push(eq(incidentesSeguridad.estado, filtros.estado as any));
+  
+  const query = db.select().from(incidentesSeguridad)
+    .where(and(...conditions))
+    .orderBy(desc(incidentesSeguridad.createdAt));
+  
+  if (filtros?.limit) {
+    return query.limit(filtros.limit);
+  }
+  return query;
+}
+
+export async function getIncidenteById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.select().from(incidentesSeguridad).where(eq(incidentesSeguridad.id, id));
+  return result || null;
+}
+
+export async function actualizarIncidente(id: number, data: Partial<InsertIncidenteSeguridad>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  await db.update(incidentesSeguridad).set(data).where(eq(incidentesSeguridad.id, id));
+}
+
+export async function cerrarIncidente(id: number, cerradoPor: number, accionCorrectiva: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  await db.update(incidentesSeguridad).set({
+    estado: "cerrado",
+    cerradoPor,
+    accionCorrectiva,
+    fechaCierre: new Date(),
+  }).where(eq(incidentesSeguridad.id, id));
+}
+
+export async function getEstadisticasSeguridad(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return { total: 0, abiertos: 0, enProceso: 0, cerrados: 0, porTipo: [], porSeveridad: [] };
+  
+  const todos = await db.select().from(incidentesSeguridad)
+    .where(eq(incidentesSeguridad.proyectoId, proyectoId));
+  
+  const abiertos = todos.filter(i => i.estado === "abierto").length;
+  const enProceso = todos.filter(i => i.estado === "en_proceso").length;
+  const cerrados = todos.filter(i => i.estado === "cerrado").length;
+  
+  // Agrupar por tipo
+  const tipoMap = new Map<string, number>();
+  todos.forEach(i => tipoMap.set(i.tipo, (tipoMap.get(i.tipo) || 0) + 1));
+  const porTipo = Array.from(tipoMap.entries()).map(([tipo, count]) => ({ tipo, count }));
+  
+  // Agrupar por severidad
+  const sevMap = new Map<string, number>();
+  todos.forEach(i => sevMap.set(i.severidad, (sevMap.get(i.severidad) || 0) + 1));
+  const porSeveridad = Array.from(sevMap.entries()).map(([severidad, count]) => ({ severidad, count }));
+  
+  // Tendencia últimos 30 días
+  const hace30Dias = new Date();
+  hace30Dias.setDate(hace30Dias.getDate() - 30);
+  const recientes = todos.filter(i => i.createdAt >= hace30Dias);
+  const porDia = new Map<string, number>();
+  recientes.forEach(i => {
+    const dia = i.createdAt.toISOString().split('T')[0];
+    porDia.set(dia, (porDia.get(dia) || 0) + 1);
+  });
+  const tendencia = Array.from(porDia.entries())
+    .map(([fecha, count]) => ({ fecha, count }))
+    .sort((a, b) => a.fecha.localeCompare(b.fecha));
+  
+  // Tiempo promedio de resolución (en horas)
+  const resueltos = todos.filter(i => i.estado === "cerrado" && i.fechaCierre);
+  const tiempoPromedio = resueltos.length > 0
+    ? resueltos.reduce((sum, i) => sum + (i.fechaCierre!.getTime() - i.createdAt.getTime()), 0) / resueltos.length / (1000 * 60 * 60)
+    : 0;
+  
+  return { total: todos.length, abiertos, enProceso, cerrados, porTipo, porSeveridad, tendencia, tiempoPromedio: Math.round(tiempoPromedio) };
+}
+
+// Checklists
+export async function crearChecklistSeguridad(data: InsertChecklistSeguridad, items: Omit<InsertChecklistItemSeguridad, "checklistId">[]) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const [result] = await db.insert(checklistsSeguridad).values(data);
+  const checklistId = result.insertId;
+  if (items.length > 0) {
+    await db.insert(checklistItemsSeguridad).values(items.map((item, idx) => ({ ...item, checklistId, orden: idx })));
+  }
+  return checklistId;
+}
+
+export async function getChecklistsSeguridad(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(checklistsSeguridad)
+    .where(eq(checklistsSeguridad.proyectoId, proyectoId))
+    .orderBy(desc(checklistsSeguridad.createdAt));
+}
+
+export async function getChecklistConItems(checklistId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [checklist] = await db.select().from(checklistsSeguridad).where(eq(checklistsSeguridad.id, checklistId));
+  if (!checklist) return null;
+  const items = await db.select().from(checklistItemsSeguridad)
+    .where(eq(checklistItemsSeguridad.checklistId, checklistId))
+    .orderBy(asc(checklistItemsSeguridad.orden));
+  return { ...checklist, items };
+}
+
+export async function actualizarChecklistItem(itemId: number, cumple: "si" | "no" | "na", observacion?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  await db.update(checklistItemsSeguridad).set({ cumple, observacion }).where(eq(checklistItemsSeguridad.id, itemId));
+}
+
+export async function completarChecklist(checklistId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const items = await db.select().from(checklistItemsSeguridad)
+    .where(eq(checklistItemsSeguridad.checklistId, checklistId));
+  const total = items.filter(i => i.cumple !== "na").length;
+  const cumplidos = items.filter(i => i.cumple === "si").length;
+  await db.update(checklistsSeguridad).set({
+    completado: true,
+    puntajeTotal: total,
+    puntajeObtenido: cumplidos,
+  }).where(eq(checklistsSeguridad.id, checklistId));
 }

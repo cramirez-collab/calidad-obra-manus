@@ -4349,3 +4349,30 @@
 - [x] Aplicar en foto "después" (Seguimiento.tsx - agregado grid cámara + galería)
 - [x] Aplicar en fotos de evidencia (PruebasDetalle.tsx - agregado grid cámara + galería)
 - [x] Funcional en móvil (Android/iOS) y desktop - capture="environment" para cámara, sin capture para galería
+
+## Módulo de Seguridad
+### DB
+- [x] Tabla incidentesSeguridad (id, proyectoId, reportadoPor, tipo, severidad, descripcion, fotoUrl, ubicacion, estado, fechaCreacion, fechaCierre)
+- [x] Tabla checklistSeguridad (id, proyectoId, unidadId, creadoPor, fecha, completado)
+- [x] Tabla checklistItems (id, checklistId, pregunta, cumple, observacion)
+- [x] Migrar con pnpm db:push
+
+### Backend
+- [x] Router seguridad con CRUD incidentes
+- [x] Queries: listar, filtrar por tipo/severidad/estado/fecha
+- [x] Mutations: crear incidente rápido (foto + tipo + ubicación), cerrar incidente
+- [x] Estadísticas: por tipo, severidad, tendencia, tiempo resolución
+- [x] Checklist: crear, completar, listar por unidad
+
+### Frontend
+- [x] Página /seguridad con tabs: Reportar, Incidentes, Stats, Checklist
+- [x] Tab Reportar: formulario ultra rápido (1 tap foto, seleccionar tipo, enviar)
+- [x] Tab Incidentes: lista con filtros, estados (abierto/en_proceso/cerrado)
+- [x] Tab Stats: gráficas por tipo, severidad, tendencia mensual
+- [x] Tab Checklist: crear y completar checklists de seguridad
+- [x] Botón WhatsApp integrado para comunicación inmediata
+
+### Navegación y Permisos
+- [x] Agregar Seguridad al menú lateral (todos los roles)
+- [x] Seguristas: acceso completo al módulo de seguridad (pueden crear/editar incidentes)
+- [x] Acceso rápido desde Bienvenida para seguristas y admin/supervisor

@@ -112,6 +112,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: Shield, label: "Pruebas", path: "/pruebas" },
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
     { icon: ListOrdered, label: "Especialidades", path: "/lista-especialidades" },
+    { icon: AlertTriangle, label: "Seguridad", path: "/seguridad" },
   ];
   
   // Agregar enlaces externos solo si están configurados en el proyecto (con títulos personalizados)
@@ -156,10 +157,11 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: Mail, label: "Correos", path: "/bitacora-correos", group: "Usuarios" },
   ];
 
-  // Seguristas: solo Inicio (lectura) + WhatsApp flotante
+  // Seguristas: Inicio + Seguridad (lectura + WhatsApp flotante)
   if (role === 'segurista') {
     return [
       { icon: LayoutDashboard, label: "Inicio", path: "/bienvenida" },
+      { icon: Shield, label: "Seguridad", path: "/seguridad" },
     ];
   }
 

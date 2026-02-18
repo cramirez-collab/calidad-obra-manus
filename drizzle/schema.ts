@@ -787,3 +787,81 @@ export const pruebasBitacora = mysqlTable("pruebas_bitacora", {
 
 export type PruebaBitacora = typeof pruebasBitacora.$inferSelect;
 export type InsertPruebaBitacora = typeof pruebasBitacora.$inferInsert;
+
+// ==========================================
+// MÓDULO DE SEGURIDAD
+// ==========================================
+
+/**
+ * Incidentes de seguridad reportados en obra
+ */
+export const incidentesSeguridad = mysqlTable("incidentes_seguridad", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  reportadoPor: int("reportadoPor").notNull(), // userId
+  tipo: mysqlEnum("tipo_incidente", [
+    "caida",
+    "golpe",
+    "corte",
+    "electrico",
+    "derrumbe",
+    "incendio",
+    "quimico",
+    "epp_faltante",
+    "condicion_insegura",
+    "acto_inseguro",
+    "casi_accidente",
+    "otro",
+  ]).notNull(),
+  severidad: mysqlEnum("severidad_incidente", ["baja", "media", "alta", "critica"]).notNull(),
+  descripcion: text("descripcion").notNull(),
+  ubicacion: varchar("ubicacion", { length: 255 }), // zona/nivel/área
+  unidadId: int("unidadId"), // opcional, vinculado a unidad
+  fotoUrl: text("fotoUrl"),
+  fotoBase64: text("fotoBase64"),
+  estado: mysqlEnum("estado_incidente", ["abierto", "en_proceso", "cerrado"]).default("abierto").notNull(),
+  accionCorrectiva: text("accionCorrectiva"),
+  cerradoPor: int("cerradoPor"),
+  fechaCierre: timestamp("fechaCierre"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type IncidenteSeguridad = typeof incidentesSeguridad.$inferSelect;
+export type InsertIncidenteSeguridad = typeof incidentesSeguridad.$inferInsert;
+
+/**
+ * Checklists de seguridad (encabezado)
+ */
+export const checklistsSeguridad = mysqlTable("checklists_seguridad", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  creadoPor: int("creadoPor").notNull(),
+  titulo: varchar("titulo", { length: 255 }).notNull(),
+  ubicacion: varchar("ubicacion", { length: 255 }),
+  unidadId: int("unidadId"),
+  completado: boolean("completado").default(false).notNull(),
+  puntajeTotal: int("puntajeTotal").default(0),
+  puntajeObtenido: int("puntajeObtenido").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ChecklistSeguridad = typeof checklistsSeguridad.$inferSelect;
+export type InsertChecklistSeguridad = typeof checklistsSeguridad.$inferInsert;
+
+/**
+ * Items individuales del checklist de seguridad
+ */
+export const checklistItemsSeguridad = mysqlTable("checklist_items_seguridad", {
+  id: int("id").autoincrement().primaryKey(),
+  checklistId: int("checklistId").notNull(),
+  categoria: varchar("categoria", { length: 100 }).notNull(), // EPP, Señalización, Orden, etc.
+  pregunta: varchar("pregunta", { length: 500 }).notNull(),
+  cumple: mysqlEnum("cumple_check", ["si", "no", "na"]).default("na").notNull(),
+  observacion: text("observacion"),
+  orden: int("orden").default(0).notNull(),
+});
+
+export type ChecklistItemSeguridad = typeof checklistItemsSeguridad.$inferSelect;
+export type InsertChecklistItemSeguridad = typeof checklistItemsSeguridad.$inferInsert;

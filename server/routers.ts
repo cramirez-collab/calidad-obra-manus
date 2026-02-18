@@ -4073,5 +4073,154 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         };
       }),
   }),
+
+  // ==========================================
+  // MÓDULO DE SEGURIDAD
+  // ==========================================
+  seguridad: router({
+    // Crear incidente rápido
+    crearIncidente: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        tipo: z.enum(["caida", "golpe", "corte", "electrico", "derrumbe", "incendio", "quimico", "epp_faltante", "condicion_insegura", "acto_inseguro", "casi_accidente", "otro"]),
+        severidad: z.enum(["baja", "media", "alta", "critica"]),
+        descripcion: z.string().min(1),
+        ubicacion: z.string().optional(),
+        unidadId: z.number().optional(),
+        fotoBase64: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        let fotoUrl: string | undefined;
+        if (input.fotoBase64) {
+          try {
+            const buffer = Buffer.from(input.fotoBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+            const key = `seguridad/${input.proyectoId}/${nanoid(10)}.jpg`;
+            const { url } = await storagePut(key, buffer, 'image/jpeg');
+            fotoUrl = url;
+          } catch (e) {
+            console.error('Error subiendo foto de incidente:', e);
+          }
+        }
+        const id = await db.crearIncidenteSeguridad({
+          proyectoId: input.proyectoId,
+          reportadoPor: ctx.user.id,
+          tipo: input.tipo,
+          severidad: input.severidad,
+          descripcion: input.descripcion,
+          ubicacion: input.ubicacion,
+          unidadId: input.unidadId,
+          fotoUrl,
+          fotoBase64: input.fotoBase64 ? undefined : undefined,
+          estado: "abierto",
+        });
+        return { id, success: true };
+      }),
+
+    // Listar incidentes
+    listar: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        tipo: z.string().optional(),
+        severidad: z.string().optional(),
+        estado: z.string().optional(),
+        limit: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return db.getIncidentesSeguridad(input.proyectoId, {
+          tipo: input.tipo,
+          severidad: input.severidad,
+          estado: input.estado,
+          limit: input.limit,
+        });
+      }),
+
+    // Obtener incidente por ID
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getIncidenteById(input.id);
+      }),
+
+    // Actualizar estado de incidente
+    actualizarEstado: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        estado: z.enum(["abierto", "en_proceso", "cerrado"]),
+        accionCorrectiva: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (input.estado === "cerrado") {
+          await db.cerrarIncidente(input.id, ctx.user.id, input.accionCorrectiva || "");
+        } else {
+          await db.actualizarIncidente(input.id, { estado: input.estado });
+        }
+        return { success: true };
+      }),
+
+    // Estadísticas
+    estadisticas: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getEstadisticasSeguridad(input.proyectoId);
+      }),
+
+    // Checklists
+    crearChecklist: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        titulo: z.string().min(1),
+        ubicacion: z.string().optional(),
+        unidadId: z.number().optional(),
+        items: z.array(z.object({
+          categoria: z.string(),
+          pregunta: z.string(),
+          cumple: z.enum(["si", "no", "na"]).default("na"),
+          observacion: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.crearChecklistSeguridad(
+          {
+            proyectoId: input.proyectoId,
+            creadoPor: ctx.user.id,
+            titulo: input.titulo,
+            ubicacion: input.ubicacion,
+            unidadId: input.unidadId,
+          },
+          input.items,
+        );
+        return { id, success: true };
+      }),
+
+    listarChecklists: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getChecklistsSeguridad(input.proyectoId);
+      }),
+
+    getChecklist: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getChecklistConItems(input.id);
+      }),
+
+    actualizarChecklistItem: protectedProcedure
+      .input(z.object({
+        itemId: z.number(),
+        cumple: z.enum(["si", "no", "na"]),
+        observacion: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.actualizarChecklistItem(input.itemId, input.cumple, input.observacion);
+        return { success: true };
+      }),
+
+    completarChecklist: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.completarChecklist(input.id);
+        return { success: true };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

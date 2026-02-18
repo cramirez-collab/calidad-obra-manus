@@ -32,7 +32,8 @@ import {
   FileText,
   Crosshair,
   CircleCheckBig,
-  ShieldCheck
+  ShieldCheck,
+  AlertTriangle
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ZoomablePlano from "@/components/ZoomablePlano";
@@ -979,13 +980,16 @@ export default function Bienvenida() {
     corregir: pendientes?.filter((i: any) => i.status === "rechazado").length || 0,
   };
 
-  // Acciones rápidas: Nuevo, Pines (captura), Stats
-  // Seguristas no ven iconos de acción, solo WhatsApp
-  const quickActions = isSegurista ? [] : [
+  // Acciones rápidas: Nuevo, Pines (captura), Stats, Seguridad
+  // Seguristas solo ven Seguridad
+  const quickActions = isSegurista ? [
+    { icon: AlertTriangle, label: "Seguridad", path: "/seguridad", color: "bg-red-500", roles: ['segurista'] },
+  ] : [
     { icon: Plus, label: "Nuevo", path: "/nuevo-item", color: "bg-[#02B381]", roles: ['superadmin', 'admin', 'residente', 'jefe_residente'] },
     { icon: Crosshair, label: "Pines", path: "/planos", color: "bg-[#4A90D9]", roles: ['superadmin', 'admin', 'residente', 'jefe_residente', 'supervisor'] },
     { icon: ShieldCheck, label: "Pruebas", path: "/pruebas", color: "bg-[#E67E22]", roles: ['superadmin', 'admin', 'supervisor', 'residente', 'jefe_residente'] },
     { icon: BarChart3, label: "Stats", path: "/estadisticas", color: "bg-[#002C63]", roles: ['superadmin', 'admin', 'supervisor'] },
+    { icon: AlertTriangle, label: "Seguridad", path: "/seguridad", color: "bg-red-500", roles: ['superadmin', 'admin', 'supervisor'] },
   ];
 
   const visibleActions = quickActions.filter(a => 
