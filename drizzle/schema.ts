@@ -903,7 +903,8 @@ export const mensajesSeguridad = mysqlTable("mensajes_seguridad", {
   transcripcion: text("transcripcion"),
   bullets: text("bullets"), // JSON array con 5 bullets de resumen
   duracionSegundos: int("duracion_segundos"),
-  tipo: mysqlEnum("tipo", ["texto", "voz"]).default("texto").notNull(),
+  fotoUrl: text("foto_url"), // URL de foto adjunta en mensaje
+  tipo: mysqlEnum("tipo", ["texto", "voz", "foto"]).default("texto").notNull(),
   editado: boolean("editado").default(false).notNull(),
   eliminado: boolean("eliminado").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

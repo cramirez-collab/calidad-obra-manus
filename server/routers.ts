@@ -4511,8 +4511,88 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         fotoMarcadaBase64: z.string(),
       }))
       .mutation(async ({ input }) => {
-        await db.guardarFotoMarcadaIncidente(input.id, input.fotoMarcadaBase64);
-        return { success: true };
+        // Subir foto marcada a S3
+        let fotoMarcadaUrl = '';
+        try {
+          const base64Data = input.fotoMarcadaBase64.includes(',') ? input.fotoMarcadaBase64.split(',')[1] : input.fotoMarcadaBase64;
+          const buffer = Buffer.from(base64Data, 'base64');
+          const key = `seguridad/marcadas/${input.id}/${nanoid(10)}.png`;
+          const { url } = await storagePut(key, buffer, 'image/png');
+          fotoMarcadaUrl = url;
+        } catch (e) {
+          console.error('Error subiendo foto marcada:', e);
+        }
+        await db.guardarFotoMarcadaIncidente(input.id, fotoMarcadaUrl || input.fotoMarcadaBase64, input.fotoMarcadaBase64);
+        return { success: true, fotoMarcadaUrl };
+      }),
+
+    // Enviar mensaje con foto en chat
+    enviarMensajeFoto: protectedProcedure
+      .input(z.object({
+        incidenteId: z.number(),
+        fotoBase64: z.string(),
+        texto: z.string().optional().default(''),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Subir foto a S3
+        const base64Data = input.fotoBase64.includes(',') ? input.fotoBase64.split(',')[1] : input.fotoBase64;
+        const buffer = Buffer.from(base64Data, 'base64');
+        const ext = input.fotoBase64.includes('image/png') ? 'png' : 'jpg';
+        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+        const key = `seguridad/chat-fotos/${input.incidenteId}/${nanoid(10)}.${ext}`;
+        const { url: fotoUrl } = await storagePut(key, buffer, mimeType);
+
+        const id = await db.createMensajeSeguridad({
+          incidenteId: input.incidenteId,
+          usuarioId: ctx.user.id,
+          texto: input.texto || '[Foto]',
+          tipo: 'foto',
+          fotoUrl,
+        });
+        return { id, success: true, fotoUrl };
+      }),
+
+    // Exportar reporte PDF de incidente
+    exportarPDF: protectedProcedure
+      .input(z.object({ incidenteId: z.number() }))
+      .query(async ({ input }) => {
+        const data = await db.getIncidenteCompletoParaPDF(input.incidenteId);
+        if (!data) throw new TRPCError({ code: 'NOT_FOUND', message: 'Incidente no encontrado' });
+        
+        const { incidente, mensajes, reportadoPor } = data;
+        const sevLabels: Record<string, string> = { baja: 'Baja', media: 'Media', alta: 'Alta', critica: 'Cr\u00edtica' };
+        const tipoLabels: Record<string, string> = {
+          caida: 'Ca\u00edda', golpe: 'Golpe', corte: 'Corte', electrico: 'El\u00e9ctrico',
+          derrumbe: 'Derrumbe', incendio: 'Incendio', quimico: 'Qu\u00edmico',
+          epp_faltante: 'EPP Faltante', condicion_insegura: 'Condici\u00f3n Insegura',
+          acto_inseguro: 'Acto Inseguro', casi_accidente: 'Casi Accidente', otro: 'Otro',
+        };
+
+        return {
+          codigo: incidente.codigo || `SEG${String(incidente.id).padStart(5, '0')}`,
+          tipo: tipoLabels[incidente.tipo] || incidente.tipo,
+          severidad: sevLabels[incidente.severidad] || incidente.severidad,
+          estado: incidente.estado,
+          descripcion: incidente.descripcion,
+          ubicacion: incidente.ubicacion,
+          fotoUrl: incidente.fotoUrl,
+          fotoMarcadaUrl: incidente.fotoMarcadaUrl,
+          reportadoPor: reportadoPor?.name || 'Desconocido',
+          fechaCreacion: incidente.createdAt.toISOString(),
+          fechaCierre: incidente.fechaCierre?.toISOString() || null,
+          accionCorrectiva: incidente.accionCorrectiva,
+          mensajes: mensajes.map(m => ({
+            id: m.id,
+            usuario: m.usuario?.name || 'Usuario',
+            texto: m.texto,
+            tipo: m.tipo,
+            fotoUrl: m.fotoUrl,
+            audioUrl: m.audioUrl,
+            transcripcion: m.transcripcion,
+            bullets: m.bullets ? (typeof m.bullets === 'string' ? JSON.parse(m.bullets) : m.bullets) : null,
+            fecha: m.createdAt.toISOString(),
+          })),
+        };
       }),
 
     // Listar usuarios del proyecto para @mentions

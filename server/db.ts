@@ -6724,11 +6724,12 @@ export async function createMensajeSeguridad(data: {
   incidenteId: number;
   usuarioId: number;
   texto: string;
-  tipo?: "texto" | "voz";
+  tipo?: "texto" | "voz" | "foto";
   audioUrl?: string | null;
   transcripcion?: string | null;
   bullets?: string | null;
   duracionSegundos?: number | null;
+  fotoUrl?: string | null;
 }) {
   const db = await getDb();
   if (!db) throw new Error("DB no disponible");
@@ -6742,6 +6743,7 @@ export async function createMensajeSeguridad(data: {
     transcripcion: data.transcripcion || null,
     bullets: data.bullets || null,
     duracionSegundos: data.duracionSegundos || null,
+    fotoUrl: data.fotoUrl || null,
   });
   return result.insertId;
 }
@@ -6771,10 +6773,40 @@ export async function editarMensajeSeguridad(id: number, texto: string) {
     .where(eq(mensajesSeguridad.id, id));
 }
 
-export async function guardarFotoMarcadaIncidente(id: number, fotoMarcadaBase64: string) {
+export async function guardarFotoMarcadaIncidente(id: number, fotoMarcadaUrl: string, fotoMarcadaBase64?: string) {
   const db = await getDb();
   if (!db) throw new Error("DB no disponible");
+  const updateData: any = { fotoMarcadaUrl };
+  if (fotoMarcadaBase64) updateData.fotoMarcadaBase64 = fotoMarcadaBase64;
   await db.update(incidentesSeguridad)
-    .set({ fotoMarcadaBase64 })
+    .set(updateData)
     .where(eq(incidentesSeguridad.id, id));
+}
+
+// Obtener incidente completo con mensajes para PDF
+export async function getIncidenteCompletoParaPDF(incidenteId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const [incidente] = await db.select().from(incidentesSeguridad).where(eq(incidentesSeguridad.id, incidenteId));
+  if (!incidente) return null;
+  
+  const mensajes = await db.select().from(mensajesSeguridad)
+    .where(and(eq(mensajesSeguridad.incidenteId, incidenteId), eq(mensajesSeguridad.eliminado, false)))
+    .orderBy(mensajesSeguridad.createdAt);
+  
+  // Obtener nombres de usuarios
+  const userIds = Array.from(new Set([incidente.reportadoPor, ...mensajes.map(m => m.usuarioId)]));
+  const usuarios = userIds.length > 0
+    ? await db.select({ id: users.id, name: users.name, role: users.role }).from(users).where(inArray(users.id, userIds))
+    : [];
+  
+  return {
+    incidente,
+    mensajes: mensajes.map(m => ({
+      ...m,
+      usuario: usuarios.find(u => u.id === m.usuarioId),
+    })),
+    reportadoPor: usuarios.find(u => u.id === incidente.reportadoPor),
+  };
 }

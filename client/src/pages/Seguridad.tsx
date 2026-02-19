@@ -42,12 +42,16 @@ import {
   AtSign,
   ChevronUp,
   ChevronRight,
+  FileDown,
+  ZoomIn,
+  Pencil,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserAvatar } from "@/components/UserAvatar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { compressAdaptive } from "@/lib/imageCompression";
+import FotoEditor from "@/components/FotoEditor";
 
 // Tipos de incidente con labels y colores
 const TIPOS_INCIDENTE = [
@@ -921,6 +925,57 @@ function TabChecklist({ proyectoId }: { proyectoId: number }) {
 // ==========================================
 // CHAT POR INCIDENTE
 // ==========================================
+// Generar HTML para reporte PDF de incidente
+function generatePDFHtml(data: any): string {
+  const sevColors: Record<string, string> = { Baja: '#22c55e', Media: '#eab308', Alta: '#f97316', 'Cr\u00edtica': '#ef4444' };
+  const sevColor = sevColors[data.severidad] || '#6b7280';
+  const fecha = new Date(data.fechaCreacion).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  
+  let mensajesHtml = '';
+  if (data.mensajes?.length > 0) {
+    mensajesHtml = data.mensajes.map((m: any) => {
+      const mFecha = new Date(m.fecha).toLocaleDateString('es-MX', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      let content = '';
+      if (m.tipo === 'foto' && m.fotoUrl) {
+        content = `<img src="${m.fotoUrl}" style="max-width:300px;border-radius:8px;margin:4px 0" />`;
+      } else if (m.tipo === 'voz' && m.bullets?.length) {
+        content = '<ul style="margin:4px 0;padding-left:20px">' + m.bullets.map((b: string) => `<li style="font-size:13px;margin:2px 0">${b}</li>`).join('') + '</ul>';
+        if (m.transcripcion) content += `<p style="font-size:11px;color:#888;margin-top:4px"><em>Transcripci\u00f3n: ${m.transcripcion}</em></p>`;
+      } else {
+        content = `<p style="font-size:13px;margin:4px 0">${m.texto}</p>`;
+      }
+      return `<div style="padding:8px 0;border-bottom:1px solid #eee"><strong style="font-size:12px">${m.usuario}</strong> <span style="font-size:11px;color:#888">${mFecha}</span>${content}</div>`;
+    }).join('');
+  }
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte ${data.codigo}</title>
+<style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#333}
+.header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid ${sevColor};padding-bottom:12px;margin-bottom:20px}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:bold;color:white;background:${sevColor}}
+.section{margin:16px 0}.section h3{font-size:14px;color:#555;border-bottom:1px solid #ddd;padding-bottom:4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
+.grid dt{color:#888;font-size:12px}.grid dd{margin:0;font-weight:500}
+.fotos{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0}
+.fotos img{max-width:300px;border-radius:8px;border:1px solid #ddd}
+@media print{body{padding:10px}}
+</style></head><body>
+<div class="header"><div><h1 style="margin:0;font-size:22px">${data.codigo}</h1><p style="margin:4px 0 0;color:#888;font-size:13px">Reporte de Incidente de Seguridad</p></div><span class="badge">${data.severidad}</span></div>
+<div class="section"><h3>Informaci\u00f3n General</h3><dl class="grid">
+<dt>Tipo</dt><dd>${data.tipo}</dd>
+<dt>Estado</dt><dd>${data.estado}</dd>
+<dt>Reportado por</dt><dd>${data.reportadoPor}</dd>
+<dt>Fecha</dt><dd>${fecha}</dd>
+<dt>Ubicaci\u00f3n</dt><dd>${data.ubicacion || 'No especificada'}</dd>
+${data.fechaCierre ? `<dt>Fecha cierre</dt><dd>${new Date(data.fechaCierre).toLocaleDateString('es-MX')}</dd>` : ''}
+</dl></div>
+<div class="section"><h3>Descripci\u00f3n</h3><p style="font-size:13px">${data.descripcion}</p></div>
+${data.accionCorrectiva ? `<div class="section"><h3>Acci\u00f3n Correctiva</h3><p style="font-size:13px">${data.accionCorrectiva}</p></div>` : ''}
+${data.fotoUrl || data.fotoMarcadaUrl ? `<div class="section"><h3>Evidencia Fotogr\u00e1fica</h3><div class="fotos">${data.fotoUrl ? `<div><p style="font-size:11px;color:#888">Original</p><img src="${data.fotoUrl}" /></div>` : ''}${data.fotoMarcadaUrl ? `<div><p style="font-size:11px;color:#888">Marcada</p><img src="${data.fotoMarcadaUrl}" /></div>` : ''}</div></div>` : ''}
+${mensajesHtml ? `<div class="section"><h3>Historial de Mensajes (${data.mensajes.length})</h3>${mensajesHtml}</div>` : ''}
+<footer style="margin-top:30px;padding-top:10px;border-top:1px solid #ddd;font-size:11px;color:#aaa;text-align:center">Generado por ObjetivaQC &mdash; ${new Date().toLocaleDateString('es-MX')}</footer>
+</body></html>`;
+}
+
 function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: number; incidenteInfo: any; onBack: () => void }) {
   const { user } = useAuth();
   const [mensaje, setMensaje] = useState("");
@@ -940,6 +995,11 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
   // Edit state
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
+
+  // Photo state
+  const [showFotoEditor, setShowFotoEditor] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const fotoInputRef = useRef<HTMLInputElement>(null);
 
   // @mentions state
   const [showMentions, setShowMentions] = useState(false);
@@ -988,6 +1048,60 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
     },
     onError: (e) => toast.error(e.message),
   });
+
+  const enviarFoto = trpc.seguridad.enviarMensajeFoto.useMutation({
+    onSuccess: () => {
+      utils.seguridad.mensajesByIncidente.invalidate({ incidenteId });
+      toast.success("Foto enviada");
+      setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }), 100);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const guardarMarcas = trpc.seguridad.guardarFotoMarcada.useMutation({
+    onSuccess: () => {
+      toast.success("Foto marcada guardada");
+      setShowFotoEditor(false);
+      utils.seguridad.getById.invalidate({ id: incidenteId });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const { data: pdfData } = trpc.seguridad.exportarPDF.useQuery(
+    { incidenteId },
+    { enabled: false }
+  );
+
+  const handleFotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      enviarFoto.mutate({ incidenteId, fotoBase64: base64 });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const result = await utils.seguridad.exportarPDF.fetch({ incidenteId });
+      if (!result) return;
+      // Generate HTML-based PDF
+      const html = generatePDFHtml(result);
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${result.codigo}_reporte.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Reporte exportado');
+    } catch (e: any) {
+      toast.error(e.message || 'Error al exportar');
+    }
+  };
 
   // Scroll al final cuando cargan mensajes
   useEffect(() => {
@@ -1145,6 +1259,22 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
           <p className="text-[10px] text-muted-foreground truncate">{incidenteInfo?.descripcion?.slice(0, 60)}</p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
+          {/* Botón rayar foto */}
+          {incidenteData?.fotoUrl && (
+            <button
+              onClick={() => setShowFotoEditor(true)}
+              className="h-7 w-7 rounded-full flex items-center justify-center bg-orange-100 hover:bg-orange-200 text-orange-600" title="Rayar foto"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {/* Botón exportar PDF */}
+          <button
+            onClick={handleExportPDF}
+            className="h-7 w-7 rounded-full flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-600" title="Exportar reporte"
+          >
+            <FileDown className="h-3.5 w-3.5" />
+          </button>
           {incidenteInfo?.sevLabel && (
             <Badge variant="outline" className={`text-[9px] ${
               incidenteInfo.severidad === 'critica' ? 'bg-red-100 text-red-700 border-red-200' :
@@ -1156,6 +1286,31 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
           <Badge variant="outline" className="text-[9px]">{incidenteInfo?.estado}</Badge>
         </div>
       </div>
+
+      {/* Foto Editor overlay */}
+      {showFotoEditor && incidenteData?.fotoUrl && (
+        <div className="mb-3 p-2 border rounded-lg bg-background">
+          <FotoEditor
+            fotoUrl={incidenteData.fotoUrl}
+            onSave={(base64) => guardarMarcas.mutate({ id: incidenteId, fotoMarcadaBase64: base64 })}
+            onCancel={() => setShowFotoEditor(false)}
+            saving={guardarMarcas.isPending}
+          />
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setLightboxUrl(null)}>
+          <button className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/20 text-white flex items-center justify-center" onClick={() => setLightboxUrl(null)}>
+            <X className="h-5 w-5" />
+          </button>
+          <img src={lightboxUrl} className="max-w-full max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+
+      {/* Hidden file input for photos */}
+      <input ref={fotoInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFotoSelect} />
 
       {/* Mensajes */}
       <div className="flex-1 overflow-y-auto px-1 space-y-3" ref={scrollRef}>
@@ -1171,6 +1326,7 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
           mensajes.map((msg: any) => {
             const isOwn = msg.usuarioId === user?.id;
             const isVoz = msg.tipo === 'voz';
+            const isFoto = msg.tipo === 'foto';
             return (
               <div key={msg.id} className={`flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}>
                 <UserAvatar
@@ -1244,7 +1400,20 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
                         )}
                       </div>
                     )}
-                    {!isVoz && editingId === msg.id ? (
+                    {/* Foto message */}
+                    {isFoto && msg.fotoUrl && (
+                      <div className="mb-1">
+                        <img
+                          src={msg.fotoUrl}
+                          className="rounded-lg max-w-[200px] max-h-[200px] object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => setLightboxUrl(msg.fotoUrl)}
+                        />
+                        {msg.texto && msg.texto !== '[Foto]' && (
+                          <p className="text-sm font-normal mt-1">{renderMsgText(msg.texto)}</p>
+                        )}
+                      </div>
+                    )}
+                    {!isVoz && !isFoto && editingId === msg.id ? (
                       <div className="space-y-1.5">
                         <Textarea
                           value={editText}
@@ -1257,7 +1426,7 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
                           <Button size="sm" className="h-6 text-[10px] px-2 bg-red-500 text-white" onClick={() => editarMut.mutate({ id: msg.id, texto: editText })} disabled={editarMut.isPending}>Guardar</Button>
                         </div>
                       </div>
-                    ) : !isVoz ? (
+                    ) : !isVoz && !isFoto ? (
                       <p className="text-sm font-normal whitespace-pre-wrap break-words">{renderMsgText(msg.texto)}</p>
                     ) : null}
                     {/* Acciones admin: editar/eliminar */}
@@ -1320,16 +1489,29 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
             ))}
           </div>
         )}
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           <Textarea
             ref={textareaRef}
             value={mensaje}
             onChange={handleMensajeChange}
             onKeyDown={handleKeyDown}
-            placeholder="Escribe un mensaje... usa @ para mencionar"
+            placeholder="Escribe... @ mencionar"
             className="min-h-[44px] max-h-24 resize-none text-sm flex-1"
             rows={1}
           />
+          {/* Botón cámara/foto */}
+          <button
+            onClick={() => fotoInputRef.current?.click()}
+            disabled={enviarFoto.isPending}
+            className={`h-[44px] w-[44px] rounded-xl flex items-center justify-center transition-all shrink-0 ${
+              enviarFoto.isPending
+                ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                : 'bg-muted hover:bg-muted/80 text-foreground'
+            }`}
+            title="Enviar foto"
+          >
+            {enviarFoto.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+          </button>
           {/* Botón micrófono */}
           <button
             onClick={isRecording ? stopRecording : startRecording}
@@ -1358,7 +1540,7 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
           </button>
         </div>
         <p className="text-[10px] text-muted-foreground mt-1 text-center">
-          Enter enviar · Shift+Enter nueva línea · @ mencionar · Mic nota de voz IA
+          Enter enviar · @ mencionar · 📷 foto · 🎙 voz IA
         </p>
       </div>
     </div>

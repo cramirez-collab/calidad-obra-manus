@@ -4458,3 +4458,23 @@
 ### Dropdown de Nivel/Severidad en Incidentes
 - [x] Dropdown para seleccionar nivel/severidad al crear incidente (ya existía en form)
 - [x] Mostrar nivel con color en tarjetas y header del chat
+
+## 3 Mejoras Seguridad (Feb 2026)
+
+### 1. Rayado sobre fotos de incidentes
+- [x] Componente FotoEditor con Canvas para dibujar sobre foto del incidente
+- [x] Herramientas: lápiz rojo, grosor, borrar, deshacer
+- [x] Guardar foto marcada en S3 (campo fotoMarcada en BD)
+- [x] Botón rayar foto en header del chat del incidente
+
+### 2. Adjuntar fotos en chat de incidentes
+- [x] Botón de cámara/galería en input del chat
+- [x] Subir foto a S3 y enviar como mensaje tipo "foto"
+- [x] Previsualización de foto en burbuja de chat
+- [x] Zoom/lightbox al tocar la foto
+
+### 3. Exportar reporte PDF de incidente
+- [x] Endpoint exportarPDF con datos completos del incidente
+- [x] Incluir: datos, foto, foto marcada, chat, bullets de voz
+- [x] Botón "Exportar reporte" en header del chat de incidente
+- [x] Diseño HTML profesional con colores por severidad
