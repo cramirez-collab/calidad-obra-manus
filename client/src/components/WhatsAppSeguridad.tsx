@@ -24,6 +24,10 @@ function useIsHidalma() {
   return proyectoActual?.nombre?.toLowerCase().includes("hidalma") ?? false;
 }
 
+/** Uniform size matching FloatingCaptureButton */
+const BTN = "flex items-center justify-center h-10 w-10 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95";
+const ICON = "w-[18px] h-[18px] text-white";
+
 /**
  * Botones flotantes WhatsApp que se renderizan DENTRO del contenedor
  * unificado de FloatingCaptureButton. Retorna fragmento con los botones
@@ -42,9 +46,9 @@ export function WhatsAppFloatingButtons() {
             href={WHATSAPP_CONTRATISTAS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-7 h-7 rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] transition-all hover:scale-110 active:scale-95"
+            className={`${BTN} bg-[#02B381] hover:bg-[#029970]`}
           >
-            <WhatsAppIcon className="w-3.5 h-3.5 text-white" />
+            <WhatsAppIcon className={ICON} />
           </a>
         </TooltipTrigger>
         <TooltipContent side="left" className="bg-[#02B381] text-white border-[#029970]">
@@ -59,9 +63,9 @@ export function WhatsAppFloatingButtons() {
             href={WHATSAPP_SEGURIDAD_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-7 h-7 rounded-full shadow-md bg-red-600 hover:bg-red-700 transition-all hover:scale-110 active:scale-95"
+            className={`${BTN} bg-red-600 hover:bg-red-700`}
           >
-            <WhatsAppIcon className="w-3.5 h-3.5 text-white" />
+            <WhatsAppIcon className={ICON} />
           </a>
         </TooltipTrigger>
         <TooltipContent side="left" className="bg-red-600 text-white border-red-700">

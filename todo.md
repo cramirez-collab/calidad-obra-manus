@@ -4546,3 +4546,6 @@
 ### Fix Tarjetas Incidentes (Feb 2026)
 - [x] Mejorar iconos de botones de acción con tooltips al hover (solo iconos, Tooltip de shadcn)
 - [x] Mostrar a quién está asignada la incidencia en la tarjeta (UserCheck + nombre)
+
+### Fix Flotantes Mismo Tamaño (Feb 2026)
+- [x] Uniformar todos los botones flotantes al mismo tamaño (h-10 w-10 = 40px, con Tooltip side=left)
