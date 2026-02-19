@@ -43,6 +43,7 @@ import {
   mensajesSeguridad, InsertMensajeSeguridad,
   bitacoraSeguridad, InsertBitacoraSeguridad,
   evidenciasSeguridad, InsertEvidenciaSeguridad,
+  tiposIncidenciaCustom, InsertTipoIncidenciaCustom,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -7036,4 +7037,36 @@ export async function countEvidenciasByIncidente(incidenteId: number) {
     .from(evidenciasSeguridad)
     .where(eq(evidenciasSeguridad.incidenteId, incidenteId));
   return result[0]?.count || 0;
+}
+
+// ==================== TIPOS DE INCIDENCIA CUSTOM ====================
+
+export async function getTiposIncidenciaByProyecto(proyectoId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  return db.select()
+    .from(tiposIncidenciaCustom)
+    .where(eq(tiposIncidenciaCustom.proyectoId, proyectoId))
+    .orderBy(tiposIncidenciaCustom.orden, tiposIncidenciaCustom.id);
+}
+
+export async function createTipoIncidencia(data: InsertTipoIncidenciaCustom) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const result = await db.insert(tiposIncidenciaCustom).values(data);
+  return result[0].insertId;
+}
+
+export async function updateTipoIncidencia(id: number, data: Partial<InsertTipoIncidenciaCustom>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  await db.update(tiposIncidenciaCustom)
+    .set(data)
+    .where(eq(tiposIncidenciaCustom.id, id));
+}
+
+export async function deleteTipoIncidencia(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  await db.delete(tiposIncidenciaCustom).where(eq(tiposIncidenciaCustom.id, id));
 }

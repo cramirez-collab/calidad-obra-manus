@@ -4780,6 +4780,61 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
 
         return { ok: true };
       }),
+
+    // ==================== TIPOS DE INCIDENCIA CUSTOM ====================
+
+    tiposIncidencia: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getTiposIncidenciaByProyecto(input.proyectoId);
+      }),
+
+    crearTipoIncidencia: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        clave: z.string().min(1).max(100),
+        label: z.string().min(1).max(150),
+        icono: z.string().default("ClipboardList"),
+        color: z.string().default("bg-gray-100 text-gray-700"),
+        iconColor: z.string().default("text-gray-600"),
+        orden: z.number().default(0),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (!['admin', 'superadmin'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo administradores pueden gestionar tipos de incidencia' });
+        }
+        const id = await db.createTipoIncidencia(input);
+        return { id };
+      }),
+
+    actualizarTipoIncidencia: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        label: z.string().min(1).max(150).optional(),
+        icono: z.string().optional(),
+        color: z.string().optional(),
+        iconColor: z.string().optional(),
+        activo: z.boolean().optional(),
+        orden: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (!['admin', 'superadmin'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo administradores pueden gestionar tipos de incidencia' });
+        }
+        const { id, ...data } = input;
+        await db.updateTipoIncidencia(id, data);
+        return { ok: true };
+      }),
+
+    eliminarTipoIncidencia: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (!['admin', 'superadmin'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo administradores pueden gestionar tipos de incidencia' });
+        }
+        await db.deleteTipoIncidencia(input.id);
+        return { ok: true };
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

@@ -46,7 +46,12 @@ import {
   RotateCcw,
   ChevronLeft,
   ChevronRight,
-  ClipboardCheck
+  ClipboardCheck,
+  Flame,
+  HardHat,
+  ShieldAlert,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
@@ -521,6 +526,11 @@ export default function Configuracion() {
           <div id="gestion-pines">
             <PinesManager proyectoId={selectedProjectId} />
           </div>
+        )}
+
+        {/* T - Tipos de Incidencia (Seguridad) */}
+        {isAdmin && selectedProjectId && (
+          <TiposIncidenciaManager proyectoId={selectedProjectId} />
         )}
 
         {/* P - Pruebas (Editor de catálogo) */}
@@ -1500,5 +1510,280 @@ function PinesManager({ proyectoId }: { proyectoId: number }) {
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+
+// ==================== TIPOS DE INCIDENCIA MANAGER ====================
+
+const ICONOS_DISPONIBLES = [
+  { name: "AlertTriangle", label: "Alerta" },
+  { name: "Flame", label: "Fuego" },
+  { name: "Zap", label: "Eléctrico" },
+  { name: "HardHat", label: "Casco" },
+  { name: "ShieldAlert", label: "Escudo" },
+  { name: "Building2", label: "Edificio" },
+  { name: "Trash2", label: "Peligro" },
+  { name: "Eye", label: "Ojo" },
+  { name: "ClipboardCheck", label: "Lista" },
+  { name: "Users", label: "Personas" },
+];
+
+const COLORES_DISPONIBLES = [
+  { color: "bg-red-100 text-red-700", iconColor: "text-red-600", label: "Rojo" },
+  { color: "bg-orange-100 text-orange-700", iconColor: "text-orange-600", label: "Naranja" },
+  { color: "bg-amber-100 text-amber-700", iconColor: "text-amber-600", label: "Ámbar" },
+  { color: "bg-yellow-100 text-yellow-700", iconColor: "text-yellow-600", label: "Amarillo" },
+  { color: "bg-green-100 text-green-700", iconColor: "text-green-600", label: "Verde" },
+  { color: "bg-blue-100 text-blue-700", iconColor: "text-blue-600", label: "Azul" },
+  { color: "bg-purple-100 text-purple-700", iconColor: "text-purple-600", label: "Morado" },
+  { color: "bg-rose-100 text-rose-700", iconColor: "text-rose-600", label: "Rosa" },
+  { color: "bg-stone-100 text-stone-700", iconColor: "text-stone-600", label: "Piedra" },
+  { color: "bg-gray-100 text-gray-700", iconColor: "text-gray-600", label: "Gris" },
+];
+
+function TiposIncidenciaManager({ proyectoId }: { proyectoId: number }) {
+  const { data: tipos, refetch } = trpc.seguridad.tiposIncidencia.useQuery({ proyectoId });
+  const crearMut = trpc.seguridad.crearTipoIncidencia.useMutation({
+    onSuccess: () => { toast.success("Tipo creado"); refetch(); resetForm(); },
+    onError: (e: any) => toast.error(e.message),
+  });
+  const actualizarMut = trpc.seguridad.actualizarTipoIncidencia.useMutation({
+    onSuccess: () => { toast.success("Tipo actualizado"); refetch(); setEditingId(null); },
+    onError: (e: any) => toast.error(e.message),
+  });
+  const eliminarMut = trpc.seguridad.eliminarTipoIncidencia.useMutation({
+    onSuccess: () => { toast.success("Tipo eliminado"); refetch(); setDeleteId(null); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [formData, setFormData] = useState({
+    clave: "",
+    label: "",
+    icono: "AlertTriangle",
+    colorIdx: 0,
+  });
+
+  const resetForm = () => {
+    setFormData({ clave: "", label: "", icono: "AlertTriangle", colorIdx: 0 });
+    setShowForm(false);
+    setEditingId(null);
+  };
+
+  const handleSubmit = () => {
+    const colorInfo = COLORES_DISPONIBLES[formData.colorIdx];
+    if (editingId) {
+      actualizarMut.mutate({
+        id: editingId,
+        label: formData.label,
+        icono: formData.icono,
+        color: colorInfo.color,
+        iconColor: colorInfo.iconColor,
+      });
+    } else {
+      const clave = formData.clave || formData.label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+      crearMut.mutate({
+        proyectoId,
+        clave,
+        label: formData.label,
+        icono: formData.icono,
+        color: colorInfo.color,
+        iconColor: colorInfo.iconColor,
+        orden: (tipos?.length || 0) + 1,
+      });
+    }
+  };
+
+  const startEdit = (tipo: any) => {
+    const colorIdx = COLORES_DISPONIBLES.findIndex(c => c.color === tipo.color);
+    setFormData({
+      clave: tipo.clave,
+      label: tipo.label,
+      icono: tipo.icono || "AlertTriangle",
+      colorIdx: colorIdx >= 0 ? colorIdx : 0,
+    });
+    setEditingId(tipo.id);
+    setShowForm(true);
+  };
+
+  // Default types (from enum) - shown as reference
+  const defaultTypes = [
+    { clave: "caida", label: "Caída" },
+    { clave: "golpe", label: "Golpe" },
+    { clave: "corte", label: "Corte" },
+    { clave: "electrico", label: "Eléctrico" },
+    { clave: "derrumbe", label: "Derrumbe" },
+    { clave: "incendio", label: "Incendio" },
+    { clave: "quimico", label: "Químico" },
+    { clave: "epp_faltante", label: "EPP Faltante" },
+    { clave: "condicion_insegura", label: "Cond. Insegura" },
+    { clave: "acto_inseguro", label: "Acto Inseguro" },
+    { clave: "casi_accidente", label: "Casi Accidente" },
+    { clave: "otro", label: "Otro" },
+  ];
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ShieldAlert className="h-5 w-5 text-red-600" />
+            Tipos de Incidencia (Seguridad)
+          </CardTitle>
+          <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }} className="gap-1 bg-red-600 hover:bg-red-700 text-white">
+            <Plus className="h-3.5 w-3.5" /> Agregar
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Default types reference */}
+        <div>
+          <p className="text-[11px] font-medium text-muted-foreground mb-2">Tipos predefinidos del sistema</p>
+          <div className="flex flex-wrap gap-1.5">
+            {defaultTypes.map(dt => (
+              <span key={dt.clave} className="text-[10px] px-2 py-1 rounded-full bg-muted text-muted-foreground border">
+                {dt.label}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Custom types */}
+        {tipos && tipos.length > 0 && (
+          <div>
+            <p className="text-[11px] font-medium text-muted-foreground mb-2">Tipos personalizados del proyecto</p>
+            <div className="space-y-2">
+              {tipos.map((tipo: any) => (
+                <div key={tipo.id} className={`flex items-center gap-3 p-2.5 rounded-lg border ${tipo.activo ? 'bg-background' : 'bg-muted/50 opacity-60'}`}>
+                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${tipo.color || 'bg-gray-100'}`}>
+                    <AlertTriangle className={`w-4 h-4 ${tipo.iconColor || 'text-gray-600'}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{tipo.label}</p>
+                    <p className="text-[10px] text-muted-foreground font-mono">{tipo.clave}</p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7"
+                      onClick={() => actualizarMut.mutate({ id: tipo.id, activo: !tipo.activo })}
+                      title={tipo.activo ? "Desactivar" : "Activar"}
+                    >
+                      {tipo.activo ? <ToggleRight className="w-4 h-4 text-green-600" /> : <ToggleLeft className="w-4 h-4 text-muted-foreground" />}
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEdit(tipo)}>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-red-500 hover:text-red-700" onClick={() => setDeleteId(tipo.id)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tipos && tipos.length === 0 && !showForm && (
+          <div className="text-center py-6 text-muted-foreground">
+            <ShieldAlert className="w-8 h-8 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">Sin tipos personalizados</p>
+            <p className="text-xs">Los tipos predefinidos del sistema están disponibles por defecto</p>
+          </div>
+        )}
+
+        {/* Create/Edit form */}
+        {showForm && (
+          <div className="border rounded-lg p-4 space-y-3 bg-accent/30">
+            <p className="text-sm font-semibold">{editingId ? "Editar Tipo" : "Nuevo Tipo de Incidencia"}</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Nombre</Label>
+                <Input
+                  placeholder="Ej: Trabajo en Altura"
+                  value={formData.label}
+                  onChange={e => setFormData(prev => ({ ...prev, label: e.target.value }))}
+                  className="h-9"
+                />
+              </div>
+              {!editingId && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Clave (auto si vacío)</Label>
+                  <Input
+                    placeholder="trabajo_en_altura"
+                    value={formData.clave}
+                    onChange={e => setFormData(prev => ({ ...prev, clave: e.target.value }))}
+                    className="h-9 font-mono text-xs"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Color picker */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Color</Label>
+              <div className="flex flex-wrap gap-2">
+                {COLORES_DISPONIBLES.map((c, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setFormData(prev => ({ ...prev, colorIdx: idx }))}
+                    className={`h-7 w-7 rounded-full border-2 transition-all ${c.color.split(' ')[0]} ${
+                      formData.colorIdx === idx ? 'border-foreground scale-110 ring-2 ring-offset-1 ring-foreground/30' : 'border-transparent'
+                    }`}
+                    title={c.label}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div className="flex items-center gap-2 p-2 rounded-lg border bg-background">
+              <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${COLORES_DISPONIBLES[formData.colorIdx].color}`}>
+                <AlertTriangle className={`w-4 h-4 ${COLORES_DISPONIBLES[formData.colorIdx].iconColor}`} />
+              </div>
+              <span className="text-sm font-medium">{formData.label || "Vista previa"}</span>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={resetForm}>Cancelar</Button>
+              <Button
+                size="sm"
+                onClick={handleSubmit}
+                disabled={!formData.label || crearMut.isPending || actualizarMut.isPending}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {(crearMut.isPending || actualizarMut.isPending) ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                {editingId ? "Guardar" : "Crear"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar este tipo de incidencia?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Los incidentes existentes con este tipo no se verán afectados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { if (deleteId) eliminarMut.mutate({ id: deleteId }); }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {eliminarMut.isPending ? 'Eliminando...' : 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
   );
 }

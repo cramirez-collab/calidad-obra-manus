@@ -94,7 +94,7 @@ const SEVERIDADES = [
 const ESTADOS = [
   { value: "abierto", label: "Abierto", color: "bg-red-100 text-red-700 border-red-200" },
   { value: "en_proceso", label: "En Proceso", color: "bg-amber-100 text-amber-700 border-amber-200" },
-  { value: "prevencion", label: "Prevenci\u00f3n", color: "bg-blue-100 text-blue-700 border-blue-200" },
+  { value: "prevencion", label: "Prevención", color: "bg-blue-100 text-blue-700 border-blue-200" },
   { value: "cerrado", label: "Cerrado", color: "bg-green-100 text-green-700 border-green-200" },
 ] as const;
 
@@ -573,7 +573,8 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      {(() => { const TpIcon = tp?.Icon || ClipboardList; return <TpIcon className={`w-3.5 h-3.5 shrink-0 ${tp?.iconColor || 'text-gray-500'}`} />; })()}
                       <span className="text-xs font-semibold">{tp?.label || inc.tipo}</span>
                       {inc.codigo && (
                         <span className="text-[9px] font-mono text-red-600 bg-red-50 px-1.5 py-0.5 rounded">{inc.codigo}</span>
@@ -824,7 +825,7 @@ function DashboardSegurista({ proyectoId, onOpenChat }: { proyectoId: number; on
         </Card>
         <Card className="p-2 text-center border-blue-200">
           <p className="text-lg font-bold text-blue-600">{stats.prevencion}</p>
-          <p className="text-[8px] text-muted-foreground">Prevenci\u00f3n</p>
+          <p className="text-[8px] text-muted-foreground">Prevención</p>
         </Card>
         <Card className="p-2 text-center border-green-200">
           <p className="text-lg font-bold text-green-600">{stats.cerrados}</p>
@@ -894,7 +895,7 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
         </Card>
         <Card className="p-3 text-center border-blue-200">
           <p className="text-2xl font-bold text-blue-600">{stats.prevencion || 0}</p>
-          <p className="text-[10px] text-muted-foreground">Prevenci\u00f3n</p>
+          <p className="text-[10px] text-muted-foreground">Prevención</p>
         </Card>
         <Card className="p-3 text-center border-green-200">
           <p className="text-2xl font-bold text-green-600">{stats.cerrados}</p>
@@ -1717,12 +1718,12 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
                 className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
                   evidenciaTipo === t ? 'bg-emerald-500 text-white border-emerald-500' : 'border-muted-foreground/30 text-muted-foreground hover:bg-muted'
                 }`}>
-                {t === 'seguimiento' ? 'Seguimiento' : t === 'resolucion' ? 'Resoluci\u00f3n' : 'Prevenci\u00f3n'}
+                {t === 'seguimiento' ? 'Seguimiento' : t === 'resolucion' ? 'Resolución' : 'Prevención'}
               </button>
             ))}
           </div>
           <input
-            type="text" placeholder="Descripci\u00f3n breve (opcional)"
+            type="text" placeholder="Descripción breve (opcional)"
             value={evidenciaDesc} onChange={e => setEvidenciaDesc(e.target.value)}
             className="w-full text-xs border rounded-lg px-2 py-1.5 bg-background"
           />

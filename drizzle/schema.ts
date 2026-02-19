@@ -959,3 +959,25 @@ export const mensajesSeguridad = mysqlTable("mensajes_seguridad", {
 });
 export type MensajeSeguridad = typeof mensajesSeguridad.$inferSelect;
 export type InsertMensajeSeguridad = typeof mensajesSeguridad.$inferInsert;
+
+
+/**
+ * Tipos de incidencia personalizados por proyecto
+ * Permite a admins agregar, renombrar y desactivar tipos de incidencia
+ * Los tipos base del enum siguen existiendo; esta tabla los extiende/sobreescribe
+ */
+export const tiposIncidenciaCustom = mysqlTable("tipos_incidencia_custom", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  clave: varchar("clave", { length: 100 }).notNull(), // valor interno (slug)
+  label: varchar("label", { length: 150 }).notNull(), // nombre visible
+  icono: varchar("icono", { length: 50 }).default("ClipboardList"), // nombre del icono Lucide
+  color: varchar("color", { length: 100 }).default("bg-gray-100 text-gray-700"), // clases CSS
+  iconColor: varchar("iconColor", { length: 50 }).default("text-gray-600"),
+  activo: boolean("activo").default(true).notNull(),
+  orden: int("orden").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TipoIncidenciaCustom = typeof tiposIncidenciaCustom.$inferSelect;
+export type InsertTipoIncidenciaCustom = typeof tiposIncidenciaCustom.$inferInsert;

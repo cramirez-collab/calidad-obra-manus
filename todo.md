@@ -4565,3 +4565,8 @@
 - [x] Flujo de evidencias para segurista asignado: subir fotos de resolución/seguimiento
 - [x] Sección de evidencias visible en chat de incidente con fotos del asignado
 - [x] Solo el segurista asignado (o admin/superadmin) puede subir evidencias de resolución (15 tests)
+
+### Fix KPI Cards y CRUD Tipos Incidencia (Feb 2026)
+-- [x] Fix texto corrupto "Prevención" en KPI cards del dashboard segurista (eliminar código Unicode)ode)
+- [x] Centrar iconos alineados al texto dentro de las tarjetas de incidentes (icono inline con label)
+- [x] CRUD de tipos de incidencia en página de Configuración (agregar, editar, eliminar tipos personalizados)
