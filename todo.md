@@ -4575,3 +4575,7 @@
 - [x] Integrar tipos custom del proyecto en el formulario de reporte de incidentes (junto a predefinidos)
 - [x] Filtro por tipo en la lista de incidentes (dropdown incluye tipos custom activos)
 - [x] Reordenar tipos custom con drag-and-drop en Configuración (GripVertical handle + HTML5 drag events)
+
+### Fix Botones Tipo Incidente (Feb 2026)
+- [x] Centrar icono arriba del texto en botones de tipo de incidente (flex-col items-center gap-1)
+- [x] Doble tap para deseleccionar tipo y severidad (toggle: tap selecciona, tap de nuevo deselecciona)

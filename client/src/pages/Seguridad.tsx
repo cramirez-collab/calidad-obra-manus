@@ -348,15 +348,15 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
           {allTipos.map((t) => (
             <button
               key={t.value}
-              onClick={() => setTipo(t.value)}
-              className={`p-2.5 rounded-xl border-2 text-center transition-all ${
+              onClick={() => setTipo(prev => prev === t.value ? "" : t.value)}
+              className={`p-2.5 rounded-xl border-2 text-center transition-all flex flex-col items-center justify-center gap-1 ${
                 tipo === t.value
                   ? "border-red-500 bg-red-50 shadow-sm"
                   : "border-transparent bg-muted/30 hover:bg-muted/60"
               }`}
             >
-              {(() => { const TIcon = t.Icon; return <TIcon className={`w-5 h-5 ${tipo === t.value ? t.iconColor : 'text-muted-foreground'}`} />; })()}
-              <span className="text-[10px] font-medium leading-tight block mt-0.5">{t.label}</span>
+              {(() => { const TIcon = t.Icon; return <TIcon className={`w-5 h-5 mx-auto ${tipo === t.value ? t.iconColor : 'text-muted-foreground'}`} />; })()}
+              <span className="text-[10px] font-medium leading-tight">{t.label}</span>
             </button>
           ))}
         </div>
@@ -369,7 +369,7 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
           {SEVERIDADES.map((s) => (
             <button
               key={s.value}
-              onClick={() => setSeveridad(s.value)}
+              onClick={() => setSeveridad(prev => prev === s.value ? "" : s.value)}
               className={`py-2.5 px-2 rounded-xl border-2 text-center transition-all ${
                 severidad === s.value
                   ? `border-current ${s.bgLight} ${s.textColor} shadow-sm`
