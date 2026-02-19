@@ -798,6 +798,7 @@ export type InsertPruebaBitacora = typeof pruebasBitacora.$inferInsert;
 export const incidentesSeguridad = mysqlTable("incidentes_seguridad", {
   id: int("id").autoincrement().primaryKey(),
   proyectoId: int("proyectoId").notNull(),
+  codigo: varchar("codigo", { length: 50 }), // SEG00001, SEG00002...
   reportadoPor: int("reportadoPor").notNull(), // userId
   tipo: mysqlEnum("tipo_incidente", [
     "caida",
@@ -819,6 +820,8 @@ export const incidentesSeguridad = mysqlTable("incidentes_seguridad", {
   unidadId: int("unidadId"), // opcional, vinculado a unidad
   fotoUrl: text("fotoUrl"),
   fotoBase64: text("fotoBase64"),
+  fotoMarcadaUrl: text("fotoMarcadaUrl"), // Foto con marcas/rayado
+  fotoMarcadaBase64: text("fotoMarcadaBase64"), // Foto marcada en base64
   estado: mysqlEnum("estado_incidente", ["abierto", "en_proceso", "cerrado"]).default("abierto").notNull(),
   accionCorrectiva: text("accionCorrectiva"),
   cerradoPor: int("cerradoPor"),

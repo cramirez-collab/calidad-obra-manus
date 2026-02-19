@@ -4418,3 +4418,43 @@
 - [x] Botón de micrófono para notas de voz con transcripción IA + 5 bullets
 - [x] Lista de mensajes con avatar, nombre, fecha, burbujas de chat, reproducción de audio
 - [ ] Eliminar tab "Voz" independiente (se mantiene como opción adicional)
+
+## Mejoras Chat Seguridad e Incidentes (Feb 2026)
+
+### Permisos y Edición
+- [x] Superadmin y Admin pueden editar mensajes del chat
+- [x] Superadmin y Admin pueden eliminar mensajes del chat
+- [x] Superadmin y Admin pueden editar incidentes completos
+
+### Rayar Fotos de Incidentes
+- [ ] Herramienta de dibujo/rayado sobre fotos de incidentes (pendiente - requiere canvas component)
+
+### Estilo del Chat
+- [x] Texto normal negro sin bold en mensajes (no fondo rojo)
+- [x] Solo fondo rojo para actividades críticas de riesgo
+- [x] Icono de chat en color rojo en las tarjetas de incidentes
+
+### Códigos de Seguimiento
+- [x] Código secuencial SEG00001 para cada incidente
+- [x] Mostrar código en tarjeta y detalle del incidente
+- [x] Código visible en el chat (header del chat)
+
+### Notificaciones Push con Tono según Gravedad
+- [x] Notificación push para incidentes de seguridad con emoji de severidad
+- [x] Vibración según gravedad (baja=corta, crítica=alarma larga)
+- [x] Integrado con pushService y service worker existente
+
+### Estadísticas de Seguridad
+- [x] Tab de estadísticas en módulo de seguridad (ya existía)
+- [x] Gráficos de incidentes por tipo, estado, gravedad
+- [x] KPIs de seguridad (tiempo resolución promedio)
+- [x] Tendencias últimos 30 días
+
+### @Mentions en Chat de Seguridad
+- [x] Sistema @mentions para etiquetar usuarios en chat de incidentes
+- [x] Autocompletado de usuarios al escribir @
+- [x] Notificación push al usuario mencionado
+
+### Dropdown de Nivel/Severidad en Incidentes
+- [x] Dropdown para seleccionar nivel/severidad al crear incidente (ya existía en form)
+- [x] Mostrar nivel con color en tarjetas y header del chat

@@ -6495,10 +6495,22 @@ export async function getCatalogoPruebasAll(proyectoId: number) {
 // MÓDULO DE SEGURIDAD - DB HELPERS
 // ==========================================
 
+export async function getNextCodigoSeg(proyectoId: number): Promise<string> {
+  const db = await getDb();
+  if (!db) return "SEG00001";
+  const [result] = await db.select({ count: sql<number>`COUNT(*)` })
+    .from(incidentesSeguridad)
+    .where(eq(incidentesSeguridad.proyectoId, proyectoId));
+  const next = (result?.count || 0) + 1;
+  return `SEG${String(next).padStart(5, '0')}`;
+}
+
 export async function crearIncidenteSeguridad(data: InsertIncidenteSeguridad) {
   const db = await getDb();
   if (!db) throw new Error("DB no disponible");
-  const [result] = await db.insert(incidentesSeguridad).values(data);
+  // Auto-generate codigo SEG00001...
+  const codigo = await getNextCodigoSeg(data.proyectoId);
+  const [result] = await db.insert(incidentesSeguridad).values({ ...data, codigo });
   return result.insertId;
 }
 
@@ -6749,4 +6761,20 @@ export async function countMensajesSeguridad(incidenteId: number) {
     .from(mensajesSeguridad)
     .where(and(eq(mensajesSeguridad.incidenteId, incidenteId), eq(mensajesSeguridad.eliminado, false)));
   return result?.count || 0;
+}
+
+export async function editarMensajeSeguridad(id: number, texto: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  await db.update(mensajesSeguridad)
+    .set({ texto, editado: true })
+    .where(eq(mensajesSeguridad.id, id));
+}
+
+export async function guardarFotoMarcadaIncidente(id: number, fotoMarcadaBase64: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  await db.update(incidentesSeguridad)
+    .set({ fotoMarcadaBase64 })
+    .where(eq(incidentesSeguridad.id, id));
 }

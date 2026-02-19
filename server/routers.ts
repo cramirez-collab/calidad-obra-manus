@@ -4116,6 +4116,36 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           fotoBase64: input.fotoBase64 ? undefined : undefined,
           estado: "abierto",
         });
+
+        // Obtener el incidente creado para el código SEG
+        const incidenteCreado = await db.getIncidenteById(id);
+        const codigoSeg = incidenteCreado?.codigo || `SEG${String(id).padStart(5, '0')}`;
+
+        // Enviar notificación push a todos los usuarios del proyecto
+        try {
+          const usuariosProyecto = await db.getUsuariosByProyecto(input.proyectoId);
+          const userIds = usuariosProyecto.map((u: any) => u.id).filter((uid: number) => uid !== ctx.user.id);
+          if (userIds.length > 0) {
+            const pushSubs = await db.getPushSubscriptionsByUsuarios(userIds);
+            if (pushSubs.length > 0) {
+              const sevLabels: Record<string, string> = { baja: 'Baja', media: 'Media', alta: 'Alta', critica: 'CRÍTICA' };
+              const sevEmoji: Record<string, string> = { baja: '🟢', media: '🟡', alta: '🟠', critica: '🔴' };
+              await pushService.sendPushToMultiple(pushSubs, {
+                title: `${sevEmoji[input.severidad] || '🚨'} Incidente ${sevLabels[input.severidad] || input.severidad} - ${codigoSeg}`,
+                body: `${input.tipo.replace(/_/g, ' ').toUpperCase()}: ${input.descripcion.slice(0, 80)}`,
+                incidenteId: id,
+                codigoSeg,
+                severidad: input.severidad,
+                tipoIncidente: input.tipo,
+                tag: `oqc-seg-${id}`,
+                data: { url: '/seguridad', incidenteId: id, tipo: 'incidente_nuevo' },
+              });
+            }
+          }
+        } catch (e) {
+          console.error('[Seguridad] Error enviando push de incidente:', e);
+        }
+
         return { id, success: true };
       }),
 
@@ -4333,6 +4363,39 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           texto: input.texto,
           tipo: "texto",
         });
+
+        // Enviar push a usuarios @mencionados
+        try {
+          const mentions = input.texto.match(/@(\w+(?:\s\w+)?)/g);
+          if (mentions && mentions.length > 0) {
+            const incidente = await db.getIncidenteById(input.incidenteId);
+            if (incidente) {
+              const usuariosProyecto = await db.getUsuariosByProyecto(incidente.proyectoId);
+              const mentionedNames = mentions.map(m => m.replace('@', '').toLowerCase());
+              const mentionedUsers = usuariosProyecto.filter((u: any) =>
+                mentionedNames.some(name => u.name?.toLowerCase().includes(name))
+              );
+              const mentionedIds = mentionedUsers.map((u: any) => u.id).filter((uid: number) => uid !== ctx.user.id);
+              if (mentionedIds.length > 0) {
+                const pushSubs = await db.getPushSubscriptionsByUsuarios(mentionedIds);
+                if (pushSubs.length > 0) {
+                  await pushService.sendPushToMultiple(pushSubs, {
+                    title: `📢 Te mencionaron en ${incidente.codigo || 'incidente'}`,
+                    body: `${ctx.user.name || 'Usuario'}: ${input.texto.slice(0, 80)}`,
+                    incidenteId: input.incidenteId,
+                    codigoSeg: incidente.codigo || undefined,
+                    severidad: incidente.severidad,
+                    tipoIncidente: incidente.tipo,
+                    data: { url: '/seguridad', incidenteId: input.incidenteId, tipo: 'mencion_seguridad' },
+                  });
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error('[Seguridad] Error enviando push de mención:', e);
+        }
+
         return { id, success: true };
       }),
 
@@ -4408,11 +4471,56 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
     eliminarMensaje: protectedProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ ctx, input }) => {
-        if (!['superadmin', 'admin', 'supervisor'].includes(ctx.user.role)) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para eliminar mensajes' });
+        if (!['superadmin', 'admin'].includes(ctx.user.role)) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo admin/superadmin pueden eliminar mensajes' });
         }
         await db.deleteMensajeSeguridad(input.id);
         return { success: true };
+      }),
+
+    editarMensaje: protectedProcedure
+      .input(z.object({ id: z.number(), texto: z.string().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        if (!['superadmin', 'admin'].includes(ctx.user.role)) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo admin/superadmin pueden editar mensajes' });
+        }
+        await db.editarMensajeSeguridad(input.id, input.texto);
+        return { success: true };
+      }),
+
+    editarIncidente: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        tipo: z.enum(["caida", "golpe", "corte", "electrico", "derrumbe", "incendio", "quimico", "epp_faltante", "condicion_insegura", "acto_inseguro", "casi_accidente", "otro"]).optional(),
+        severidad: z.enum(["baja", "media", "alta", "critica"]).optional(),
+        descripcion: z.string().optional(),
+        ubicacion: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (!['superadmin', 'admin'].includes(ctx.user.role)) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo admin/superadmin pueden editar incidentes' });
+        }
+        const { id, ...data } = input;
+        await db.actualizarIncidente(id, data as any);
+        return { success: true };
+      }),
+
+    guardarFotoMarcada: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        fotoMarcadaBase64: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        await db.guardarFotoMarcadaIncidente(input.id, input.fotoMarcadaBase64);
+        return { success: true };
+      }),
+
+    // Listar usuarios del proyecto para @mentions
+    usuariosProyecto: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        const usuarios = await db.getUsuariosByProyecto(input.proyectoId);
+        return usuarios.map((u: any) => ({ id: u.id, name: u.name, role: u.role, fotoUrl: u.fotoUrl }));
       }),
   }),
 });

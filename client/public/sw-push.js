@@ -28,7 +28,12 @@ self.addEventListener('push', (event) => {
     itemCodigo: null,
     unidadNombre: null,
     defectoNombre: null,
-    itemId: null
+    itemId: null,
+    // Seguridad
+    incidenteId: null,
+    codigoSeg: null,
+    severidad: null,
+    tipoIncidente: null
   };
   
   if (event.data) {
@@ -40,9 +45,19 @@ self.addEventListener('push', (event) => {
     }
   }
   
-  // Construir el cuerpo de la notificación con información del ítem
+  // Construir el cuerpo de la notificación con información del ítem o incidente
   let notificationBody = data.body;
-  if (data.itemCodigo || data.unidadNombre || data.defectoNombre) {
+  if (data.codigoSeg || data.tipoIncidente) {
+    // Notificación de seguridad
+    const parts = [];
+    if (data.codigoSeg) parts.push(`🚨 ${data.codigoSeg}`);
+    if (data.tipoIncidente) parts.push(`${data.tipoIncidente}`);
+    if (data.severidad) parts.push(`Severidad: ${data.severidad.toUpperCase()}`);
+    notificationBody = parts.join(' | ');
+    if (data.body && data.body !== 'Nueva notificación') {
+      notificationBody = `${data.body}\n${notificationBody}`;
+    }
+  } else if (data.itemCodigo || data.unidadNombre || data.defectoNombre) {
     const parts = [];
     if (data.itemCodigo) parts.push(`📋 ${data.itemCodigo}`);
     if (data.unidadNombre) parts.push(`🏠 ${data.unidadNombre}`);
@@ -53,29 +68,47 @@ self.addEventListener('push', (event) => {
     }
   }
   
+  // Vibración según severidad de seguridad
+  let vibratePattern = [300, 100, 300, 100, 300]; // default
+  if (data.severidad === 'critica') {
+    vibratePattern = [500, 100, 500, 100, 500, 100, 500, 100, 500]; // alarma larga
+  } else if (data.severidad === 'alta') {
+    vibratePattern = [400, 100, 400, 100, 400, 100, 400]; // fuerte
+  } else if (data.severidad === 'media') {
+    vibratePattern = [300, 100, 300, 100, 300]; // medio
+  } else if (data.severidad === 'baja') {
+    vibratePattern = [200, 100, 200]; // suave
+  }
+
+  // Determinar acciones según tipo
+  const isSeguridad = !!data.incidenteId || !!data.codigoSeg;
+  const actions = isSeguridad
+    ? [
+        { action: 'ver', title: '🔍 Ver Incidente', icon: '/icons/view-icon.png' },
+        { action: 'cerrar', title: '✖️ Cerrar', icon: '/icons/close-icon.png' }
+      ]
+    : [
+        { action: 'ver', title: '👁️ Ver Ítem', icon: '/icons/view-icon.png' },
+        { action: 'cerrar', title: '✖️ Cerrar', icon: '/icons/close-icon.png' }
+      ];
+
   const options = {
     body: notificationBody,
     icon: data.icon,
     badge: data.badge,
-    tag: data.tag || `oqc-item-${data.itemId || Date.now()}`,
+    tag: data.tag || (isSeguridad ? `oqc-seg-${data.incidenteId || Date.now()}` : `oqc-item-${data.itemId || Date.now()}`),
     data: {
       ...data.data,
       itemId: data.itemId || data.data?.itemId,
-      url: data.data?.url || (data.itemId ? `/items/${data.itemId}` : '/')
+      incidenteId: data.incidenteId,
+      url: data.data?.url || (data.incidenteId ? '/seguridad' : data.itemId ? `/items/${data.itemId}` : '/')
     },
-    // Configuración para pantalla bloqueada
-    vibrate: [300, 100, 300, 100, 300], // Vibración más larga para llamar atención
-    requireInteraction: true, // Mantener visible hasta que el usuario interactúe
-    renotify: true, // Notificar aunque ya exista una con el mismo tag
-    silent: false, // Reproducir sonido
-    // Prioridad alta para mostrarse incluso con pantalla bloqueada
-    urgency: 'high',
-    // Acciones disponibles
-    actions: [
-      { action: 'ver', title: '👁️ Ver Ítem', icon: '/icons/view-icon.png' },
-      { action: 'cerrar', title: '✖️ Cerrar', icon: '/icons/close-icon.png' }
-    ],
-    // Timestamp para ordenar notificaciones
+    vibrate: vibratePattern,
+    requireInteraction: data.severidad === 'critica' || data.severidad === 'alta' || true,
+    renotify: true,
+    silent: false,
+    urgency: data.severidad === 'critica' ? 'very-low' : 'high', // very-low = max priority in some browsers
+    actions,
     timestamp: Date.now()
   };
   

@@ -38,6 +38,10 @@ import {
   ArrowLeft,
   Trash2,
   MoreVertical,
+  Edit3,
+  AtSign,
+  ChevronUp,
+  ChevronRight,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -467,8 +471,11 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-semibold">{tp?.label || inc.tipo}</span>
-                      <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${es?.color || ""}`}>
-                        {es?.label || inc.estado}
+                      {inc.codigo && (
+                        <span className="text-[9px] font-mono text-red-600 bg-red-50 px-1.5 py-0.5 rounded">{inc.codigo}</span>
+                      )}
+                      <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${estadoInfo(inc.estado)?.color || ""}`}>
+                        {estadoInfo(inc.estado)?.label || inc.estado}
                       </Badge>
                       <div className={`h-2 w-2 rounded-full ${sv?.color || "bg-gray-400"} ml-auto`} title={sv?.label} />
                     </div>
@@ -507,10 +514,10 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 text-[10px] px-2 border-blue-200 text-blue-600 ml-auto"
-                        onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, icon: tp?.icon, severidad: sv?.label, estado: es?.label, descripcion: inc.descripcion })}
+                        className="h-7 text-[10px] px-2 border-red-200 text-red-600 ml-auto"
+                        onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, icon: tp?.icon, severidad: inc.severidad, sevLabel: sv?.label, estado: estadoInfo(inc.estado)?.label, descripcion: inc.descripcion, codigo: inc.codigo })}
                       >
-                        <MessageCircle className="w-3 h-3 mr-1" /> Chat
+                        <MessageCircle className="w-3 h-3 mr-1 text-red-500" /> Chat
                       </Button>
                     </div>
                   </div>
@@ -930,7 +937,21 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
   const [playingId, setPlayingId] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Edit state
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editText, setEditText] = useState("");
+
+  // @mentions state
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionFilter, setMentionFilter] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const { data: incidenteData } = trpc.seguridad.getById.useQuery({ id: incidenteId });
   const { data: mensajes, isLoading } = trpc.seguridad.mensajesByIncidente.useQuery({ incidenteId });
+  const { data: usuariosProyecto } = trpc.seguridad.usuariosProyecto.useQuery(
+    { proyectoId: incidenteData?.proyectoId || 0 },
+    { enabled: !!incidenteData?.proyectoId }
+  );
 
   const enviarTexto = trpc.seguridad.enviarMensaje.useMutation({
     onSuccess: () => {
@@ -958,12 +979,54 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
     onError: (e) => toast.error(e.message),
   });
 
+  const editarMut = trpc.seguridad.editarMensaje.useMutation({
+    onSuccess: () => {
+      toast.success("Mensaje editado");
+      setEditingId(null);
+      setEditText("");
+      utils.seguridad.mensajesByIncidente.invalidate({ incidenteId });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   // Scroll al final cuando cargan mensajes
   useEffect(() => {
     if (mensajes && scrollRef.current) {
       scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight });
     }
   }, [mensajes]);
+
+  // @mentions handler
+  const handleMensajeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setMensaje(val);
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = val.slice(0, cursorPos);
+    const lastAt = textBeforeCursor.lastIndexOf('@');
+    if (lastAt !== -1 && (lastAt === 0 || textBeforeCursor[lastAt - 1] === ' ')) {
+      const filter = textBeforeCursor.slice(lastAt + 1);
+      if (!filter.includes(' ')) {
+        setShowMentions(true);
+        setMentionFilter(filter.toLowerCase());
+        return;
+      }
+    }
+    setShowMentions(false);
+  };
+
+  const insertMention = (name: string) => {
+    const cursorPos = textareaRef.current?.selectionStart || 0;
+    const textBeforeCursor = mensaje.slice(0, cursorPos);
+    const lastAt = textBeforeCursor.lastIndexOf('@');
+    const newText = mensaje.slice(0, lastAt) + `@${name} ` + mensaje.slice(cursorPos);
+    setMensaje(newText);
+    setShowMentions(false);
+    textareaRef.current?.focus();
+  };
+
+  const filteredUsers = (usuariosProyecto || []).filter((u: any) =>
+    u.name?.toLowerCase().includes(mentionFilter)
+  ).slice(0, 5);
 
   const handleSend = () => {
     if (!mensaje.trim()) return;
@@ -1049,11 +1112,22 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
-  const canDelete = user && ['superadmin', 'admin', 'supervisor'].includes(user.role);
+  const isAdmin = user && ['superadmin', 'admin'].includes(user.role);
+  const isCritica = incidenteInfo?.severidad === 'critica';
+
+  // Render @mention highlighted text
+  const renderMsgText = (text: string) => {
+    const parts = text.split(/(@\w+(?:\s\w+)?)/g);
+    return parts.map((part, i) =>
+      part.startsWith('@') ? (
+        <span key={i} className="font-semibold text-red-600">{part}</span>
+      ) : part
+    );
+  };
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 200px)', minHeight: '400px' }}>
-      {/* Header */}
+      {/* Header con código SEG */}
       <div className="flex items-center gap-2 pb-3 border-b mb-2">
         <button onClick={onBack} className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center">
           <ArrowLeft className="h-4 w-4" />
@@ -1062,10 +1136,25 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
           {incidenteInfo?.icon || "📝"}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate">{incidenteInfo?.tipo || "Incidente"}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold truncate">{incidenteInfo?.tipo || "Incidente"}</p>
+            {incidenteInfo?.codigo && (
+              <span className="text-[9px] font-mono text-red-600 bg-red-50 px-1.5 py-0.5 rounded shrink-0">{incidenteInfo.codigo}</span>
+            )}
+          </div>
           <p className="text-[10px] text-muted-foreground truncate">{incidenteInfo?.descripcion?.slice(0, 60)}</p>
         </div>
-        <Badge variant="outline" className="text-[9px] shrink-0">{incidenteInfo?.estado}</Badge>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {incidenteInfo?.sevLabel && (
+            <Badge variant="outline" className={`text-[9px] ${
+              incidenteInfo.severidad === 'critica' ? 'bg-red-100 text-red-700 border-red-200' :
+              incidenteInfo.severidad === 'alta' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+              incidenteInfo.severidad === 'media' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
+              'bg-green-100 text-green-700 border-green-200'
+            }`}>{incidenteInfo.sevLabel}</Badge>
+          )}
+          <Badge variant="outline" className="text-[9px]">{incidenteInfo?.estado}</Badge>
+        </div>
       </div>
 
       {/* Mensajes */}
@@ -1097,8 +1186,14 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
                     <span className="text-[9px] text-muted-foreground">
                       {format(new Date(msg.createdAt), "d MMM HH:mm", { locale: es })}
                     </span>
+                    {msg.editado && <span className="text-[8px] text-muted-foreground italic">(editado)</span>}
                   </div>
-                  <div className={`group relative rounded-xl px-3 py-2 ${isOwn ? 'bg-red-500 text-white' : 'bg-muted'}`}>
+                  {/* Burbuja: fondo rojo SOLO si es crítica, sino fondo suave */}
+                  <div className={`group relative rounded-xl px-3 py-2 ${
+                    isCritica
+                      ? (isOwn ? 'bg-red-500 text-white' : 'bg-red-50 text-foreground border border-red-200')
+                      : (isOwn ? 'bg-slate-200 text-foreground' : 'bg-muted text-foreground')
+                  }`}>
                     {isVoz && (
                       <div className="mb-1.5">
                         <div className="flex items-center gap-2 mb-1">
@@ -1106,19 +1201,19 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
                             onClick={() => msg.audioUrl && (playingId === msg.id ? stopAudio() : playAudio(msg.audioUrl, msg.id))}
                             className={`h-7 w-7 rounded-full flex items-center justify-center transition-colors ${
                               playingId === msg.id
-                                ? (isOwn ? 'bg-white/20' : 'bg-red-500 text-white')
-                                : (isOwn ? 'bg-white/10 hover:bg-white/20' : 'bg-muted-foreground/10 hover:bg-muted-foreground/20')
+                                ? 'bg-red-500 text-white'
+                                : 'bg-muted-foreground/10 hover:bg-muted-foreground/20'
                             }`}
                           >
                             {playingId === msg.id ? <Square className="h-3 w-3 fill-current" /> : <Play className="h-3 w-3 fill-current ml-0.5" />}
                           </button>
                           <div className="flex-1">
-                            <div className={`h-1 rounded-full ${isOwn ? 'bg-white/30' : 'bg-muted-foreground/20'}`}>
-                              <div className={`h-full rounded-full ${isOwn ? 'bg-white/70' : 'bg-red-500'}`} style={{ width: playingId === msg.id ? '60%' : '100%' }} />
+                            <div className="h-1 rounded-full bg-muted-foreground/20">
+                              <div className="h-full rounded-full bg-red-500" style={{ width: playingId === msg.id ? '60%' : '100%' }} />
                             </div>
                           </div>
                           {msg.duracionSegundos > 0 && (
-                            <span className={`text-[9px] ${isOwn ? 'text-white/70' : 'text-muted-foreground'}`}>
+                            <span className="text-[9px] text-muted-foreground">
                               {formatTime(msg.duracionSegundos)}
                             </span>
                           )}
@@ -1128,12 +1223,10 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
                           <div className="space-y-1 mt-1.5">
                             {msg.bullets.map((bullet: string, i: number) => (
                               <div key={i} className="flex gap-1.5 items-start">
-                                <div className={`h-4 w-4 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0 mt-0.5 ${
-                                  isOwn ? 'bg-white/20 text-white' : 'bg-red-500 text-white'
-                                }`}>
+                                <div className="h-4 w-4 rounded-full bg-red-500 text-white flex items-center justify-center text-[8px] font-bold shrink-0 mt-0.5">
                                   {i + 1}
                                 </div>
-                                <p className="text-xs leading-snug">{bullet}</p>
+                                <p className="text-xs leading-snug font-normal">{bullet}</p>
                               </div>
                             ))}
                           </div>
@@ -1141,28 +1234,52 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
                         {/* Transcripción colapsable */}
                         {msg.transcripcion && (
                           <details className="mt-1.5">
-                            <summary className={`text-[10px] cursor-pointer ${isOwn ? 'text-white/60 hover:text-white/80' : 'text-muted-foreground hover:text-foreground'}`}>
+                            <summary className="text-[10px] cursor-pointer text-muted-foreground hover:text-foreground">
                               Ver transcripción
                             </summary>
-                            <p className={`text-[10px] mt-1 rounded p-1.5 leading-relaxed ${isOwn ? 'bg-white/10 text-white/80' : 'bg-background text-muted-foreground'}`}>
+                            <p className="text-[10px] mt-1 rounded p-1.5 leading-relaxed bg-background/50 text-muted-foreground">
                               {msg.transcripcion}
                             </p>
                           </details>
                         )}
                       </div>
                     )}
-                    {!isVoz && (
-                      <p className="text-sm whitespace-pre-wrap break-words">{msg.texto}</p>
-                    )}
-                    {/* Eliminar */}
-                    {canDelete && (
-                      <button
-                        onClick={() => eliminarMut.mutate({ id: msg.id })}
-                        className={`absolute -top-1 ${isOwn ? '-left-6' : '-right-6'} h-5 w-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground`}
-                        title="Eliminar"
-                      >
-                        <Trash2 className="h-2.5 w-2.5" />
-                      </button>
+                    {!isVoz && editingId === msg.id ? (
+                      <div className="space-y-1.5">
+                        <Textarea
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          className="min-h-[36px] text-sm resize-none bg-background text-foreground"
+                          rows={2}
+                        />
+                        <div className="flex gap-1 justify-end">
+                          <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={() => setEditingId(null)}>Cancelar</Button>
+                          <Button size="sm" className="h-6 text-[10px] px-2 bg-red-500 text-white" onClick={() => editarMut.mutate({ id: msg.id, texto: editText })} disabled={editarMut.isPending}>Guardar</Button>
+                        </div>
+                      </div>
+                    ) : !isVoz ? (
+                      <p className="text-sm font-normal whitespace-pre-wrap break-words">{renderMsgText(msg.texto)}</p>
+                    ) : null}
+                    {/* Acciones admin: editar/eliminar */}
+                    {isAdmin && editingId !== msg.id && (
+                      <div className={`absolute -top-1 ${isOwn ? '-left-12' : '-right-12'} flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity`}>
+                        {!isVoz && (
+                          <button
+                            onClick={() => { setEditingId(msg.id); setEditText(msg.texto); }}
+                            className="h-5 w-5 rounded-full flex items-center justify-center bg-blue-500 text-white"
+                            title="Editar"
+                          >
+                            <Edit3 className="h-2.5 w-2.5" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => eliminarMut.mutate({ id: msg.id })}
+                          className="h-5 w-5 rounded-full flex items-center justify-center bg-destructive text-destructive-foreground"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="h-2.5 w-2.5" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1187,12 +1304,29 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
             <span className="text-xs">Transcribiendo y generando resumen...</span>
           </div>
         )}
+        {/* @Mentions dropdown */}
+        {showMentions && filteredUsers.length > 0 && (
+          <div className="mb-2 bg-background border rounded-lg shadow-lg max-h-32 overflow-y-auto">
+            {filteredUsers.map((u: any) => (
+              <button
+                key={u.id}
+                onClick={() => insertMention(u.name)}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center gap-2"
+              >
+                <AtSign className="h-3 w-3 text-red-500" />
+                <span>{u.name}</span>
+                <span className="text-[10px] text-muted-foreground ml-auto">{u.role}</span>
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex gap-2">
           <Textarea
+            ref={textareaRef}
             value={mensaje}
-            onChange={(e) => setMensaje(e.target.value)}
+            onChange={handleMensajeChange}
             onKeyDown={handleKeyDown}
-            placeholder="Escribe un mensaje..."
+            placeholder="Escribe un mensaje... usa @ para mencionar"
             className="min-h-[44px] max-h-24 resize-none text-sm flex-1"
             rows={1}
           />
@@ -1224,7 +1358,7 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
           </button>
         </div>
         <p className="text-[10px] text-muted-foreground mt-1 text-center">
-          Enter enviar · Shift+Enter nueva línea · 🎙️ Nota de voz con IA
+          Enter enviar · Shift+Enter nueva línea · @ mencionar · Mic nota de voz IA
         </p>
       </div>
     </div>

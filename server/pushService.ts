@@ -17,6 +17,7 @@ export interface PushPayload {
   data?: {
     url?: string;
     itemId?: number;
+    incidenteId?: number;
     tipo?: string;
   };
   // Información detallada del ítem para mostrar en la notificación
@@ -26,6 +27,11 @@ export interface PushPayload {
   itemId?: number;
   // Preview del comentario (3 palabras)
   comentarioPreview?: string;
+  // Seguridad - incidentes
+  incidenteId?: number;
+  codigoSeg?: string;
+  severidad?: string; // baja | media | alta | critica
+  tipoIncidente?: string;
 }
 
 /**
@@ -50,18 +56,24 @@ export async function sendPushNotification(
       body: payload.body,
       icon: payload.icon || "/icons/icon-192x192.png",
       badge: payload.badge || "/icons/badge-72x72.png",
-      tag: payload.tag || `objetivaoqc-item-${payload.itemId || Date.now()}`,
+      tag: payload.tag || (payload.incidenteId ? `oqc-seg-${payload.incidenteId}` : `objetivaoqc-item-${payload.itemId || Date.now()}`),
       data: {
         ...payload.data,
         itemId: payload.itemId,
-        url: payload.data?.url || (payload.itemId ? `/items/${payload.itemId}` : '/')
+        incidenteId: payload.incidenteId,
+        url: payload.data?.url || (payload.incidenteId ? '/seguridad' : payload.itemId ? `/items/${payload.itemId}` : '/')
       },
       // Información del ítem para mostrar en la notificación
       itemCodigo: payload.itemCodigo,
       unidadNombre: payload.unidadNombre,
       defectoNombre: payload.defectoNombre,
       itemId: payload.itemId,
-      comentarioPreview: payload.comentarioPreview
+      comentarioPreview: payload.comentarioPreview,
+      // Seguridad
+      incidenteId: payload.incidenteId,
+      codigoSeg: payload.codigoSeg,
+      severidad: payload.severidad,
+      tipoIncidente: payload.tipoIncidente
     });
 
     await webpush.sendNotification(pushSubscription, notificationPayload);
