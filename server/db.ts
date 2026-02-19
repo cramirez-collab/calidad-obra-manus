@@ -6811,3 +6811,95 @@ export async function getIncidenteCompletoParaPDF(incidenteId: number) {
     reportadoPor: usuarios.find(u => u.id === incidente.reportadoPor),
   };
 }
+
+// Eliminar incidente de seguridad y sus mensajes asociados
+export async function eliminarIncidenteSeguridad(incidenteId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  
+  // Eliminar mensajes asociados
+  await db.delete(mensajesSeguridad).where(eq(mensajesSeguridad.incidenteId, incidenteId));
+  // Eliminar notas de voz asociadas
+  await db.delete(notasVozSeguridad).where(eq(notasVozSeguridad.incidenteId, incidenteId));
+  // Eliminar el incidente
+  await db.delete(incidentesSeguridad).where(eq(incidentesSeguridad.id, incidenteId));
+}
+
+// Dashboard para seguristas: incidentes del proyecto con conteos
+export async function getDashboardSegurista(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return { incidentes: [], stats: { total: 0, abiertos: 0, enProceso: 0, prevencion: 0, cerrados: 0 } };
+  
+  const todos = await db.select().from(incidentesSeguridad)
+    .where(eq(incidentesSeguridad.proyectoId, proyectoId))
+    .orderBy(desc(incidentesSeguridad.createdAt));
+  
+  const abiertos = todos.filter(i => i.estado === "abierto").length;
+  const enProceso = todos.filter(i => i.estado === "en_proceso").length;
+  const prevencion = todos.filter(i => i.estado === "prevencion").length;
+  const cerrados = todos.filter(i => i.estado === "cerrado").length;
+  
+  // Contar mensajes por incidente
+  const incidenteIds = todos.map(i => i.id);
+  let mensajesCounts: Record<number, number> = {};
+  if (incidenteIds.length > 0) {
+    const mensajes = await db.select({
+      incidenteId: mensajesSeguridad.incidenteId,
+    }).from(mensajesSeguridad)
+      .where(and(
+        inArray(mensajesSeguridad.incidenteId, incidenteIds),
+        eq(mensajesSeguridad.eliminado, false)
+      ));
+    mensajes.forEach(m => {
+      mensajesCounts[m.incidenteId] = (mensajesCounts[m.incidenteId] || 0) + 1;
+    });
+  }
+  
+  return {
+    incidentes: todos.map(i => ({
+      ...i,
+      mensajesCount: mensajesCounts[i.id] || 0,
+    })),
+    stats: { total: todos.length, abiertos, enProceso, prevencion, cerrados },
+  };
+}
+
+// Reporte general de seguridad para PDF
+export async function getReporteGeneralSeguridad(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const todos = await db.select().from(incidentesSeguridad)
+    .where(eq(incidentesSeguridad.proyectoId, proyectoId))
+    .orderBy(desc(incidentesSeguridad.createdAt));
+  
+  // Stats
+  const abiertos = todos.filter(i => i.estado === "abierto").length;
+  const enProceso = todos.filter(i => i.estado === "en_proceso").length;
+  const prevencion = todos.filter(i => i.estado === "prevencion").length;
+  const cerrados = todos.filter(i => i.estado === "cerrado").length;
+  
+  // Por tipo
+  const tipoMap = new Map<string, number>();
+  todos.forEach(i => tipoMap.set(i.tipo, (tipoMap.get(i.tipo) || 0) + 1));
+  const porTipo = Array.from(tipoMap.entries()).map(([tipo, count]) => ({ tipo, count }));
+  
+  // Por severidad
+  const sevMap = new Map<string, number>();
+  todos.forEach(i => sevMap.set(i.severidad, (sevMap.get(i.severidad) || 0) + 1));
+  const porSeveridad = Array.from(sevMap.entries()).map(([severidad, count]) => ({ severidad, count }));
+  
+  // Obtener nombres de reportadores
+  const userIds = Array.from(new Set(todos.map(i => i.reportadoPor)));
+  const usuarios = userIds.length > 0
+    ? await db.select({ id: users.id, name: users.name, role: users.role }).from(users).where(inArray(users.id, userIds))
+    : [];
+  
+  return {
+    stats: { total: todos.length, abiertos, enProceso, prevencion, cerrados, porTipo, porSeveridad },
+    incidentes: todos.map(i => ({
+      ...i,
+      reportadoPorNombre: usuarios.find(u => u.id === i.reportadoPor)?.name || "Desconocido",
+    })),
+  };
+}

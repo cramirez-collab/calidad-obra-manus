@@ -4555,7 +4555,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
     // Exportar reporte PDF de incidente
     exportarPDF: protectedProcedure
       .input(z.object({ incidenteId: z.number() }))
-      .query(async ({ input }) => {
+      .mutation(async ({ input }) => {
         const data = await db.getIncidenteCompletoParaPDF(input.incidenteId);
         if (!data) throw new TRPCError({ code: 'NOT_FOUND', message: 'Incidente no encontrado' });
         
@@ -4601,6 +4601,31 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
       .query(async ({ input }) => {
         const usuarios = await db.getUsuariosByProyecto(input.proyectoId);
         return usuarios.map((u: any) => ({ id: u.id, name: u.name, role: u.role, fotoUrl: u.fotoUrl }));
+      }),
+
+    // Eliminar incidente (solo admin/superadmin)
+    eliminarIncidente: protectedProcedure
+      .input(z.object({ incidenteId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'superadmin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo admin/superadmin pueden eliminar incidentes' });
+        }
+        await db.eliminarIncidenteSeguridad(input.incidenteId);
+        return { ok: true };
+      }),
+
+    // Dashboard para seguristas
+    dashboardSegurista: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getDashboardSegurista(input.proyectoId);
+      }),
+
+    // Reporte general de seguridad para PDF
+    reporteGeneral: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getReporteGeneralSeguridad(input.proyectoId);
       }),
   }),
 });

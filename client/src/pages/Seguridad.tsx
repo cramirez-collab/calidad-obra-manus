@@ -118,6 +118,7 @@ export default function Seguridad() {
   const [chatIncidenteInfo, setChatIncidenteInfo] = useState<any>(null);
 
   const proyectoActual = userProjects?.find((p: any) => p.id === selectedProjectId);
+  const isSegurista = user?.role === 'segurista';
 
   if (!selectedProjectId) {
     return (
@@ -129,13 +130,15 @@ export default function Seguridad() {
     );
   }
 
-  const tabs: { id: Tab; label: string; icon: typeof Shield }[] = [
+  // Seguristas ven tabs simplificados enfocados en su trabajo
+  const allTabs: { id: Tab; label: string; icon: typeof Shield }[] = [
     { id: "reportar", label: "Reportar", icon: AlertTriangle },
     { id: "incidentes", label: "Incidentes", icon: Shield },
     { id: "stats", label: "Stats", icon: BarChart3 },
     { id: "checklist", label: "Checklist", icon: ClipboardCheck },
     { id: "voz", label: "Voz", icon: Mic },
   ];
+  const tabs = allTabs;
 
   return (
     <DashboardLayout>
@@ -160,6 +163,9 @@ export default function Seguridad() {
             <MessageCircle className="h-5 w-5 text-white" />
           </a>
         </div>
+
+        {/* Dashboard rápido para seguristas */}
+        {isSegurista && <DashboardSegurista proyectoId={selectedProjectId} onOpenChat={(id: number, info: any) => { setChatIncidenteId(id); setChatIncidenteInfo(info); setActiveTab('incidentes'); }} />}
 
         {/* Tabs */}
         <div className="flex gap-1 bg-muted/50 rounded-xl p-1 mb-4">
@@ -391,11 +397,16 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
 // TAB INCIDENTES - Lista con filtros
 // ==========================================
 function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenChat: (id: number, info: any) => void }) {
+  const { user } = useAuth();
   const [filtroEstado, setFiltroEstado] = useState<string>("");
   const [filtroTipo, setFiltroTipo] = useState<string>("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [accionCorrectiva, setAccionCorrectiva] = useState("");
   const [showCerrarModal, setShowCerrarModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  const [pdfLoading, setPdfLoading] = useState<number | null>(null);
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
   const { data: incidentes, isLoading } = trpc.seguridad.listar.useQuery({
     proyectoId,
@@ -414,6 +425,53 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
       setSelectedId(null);
     },
     onError: (e) => toast.error(e.message),
+  });
+
+  const eliminarMut = trpc.seguridad.eliminarIncidente.useMutation({
+    onSuccess: () => {
+      toast.success("Incidente eliminado");
+      utils.seguridad.listar.invalidate();
+      utils.seguridad.estadisticas.invalidate();
+      setShowDeleteConfirm(null);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const exportarPDFMut = trpc.seguridad.exportarPDF.useMutation({
+    onSuccess: (data) => {
+      const sevColors: Record<string, string> = { baja: '#22c55e', media: '#eab308', alta: '#f97316', critica: '#ef4444' };
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte ${data.codigo}</title>
+<style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#333}
+h1{color:${sevColors[data.estado] || '#333'};border-bottom:3px solid ${sevColors[data.severidad?.toLowerCase()] || '#ccc'};padding-bottom:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0}
+.field{background:#f9f9f9;padding:8px 12px;border-radius:6px}
+.field label{font-size:11px;color:#666;display:block}.field span{font-weight:600}
+img{max-width:100%;border-radius:8px;margin:10px 0}
+.msg{padding:8px 12px;margin:4px 0;border-radius:8px;background:#f3f4f6}
+.msg .name{font-weight:600;font-size:12px;color:#666}.msg .text{font-size:13px}
+.bullets{list-style:disc;padding-left:20px;font-size:12px}
+@media print{body{padding:0}}
+</style></head><body>
+<h1>${data.codigo} - ${data.tipo}</h1>
+<div class="grid">
+<div class="field"><label>Severidad</label><span>${data.severidad}</span></div>
+<div class="field"><label>Estado</label><span>${data.estado}</span></div>
+<div class="field"><label>Reportado por</label><span>${data.reportadoPor}</span></div>
+<div class="field"><label>Fecha</label><span>${new Date(data.fechaCreacion).toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' })}</span></div>
+${data.ubicacion ? `<div class="field"><label>Ubicaci\u00f3n</label><span>${data.ubicacion}</span></div>` : ''}
+${data.accionCorrectiva ? `<div class="field"><label>Acci\u00f3n Correctiva</label><span>${data.accionCorrectiva}</span></div>` : ''}
+</div>
+<p>${data.descripcion}</p>
+${data.fotoUrl ? `<h3>Foto del Incidente</h3><img src="${data.fotoUrl}" />` : ''}
+${data.fotoMarcadaUrl ? `<h3>Foto Marcada</h3><img src="${data.fotoMarcadaUrl}" />` : ''}
+${data.mensajes.length > 0 ? `<h3>Historial de Mensajes (${data.mensajes.length})</h3>${data.mensajes.map((m: any) => `<div class="msg"><div class="name">${m.usuario} - ${new Date(m.fecha).toLocaleString('es-MX')}</div>${m.tipo === 'foto' && m.fotoUrl ? `<img src="${m.fotoUrl}" style="max-height:200px" />` : ''}${m.texto ? `<div class="text">${m.texto}</div>` : ''}${m.bullets ? `<ul class="bullets">${(Array.isArray(m.bullets) ? m.bullets : []).map((b: string) => `<li>${b}</li>`).join('')}</ul>` : ''}</div>`).join('')}` : ''}
+<script>window.onload=function(){window.print()}<\/script>
+</body></html>`;
+      const w = window.open('', '_blank');
+      if (w) { w.document.write(html); w.document.close(); }
+      setPdfLoading(null);
+    },
+    onError: (e) => { toast.error(e.message); setPdfLoading(null); },
   });
 
   const handleCerrar = () => {
@@ -530,11 +588,31 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 text-[10px] px-2 border-red-200 text-red-600 ml-auto"
+                        className="h-7 text-[10px] px-2 border-red-200 text-red-600"
                         onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, icon: tp?.icon, severidad: inc.severidad, sevLabel: sv?.label, estado: estadoInfo(inc.estado)?.label, descripcion: inc.descripcion, codigo: inc.codigo })}
                       >
                         <MessageCircle className="w-3 h-3 mr-1 text-red-500" /> Chat
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[10px] px-2 border-gray-200 text-gray-600"
+                        onClick={() => { setPdfLoading(inc.id); exportarPDFMut.mutate({ incidenteId: inc.id }); }}
+                        disabled={pdfLoading === inc.id}
+                      >
+                        {pdfLoading === inc.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileDown className="w-3 h-3 mr-1" />}
+                        PDF
+                      </Button>
+                      {isAdmin && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-[10px] px-2 border-red-300 text-red-600 ml-auto"
+                          onClick={() => setShowDeleteConfirm(inc.id)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -543,6 +621,27 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
           })}
         </div>
       )}
+
+      {/* Modal confirmar eliminación */}
+      <Dialog open={showDeleteConfirm !== null} onOpenChange={() => setShowDeleteConfirm(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-sm text-red-600">Eliminar Incidente</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">Esta acción eliminará el incidente y todos sus mensajes asociados. No se puede deshacer.</p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(null)}>Cancelar</Button>
+            <Button
+              size="sm"
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => showDeleteConfirm && eliminarMut.mutate({ incidenteId: showDeleteConfirm })}
+              disabled={eliminarMut.isPending}
+            >
+              {eliminarMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Eliminar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal cerrar incidente */}
       <Dialog open={showCerrarModal} onOpenChange={setShowCerrarModal}>
@@ -570,6 +669,75 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// ==========================================
+// DASHBOARD SEGURISTA - Vista rápida para seguristas
+// ==========================================
+function DashboardSegurista({ proyectoId, onOpenChat }: { proyectoId: number; onOpenChat: (id: number, info: any) => void }) {
+  const { data, isLoading } = trpc.seguridad.dashboardSegurista.useQuery({ proyectoId });
+
+  if (isLoading || !data) return null;
+
+  const { stats, incidentes } = data;
+  const urgentes = incidentes.filter((i: any) => i.estado === 'abierto' && (i.severidad === 'critica' || i.severidad === 'alta'));
+
+  return (
+    <div className="mb-4 space-y-3">
+      {/* KPIs rápidos */}
+      <div className="grid grid-cols-5 gap-1.5">
+        <Card className="p-2 text-center">
+          <p className="text-lg font-bold">{stats.total}</p>
+          <p className="text-[8px] text-muted-foreground">Total</p>
+        </Card>
+        <Card className="p-2 text-center border-red-200">
+          <p className="text-lg font-bold text-red-600">{stats.abiertos}</p>
+          <p className="text-[8px] text-muted-foreground">Abiertos</p>
+        </Card>
+        <Card className="p-2 text-center border-amber-200">
+          <p className="text-lg font-bold text-amber-600">{stats.enProceso}</p>
+          <p className="text-[8px] text-muted-foreground">Proceso</p>
+        </Card>
+        <Card className="p-2 text-center border-blue-200">
+          <p className="text-lg font-bold text-blue-600">{stats.prevencion}</p>
+          <p className="text-[8px] text-muted-foreground">Prevenci\u00f3n</p>
+        </Card>
+        <Card className="p-2 text-center border-green-200">
+          <p className="text-lg font-bold text-green-600">{stats.cerrados}</p>
+          <p className="text-[8px] text-muted-foreground">Cerrados</p>
+        </Card>
+      </div>
+
+      {/* Incidentes urgentes */}
+      {urgentes.length > 0 && (
+        <Card className="p-3 border-red-300 bg-red-50/50">
+          <div className="flex items-center gap-2 mb-2">
+            <Flame className="w-4 h-4 text-red-500" />
+            <span className="text-xs font-semibold text-red-700">Urgentes ({urgentes.length})</span>
+          </div>
+          <div className="space-y-1.5">
+            {urgentes.slice(0, 3).map((inc: any) => {
+              const tp = TIPOS_INCIDENTE.find(t => t.value === inc.tipo);
+              const sv = SEVERIDADES.find(s => s.value === inc.severidad);
+              return (
+                <div key={inc.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-red-100/50 rounded p-1 -mx-1"
+                  onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, icon: tp?.icon, severidad: inc.severidad, sevLabel: sv?.label, estado: 'Abierto', descripcion: inc.descripcion, codigo: inc.codigo })}
+                >
+                  <span>{tp?.icon || '\u26a0\ufe0f'}</span>
+                  <span className="font-mono text-[9px] text-red-600">{inc.codigo}</span>
+                  <span className="truncate flex-1">{inc.descripcion}</span>
+                  <div className={`h-2 w-2 rounded-full ${sv?.color || 'bg-gray-400'}`} />
+                  <Badge variant="outline" className="text-[8px] px-1 py-0 border-red-200 text-red-600">
+                    {inc.mensajesCount || 0} msg
+                  </Badge>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
@@ -1083,10 +1251,39 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
     onError: (e) => toast.error(e.message),
   });
 
-  const { data: pdfData } = trpc.seguridad.exportarPDF.useQuery(
-    { incidenteId },
-    { enabled: false }
-  );
+  const exportarPDFChat = trpc.seguridad.exportarPDF.useMutation({
+    onSuccess: (data) => {
+      const sevColors: Record<string, string> = { baja: '#22c55e', media: '#eab308', alta: '#f97316', critica: '#ef4444' };
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte ${data.codigo}</title>
+<style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#333}
+h1{border-bottom:3px solid ${sevColors[data.severidad?.toLowerCase()] || '#ccc'};padding-bottom:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0}
+.field{background:#f9f9f9;padding:8px 12px;border-radius:6px}
+.field label{font-size:11px;color:#666;display:block}.field span{font-weight:600}
+img{max-width:100%;border-radius:8px;margin:10px 0}
+.msg{padding:8px 12px;margin:4px 0;border-radius:8px;background:#f3f4f6}
+.msg .name{font-weight:600;font-size:12px;color:#666}.msg .text{font-size:13px}
+.bullets{list-style:disc;padding-left:20px;font-size:12px}
+@media print{body{padding:0}}
+</style></head><body>
+<h1>${data.codigo} - ${data.tipo}</h1>
+<div class="grid">
+<div class="field"><label>Severidad</label><span>${data.severidad}</span></div>
+<div class="field"><label>Estado</label><span>${data.estado}</span></div>
+<div class="field"><label>Reportado por</label><span>${data.reportadoPor}</span></div>
+<div class="field"><label>Fecha</label><span>${new Date(data.fechaCreacion).toLocaleDateString('es-MX')}</span></div>
+</div>
+<p>${data.descripcion}</p>
+${data.fotoUrl ? `<h3>Foto</h3><img src="${data.fotoUrl}" />` : ''}
+${data.fotoMarcadaUrl ? `<h3>Foto Marcada</h3><img src="${data.fotoMarcadaUrl}" />` : ''}
+${data.mensajes.length > 0 ? `<h3>Chat (${data.mensajes.length})</h3>${data.mensajes.map((m: any) => `<div class="msg"><div class="name">${m.usuario} - ${new Date(m.fecha).toLocaleString('es-MX')}</div>${m.tipo === 'foto' && m.fotoUrl ? `<img src="${m.fotoUrl}" style="max-height:200px" />` : ''}${m.texto ? `<div class="text">${m.texto}</div>` : ''}${m.bullets ? `<ul class="bullets">${(Array.isArray(m.bullets) ? m.bullets : []).map((b: string) => `<li>${b}</li>`).join('')}</ul>` : ''}</div>`).join('')}` : ''}
+<script>window.onload=function(){window.print()}<\/script>
+</body></html>`;
+      const w = window.open('', '_blank');
+      if (w) { w.document.write(html); w.document.close(); }
+    },
+    onError: (e) => toast.error(e.message),
+  });
 
   const handleFotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1100,23 +1297,8 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
     e.target.value = '';
   };
 
-  const handleExportPDF = async () => {
-    try {
-      const result = await utils.seguridad.exportarPDF.fetch({ incidenteId });
-      if (!result) return;
-      // Generate HTML-based PDF
-      const html = generatePDFHtml(result);
-      const blob = new Blob([html], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${result.codigo}_reporte.html`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success('Reporte exportado');
-    } catch (e: any) {
-      toast.error(e.message || 'Error al exportar');
-    }
+  const handleExportPDF = () => {
+    exportarPDFChat.mutate({ incidenteId });
   };
 
   // Scroll al final cuando cargan mensajes

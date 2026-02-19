@@ -4495,3 +4495,23 @@
 - [x] Botón "Prevención" en tarjeta de incidente (azul, con icono Shield)
 - [x] Color azul y estilo para estado prevención en UI
 - [x] Incluir en estadísticas de seguridad (card azul + campo prevencion en stats)
+
+## Dashboard Segurista, Eliminar Incidencias y PDF Reportes (Feb 2026)
+
+### Dashboard Exclusivo Segurista
+- [x] Vista simplificada para rol segurista con KPIs y incidentes urgentes
+- [x] KPIs: total, abiertos, en proceso, prevención, cerrados
+- [x] Acceso directo al chat de cada incidente urgente
+- [x] Solo visible para usuarios con rol segurista
+
+### Eliminar Incidencias (solo admin/superadmin)
+- [x] Procedure eliminarIncidente con validación de rol admin/superadmin
+- [x] DB helper para eliminar incidente y mensajes asociados (cascade)
+- [x] Botón eliminar (rojo) en listado de incidentes, solo visible para admin/superadmin
+- [x] Confirmación con Dialog antes de eliminar
+
+### PDF Reportes de Seguridad e Incidencias
+- [x] Reporte individual de incidente con foto, chat, bullets de voz (exportarPDF mutation)
+- [x] Botón "PDF" en cada tarjeta de incidente
+- [x] Botón "Exportar reporte" en header del chat de incidente
+- [x] HTML profesional con print() para generar PDF desde navegador
