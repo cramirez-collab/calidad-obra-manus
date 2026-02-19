@@ -1566,6 +1566,27 @@ function TiposIncidenciaManager({ proyectoId }: { proyectoId: number }) {
     icono: "AlertTriangle",
     colorIdx: 0,
   });
+  const [dragId, setDragId] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<number | null>(null);
+
+  const handleDragStart = (id: number) => setDragId(id);
+  const handleDragOver = (e: React.DragEvent, id: number) => { e.preventDefault(); setDragOverId(id); };
+  const handleDragEnd = () => { setDragId(null); setDragOverId(null); };
+  const handleDrop = (targetId: number) => {
+    if (!dragId || dragId === targetId || !tipos) return;
+    const sorted = [...tipos];
+    const fromIdx = sorted.findIndex((t: any) => t.id === dragId);
+    const toIdx = sorted.findIndex((t: any) => t.id === targetId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const [moved] = sorted.splice(fromIdx, 1);
+    sorted.splice(toIdx, 0, moved);
+    // Update order for all items
+    sorted.forEach((t: any, idx: number) => {
+      actualizarMut.mutate({ id: t.id, orden: idx + 1 });
+    });
+    setDragId(null);
+    setDragOverId(null);
+  };
 
   const resetForm = () => {
     setFormData({ clave: "", label: "", icono: "AlertTriangle", colorIdx: 0 });
@@ -1657,7 +1678,18 @@ function TiposIncidenciaManager({ proyectoId }: { proyectoId: number }) {
             <p className="text-[11px] font-medium text-muted-foreground mb-2">Tipos personalizados del proyecto</p>
             <div className="space-y-2">
               {tipos.map((tipo: any) => (
-                <div key={tipo.id} className={`flex items-center gap-3 p-2.5 rounded-lg border ${tipo.activo ? 'bg-background' : 'bg-muted/50 opacity-60'}`}>
+                <div
+                  key={tipo.id}
+                  draggable
+                  onDragStart={() => handleDragStart(tipo.id)}
+                  onDragOver={(e) => handleDragOver(e, tipo.id)}
+                  onDragEnd={handleDragEnd}
+                  onDrop={() => handleDrop(tipo.id)}
+                  className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-grab active:cursor-grabbing ${
+                    tipo.activo ? 'bg-background' : 'bg-muted/50 opacity-60'
+                  } ${dragId === tipo.id ? 'opacity-40 scale-95' : ''} ${dragOverId === tipo.id && dragId !== tipo.id ? 'border-red-400 bg-red-50/50' : ''}`}
+                >
+                  <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
                   <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${tipo.color || 'bg-gray-100'}`}>
                     <AlertTriangle className={`w-4 h-4 ${tipo.iconColor || 'text-gray-600'}`} />
                   </div>

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { useProject } from "@/contexts/ProjectContext";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -243,6 +243,19 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
   const galleryRef = useRef<HTMLInputElement>(null);
   const utils = trpc.useUtils();
 
+  // Fetch custom types for this project
+  const { data: tiposCustom } = trpc.seguridad.tiposIncidencia.useQuery({ proyectoId });
+  type TipoItem = { value: string; label: string; Icon: LucideIcon; color: string; iconColor: string };
+  const allTipos: TipoItem[] = useMemo(() => {
+    const base: TipoItem[] = [...TIPOS_INCIDENTE];
+    if (tiposCustom) {
+      tiposCustom.filter((tc: any) => tc.activo).forEach((tc: any) => {
+        base.push({ value: tc.clave, label: tc.label, Icon: ClipboardList, color: tc.color || 'bg-gray-100 text-gray-700', iconColor: tc.iconColor || 'text-gray-600' });
+      });
+    }
+    return base;
+  }, [tiposCustom]);
+
   const crearMut = trpc.seguridad.crearIncidente.useMutation({
     onSuccess: () => {
       toast.success("Incidente reportado exitosamente");
@@ -332,7 +345,7 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
       <div>
         <label className="text-xs font-semibold text-muted-foreground mb-2 block">Tipo de incidente *</label>
         <div className="grid grid-cols-3 gap-2">
-          {TIPOS_INCIDENTE.map((t) => (
+          {allTipos.map((t) => (
             <button
               key={t.value}
               onClick={() => setTipo(t.value)}
@@ -460,6 +473,19 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
 
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
+  // Fetch custom types for filter dropdown
+  const { data: tiposCustom } = trpc.seguridad.tiposIncidencia.useQuery({ proyectoId });
+  type TipoItemList = { value: string; label: string; Icon: LucideIcon; color: string; iconColor: string };
+  const allTiposForFilter: TipoItemList[] = useMemo(() => {
+    const base: TipoItemList[] = [...TIPOS_INCIDENTE];
+    if (tiposCustom) {
+      tiposCustom.filter((tc: any) => tc.activo).forEach((tc: any) => {
+        base.push({ value: tc.clave, label: tc.label, Icon: ClipboardList, color: tc.color || 'bg-gray-100 text-gray-700', iconColor: tc.iconColor || 'text-gray-600' });
+      });
+    }
+    return base;
+  }, [tiposCustom]);
+
   const { data: incidentes, isLoading } = trpc.seguridad.listar.useQuery({
     proyectoId,
     estado: filtroEstado || undefined,
@@ -520,7 +546,7 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
     actualizarMut.mutate({ id: selectedId, estado: "cerrado", accionCorrectiva });
   };
 
-  const tipoInfo = (tipo: string) => TIPOS_INCIDENTE.find(t => t.value === tipo);
+  const tipoInfo = (tipo: string) => allTiposForFilter.find(t => t.value === tipo) || TIPOS_INCIDENTE.find(t => t.value === tipo);
   const sevInfo = (sev: string) => SEVERIDADES.find(s => s.value === sev);
   const estadoInfo = (est: string) => ESTADOS.find(e => e.value === est);
 
@@ -542,7 +568,7 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
           className="text-xs border rounded-lg px-2 py-1.5 bg-background min-w-[100px]"
         >
           <option value="">Todos los tipos</option>
-          {TIPOS_INCIDENTE.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          {allTiposForFilter.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
       </div>
 

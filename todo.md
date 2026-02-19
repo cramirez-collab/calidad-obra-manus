@@ -4570,3 +4570,8 @@
 -- [x] Fix texto corrupto "Prevención" en KPI cards del dashboard segurista (eliminar código Unicode)ode)
 - [x] Centrar iconos alineados al texto dentro de las tarjetas de incidentes (icono inline con label)
 - [x] CRUD de tipos de incidencia en página de Configuración (agregar, editar, eliminar tipos personalizados)
+
+### Mejoras Tipos Incidencia (Feb 2026)
+- [x] Integrar tipos custom del proyecto en el formulario de reporte de incidentes (junto a predefinidos)
+- [x] Filtro por tipo en la lista de incidentes (dropdown incluye tipos custom activos)
+- [x] Reordenar tipos custom con drag-and-drop en Configuración (GripVertical handle + HTML5 drag events)
