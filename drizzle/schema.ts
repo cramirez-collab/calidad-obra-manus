@@ -835,6 +835,22 @@ export type IncidenteSeguridad = typeof incidentesSeguridad.$inferSelect;
 export type InsertIncidenteSeguridad = typeof incidentesSeguridad.$inferInsert;
 
 /**
+ * Evidencias de seguimiento/resolución subidas por el segurista asignado
+ */
+export const evidenciasSeguridad = mysqlTable("evidencias_seguridad", {
+  id: int("id").autoincrement().primaryKey(),
+  incidenteId: int("incidenteId").notNull(),
+  usuarioId: int("usuarioId").notNull(), // quien subió la evidencia
+  fotoUrl: text("fotoUrl").notNull(), // URL de la foto en S3
+  descripcion: text("descripcion"), // descripción opcional de la evidencia
+  tipo: mysqlEnum("tipo_evidencia", ["seguimiento", "resolucion", "prevencion"]).default("seguimiento").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EvidenciaSeguridad = typeof evidenciasSeguridad.$inferSelect;
+export type InsertEvidenciaSeguridad = typeof evidenciasSeguridad.$inferInsert;
+
+/**
  * Bitácora de seguridad - Historial de acciones por incidente
  */
 export const bitacoraSeguridad = mysqlTable("bitacora_seguridad", {

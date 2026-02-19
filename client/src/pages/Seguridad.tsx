@@ -47,6 +47,18 @@ import {
   Pencil,
   UserCheck,
   User,
+  ArrowDownCircle,
+  Hammer,
+  Scissors,
+  Building2,
+  FlaskConical,
+  ShieldOff,
+  Ban,
+  TriangleAlert,
+  ClipboardList,
+  type LucideIcon,
+  Upload,
+  Image as ImageLucide,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -56,20 +68,20 @@ import { es } from "date-fns/locale";
 import { compressAdaptive } from "@/lib/imageCompression";
 import FotoEditor from "@/components/FotoEditor";
 
-// Tipos de incidente con labels y colores
-const TIPOS_INCIDENTE = [
-  { value: "caida", label: "Caída", icon: "🧗", color: "bg-red-100 text-red-700" },
-  { value: "golpe", label: "Golpe", icon: "💥", color: "bg-orange-100 text-orange-700" },
-  { value: "corte", label: "Corte", icon: "🔪", color: "bg-rose-100 text-rose-700" },
-  { value: "electrico", label: "Eléctrico", icon: "⚡", color: "bg-yellow-100 text-yellow-700" },
-  { value: "derrumbe", label: "Derrumbe", icon: "🏚️", color: "bg-stone-100 text-stone-700" },
-  { value: "incendio", label: "Incendio", icon: "🔥", color: "bg-red-100 text-red-700" },
-  { value: "quimico", label: "Químico", icon: "☣️", color: "bg-purple-100 text-purple-700" },
-  { value: "epp_faltante", label: "EPP Faltante", icon: "🦺", color: "bg-amber-100 text-amber-700" },
-  { value: "condicion_insegura", label: "Condición Insegura", icon: "⚠️", color: "bg-yellow-100 text-yellow-700" },
-  { value: "acto_inseguro", label: "Acto Inseguro", icon: "🚫", color: "bg-red-100 text-red-700" },
-  { value: "casi_accidente", label: "Casi Accidente", icon: "😰", color: "bg-blue-100 text-blue-700" },
-  { value: "otro", label: "Otro", icon: "📋", color: "bg-gray-100 text-gray-700" },
+// Tipos de incidente con labels, iconos Lucide y colores
+const TIPOS_INCIDENTE: readonly { value: string; label: string; Icon: LucideIcon; color: string; iconColor: string }[] = [
+  { value: "caida", label: "Caída", Icon: ArrowDownCircle, color: "bg-red-100 text-red-700", iconColor: "text-red-600" },
+  { value: "golpe", label: "Golpe", Icon: Hammer, color: "bg-orange-100 text-orange-700", iconColor: "text-orange-600" },
+  { value: "corte", label: "Corte", Icon: Scissors, color: "bg-rose-100 text-rose-700", iconColor: "text-rose-600" },
+  { value: "electrico", label: "Eléctrico", Icon: Zap, color: "bg-yellow-100 text-yellow-700", iconColor: "text-yellow-600" },
+  { value: "derrumbe", label: "Derrumbe", Icon: Building2, color: "bg-stone-100 text-stone-700", iconColor: "text-stone-600" },
+  { value: "incendio", label: "Incendio", Icon: Flame, color: "bg-red-100 text-red-700", iconColor: "text-red-600" },
+  { value: "quimico", label: "Químico", Icon: FlaskConical, color: "bg-purple-100 text-purple-700", iconColor: "text-purple-600" },
+  { value: "epp_faltante", label: "EPP Faltante", Icon: HardHat, color: "bg-amber-100 text-amber-700", iconColor: "text-amber-600" },
+  { value: "condicion_insegura", label: "Cond. Insegura", Icon: AlertTriangle, color: "bg-yellow-100 text-yellow-700", iconColor: "text-yellow-600" },
+  { value: "acto_inseguro", label: "Acto Inseguro", Icon: Ban, color: "bg-red-100 text-red-700", iconColor: "text-red-600" },
+  { value: "casi_accidente", label: "Casi Accidente", Icon: TriangleAlert, color: "bg-blue-100 text-blue-700", iconColor: "text-blue-600" },
+  { value: "otro", label: "Otro", Icon: ClipboardList, color: "bg-gray-100 text-gray-700", iconColor: "text-gray-600" },
 ] as const;
 
 const SEVERIDADES = [
@@ -330,7 +342,7 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
                   : "border-transparent bg-muted/30 hover:bg-muted/60"
               }`}
             >
-              <span className="text-lg block">{t.icon}</span>
+              {(() => { const TIcon = t.Icon; return <TIcon className={`w-5 h-5 ${tipo === t.value ? t.iconColor : 'text-muted-foreground'}`} />; })()}
               <span className="text-[10px] font-medium leading-tight block mt-0.5">{t.label}</span>
             </button>
           ))}
@@ -530,7 +542,7 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
           className="text-xs border rounded-lg px-2 py-1.5 bg-background min-w-[100px]"
         >
           <option value="">Todos los tipos</option>
-          {TIPOS_INCIDENTE.map(t => <option key={t.value} value={t.value}>{t.icon} {t.label}</option>)}
+          {TIPOS_INCIDENTE.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
       </div>
 
@@ -557,7 +569,7 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
                     <img src={inc.fotoUrl} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
                   ) : (
                     <div className="w-14 h-14 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl">{tp?.icon || "📋"}</span>
+                      {(() => { const TpIcon = tp?.Icon || ClipboardList; return <TpIcon className={`w-6 h-6 ${tp?.iconColor || 'text-gray-500'}`} />; })()}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -574,7 +586,7 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
                     <p className="text-xs text-muted-foreground line-clamp-2">{inc.descripcion}</p>
                     <div className="flex items-center gap-2 mt-1.5">
                       {inc.ubicacion && (
-                        <span className="text-[10px] text-muted-foreground/70">📍 {inc.ubicacion}</span>
+                        <span className="text-[10px] text-muted-foreground/70 flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{inc.ubicacion}</span>
                       )}
                       {inc.asignadoA && getUsuarioNombre(inc.asignadoA) && (
                         <span className="text-[10px] text-emerald-600 flex items-center gap-0.5">
@@ -641,7 +653,7 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
                             size="icon"
                             variant="outline"
                             className="h-6 w-6 border-red-200 text-red-600 hover:bg-red-50 p-0"
-                            onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, icon: tp?.icon, severidad: inc.severidad, sevLabel: sv?.label, estado: estadoInfo(inc.estado)?.label, descripcion: inc.descripcion, codigo: inc.codigo })}
+                            onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, tipoValue: inc.tipo, severidad: inc.severidad, sevLabel: sv?.label, estado: estadoInfo(inc.estado)?.label, descripcion: inc.descripcion, codigo: inc.codigo })}
                           >
                             <MessageCircle className="w-3 h-3" />
                           </Button>
@@ -833,9 +845,9 @@ function DashboardSegurista({ proyectoId, onOpenChat }: { proyectoId: number; on
               const sv = SEVERIDADES.find(s => s.value === inc.severidad);
               return (
                 <div key={inc.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-red-100/50 rounded p-1 -mx-1"
-                  onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, icon: tp?.icon, severidad: inc.severidad, sevLabel: sv?.label, estado: 'Abierto', descripcion: inc.descripcion, codigo: inc.codigo })}
+                  onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, tipoValue: inc.tipo, severidad: inc.severidad, sevLabel: sv?.label, estado: 'Abierto', descripcion: inc.descripcion, codigo: inc.codigo })}
                 >
-                  <span>{tp?.icon || '\u26a0\ufe0f'}</span>
+                  {(() => { const TpIcon = tp?.Icon || AlertTriangle; return <TpIcon className={`w-3.5 h-3.5 ${tp?.iconColor || 'text-gray-500'}`} />; })()}
                   <span className="font-mono text-[9px] text-red-600">{inc.codigo}</span>
                   <span className="truncate flex-1">{inc.descripcion}</span>
                   <div className={`h-2 w-2 rounded-full ${sv?.color || 'bg-gray-400'}`} />
@@ -910,7 +922,7 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
               const info = TIPOS_INCIDENTE.find(ti => ti.value === t.tipo);
               return (
                 <div key={t.tipo} className="flex items-center gap-2">
-                  <span className="text-sm w-5">{info?.icon || "📋"}</span>
+                  {(() => { const TIcon = info?.Icon || ClipboardList; return <TIcon className={`w-4 h-4 ${info?.iconColor || 'text-gray-500'}`} />; })()}
                   <span className="text-[10px] w-24 truncate">{info?.label || t.tipo}</span>
                   <div className="flex-1 h-3 bg-muted/50 rounded-full overflow-hidden">
                     <div
@@ -1164,7 +1176,7 @@ function TabChecklist({ proyectoId }: { proyectoId: number }) {
                   </div>
                   <div className="flex-1">
                     <p className="text-xs font-semibold">{cl.titulo}</p>
-                    {cl.ubicacion && <p className="text-[10px] text-muted-foreground">📍 {cl.ubicacion}</p>}
+                    {cl.ubicacion && <p className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{cl.ubicacion}</p>}
                     <p className="text-[10px] text-muted-foreground/50">
                       {new Date(cl.createdAt).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
                     </p>
@@ -1603,6 +1615,12 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
   // Asignar state
   const [showBitacora, setShowBitacora] = useState(false);
   const [showAsignar, setShowAsignar] = useState(false);
+  const [showEvidencias, setShowEvidencias] = useState(false);
+  const evidenciaInputRef = useRef<HTMLInputElement>(null);
+  const [evidenciaPending, setEvidenciaPending] = useState<string | null>(null);
+  const [showEvidenciaEditor, setShowEvidenciaEditor] = useState(false);
+  const [evidenciaTipo, setEvidenciaTipo] = useState<"seguimiento" | "resolucion" | "prevencion">("seguimiento");
+  const [evidenciaDesc, setEvidenciaDesc] = useState("");
 
   const asignarMut = trpc.seguridad.asignarIncidente.useMutation({
     onSuccess: () => {
@@ -1615,6 +1633,60 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
   });
 
   const bitacoraQuery = trpc.seguridad.bitacoraByIncidente.useQuery({ incidenteId });
+  const evidenciasQuery = trpc.seguridad.evidenciasByIncidente.useQuery({ incidenteId });
+
+  const subirEvidenciaMut = trpc.seguridad.subirEvidencia.useMutation({
+    onSuccess: () => {
+      toast.success("Evidencia subida");
+      evidenciasQuery.refetch();
+      bitacoraQuery.refetch();
+      setEvidenciaPending(null);
+      setShowEvidenciaEditor(false);
+      setEvidenciaDesc("");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const isAsignado = incidenteData?.asignadoA === user?.id;
+  const canUploadEvidencia = isAsignado || isAdmin;
+
+  const handleEvidenciaSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const base64 = reader.result as string;
+        const result = await compressAdaptive(base64);
+        setEvidenciaPending(result.compressed);
+      } catch {
+        setEvidenciaPending(reader.result as string);
+      }
+      setShowEvidenciaEditor(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleEvidenciaEditorSave = (markedBase64: string) => {
+    subirEvidenciaMut.mutate({
+      incidenteId,
+      fotoBase64: markedBase64,
+      descripcion: evidenciaDesc || undefined,
+      tipo: evidenciaTipo,
+    });
+  };
+
+  const handleEvidenciaEditorSkip = () => {
+    if (evidenciaPending) {
+      subirEvidenciaMut.mutate({
+        incidenteId,
+        fotoBase64: evidenciaPending,
+        descripcion: evidenciaDesc || undefined,
+        tipo: evidenciaTipo,
+      });
+    }
+  };
 
   // Render @mention highlighted text
   const renderMsgText = (text: string) => {
@@ -1625,6 +1697,47 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
       ) : part
     );
   };
+
+  // Show FotoEditor for evidencia before uploading
+  if (showEvidenciaEditor && evidenciaPending) {
+    return (
+      <div className="flex flex-col" style={{ height: 'calc(100vh - 200px)', minHeight: '400px' }}>
+        <div className="flex items-center justify-between pb-2 border-b mb-2">
+          <h3 className="text-sm font-semibold text-emerald-700 flex items-center gap-2">
+            <Pencil className="w-4 h-4" /> Marcar Evidencia
+          </h3>
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={handleEvidenciaEditorSkip}>
+            Subir sin marcar
+          </Button>
+        </div>
+        <div className="mb-2 space-y-2">
+          <div className="flex gap-1">
+            {(["seguimiento", "resolucion", "prevencion"] as const).map(t => (
+              <button key={t} onClick={() => setEvidenciaTipo(t)}
+                className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                  evidenciaTipo === t ? 'bg-emerald-500 text-white border-emerald-500' : 'border-muted-foreground/30 text-muted-foreground hover:bg-muted'
+                }`}>
+                {t === 'seguimiento' ? 'Seguimiento' : t === 'resolucion' ? 'Resoluci\u00f3n' : 'Prevenci\u00f3n'}
+              </button>
+            ))}
+          </div>
+          <input
+            type="text" placeholder="Descripci\u00f3n breve (opcional)"
+            value={evidenciaDesc} onChange={e => setEvidenciaDesc(e.target.value)}
+            className="w-full text-xs border rounded-lg px-2 py-1.5 bg-background"
+          />
+        </div>
+        <div className="flex-1 overflow-auto">
+          <FotoEditor
+            fotoUrl={evidenciaPending}
+            onSave={handleEvidenciaEditorSave}
+            onCancel={handleEvidenciaEditorSkip}
+            saving={subirEvidenciaMut.isPending}
+          />
+        </div>
+      </div>
+    );
+  }
 
   // Show FotoEditor for chat photo before sending
   if (showChatFotoEditor && pendingFotoBase64) {
@@ -1657,8 +1770,8 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
         <button onClick={onBack} className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center">
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <div className="h-8 w-8 rounded-lg bg-red-100 flex items-center justify-center text-sm">
-          {incidenteInfo?.icon || "📝"}
+        <div className="h-8 w-8 rounded-lg bg-red-100 flex items-center justify-center">
+          {(() => { const tp = TIPOS_INCIDENTE.find(t => t.value === incidenteInfo?.tipoValue); const TpIcon = tp?.Icon || Shield; return <TpIcon className={`w-4 h-4 ${tp?.iconColor || 'text-red-600'}`} />; })()}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -1692,6 +1805,14 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
             className="h-6 w-6 rounded-full flex items-center justify-center bg-purple-100 hover:bg-purple-200 text-purple-600" title="Asignar responsable"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" /></svg>
+          </button>
+          {/* Botón evidencias */}
+          <button
+            onClick={() => setShowEvidencias(!showEvidencias)}
+            className={`h-6 w-6 rounded-full flex items-center justify-center transition-colors ${
+              showEvidencias ? 'bg-emerald-500 text-white' : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-600'
+            }`} title="Evidencias">
+            <ImageLucide className="h-3 w-3" />
           </button>
           {/* Botón bitácora */}
           <button
@@ -1786,6 +1907,66 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
                       {new Date(entry.createdAt).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Evidencias panel */}
+      {showEvidencias && (
+        <div className="mb-2 p-2 border rounded-lg bg-emerald-50/50">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] font-medium text-emerald-700">Evidencias de Seguimiento</p>
+            {canUploadEvidencia && (
+              <Button size="sm" variant="outline" className="h-6 text-[10px] border-emerald-300 text-emerald-700 hover:bg-emerald-100 gap-1"
+                onClick={() => evidenciaInputRef.current?.click()}
+                disabled={subirEvidenciaMut.isPending}
+              >
+                {subirEvidenciaMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                Subir evidencia
+              </Button>
+            )}
+          </div>
+          <input ref={evidenciaInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleEvidenciaSelect} />
+          {evidenciasQuery.isLoading ? (
+            <div className="flex justify-center py-3"><Loader2 className="h-4 w-4 animate-spin text-emerald-500" /></div>
+          ) : !evidenciasQuery.data?.length ? (
+            <div className="text-center py-3">
+              <ImageLucide className="w-8 h-8 mx-auto text-emerald-300 mb-1" />
+              <p className="text-[10px] text-muted-foreground">Sin evidencias aún</p>
+              {canUploadEvidencia && <p className="text-[9px] text-emerald-600">Sube fotos de seguimiento o resolución</p>}
+              {!canUploadEvidencia && incidenteData?.asignadoA && (
+                <p className="text-[9px] text-muted-foreground">Solo el responsable asignado puede subir evidencias</p>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {evidenciasQuery.data.map((ev: any) => (
+                <div key={ev.id} className="relative group">
+                  <img
+                    src={ev.fotoUrl}
+                    alt="Evidencia"
+                    className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setLightboxUrl(ev.fotoUrl)}
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent rounded-b-lg p-1">
+                    <p className="text-[8px] text-white font-medium truncate">{ev.usuario?.name || 'Usuario'}</p>
+                    <div className="flex items-center gap-1">
+                      <span className={`text-[7px] px-1 py-0.5 rounded-full ${
+                        ev.tipo === 'resolucion' ? 'bg-green-500 text-white' :
+                        ev.tipo === 'prevencion' ? 'bg-blue-500 text-white' :
+                        'bg-amber-500 text-white'
+                      }`}>{ev.tipo === 'seguimiento' ? 'Seg' : ev.tipo === 'resolucion' ? 'Res' : 'Prev'}</span>
+                      <span className="text-[7px] text-white/80">
+                        {new Date(ev.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}
+                      </span>
+                    </div>
+                  </div>
+                  {ev.descripcion && (
+                    <p className="text-[8px] text-muted-foreground mt-0.5 truncate px-0.5">{ev.descripcion}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -2046,7 +2227,7 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
           </button>
         </div>
         <p className="text-[10px] text-muted-foreground mt-1 text-center">
-          Enter enviar · @ mencionar · 📷 foto · 🎙 voz IA
+          Enter enviar · @ mencionar · Foto · Voz IA
         </p>
       </div>
     </div>

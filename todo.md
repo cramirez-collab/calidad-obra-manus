@@ -4556,3 +4556,12 @@
 - [x] Fotos en PDF a tamaño pequeño/mediano (max-height:110px), layout compacto para caber en 1 página
 - [x] Menú desplegable para asignar incidencia directamente en tarjeta (botón púrpura con dropdown de usuarios)
 - [x] Al capturar foto del incidente, abrir editor de rayado inmediatamente (FotoEditor en TabReportar y IncidenteChat)
+
+### Profesionalizar Iconos y Evidencias Segurista (Feb 2026)
+- [x] Reemplazar emojis de tipos de incidente por iconos Lucide monocromáticos profesionales
+- [x] Reemplazar emojis en severidades por indicadores visuales sin emoji
+- [x] Reemplazar emojis en dashboard segurista y estadísticas
+- [x] Reemplazar emojis en PDF de ficha de incidencia
+- [x] Flujo de evidencias para segurista asignado: subir fotos de resolución/seguimiento
+- [x] Sección de evidencias visible en chat de incidente con fotos del asignado
+- [x] Solo el segurista asignado (o admin/superadmin) puede subir evidencias de resolución (15 tests)

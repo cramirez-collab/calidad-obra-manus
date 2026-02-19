@@ -2656,7 +2656,7 @@ export const appRouter = router({
             const pushSubsMencion = await db.getPushSubscriptionsByUsuario(userId);
             if (pushSubsMencion.length > 0 && itemInfoMencion) {
               await pushService.sendPushToMultiple(pushSubsMencion, {
-                title: '📢 Te Mencionaron',
+                title: 'Te Mencionaron',
                 body: `${ctx.user.name || 'Un usuario'} te mencionó`,
                 itemCodigo: itemInfoMencion.codigo,
                 unidadNombre: itemInfoMencion.unidadNombre,
@@ -4129,9 +4129,9 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
             const pushSubs = await db.getPushSubscriptionsByUsuarios(userIds);
             if (pushSubs.length > 0) {
               const sevLabels: Record<string, string> = { baja: 'Baja', media: 'Media', alta: 'Alta', critica: 'CRÍTICA' };
-              const sevEmoji: Record<string, string> = { baja: '🟢', media: '🟡', alta: '🟠', critica: '🔴' };
+              const sevPrefix: Record<string, string> = { baja: '[BAJA]', media: '[MEDIA]', alta: '[ALTA]', critica: '[CRÍTICA]' };
               await pushService.sendPushToMultiple(pushSubs, {
-                title: `${sevEmoji[input.severidad] || '🚨'} Incidente ${sevLabels[input.severidad] || input.severidad} - ${codigoSeg}`,
+                title: `${sevPrefix[input.severidad] || '[SEG]'} Incidente ${sevLabels[input.severidad] || input.severidad} - ${codigoSeg}`,
                 body: `${input.tipo.replace(/_/g, ' ').toUpperCase()}: ${input.descripcion.slice(0, 80)}`,
                 incidenteId: id,
                 codigoSeg,
@@ -4380,7 +4380,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
                 const pushSubs = await db.getPushSubscriptionsByUsuarios(mentionedIds);
                 if (pushSubs.length > 0) {
                   await pushService.sendPushToMultiple(pushSubs, {
-                    title: `📢 Te mencionaron en ${incidente.codigo || 'incidente'}`,
+                    title: `Mención en ${incidente.codigo || 'incidente'}`,
                     body: `${ctx.user.name || 'Usuario'}: ${input.texto.slice(0, 80)}`,
                     incidenteId: input.incidenteId,
                     codigoSeg: incidente.codigo || undefined,
@@ -4671,7 +4671,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
             const pushSubs = await db.getPushSubscriptionsByUsuarios([input.asignadoA]);
             if (pushSubs.length > 0) {
               await pushService.sendPushToMultiple(pushSubs, {
-                title: `📋 Incidente asignado - ${incidente.codigo || 'SEG'}`,
+                title: `Incidente asignado - ${incidente.codigo || 'SEG'}`,
                 body: `${ctx.user.name || 'Admin'} te asignó el incidente: ${incidente.descripcion?.slice(0, 60)}`,
                 incidenteId: input.incidenteId,
                 codigoSeg: incidente.codigo || undefined,
@@ -4700,6 +4700,85 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
       .input(z.object({ proyectoId: z.number(), limit: z.number().optional().default(50) }))
       .query(async ({ input }) => {
         return db.getBitacoraByProyecto(input.proyectoId, input.limit);
+      }),
+
+    // ==================== EVIDENCIAS ====================
+
+    // Subir evidencia de seguimiento/resolución
+    subirEvidencia: protectedProcedure
+      .input(z.object({
+        incidenteId: z.number(),
+        fotoBase64: z.string(),
+        descripcion: z.string().optional(),
+        tipo: z.enum(["seguimiento", "resolucion", "prevencion"]).default("seguimiento"),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const incidente = await db.getIncidenteById(input.incidenteId);
+        if (!incidente) throw new TRPCError({ code: 'NOT_FOUND', message: 'Incidente no encontrado' });
+
+        // Solo el asignado, admin o superadmin pueden subir evidencias
+        const isAsignado = incidente.asignadoA === ctx.user.id;
+        const isAdmin = ['admin', 'superadmin'].includes(ctx.user.role || '');
+        if (!isAsignado && !isAdmin) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo el responsable asignado o administradores pueden subir evidencias' });
+        }
+
+        // Upload photo to S3
+        const buffer = Buffer.from(input.fotoBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+        const ext = input.fotoBase64.startsWith('data:image/png') ? 'png' : 'jpg';
+        const key = `seguridad/evidencias/${input.incidenteId}/${nanoid(10)}.${ext}`;
+        const { url } = await storagePut(key, buffer, `image/${ext}`);
+
+        const id = await db.createEvidenciaSeguridad({
+          incidenteId: input.incidenteId,
+          usuarioId: ctx.user.id,
+          fotoUrl: url,
+          descripcion: input.descripcion || null,
+          tipo: input.tipo,
+        });
+
+        // Registrar en bitácora
+        await db.crearEntradaBitacora({
+          incidenteId: input.incidenteId,
+          proyectoId: incidente.proyectoId,
+          usuarioId: ctx.user.id,
+          accion: 'foto_enviada',
+          detalle: `Evidencia de ${input.tipo} subida`,
+        });
+
+        return { id, url };
+      }),
+
+    // Listar evidencias de un incidente
+    evidenciasByIncidente: protectedProcedure
+      .input(z.object({ incidenteId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getEvidenciasByIncidente(input.incidenteId);
+      }),
+
+    // Eliminar evidencia (solo admin/superadmin o quien la subió)
+    eliminarEvidencia: protectedProcedure
+      .input(z.object({ evidenciaId: z.number(), incidenteId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const isAdmin = ['admin', 'superadmin'].includes(ctx.user.role || '');
+        // For now, only admins can delete evidencias
+        if (!isAdmin) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo administradores pueden eliminar evidencias' });
+        }
+        await db.deleteEvidenciaSeguridad(input.evidenciaId);
+
+        const incidente = await db.getIncidenteById(input.incidenteId);
+        if (incidente) {
+          await db.crearEntradaBitacora({
+            incidenteId: input.incidenteId,
+            proyectoId: incidente.proyectoId,
+            usuarioId: ctx.user.id,
+            accion: 'eliminacion_mensaje',
+            detalle: 'Evidencia eliminada',
+          });
+        }
+
+        return { ok: true };
       }),
   }),
 });

@@ -42,6 +42,7 @@ import {
   checklistItemsSeguridad, InsertChecklistItemSeguridad,
   mensajesSeguridad, InsertMensajeSeguridad,
   bitacoraSeguridad, InsertBitacoraSeguridad,
+  evidenciasSeguridad, InsertEvidenciaSeguridad,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -6996,4 +6997,43 @@ export async function asignarIncidenteSeguridad(incidenteId: number, asignadoA: 
   await db.update(incidentesSeguridad)
     .set({ asignadoA })
     .where(eq(incidentesSeguridad.id, incidenteId));
+}
+
+// ==================== EVIDENCIAS DE SEGURIDAD ====================
+
+export async function createEvidenciaSeguridad(data: InsertEvidenciaSeguridad) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const result = await db.insert(evidenciasSeguridad).values(data);
+  return result[0].insertId;
+}
+
+export async function getEvidenciasByIncidente(incidenteId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const rows = await db.select()
+    .from(evidenciasSeguridad)
+    .where(eq(evidenciasSeguridad.incidenteId, incidenteId))
+    .orderBy(desc(evidenciasSeguridad.createdAt));
+  // Enrich with user info
+  const enriched = await Promise.all(rows.map(async (ev) => {
+    const usuario = await getUserById(ev.usuarioId);
+    return { ...ev, usuario: usuario ? { id: usuario.id, name: usuario.name, fotoUrl: usuario.fotoUrl } : null };
+  }));
+  return enriched;
+}
+
+export async function deleteEvidenciaSeguridad(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  await db.delete(evidenciasSeguridad).where(eq(evidenciasSeguridad.id, id));
+}
+
+export async function countEvidenciasByIncidente(incidenteId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const result = await db.select({ count: sql<number>`COUNT(*)` })
+    .from(evidenciasSeguridad)
+    .where(eq(evidenciasSeguridad.incidenteId, incidenteId));
+  return result[0]?.count || 0;
 }
