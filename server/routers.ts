@@ -4178,7 +4178,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
     actualizarEstado: protectedProcedure
       .input(z.object({
         id: z.number(),
-        estado: z.enum(["abierto", "en_proceso", "cerrado"]),
+        estado: z.enum(["abierto", "en_proceso", "cerrado", "prevencion"]),
         accionCorrectiva: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {

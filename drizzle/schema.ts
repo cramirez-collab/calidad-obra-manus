@@ -822,7 +822,7 @@ export const incidentesSeguridad = mysqlTable("incidentes_seguridad", {
   fotoBase64: text("fotoBase64"),
   fotoMarcadaUrl: text("fotoMarcadaUrl"), // Foto con marcas/rayado
   fotoMarcadaBase64: text("fotoMarcadaBase64"), // Foto marcada en base64
-  estado: mysqlEnum("estado_incidente", ["abierto", "en_proceso", "cerrado"]).default("abierto").notNull(),
+  estado: mysqlEnum("estado_incidente", ["abierto", "en_proceso", "cerrado", "prevencion"]).default("abierto").notNull(),
   accionCorrectiva: text("accionCorrectiva"),
   cerradoPor: int("cerradoPor"),
   fechaCierre: timestamp("fechaCierre"),

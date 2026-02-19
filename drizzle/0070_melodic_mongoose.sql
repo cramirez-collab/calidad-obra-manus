@@ -1,0 +1,1 @@
+ALTER TABLE `incidentes_seguridad` MODIFY COLUMN `estado_incidente` enum('abierto','en_proceso','cerrado','prevencion') NOT NULL DEFAULT 'abierto';

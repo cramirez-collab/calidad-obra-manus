@@ -79,6 +79,7 @@ const SEVERIDADES = [
 const ESTADOS = [
   { value: "abierto", label: "Abierto", color: "bg-red-100 text-red-700 border-red-200" },
   { value: "en_proceso", label: "En Proceso", color: "bg-amber-100 text-amber-700 border-amber-200" },
+  { value: "prevencion", label: "Prevenci\u00f3n", color: "bg-blue-100 text-blue-700 border-blue-200" },
   { value: "cerrado", label: "Cerrado", color: "bg-green-100 text-green-700 border-green-200" },
 ] as const;
 
@@ -505,6 +506,17 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
                           <Clock className="w-3 h-3 mr-1" /> En Proceso
                         </Button>
                       )}
+                      {inc.estado !== "cerrado" && inc.estado !== "prevencion" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-[10px] px-2 border-blue-200 text-blue-600"
+                          onClick={() => actualizarMut.mutate({ id: inc.id, estado: "prevencion" })}
+                          disabled={actualizarMut.isPending}
+                        >
+                          <Shield className="w-3 h-3 mr-1" /> Prevenci\u00f3n
+                        </Button>
+                      )}
                       {inc.estado !== "cerrado" && (
                         <Button
                           size="sm"
@@ -589,6 +601,10 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
         <Card className="p-3 text-center border-amber-200">
           <p className="text-2xl font-bold text-amber-600">{stats.enProceso}</p>
           <p className="text-[10px] text-muted-foreground">En Proceso</p>
+        </Card>
+        <Card className="p-3 text-center border-blue-200">
+          <p className="text-2xl font-bold text-blue-600">{stats.prevencion || 0}</p>
+          <p className="text-[10px] text-muted-foreground">Prevenci\u00f3n</p>
         </Card>
         <Card className="p-3 text-center border-green-200">
           <p className="text-2xl font-bold text-green-600">{stats.cerrados}</p>

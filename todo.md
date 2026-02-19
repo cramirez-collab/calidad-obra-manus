@@ -4478,3 +4478,20 @@
 - [x] Incluir: datos, foto, foto marcada, chat, bullets de voz
 - [x] Botón "Exportar reporte" en header del chat de incidente
 - [x] Diseño HTML profesional con colores por severidad
+
+## Rol Segurista y Estado Prevención (Feb 2026)
+
+### Rol Segurista
+- [x] Rol "segurista" ya existía en enum de roles en schema de usuarios
+- [x] Migrar BD con pnpm db:push (estado prevención)
+- [x] Permisos: segurista puede crear/ver incidentes, enviar mensajes en chat, grabar notas de voz (protectedProcedure)
+- [x] Segurista visible en @mentions del módulo de seguridad (getUsuariosByProyecto no filtra por rol)
+- [x] Segurista aparece en lista de usuarios del proyecto
+- [x] UI: opción de rol segurista en gestión de usuarios (ya en createUser/updateUser)
+
+### Estado Prevención en Incidentes
+- [x] Agregar "prevencion" al enum de estados de incidentes
+- [x] Migrar BD
+- [x] Botón "Prevención" en tarjeta de incidente (azul, con icono Shield)
+- [x] Color azul y estilo para estado prevención en UI
+- [x] Incluir en estadísticas de seguridad (card azul + campo prevencion en stats)

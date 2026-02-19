@@ -6563,13 +6563,14 @@ export async function cerrarIncidente(id: number, cerradoPor: number, accionCorr
 
 export async function getEstadisticasSeguridad(proyectoId: number) {
   const db = await getDb();
-  if (!db) return { total: 0, abiertos: 0, enProceso: 0, cerrados: 0, porTipo: [], porSeveridad: [] };
+  if (!db) return { total: 0, abiertos: 0, enProceso: 0, prevencion: 0, cerrados: 0, porTipo: [], porSeveridad: [] };
   
   const todos = await db.select().from(incidentesSeguridad)
     .where(eq(incidentesSeguridad.proyectoId, proyectoId));
   
   const abiertos = todos.filter(i => i.estado === "abierto").length;
   const enProceso = todos.filter(i => i.estado === "en_proceso").length;
+  const prevencion = todos.filter(i => i.estado === "prevencion").length;
   const cerrados = todos.filter(i => i.estado === "cerrado").length;
   
   // Agrupar por tipo
@@ -6601,7 +6602,7 @@ export async function getEstadisticasSeguridad(proyectoId: number) {
     ? resueltos.reduce((sum, i) => sum + (i.fechaCierre!.getTime() - i.createdAt.getTime()), 0) / resueltos.length / (1000 * 60 * 60)
     : 0;
   
-  return { total: todos.length, abiertos, enProceso, cerrados, porTipo, porSeveridad, tendencia, tiempoPromedio: Math.round(tiempoPromedio) };
+  return { total: todos.length, abiertos, enProceso, prevencion, cerrados, porTipo, porSeveridad, tendencia, tiempoPromedio: Math.round(tiempoPromedio) };
 }
 
 // Checklists
