@@ -45,8 +45,10 @@ import {
   FileDown,
   ZoomIn,
   Pencil,
+  UserCheck,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { UserAvatar } from "@/components/UserAvatar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -414,6 +416,13 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
     tipo: filtroTipo || undefined,
   });
 
+  const { data: usuarios } = trpc.seguridad.usuariosProyecto.useQuery({ proyectoId });
+  const getUsuarioNombre = (userId: string | null) => {
+    if (!userId || !usuarios) return null;
+    const u = usuarios.find((u: any) => u.id === userId);
+    return u ? u.name : null;
+  };
+
   const utils = trpc.useUtils();
   const actualizarMut = trpc.seguridad.actualizarEstado.useMutation({
     onSuccess: () => {
@@ -547,71 +556,106 @@ ${data.mensajes.length > 0 ? `<h3>Historial de Mensajes (${data.mensajes.length}
                       {inc.ubicacion && (
                         <span className="text-[10px] text-muted-foreground/70">📍 {inc.ubicacion}</span>
                       )}
+                      {inc.asignadoA && getUsuarioNombre(inc.asignadoA) && (
+                        <span className="text-[10px] text-emerald-600 flex items-center gap-0.5">
+                          <UserCheck className="w-3 h-3" />
+                          {getUsuarioNombre(inc.asignadoA)}
+                        </span>
+                      )}
                       <span className="text-[10px] text-muted-foreground/50 ml-auto">
                         {new Date(inc.createdAt).toLocaleDateString("es-MX", { day: "2-digit", month: "short" })}
                       </span>
                     </div>
-                    {/* Acciones rápidas */}
-                    <div className="flex flex-wrap gap-1.5 mt-2">
+                    {/* Acciones rápidas - solo iconos con tooltip */}
+                    <div className="flex items-center gap-1 mt-2">
                       {inc.estado !== "cerrado" && inc.estado === "abierto" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-[10px] px-2 border-amber-200 text-amber-600"
-                          onClick={() => actualizarMut.mutate({ id: inc.id, estado: "en_proceso" })}
-                          disabled={actualizarMut.isPending}
-                        >
-                          <Clock className="w-3 h-3 mr-1" /> En Proceso
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-7 w-7 border-amber-200 text-amber-600 hover:bg-amber-50"
+                              onClick={() => actualizarMut.mutate({ id: inc.id, estado: "en_proceso" })}
+                              disabled={actualizarMut.isPending}
+                            >
+                              <Clock className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>En Proceso</TooltipContent>
+                        </Tooltip>
                       )}
                       {inc.estado !== "cerrado" && inc.estado !== "prevencion" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-[10px] px-2 border-blue-200 text-blue-600"
-                          onClick={() => actualizarMut.mutate({ id: inc.id, estado: "prevencion" })}
-                          disabled={actualizarMut.isPending}
-                        >
-                          <Shield className="w-3 h-3 mr-1" /> Prevención
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-7 w-7 border-blue-200 text-blue-600 hover:bg-blue-50"
+                              onClick={() => actualizarMut.mutate({ id: inc.id, estado: "prevencion" })}
+                              disabled={actualizarMut.isPending}
+                            >
+                              <Shield className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Prevención</TooltipContent>
+                        </Tooltip>
                       )}
                       {inc.estado !== "cerrado" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-[10px] px-2 border-green-200 text-green-600"
-                          onClick={() => { setSelectedId(inc.id); setShowCerrarModal(true); }}
-                        >
-                          <CheckCircle2 className="w-3 h-3 mr-1" /> Cerrar
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-7 w-7 border-green-200 text-green-600 hover:bg-green-50"
+                              onClick={() => { setSelectedId(inc.id); setShowCerrarModal(true); }}
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Cerrar Incidente</TooltipContent>
+                        </Tooltip>
                       )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-[10px] px-2 border-red-200 text-red-600"
-                        onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, icon: tp?.icon, severidad: inc.severidad, sevLabel: sv?.label, estado: estadoInfo(inc.estado)?.label, descripcion: inc.descripcion, codigo: inc.codigo })}
-                      >
-                        <MessageCircle className="w-3 h-3 mr-1 text-red-500" /> Chat
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-[10px] px-2 border-gray-200 text-gray-600"
-                        onClick={() => { setPdfLoading(inc.id); exportarPDFMut.mutate({ incidenteId: inc.id }); }}
-                        disabled={pdfLoading === inc.id}
-                      >
-                        {pdfLoading === inc.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileDown className="w-3 h-3 mr-1" />}
-                        PDF
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            className="h-7 w-7 border-red-200 text-red-600 hover:bg-red-50"
+                            onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, icon: tp?.icon, severidad: inc.severidad, sevLabel: sv?.label, estado: estadoInfo(inc.estado)?.label, descripcion: inc.descripcion, codigo: inc.codigo })}
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Chat</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            className="h-7 w-7 border-gray-200 text-gray-600 hover:bg-gray-50"
+                            onClick={() => { setPdfLoading(inc.id); exportarPDFMut.mutate({ incidenteId: inc.id }); }}
+                            disabled={pdfLoading === inc.id}
+                          >
+                            {pdfLoading === inc.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Exportar PDF</TooltipContent>
+                      </Tooltip>
                       {isAdmin && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-[10px] px-2 border-red-300 text-red-600 ml-auto"
-                          onClick={() => setShowDeleteConfirm(inc.id)}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-7 w-7 border-red-300 text-red-600 hover:bg-red-50 ml-auto"
+                              onClick={() => setShowDeleteConfirm(inc.id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Eliminar</TooltipContent>
+                        </Tooltip>
                       )}
                     </div>
                   </div>

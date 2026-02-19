@@ -4542,3 +4542,7 @@
 - [x] Fix encoding "Prevención" correctamente en botón
 - [x] Reacomodar contenedores con flex-wrap para que no se corten
 - [x] Botones de acción en tarjetas con flex-wrap y gap-1.5 para mobile
+
+### Fix Tarjetas Incidentes (Feb 2026)
+- [x] Mejorar iconos de botones de acción con tooltips al hover (solo iconos, Tooltip de shadcn)
+- [x] Mostrar a quién está asignada la incidencia en la tarjeta (UserCheck + nombre)
