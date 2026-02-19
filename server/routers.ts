@@ -4568,6 +4568,13 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           acto_inseguro: 'Acto Inseguro', casi_accidente: 'Casi Accidente', otro: 'Otro',
         };
 
+        // Get assigned user name
+        let asignadoNombre: string | null = null;
+        if (incidente.asignadoA) {
+          const asignadoUser = await db.getUserById(incidente.asignadoA);
+          asignadoNombre = asignadoUser?.name || null;
+        }
+
         return {
           codigo: incidente.codigo || `SEG${String(incidente.id).padStart(5, '0')}`,
           tipo: tipoLabels[incidente.tipo] || incidente.tipo,
@@ -4578,6 +4585,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           fotoUrl: incidente.fotoUrl,
           fotoMarcadaUrl: incidente.fotoMarcadaUrl,
           reportadoPor: reportadoPor?.name || 'Desconocido',
+          asignadoNombre,
           fechaCreacion: incidente.createdAt.toISOString(),
           fechaCierre: incidente.fechaCierre?.toISOString() || null,
           accionCorrectiva: incidente.accionCorrectiva,

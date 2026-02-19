@@ -4549,3 +4549,10 @@
 
 ### Fix Flotantes Mismo Tamaño (Feb 2026)
 - [x] Uniformar todos los botones flotantes al mismo tamaño (h-10 w-10 = 40px, con Tooltip side=left)
+
+### Fix Tarjetas, PDF, Asignar, Rayado Foto (Feb 2026)
+- [x] Reducir iconos de acción en tarjetas para que quepan en pantalla mobile (h-6 w-6 con iconos w-3 h-3)
+- [x] Rediseñar PDF como "Ficha de Incidencia de Seguridad e Higiene" en hoja carta formato Objetiva
+- [x] Fotos en PDF a tamaño pequeño/mediano (max-height:110px), layout compacto para caber en 1 página
+- [x] Menú desplegable para asignar incidencia directamente en tarjeta (botón púrpura con dropdown de usuarios)
+- [x] Al capturar foto del incidente, abrir editor de rayado inmediatamente (FotoEditor en TabReportar y IncidenteChat)

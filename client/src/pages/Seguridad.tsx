@@ -46,6 +46,7 @@ import {
   ZoomIn,
   Pencil,
   UserCheck,
+  User,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -224,6 +225,8 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
   const [ubicacion, setUbicacion] = useState("");
   const [fotoBase64, setFotoBase64] = useState<string | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [fotoOriginal, setFotoOriginal] = useState<string | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const utils = trpc.useUtils();
@@ -251,17 +254,32 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
       try {
         const base64 = ev.target?.result as string;
         const result = await compressAdaptive(base64);
-        setFotoBase64(result.compressed);
-        setFotoPreview(result.compressed);
+        setFotoOriginal(result.compressed);
+        setShowEditor(true);
       } catch {
         const raw = ev.target?.result as string;
-        setFotoBase64(raw);
-        setFotoPreview(raw);
+        setFotoOriginal(raw);
+        setShowEditor(true);
       }
     };
     reader.readAsDataURL(file);
     e.target.value = "";
   }, []);
+
+  const handleEditorSave = useCallback((markedBase64: string) => {
+    setFotoBase64(markedBase64);
+    setFotoPreview(markedBase64);
+    setShowEditor(false);
+  }, []);
+
+  const handleEditorSkip = useCallback(() => {
+    // Use original without markup
+    if (fotoOriginal) {
+      setFotoBase64(fotoOriginal);
+      setFotoPreview(fotoOriginal);
+    }
+    setShowEditor(false);
+  }, [fotoOriginal]);
 
   const handleSubmit = () => {
     if (!tipo) { toast.error("Selecciona el tipo de incidente"); return; }
@@ -276,6 +294,25 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
       fotoBase64: fotoBase64 || undefined,
     });
   };
+
+  // Show FotoEditor overlay when photo is captured
+  if (showEditor && fotoOriginal) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-red-600">Marcar Foto</h3>
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={handleEditorSkip}>
+            Omitir marcado
+          </Button>
+        </div>
+        <FotoEditor
+          fotoUrl={fotoOriginal}
+          onSave={handleEditorSave}
+          onCancel={handleEditorSkip}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -407,6 +444,7 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
   const [showCerrarModal, setShowCerrarModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [pdfLoading, setPdfLoading] = useState<number | null>(null);
+  const [showAsignarId, setShowAsignarId] = useState<number | null>(null);
 
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
@@ -417,7 +455,7 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
   });
 
   const { data: usuarios } = trpc.seguridad.usuariosProyecto.useQuery({ proyectoId });
-  const getUsuarioNombre = (userId: string | null) => {
+  const getUsuarioNombre = (userId: number | string | null) => {
     if (!userId || !usuarios) return null;
     const u = usuarios.find((u: any) => u.id === userId);
     return u ? u.name : null;
@@ -446,36 +484,18 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
     onError: (e) => toast.error(e.message),
   });
 
+  const asignarMut = trpc.seguridad.asignarIncidente.useMutation({
+    onSuccess: () => {
+      toast.success("Incidente asignado");
+      utils.seguridad.listar.invalidate();
+      setShowAsignarId(null);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const exportarPDFMut = trpc.seguridad.exportarPDF.useMutation({
     onSuccess: (data) => {
-      const sevColors: Record<string, string> = { baja: '#22c55e', media: '#eab308', alta: '#f97316', critica: '#ef4444' };
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte ${data.codigo}</title>
-<style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#333}
-h1{color:${sevColors[data.estado] || '#333'};border-bottom:3px solid ${sevColors[data.severidad?.toLowerCase()] || '#ccc'};padding-bottom:10px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0}
-.field{background:#f9f9f9;padding:8px 12px;border-radius:6px}
-.field label{font-size:11px;color:#666;display:block}.field span{font-weight:600}
-img{max-width:100%;border-radius:8px;margin:10px 0}
-.msg{padding:8px 12px;margin:4px 0;border-radius:8px;background:#f3f4f6}
-.msg .name{font-weight:600;font-size:12px;color:#666}.msg .text{font-size:13px}
-.bullets{list-style:disc;padding-left:20px;font-size:12px}
-@media print{body{padding:0}}
-</style></head><body>
-<h1>${data.codigo} - ${data.tipo}</h1>
-<div class="grid">
-<div class="field"><label>Severidad</label><span>${data.severidad}</span></div>
-<div class="field"><label>Estado</label><span>${data.estado}</span></div>
-<div class="field"><label>Reportado por</label><span>${data.reportadoPor}</span></div>
-<div class="field"><label>Fecha</label><span>${new Date(data.fechaCreacion).toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' })}</span></div>
-${data.ubicacion ? `<div class="field"><label>Ubicaci\u00f3n</label><span>${data.ubicacion}</span></div>` : ''}
-${data.accionCorrectiva ? `<div class="field"><label>Acci\u00f3n Correctiva</label><span>${data.accionCorrectiva}</span></div>` : ''}
-</div>
-<p>${data.descripcion}</p>
-${data.fotoUrl ? `<h3>Foto del Incidente</h3><img src="${data.fotoUrl}" />` : ''}
-${data.fotoMarcadaUrl ? `<h3>Foto Marcada</h3><img src="${data.fotoMarcadaUrl}" />` : ''}
-${data.mensajes.length > 0 ? `<h3>Historial de Mensajes (${data.mensajes.length})</h3>${data.mensajes.map((m: any) => `<div class="msg"><div class="name">${m.usuario} - ${new Date(m.fecha).toLocaleString('es-MX')}</div>${m.tipo === 'foto' && m.fotoUrl ? `<img src="${m.fotoUrl}" style="max-height:200px" />` : ''}${m.texto ? `<div class="text">${m.texto}</div>` : ''}${m.bullets ? `<ul class="bullets">${(Array.isArray(m.bullets) ? m.bullets : []).map((b: string) => `<li>${b}</li>`).join('')}</ul>` : ''}</div>`).join('')}` : ''}
-<script>window.onload=function(){window.print()}<\/script>
-</body></html>`;
+      const html = generarFichaIncidencia(data);
       const w = window.open('', '_blank');
       if (w) { w.document.write(html); w.document.close(); }
       setPdfLoading(null);
@@ -567,18 +587,18 @@ ${data.mensajes.length > 0 ? `<h3>Historial de Mensajes (${data.mensajes.length}
                       </span>
                     </div>
                     {/* Acciones rápidas - solo iconos con tooltip */}
-                    <div className="flex items-center gap-1 mt-2">
+                    <div className="flex items-center gap-0.5 mt-2 flex-wrap">
                       {inc.estado !== "cerrado" && inc.estado === "abierto" && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               size="icon"
                               variant="outline"
-                              className="h-7 w-7 border-amber-200 text-amber-600 hover:bg-amber-50"
+                              className="h-6 w-6 border-amber-200 text-amber-600 hover:bg-amber-50 p-0"
                               onClick={() => actualizarMut.mutate({ id: inc.id, estado: "en_proceso" })}
                               disabled={actualizarMut.isPending}
                             >
-                              <Clock className="w-3.5 h-3.5" />
+                              <Clock className="w-3 h-3" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>En Proceso</TooltipContent>
@@ -590,11 +610,11 @@ ${data.mensajes.length > 0 ? `<h3>Historial de Mensajes (${data.mensajes.length}
                             <Button
                               size="icon"
                               variant="outline"
-                              className="h-7 w-7 border-blue-200 text-blue-600 hover:bg-blue-50"
+                              className="h-6 w-6 border-blue-200 text-blue-600 hover:bg-blue-50 p-0"
                               onClick={() => actualizarMut.mutate({ id: inc.id, estado: "prevencion" })}
                               disabled={actualizarMut.isPending}
                             >
-                              <Shield className="w-3.5 h-3.5" />
+                              <Shield className="w-3 h-3" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Prevención</TooltipContent>
@@ -606,10 +626,10 @@ ${data.mensajes.length > 0 ? `<h3>Historial de Mensajes (${data.mensajes.length}
                             <Button
                               size="icon"
                               variant="outline"
-                              className="h-7 w-7 border-green-200 text-green-600 hover:bg-green-50"
+                              className="h-6 w-6 border-green-200 text-green-600 hover:bg-green-50 p-0"
                               onClick={() => { setSelectedId(inc.id); setShowCerrarModal(true); }}
                             >
-                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <CheckCircle2 className="w-3 h-3" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Cerrar Incidente</TooltipContent>
@@ -620,10 +640,10 @@ ${data.mensajes.length > 0 ? `<h3>Historial de Mensajes (${data.mensajes.length}
                           <Button
                             size="icon"
                             variant="outline"
-                            className="h-7 w-7 border-red-200 text-red-600 hover:bg-red-50"
+                            className="h-6 w-6 border-red-200 text-red-600 hover:bg-red-50 p-0"
                             onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, icon: tp?.icon, severidad: inc.severidad, sevLabel: sv?.label, estado: estadoInfo(inc.estado)?.label, descripcion: inc.descripcion, codigo: inc.codigo })}
                           >
-                            <MessageCircle className="w-3.5 h-3.5" />
+                            <MessageCircle className="w-3 h-3" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>Chat</TooltipContent>
@@ -633,31 +653,77 @@ ${data.mensajes.length > 0 ? `<h3>Historial de Mensajes (${data.mensajes.length}
                           <Button
                             size="icon"
                             variant="outline"
-                            className="h-7 w-7 border-gray-200 text-gray-600 hover:bg-gray-50"
+                            className="h-6 w-6 border-gray-200 text-gray-600 hover:bg-gray-50 p-0"
                             onClick={() => { setPdfLoading(inc.id); exportarPDFMut.mutate({ incidenteId: inc.id }); }}
                             disabled={pdfLoading === inc.id}
                           >
-                            {pdfLoading === inc.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+                            {pdfLoading === inc.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileDown className="w-3 h-3" />}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>Exportar PDF</TooltipContent>
                       </Tooltip>
+                      {inc.estado !== "cerrado" && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-6 w-6 border-purple-200 text-purple-600 hover:bg-purple-50 p-0"
+                              onClick={() => setShowAsignarId(showAsignarId === inc.id ? null : inc.id)}
+                            >
+                              <User className="w-3 h-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Asignar</TooltipContent>
+                        </Tooltip>
+                      )}
                       {isAdmin && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               size="icon"
                               variant="outline"
-                              className="h-7 w-7 border-red-300 text-red-600 hover:bg-red-50 ml-auto"
+                              className="h-6 w-6 border-red-300 text-red-600 hover:bg-red-50 p-0"
                               onClick={() => setShowDeleteConfirm(inc.id)}
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-3 h-3" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>Eliminar</TooltipContent>
                         </Tooltip>
                       )}
                     </div>
+                    {/* Dropdown asignar */}
+                    {showAsignarId === inc.id && usuarios && (
+                      <div className="mt-1 p-2 bg-purple-50 rounded-lg border border-purple-200 animate-in slide-in-from-top-1">
+                        <p className="text-[10px] font-medium text-purple-700 mb-1">Asignar a:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {usuarios.map((u: any) => (
+                            <button
+                              key={u.id}
+                              className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${
+                                inc.asignadoA === u.id
+                                  ? 'bg-purple-600 text-white border-purple-600'
+                                  : 'bg-white text-purple-700 border-purple-300 hover:bg-purple-100'
+                              }`}
+                              onClick={() => asignarMut.mutate({ incidenteId: inc.id, asignadoA: u.id })}
+                              disabled={asignarMut.isPending}
+                            >
+                              {u.name}
+                            </button>
+                          ))}
+                          {inc.asignadoA && (
+                            <button
+                              className="text-[10px] px-2 py-0.5 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100"
+                              onClick={() => asignarMut.mutate({ incidenteId: inc.id, asignadoA: null })}
+                              disabled={asignarMut.isPending}
+                            >
+                              Quitar
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -1154,53 +1220,119 @@ function TabChecklist({ proyectoId }: { proyectoId: number }) {
 // CHAT POR INCIDENTE
 // ==========================================
 // Generar HTML para reporte PDF de incidente
-function generatePDFHtml(data: any): string {
-  const sevColors: Record<string, string> = { Baja: '#22c55e', Media: '#eab308', Alta: '#f97316', 'Cr\u00edtica': '#ef4444' };
+function generarFichaIncidencia(data: any): string {
+  const sevColors: Record<string, string> = { Baja: '#16a34a', Media: '#ca8a04', Alta: '#ea580c', 'Crítica': '#dc2626', baja: '#16a34a', media: '#ca8a04', alta: '#ea580c', critica: '#dc2626' };
   const sevColor = sevColors[data.severidad] || '#6b7280';
-  const fecha = new Date(data.fechaCreacion).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  
+  const sevLabels: Record<string, string> = { baja: 'BAJA', media: 'MEDIA', alta: 'ALTA', critica: 'CRÍTICA' };
+  const fecha = new Date(data.fechaCreacion).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' });
+  const hora = new Date(data.fechaCreacion).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  const estadoLabels: Record<string, string> = { abierto: 'Abierto', en_proceso: 'En Proceso', prevencion: 'Prevención', cerrado: 'Cerrado' };
+  const estadoColors: Record<string, string> = { abierto: '#dc2626', en_proceso: '#ca8a04', prevencion: '#2563eb', cerrado: '#16a34a' };
+  const tipoLabels: Record<string, string> = { caida: 'Caída', electrico: 'Eléctrico', incendio: 'Incendio', quimico: 'Químico', ergonomico: 'Ergonómico', atrapamiento: 'Atrapamiento', golpe: 'Golpe', corte: 'Corte', otro: 'Otro' };
+
   let mensajesHtml = '';
   if (data.mensajes?.length > 0) {
-    mensajesHtml = data.mensajes.map((m: any) => {
-      const mFecha = new Date(m.fecha).toLocaleDateString('es-MX', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const msgs = data.mensajes.slice(0, 6);
+    mensajesHtml = msgs.map((m: any) => {
+      const mFecha = new Date(m.fecha).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
+      const mHora = new Date(m.fecha).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
       let content = '';
-      if (m.tipo === 'foto' && m.fotoUrl) {
-        content = `<img src="${m.fotoUrl}" style="max-width:300px;border-radius:8px;margin:4px 0" />`;
-      } else if (m.tipo === 'voz' && m.bullets?.length) {
-        content = '<ul style="margin:4px 0;padding-left:20px">' + m.bullets.map((b: string) => `<li style="font-size:13px;margin:2px 0">${b}</li>`).join('') + '</ul>';
-        if (m.transcripcion) content += `<p style="font-size:11px;color:#888;margin-top:4px"><em>Transcripci\u00f3n: ${m.transcripcion}</em></p>`;
-      } else {
-        content = `<p style="font-size:13px;margin:4px 0">${m.texto}</p>`;
-      }
-      return `<div style="padding:8px 0;border-bottom:1px solid #eee"><strong style="font-size:12px">${m.usuario}</strong> <span style="font-size:11px;color:#888">${mFecha}</span>${content}</div>`;
+      if (m.tipo === 'foto' && m.fotoUrl) content = '<span style="color:#2563eb;font-size:7px;font-style:italic">[Foto adjunta]</span>';
+      else if (m.tipo === 'voz' && m.bullets?.length) content = m.bullets.slice(0,2).map((b: string) => `<span style="font-size:7px">• ${b}</span>`).join('<br/>');
+      else content = `<span style="font-size:7px">${(m.texto || '').substring(0, 60)}${(m.texto || '').length > 60 ? '...' : ''}</span>`;
+      return `<tr><td style="font-size:6.5px;color:#888;padding:1px 3px;border-bottom:1px solid #f3f3f3;white-space:nowrap;vertical-align:top;width:60px">${m.usuario}<br/><span style="color:#aaa">${mFecha} ${mHora}</span></td><td style="padding:1px 3px;border-bottom:1px solid #f3f3f3;vertical-align:top">${content}</td></tr>`;
     }).join('');
+    if (data.mensajes.length > 6) mensajesHtml += `<tr><td colspan="2" style="font-size:6.5px;color:#aaa;padding:1px 3px;text-align:center">+ ${data.mensajes.length - 6} mensajes más</td></tr>`;
   }
 
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte ${data.codigo}</title>
-<style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#333}
-.header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid ${sevColor};padding-bottom:12px;margin-bottom:20px}
-.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:bold;color:white;background:${sevColor}}
-.section{margin:16px 0}.section h3{font-size:14px;color:#555;border-bottom:1px solid #ddd;padding-bottom:4px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
-.grid dt{color:#888;font-size:12px}.grid dd{margin:0;font-weight:500}
-.fotos{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0}
-.fotos img{max-width:300px;border-radius:8px;border:1px solid #ddd}
-@media print{body{padding:10px}}
+  const fotosHtml = (data.fotoUrl || data.fotoMarcadaUrl) ? `<div class="section">
+    <div class="section-title">Evidencia Fotográfica</div>
+    <div style="display:flex;gap:6px;align-items:flex-start">
+      ${data.fotoUrl ? `<div style="flex:1;text-align:center"><img src="${data.fotoUrl}" style="max-width:100%;max-height:110px;object-fit:contain;border-radius:3px;border:1px solid #e5e7eb" /><div style="font-size:6px;color:#999;margin-top:1px">Original</div></div>` : ''}
+      ${data.fotoMarcadaUrl ? `<div style="flex:1;text-align:center"><img src="${data.fotoMarcadaUrl}" style="max-width:100%;max-height:110px;object-fit:contain;border-radius:3px;border:1px solid #e5e7eb" /><div style="font-size:6px;color:#999;margin-top:1px">Marcada</div></div>` : ''}
+    </div>
+  </div>` : '';
+
+  // Chat photos from messages
+  const chatFotos = data.mensajes?.filter((m: any) => m.tipo === 'foto' && m.fotoUrl).slice(0, 4) || [];
+  const chatFotosHtml = chatFotos.length > 0 ? `<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">
+    ${chatFotos.map((m: any) => `<img src="${m.fotoUrl}" style="width:70px;height:50px;object-fit:cover;border-radius:2px;border:1px solid #e5e7eb" />`).join('')}
+  </div>` : '';
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Ficha ${data.codigo}</title>
+<style>
+@page{size:letter;margin:10mm 12mm}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:8px;line-height:1.3}
+.page{width:100%;max-width:190mm}
+.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid #0d9488;padding-bottom:6px;margin-bottom:6px}
+.logo-area{}
+.logo-text{font-size:16px;font-weight:800;color:#0d9488;letter-spacing:-0.3px;line-height:1}
+.logo-sub{font-size:7px;color:#888;font-weight:400;letter-spacing:0.2px;margin-top:1px}
+.title-area{text-align:right}
+.title-area h1{font-size:9px;color:#444;margin:0;text-transform:uppercase;letter-spacing:0.3px;font-weight:700;line-height:1.2}
+.title-area .codigo{font-size:14px;font-weight:800;color:${sevColor};margin-top:2px}
+.meta-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:3px 0}
+.sev-badge{display:inline-block;padding:1px 8px;border-radius:8px;font-size:7px;font-weight:700;color:white;background:${sevColor};letter-spacing:0.3px}
+.estado-badge{display:inline-block;padding:1px 8px;border-radius:8px;font-size:7px;font-weight:600;color:white;background:${estadoColors[data.estado] || '#6b7280'}}
+.section{margin:5px 0}
+.section-title{font-size:7.5px;font-weight:700;color:#0d9488;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #e5e7eb;padding-bottom:2px;margin-bottom:4px}
+.info-table{width:100%;border-collapse:collapse}
+.info-table td{padding:2px 4px;font-size:8px;border-bottom:1px solid #f5f5f5}
+.info-table .lbl{color:#999;font-size:6.5px;text-transform:uppercase;letter-spacing:0.2px;width:70px;vertical-align:top;font-weight:500}
+.info-table .val{font-weight:600;color:#333}
+.desc-box{font-size:8px;line-height:1.35;color:#333;padding:4px 6px;background:#f8fafb;border-left:2.5px solid #0d9488;border-radius:0 3px 3px 0;margin:3px 0}
+.msg-table{width:100%;border-collapse:collapse}
+.footer{margin-top:8px;padding-top:4px;border-top:1.5px solid #0d9488;display:flex;justify-content:space-between;font-size:6.5px;color:#aaa}
+@media print{body{padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{page-break-inside:avoid}}
 </style></head><body>
-<div class="header"><div><h1 style="margin:0;font-size:22px">${data.codigo}</h1><p style="margin:4px 0 0;color:#888;font-size:13px">Reporte de Incidente de Seguridad</p></div><span class="badge">${data.severidad}</span></div>
-<div class="section"><h3>Informaci\u00f3n General</h3><dl class="grid">
-<dt>Tipo</dt><dd>${data.tipo}</dd>
-<dt>Estado</dt><dd>${data.estado}</dd>
-<dt>Reportado por</dt><dd>${data.reportadoPor}</dd>
-<dt>Fecha</dt><dd>${fecha}</dd>
-<dt>Ubicaci\u00f3n</dt><dd>${data.ubicacion || 'No especificada'}</dd>
-${data.fechaCierre ? `<dt>Fecha cierre</dt><dd>${new Date(data.fechaCierre).toLocaleDateString('es-MX')}</dd>` : ''}
-</dl></div>
-<div class="section"><h3>Descripci\u00f3n</h3><p style="font-size:13px">${data.descripcion}</p></div>
-${data.accionCorrectiva ? `<div class="section"><h3>Acci\u00f3n Correctiva</h3><p style="font-size:13px">${data.accionCorrectiva}</p></div>` : ''}
-${data.fotoUrl || data.fotoMarcadaUrl ? `<div class="section"><h3>Evidencia Fotogr\u00e1fica</h3><div class="fotos">${data.fotoUrl ? `<div><p style="font-size:11px;color:#888">Original</p><img src="${data.fotoUrl}" /></div>` : ''}${data.fotoMarcadaUrl ? `<div><p style="font-size:11px;color:#888">Marcada</p><img src="${data.fotoMarcadaUrl}" /></div>` : ''}</div></div>` : ''}
-${mensajesHtml ? `<div class="section"><h3>Historial de Mensajes (${data.mensajes.length})</h3>${mensajesHtml}</div>` : ''}
-<footer style="margin-top:30px;padding-top:10px;border-top:1px solid #ddd;font-size:11px;color:#aaa;text-align:center">Generado por ObjetivaQC &mdash; ${new Date().toLocaleDateString('es-MX')}</footer>
+<div class="page">
+  <div class="header">
+    <div class="logo-area">
+      <div class="logo-text">OBJETIVA</div>
+      <div class="logo-sub">INNOVACIÓN EN DESARROLLOS INMOBILIARIOS</div>
+    </div>
+    <div class="title-area">
+      <h1>Ficha de Incidencia<br/>Seguridad e Higiene</h1>
+      <div class="codigo">${data.codigo}</div>
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <div><span class="sev-badge">SEVERIDAD: ${sevLabels[data.severidad] || data.severidad.toUpperCase()}</span></div>
+    <div><span class="estado-badge">${estadoLabels[data.estado] || data.estado}</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Información General</div>
+    <table class="info-table">
+      <tr><td class="lbl">Tipo</td><td class="val">${tipoLabels[data.tipo] || data.tipo}</td><td class="lbl">Fecha</td><td class="val">${fecha} — ${hora}</td></tr>
+      <tr><td class="lbl">Reportado por</td><td class="val">${data.reportadoPor}</td><td class="lbl">Ubicación</td><td class="val">${data.ubicacion || '—'}</td></tr>
+      ${data.asignadoNombre ? `<tr><td class="lbl">Asignado a</td><td class="val">${data.asignadoNombre}</td><td class="lbl">Fecha cierre</td><td class="val">${data.fechaCierre ? new Date(data.fechaCierre).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</td></tr>` : (data.fechaCierre ? `<tr><td class="lbl">Fecha cierre</td><td class="val" colspan="3">${new Date(data.fechaCierre).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}</td></tr>` : '')}
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Descripción del Incidente</div>
+    <div class="desc-box">${data.descripcion}</div>
+  </div>
+
+  ${data.accionCorrectiva ? `<div class="section"><div class="section-title">Acción Correctiva</div><div class="desc-box" style="border-left-color:#ea580c">${data.accionCorrectiva}</div></div>` : ''}
+
+  ${fotosHtml}
+
+  ${mensajesHtml ? `<div class="section">
+    <div class="section-title">Seguimiento (${data.mensajes.length} mensajes)</div>
+    <table class="msg-table">${mensajesHtml}</table>
+    ${chatFotosHtml}
+  </div>` : ''}
+
+  <div class="footer">
+    <span>Generado por ObjetivaQC — Sistema de Control de Calidad</span>
+    <span>${new Date().toLocaleDateString('es-MX', { year:'numeric', month:'short', day:'numeric' })} ${new Date().toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' })}</span>
+  </div>
+</div>
+<script>window.onload=function(){window.print()}<\/script>
 </body></html>`;
 }
 
@@ -1227,6 +1359,8 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
   // Photo state
   const [showFotoEditor, setShowFotoEditor] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [pendingFotoBase64, setPendingFotoBase64] = useState<string | null>(null);
+  const [showChatFotoEditor, setShowChatFotoEditor] = useState(false);
   const fotoInputRef = useRef<HTMLInputElement>(null);
 
   // @mentions state
@@ -1297,32 +1431,7 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
 
   const exportarPDFChat = trpc.seguridad.exportarPDF.useMutation({
     onSuccess: (data) => {
-      const sevColors: Record<string, string> = { baja: '#22c55e', media: '#eab308', alta: '#f97316', critica: '#ef4444' };
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte ${data.codigo}</title>
-<style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#333}
-h1{border-bottom:3px solid ${sevColors[data.severidad?.toLowerCase()] || '#ccc'};padding-bottom:10px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0}
-.field{background:#f9f9f9;padding:8px 12px;border-radius:6px}
-.field label{font-size:11px;color:#666;display:block}.field span{font-weight:600}
-img{max-width:100%;border-radius:8px;margin:10px 0}
-.msg{padding:8px 12px;margin:4px 0;border-radius:8px;background:#f3f4f6}
-.msg .name{font-weight:600;font-size:12px;color:#666}.msg .text{font-size:13px}
-.bullets{list-style:disc;padding-left:20px;font-size:12px}
-@media print{body{padding:0}}
-</style></head><body>
-<h1>${data.codigo} - ${data.tipo}</h1>
-<div class="grid">
-<div class="field"><label>Severidad</label><span>${data.severidad}</span></div>
-<div class="field"><label>Estado</label><span>${data.estado}</span></div>
-<div class="field"><label>Reportado por</label><span>${data.reportadoPor}</span></div>
-<div class="field"><label>Fecha</label><span>${new Date(data.fechaCreacion).toLocaleDateString('es-MX')}</span></div>
-</div>
-<p>${data.descripcion}</p>
-${data.fotoUrl ? `<h3>Foto</h3><img src="${data.fotoUrl}" />` : ''}
-${data.fotoMarcadaUrl ? `<h3>Foto Marcada</h3><img src="${data.fotoMarcadaUrl}" />` : ''}
-${data.mensajes.length > 0 ? `<h3>Chat (${data.mensajes.length})</h3>${data.mensajes.map((m: any) => `<div class="msg"><div class="name">${m.usuario} - ${new Date(m.fecha).toLocaleString('es-MX')}</div>${m.tipo === 'foto' && m.fotoUrl ? `<img src="${m.fotoUrl}" style="max-height:200px" />` : ''}${m.texto ? `<div class="text">${m.texto}</div>` : ''}${m.bullets ? `<ul class="bullets">${(Array.isArray(m.bullets) ? m.bullets : []).map((b: string) => `<li>${b}</li>`).join('')}</ul>` : ''}</div>`).join('')}` : ''}
-<script>window.onload=function(){window.print()}<\/script>
-</body></html>`;
+      const html = generarFichaIncidencia(data);
       const w = window.open('', '_blank');
       if (w) { w.document.write(html); w.document.close(); }
     },
@@ -1333,12 +1442,32 @@ ${data.mensajes.length > 0 ? `<h3>Chat (${data.mensajes.length})</h3>${data.mens
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      enviarFoto.mutate({ incidenteId, fotoBase64: base64 });
+    reader.onload = async () => {
+      try {
+        const base64 = reader.result as string;
+        const result = await compressAdaptive(base64);
+        setPendingFotoBase64(result.compressed);
+      } catch {
+        setPendingFotoBase64(reader.result as string);
+      }
+      setShowChatFotoEditor(true);
     };
     reader.readAsDataURL(file);
     e.target.value = '';
+  };
+
+  const handleChatFotoEditorSave = (markedBase64: string) => {
+    enviarFoto.mutate({ incidenteId, fotoBase64: markedBase64 });
+    setShowChatFotoEditor(false);
+    setPendingFotoBase64(null);
+  };
+
+  const handleChatFotoEditorSkip = () => {
+    if (pendingFotoBase64) {
+      enviarFoto.mutate({ incidenteId, fotoBase64: pendingFotoBase64 });
+    }
+    setShowChatFotoEditor(false);
+    setPendingFotoBase64(null);
   };
 
   const handleExportPDF = () => {
@@ -1496,6 +1625,30 @@ ${data.mensajes.length > 0 ? `<h3>Chat (${data.mensajes.length})</h3>${data.mens
       ) : part
     );
   };
+
+  // Show FotoEditor for chat photo before sending
+  if (showChatFotoEditor && pendingFotoBase64) {
+    return (
+      <div className="flex flex-col" style={{ height: 'calc(100vh - 200px)', minHeight: '400px' }}>
+        <div className="flex items-center justify-between pb-2 border-b mb-2">
+          <h3 className="text-sm font-semibold text-red-600 flex items-center gap-2">
+            <Pencil className="w-4 h-4" /> Marcar Foto
+          </h3>
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={handleChatFotoEditorSkip}>
+            Enviar sin marcar
+          </Button>
+        </div>
+        <div className="flex-1 overflow-auto">
+          <FotoEditor
+            fotoUrl={pendingFotoBase64}
+            onSave={handleChatFotoEditorSave}
+            onCancel={handleChatFotoEditorSkip}
+            saving={enviarFoto.isPending}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 200px)', minHeight: '400px' }}>
