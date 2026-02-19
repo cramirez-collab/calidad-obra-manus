@@ -4627,6 +4627,72 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
       .query(async ({ input }) => {
         return db.getReporteGeneralSeguridad(input.proyectoId);
       }),
+
+    // Asignar incidente a un usuario
+    asignarIncidente: protectedProcedure
+      .input(z.object({
+        incidenteId: z.number(),
+        asignadoA: z.number().nullable(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Solo admin/superadmin/supervisor pueden asignar
+        if (!['admin', 'superadmin', 'supervisor'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Sin permisos para asignar incidentes' });
+        }
+        const incidente = await db.getIncidenteById(input.incidenteId);
+        if (!incidente) throw new TRPCError({ code: 'NOT_FOUND' });
+        
+        await db.asignarIncidenteSeguridad(input.incidenteId, input.asignadoA);
+        
+        // Registrar en bitácora
+        const asignadoNombre = input.asignadoA
+          ? (await db.getUserById(input.asignadoA))?.name || 'Desconocido'
+          : 'Nadie';
+        await db.crearEntradaBitacora({
+          incidenteId: input.incidenteId,
+          proyectoId: incidente.proyectoId,
+          usuarioId: ctx.user.id,
+          accion: 'asignacion',
+          detalle: `Asignado a ${asignadoNombre}`,
+          valorNuevo: input.asignadoA?.toString() || 'null',
+        });
+        
+        // Notificar al asignado
+        if (input.asignadoA) {
+          try {
+            const pushSubs = await db.getPushSubscriptionsByUsuarios([input.asignadoA]);
+            if (pushSubs.length > 0) {
+              await pushService.sendPushToMultiple(pushSubs, {
+                title: `📋 Incidente asignado - ${incidente.codigo || 'SEG'}`,
+                body: `${ctx.user.name || 'Admin'} te asignó el incidente: ${incidente.descripcion?.slice(0, 60)}`,
+                incidenteId: input.incidenteId,
+                codigoSeg: incidente.codigo || undefined,
+                severidad: incidente.severidad,
+                tipoIncidente: incidente.tipo,
+                data: { url: '/seguridad', incidenteId: input.incidenteId, tipo: 'asignacion_seguridad' },
+              });
+            }
+          } catch (e) {
+            console.error('[Seguridad] Error enviando push de asignación:', e);
+          }
+        }
+        
+        return { success: true };
+      }),
+
+    // Bitácora por incidente
+    bitacoraByIncidente: protectedProcedure
+      .input(z.object({ incidenteId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getBitacoraByIncidente(input.incidenteId);
+      }),
+
+    // Bitácora general del proyecto
+    bitacoraByProyecto: protectedProcedure
+      .input(z.object({ proyectoId: z.number(), limit: z.number().optional().default(50) }))
+      .query(async ({ input }) => {
+        return db.getBitacoraByProyecto(input.proyectoId, input.limit);
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

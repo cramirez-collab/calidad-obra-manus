@@ -4515,3 +4515,30 @@
 - [x] Botón "PDF" en cada tarjeta de incidente
 - [x] Botón "Exportar reporte" en header del chat de incidente
 - [x] HTML profesional con print() para generar PDF desde navegador
+
+## Asignar Incidentes y Bitácora de Seguridad (Feb 2026)
+
+### Asignar Incidentes a Seguristas
+- [x] Campo asignadoA (userId) en tabla incidentes_seguridad
+- [x] Migrar BD con pnpm db:push
+- [x] Procedure asignarIncidente para asignar responsable
+- [x] UI: dropdown de seguristas/usuarios para asignar en chat de incidente (botón púrpura)
+- [x] Mostrar responsable asignado en panel asignar
+- [x] Bitácora registra asignación automáticamente
+
+### Bitácora de Seguridad
+- [x] Tabla bitacora_seguridad (incidenteId, usuarioId, accion, detalle, fecha)
+- [x] Migrar BD
+- [x] Registrar automáticamente: creación, cambio estado, asignación, edición, eliminación
+- [x] DB helpers: crearEntradaBitacora, getBitacoraByIncidente, getBitacoraByProyecto
+- [x] Procedures tRPC: bitacoraByIncidente, bitacoraByProyecto
+- [x] UI: panel Bitácora en chat de incidente con timeline de eventos (botón ámbar)
+- [x] Iconos y colores por tipo de acción (verde=creado, azul=estado, púrpura=asignado, ámbar=editado, rojo=eliminado, naranja=foto)
+- [x] Tests vitest (17 tests)
+
+### Fix UI Flotantes y Contenedores
+- [x] Reducir botones flotantes al 60% (h-10→h-7, iconos h-5→h-3.5, gap-2→gap-1.5)
+- [x] Agregar icono de Seguridad (Shield rojo) en la línea de flotantes
+- [x] Fix encoding "Prevención" correctamente en botón
+- [x] Reacomodar contenedores con flex-wrap para que no se corten
+- [x] Botones de acción en tarjetas con flex-wrap y gap-1.5 para mobile

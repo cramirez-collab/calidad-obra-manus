@@ -552,7 +552,7 @@ ${data.mensajes.length > 0 ? `<h3>Historial de Mensajes (${data.mensajes.length}
                       </span>
                     </div>
                     {/* Acciones rápidas */}
-                    <div className="flex gap-1.5 mt-2">
+                    <div className="flex flex-wrap gap-1.5 mt-2">
                       {inc.estado !== "cerrado" && inc.estado === "abierto" && (
                         <Button
                           size="sm"
@@ -572,7 +572,7 @@ ${data.mensajes.length > 0 ? `<h3>Historial de Mensajes (${data.mensajes.length}
                           onClick={() => actualizarMut.mutate({ id: inc.id, estado: "prevencion" })}
                           disabled={actualizarMut.isPending}
                         >
-                          <Shield className="w-3 h-3 mr-1" /> Prevenci\u00f3n
+                          <Shield className="w-3 h-3 mr-1" /> Prevención
                         </Button>
                       )}
                       {inc.estado !== "cerrado" && (
@@ -1427,6 +1427,22 @@ ${data.mensajes.length > 0 ? `<h3>Chat (${data.mensajes.length})</h3>${data.mens
   const isAdmin = user && ['superadmin', 'admin'].includes(user.role);
   const isCritica = incidenteInfo?.severidad === 'critica';
 
+  // Asignar state
+  const [showBitacora, setShowBitacora] = useState(false);
+  const [showAsignar, setShowAsignar] = useState(false);
+
+  const asignarMut = trpc.seguridad.asignarIncidente.useMutation({
+    onSuccess: () => {
+      toast.success("Responsable asignado");
+      setShowAsignar(false);
+      utils.seguridad.getById.invalidate({ id: incidenteId });
+      bitacoraQuery.refetch();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const bitacoraQuery = trpc.seguridad.bitacoraByIncidente.useQuery({ incidenteId });
+
   // Render @mention highlighted text
   const renderMsgText = (text: string) => {
     const parts = text.split(/(@\w+(?:\s\w+)?)/g);
@@ -1440,7 +1456,7 @@ ${data.mensajes.length > 0 ? `<h3>Chat (${data.mensajes.length})</h3>${data.mens
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 200px)', minHeight: '400px' }}>
       {/* Header con código SEG */}
-      <div className="flex items-center gap-2 pb-3 border-b mb-2">
+      <div className="flex items-center gap-2 pb-2 border-b mb-1">
         <button onClick={onBack} className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center">
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -1456,22 +1472,38 @@ ${data.mensajes.length > 0 ? `<h3>Chat (${data.mensajes.length})</h3>${data.mens
           </div>
           <p className="text-[10px] text-muted-foreground truncate">{incidenteInfo?.descripcion?.slice(0, 60)}</p>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
           {/* Botón rayar foto */}
           {incidenteData?.fotoUrl && (
             <button
               onClick={() => setShowFotoEditor(true)}
-              className="h-7 w-7 rounded-full flex items-center justify-center bg-orange-100 hover:bg-orange-200 text-orange-600" title="Rayar foto"
+              className="h-6 w-6 rounded-full flex items-center justify-center bg-orange-100 hover:bg-orange-200 text-orange-600" title="Rayar foto"
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Pencil className="h-3 w-3" />
             </button>
           )}
           {/* Botón exportar PDF */}
           <button
             onClick={handleExportPDF}
-            className="h-7 w-7 rounded-full flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-600" title="Exportar reporte"
+            className="h-6 w-6 rounded-full flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-600" title="Exportar reporte"
           >
-            <FileDown className="h-3.5 w-3.5" />
+            <FileDown className="h-3 w-3" />
+          </button>
+          {/* Botón asignar */}
+          <button
+            onClick={() => setShowAsignar(!showAsignar)}
+            className="h-6 w-6 rounded-full flex items-center justify-center bg-purple-100 hover:bg-purple-200 text-purple-600" title="Asignar responsable"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" /></svg>
+          </button>
+          {/* Botón bitácora */}
+          <button
+            onClick={() => setShowBitacora(!showBitacora)}
+            className={`h-6 w-6 rounded-full flex items-center justify-center transition-colors ${
+              showBitacora ? 'bg-amber-500 text-white' : 'bg-amber-100 hover:bg-amber-200 text-amber-600'
+            }`} title="Bitácora"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
           </button>
           {incidenteInfo?.sevLabel && (
             <Badge variant="outline" className={`text-[9px] ${
@@ -1484,6 +1516,85 @@ ${data.mensajes.length > 0 ? `<h3>Chat (${data.mensajes.length})</h3>${data.mens
           <Badge variant="outline" className="text-[9px]">{incidenteInfo?.estado}</Badge>
         </div>
       </div>
+
+      {/* Asignar responsable dropdown */}
+      {showAsignar && (
+        <div className="mb-2 p-2 border rounded-lg bg-purple-50/50">
+          <p className="text-[10px] font-medium text-purple-700 mb-1.5">Asignar responsable:</p>
+          <div className="flex flex-wrap gap-1">
+            {(usuariosProyecto || []).filter((u: any) => u.role === 'segurista' || u.role === 'admin' || u.role === 'superadmin').map((u: any) => (
+              <button
+                key={u.id}
+                onClick={() => asignarMut.mutate({ incidenteId, asignadoA: u.id })}
+                className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                  incidenteData?.asignadoA === u.id
+                    ? 'bg-purple-500 text-white border-purple-500'
+                    : 'bg-white hover:bg-purple-100 border-purple-200 text-purple-700'
+                }`}
+                disabled={asignarMut.isPending}
+              >
+                {u.name} ({u.role})
+              </button>
+            ))}
+            {incidenteData?.asignadoA && (
+              <button
+                onClick={() => asignarMut.mutate({ incidenteId, asignadoA: null })}
+                className="text-[10px] px-2 py-1 rounded-full border bg-white hover:bg-red-50 border-red-200 text-red-500"
+                disabled={asignarMut.isPending}
+              >
+                Quitar asignación
+              </button>
+            )}
+          </div>
+          {incidenteData?.asignadoA && (
+            <p className="text-[9px] text-purple-600 mt-1">Asignado a: {(usuariosProyecto || []).find((u: any) => u.id === incidenteData.asignadoA)?.name || 'Usuario'}</p>
+          )}
+        </div>
+      )}
+
+      {/* Bitácora panel */}
+      {showBitacora && (
+        <div className="mb-2 p-2 border rounded-lg bg-amber-50/50 max-h-48 overflow-y-auto">
+          <p className="text-[10px] font-medium text-amber-700 mb-1.5">Bitácora de Seguridad</p>
+          {bitacoraQuery.isLoading ? (
+            <div className="flex justify-center py-3"><Loader2 className="h-4 w-4 animate-spin text-amber-500" /></div>
+          ) : !bitacoraQuery.data?.length ? (
+            <p className="text-[10px] text-muted-foreground text-center py-2">Sin entradas en la bitácora</p>
+          ) : (
+            <div className="space-y-1.5">
+              {bitacoraQuery.data.map((entry: any) => (
+                <div key={entry.id} className="flex gap-2 items-start">
+                  <div className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                    entry.accion === 'creado' ? 'bg-green-100 text-green-600' :
+                    entry.accion === 'estado_cambiado' ? 'bg-blue-100 text-blue-600' :
+                    entry.accion === 'asignado' ? 'bg-purple-100 text-purple-600' :
+                    entry.accion === 'editado' ? 'bg-amber-100 text-amber-600' :
+                    entry.accion === 'eliminado' ? 'bg-red-100 text-red-600' :
+                    entry.accion === 'foto_marcada' ? 'bg-orange-100 text-orange-600' :
+                    'bg-gray-100 text-gray-600'
+                  }`}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-2.5 w-2.5">
+                      {entry.accion === 'creado' ? <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></> :
+                       entry.accion === 'estado_cambiado' ? <><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></> :
+                       entry.accion === 'asignado' ? <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></> :
+                       <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></>}
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] leading-snug">
+                      <span className="font-medium">{entry.usuario?.name || 'Sistema'}</span>{' '}
+                      <span className="text-muted-foreground">{entry.detalle}</span>
+                    </p>
+                    <p className="text-[9px] text-muted-foreground/60">
+                      {new Date(entry.createdAt).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Foto Editor overlay */}
       {showFotoEditor && incidenteData?.fotoUrl && (

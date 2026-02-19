@@ -41,6 +41,7 @@ import {
   checklistsSeguridad, InsertChecklistSeguridad,
   checklistItemsSeguridad, InsertChecklistItemSeguridad,
   mensajesSeguridad, InsertMensajeSeguridad,
+  bitacoraSeguridad, InsertBitacoraSeguridad,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -6902,4 +6903,97 @@ export async function getReporteGeneralSeguridad(proyectoId: number) {
       reportadoPorNombre: usuarios.find(u => u.id === i.reportadoPor)?.name || "Desconocido",
     })),
   };
+}
+
+
+// ==================== BITÁCORA DE SEGURIDAD ====================
+
+export async function crearEntradaBitacora(data: {
+  incidenteId: number;
+  proyectoId: number;
+  usuarioId: number;
+  accion: "creacion" | "cambio_estado" | "asignacion" | "edicion" | "eliminacion_mensaje" | "nota_voz" | "foto_enviada" | "foto_marcada" | "mensaje_enviado" | "exportar_pdf" | "cambio_severidad";
+  detalle?: string;
+  valorAnterior?: string;
+  valorNuevo?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const result = await db.insert(bitacoraSeguridad).values({
+    incidenteId: data.incidenteId,
+    proyectoId: data.proyectoId,
+    usuarioId: data.usuarioId,
+    accion: data.accion,
+    detalle: data.detalle || null,
+    valorAnterior: data.valorAnterior || null,
+    valorNuevo: data.valorNuevo || null,
+  });
+  return result[0].insertId;
+}
+
+export async function getBitacoraByIncidente(incidenteId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const entradas = await db.select()
+    .from(bitacoraSeguridad)
+    .where(eq(bitacoraSeguridad.incidenteId, incidenteId))
+    .orderBy(desc(bitacoraSeguridad.createdAt));
+  
+  const userIds = Array.from(new Set(entradas.map((e: any) => e.usuarioId))) as number[];
+  const usuariosList = userIds.length > 0
+    ? await db.select({ id: users.id, name: users.name, role: users.role, fotoUrl: users.fotoUrl })
+        .from(users)
+        .where(inArray(users.id, userIds))
+    : [];
+  
+  return entradas.map((e: any) => ({
+    ...e,
+    usuarioNombre: usuariosList.find((u: any) => u.id === e.usuarioId)?.name || "Desconocido",
+    usuarioRole: usuariosList.find((u: any) => u.id === e.usuarioId)?.role || "user",
+    usuarioAvatar: usuariosList.find((u: any) => u.id === e.usuarioId)?.fotoUrl || null,
+  }));
+}
+
+export async function getBitacoraByProyecto(proyectoId: number, limit = 50) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const entradas = await db.select()
+    .from(bitacoraSeguridad)
+    .where(eq(bitacoraSeguridad.proyectoId, proyectoId))
+    .orderBy(desc(bitacoraSeguridad.createdAt))
+    .limit(limit);
+  
+  const userIds = Array.from(new Set(entradas.map((e: any) => e.usuarioId))) as number[];
+  const incidenteIds = Array.from(new Set(entradas.map((e: any) => e.incidenteId))) as number[];
+  
+  const usuariosList = userIds.length > 0
+    ? await db.select({ id: users.id, name: users.name, role: users.role, fotoUrl: users.fotoUrl })
+        .from(users)
+        .where(inArray(users.id, userIds))
+    : [];
+  
+  const incidentesList = incidenteIds.length > 0
+    ? await db.select({ id: incidentesSeguridad.id, codigo: incidentesSeguridad.codigo, tipo: incidentesSeguridad.tipo })
+        .from(incidentesSeguridad)
+        .where(inArray(incidentesSeguridad.id, incidenteIds))
+    : [];
+  
+  return entradas.map((e: any) => ({
+    ...e,
+    usuarioNombre: usuariosList.find((u: any) => u.id === e.usuarioId)?.name || "Desconocido",
+    usuarioRole: usuariosList.find((u: any) => u.id === e.usuarioId)?.role || "user",
+    usuarioAvatar: usuariosList.find((u: any) => u.id === e.usuarioId)?.fotoUrl || null,
+    incidenteCodigo: incidentesList.find((i: any) => i.id === e.incidenteId)?.codigo || null,
+    incidenteTipo: incidentesList.find((i: any) => i.id === e.incidenteId)?.tipo || null,
+  }));
+}
+
+// ==================== ASIGNAR INCIDENTE ====================
+
+export async function asignarIncidenteSeguridad(incidenteId: number, asignadoA: number | null) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  await db.update(incidentesSeguridad)
+    .set({ asignadoA })
+    .where(eq(incidentesSeguridad.id, incidenteId));
 }

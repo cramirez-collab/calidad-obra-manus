@@ -824,6 +824,7 @@ export const incidentesSeguridad = mysqlTable("incidentes_seguridad", {
   fotoMarcadaBase64: text("fotoMarcadaBase64"), // Foto marcada en base64
   estado: mysqlEnum("estado_incidente", ["abierto", "en_proceso", "cerrado", "prevencion"]).default("abierto").notNull(),
   accionCorrectiva: text("accionCorrectiva"),
+  asignadoA: int("asignadoA"), // userId del segurista/responsable asignado
   cerradoPor: int("cerradoPor"),
   fechaCierre: timestamp("fechaCierre"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -832,6 +833,36 @@ export const incidentesSeguridad = mysqlTable("incidentes_seguridad", {
 
 export type IncidenteSeguridad = typeof incidentesSeguridad.$inferSelect;
 export type InsertIncidenteSeguridad = typeof incidentesSeguridad.$inferInsert;
+
+/**
+ * Bitácora de seguridad - Historial de acciones por incidente
+ */
+export const bitacoraSeguridad = mysqlTable("bitacora_seguridad", {
+  id: int("id").autoincrement().primaryKey(),
+  incidenteId: int("incidenteId").notNull(),
+  proyectoId: int("proyectoId").notNull(),
+  usuarioId: int("usuarioId").notNull(), // quien realizó la acción
+  accion: mysqlEnum("accion_bitacora", [
+    "creacion",
+    "cambio_estado",
+    "asignacion",
+    "edicion",
+    "eliminacion_mensaje",
+    "nota_voz",
+    "foto_enviada",
+    "foto_marcada",
+    "mensaje_enviado",
+    "exportar_pdf",
+    "cambio_severidad",
+  ]).notNull(),
+  detalle: text("detalle"), // descripción legible del cambio
+  valorAnterior: text("valorAnterior"), // estado/valor anterior
+  valorNuevo: text("valorNuevo"), // estado/valor nuevo
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BitacoraSeguridad = typeof bitacoraSeguridad.$inferSelect;
+export type InsertBitacoraSeguridad = typeof bitacoraSeguridad.$inferInsert;
 
 /**
  * Checklists de seguridad (encabezado)

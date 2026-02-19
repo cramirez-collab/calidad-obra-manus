@@ -210,55 +210,67 @@ export function FloatingCaptureButton() {
 
   return (
     <>
-      {/* SINGLE flex container for ALL floating buttons - right side */}
-      <div className="fixed bottom-6 right-4 z-50 flex flex-col items-center gap-3">
-        {/* WhatsApp buttons (Contratistas + Seguridad) - solo Hidalma, arriba de todo */}
+      {/* SINGLE flex container for ALL floating buttons - right side - 60% size */}
+      <div className="fixed bottom-4 right-3 z-50 flex flex-col items-center gap-1.5">
+        {/* WhatsApp buttons (Contratistas + Seguridad) - solo Hidalma */}
         <WhatsAppFloatingButtons />
 
-        {/* Seguristas solo ven WhatsApp, no los botones de acción */}
+        {/* Seguristas solo ven WhatsApp + Seguridad, no los botones de acción */}
         {!isSegurista && (
           <>
             {/* 1. Plus - Nuevo Ítem */}
             <Button
               onClick={() => setLocation("/nuevo-item")}
               size="icon"
-              className="h-10 w-10 rounded-full shadow-lg bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
+              className="h-7 w-7 rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
               title="Nuevo Ítem"
             >
-              <Plus className="h-5 w-5 text-white" strokeWidth={3} />
+              <Plus className="h-3.5 w-3.5 text-white" strokeWidth={3} />
             </Button>
 
             {/* 2. Pin - Ver Planos en modo Pin */}
             <Button
               onClick={() => setLocation("/planos?mode=pin")}
               size="icon"
-              className="h-10 w-10 rounded-full shadow-lg bg-[#E67E22] hover:bg-[#D35400] p-0 transition-transform active:scale-90"
+              className="h-7 w-7 rounded-full shadow-md bg-[#E67E22] hover:bg-[#D35400] p-0 transition-transform active:scale-90"
               title="Pin en Plano"
             >
-              <MapPin className="h-5 w-5 text-white" />
+              <MapPin className="h-3.5 w-3.5 text-white" />
             </Button>
 
             {/* 3. Crosshair - Captura rápida (nuevo ítem) */}
             <Button
               onClick={() => setLocation("/planos?mode=nuevo")}
               size="icon"
-              className="h-10 w-10 rounded-full shadow-lg bg-[#002C63] hover:bg-[#001d42] p-0 transition-transform active:scale-90"
+              className="h-7 w-7 rounded-full shadow-md bg-[#002C63] hover:bg-[#001d42] p-0 transition-transform active:scale-90"
               title="Captura Rápida"
             >
-              <Crosshair className="h-5 w-5 text-white" />
+              <Crosshair className="h-3.5 w-3.5 text-white" />
             </Button>
 
             {/* 4. QR - Escanear QR */}
             <Button
               onClick={() => { setStatus("idle"); setIsOpen(true); }}
               size="icon"
-              className="h-10 w-10 rounded-full shadow-lg bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
+              className="h-7 w-7 rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] p-0 transition-transform active:scale-90"
               title="Escanear QR"
             >
-              <QrCode className="h-5 w-5 text-white" />
+              <QrCode className="h-3.5 w-3.5 text-white" />
             </Button>
           </>
         )}
+
+        {/* 5. Seguridad - siempre visible */}
+        <Button
+          onClick={() => setLocation("/seguridad")}
+          size="icon"
+          className="h-7 w-7 rounded-full shadow-md bg-red-600 hover:bg-red-700 p-0 transition-transform active:scale-90"
+          title="Seguridad"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-white">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        </Button>
       </div>
 
       {/* QR Scanner Modal */}

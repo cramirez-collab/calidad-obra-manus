@@ -42,10 +42,9 @@ export function WhatsAppFloatingButtons() {
             href={WHATSAPP_CONTRATISTAS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-10 h-10 rounded-full shadow-lg bg-[#02B381] hover:bg-[#029970] transition-all hover:scale-110 active:scale-95"
-            style={{ boxShadow: "0 2px 8px rgba(2, 179, 129, 0.35)" }}
+            className="flex items-center justify-center w-7 h-7 rounded-full shadow-md bg-[#02B381] hover:bg-[#029970] transition-all hover:scale-110 active:scale-95"
           >
-            <WhatsAppIcon className="w-5 h-5 text-white" />
+            <WhatsAppIcon className="w-3.5 h-3.5 text-white" />
           </a>
         </TooltipTrigger>
         <TooltipContent side="left" className="bg-[#02B381] text-white border-[#029970]">
@@ -60,10 +59,9 @@ export function WhatsAppFloatingButtons() {
             href={WHATSAPP_SEGURIDAD_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-10 h-10 rounded-full shadow-lg bg-red-600 hover:bg-red-700 transition-all hover:scale-110 active:scale-95"
-            style={{ boxShadow: "0 2px 8px rgba(220, 38, 38, 0.35)" }}
+            className="flex items-center justify-center w-7 h-7 rounded-full shadow-md bg-red-600 hover:bg-red-700 transition-all hover:scale-110 active:scale-95"
           >
-            <WhatsAppIcon className="w-5 h-5 text-white" />
+            <WhatsAppIcon className="w-3.5 h-3.5 text-white" />
           </a>
         </TooltipTrigger>
         <TooltipContent side="left" className="bg-red-600 text-white border-red-700">
