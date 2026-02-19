@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, name, email, role FROM users WHERE name LIKE '%Carlos%' OR name LIKE '%Ramirez%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, name, email, role FROM users WHERE name LIKE '%Carlos%' OR name LIKE '%Ramirez%' LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Carlos Ramirez",
+      "email": "cramirez@objetiva.mx",
+      "role": "superadmin"
+    },
+    {
+      "id": "540085",
+      "name": "Julian Rodríguez Ramírez",
+      "email": "jrodriguez@objetiva.mx",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\n1\tCarlos Ramirez\tcramirez@objetiva.mx\tsuperadmin\n540085\tJulian Rodríguez Ramírez\tjrodriguez@objetiva.mx\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

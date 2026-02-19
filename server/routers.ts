@@ -51,7 +51,7 @@ const jefeResidenteProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
-// Middleware para roles que pueden subir foto después (incluye residente)
+// Middleware para roles que pueden subir foto después (incluye residente, excluye segurista)
 const canUploadFotoProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (!['superadmin', 'admin', 'supervisor', 'jefe_residente', 'residente'].includes(ctx.user.role)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Acceso denegado. No tienes permiso para subir fotos.' });
@@ -59,18 +59,21 @@ const canUploadFotoProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
-// Middleware para excluir desarrollador de operaciones de escritura (solo puede ver y comentar)
+// Middleware para excluir desarrollador y segurista de operaciones de escritura
 const noDesarrolladorProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role === 'desarrollador') {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'El rol Desarrollador solo puede ver y comentar. No puede crear, editar o eliminar registros.' });
   }
+  if (ctx.user.role === 'segurista') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'El rol Segurista solo puede editar en el módulo de Seguridad.' });
+  }
   return next({ ctx });
 });
 
-// Middleware para excluir segurista de operaciones de escritura (solo lectura + WhatsApp)
+// Middleware para excluir segurista de operaciones de escritura fuera de Seguridad
 const noSeguristaProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role === 'segurista') {
-    throw new TRPCError({ code: 'FORBIDDEN', message: 'El rol Segurista es de solo lectura. No puede crear, editar o eliminar registros.' });
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'El rol Segurista solo puede editar en el módulo de Seguridad.' });
   }
   return next({ ctx });
 });
@@ -1385,7 +1388,7 @@ export const appRouter = router({
         return { success: true, fotoUrl: 'base64-saved' };
       }),
     
-    aprobar: protectedProcedure
+    aprobar: noSeguristaProcedure
       .input(z.object({
         itemId: z.number(),
         comentario: z.string().optional(),
@@ -1486,7 +1489,7 @@ export const appRouter = router({
         return { success: true };
       }),
     
-    rechazar: protectedProcedure
+    rechazar: noSeguristaProcedure
       .input(z.object({
         itemId: z.number(),
         comentario: z.string().min(1, 'Se requiere un comentario para rechazar'),
@@ -1681,7 +1684,7 @@ export const appRouter = router({
       }),
 
     // Actualizar pin de ubicación de un ítem
-    updatePin: protectedProcedure
+    updatePin: noSeguristaProcedure
       .input(z.object({
         itemId: z.number(),
         pinPlanoId: z.number().nullable(),
@@ -2606,7 +2609,7 @@ export const appRouter = router({
       }),
     
     // Crear mensaje
-    create: protectedProcedure
+    create: noSeguristaProcedure
       .input(z.object({
         itemId: z.number(),
         texto: z.string().min(1),
@@ -2671,7 +2674,7 @@ export const appRouter = router({
       }),
     
     // Editar mensaje (solo admin/superadmin o autor)
-    update: protectedProcedure
+    update: noSeguristaProcedure
       .input(z.object({
         id: z.number(),
         texto: z.string().min(1),
@@ -3094,7 +3097,7 @@ export const appRouter = router({
           return db.getPinesByPlano(input.planoId);
         }),
 
-      crear: protectedProcedure
+      crear: noSeguristaProcedure
         .input(z.object({
           planoId: z.number(),
           itemId: z.number().optional(),
@@ -3114,7 +3117,7 @@ export const appRouter = router({
           return { id };
         }),
 
-      eliminar: protectedProcedure
+      eliminar: noSeguristaProcedure
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input }) => {
           await db.deletePlanoPin(input.id);

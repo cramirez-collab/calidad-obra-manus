@@ -981,10 +981,8 @@ export default function Bienvenida() {
   };
 
   // Acciones rápidas: Nuevo, Pines (captura), Stats, Seguridad
-  // Seguristas solo ven Seguridad
-  const quickActions = isSegurista ? [
-    { icon: AlertTriangle, label: "Seguridad", path: "/seguridad", color: "bg-red-500", roles: ['segurista'] },
-  ] : [
+  // Seguristas ven todo en lectura + Seguridad para editar
+  const quickActions = [
     { icon: Plus, label: "Nuevo", path: "/nuevo-item", color: "bg-[#02B381]", roles: ['superadmin', 'admin', 'residente', 'jefe_residente'] },
     { icon: Crosshair, label: "Pines", path: "/planos", color: "bg-[#4A90D9]", roles: ['superadmin', 'admin', 'residente', 'jefe_residente', 'supervisor'] },
     { icon: ShieldCheck, label: "Pruebas", path: "/pruebas", color: "bg-[#E67E22]", roles: ['superadmin', 'admin', 'supervisor', 'residente', 'jefe_residente'] },
@@ -1039,9 +1037,9 @@ export default function Bienvenida() {
                 <TooltipContent>{action.label}</TooltipContent>
               </Tooltip>
             ))}
-            {/* Botón Ver Planos con Pines - oculto para seguristas */}
-            {!isSegurista && (
-              <Tooltip>
+            {/* Botón Ver Planos con Pines */}
+            {
+              (<Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     size="icon"
@@ -1053,8 +1051,8 @@ export default function Bienvenida() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Ver Pines</TooltipContent>
-              </Tooltip>
-            )}
+              </Tooltip>)
+            }
             {/* Botón R - Reporte IA Análisis Profundo */}
             {isAdmin && (
               <Tooltip>
@@ -1075,9 +1073,9 @@ export default function Bienvenida() {
                 <TooltipContent>Reporte IA</TooltipContent>
               </Tooltip>
             )}
-            {/* Botón PDF Reporte Planos con Pines - oculto para seguristas */}
-            {!isSegurista && (
-              <Tooltip>
+            {/* Botón PDF Reporte Planos con Pines */}
+            {
+              (<Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     size="icon"
@@ -1090,11 +1088,11 @@ export default function Bienvenida() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>PDF Planos</TooltipContent>
-              </Tooltip>
-            )}
-            {/* Botón Avisos con badge rojo - oculto para seguristas */}
-            {!isSegurista && (
-              <Tooltip>
+              </Tooltip>)
+            }
+            {/* Botón Avisos con badge rojo */}
+            {
+              (<Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     size="icon"
@@ -1111,8 +1109,8 @@ export default function Bienvenida() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Avisos</TooltipContent>
-              </Tooltip>
-            )}
+              </Tooltip>)
+            }
 
           </div>
         </div>

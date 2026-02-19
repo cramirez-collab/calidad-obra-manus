@@ -1,0 +1,58 @@
+{
+  "query": "SELECT e.id, e.nombre, e.proyectoId, COUNT(i.id) as item_count FROM empresas e LEFT JOIN items i ON i.empresaId = e.id GROUP BY e.id, e.nombre, e.proyectoId HAVING item_count > 0 ORDER BY item_count DESC",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT e.id, e.nombre, e.proyectoId, COUNT(i.id) as item_count FROM empresas e LEFT JOIN items i ON i.empresaId = e.id GROUP BY e.id, e.nombre, e.proyectoId HAVING item_count > 0 ORDER BY item_count DESC",
+  "rows": [
+    {
+      "id": "510001",
+      "nombre": "Garcab TYP",
+      "proyectoId": "1",
+      "item_count": "18"
+    },
+    {
+      "id": "1950001",
+      "nombre": "Novotile",
+      "proyectoId": "1",
+      "item_count": "12"
+    },
+    {
+      "id": "510004",
+      "nombre": "Dcon",
+      "proyectoId": "1",
+      "item_count": "6"
+    },
+    {
+      "id": "540001",
+      "nombre": "Orca",
+      "proyectoId": "1",
+      "item_count": "5"
+    },
+    {
+      "id": "510005",
+      "nombre": "Gumik",
+      "proyectoId": "1",
+      "item_count": "3"
+    },
+    {
+      "id": "480003",
+      "nombre": "Waller ",
+      "proyectoId": "1",
+      "item_count": "3"
+    },
+    {
+      "id": "510003",
+      "nombre": "Riepsa",
+      "proyectoId": "1",
+      "item_count": "3"
+    },
+    {
+      "id": "510002",
+      "nombre": "iimsa",
+      "proyectoId": "1",
+      "item_count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tproyectoId\titem_count\n510001\tGarcab TYP\t1\t18\n1950001\tNovotile\t1\t12\n510004\tDcon\t1\t6\n540001\tOrca\t1\t5\n510005\tGumik\t1\t3\n480003\tWaller \t1\t3\n510003\tRiepsa\t1\t3\n510002\tiimsa\t1\t1\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

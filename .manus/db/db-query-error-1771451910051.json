@@ -1,0 +1,8 @@
+{
+  "query": "SELECT e.id, e.nombre, e.color, e.proyectoId, COUNT(i.id) as item_count \nFROM empresas e \nLEFT JOIN items i ON i.empresaId = e.id \nGROUP BY e.id, e.nombre, e.color, e.proyectoId \nHAVING item_count > 0 \nORDER BY item_count DESC",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT e.id, e.nombre, e.color, e.proyectoId, COUNT(i.id) as item_count \nFROM empresas e \nLEFT JOIN items i ON i.empresaId = e.id \nGROUP BY e.id, e.nombre, e.color, e.proyectoId \nHAVING item_count > 0 \nORDER BY item_count DESC",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'e.color' in 'group statement'"
+  ]
+}

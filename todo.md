@@ -4381,3 +4381,11 @@
 - [x] Agregar opciones cámara y galería en la sección "Foto Después" de ItemDetail
 - [x] Verificar si hay otros inputs de foto en ItemDetail que necesiten las dos opciones (NuevoItem ya tenía ambas)
 - [x] Eliminar iconos WhatsApp de la barra superior de Bienvenida (ya están como flotantes)
+
+## Ajuste permisos Segurista: ver todo, editar solo Seguridad
+- [x] DashboardLayout: segurista ve TODOS los módulos en navegación (baseItems + analysisItems)
+- [x] Bienvenida: segurista ve todos los iconos de acceso rápido (lectura)
+- [x] Backend: segurista puede hacer queries en todos los routers (lectura)
+- [x] Backend: noSeguristaProcedure aplicado a items.create, aprobar, rechazar, updatePin, mensajes, pines
+- [x] Frontend: admin/supervisor procedures ya bloquean segurista + noSeguristaProcedure en protectedProcedure mutations
+- [x] FloatingCaptureButton: segurista no ve botones de captura de calidad (solo WhatsApp)
