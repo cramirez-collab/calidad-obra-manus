@@ -40,6 +40,7 @@ import {
   notasVozSeguridad, InsertNotaVozSeguridad,
   checklistsSeguridad, InsertChecklistSeguridad,
   checklistItemsSeguridad, InsertChecklistItemSeguridad,
+  mensajesSeguridad, InsertMensajeSeguridad,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -6681,4 +6682,71 @@ export async function getNotaVozById(id: number) {
   if (!db) return null;
   const [result] = await db.select().from(notasVozSeguridad).where(eq(notasVozSeguridad.id, id));
   return result;
+}
+
+
+// ===== MENSAJES DE SEGURIDAD (CHAT POR INCIDENTE) =====
+
+export async function getMensajesSeguridad(incidenteId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const mensajesData = await db.select().from(mensajesSeguridad)
+    .where(and(eq(mensajesSeguridad.incidenteId, incidenteId), eq(mensajesSeguridad.eliminado, false)))
+    .orderBy(mensajesSeguridad.createdAt);
+  
+  const usuarioIds = Array.from(new Set(mensajesData.map(m => m.usuarioId)));
+  if (usuarioIds.length === 0) return [];
+  
+  const usuariosData = await db.select().from(users)
+    .where(inArray(users.id, usuarioIds));
+  
+  return mensajesData.map(m => ({
+    ...m,
+    usuario: usuariosData.find(u => u.id === m.usuarioId),
+    bullets: m.bullets ? JSON.parse(m.bullets) : null,
+  }));
+}
+
+export async function createMensajeSeguridad(data: {
+  incidenteId: number;
+  usuarioId: number;
+  texto: string;
+  tipo?: "texto" | "voz";
+  audioUrl?: string | null;
+  transcripcion?: string | null;
+  bullets?: string | null;
+  duracionSegundos?: number | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  
+  const [result] = await db.insert(mensajesSeguridad).values({
+    incidenteId: data.incidenteId,
+    usuarioId: data.usuarioId,
+    texto: data.texto,
+    tipo: data.tipo || "texto",
+    audioUrl: data.audioUrl || null,
+    transcripcion: data.transcripcion || null,
+    bullets: data.bullets || null,
+    duracionSegundos: data.duracionSegundos || null,
+  });
+  return result.insertId;
+}
+
+export async function deleteMensajeSeguridad(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(mensajesSeguridad)
+    .set({ eliminado: true })
+    .where(eq(mensajesSeguridad.id, id));
+}
+
+export async function countMensajesSeguridad(incidenteId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  const [result] = await db.select({ count: sql<number>`COUNT(*)` })
+    .from(mensajesSeguridad)
+    .where(and(eq(mensajesSeguridad.incidenteId, incidenteId), eq(mensajesSeguridad.eliminado, false)));
+  return result?.count || 0;
 }

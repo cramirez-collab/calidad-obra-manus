@@ -4404,3 +4404,17 @@
 - [x] Mostrar 5 bullets como evidencia en nota de voz
 - [x] Integrar en la página de Seguridad (tab Voz dedicado)
 - [x] Historial de notas de voz por proyecto con reproducción de audio
+
+## Chat por Incidente en Módulo de Seguridad (como ítems de calidad)
+### Backend
+- [x] Tabla mensajes_seguridad en BD (incidenteId, usuarioId, texto, audioUrl, transcripcion, bullets, tipo)
+- [x] DB helpers: getMensajesSeguridad, createMensajeSeguridad, deleteMensajeSeguridad, countMensajesSeguridad
+- [x] Router tRPC: mensajesByIncidente, enviarMensaje, enviarMensajeVoz, eliminarMensaje
+- [x] Migrar BD con pnpm db:push
+
+### Frontend
+- [x] Vista de detalle de incidente con sección de chat (IncidenteChat component)
+- [x] Input de texto para enviar mensajes (Enter para enviar, Shift+Enter nueva línea)
+- [x] Botón de micrófono para notas de voz con transcripción IA + 5 bullets
+- [x] Lista de mensajes con avatar, nombre, fecha, burbujas de chat, reproducción de audio
+- [ ] Eliminar tab "Voz" independiente (se mantiene como opción adicional)

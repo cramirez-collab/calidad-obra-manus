@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useProject } from "@/contexts/ProjectContext";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -35,7 +35,14 @@ import {
   Play,
   Square,
   Volume2,
+  ArrowLeft,
+  Trash2,
+  MoreVertical,
 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { UserAvatar } from "@/components/UserAvatar";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { compressAdaptive } from "@/lib/imageCompression";
 
 // Tipos de incidente con labels y colores
@@ -68,6 +75,7 @@ const ESTADOS = [
 ] as const;
 
 type Tab = "reportar" | "incidentes" | "stats" | "checklist" | "voz";
+type IncidenteView = "list" | "chat";
 
 // Checklist predefinido de seguridad
 const CHECKLIST_TEMPLATE = [
@@ -97,6 +105,8 @@ export default function Seguridad() {
   const { selectedProjectId, userProjects } = useProject();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("reportar");
+  const [chatIncidenteId, setChatIncidenteId] = useState<number | null>(null);
+  const [chatIncidenteInfo, setChatIncidenteInfo] = useState<any>(null);
 
   const proyectoActual = userProjects?.find((p: any) => p.id === selectedProjectId);
 
@@ -165,7 +175,20 @@ export default function Seguridad() {
 
         {/* Content */}
         {activeTab === "reportar" && <TabReportar proyectoId={selectedProjectId} />}
-        {activeTab === "incidentes" && <TabIncidentes proyectoId={selectedProjectId} />}
+        {activeTab === "incidentes" && (
+          chatIncidenteId ? (
+            <IncidenteChat
+              incidenteId={chatIncidenteId}
+              incidenteInfo={chatIncidenteInfo}
+              onBack={() => { setChatIncidenteId(null); setChatIncidenteInfo(null); }}
+            />
+          ) : (
+            <TabIncidentes
+              proyectoId={selectedProjectId}
+              onOpenChat={(id: number, info: any) => { setChatIncidenteId(id); setChatIncidenteInfo(info); }}
+            />
+          )
+        )}
         {activeTab === "stats" && <TabStats proyectoId={selectedProjectId} />}
         {activeTab === "checklist" && <TabChecklist proyectoId={selectedProjectId} />}
         {activeTab === "voz" && <TabNotasVoz proyectoId={selectedProjectId} />}
@@ -358,7 +381,7 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
 // ==========================================
 // TAB INCIDENTES - Lista con filtros
 // ==========================================
-function TabIncidentes({ proyectoId }: { proyectoId: number }) {
+function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenChat: (id: number, info: any) => void }) {
   const [filtroEstado, setFiltroEstado] = useState<string>("");
   const [filtroTipo, setFiltroTipo] = useState<string>("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -459,19 +482,19 @@ function TabIncidentes({ proyectoId }: { proyectoId: number }) {
                       </span>
                     </div>
                     {/* Acciones rápidas */}
-                    {inc.estado !== "cerrado" && (
-                      <div className="flex gap-1.5 mt-2">
-                        {inc.estado === "abierto" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-[10px] px-2 border-amber-200 text-amber-600"
-                            onClick={() => actualizarMut.mutate({ id: inc.id, estado: "en_proceso" })}
-                            disabled={actualizarMut.isPending}
-                          >
-                            <Clock className="w-3 h-3 mr-1" /> En Proceso
-                          </Button>
-                        )}
+                    <div className="flex gap-1.5 mt-2">
+                      {inc.estado !== "cerrado" && inc.estado === "abierto" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-[10px] px-2 border-amber-200 text-amber-600"
+                          onClick={() => actualizarMut.mutate({ id: inc.id, estado: "en_proceso" })}
+                          disabled={actualizarMut.isPending}
+                        >
+                          <Clock className="w-3 h-3 mr-1" /> En Proceso
+                        </Button>
+                      )}
+                      {inc.estado !== "cerrado" && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -480,8 +503,16 @@ function TabIncidentes({ proyectoId }: { proyectoId: number }) {
                         >
                           <CheckCircle2 className="w-3 h-3 mr-1" /> Cerrar
                         </Button>
-                      </div>
-                    )}
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[10px] px-2 border-blue-200 text-blue-600 ml-auto"
+                        onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, icon: tp?.icon, severidad: sv?.label, estado: es?.label, descripcion: inc.descripcion })}
+                      >
+                        <MessageCircle className="w-3 h-3 mr-1" /> Chat
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -879,6 +910,326 @@ function TabChecklist({ proyectoId }: { proyectoId: number }) {
   );
 }
 
+
+// ==========================================
+// CHAT POR INCIDENTE
+// ==========================================
+function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: number; incidenteInfo: any; onBack: () => void }) {
+  const { user } = useAuth();
+  const [mensaje, setMensaje] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const utils = trpc.useUtils();
+
+  // Voice recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingTimeRef = useRef(0);
+  const [playingId, setPlayingId] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const { data: mensajes, isLoading } = trpc.seguridad.mensajesByIncidente.useQuery({ incidenteId });
+
+  const enviarTexto = trpc.seguridad.enviarMensaje.useMutation({
+    onSuccess: () => {
+      setMensaje("");
+      utils.seguridad.mensajesByIncidente.invalidate({ incidenteId });
+      setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }), 100);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const enviarVoz = trpc.seguridad.enviarMensajeVoz.useMutation({
+    onSuccess: () => {
+      utils.seguridad.mensajesByIncidente.invalidate({ incidenteId });
+      toast.success("Nota de voz procesada");
+      setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }), 100);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const eliminarMut = trpc.seguridad.eliminarMensaje.useMutation({
+    onSuccess: () => {
+      toast.success("Mensaje eliminado");
+      utils.seguridad.mensajesByIncidente.invalidate({ incidenteId });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  // Scroll al final cuando cargan mensajes
+  useEffect(() => {
+    if (mensajes && scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight });
+    }
+  }, [mensajes]);
+
+  const handleSend = () => {
+    if (!mensaje.trim()) return;
+    enviarTexto.mutate({ incidenteId, texto: mensaje });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  // Grabar audio
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+      const recorder = new MediaRecorder(stream, { mimeType });
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(audioChunksRef.current, { type: mimeType });
+        if (blob.size < 1000) {
+          toast.error("Audio muy corto");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          enviarVoz.mutate({
+            incidenteId,
+            audioBase64: reader.result as string,
+            mimeType: mimeType.split(';')[0],
+            duracionSegundos: recordingTimeRef.current,
+          });
+        };
+        reader.readAsDataURL(blob);
+        setRecordingTime(0);
+      };
+
+      recorder.start(1000);
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+      setRecordingTime(0);
+      recordingTimeRef.current = 0;
+      timerRef.current = setInterval(() => {
+        recordingTimeRef.current += 1;
+        setRecordingTime(t => t + 1);
+      }, 1000);
+    } catch {
+      toast.error("No se pudo acceder al micrófono");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  };
+
+  const playAudio = (url: string, id: number) => {
+    if (audioRef.current) audioRef.current.pause();
+    const audio = new Audio(url);
+    audio.onended = () => setPlayingId(null);
+    audio.play();
+    audioRef.current = audio;
+    setPlayingId(id);
+  };
+
+  const stopAudio = () => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    setPlayingId(null);
+  };
+
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+
+  const canDelete = user && ['superadmin', 'admin', 'supervisor'].includes(user.role);
+
+  return (
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 200px)', minHeight: '400px' }}>
+      {/* Header */}
+      <div className="flex items-center gap-2 pb-3 border-b mb-2">
+        <button onClick={onBack} className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center">
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <div className="h-8 w-8 rounded-lg bg-red-100 flex items-center justify-center text-sm">
+          {incidenteInfo?.icon || "📝"}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold truncate">{incidenteInfo?.tipo || "Incidente"}</p>
+          <p className="text-[10px] text-muted-foreground truncate">{incidenteInfo?.descripcion?.slice(0, 60)}</p>
+        </div>
+        <Badge variant="outline" className="text-[9px] shrink-0">{incidenteInfo?.estado}</Badge>
+      </div>
+
+      {/* Mensajes */}
+      <div className="flex-1 overflow-y-auto px-1 space-y-3" ref={scrollRef}>
+        {isLoading ? (
+          <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+        ) : !mensajes?.length ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <MessageCircle className="h-10 w-10 mb-2 opacity-30" />
+            <p className="text-sm">Sin mensajes aún</p>
+            <p className="text-xs opacity-70">Escribe o graba una nota de voz</p>
+          </div>
+        ) : (
+          mensajes.map((msg: any) => {
+            const isOwn = msg.usuarioId === user?.id;
+            const isVoz = msg.tipo === 'voz';
+            return (
+              <div key={msg.id} className={`flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}>
+                <UserAvatar
+                  name={msg.usuario?.name}
+                  fotoUrl={msg.usuario?.fotoUrl}
+                  fotoBase64={(msg.usuario as any)?.fotoBase64}
+                  size="lg"
+                  showName={false}
+                />
+                <div className={`flex flex-col max-w-[80%] ${isOwn ? 'items-end' : ''}`}>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[10px] font-medium">{msg.usuario?.name || 'Usuario'}</span>
+                    <span className="text-[9px] text-muted-foreground">
+                      {format(new Date(msg.createdAt), "d MMM HH:mm", { locale: es })}
+                    </span>
+                  </div>
+                  <div className={`group relative rounded-xl px-3 py-2 ${isOwn ? 'bg-red-500 text-white' : 'bg-muted'}`}>
+                    {isVoz && (
+                      <div className="mb-1.5">
+                        <div className="flex items-center gap-2 mb-1">
+                          <button
+                            onClick={() => msg.audioUrl && (playingId === msg.id ? stopAudio() : playAudio(msg.audioUrl, msg.id))}
+                            className={`h-7 w-7 rounded-full flex items-center justify-center transition-colors ${
+                              playingId === msg.id
+                                ? (isOwn ? 'bg-white/20' : 'bg-red-500 text-white')
+                                : (isOwn ? 'bg-white/10 hover:bg-white/20' : 'bg-muted-foreground/10 hover:bg-muted-foreground/20')
+                            }`}
+                          >
+                            {playingId === msg.id ? <Square className="h-3 w-3 fill-current" /> : <Play className="h-3 w-3 fill-current ml-0.5" />}
+                          </button>
+                          <div className="flex-1">
+                            <div className={`h-1 rounded-full ${isOwn ? 'bg-white/30' : 'bg-muted-foreground/20'}`}>
+                              <div className={`h-full rounded-full ${isOwn ? 'bg-white/70' : 'bg-red-500'}`} style={{ width: playingId === msg.id ? '60%' : '100%' }} />
+                            </div>
+                          </div>
+                          {msg.duracionSegundos > 0 && (
+                            <span className={`text-[9px] ${isOwn ? 'text-white/70' : 'text-muted-foreground'}`}>
+                              {formatTime(msg.duracionSegundos)}
+                            </span>
+                          )}
+                        </div>
+                        {/* 5 Bullets */}
+                        {msg.bullets && Array.isArray(msg.bullets) && msg.bullets.length > 0 && (
+                          <div className="space-y-1 mt-1.5">
+                            {msg.bullets.map((bullet: string, i: number) => (
+                              <div key={i} className="flex gap-1.5 items-start">
+                                <div className={`h-4 w-4 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0 mt-0.5 ${
+                                  isOwn ? 'bg-white/20 text-white' : 'bg-red-500 text-white'
+                                }`}>
+                                  {i + 1}
+                                </div>
+                                <p className="text-xs leading-snug">{bullet}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {/* Transcripción colapsable */}
+                        {msg.transcripcion && (
+                          <details className="mt-1.5">
+                            <summary className={`text-[10px] cursor-pointer ${isOwn ? 'text-white/60 hover:text-white/80' : 'text-muted-foreground hover:text-foreground'}`}>
+                              Ver transcripción
+                            </summary>
+                            <p className={`text-[10px] mt-1 rounded p-1.5 leading-relaxed ${isOwn ? 'bg-white/10 text-white/80' : 'bg-background text-muted-foreground'}`}>
+                              {msg.transcripcion}
+                            </p>
+                          </details>
+                        )}
+                      </div>
+                    )}
+                    {!isVoz && (
+                      <p className="text-sm whitespace-pre-wrap break-words">{msg.texto}</p>
+                    )}
+                    {/* Eliminar */}
+                    {canDelete && (
+                      <button
+                        onClick={() => eliminarMut.mutate({ id: msg.id })}
+                        className={`absolute -top-1 ${isOwn ? '-left-6' : '-right-6'} h-5 w-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground`}
+                        title="Eliminar"
+                      >
+                        <Trash2 className="h-2.5 w-2.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Input area */}
+      <div className="pt-3 border-t mt-2">
+        {/* Recording indicator */}
+        {isRecording && (
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-sm font-mono font-bold text-red-600">{formatTime(recordingTime)}</span>
+          </div>
+        )}
+        {enviarVoz.isPending && (
+          <div className="flex items-center justify-center gap-2 mb-2 text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <span className="text-xs">Transcribiendo y generando resumen...</span>
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Textarea
+            value={mensaje}
+            onChange={(e) => setMensaje(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Escribe un mensaje..."
+            className="min-h-[44px] max-h-24 resize-none text-sm flex-1"
+            rows={1}
+          />
+          {/* Botón micrófono */}
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={enviarVoz.isPending}
+            className={`h-[44px] w-[44px] rounded-xl flex items-center justify-center transition-all shrink-0 ${
+              isRecording
+                ? 'bg-red-500 text-white animate-pulse'
+                : enviarVoz.isPending
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  : 'bg-muted hover:bg-muted/80 text-foreground'
+            }`}
+          >
+            {isRecording ? <Square className="h-4 w-4 fill-current" /> : enviarVoz.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
+          </button>
+          {/* Botón enviar */}
+          <button
+            onClick={handleSend}
+            disabled={!mensaje.trim() || enviarTexto.isPending}
+            className={`h-[44px] w-[44px] rounded-xl flex items-center justify-center transition-all shrink-0 ${
+              mensaje.trim()
+                ? 'bg-red-500 text-white hover:bg-red-600'
+                : 'bg-muted text-muted-foreground cursor-not-allowed'
+            }`}
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-1 text-center">
+          Enter enviar · Shift+Enter nueva línea · 🎙️ Nota de voz con IA
+        </p>
+      </div>
+    </div>
+  );
+}
 
 // ==========================================
 // TAB: NOTAS DE VOZ

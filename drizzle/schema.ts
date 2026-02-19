@@ -884,3 +884,27 @@ export const notasVozSeguridad = mysqlTable("notas_voz_seguridad", {
 });
 export type NotaVozSeguridad = typeof notasVozSeguridad.$inferSelect;
 export type InsertNotaVozSeguridad = typeof notasVozSeguridad.$inferInsert;
+
+
+/**
+ * Mensajes/chat por incidente de seguridad
+ * Replica el patrón de mensajes por ítem de calidad, con soporte para notas de voz
+ */
+export const mensajesSeguridad = mysqlTable("mensajes_seguridad", {
+  id: int("id").autoincrement().primaryKey(),
+  incidenteId: int("incidente_id").notNull(),
+  usuarioId: int("usuario_id").notNull(),
+  texto: text("texto").notNull(),
+  // Campos de nota de voz (opcionales)
+  audioUrl: text("audio_url"),
+  transcripcion: text("transcripcion"),
+  bullets: text("bullets"), // JSON array con 5 bullets de resumen
+  duracionSegundos: int("duracion_segundos"),
+  tipo: mysqlEnum("tipo", ["texto", "voz"]).default("texto").notNull(),
+  editado: boolean("editado").default(false).notNull(),
+  eliminado: boolean("eliminado").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+export type MensajeSeguridad = typeof mensajesSeguridad.$inferSelect;
+export type InsertMensajeSeguridad = typeof mensajesSeguridad.$inferInsert;

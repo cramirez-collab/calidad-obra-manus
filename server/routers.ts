@@ -4313,6 +4313,107 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           bullets: n.bullets ? JSON.parse(n.bullets as string) : [],
         }));
       }),
+
+    // ==================== CHAT POR INCIDENTE ====================
+    mensajesByIncidente: protectedProcedure
+      .input(z.object({ incidenteId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getMensajesSeguridad(input.incidenteId);
+      }),
+
+    enviarMensaje: protectedProcedure
+      .input(z.object({
+        incidenteId: z.number(),
+        texto: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.createMensajeSeguridad({
+          incidenteId: input.incidenteId,
+          usuarioId: ctx.user.id,
+          texto: input.texto,
+          tipo: "texto",
+        });
+        return { id, success: true };
+      }),
+
+    enviarMensajeVoz: protectedProcedure
+      .input(z.object({
+        incidenteId: z.number(),
+        audioBase64: z.string(),
+        mimeType: z.string().optional().default('audio/webm'),
+        duracionSegundos: z.number().optional().default(0),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // 1. Subir audio a S3
+        const ext = input.mimeType.includes('mp4') ? 'mp4' : 'webm';
+        const fileKey = `seguridad/voz/${input.incidenteId}/${nanoid(10)}.${ext}`;
+        const base64Data = input.audioBase64.includes(',') ? input.audioBase64.split(',')[1] : input.audioBase64;
+        const audioBuffer = Buffer.from(base64Data, 'base64');
+        const { url: audioUrl } = await storagePut(fileKey, audioBuffer, input.mimeType);
+
+        // 2. Transcribir con Whisper
+        let textoTranscrito = '';
+        try {
+          const transcripcion = await transcribeAudioBase64({
+            audioBase64: input.audioBase64,
+            mimeType: input.mimeType,
+            language: 'es-MX',
+            prompt: 'Transcribir reporte de seguridad en obra. Español de México.',
+          });
+          if (!('error' in transcripcion)) {
+            textoTranscrito = transcripcion.text;
+          }
+        } catch (e) {
+          textoTranscrito = '[Error al transcribir audio]';
+        }
+
+        // 3. Generar 5 bullets con LLM
+        let bullets: string[] = [];
+        if (textoTranscrito && textoTranscrito !== '[Error al transcribir audio]') {
+          try {
+            const llmResp = await invokeLLM({
+              messages: [
+                { role: 'system', content: 'Eres un asistente de seguridad industrial en obra. Genera EXACTAMENTE 5 bullets concisos (máximo 10 palabras cada uno) que resuman el reporte de voz. Solo devuelve los 5 bullets como JSON array de strings, sin nada más.' },
+                { role: 'user', content: textoTranscrito },
+              ],
+            });
+            const raw = typeof llmResp.choices[0]?.message?.content === 'string' ? llmResp.choices[0].message.content : '';
+            try {
+              const parsed = JSON.parse(raw.replace(/```json\n?|```/g, '').trim());
+              if (Array.isArray(parsed)) bullets = parsed.slice(0, 5);
+            } catch {
+              bullets = raw.split('\n').filter((l: string) => l.trim()).map((l: string) => l.replace(/^[-•*\d.]+\s*/, '').trim()).slice(0, 5);
+            }
+          } catch {
+            bullets = [textoTranscrito.slice(0, 80)];
+          }
+        }
+
+        // 4. Guardar mensaje de tipo voz
+        const textoDisplay = bullets.length > 0 ? bullets.map((b, i) => `${i+1}. ${b}`).join('\n') : textoTranscrito || '[Nota de voz]';
+        const id = await db.createMensajeSeguridad({
+          incidenteId: input.incidenteId,
+          usuarioId: ctx.user.id,
+          texto: textoDisplay,
+          tipo: "voz",
+          audioUrl,
+          transcripcion: textoTranscrito,
+          bullets: JSON.stringify(bullets),
+          duracionSegundos: input.duracionSegundos,
+        });
+
+        return { id, success: true, transcripcion: textoTranscrito, bullets, audioUrl };
+      }),
+
+    eliminarMensaje: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (!['superadmin', 'admin', 'supervisor'].includes(ctx.user.role)) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para eliminar mensajes' });
+        }
+        await db.deleteMensajeSeguridad(input.id);
+        return { success: true };
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;
