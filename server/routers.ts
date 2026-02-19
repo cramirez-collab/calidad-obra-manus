@@ -4224,6 +4224,95 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         await db.completarChecklist(input.id);
         return { success: true };
       }),
+
+    // ===== NOTAS DE VOZ =====
+    transcribirYResumir: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        incidenteId: z.number().optional(),
+        audioBase64: z.string(),
+        mimeType: z.string().optional(),
+        duracionSegundos: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // 1. Transcribir audio con Whisper
+        const transcripcionResult = await transcribeAudioBase64({
+          audioBase64: input.audioBase64,
+          mimeType: input.mimeType || 'audio/webm',
+          language: 'es',
+          prompt: 'Transcribir reporte de seguridad en obra de construcción',
+        });
+        if ('error' in transcripcionResult) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: transcripcionResult.error });
+        }
+        const textoTranscrito = transcripcionResult.text;
+
+        // 2. Generar 5 bullets con LLM
+        const llmResponse = await invokeLLM({
+          messages: [
+            { role: 'system', content: 'Eres un asistente de seguridad en obra de construcción. A partir de la transcripción de voz del usuario, genera exactamente 5 puntos clave (bullets) concisos y accionables. Responde SOLO con un JSON array de 5 strings, sin explicaciones adicionales. Ejemplo: ["Punto 1", "Punto 2", "Punto 3", "Punto 4", "Punto 5"]' },
+            { role: 'user', content: textoTranscrito },
+          ],
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'bullets_seguridad',
+              strict: true,
+              schema: {
+                type: 'object',
+                properties: {
+                  bullets: { type: 'array', items: { type: 'string' }, description: '5 puntos clave' },
+                },
+                required: ['bullets'],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+        let bullets: string[] = [];
+        try {
+          const rawContent = llmResponse.choices[0].message.content;
+          const contentStr = typeof rawContent === 'string' ? rawContent : JSON.stringify(rawContent);
+          const parsed = JSON.parse(contentStr || '{}');
+          bullets = (parsed.bullets || []).slice(0, 5);
+        } catch { bullets = [textoTranscrito]; }
+
+        // 3. Subir audio a S3
+        let audioUrl = '';
+        try {
+          const audioBuffer = Buffer.from(input.audioBase64.includes(',') ? input.audioBase64.split(',')[1] : input.audioBase64, 'base64');
+          const ext = input.mimeType?.includes('webm') ? 'webm' : input.mimeType?.includes('mp4') ? 'm4a' : 'webm';
+          const key = `seguridad/voz/${input.proyectoId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+          const { url } = await storagePut(key, audioBuffer, input.mimeType || 'audio/webm');
+          audioUrl = url;
+        } catch { /* audio upload optional */ }
+
+        // 4. Guardar en BD
+        const notaId = await db.crearNotaVoz({
+          proyectoId: input.proyectoId,
+          incidenteId: input.incidenteId || null,
+          creadoPorId: ctx.user.id,
+          audioUrl,
+          transcripcion: textoTranscrito,
+          bullets: JSON.stringify(bullets),
+          duracionSegundos: input.duracionSegundos || 0,
+        });
+
+        return { id: notaId, transcripcion: textoTranscrito, bullets, audioUrl };
+      }),
+
+    listarNotasVoz: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        incidenteId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const notas = await db.getNotasVozByProyecto(input.proyectoId, input.incidenteId);
+        return notas.map((n: any) => ({
+          ...n,
+          bullets: n.bullets ? JSON.parse(n.bullets as string) : [],
+        }));
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

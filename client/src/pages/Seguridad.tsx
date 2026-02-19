@@ -30,6 +30,11 @@ import {
   Eye,
   X,
   MessageCircle,
+  Mic,
+  MicOff,
+  Play,
+  Square,
+  Volume2,
 } from "lucide-react";
 import { compressAdaptive } from "@/lib/imageCompression";
 
@@ -62,7 +67,7 @@ const ESTADOS = [
   { value: "cerrado", label: "Cerrado", color: "bg-green-100 text-green-700 border-green-200" },
 ] as const;
 
-type Tab = "reportar" | "incidentes" | "stats" | "checklist";
+type Tab = "reportar" | "incidentes" | "stats" | "checklist" | "voz";
 
 // Checklist predefinido de seguridad
 const CHECKLIST_TEMPLATE = [
@@ -110,6 +115,7 @@ export default function Seguridad() {
     { id: "incidentes", label: "Incidentes", icon: Shield },
     { id: "stats", label: "Stats", icon: BarChart3 },
     { id: "checklist", label: "Checklist", icon: ClipboardCheck },
+    { id: "voz", label: "Voz", icon: Mic },
   ];
 
   return (
@@ -162,6 +168,7 @@ export default function Seguridad() {
         {activeTab === "incidentes" && <TabIncidentes proyectoId={selectedProjectId} />}
         {activeTab === "stats" && <TabStats proyectoId={selectedProjectId} />}
         {activeTab === "checklist" && <TabChecklist proyectoId={selectedProjectId} />}
+        {activeTab === "voz" && <TabNotasVoz proyectoId={selectedProjectId} />}
       </div>
     </DashboardLayout>
   );
@@ -868,6 +875,247 @@ function TabChecklist({ proyectoId }: { proyectoId: number }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+
+// ==========================================
+// TAB: NOTAS DE VOZ
+// ==========================================
+function TabNotasVoz({ proyectoId }: { proyectoId: number }) {
+  const { user } = useAuth();
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [playingId, setPlayingId] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingTimeRef = useRef(0);
+
+  const notasQuery = trpc.seguridad.listarNotasVoz.useQuery({ proyectoId });
+  const transcribirMut = trpc.seguridad.transcribirYResumir.useMutation({
+    onSuccess: () => {
+      notasQuery.refetch();
+      toast.success("Nota de voz procesada");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  // Iniciar grabación
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+        ? 'audio/webm;codecs=opus' 
+        : MediaRecorder.isTypeSupported('audio/webm') 
+          ? 'audio/webm' 
+          : 'audio/mp4';
+      const recorder = new MediaRecorder(stream, { mimeType });
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunks, { type: mimeType });
+        setAudioChunks(chunks);
+        
+        // Convertir a base64 y enviar
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result as string;
+          transcribirMut.mutate({
+            proyectoId,
+            audioBase64: base64,
+            mimeType: mimeType.split(';')[0],
+            duracionSegundos: recordingTimeRef.current,
+          });
+        };
+        reader.readAsDataURL(blob);
+        setRecordingTime(0);
+      };
+
+      recorder.start(1000);
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      recordingTimeRef.current = 0;
+      timerRef.current = setInterval(() => {
+        recordingTimeRef.current += 1;
+        setRecordingTime(t => t + 1);
+      }, 1000);
+    } catch (err) {
+      toast.error("No se pudo acceder al micrófono. Verifica los permisos.");
+    }
+  };
+
+  // Detener grabación
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+    setIsRecording(false);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  // Reproducir audio
+  const playAudio = (url: string, id: number) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    const audio = new Audio(url);
+    audio.onended = () => setPlayingId(null);
+    audio.play();
+    audioRef.current = audio;
+    setPlayingId(id);
+  };
+
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setPlayingId(null);
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Botón de grabación */}
+      <Card className="p-6 text-center">
+        <p className="text-sm text-muted-foreground mb-3">
+          Graba un reporte de voz. Se transcribirá y generará 5 puntos clave automáticamente.
+        </p>
+
+        {/* Indicador de grabación */}
+        {isRecording && (
+          <div className="mb-4 flex items-center justify-center gap-3">
+            <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-2xl font-mono font-bold text-red-600">{formatTime(recordingTime)}</span>
+          </div>
+        )}
+
+        {/* Procesando */}
+        {transcribirMut.isPending && (
+          <div className="mb-4 flex items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">Transcribiendo y generando resumen...</span>
+          </div>
+        )}
+
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={transcribirMut.isPending}
+          className={`h-20 w-20 rounded-full flex items-center justify-center mx-auto transition-all shadow-lg ${
+            isRecording
+              ? "bg-red-500 hover:bg-red-600 scale-110 animate-pulse"
+              : transcribirMut.isPending
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-red-500 hover:bg-red-600 hover:scale-105"
+          }`}
+        >
+          {isRecording ? (
+            <Square className="h-8 w-8 text-white fill-white" />
+          ) : transcribirMut.isPending ? (
+            <Loader2 className="h-8 w-8 text-white animate-spin" />
+          ) : (
+            <Mic className="h-8 w-8 text-white" />
+          )}
+        </button>
+
+        <p className="text-xs text-muted-foreground mt-3">
+          {isRecording ? "Toca para detener" : transcribirMut.isPending ? "Procesando..." : "Toca para grabar"}
+        </p>
+      </Card>
+
+      {/* Lista de notas de voz */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold flex items-center gap-2">
+          <Volume2 className="h-4 w-4" />
+          Notas de Voz ({notasQuery.data?.length || 0})
+        </h3>
+
+        {notasQuery.isLoading && (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
+        {notasQuery.data?.length === 0 && !notasQuery.isLoading && (
+          <Card className="p-8 text-center">
+            <MicOff className="h-10 w-10 mx-auto text-muted-foreground/30 mb-2" />
+            <p className="text-sm text-muted-foreground">No hay notas de voz aún</p>
+            <p className="text-xs text-muted-foreground/70">Graba tu primer reporte de seguridad</p>
+          </Card>
+        )}
+
+        {notasQuery.data?.map((nota: any) => (
+          <Card key={nota.id} className="p-4">
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
+                <Mic className="h-4 w-4 text-red-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{nota.creadoPorNombre || "Usuario"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(nota.fechaCreacion).toLocaleString("es-MX", { 
+                    day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" 
+                  })}
+                  {nota.duracionSegundos > 0 && ` · ${formatTime(nota.duracionSegundos)}`}
+                </p>
+              </div>
+              {nota.audioUrl && (
+                <button
+                  onClick={() => playingId === nota.id ? stopAudio() : playAudio(nota.audioUrl, nota.id)}
+                  className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+                    playingId === nota.id ? "bg-red-500 text-white" : "bg-muted hover:bg-muted/80"
+                  }`}
+                >
+                  {playingId === nota.id ? <Square className="h-3 w-3 fill-current" /> : <Play className="h-3 w-3 fill-current ml-0.5" />}
+                </button>
+              )}
+            </div>
+
+            {/* 5 Bullets */}
+            <div className="space-y-1.5 mb-2">
+              {(nota.bullets as string[])?.map((bullet: string, i: number) => (
+                <div key={i} className="flex gap-2 items-start">
+                  <div className="h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                    {i + 1}
+                  </div>
+                  <p className="text-sm leading-snug">{bullet}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Transcripción colapsable */}
+            {nota.transcripcion && (
+              <details className="mt-2">
+                <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                  Ver transcripción completa
+                </summary>
+                <p className="text-xs text-muted-foreground mt-1 bg-muted/50 rounded-lg p-2 leading-relaxed">
+                  {nota.transcripcion}
+                </p>
+              </details>
+            )}
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

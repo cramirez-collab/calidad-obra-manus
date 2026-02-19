@@ -4389,3 +4389,18 @@
 - [x] Backend: noSeguristaProcedure aplicado a items.create, aprobar, rechazar, updatePin, mensajes, pines
 - [x] Frontend: admin/supervisor procedures ya bloquean segurista + noSeguristaProcedure en protectedProcedure mutations
 - [x] FloatingCaptureButton: segurista no ve botones de captura de calidad (solo WhatsApp)
+
+## Chat con Micrófono en Módulo de Seguridad
+### Backend
+- [x] Endpoint para transcribir audio (usar transcribeAudioBase64 helper)
+- [x] Endpoint para generar 5 bullets de resumen con LLM a partir de transcripción
+- [x] Tabla notas_voz_seguridad en BD (incidenteId, audioUrl, transcripcion, bullets, creadoPor, fecha)
+- [x] Migrar BD con pnpm db:push
+
+### Frontend
+- [x] Componente de grabación de voz (MediaRecorder API)
+- [x] Botón de micrófono con animación de grabando
+- [x] Subir audio a S3, transcribir, generar bullets
+- [x] Mostrar 5 bullets como evidencia en nota de voz
+- [x] Integrar en la página de Seguridad (tab Voz dedicado)
+- [x] Historial de notas de voz por proyecto con reproducción de audio

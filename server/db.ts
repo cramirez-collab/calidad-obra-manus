@@ -37,6 +37,7 @@ import {
   pruebasResultado, InsertPruebaResultado,
   pruebasBitacora, InsertPruebaBitacora,
   incidentesSeguridad, InsertIncidenteSeguridad,
+  notasVozSeguridad, InsertNotaVozSeguridad,
   checklistsSeguridad, InsertChecklistSeguridad,
   checklistItemsSeguridad, InsertChecklistItemSeguridad,
 } from "../drizzle/schema";
@@ -6639,4 +6640,45 @@ export async function completarChecklist(checklistId: number) {
     puntajeTotal: total,
     puntajeObtenido: cumplidos,
   }).where(eq(checklistsSeguridad.id, checklistId));
+}
+
+
+// ===== NOTAS DE VOZ SEGURIDAD =====
+
+export async function crearNotaVoz(data: InsertNotaVozSeguridad) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const [result] = await db.insert(notasVozSeguridad).values(data);
+  return result.insertId;
+}
+
+export async function getNotasVozByProyecto(proyectoId: number, incidenteId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(notasVozSeguridad.proyectoId, proyectoId)];
+  if (incidenteId) conditions.push(eq(notasVozSeguridad.incidenteId, incidenteId));
+  return db.select({
+    id: notasVozSeguridad.id,
+    proyectoId: notasVozSeguridad.proyectoId,
+    incidenteId: notasVozSeguridad.incidenteId,
+    creadoPorId: notasVozSeguridad.creadoPorId,
+    audioUrl: notasVozSeguridad.audioUrl,
+    transcripcion: notasVozSeguridad.transcripcion,
+    bullets: notasVozSeguridad.bullets,
+    duracionSegundos: notasVozSeguridad.duracionSegundos,
+    fechaCreacion: notasVozSeguridad.fechaCreacion,
+    creadoPorNombre: users.name,
+    creadoPorFoto: users.fotoUrl,
+  })
+    .from(notasVozSeguridad)
+    .leftJoin(users, eq(notasVozSeguridad.creadoPorId, users.id))
+    .where(and(...conditions))
+    .orderBy(desc(notasVozSeguridad.fechaCreacion));
+}
+
+export async function getNotaVozById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.select().from(notasVozSeguridad).where(eq(notasVozSeguridad.id, id));
+  return result;
 }

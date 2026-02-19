@@ -865,3 +865,22 @@ export const checklistItemsSeguridad = mysqlTable("checklist_items_seguridad", {
 
 export type ChecklistItemSeguridad = typeof checklistItemsSeguridad.$inferSelect;
 export type InsertChecklistItemSeguridad = typeof checklistItemsSeguridad.$inferInsert;
+
+
+/**
+ * Notas de voz del módulo de seguridad
+ * El usuario graba audio, se transcribe con Whisper, se generan 5 bullets con LLM
+ */
+export const notasVozSeguridad = mysqlTable("notas_voz_seguridad", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyecto_id").notNull(),
+  incidenteId: int("incidente_id"), // Opcional: puede estar vinculada a un incidente
+  creadoPorId: int("creado_por_id").notNull(),
+  audioUrl: text("audio_url"), // URL del audio en S3
+  transcripcion: text("transcripcion"), // Texto completo transcrito
+  bullets: text("bullets"), // JSON array con los 5 bullets de resumen
+  duracionSegundos: int("duracion_segundos"),
+  fechaCreacion: timestamp("fecha_creacion").defaultNow().notNull(),
+});
+export type NotaVozSeguridad = typeof notasVozSeguridad.$inferSelect;
+export type InsertNotaVozSeguridad = typeof notasVozSeguridad.$inferInsert;
