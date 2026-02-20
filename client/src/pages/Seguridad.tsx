@@ -1386,26 +1386,26 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
   return (
     <div className="space-y-4">
       {/* Resumen */}
-      <div className="grid grid-cols-4 gap-2">
-        <Card className="p-3 text-center">
-          <p className="text-2xl font-bold">{stats.total}</p>
-          <p className="text-[10px] text-muted-foreground">Total</p>
+      <div className="grid grid-cols-5 gap-1.5">
+        <Card className="p-2 text-center">
+          <p className="text-lg font-bold">{stats.total}</p>
+          <p className="text-[8px] text-muted-foreground">Total</p>
         </Card>
-        <Card className="p-3 text-center border-red-200">
-          <p className="text-2xl font-bold text-red-600">{stats.abiertos}</p>
-          <p className="text-[10px] text-muted-foreground">Abiertos</p>
+        <Card className="p-2 text-center border-red-200">
+          <p className="text-lg font-bold text-red-600">{stats.abiertos}</p>
+          <p className="text-[8px] text-muted-foreground">Abiertos</p>
         </Card>
-        <Card className="p-3 text-center border-amber-200">
-          <p className="text-2xl font-bold text-amber-600">{stats.enProceso}</p>
-          <p className="text-[10px] text-muted-foreground">En Proceso</p>
+        <Card className="p-2 text-center border-amber-200">
+          <p className="text-lg font-bold text-amber-600">{stats.enProceso}</p>
+          <p className="text-[8px] text-muted-foreground">Proceso</p>
         </Card>
-        <Card className="p-3 text-center border-blue-200">
-          <p className="text-2xl font-bold text-blue-600">{stats.prevencion || 0}</p>
-          <p className="text-[10px] text-muted-foreground">Prevención</p>
+        <Card className="p-2 text-center border-blue-200">
+          <p className="text-lg font-bold text-blue-600">{stats.prevencion || 0}</p>
+          <p className="text-[8px] text-muted-foreground">Prevención</p>
         </Card>
-        <Card className="p-3 text-center border-green-200">
-          <p className="text-2xl font-bold text-green-600">{stats.cerrados}</p>
-          <p className="text-[10px] text-muted-foreground">Cerrados</p>
+        <Card className="p-2 text-center border-green-200">
+          <p className="text-lg font-bold text-green-600">{stats.cerrados}</p>
+          <p className="text-[8px] text-muted-foreground">Cerrados</p>
         </Card>
       </div>
 

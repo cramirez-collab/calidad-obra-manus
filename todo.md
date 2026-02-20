@@ -4654,3 +4654,4 @@
 - [ ] Mostrar fotos de evidencia en el PDF generado
 - [ ] UI historial de reportes con lista y comparacion
 - [ ] Eliminar reportes del historial
+- [x] Ajustar conteos de TabStats a una sola línea (5 columnas)
