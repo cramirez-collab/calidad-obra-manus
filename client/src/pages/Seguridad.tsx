@@ -741,7 +741,7 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
         <select
           value={asignadoA || ''}
           onChange={(e) => setAsignadoA(e.target.value ? Number(e.target.value) : undefined)}
-          className="w-full h-11 rounded-xl border-2 bg-background text-sm px-3 font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
+          className="w-full h-11 rounded-xl border-2 bg-background text-[8pt] px-3 font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
         >
           <option value="">Sin asignar</option>
           {(() => {

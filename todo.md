@@ -4630,3 +4630,4 @@
 - [x] Rediseñar selector de ubicación/nivel más grande y accesible (modal/sheet en vez de dropdown pequeño)
 - [x] Hacer evidencia fotográfica más visible y clara en el formulario
 - [x] Optimizar layout mobile-first del formulario de reporte completo
+- [x] Reducir tamaño de letra del select de segurista asignado a 8pt
