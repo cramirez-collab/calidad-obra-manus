@@ -59,6 +59,7 @@ import {
   type LucideIcon,
   Upload,
   Image as ImageLucide,
+  MapPin,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -243,6 +244,66 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
   const galleryRef = useRef<HTMLInputElement>(null);
   const utils = trpc.useUtils();
 
+  // Voice recording for description
+  const [isRecordingDesc, setIsRecordingDesc] = useState(false);
+  const [recordingTimeDesc, setRecordingTimeDesc] = useState(0);
+  const descRecorderRef = useRef<MediaRecorder | null>(null);
+  const descChunksRef = useRef<Blob[]>([]);
+  const descTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const descRecTimeRef = useRef(0);
+
+  const vozMut = trpc.seguridad.vozADescripcion.useMutation({
+    onSuccess: (data) => {
+      setDescripcion(data.resumen);
+      toast.success("Voz transcrita");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const startRecordingDesc = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+      const recorder = new MediaRecorder(stream, { mimeType });
+      descChunksRef.current = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) descChunksRef.current.push(e.data); };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(descChunksRef.current, { type: mimeType });
+        if (blob.size < 1000) { toast.error("Audio muy corto"); return; }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          vozMut.mutate({ audioBase64: reader.result as string, mimeType: mimeType.split(';')[0] });
+        };
+        reader.readAsDataURL(blob);
+      };
+      recorder.start();
+      descRecorderRef.current = recorder;
+      setIsRecordingDesc(true);
+      setRecordingTimeDesc(0);
+      descRecTimeRef.current = 0;
+      descTimerRef.current = setInterval(() => {
+        descRecTimeRef.current += 1;
+        setRecordingTimeDesc(descRecTimeRef.current);
+      }, 1000);
+    } catch {
+      toast.error("No se pudo acceder al micrófono");
+    }
+  };
+
+  const stopRecordingDesc = () => {
+    if (descRecorderRef.current?.state === 'recording') descRecorderRef.current.stop();
+    if (descTimerRef.current) clearInterval(descTimerRef.current);
+    setIsRecordingDesc(false);
+  };
+
+  // Ubicación: niveles y unidades
+  const { data: nivelesData } = trpc.seguridad.nivelesYUnidades.useQuery({ proyectoId });
+  const [showUbicDropdown, setShowUbicDropdown] = useState(false);
+  const [expandedNivel, setExpandedNivel] = useState<string | null>(null);
+
   // Fetch custom types for this project
   const { data: tiposCustom } = trpc.seguridad.tiposIncidencia.useQuery({ proyectoId });
   type TipoItem = { value: string; label: string; Icon: LucideIcon; color: string; iconColor: string };
@@ -418,27 +479,124 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
         )}
       </div>
 
-      {/* Descripción */}
+      {/* Descripción con botón de voz */}
       <div>
         <label className="text-xs font-semibold text-muted-foreground mb-1 block">Descripción *</label>
-        <Textarea
-          value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
-          placeholder="Describe brevemente el incidente..."
-          rows={3}
-          className="resize-none text-sm"
-        />
+        <div className="relative">
+          <Textarea
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            placeholder="Describe brevemente el incidente..."
+            rows={3}
+            className="resize-none text-sm pr-12"
+          />
+          <button
+            type="button"
+            onClick={isRecordingDesc ? stopRecordingDesc : startRecordingDesc}
+            disabled={vozMut.isPending}
+            className={`absolute right-2 top-2 h-8 w-8 rounded-full flex items-center justify-center transition-all ${
+              isRecordingDesc
+                ? 'bg-red-500 text-white animate-pulse'
+                : vozMut.isPending
+                  ? 'bg-gray-200 text-gray-400'
+                  : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
+            }`}
+          >
+            {vozMut.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isRecordingDesc ? (
+              <Square className="w-3 h-3 fill-current" />
+            ) : (
+              <Mic className="w-4 h-4" />
+            )}
+          </button>
+          {isRecordingDesc && (
+            <span className="absolute right-12 top-3 text-[10px] text-red-500 font-mono">
+              {Math.floor(recordingTimeDesc / 60)}:{(recordingTimeDesc % 60).toString().padStart(2, '0')}
+            </span>
+          )}
+        </div>
+        {vozMut.isPending && (
+          <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+            <Loader2 className="w-3 h-3 animate-spin" /> Transcribiendo y resumiendo...
+          </p>
+        )}
       </div>
 
-      {/* Ubicación */}
+      {/* Ubicación con desplegable de niveles/unidades + texto libre */}
       <div>
         <label className="text-xs font-semibold text-muted-foreground mb-1 block">Ubicación (zona/nivel)</label>
-        <Input
-          value={ubicacion}
-          onChange={(e) => setUbicacion(e.target.value)}
-          placeholder="Ej: Nivel 3, Zona A"
-          className="text-sm"
-        />
+        <div className="relative">
+          <div className="flex gap-2">
+            <Input
+              value={ubicacion}
+              onChange={(e) => setUbicacion(e.target.value)}
+              placeholder="Ej: Nivel 3, Depto 101"
+              className="text-sm flex-1"
+            />
+            <button
+              type="button"
+              onClick={() => setShowUbicDropdown(!showUbicDropdown)}
+              className="h-9 w-9 rounded-lg border flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+            >
+              <MapPin className="w-4 h-4" />
+            </button>
+          </div>
+          {showUbicDropdown && nivelesData && (
+            <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-background border rounded-lg shadow-lg max-h-60 overflow-auto">
+              {nivelesData.map((n) => (
+                <div key={n.nivel}>
+                  <button
+                    type="button"
+                    className="w-full text-left px-3 py-2 text-xs font-semibold hover:bg-muted flex items-center justify-between border-b"
+                    onClick={() => {
+                      if (expandedNivel === n.nivel) {
+                        setExpandedNivel(null);
+                      } else {
+                        setExpandedNivel(n.nivel);
+                      }
+                    }}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Building2 className="w-3 h-3 text-muted-foreground" />
+                      {n.nivel}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">{n.unidades.length} uds</span>
+                  </button>
+                  {expandedNivel === n.nivel && (
+                    <div className="bg-muted/30">
+                      <button
+                        type="button"
+                        className="w-full text-left px-6 py-1.5 text-xs hover:bg-muted/60 text-emerald-600 font-medium"
+                        onClick={() => {
+                          setUbicacion(n.nivel);
+                          setShowUbicDropdown(false);
+                          setExpandedNivel(null);
+                        }}
+                      >
+                        Seleccionar {n.nivel} (general)
+                      </button>
+                      {n.unidades.map((u) => (
+                        <button
+                          key={u}
+                          type="button"
+                          className="w-full text-left px-6 py-1.5 text-xs hover:bg-muted/60"
+                          onClick={() => {
+                            setUbicacion(`${n.nivel} - ${u}`);
+                            setShowUbicDropdown(false);
+                            setExpandedNivel(null);
+                          }}
+                        >
+                          {u}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Botón enviar */}

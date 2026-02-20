@@ -1,0 +1,102 @@
+{
+  "query": "SELECT DISTINCT nivel, COUNT(*) as cnt FROM unidades WHERE proyectoId = 1 AND activo = 1 GROUP BY nivel ORDER BY nivel LIMIT 30",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT DISTINCT nivel, COUNT(*) as cnt FROM unidades WHERE proyectoId = 1 AND activo = 1 GROUP BY nivel ORDER BY nivel LIMIT 30",
+  "rows": [
+    {
+      "nivel": "NULL",
+      "cnt": "1"
+    },
+    {
+      "nivel": "-5",
+      "cnt": "2"
+    },
+    {
+      "nivel": "1",
+      "cnt": "14"
+    },
+    {
+      "nivel": "2",
+      "cnt": "10"
+    },
+    {
+      "nivel": "3",
+      "cnt": "8"
+    },
+    {
+      "nivel": "4",
+      "cnt": "8"
+    },
+    {
+      "nivel": "5",
+      "cnt": "8"
+    },
+    {
+      "nivel": "6",
+      "cnt": "8"
+    },
+    {
+      "nivel": "7",
+      "cnt": "8"
+    },
+    {
+      "nivel": "8",
+      "cnt": "8"
+    },
+    {
+      "nivel": "9",
+      "cnt": "8"
+    },
+    {
+      "nivel": "10",
+      "cnt": "8"
+    },
+    {
+      "nivel": "11",
+      "cnt": "8"
+    },
+    {
+      "nivel": "12",
+      "cnt": "8"
+    },
+    {
+      "nivel": "13",
+      "cnt": "8"
+    },
+    {
+      "nivel": "14",
+      "cnt": "6"
+    },
+    {
+      "nivel": "15",
+      "cnt": "5"
+    },
+    {
+      "nivel": "16",
+      "cnt": "6"
+    },
+    {
+      "nivel": "17",
+      "cnt": "5"
+    },
+    {
+      "nivel": "18",
+      "cnt": "5"
+    },
+    {
+      "nivel": "19",
+      "cnt": "5"
+    },
+    {
+      "nivel": "20",
+      "cnt": "6"
+    },
+    {
+      "nivel": "21",
+      "cnt": "5"
+    }
+  ],
+  "messages": [],
+  "stdout": "nivel\tcnt\nNULL\t1\n-5\t2\n1\t14\n2\t10\n3\t8\n4\t8\n5\t8\n6\t8\n7\t8\n8\t8\n9\t8\n10\t8\n11\t8\n12\t8\n13\t8\n14\t6\n15\t5\n16\t6\n17\t5\n18\t5\n19\t5\n20\t6\n21\t5\n",
+  "stderr": "",
+  "execution_time_ms": 184
+}

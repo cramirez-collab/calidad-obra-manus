@@ -4344,6 +4344,79 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         }));
       }),
 
+    // ==================== VOZ A DESCRIPCIÓN ====================
+    vozADescripcion: protectedProcedure
+      .input(z.object({
+        audioBase64: z.string(),
+        mimeType: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const transcripcionResult = await transcribeAudioBase64({
+          audioBase64: input.audioBase64,
+          mimeType: input.mimeType || 'audio/webm',
+          language: 'es',
+          prompt: 'Transcribir reporte de incidente de seguridad en obra de construcción',
+        });
+        if ('error' in transcripcionResult) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: transcripcionResult.error });
+        }
+        const textoTranscrito = transcripcionResult.text;
+
+        // Generar resumen de acción concreta en máximo 5 palabras
+        const llmResponse = await invokeLLM({
+          messages: [
+            { role: 'system', content: 'Eres un asistente de seguridad industrial en obra. A partir de la transcripción de voz, genera UNA SOLA frase de acción concreta de MÁXIMO 5 palabras que describa el incidente. Ejemplos: "Caída de material nivel 3", "Cable expuesto zona norte", "Trabajador sin casco piso 5". Responde SOLO con un JSON con el campo "resumen". Sin explicaciones.' },
+            { role: 'user', content: textoTranscrito },
+          ],
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'resumen_voz',
+              strict: true,
+              schema: {
+                type: 'object',
+                properties: {
+                  resumen: { type: 'string', description: 'Frase de acción concreta de máximo 5 palabras' },
+                },
+                required: ['resumen'],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+        let resumen = textoTranscrito;
+        try {
+          const rawContent = llmResponse.choices[0].message.content;
+          const contentStr = typeof rawContent === 'string' ? rawContent : JSON.stringify(rawContent);
+          const parsed = JSON.parse(contentStr || '{}');
+          resumen = parsed.resumen || textoTranscrito;
+        } catch { /* fallback to full transcription */ }
+
+        return { transcripcion: textoTranscrito, resumen };
+      }),
+
+    // ==================== NIVELES Y UNIDADES PARA UBICACIÓN ====================
+    nivelesYUnidades: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        const unidadesList = await db.getUnidadesByProyecto(input.proyectoId);
+        // Agrupar por nivel
+        const nivelesMap = new Map<number | null, string[]>();
+        for (const u of unidadesList) {
+          const nivel = (u as any).nivel;
+          if (!nivelesMap.has(nivel)) nivelesMap.set(nivel, []);
+          nivelesMap.get(nivel)!.push((u as any).nombre);
+        }
+        const niveles = Array.from(nivelesMap.entries())
+          .sort((a, b) => (a[0] ?? -999) - (b[0] ?? -999))
+          .map(([nivel, unidades]) => ({
+            nivel: nivel !== null ? `Nivel ${nivel}` : 'Sin nivel',
+            nivelNum: nivel,
+            unidades,
+          }));
+        return niveles;
+      }),
+
     // ==================== CHAT POR INCIDENTE ====================
     mensajesByIncidente: protectedProcedure
       .input(z.object({ incidenteId: z.number() }))

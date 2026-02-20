@@ -1,0 +1,79 @@
+{
+  "query": "SELECT DISTINCT nivel FROM unidades WHERE proyectoId = 1 AND activo = 1 ORDER BY nivel",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT DISTINCT nivel FROM unidades WHERE proyectoId = 1 AND activo = 1 ORDER BY nivel",
+  "rows": [
+    {
+      "nivel": "NULL"
+    },
+    {
+      "nivel": "-5"
+    },
+    {
+      "nivel": "1"
+    },
+    {
+      "nivel": "2"
+    },
+    {
+      "nivel": "3"
+    },
+    {
+      "nivel": "4"
+    },
+    {
+      "nivel": "5"
+    },
+    {
+      "nivel": "6"
+    },
+    {
+      "nivel": "7"
+    },
+    {
+      "nivel": "8"
+    },
+    {
+      "nivel": "9"
+    },
+    {
+      "nivel": "10"
+    },
+    {
+      "nivel": "11"
+    },
+    {
+      "nivel": "12"
+    },
+    {
+      "nivel": "13"
+    },
+    {
+      "nivel": "14"
+    },
+    {
+      "nivel": "15"
+    },
+    {
+      "nivel": "16"
+    },
+    {
+      "nivel": "17"
+    },
+    {
+      "nivel": "18"
+    },
+    {
+      "nivel": "19"
+    },
+    {
+      "nivel": "20"
+    },
+    {
+      "nivel": "21"
+    }
+  ],
+  "messages": [],
+  "stdout": "nivel\nNULL\n-5\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n",
+  "stderr": "",
+  "execution_time_ms": 117
+}

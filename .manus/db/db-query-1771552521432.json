@@ -1,0 +1,90 @@
+{
+  "query": "SELECT nivel, nombre FROM unidades WHERE proyectoId = 1 AND activo = 1 ORDER BY nivel, nombre LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT nivel, nombre FROM unidades WHERE proyectoId = 1 AND activo = 1 ORDER BY nivel, nombre LIMIT 20",
+  "rows": [
+    {
+      "nivel": "NULL",
+      "nombre": "C1"
+    },
+    {
+      "nivel": "-5",
+      "nombre": "Sotano 4"
+    },
+    {
+      "nivel": "-5",
+      "nombre": "Sotano 5"
+    },
+    {
+      "nivel": "1",
+      "nombre": "101"
+    },
+    {
+      "nivel": "1",
+      "nombre": "102"
+    },
+    {
+      "nivel": "1",
+      "nombre": "103"
+    },
+    {
+      "nivel": "1",
+      "nombre": "105"
+    },
+    {
+      "nivel": "1",
+      "nombre": "106"
+    },
+    {
+      "nivel": "1",
+      "nombre": "E1"
+    },
+    {
+      "nivel": "1",
+      "nombre": "FN1"
+    },
+    {
+      "nivel": "1",
+      "nombre": "FO1"
+    },
+    {
+      "nivel": "1",
+      "nombre": "FP1"
+    },
+    {
+      "nivel": "1",
+      "nombre": "FS1"
+    },
+    {
+      "nivel": "1",
+      "nombre": "Gym"
+    },
+    {
+      "nivel": "1",
+      "nombre": "Lobby"
+    },
+    {
+      "nivel": "1",
+      "nombre": "Lud"
+    },
+    {
+      "nivel": "1",
+      "nombre": "P1"
+    },
+    {
+      "nivel": "2",
+      "nombre": "201"
+    },
+    {
+      "nivel": "2",
+      "nombre": "202"
+    },
+    {
+      "nivel": "2",
+      "nombre": "203"
+    }
+  ],
+  "messages": [],
+  "stdout": "nivel\tnombre\nNULL\tC1\n-5\tSotano 4\n-5\tSotano 5\n1\t101\n1\t102\n1\t103\n1\t105\n1\t106\n1\tE1\n1\tFN1\n1\tFO1\n1\tFP1\n1\tFS1\n1\tGym\n1\tLobby\n1\tLud\n1\tP1\n2\t201\n2\t202\n2\t203\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

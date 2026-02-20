@@ -4592,3 +4592,7 @@
 - [x] Filtro "Solo mis asignados" en pestaña Incidentes (botón naranja toggle)
 - [x] Agregar rol Segurista a la pantalla de roles con sus permisos (Reportar, Subir evidencias, Ver asignados)
 - [x] Verificar 12 seguristas activos en BD con clave 123456 (4 duplicados Cynthia desactivados, 12 en proyecto Hidalma)
+
+### Voz en Descripción + Ubicación Desplegable (Feb 2026)
+- [x] Botón de voz en descripción que transcriba audio y resuma en acción concreta de 5 palabras con LLM
+- [x] Cambiar campo ubicación a desplegable con niveles/unidades del proyecto + opción texto libre
