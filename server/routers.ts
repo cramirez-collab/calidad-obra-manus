@@ -4625,8 +4625,8 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
     // Dashboard para seguristas
     dashboardSegurista: protectedProcedure
       .input(z.object({ proyectoId: z.number() }))
-      .query(async ({ input }) => {
-        return db.getDashboardSegurista(input.proyectoId);
+      .query(async ({ input, ctx }) => {
+        return db.getDashboardSegurista(input.proyectoId, ctx.user.id);
       }),
 
     // Reporte general de seguridad para PDF
@@ -4665,9 +4665,10 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           valorNuevo: input.asignadoA?.toString() || 'null',
         });
         
-        // Notificar al asignado
+        // Notificar al asignado (push + in-app)
         if (input.asignadoA) {
           try {
+            // Push notification
             const pushSubs = await db.getPushSubscriptionsByUsuarios([input.asignadoA]);
             if (pushSubs.length > 0) {
               await pushService.sendPushToMultiple(pushSubs, {
@@ -4680,8 +4681,16 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
                 data: { url: '/seguridad', incidenteId: input.incidenteId, tipo: 'asignacion_seguridad' },
               });
             }
+            // In-app notification
+            await db.createNotificacion({
+              usuarioId: input.asignadoA,
+              proyectoId: incidente.proyectoId,
+              tipo: 'asignacion_seguridad',
+              titulo: `Incidente asignado: ${incidente.codigo || 'SEG'}`,
+              mensaje: `${ctx.user.name || 'Admin'} te asignó el incidente "${incidente.descripcion?.slice(0, 80)}". Severidad: ${incidente.severidad}.`,
+            });
           } catch (e) {
-            console.error('[Seguridad] Error enviando push de asignación:', e);
+            console.error('[Seguridad] Error enviando notificación de asignación:', e);
           }
         }
         

@@ -4582,3 +4582,8 @@
 
 ### Fix Rol Segurista (Feb 2026)
 - [x] Agregar "segurista" al enum rolEnProyecto en proyecto_usuarios para que se puedan crear usuarios con ese rol
+
+### Vista Segurista + Notificaciones + Alta Usuarios (Feb 2026)
+- [x] Vista personalizada del segurista: al iniciar sesión ver directamente sus incidentes asignados (sección Mis Asignados)
+- [x] Notificación push + in-app al segurista cuando se le asigna un incidente desde la tarjeta
+- [x] Dar de alta 13 seguristas del documento con sus empresas (11 creados/actualizados, empresa SSG creada, password: 123456)

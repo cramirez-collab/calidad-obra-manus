@@ -6829,9 +6829,9 @@ export async function eliminarIncidenteSeguridad(incidenteId: number) {
 }
 
 // Dashboard para seguristas: incidentes del proyecto con conteos
-export async function getDashboardSegurista(proyectoId: number) {
+export async function getDashboardSegurista(proyectoId: number, userId?: number) {
   const db = await getDb();
-  if (!db) return { incidentes: [], stats: { total: 0, abiertos: 0, enProceso: 0, prevencion: 0, cerrados: 0 } };
+  if (!db) return { incidentes: [], misAsignados: [], stats: { total: 0, abiertos: 0, enProceso: 0, prevencion: 0, cerrados: 0 } };
   
   const todos = await db.select().from(incidentesSeguridad)
     .where(eq(incidentesSeguridad.proyectoId, proyectoId))
@@ -6858,8 +6858,15 @@ export async function getDashboardSegurista(proyectoId: number) {
     });
   }
   
+  // Incidentes asignados al usuario actual
+  const misAsignados = userId ? todos.filter(i => i.asignadoA === userId && i.estado !== 'cerrado') : [];
+  
   return {
     incidentes: todos.map(i => ({
+      ...i,
+      mensajesCount: mensajesCounts[i.id] || 0,
+    })),
+    misAsignados: misAsignados.map(i => ({
       ...i,
       mensajesCount: mensajesCounts[i.id] || 0,
     })),

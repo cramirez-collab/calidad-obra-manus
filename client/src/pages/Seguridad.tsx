@@ -830,8 +830,28 @@ function DashboardSegurista({ proyectoId, onOpenChat }: { proyectoId: number; on
 
   if (isLoading || !data) return null;
 
-  const { stats, incidentes } = data;
+  const { stats, incidentes, misAsignados } = data as any;
   const urgentes = incidentes.filter((i: any) => i.estado === 'abierto' && (i.severidad === 'critica' || i.severidad === 'alta'));
+
+  const renderIncidentRow = (inc: any, borderColor: string = 'border-gray-200') => {
+    const tp = TIPOS_INCIDENTE.find(t => t.value === inc.tipo);
+    const sv = SEVERIDADES.find(s => s.value === inc.severidad);
+    const TpIcon = tp?.Icon || AlertTriangle;
+    const estadoLabels: Record<string, string> = { abierto: 'Abierto', en_proceso: 'En Proceso', prevencion: 'Prevención', cerrado: 'Cerrado' };
+    return (
+      <div key={inc.id} className={`flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/50 rounded p-1.5 -mx-1`}
+        onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, tipoValue: inc.tipo, severidad: inc.severidad, sevLabel: sv?.label, estado: estadoLabels[inc.estado] || inc.estado, descripcion: inc.descripcion, codigo: inc.codigo })}
+      >
+        <TpIcon className={`w-3.5 h-3.5 shrink-0 ${tp?.iconColor || 'text-gray-500'}`} />
+        <span className="font-mono text-[9px] text-muted-foreground shrink-0">{inc.codigo}</span>
+        <span className="truncate flex-1">{inc.descripcion}</span>
+        <div className={`h-2 w-2 rounded-full shrink-0 ${sv?.color || 'bg-gray-400'}`} />
+        <Badge variant="outline" className="text-[8px] px-1 py-0 shrink-0">
+          {inc.mensajesCount || 0}
+        </Badge>
+      </div>
+    );
+  };
 
   return (
     <div className="mb-4 space-y-3">
@@ -859,6 +879,19 @@ function DashboardSegurista({ proyectoId, onOpenChat }: { proyectoId: number; on
         </Card>
       </div>
 
+      {/* MIS INCIDENTES ASIGNADOS - Sección principal para seguristas */}
+      {misAsignados && misAsignados.length > 0 && (
+        <Card className="p-3 border-orange-300 bg-orange-50/50">
+          <div className="flex items-center gap-2 mb-2">
+            <User className="w-4 h-4 text-orange-600" />
+            <span className="text-xs font-semibold text-orange-700">Mis Asignados ({misAsignados.length})</span>
+          </div>
+          <div className="space-y-0.5 divide-y divide-orange-100">
+            {misAsignados.map((inc: any) => renderIncidentRow(inc, 'border-orange-200'))}
+          </div>
+        </Card>
+      )}
+
       {/* Incidentes urgentes */}
       {urgentes.length > 0 && (
         <Card className="p-3 border-red-300 bg-red-50/50">
@@ -866,24 +899,8 @@ function DashboardSegurista({ proyectoId, onOpenChat }: { proyectoId: number; on
             <Flame className="w-4 h-4 text-red-500" />
             <span className="text-xs font-semibold text-red-700">Urgentes ({urgentes.length})</span>
           </div>
-          <div className="space-y-1.5">
-            {urgentes.slice(0, 3).map((inc: any) => {
-              const tp = TIPOS_INCIDENTE.find(t => t.value === inc.tipo);
-              const sv = SEVERIDADES.find(s => s.value === inc.severidad);
-              return (
-                <div key={inc.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-red-100/50 rounded p-1 -mx-1"
-                  onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, tipoValue: inc.tipo, severidad: inc.severidad, sevLabel: sv?.label, estado: 'Abierto', descripcion: inc.descripcion, codigo: inc.codigo })}
-                >
-                  {(() => { const TpIcon = tp?.Icon || AlertTriangle; return <TpIcon className={`w-3.5 h-3.5 ${tp?.iconColor || 'text-gray-500'}`} />; })()}
-                  <span className="font-mono text-[9px] text-red-600">{inc.codigo}</span>
-                  <span className="truncate flex-1">{inc.descripcion}</span>
-                  <div className={`h-2 w-2 rounded-full ${sv?.color || 'bg-gray-400'}`} />
-                  <Badge variant="outline" className="text-[8px] px-1 py-0 border-red-200 text-red-600">
-                    {inc.mensajesCount || 0} msg
-                  </Badge>
-                </div>
-              );
-            })}
+          <div className="space-y-0.5 divide-y divide-red-100">
+            {urgentes.slice(0, 5).map((inc: any) => renderIncidentRow(inc, 'border-red-200'))}
           </div>
         </Card>
       )}

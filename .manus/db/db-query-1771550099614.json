@@ -1,0 +1,195 @@
+{
+  "query": "SELECT id, nombre, proyectoId FROM empresas WHERE activo = 1 ORDER BY nombre LIMIT 50;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, proyectoId FROM empresas WHERE activo = 1 ORDER BY nombre LIMIT 50;",
+  "rows": [
+    {
+      "id": "3570001",
+      "nombre": "Andraca",
+      "proyectoId": "1"
+    },
+    {
+      "id": "2820003",
+      "nombre": "ARCIN",
+      "proyectoId": "150001"
+    },
+    {
+      "id": "510004",
+      "nombre": "Dcon",
+      "proyectoId": "1"
+    },
+    {
+      "id": "3660001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3660007",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3690001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3660009",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3660011",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3660002",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3660010",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3660008",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3660004",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3600001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3660003",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3660005",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3630001",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3660012",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3660006",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "3600002",
+      "nombre": "Empresa Test UX",
+      "proyectoId": "NULL"
+    },
+    {
+      "id": "480001",
+      "nombre": "Ennco",
+      "proyectoId": "1"
+    },
+    {
+      "id": "480002",
+      "nombre": "Garcab Albañil",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1950002",
+      "nombre": "Garcab cerámicos ",
+      "proyectoId": "1"
+    },
+    {
+      "id": "510001",
+      "nombre": "Garcab TYP",
+      "proyectoId": "1"
+    },
+    {
+      "id": "2010007",
+      "nombre": "GbG",
+      "proyectoId": "1"
+    },
+    {
+      "id": "330003",
+      "nombre": "GBPO",
+      "proyectoId": "1"
+    },
+    {
+      "id": "510005",
+      "nombre": "Gumik",
+      "proyectoId": "1"
+    },
+    {
+      "id": "510002",
+      "nombre": "iimsa",
+      "proyectoId": "1"
+    },
+    {
+      "id": "2010006",
+      "nombre": "Lupher",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1950001",
+      "nombre": "Novotile",
+      "proyectoId": "1"
+    },
+    {
+      "id": "2820002",
+      "nombre": "Novotile",
+      "proyectoId": "150001"
+    },
+    {
+      "id": "2760006",
+      "nombre": "Objetiva ",
+      "proyectoId": "150001"
+    },
+    {
+      "id": "360001",
+      "nombre": "Objetiva",
+      "proyectoId": "1"
+    },
+    {
+      "id": "540001",
+      "nombre": "Orca",
+      "proyectoId": "1"
+    },
+    {
+      "id": "2790001",
+      "nombre": "Qdt",
+      "proyectoId": "150001"
+    },
+    {
+      "id": "2820001",
+      "nombre": "QDT",
+      "proyectoId": "150001"
+    },
+    {
+      "id": "510003",
+      "nombre": "Riepsa",
+      "proyectoId": "1"
+    },
+    {
+      "id": "480003",
+      "nombre": "Waller ",
+      "proyectoId": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\tproyectoId\n3570001\tAndraca\t1\n2820003\tARCIN\t150001\n510004\tDcon\t1\n3660001\tEmpresa Test UX\tNULL\n3660007\tEmpresa Test UX\tNULL\n3690001\tEmpresa Test UX\tNULL\n3660009\tEmpresa Test UX\tNULL\n3660011\tEmpresa Test UX\tNULL\n3660002\tEmpresa Test UX\tNULL\n3660010\tEmpresa Test UX\tNULL\n3660008\tEmpresa Test UX\tNULL\n3660004\tEmpresa Test UX\tNULL\n3600001\tEmpresa Test UX\tNULL\n3660003\tEmpresa Test UX\tNULL\n3660005\tEmpresa Test UX\tNULL\n3630001\tEmpresa Test UX\tNULL\n3660012\tEmpresa Test UX\tNULL\n3660006\tEmpresa Test UX\tNULL\n3600002\tEmpresa Test UX\tNULL\n480001\tEnnco\t1\n480002\tGarcab Albañil\t1\n1950002\tGarcab cerámicos \t1\n510001\tGarcab TYP\t1\n2010007\tGbG\t1\n330003\tGBPO\t1\n510005\tGumik\t1\n510002\tiimsa\t1\n2010006\tLupher\t1\n1950001\tNovotile\t1\n2820002\tNovotile\t150001\n2760006\tObjetiva \t150001\n360001\tObjetiva\t1\n540001\tOrca\t1\n2790001\tQdt\t150001\n2820001\tQDT\t150001\n510003\tRiepsa\t1\n480003\tWaller \t1\n",
+  "stderr": "",
+  "execution_time_ms": 126
+}
