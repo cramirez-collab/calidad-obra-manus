@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, proyectoId, tipo_incidente, severidad_incidente, estado_incidente, codigo FROM incidentes_seguridad LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, proyectoId, tipo_incidente, severidad_incidente, estado_incidente, codigo FROM incidentes_seguridad LIMIT 5;",
+  "rows": [
+    {
+      "id": "60002",
+      "proyectoId": "1",
+      "tipo_incidente": "epp_faltante",
+      "severidad_incidente": "alta",
+      "estado_incidente": "prevencion",
+      "codigo": "SEG00001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tproyectoId\ttipo_incidente\tseveridad_incidente\testado_incidente\tcodigo\n60002\t1\tepp_faltante\talta\tprevencion\tSEG00001\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

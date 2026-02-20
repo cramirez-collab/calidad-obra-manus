@@ -101,6 +101,7 @@ const ESTADOS = [
 
 type Tab = "reportar" | "incidentes" | "stats" | "checklist" | "voz";
 type IncidenteView = "list" | "chat";
+type FiltroEstadoFromKPI = "" | "abierto" | "en_proceso" | "prevencion" | "cerrado";
 
 // Checklist predefinido de seguridad
 const CHECKLIST_TEMPLATE = [
@@ -132,6 +133,7 @@ export default function Seguridad() {
   const [activeTab, setActiveTab] = useState<Tab>("reportar");
   const [chatIncidenteId, setChatIncidenteId] = useState<number | null>(null);
   const [chatIncidenteInfo, setChatIncidenteInfo] = useState<any>(null);
+  const [filtroEstadoGlobal, setFiltroEstadoGlobal] = useState<FiltroEstadoFromKPI>("");
 
   const proyectoActual = userProjects?.find((p: any) => p.id === selectedProjectId);
   const isSegurista = user?.role === 'segurista';
@@ -180,7 +182,19 @@ export default function Seguridad() {
           </a>
         </div>
 
-        {/* Dashboard rápido para seguristas */}
+        {/* KPIs de seguridad - visibles para todos */}
+        <KPIsSeguridad
+          proyectoId={selectedProjectId}
+          onFilterClick={(estado: FiltroEstadoFromKPI) => {
+            setFiltroEstadoGlobal(estado);
+            setActiveTab('incidentes');
+            setChatIncidenteId(null);
+            setChatIncidenteInfo(null);
+          }}
+          activeFilter={filtroEstadoGlobal}
+        />
+
+        {/* Dashboard extendido solo para seguristas */}
         {isSegurista && <DashboardSegurista proyectoId={selectedProjectId} onOpenChat={(id: number, info: any) => { setChatIncidenteId(id); setChatIncidenteInfo(info); setActiveTab('incidentes'); }} />}
 
         {/* Tabs */}
@@ -217,6 +231,8 @@ export default function Seguridad() {
             <TabIncidentes
               proyectoId={selectedProjectId}
               onOpenChat={(id: number, info: any) => { setChatIncidenteId(id); setChatIncidenteInfo(info); }}
+              filtroEstadoExterno={filtroEstadoGlobal}
+              onClearFiltroExterno={() => setFiltroEstadoGlobal("")}
             />
           )
         )}
@@ -229,7 +245,47 @@ export default function Seguridad() {
 }
 
 // ==========================================
-// TAB REPORTAR - Reporte ultra rápido
+// KPIs DE SEGURIDAD - Conteos clickeables como filtros
+// ==========================================
+function KPIsSeguridad({ proyectoId, onFilterClick, activeFilter }: {
+  proyectoId: number;
+  onFilterClick: (estado: FiltroEstadoFromKPI) => void;
+  activeFilter: FiltroEstadoFromKPI;
+}) {
+  const { data: stats, isLoading } = trpc.seguridad.estadisticas.useQuery({ proyectoId });
+
+  if (isLoading || !stats) return null;
+
+  const kpis = [
+    { key: '' as FiltroEstadoFromKPI, label: 'Total', value: stats.total, color: 'text-foreground', border: 'border-border', bg: '' },
+    { key: 'abierto' as FiltroEstadoFromKPI, label: 'Abiertos', value: stats.abiertos, color: 'text-red-600', border: 'border-red-200', bg: 'bg-red-50/50' },
+    { key: 'en_proceso' as FiltroEstadoFromKPI, label: 'Proceso', value: stats.enProceso, color: 'text-amber-600', border: 'border-amber-200', bg: 'bg-amber-50/50' },
+    { key: 'prevencion' as FiltroEstadoFromKPI, label: 'Prevenci\u00f3n', value: stats.prevencion || 0, color: 'text-blue-600', border: 'border-blue-200', bg: 'bg-blue-50/50' },
+    { key: 'cerrado' as FiltroEstadoFromKPI, label: 'Cerrados', value: stats.cerrados, color: 'text-green-600', border: 'border-green-200', bg: 'bg-green-50/50' },
+  ];
+
+  return (
+    <div className="grid grid-cols-5 gap-1.5 mb-3">
+      {kpis.map((k) => (
+        <button
+          key={k.key}
+          onClick={() => onFilterClick(activeFilter === k.key ? '' : k.key)}
+          className={`p-2 text-center rounded-lg border transition-all ${
+            activeFilter === k.key
+              ? `${k.border} ${k.bg} ring-2 ring-red-500/30 shadow-sm`
+              : `${k.border} ${k.bg} hover:shadow-sm`
+          }`}
+        >
+          <p className={`text-lg font-bold ${k.color}`}>{k.value}</p>
+          <p className="text-[8px] text-muted-foreground">{k.label}</p>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ==========================================
+// TAB REPORTAR - Reporte ultra r\u00e1pido
 // ==========================================
 function TabReportar({ proyectoId }: { proyectoId: number }) {
   const [tipo, setTipo] = useState<string>("");
@@ -488,7 +544,7 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
         <input ref={galleryRef} type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
         {fotoPreview ? (
           <div className="relative">
-            <img src={fotoPreview} alt="Evidencia" className="w-full h-28 object-cover rounded-lg border" />
+            <img src={fotoPreview} alt="Evidencia" className="w-full h-20 object-cover rounded-lg border" />
             <button
               onClick={() => { setFotoBase64(null); setFotoPreview(null); }}
               className="absolute top-1.5 right-1.5 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center"
@@ -646,15 +702,11 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
           >
             <option value="">Sin asignar</option>
             {(() => {
-              const roleOrder = ['segurista', 'supervisor', 'admin', 'superadmin', 'jefe_residente', 'residente'];
-              const roleLabels: Record<string, string> = { segurista: 'Segurista', supervisor: 'Supervisor', admin: 'Admin', superadmin: 'Superadmin', jefe_residente: 'Jefe Res.', residente: 'Residente' };
-              const sorted = [...(usuariosProyecto || [])].sort((a: any, b: any) => {
-                const ai = roleOrder.indexOf(a.role) === -1 ? 99 : roleOrder.indexOf(a.role);
-                const bi = roleOrder.indexOf(b.role) === -1 ? 99 : roleOrder.indexOf(b.role);
-                return ai - bi || (a.name || '').localeCompare(b.name || '');
-              });
+              // Solo mostrar seguristas en el dropdown de asignación
+              const seguristas = (usuariosProyecto || []).filter((u: any) => u.role === 'segurista');
+              const sorted = [...seguristas].sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
               return sorted.map((u: any) => (
-                <option key={u.id} value={u.id}>{u.name} ({roleLabels[u.role] || u.role})</option>
+                <option key={u.id} value={u.id}>{u.name}</option>
               ));
             })()}
           </select>
@@ -682,9 +734,14 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
 // ==========================================
 // TAB INCIDENTES - Lista con filtros
 // ==========================================
-function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenChat: (id: number, info: any) => void }) {
+function TabIncidentes({ proyectoId, onOpenChat, filtroEstadoExterno, onClearFiltroExterno }: { proyectoId: number; onOpenChat: (id: number, info: any) => void; filtroEstadoExterno?: FiltroEstadoFromKPI; onClearFiltroExterno?: () => void }) {
   const { user } = useAuth();
-  const [filtroEstado, setFiltroEstado] = useState<string>("");
+  const [filtroEstadoLocal, setFiltroEstadoLocal] = useState<string>("");
+  const filtroEstado = filtroEstadoExterno || filtroEstadoLocal;
+  const setFiltroEstado = (v: string) => {
+    setFiltroEstadoLocal(v);
+    if (onClearFiltroExterno) onClearFiltroExterno();
+  };
   const [filtroTipo, setFiltroTipo] = useState<string>("");
   const [soloMisAsignados, setSoloMisAsignados] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -832,11 +889,10 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      {(() => { const TpIcon = tp?.Icon || ClipboardList; return <TpIcon className={`w-3.5 h-3.5 shrink-0 ${tp?.iconColor || 'text-gray-500'}`} />; })()}
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                       <span className="text-xs font-semibold">{tp?.label || inc.tipo}</span>
                       {inc.codigo && (
-                        <span className="text-[9px] font-mono text-red-600 bg-red-50 px-1.5 py-0.5 rounded">{inc.codigo}</span>
+                        <span className="text-[9px] font-mono text-red-600 bg-red-50 px-1.5 py-0.5 rounded whitespace-nowrap">{inc.codigo}</span>
                       )}
                       <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${estadoInfo(inc.estado)?.color || ""}`}>
                         {estadoInfo(inc.estado)?.label || inc.estado}
@@ -970,7 +1026,7 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
                       <div className="mt-1 p-2 bg-purple-50 rounded-lg border border-purple-200 animate-in slide-in-from-top-1">
                         <p className="text-[10px] font-medium text-purple-700 mb-1">Asignar a:</p>
                         <div className="flex flex-wrap gap-1">
-                          {usuarios.map((u: any) => (
+                          {usuarios.filter((u: any) => u.role === 'segurista').map((u: any) => (
                             <button
                               key={u.id}
                               className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${

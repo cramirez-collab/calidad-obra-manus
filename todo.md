@@ -4618,3 +4618,12 @@
 - [x] Asegurar campo ubicación, asignación segurista y botón guardar siempre visibles
 - [x] Optimizar layout para que no requiera scroll excesivo
 - [x] Corregir dropdown "Asignar a" para que jale usuarios del proyecto desde la BD
+- [ ] Corregir código SEG00001 que se muestra en vertical en tarjeta de incidente
+- [ ] Quitar icono innecesario a la izquierda del micrófono en tarjeta de incidente
+- [ ] Dropdown "Asignar a" solo mostrar seguristas
+- [x] Corregir conteos de incidentes (Total, Abiertos, Proceso, Prevención, Cerrados)
+- [x] Reducir tamaño de foto en formulario de reporte
+- [ ] Hacer conteos clickeables como filtros de incidentes
+- [x] Restringir navegación para rol segurista (solo Bienvenida, Seguridad, WhatsApp seguridad, Contratistas read-only)
+- [ ] Alarma/notificación fuerte a seguristas cuando incidencia es crítica o alta
+- [ ] En tarjeta de incidente "Asignar a" solo mostrar seguristas

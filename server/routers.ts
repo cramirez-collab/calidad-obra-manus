@@ -4123,15 +4123,23 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         const incidenteCreado = await db.getIncidenteById(id);
         const codigoSeg = incidenteCreado?.codigo || `SEG${String(id).padStart(5, '0')}`;
 
-        // Enviar notificación push a todos los usuarios del proyecto
+        // Enviar notificación push: a seguristas siempre, a todos si es alta/crítica
         try {
           const usuariosProyecto = await db.getUsuariosByProyecto(input.proyectoId);
-          const userIds = usuariosProyecto.map((u: any) => u.id).filter((uid: number) => uid !== ctx.user.id);
+          const isUrgent = input.severidad === 'alta' || input.severidad === 'critica';
+          // Para incidentes urgentes, notificar a TODOS; para otros, solo a seguristas y admins
+          const userIds = usuariosProyecto
+            .filter((u: any) => {
+              if (u.usuario.id === ctx.user.id) return false;
+              if (isUrgent) return true;
+              return u.usuario.role === 'segurista' || u.usuario.role === 'admin' || u.usuario.role === 'superadmin';
+            })
+            .map((u: any) => u.usuario.id);
           if (userIds.length > 0) {
             const pushSubs = await db.getPushSubscriptionsByUsuarios(userIds);
             if (pushSubs.length > 0) {
-              const sevLabels: Record<string, string> = { baja: 'Baja', media: 'Media', alta: 'Alta', critica: 'CRÍTICA' };
-              const sevPrefix: Record<string, string> = { baja: '[BAJA]', media: '[MEDIA]', alta: '[ALTA]', critica: '[CRÍTICA]' };
+              const sevLabels: Record<string, string> = { baja: 'Baja', media: 'Media', alta: 'Alta', critica: 'CR\u00cdTICA' };
+              const sevPrefix: Record<string, string> = { baja: '[BAJA]', media: '[MEDIA]', alta: '\u26a0\ufe0f [ALTA]', critica: '\ud83d\udea8 [CR\u00cdTICA]' };
               await pushService.sendPushToMultiple(pushSubs, {
                 title: `${sevPrefix[input.severidad] || '[SEG]'} Incidente ${sevLabels[input.severidad] || input.severidad} - ${codigoSeg}`,
                 body: `${input.tipo.replace(/_/g, ' ').toUpperCase()}: ${input.descripcion.slice(0, 80)}`,

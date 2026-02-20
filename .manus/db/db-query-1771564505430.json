@@ -1,0 +1,32 @@
+{
+  "query": "SELECT * FROM incidentes_seguridad WHERE proyectoId = 1 LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT * FROM incidentes_seguridad WHERE proyectoId = 1 LIMIT 5;",
+  "rows": [
+    {
+      "id": "60002",
+      "proyectoId": "1",
+      "reportadoPor": "11700013",
+      "tipo_incidente": "epp_faltante",
+      "severidad_incidente": "alta",
+      "descripcion": "Trabajador sin casco de seguridad en zona de obra",
+      "ubicacion": "NULL",
+      "unidadId": "NULL",
+      "fotoUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/seguridad/1/odGCTiqWQp.jpg",
+      "fotoBase64": "NULL",
+      "estado_incidente": "prevencion",
+      "accionCorrectiva": "NULL",
+      "cerradoPor": "NULL",
+      "fechaCierre": "NULL",
+      "createdAt": "2026-02-20 05:01:45",
+      "updatedAt": "2026-02-20 05:02:05",
+      "codigo": "SEG00001",
+      "fotoMarcadaUrl": "NULL",
+      "fotoMarcadaBase64": "NULL",
+      "asignadoA": "10920068"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tproyectoId\treportadoPor\ttipo_incidente\tseveridad_incidente\tdescripcion\tubicacion\tunidadId\tfotoUrl\tfotoBase64\testado_incidente\taccionCorrectiva\tcerradoPor\tfechaCierre\tcreatedAt\tupdatedAt\tcodigo\tfotoMarcadaUrl\tfotoMarcadaBase64\tasignadoA\n60002\t1\t11700013\tepp_faltante\talta\tTrabajador sin casco de seguridad en zona de obra\tNULL\tNULL\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/seguridad/1/odGCTiqWQp.jpg\tNULL\tprevencion\tNULL\tNULL\tNULL\t2026-02-20 05:01:45\t2026-02-20 05:02:05\tSEG00001\tNULL\tNULL\t10920068\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

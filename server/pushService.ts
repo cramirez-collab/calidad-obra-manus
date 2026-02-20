@@ -51,12 +51,19 @@ export async function sendPushNotification(
       },
     };
 
+    const isUrgent = payload.severidad === 'critica' || payload.severidad === 'alta';
     const notificationPayload = JSON.stringify({
       title: payload.title,
       body: payload.body,
       icon: payload.icon || "/icons/icon-192x192.png",
       badge: payload.badge || "/icons/badge-72x72.png",
       tag: payload.tag || (payload.incidenteId ? `oqc-seg-${payload.incidenteId}` : `objetivaoqc-item-${payload.itemId || Date.now()}`),
+      requireInteraction: isUrgent,
+      vibrate: isUrgent ? [300, 100, 300, 100, 300, 100, 300] : [200, 100, 200],
+      actions: isUrgent ? [
+        { action: 'ver', title: 'Ver incidente' },
+        { action: 'dismiss', title: 'Descartar' }
+      ] : [],
       data: {
         ...payload.data,
         itemId: payload.itemId,
@@ -76,7 +83,12 @@ export async function sendPushNotification(
       tipoIncidente: payload.tipoIncidente
     });
 
-    await webpush.sendNotification(pushSubscription, notificationPayload);
+    // Urgency alta para incidentes críticos/altos
+    const options: any = {};
+    if (payload.severidad === 'critica' || payload.severidad === 'alta') {
+      options.urgency = 'high';
+    }
+    await webpush.sendNotification(pushSubscription, notificationPayload, options);
     return true;
   } catch (error: any) {
     console.error("[Push] Error enviando notificación:", error.message);

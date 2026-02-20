@@ -157,9 +157,13 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: Mail, label: "Correos", path: "/bitacora-correos", group: "Usuarios" },
   ];
 
-  // Seguristas: ven TODOS los módulos (lectura) + Seguridad (edición completa)
+  // Seguristas: solo ven Bienvenida, Seguridad, y Contratistas (lectura)
   if (role === 'segurista') {
-    return [...baseItems, ...analysisItems];
+    return [
+      { icon: LayoutDashboard, label: "Inicio", path: "/bienvenida" },
+      { icon: AlertTriangle, label: "Seguridad", path: "/seguridad" },
+      { icon: Building2, label: "Contratistas", path: "/empresas" },
+    ];
   }
 
   // Todos los demás usuarios ven los items base y de análisis
