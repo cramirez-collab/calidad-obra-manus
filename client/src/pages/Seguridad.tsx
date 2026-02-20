@@ -1031,7 +1031,7 @@ function DashboardSegurista({ proyectoId, onOpenChat }: { proyectoId: number; on
 
   if (isLoading || !data) return null;
 
-  const { stats, incidentes, misAsignados, diasSinAccidentes, tiempoPromedioHoras, rendimientoSeguristas, rendimientoEmpresas } = data as any;
+  const { stats, incidentes, misAsignados, diasSinAccidentes, tiempoPromedioHoras, rendimientoSeguristas, rendimientoEmpresas, semaforoEmpresas } = data as any;
   const urgentes = incidentes.filter((i: any) => i.estado === 'abierto' && (i.severidad === 'critica' || i.severidad === 'alta'));
 
   const renderIncidentRow = (inc: any, borderColor: string = 'border-gray-200') => {
@@ -1091,6 +1091,37 @@ function DashboardSegurista({ proyectoId, onOpenChat }: { proyectoId: number; on
           <p className="text-[8px] text-muted-foreground">Cerrados</p>
         </Card>
       </div>
+
+      {/* Semáforo por empresa */}
+      {semaforoEmpresas && semaforoEmpresas.length > 0 && (
+        <Card className="p-3">
+          <p className="text-xs font-semibold mb-2 text-muted-foreground">Semáforo por Empresa</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+            {semaforoEmpresas.map((e: any) => (
+              <div key={e.id} className={`flex items-center gap-1.5 p-1.5 rounded border text-[10px] ${
+                e.color === 'verde' ? 'border-green-300 bg-green-50' :
+                e.color === 'amarillo' ? 'border-amber-300 bg-amber-50' :
+                'border-red-300 bg-red-50'
+              }`}>
+                <div className={`w-3 h-3 rounded-full shrink-0 ${
+                  e.color === 'verde' ? 'bg-green-500' :
+                  e.color === 'amarillo' ? 'bg-amber-500' :
+                  'bg-red-500'
+                }`} />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium truncate">{e.nombre}</p>
+                  <p className="text-[8px] text-muted-foreground">
+                    {e.abiertos > 0 && <span className="text-red-600">{e.abiertos} abiertos</span>}
+                    {e.abiertos > 0 && e.enProceso > 0 && ' · '}
+                    {e.enProceso > 0 && <span className="text-amber-600">{e.enProceso} proceso</span>}
+                    {e.abiertos === 0 && e.enProceso === 0 && <span className="text-green-600">Sin pendientes</span>}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* MIS INCIDENTES ASIGNADOS - Sección principal para seguristas */}
       {misAsignados && misAsignados.length > 0 && (

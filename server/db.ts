@@ -6832,7 +6832,7 @@ export async function eliminarIncidenteSeguridad(incidenteId: number) {
 // Dashboard para seguristas: incidentes del proyecto con conteos
 export async function getDashboardSegurista(proyectoId: number, userId?: number) {
   const db = await getDb();
-  if (!db) return { incidentes: [], misAsignados: [], stats: { total: 0, abiertos: 0, enProceso: 0, prevencion: 0, cerrados: 0 }, diasSinAccidentes: 0, tiempoPromedioHoras: 0, rendimientoSeguristas: [], rendimientoEmpresas: [] };
+  if (!db) return { incidentes: [], misAsignados: [], stats: { total: 0, abiertos: 0, enProceso: 0, prevencion: 0, cerrados: 0 }, diasSinAccidentes: 0, tiempoPromedioHoras: 0, rendimientoSeguristas: [], rendimientoEmpresas: [], semaforoEmpresas: [] };
   
   const todos = await db.select().from(incidentesSeguridad)
     .where(eq(incidentesSeguridad.proyectoId, proyectoId))
@@ -6917,6 +6917,46 @@ export async function getDashboardSegurista(proyectoId: number, userId?: number)
     }
   }
 
+  // Semáforo por empresa: contar incidentes abiertos (no cerrados) por empresa
+  let semaforoEmpresas: { id: number; nombre: string; abiertos: number; enProceso: number; total: number; color: 'verde' | 'amarillo' | 'rojo' }[] = [];
+  {
+    // Get all empresas del proyecto
+    const allEmps = await db.select({ id: empresas.id, nombre: empresas.nombre }).from(empresas);
+    // Map reporters to empresas
+    const allReporterIds = todos.map(i => i.reportadoPor).filter((v, i, a) => a.indexOf(v) === i);
+    const erAll = allReporterIds.length > 0
+      ? await db.select({ usuarioId: empresaResidentes.usuarioId, empresaId: empresaResidentes.empresaId })
+          .from(empresaResidentes)
+          .where(and(eq(empresaResidentes.activo, true), inArray(empresaResidentes.usuarioId, allReporterIds)))
+      : [];
+    const userEmpMap: Record<number, number> = {};
+    erAll.forEach(e => { userEmpMap[e.usuarioId] = e.empresaId; });
+    const empNomMap: Record<number, string> = {};
+    allEmps.forEach(e => { empNomMap[e.id] = e.nombre; });
+    const semData: Record<number, { abiertos: number; enProceso: number; total: number }> = {};
+    for (const i of todos) {
+      const eId = userEmpMap[i.reportadoPor];
+      if (eId) {
+        if (!semData[eId]) semData[eId] = { abiertos: 0, enProceso: 0, total: 0 };
+        semData[eId].total++;
+        if (i.estado === 'abierto') semData[eId].abiertos++;
+        if (i.estado === 'en_proceso') semData[eId].enProceso++;
+      }
+    }
+    // Include all empresas that have incidents
+    semaforoEmpresas = Object.entries(semData).map(([id, d]) => {
+      const noResueltos = d.abiertos + d.enProceso;
+      return {
+        id: Number(id),
+        nombre: empNomMap[Number(id)] || '',
+        abiertos: d.abiertos,
+        enProceso: d.enProceso,
+        total: d.total,
+        color: noResueltos === 0 ? 'verde' as const : noResueltos <= 2 ? 'amarillo' as const : 'rojo' as const,
+      };
+    }).sort((a, b) => (b.abiertos + b.enProceso) - (a.abiertos + a.enProceso));
+  }
+
   // Contar mensajes por incidente
   const incidenteIds = todos.map(i => i.id);
   let mensajesCounts: Record<number, number> = {};
@@ -6950,6 +6990,7 @@ export async function getDashboardSegurista(proyectoId: number, userId?: number)
     tiempoPromedioHoras,
     rendimientoSeguristas,
     rendimientoEmpresas,
+    semaforoEmpresas,
   };
 }
 

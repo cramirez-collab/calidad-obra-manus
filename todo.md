@@ -4608,3 +4608,6 @@
 - [x] Procedures tRPC CRUD para plantillas (admin/superadmin)
 - [x] CRUD plantillas en página de Configuración (crear, editar, activar/desactivar, eliminar)
 - [x] Selector rápido de plantillas en formulario de reporte (chips horizontales con snap scroll)
+
+### Semáforo por Empresa (Feb 2026)
+- [x] Semáforo por empresa en dashboard: verde (0 abiertos), amarillo (1-2), rojo (3+)
