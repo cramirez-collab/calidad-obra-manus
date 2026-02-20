@@ -533,6 +533,11 @@ export default function Configuracion() {
           <TiposIncidenciaManager proyectoId={selectedProjectId} />
         )}
 
+        {/* PL - Plantillas Rápidas de Incidentes */}
+        {isAdmin && selectedProjectId && (
+          <PlantillasManager proyectoId={selectedProjectId} />
+        )}
+
         {/* P - Pruebas (Editor de catálogo) */}
         {isAdmin && (
           <Card className="border-[#002C63]/20 bg-[#002C63]/5">
@@ -1816,6 +1821,142 @@ function TiposIncidenciaManager({ proyectoId }: { proyectoId: number }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </Card>
+  );
+}
+
+// ==========================================
+// PLANTILLAS RÁPIDAS DE INCIDENTES
+// ==========================================
+const TIPOS_PLANTILLA = [
+  { value: 'caida', label: 'Caída' }, { value: 'golpe', label: 'Golpe' },
+  { value: 'corte', label: 'Corte' }, { value: 'electrico', label: 'Eléctrico' },
+  { value: 'derrumbe', label: 'Derrumbe' }, { value: 'incendio', label: 'Incendio' },
+  { value: 'quimico', label: 'Químico' }, { value: 'epp_faltante', label: 'EPP Faltante' },
+  { value: 'condicion_insegura', label: 'Cond. Insegura' }, { value: 'acto_inseguro', label: 'Acto Inseguro' },
+  { value: 'casi_accidente', label: 'Casi Accidente' }, { value: 'otro', label: 'Otro' },
+];
+const SEVS_PLANTILLA = [
+  { value: 'baja', label: 'Baja', color: 'bg-green-100 text-green-700' },
+  { value: 'media', label: 'Media', color: 'bg-amber-100 text-amber-700' },
+  { value: 'alta', label: 'Alta', color: 'bg-orange-100 text-orange-700' },
+  { value: 'critica', label: 'Crítica', color: 'bg-red-100 text-red-700' },
+];
+
+function PlantillasManager({ proyectoId }: { proyectoId: number }) {
+  const { data: plantillas, refetch } = trpc.seguridad.allPlantillas.useQuery({ proyectoId });
+  const crearMut = trpc.seguridad.crearPlantilla.useMutation({ onSuccess: () => { refetch(); setShowForm(false); resetForm(); toast.success('Plantilla creada'); } });
+  const editarMut = trpc.seguridad.editarPlantilla.useMutation({ onSuccess: () => { refetch(); setEditId(null); resetForm(); toast.success('Plantilla actualizada'); } });
+  const eliminarMut = trpc.seguridad.eliminarPlantilla.useMutation({ onSuccess: () => { refetch(); toast.success('Plantilla eliminada'); } });
+
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [nombre, setNombre] = useState('');
+  const [tipo, setTipo] = useState('epp_faltante');
+  const [severidad, setSeveridad] = useState<'baja' | 'media' | 'alta' | 'critica'>('media');
+  const [descripcion, setDescripcion] = useState('');
+
+  const resetForm = () => { setNombre(''); setTipo('epp_faltante'); setSeveridad('media'); setDescripcion(''); };
+
+  const startEdit = (p: any) => {
+    setEditId(p.id); setNombre(p.nombre); setTipo(p.tipo); setSeveridad(p.severidad); setDescripcion(p.descripcion); setShowForm(true);
+  };
+
+  const handleSubmit = () => {
+    if (!nombre.trim() || !descripcion.trim()) { toast.error('Nombre y descripción son requeridos'); return; }
+    if (editId) {
+      editarMut.mutate({ id: editId, nombre: nombre.trim(), tipo, severidad, descripcion: descripcion.trim() });
+    } else {
+      crearMut.mutate({ proyectoId, nombre: nombre.trim(), tipo, severidad, descripcion: descripcion.trim(), orden: (plantillas?.length || 0) + 1 });
+    }
+  };
+
+  const toggleActivo = (p: any) => {
+    editarMut.mutate({ id: p.id, activo: !p.activo });
+  };
+
+  return (
+    <Card className="border-orange-200 bg-orange-50/30">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-orange-600" />
+            <span className="font-semibold text-sm">Plantillas Rápidas de Incidentes</span>
+          </div>
+          <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => { setShowForm(!showForm); setEditId(null); resetForm(); }}>
+            <Plus className="h-3 w-3" /> Nueva
+          </Button>
+        </div>
+        <p className="text-[10px] text-muted-foreground mb-3">Plantillas pre-configuradas para reportar incidentes frecuentes con un solo tap.</p>
+
+        {showForm && (
+          <Card className="p-3 mb-3 border-orange-300 bg-white">
+            <div className="space-y-2">
+              <div>
+                <Label className="text-[10px]">Nombre corto (visible en chip)</Label>
+                <Input value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Sin casco" className="h-8 text-xs" maxLength={100} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[10px]">Tipo</Label>
+                  <select value={tipo} onChange={e => setTipo(e.target.value)} className="w-full h-8 text-xs border rounded px-2 bg-white">
+                    {TIPOS_PLANTILLA.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-[10px]">Severidad</Label>
+                  <select value={severidad} onChange={e => setSeveridad(e.target.value as any)} className="w-full h-8 text-xs border rounded px-2 bg-white">
+                    {SEVS_PLANTILLA.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <Label className="text-[10px]">Descripción predeterminada</Label>
+                <Textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Descripción que se auto-llenará..." className="text-xs min-h-[60px]" />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setShowForm(false); setEditId(null); resetForm(); }}>Cancelar</Button>
+                <Button size="sm" className="h-7 text-xs bg-orange-600 hover:bg-orange-700" onClick={handleSubmit} disabled={crearMut.isPending || editarMut.isPending}>
+                  {crearMut.isPending || editarMut.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : editId ? 'Guardar' : 'Crear'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        <div className="space-y-1">
+          {plantillas?.map((p: any) => {
+            const tipoInfo = TIPOS_PLANTILLA.find(t => t.value === p.tipo);
+            const sevInfo = SEVS_PLANTILLA.find(s => s.value === p.severidad);
+            return (
+              <div key={p.id} className={`flex items-center gap-2 p-2 rounded border text-xs ${p.activo ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-60'}`}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-medium truncate">{p.nombre}</span>
+                    <Badge variant="outline" className="text-[8px] px-1 py-0 shrink-0">{tipoInfo?.label || p.tipo}</Badge>
+                    <span className={`text-[8px] px-1 rounded ${sevInfo?.color || ''}`}>{sevInfo?.label || p.severidad}</span>
+                  </div>
+                  <p className="text-[9px] text-muted-foreground truncate mt-0.5">{p.descripcion}</p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => toggleActivo(p)} title={p.activo ? 'Desactivar' : 'Activar'}>
+                    {p.activo ? <ToggleRight className="h-3.5 w-3.5 text-green-600" /> : <ToggleLeft className="h-3.5 w-3.5 text-gray-400" />}
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => startEdit(p)}>
+                    <Pencil className="h-3 w-3 text-muted-foreground" />
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => eliminarMut.mutate({ id: p.id })}>
+                    <Trash2 className="h-3 w-3 text-red-400" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+          {(!plantillas || plantillas.length === 0) && (
+            <p className="text-[10px] text-muted-foreground text-center py-4">No hay plantillas. Las 10 predefinidas se crearán automáticamente al abrir el formulario de reporte.</p>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 }

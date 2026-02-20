@@ -306,6 +306,15 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
 
   // Fetch custom types for this project
   const { data: tiposCustom } = trpc.seguridad.tiposIncidencia.useQuery({ proyectoId });
+
+  // Plantillas rápidas
+  const { data: plantillas } = trpc.seguridad.plantillas.useQuery({ proyectoId });
+  const aplicarPlantilla = useCallback((p: any) => {
+    setTipo(p.tipo);
+    setSeveridad(p.severidad);
+    setDescripcion(p.descripcion);
+    toast.success(`Plantilla "${p.nombre}" aplicada`);
+  }, []);
   type TipoItem = { value: string; label: string; Icon: LucideIcon; color: string; iconColor: string };
   const allTipos: TipoItem[] = useMemo(() => {
     const base: TipoItem[] = [...TIPOS_INCIDENTE];
@@ -402,6 +411,29 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
 
   return (
     <div className="space-y-4">
+      {/* Plantillas rápidas */}
+      {plantillas && plantillas.length > 0 && (
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground mb-1.5 block flex items-center gap-1">
+            <Zap className="w-3 h-3 text-orange-500" /> Reporte rápido
+          </label>
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
+            {plantillas.map((p: any) => {
+              const sevColors: Record<string, string> = { baja: 'border-green-300 bg-green-50', media: 'border-amber-300 bg-amber-50', alta: 'border-orange-300 bg-orange-50', critica: 'border-red-300 bg-red-50' };
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => aplicarPlantilla(p)}
+                  className={`shrink-0 snap-start px-2.5 py-1.5 rounded-lg border text-[10px] font-medium transition-all whitespace-nowrap ${sevColors[p.severidad] || 'border-gray-200 bg-gray-50'} hover:shadow-sm active:scale-95`}
+                >
+                  {p.nombre}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Tipo - Grid de selección rápida */}
       <div>
         <label className="text-xs font-semibold text-muted-foreground mb-2 block">Tipo de incidente *</label>
@@ -999,7 +1031,7 @@ function DashboardSegurista({ proyectoId, onOpenChat }: { proyectoId: number; on
 
   if (isLoading || !data) return null;
 
-  const { stats, incidentes, misAsignados } = data as any;
+  const { stats, incidentes, misAsignados, diasSinAccidentes, tiempoPromedioHoras, rendimientoSeguristas, rendimientoEmpresas } = data as any;
   const urgentes = incidentes.filter((i: any) => i.estado === 'abierto' && (i.severidad === 'critica' || i.severidad === 'alta'));
 
   const renderIncidentRow = (inc: any, borderColor: string = 'border-gray-200') => {
@@ -1024,6 +1056,18 @@ function DashboardSegurista({ proyectoId, onOpenChat }: { proyectoId: number; on
 
   return (
     <div className="mb-4 space-y-3">
+      {/* Contador de días sin accidentes */}
+      <Card className={`p-3 text-center ${diasSinAccidentes >= 30 ? 'border-green-400 bg-green-50/50' : diasSinAccidentes >= 7 ? 'border-amber-300 bg-amber-50/50' : 'border-red-300 bg-red-50/50'}`}>
+        <div className="flex items-center justify-center gap-2">
+          <Shield className={`w-5 h-5 ${diasSinAccidentes >= 30 ? 'text-green-600' : diasSinAccidentes >= 7 ? 'text-amber-600' : 'text-red-600'}`} />
+          <span className={`text-3xl font-bold ${diasSinAccidentes >= 30 ? 'text-green-700' : diasSinAccidentes >= 7 ? 'text-amber-700' : 'text-red-700'}`}>{diasSinAccidentes}</span>
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-1">Días sin accidentes críticos</p>
+        {tiempoPromedioHoras > 0 && (
+          <p className="text-[9px] text-muted-foreground mt-0.5">Tiempo promedio resolución: <span className="font-semibold">{tiempoPromedioHoras < 24 ? `${tiempoPromedioHoras}h` : `${Math.round(tiempoPromedioHoras / 24 * 10) / 10}d`}</span></p>
+        )}
+      </Card>
+
       {/* KPIs rápidos */}
       <div className="grid grid-cols-5 gap-1.5">
         <Card className="p-2 text-center">
@@ -1057,6 +1101,42 @@ function DashboardSegurista({ proyectoId, onOpenChat }: { proyectoId: number; on
           </div>
           <div className="space-y-0.5 divide-y divide-orange-100">
             {misAsignados.map((inc: any) => renderIncidentRow(inc, 'border-orange-200'))}
+          </div>
+        </Card>
+      )}
+
+      {/* Rendimiento por segurista */}
+      {rendimientoSeguristas && rendimientoSeguristas.length > 0 && (
+        <Card className="p-3">
+          <p className="text-xs font-semibold mb-2 text-muted-foreground">Rendimiento por Segurista</p>
+          <div className="space-y-1">
+            {rendimientoSeguristas.map((s: any) => (
+              <div key={s.id} className="flex items-center justify-between text-[10px] py-1 border-b border-muted last:border-0">
+                <span className="truncate flex-1 font-medium">{s.nombre || 'Sin nombre'}</span>
+                <span className="text-muted-foreground mx-1">{s.cerrados}/{s.total}</span>
+                <span className={`font-mono text-[9px] px-1 rounded ${s.promedioHoras !== null ? (s.promedioHoras < 24 ? 'bg-green-100 text-green-700' : s.promedioHoras < 72 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700') : 'bg-gray-100 text-gray-500'}`}>
+                  {s.promedioHoras !== null ? (s.promedioHoras < 24 ? `${s.promedioHoras}h` : `${Math.round(s.promedioHoras / 24 * 10) / 10}d`) : '-'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Rendimiento por empresa */}
+      {rendimientoEmpresas && rendimientoEmpresas.length > 0 && (
+        <Card className="p-3">
+          <p className="text-xs font-semibold mb-2 text-muted-foreground">Incidentes por Empresa</p>
+          <div className="space-y-1">
+            {rendimientoEmpresas.map((e: any) => (
+              <div key={e.id} className="flex items-center justify-between text-[10px] py-1 border-b border-muted last:border-0">
+                <span className="truncate flex-1 font-medium">{e.nombre}</span>
+                <span className="text-muted-foreground mx-1">{e.cerrados}/{e.total}</span>
+                <span className={`font-mono text-[9px] px-1 rounded ${e.promedioHoras !== null ? (e.promedioHoras < 24 ? 'bg-green-100 text-green-700' : e.promedioHoras < 72 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700') : 'bg-gray-100 text-gray-500'}`}>
+                  {e.promedioHoras !== null ? (e.promedioHoras < 24 ? `${e.promedioHoras}h` : `${Math.round(e.promedioHoras / 24 * 10) / 10}d`) : '-'}
+                </span>
+              </div>
+            ))}
           </div>
         </Card>
       )}

@@ -44,6 +44,7 @@ import {
   bitacoraSeguridad, InsertBitacoraSeguridad,
   evidenciasSeguridad, InsertEvidenciaSeguridad,
   tiposIncidenciaCustom, InsertTipoIncidenciaCustom,
+  plantillasIncidencia, InsertPlantillaIncidencia,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -6831,7 +6832,7 @@ export async function eliminarIncidenteSeguridad(incidenteId: number) {
 // Dashboard para seguristas: incidentes del proyecto con conteos
 export async function getDashboardSegurista(proyectoId: number, userId?: number) {
   const db = await getDb();
-  if (!db) return { incidentes: [], misAsignados: [], stats: { total: 0, abiertos: 0, enProceso: 0, prevencion: 0, cerrados: 0 } };
+  if (!db) return { incidentes: [], misAsignados: [], stats: { total: 0, abiertos: 0, enProceso: 0, prevencion: 0, cerrados: 0 }, diasSinAccidentes: 0, tiempoPromedioHoras: 0, rendimientoSeguristas: [], rendimientoEmpresas: [] };
   
   const todos = await db.select().from(incidentesSeguridad)
     .where(eq(incidentesSeguridad.proyectoId, proyectoId))
@@ -6840,20 +6841,94 @@ export async function getDashboardSegurista(proyectoId: number, userId?: number)
   const abiertos = todos.filter(i => i.estado === "abierto").length;
   const enProceso = todos.filter(i => i.estado === "en_proceso").length;
   const prevencion = todos.filter(i => i.estado === "prevencion").length;
-  const cerrados = todos.filter(i => i.estado === "cerrado").length;
-  
+  const cerradosCount = todos.filter(i => i.estado === "cerrado").length;
+
+  // Días sin accidentes críticos (severidad alta o critica)
+  const incidentesCriticos = todos.filter(i => i.severidad === 'alta' || i.severidad === 'critica');
+  let diasSinAccidentes = 0;
+  if (incidentesCriticos.length === 0) {
+    diasSinAccidentes = todos.length > 0
+      ? Math.floor((Date.now() - new Date(todos[todos.length - 1].createdAt).getTime()) / 86400000)
+      : 0;
+  } else {
+    diasSinAccidentes = Math.floor((Date.now() - new Date(incidentesCriticos[0].createdAt).getTime()) / 86400000);
+  }
+
+  // Tiempo promedio de resolución global (incidentes cerrados)
+  const cerradosList = todos.filter(i => i.estado === 'cerrado' && i.fechaCierre);
+  let tiempoPromedioHoras = 0;
+  if (cerradosList.length > 0) {
+    const totalH = cerradosList.reduce((s, i) => s + (new Date(i.fechaCierre!).getTime() - new Date(i.createdAt).getTime()) / 3600000, 0);
+    tiempoPromedioHoras = Math.round((totalH / cerradosList.length) * 10) / 10;
+  }
+
+  // Rendimiento por segurista
+  const porSeg: Record<number, { nombre: string; total: number; cerrados: number; horas: number }> = {};
+  for (const i of todos) {
+    if (i.asignadoA) {
+      if (!porSeg[i.asignadoA]) porSeg[i.asignadoA] = { nombre: '', total: 0, cerrados: 0, horas: 0 };
+      porSeg[i.asignadoA].total++;
+      if (i.estado === 'cerrado' && i.fechaCierre) {
+        porSeg[i.asignadoA].cerrados++;
+        porSeg[i.asignadoA].horas += (new Date(i.fechaCierre).getTime() - new Date(i.createdAt).getTime()) / 3600000;
+      }
+    }
+  }
+  const segIds = Object.keys(porSeg).map(Number);
+  if (segIds.length > 0) {
+    const segUsers = await db.select({ id: users.id, name: users.name }).from(users).where(inArray(users.id, segIds));
+    segUsers.forEach(u => { if (porSeg[u.id]) porSeg[u.id].nombre = u.name || ''; });
+  }
+  const rendimientoSeguristas = Object.entries(porSeg).map(([id, d]) => ({
+    id: Number(id), nombre: d.nombre, total: d.total, cerrados: d.cerrados,
+    promedioHoras: d.cerrados > 0 ? Math.round((d.horas / d.cerrados) * 10) / 10 : null,
+  }));
+
+  // Rendimiento por empresa (via empresaResidentes)
+  let rendimientoEmpresas: { id: number; nombre: string; total: number; cerrados: number; promedioHoras: number | null }[] = [];
+  const reporterIds = todos.map(i => i.reportadoPor).filter((v, i, a) => a.indexOf(v) === i);
+  if (reporterIds.length > 0) {
+    const er = await db.select({ usuarioId: empresaResidentes.usuarioId, empresaId: empresaResidentes.empresaId })
+      .from(empresaResidentes)
+      .where(and(eq(empresaResidentes.activo, true), inArray(empresaResidentes.usuarioId, reporterIds)));
+    const empIds = er.map(e => e.empresaId).filter((v, i, a) => a.indexOf(v) === i);
+    if (empIds.length > 0) {
+      const emps = await db.select({ id: empresas.id, nombre: empresas.nombre }).from(empresas).where(inArray(empresas.id, empIds));
+      const empNombres: Record<number, string> = {};
+      emps.forEach(e => { empNombres[e.id] = e.nombre; });
+      const userEmp: Record<number, number> = {};
+      er.forEach(e => { userEmp[e.usuarioId] = e.empresaId; });
+      const porEmp: Record<number, { nombre: string; total: number; cerrados: number; horas: number }> = {};
+      for (const i of todos) {
+        const eId = userEmp[i.reportadoPor];
+        if (eId) {
+          if (!porEmp[eId]) porEmp[eId] = { nombre: empNombres[eId] || '', total: 0, cerrados: 0, horas: 0 };
+          porEmp[eId].total++;
+          if (i.estado === 'cerrado' && i.fechaCierre) {
+            porEmp[eId].cerrados++;
+            porEmp[eId].horas += (new Date(i.fechaCierre).getTime() - new Date(i.createdAt).getTime()) / 3600000;
+          }
+        }
+      }
+      rendimientoEmpresas = Object.entries(porEmp).map(([id, d]) => ({
+        id: Number(id), nombre: d.nombre, total: d.total, cerrados: d.cerrados,
+        promedioHoras: d.cerrados > 0 ? Math.round((d.horas / d.cerrados) * 10) / 10 : null,
+      }));
+    }
+  }
+
   // Contar mensajes por incidente
   const incidenteIds = todos.map(i => i.id);
   let mensajesCounts: Record<number, number> = {};
   if (incidenteIds.length > 0) {
-    const mensajes = await db.select({
+    const msgs = await db.select({
       incidenteId: mensajesSeguridad.incidenteId,
     }).from(mensajesSeguridad)
       .where(and(
         inArray(mensajesSeguridad.incidenteId, incidenteIds),
         eq(mensajesSeguridad.eliminado, false)
       ));
-    mensajes.forEach(m => {
+    msgs.forEach(m => {
       mensajesCounts[m.incidenteId] = (mensajesCounts[m.incidenteId] || 0) + 1;
     });
   }
@@ -6870,7 +6945,11 @@ export async function getDashboardSegurista(proyectoId: number, userId?: number)
       ...i,
       mensajesCount: mensajesCounts[i.id] || 0,
     })),
-    stats: { total: todos.length, abiertos, enProceso, prevencion, cerrados },
+    stats: { total: todos.length, abiertos, enProceso, prevencion, cerrados: cerradosCount },
+    diasSinAccidentes,
+    tiempoPromedioHoras,
+    rendimientoSeguristas,
+    rendimientoEmpresas,
   };
 }
 
@@ -7076,4 +7155,65 @@ export async function deleteTipoIncidencia(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB no disponible");
   await db.delete(tiposIncidenciaCustom).where(eq(tiposIncidenciaCustom.id, id));
+}
+
+// ==========================================
+// PLANTILLAS RÁPIDAS DE INCIDENTES
+// ==========================================
+
+export async function getPlantillasIncidencia(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(plantillasIncidencia)
+    .where(and(eq(plantillasIncidencia.proyectoId, proyectoId), eq(plantillasIncidencia.activo, true)))
+    .orderBy(plantillasIncidencia.orden);
+}
+
+export async function getAllPlantillasIncidencia(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(plantillasIncidencia)
+    .where(eq(plantillasIncidencia.proyectoId, proyectoId))
+    .orderBy(plantillasIncidencia.orden);
+}
+
+export async function createPlantillaIncidencia(data: InsertPlantillaIncidencia) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const result = await db.insert(plantillasIncidencia).values(data);
+  return result[0].insertId;
+}
+
+export async function updatePlantillaIncidencia(id: number, data: Partial<InsertPlantillaIncidencia>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  await db.update(plantillasIncidencia).set(data).where(eq(plantillasIncidencia.id, id));
+}
+
+export async function deletePlantillaIncidencia(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  await db.delete(plantillasIncidencia).where(eq(plantillasIncidencia.id, id));
+}
+
+export async function seedPlantillasDefault(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return;
+  // Check if already seeded
+  const existing = await db.select().from(plantillasIncidencia).where(eq(plantillasIncidencia.proyectoId, proyectoId)).limit(1);
+  if (existing.length > 0) return;
+  
+  const defaults: Omit<InsertPlantillaIncidencia, 'id'>[] = [
+    { proyectoId, nombre: "Sin casco", tipo: "epp_faltante", severidad: "alta", descripcion: "Trabajador sin casco de seguridad en zona de obra", orden: 1 },
+    { proyectoId, nombre: "Sin arnés", tipo: "epp_faltante", severidad: "critica", descripcion: "Trabajador en altura sin arnés de seguridad", orden: 2 },
+    { proyectoId, nombre: "Sin chaleco", tipo: "epp_faltante", severidad: "media", descripcion: "Trabajador sin chaleco reflectante en zona de tránsito", orden: 3 },
+    { proyectoId, nombre: "Andamio inseguro", tipo: "condicion_insegura", severidad: "critica", descripcion: "Andamio sin barandal o mal armado", orden: 4 },
+    { proyectoId, nombre: "Cables expuestos", tipo: "electrico", severidad: "critica", descripcion: "Cables eléctricos expuestos sin protección", orden: 5 },
+    { proyectoId, nombre: "Falta señalización", tipo: "condicion_insegura", severidad: "media", descripcion: "Zona de riesgo sin señalización adecuada", orden: 6 },
+    { proyectoId, nombre: "Excavación abierta", tipo: "caida", severidad: "alta", descripcion: "Excavación sin protección perimetral ni señalización", orden: 7 },
+    { proyectoId, nombre: "Material mal almacenado", tipo: "condicion_insegura", severidad: "media", descripcion: "Material apilado de forma insegura con riesgo de caída", orden: 8 },
+    { proyectoId, nombre: "Uso celular en altura", tipo: "acto_inseguro", severidad: "alta", descripcion: "Trabajador usando celular mientras trabaja en altura", orden: 9 },
+    { proyectoId, nombre: "Sin guantes", tipo: "epp_faltante", severidad: "media", descripcion: "Trabajador manipulando material sin guantes de protección", orden: 10 },
+  ];
+  await db.insert(plantillasIncidencia).values(defaults);
 }

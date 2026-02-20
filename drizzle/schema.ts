@@ -981,3 +981,28 @@ export const tiposIncidenciaCustom = mysqlTable("tipos_incidencia_custom", {
 
 export type TipoIncidenciaCustom = typeof tiposIncidenciaCustom.$inferSelect;
 export type InsertTipoIncidenciaCustom = typeof tiposIncidenciaCustom.$inferInsert;
+
+/**
+ * Plantillas rápidas de incidentes de seguridad
+ * Permiten reportar incidentes frecuentes con un solo tap
+ * Editables por admin/superadmin en Configuración
+ */
+export const plantillasIncidencia = mysqlTable("plantillas_incidencia", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  nombre: varchar("nombre", { length: 100 }).notNull(), // nombre corto visible en chip
+  tipo: mysqlEnum("tipo_plantilla", [
+    "caida", "golpe", "corte", "electrico", "derrumbe", "incendio",
+    "quimico", "epp_faltante", "condicion_insegura", "acto_inseguro",
+    "casi_accidente", "otro",
+  ]).notNull(),
+  severidad: mysqlEnum("severidad_plantilla", ["baja", "media", "alta", "critica"]).notNull(),
+  descripcion: text("descripcion").notNull(), // descripción predeterminada
+  activo: boolean("activo").default(true).notNull(),
+  orden: int("orden").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PlantillaIncidencia = typeof plantillasIncidencia.$inferSelect;
+export type InsertPlantillaIncidencia = typeof plantillasIncidencia.$inferInsert;

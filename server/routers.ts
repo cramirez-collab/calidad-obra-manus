@@ -4917,6 +4917,71 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         await db.deleteTipoIncidencia(input.id);
         return { ok: true };
       }),
+
+    // --- PLANTILLAS RÁPIDAS ---
+    plantillas: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        // Seed defaults if none exist
+        await db.seedPlantillasDefault(input.proyectoId);
+        return db.getPlantillasIncidencia(input.proyectoId);
+      }),
+
+    allPlantillas: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        if (!['admin', 'superadmin'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        await db.seedPlantillasDefault(input.proyectoId);
+        return db.getAllPlantillasIncidencia(input.proyectoId);
+      }),
+
+    crearPlantilla: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        nombre: z.string().min(1).max(100),
+        tipo: z.string(),
+        severidad: z.enum(['baja', 'media', 'alta', 'critica']),
+        descripcion: z.string().min(1),
+        orden: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (!['admin', 'superadmin'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        const id = await db.createPlantillaIncidencia(input as any);
+        return { id };
+      }),
+
+    editarPlantilla: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        nombre: z.string().min(1).max(100).optional(),
+        tipo: z.string().optional(),
+        severidad: z.enum(['baja', 'media', 'alta', 'critica']).optional(),
+        descripcion: z.string().optional(),
+        activo: z.boolean().optional(),
+        orden: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (!['admin', 'superadmin'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        const { id, ...data } = input;
+        await db.updatePlantillaIncidencia(id, data as any);
+        return { ok: true };
+      }),
+
+    eliminarPlantilla: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (!['admin', 'superadmin'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        await db.deletePlantillaIncidencia(input.id);
+        return { ok: true };
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

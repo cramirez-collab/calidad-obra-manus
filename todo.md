@@ -4596,3 +4596,15 @@
 ### Voz en Descripción + Ubicación Desplegable (Feb 2026)
 - [x] Botón de voz en descripción que transcriba audio y resuma en acción concreta de 5 palabras con LLM
 - [x] Cambiar campo ubicación a desplegable con niveles/unidades del proyecto + opción texto libre
+
+### Contador Días Sin Accidentes + Tiempo Resolución (Feb 2026)
+- [ ] Contador de días sin accidentes críticos visible en dashboard de seguridad
+- [ ] Tiempo promedio de resolución por segurista en estadísticas
+- [ ] Tiempo promedio de resolución por empresa en estadísticas
+
+### Plantillas Rápidas de Incidentes (Feb 2026)
+- [x] Tabla plantillas_incidencia en BD con tipo, severidad, nombre, descripción, orden, activo
+- [x] Seed 10 plantillas más frecuentes en construcción (auto-seed al primer query)
+- [x] Procedures tRPC CRUD para plantillas (admin/superadmin)
+- [x] CRUD plantillas en página de Configuración (crear, editar, activar/desactivar, eliminar)
+- [x] Selector rápido de plantillas en formulario de reporte (chips horizontales con snap scroll)
