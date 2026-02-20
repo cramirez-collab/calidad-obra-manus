@@ -4632,3 +4632,4 @@
 - [x] Optimizar layout mobile-first del formulario de reporte completo
 - [x] Reducir tamaño de letra del select de segurista asignado a 8pt
 - [x] Reemplazar select nativo de asignar segurista por modal bottom-sheet custom con letra 8pt
+- [x] Agregar foto de perfil del segurista asignado en botón y modal de selección

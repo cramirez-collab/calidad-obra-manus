@@ -748,7 +748,14 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
               : 'border-muted hover:border-red-300'
           }`}
         >
-          <svg className="w-4 h-4 text-purple-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+          {(() => {
+            const seg = asignadoA ? usuariosProyecto?.find((u: any) => u.id === asignadoA) : null;
+            return seg ? (
+              <UserAvatar name={seg.name} fotoUrl={seg.fotoUrl} size="xs" showName={false} className="shrink-0" />
+            ) : (
+              <svg className="w-4 h-4 text-purple-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            );
+          })()}
           <span className="text-[8pt] font-medium truncate">{(asignadoA && usuariosProyecto?.find((u: any) => u.id === asignadoA)?.name) || 'Sin asignar'}</span>
           {asignadoA && (
             <span className="ml-auto" onClick={(e) => { e.stopPropagation(); setAsignadoA(undefined); }}>
@@ -783,11 +790,12 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
                     <button
                       key={u.id}
                       onClick={() => { setAsignadoA(u.id); setShowSegSelect(false); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-[8pt] transition-colors ${
+                      className={`w-full text-left px-3 py-2 rounded-lg text-[8pt] transition-colors flex items-center gap-2 ${
                         asignadoA === u.id ? 'bg-purple-100 text-purple-800 font-semibold' : 'hover:bg-muted'
                       }`}
                     >
-                      {u.name}
+                      <UserAvatar name={u.name} fotoUrl={u.fotoUrl} size="xs" showName={false} className="shrink-0" />
+                      <span className="truncate">{u.name}</span>
                     </button>
                   ));
                 })()}
