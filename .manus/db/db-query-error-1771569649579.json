@@ -1,0 +1,8 @@
+{
+  "query": "SELECT nv.id, nv.proyectoId, nv.usuarioId, nv.transcripcion, nv.bullets, nv.duracion, nv.createdAt, u.name as usuario_nombre FROM notas_voz_seguridad nv LEFT JOIN users u ON nv.usuarioId = u.id ORDER BY nv.createdAt DESC; SELECT ms.id, ms.incidenteId, ms.usuarioId, ms.texto, ms.tipo, ms.createdAt FROM mensajes_seguridad ms ORDER BY ms.createdAt DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT nv.id, nv.proyectoId, nv.usuarioId, nv.transcripcion, nv.bullets, nv.duracion, nv.createdAt, u.name as usuario_nombre FROM notas_voz_seguridad nv LEFT JOIN users u ON nv.usuarioId = u.id ORDER BY nv.createdAt DESC; SELECT ms.id, ms.incidenteId, ms.usuarioId, ms.texto, ms.tipo, ms.createdAt FROM mensajes_seguridad ms ORDER BY ms.createdAt DESC LIMIT 20;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'nv.usuarioid' in 'on clause'"
+  ]
+}

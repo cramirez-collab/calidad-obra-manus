@@ -1,0 +1,70 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'incidentes_seguridad' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'incidentes_seguridad' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "proyectoId"
+    },
+    {
+      "COLUMN_NAME": "reportadoPor"
+    },
+    {
+      "COLUMN_NAME": "tipo_incidente"
+    },
+    {
+      "COLUMN_NAME": "severidad_incidente"
+    },
+    {
+      "COLUMN_NAME": "descripcion"
+    },
+    {
+      "COLUMN_NAME": "ubicacion"
+    },
+    {
+      "COLUMN_NAME": "unidadId"
+    },
+    {
+      "COLUMN_NAME": "fotoUrl"
+    },
+    {
+      "COLUMN_NAME": "fotoBase64"
+    },
+    {
+      "COLUMN_NAME": "estado_incidente"
+    },
+    {
+      "COLUMN_NAME": "accionCorrectiva"
+    },
+    {
+      "COLUMN_NAME": "cerradoPor"
+    },
+    {
+      "COLUMN_NAME": "fechaCierre"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "updatedAt"
+    },
+    {
+      "COLUMN_NAME": "codigo"
+    },
+    {
+      "COLUMN_NAME": "fotoMarcadaUrl"
+    },
+    {
+      "COLUMN_NAME": "fotoMarcadaBase64"
+    },
+    {
+      "COLUMN_NAME": "asignadoA"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nproyectoId\nreportadoPor\ntipo_incidente\nseveridad_incidente\ndescripcion\nubicacion\nunidadId\nfotoUrl\nfotoBase64\nestado_incidente\naccionCorrectiva\ncerradoPor\nfechaCierre\ncreatedAt\nupdatedAt\ncodigo\nfotoMarcadaUrl\nfotoMarcadaBase64\nasignadoA\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

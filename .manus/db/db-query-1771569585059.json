@@ -1,0 +1,31 @@
+{
+  "query": "SHOW TABLES LIKE '%seguridad%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SHOW TABLES LIKE '%seguridad%';",
+  "rows": [
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (%seguridad%)": "bitacora_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (%seguridad%)": "checklist_items_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (%seguridad%)": "checklists_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (%seguridad%)": "evidencias_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (%seguridad%)": "incidentes_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (%seguridad%)": "mensajes_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (%seguridad%)": "notas_voz_seguridad"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (%seguridad%)\nbitacora_seguridad\nchecklist_items_seguridad\nchecklists_seguridad\nevidencias_seguridad\nincidentes_seguridad\nmensajes_seguridad\nnotas_voz_seguridad\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

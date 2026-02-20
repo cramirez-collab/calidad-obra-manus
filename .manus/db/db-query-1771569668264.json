@@ -1,0 +1,21 @@
+{
+  "query": "SELECT * FROM notas_voz_seguridad LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT * FROM notas_voz_seguridad LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "proyecto_id": "1",
+      "incidente_id": "NULL",
+      "creado_por_id": "1",
+      "audio_url": "https://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/seguridad/voz/1/1771516703747-pitz6uovw2.webm",
+      "transcripcion": "Aquí pueden hablar y decir lo que ustedes quieran, queda registrado y queda como un habitáculo. Si está sucediendo esto, le llega la notificación aquí en la...",
+      "bullets": "[\"Asegurar la privacidad de las conversaciones grabadas.\",\"Definir el propósito y uso de las grabaciones de voz.\",\"Establecer un protocolo claro para la notificación de eventos.\",\"Garantizar que el sistema de registro funcione correctamente.\",\"Capacitar al personal sobre el uso y las implicaciones del sistema.\"]",
+      "duracion_segundos": "9",
+      "fecha_creacion": "2026-02-19 15:58:23"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tproyecto_id\tincidente_id\tcreado_por_id\taudio_url\ttranscripcion\tbullets\tduracion_segundos\tfecha_creacion\n1\t1\tNULL\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/seguridad/voz/1/1771516703747-pitz6uovw2.webm\tAquí pueden hablar y decir lo que ustedes quieran, queda registrado y queda como un habitáculo. Si está sucediendo esto, le llega la notificación aquí en la...\t[\"Asegurar la privacidad de las conversaciones grabadas.\",\"Definir el propósito y uso de las grabaciones de voz.\",\"Establecer un protocolo claro para la notificación de eventos.\",\"Garantizar que el sistema de registro funcione correctamente.\",\"Capacitar al personal sobre el uso y las implicaciones del sistema.\"]\t9\t2026-02-19 15:58:23\n",
+  "stderr": "",
+  "execution_time_ms": 49
+}

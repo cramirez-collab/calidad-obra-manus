@@ -1,0 +1,34 @@
+{
+  "query": "SELECT 'incidentes_seguridad' as tabla, COUNT(*) as total FROM incidentes_seguridad UNION ALL SELECT 'mensajes_seguridad', COUNT(*) FROM mensajes_seguridad UNION ALL SELECT 'evidencias_seguridad', COUNT(*) FROM evidencias_seguridad UNION ALL SELECT 'bitacora_seguridad', COUNT(*) FROM bitacora_seguridad UNION ALL SELECT 'notas_voz_seguridad', COUNT(*) FROM notas_voz_seguridad UNION ALL SELECT 'tipos_incidencia_custom', COUNT(*) FROM tipos_incidencia_custom;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT 'incidentes_seguridad' as tabla, COUNT(*) as total FROM incidentes_seguridad UNION ALL SELECT 'mensajes_seguridad', COUNT(*) FROM mensajes_seguridad UNION ALL SELECT 'evidencias_seguridad', COUNT(*) FROM evidencias_seguridad UNION ALL SELECT 'bitacora_seguridad', COUNT(*) FROM bitacora_seguridad UNION ALL SELECT 'notas_voz_seguridad', COUNT(*) FROM notas_voz_seguridad UNION ALL SELECT 'tipos_incidencia_custom', COUNT(*) FROM tipos_incidencia_custom;",
+  "rows": [
+    {
+      "tabla": "evidencias_seguridad",
+      "total": "0"
+    },
+    {
+      "tabla": "incidentes_seguridad",
+      "total": "0"
+    },
+    {
+      "tabla": "mensajes_seguridad",
+      "total": "0"
+    },
+    {
+      "tabla": "notas_voz_seguridad",
+      "total": "1"
+    },
+    {
+      "tabla": "bitacora_seguridad",
+      "total": "2"
+    },
+    {
+      "tabla": "tipos_incidencia_custom",
+      "total": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "tabla\ttotal\nevidencias_seguridad\t0\nincidentes_seguridad\t0\nmensajes_seguridad\t0\nnotas_voz_seguridad\t1\nbitacora_seguridad\t2\ntipos_incidencia_custom\t0\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

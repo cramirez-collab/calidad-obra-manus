@@ -4994,6 +4994,103 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         await db.deletePlantillaIncidencia(input.id);
         return { ok: true };
       }),
+
+    // Generar reporte ejecutivo de seguridad con IA
+    generarReporte: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (!['admin', 'superadmin', 'supervisor'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo admins y supervisores pueden generar reportes' });
+        }
+
+        // Recopilar todos los datos del módulo de seguridad
+        const incidentes = await db.getIncidentesSeguridad(input.proyectoId);
+        const proyecto = await db.getProyectoById(input.proyectoId);
+        const usuariosProyecto = await db.getUsuariosByProyecto(input.proyectoId);
+        const seguristas = usuariosProyecto.filter((u: any) => u.rolEnProyecto === 'segurista');
+        const notasVoz = await db.getNotasVozByProyecto(input.proyectoId);
+
+        // Estadísticas de incidentes
+        const totalIncidentes = incidentes.length;
+        const abiertos = incidentes.filter((i: any) => i.estado === 'abierto').length;
+        const enProceso = incidentes.filter((i: any) => i.estado === 'en_proceso').length;
+        const prevencion = incidentes.filter((i: any) => i.estado === 'prevencion').length;
+        const cerrados = incidentes.filter((i: any) => i.estado === 'cerrado').length;
+        const criticos = incidentes.filter((i: any) => i.severidad === 'critica').length;
+        const altos = incidentes.filter((i: any) => i.severidad === 'alta').length;
+
+        // Distribución por tipo
+        const porTipo: Record<string, number> = {};
+        incidentes.forEach((i: any) => { porTipo[i.tipo] = (porTipo[i.tipo] || 0) + 1; });
+
+        // Distribución por severidad
+        const porSeveridad: Record<string, number> = { baja: 0, media: 0, alta: 0, critica: 0 };
+        incidentes.forEach((i: any) => { porSeveridad[i.severidad] = (porSeveridad[i.severidad] || 0) + 1; });
+
+        // Distribución por ubicación
+        const porUbicacion: Record<string, number> = {};
+        incidentes.forEach((i: any) => { if (i.ubicacion) porUbicacion[i.ubicacion] = (porUbicacion[i.ubicacion] || 0) + 1; });
+
+        // Roles en el proyecto
+        const rolesDist: Record<string, number> = {};
+        usuariosProyecto.forEach((u: any) => { rolesDist[u.rolEnProyecto] = (rolesDist[u.rolEnProyecto] || 0) + 1; });
+
+        // Notas de voz transcripciones
+        const transcripciones = notasVoz.map((n: any) => ({
+          fecha: n.fechaCreacion,
+          transcripcion: n.transcripcion,
+          bullets: n.bullets,
+        }));
+
+        const fechaReporte = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        const dataContext = JSON.stringify({
+          proyecto: proyecto?.nombre || 'Sin nombre',
+          direccion: proyecto?.direccion || '',
+          fechaReporte,
+          totalUsuarios: usuariosProyecto.length,
+          distribucionRoles: rolesDist,
+          totalSeguristas: seguristas.length,
+          seguristas: seguristas.map((s: any) => s.usuario?.name || 'N/A'),
+          estadisticasIncidentes: {
+            total: totalIncidentes,
+            abiertos, enProceso, prevencion, cerrados,
+            criticos, altos,
+          },
+          distribucionPorTipo: porTipo,
+          distribucionPorSeveridad: porSeveridad,
+          distribucionPorUbicacion: porUbicacion,
+          incidentesDetalle: incidentes.slice(0, 50).map((i: any) => ({
+            codigo: i.codigo, tipo: i.tipo, severidad: i.severidad,
+            descripcion: i.descripcion, ubicacion: i.ubicacion,
+            estado: i.estado, fecha: i.createdAt,
+          })),
+          notasDeVoz: transcripciones,
+          diasSinAccidentesCriticos: totalIncidentes === 0 ? 'Sin incidentes registrados' :
+            criticos === 0 ? 'Sin accidentes criticos registrados' : 'Hay accidentes criticos pendientes',
+        }, null, 2);
+
+        const llmResponse = await invokeLLM({
+          messages: [
+            {
+              role: 'system',
+              content: `Eres un experto en seguridad industrial y salud ocupacional en obras de construccion. Genera reportes ejecutivos profesionales en español. Usa formato Markdown. No uses acentos en el texto para compatibilidad. El reporte debe ser accionable, directo y enfocado en puntos criticos.`
+            },
+            {
+              role: 'user',
+              content: `Genera un REPORTE EJECUTIVO DE SEGURIDAD para el proyecto de construccion con los siguientes datos:\n\n${dataContext}\n\nEl reporte debe incluir:\n\n1. **ENCABEZADO**: Titulo "REPORTE EJECUTIVO DE SEGURIDAD", nombre del proyecto, direccion, fecha\n2. **RESUMEN EJECUTIVO**: Parrafo breve del estado general de seguridad\n3. **INDICADORES CLAVE (KPIs)**: Tabla con Total incidentes, Abiertos, En proceso, Prevencion, Cerrados, Criticos, Altos\n4. **ANALISIS POR TIPO DE INCIDENTE**: Tabla con distribucion y porcentajes\n5. **ANALISIS POR SEVERIDAD**: Tabla con distribucion y nivel de riesgo\n6. **ZONAS CRITICAS**: Analisis de ubicaciones con mayor incidencia\n7. **EQUIPO DE SEGURIDAD**: Lista de seguristas activos y cobertura\n8. **NOTAS DE VOZ / OBSERVACIONES DE CAMPO**: Resumen de transcripciones\n9. **PUNTOS CRITICOS DE ENFOQUE**: Lista priorizada de los 5-7 puntos mas urgentes que requieren atencion inmediata\n10. **PLAN DE ACCION RECOMENDADO**: Tabla con accion, responsable sugerido, prioridad, plazo\n11. **CONCLUSIONES Y RECOMENDACIONES**: Parrafo final con vision estrategica\n\nSi hay 0 incidentes, enfoca el reporte en: estado de preparacion del equipo, recomendaciones preventivas, areas de riesgo potencial en obra de construccion, y plan de accion proactivo. Analiza las notas de voz como indicadores de la cultura de seguridad.\n\nSe profesional, concreto y accionable. No inventes datos que no esten en el contexto.`
+            }
+          ]
+        });
+
+        const reporteMarkdown = String(llmResponse.choices?.[0]?.message?.content || 'Error generando reporte');
+
+        return {
+          markdown: reporteMarkdown,
+          fechaGeneracion: new Date().toISOString(),
+          proyecto: proyecto?.nombre || 'Sin nombre',
+        };
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

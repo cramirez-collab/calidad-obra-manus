@@ -1,0 +1,9 @@
+{
+  "query": "SELECT i.*, u.name as reportado_nombre, u2.name as asignado_nombre FROM incidentes_seguridad i LEFT JOIN users u ON i.reportadoPor = u.id LEFT JOIN users u2 ON i.asignadoA = u2.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT i.*, u.name as reportado_nombre, u2.name as asignado_nombre FROM incidentes_seguridad i LEFT JOIN users u ON i.reportadoPor = u.id LEFT JOIN users u2 ON i.asignadoA = u2.id;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 53
+}

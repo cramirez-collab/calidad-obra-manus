@@ -4633,3 +4633,6 @@
 - [x] Reducir tamaño de letra del select de segurista asignado a 8pt
 - [x] Reemplazar select nativo de asignar segurista por modal bottom-sheet custom con letra 8pt
 - [x] Agregar foto de perfil del segurista asignado en botón y modal de selección
+- [ ] Generar reporte ejecutivo PDF del módulo de seguridad con IA (análisis de BD, puntos críticos, recomendaciones)
+- [ ] Endpoint backend para generar reporte de seguridad con LLM
+- [ ] UI para generar, ver y compartir reporte PDF de seguridad

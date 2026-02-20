@@ -1,0 +1,37 @@
+{
+  "query": "SELECT COUNT(*) as total_incidentes FROM incidentes_seguridad; SELECT COUNT(*) as total_mensajes FROM mensajes_seguridad; SELECT COUNT(*) as total_evidencias FROM evidencias_seguridad; SELECT COUNT(*) as total_bitacora FROM bitacora_seguridad; SELECT COUNT(*) as total_notas_voz FROM notas_voz_seguridad;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT COUNT(*) as total_incidentes FROM incidentes_seguridad; SELECT COUNT(*) as total_mensajes FROM mensajes_seguridad; SELECT COUNT(*) as total_evidencias FROM evidencias_seguridad; SELECT COUNT(*) as total_bitacora FROM bitacora_seguridad; SELECT COUNT(*) as total_notas_voz FROM notas_voz_seguridad;",
+  "rows": [
+    {
+      "total_incidentes": "0"
+    },
+    {
+      "total_incidentes": "total_mensajes"
+    },
+    {
+      "total_incidentes": "0"
+    },
+    {
+      "total_incidentes": "total_evidencias"
+    },
+    {
+      "total_incidentes": "0"
+    },
+    {
+      "total_incidentes": "total_bitacora"
+    },
+    {
+      "total_incidentes": "2"
+    },
+    {
+      "total_incidentes": "total_notas_voz"
+    },
+    {
+      "total_incidentes": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_incidentes\n0\ntotal_mensajes\n0\ntotal_evidencias\n0\ntotal_bitacora\n2\ntotal_notas_voz\n1\n",
+  "stderr": "",
+  "execution_time_ms": 69
+}
