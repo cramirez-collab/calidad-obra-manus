@@ -29,9 +29,10 @@ const ICON = "h-4.5 w-4.5 text-white";
  * ALL buttons same size (40px), with tooltips on hover.
  */
 export function FloatingCaptureButton() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const isSegurista = user?.role === 'segurista';
+  const isOnSeguridad = location === '/seguridad' || location.startsWith('/seguridad/');
 
   // Sync state
   const [isSyncingManual, setIsSyncingManual] = useState(false);
@@ -214,85 +215,88 @@ export function FloatingCaptureButton() {
   return (
     <>
       {/* SINGLE flex container for ALL floating buttons - right side - uniform size */}
-      <div className="fixed bottom-4 right-3 z-50 flex flex-col items-center gap-2">
-        {/* WhatsApp buttons (Contratistas + Seguridad) - solo Hidalma */}
-        <WhatsAppFloatingButtons />
+      {/* Ocultar en página de seguridad para no tapar el formulario */}
+      {!isOnSeguridad && (
+        <div className="fixed bottom-4 right-3 z-50 flex flex-col items-center gap-2">
+          {/* WhatsApp buttons (Contratistas + Seguridad) - solo Hidalma */}
+          <WhatsAppFloatingButtons />
 
-        {/* Seguristas solo ven WhatsApp + Seguridad, no los botones de acción */}
-        {!isSegurista && (
-          <>
-            {/* 1. Plus - Nuevo Ítem */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => setLocation("/nuevo-item")}
-                  size="icon"
-                  className={`${BTN} bg-[#02B381] hover:bg-[#029970]`}
-                >
-                  <Plus className={ICON} strokeWidth={3} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">Nuevo Ítem</TooltipContent>
-            </Tooltip>
+          {/* Seguristas solo ven WhatsApp + Seguridad, no los botones de acción */}
+          {!isSegurista && (
+            <>
+              {/* 1. Plus - Nuevo Ítem */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setLocation("/nuevo-item")}
+                    size="icon"
+                    className={`${BTN} bg-[#02B381] hover:bg-[#029970]`}
+                  >
+                    <Plus className={ICON} strokeWidth={3} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">Nuevo Ítem</TooltipContent>
+              </Tooltip>
 
-            {/* 2. Pin - Ver Planos en modo Pin */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => setLocation("/planos?mode=pin")}
-                  size="icon"
-                  className={`${BTN} bg-[#E67E22] hover:bg-[#D35400]`}
-                >
-                  <MapPin className={ICON} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">Pin en Plano</TooltipContent>
-            </Tooltip>
+              {/* 2. Pin - Ver Planos en modo Pin */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setLocation("/planos?mode=pin")}
+                    size="icon"
+                    className={`${BTN} bg-[#E67E22] hover:bg-[#D35400]`}
+                  >
+                    <MapPin className={ICON} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">Pin en Plano</TooltipContent>
+              </Tooltip>
 
-            {/* 3. Crosshair - Captura rápida (nuevo ítem) */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => setLocation("/planos?mode=nuevo")}
-                  size="icon"
-                  className={`${BTN} bg-[#002C63] hover:bg-[#001d42]`}
-                >
-                  <Crosshair className={ICON} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">Captura Rápida</TooltipContent>
-            </Tooltip>
+              {/* 3. Crosshair - Captura rápida (nuevo ítem) */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setLocation("/planos?mode=nuevo")}
+                    size="icon"
+                    className={`${BTN} bg-[#002C63] hover:bg-[#001d42]`}
+                  >
+                    <Crosshair className={ICON} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">Captura Rápida</TooltipContent>
+              </Tooltip>
 
-            {/* 4. QR - Escanear QR */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => { setStatus("idle"); setIsOpen(true); }}
-                  size="icon"
-                  className={`${BTN} bg-[#02B381] hover:bg-[#029970]`}
-                >
-                  <QrCode className={ICON} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">Escanear QR</TooltipContent>
-            </Tooltip>
-          </>
-        )}
+              {/* 4. QR - Escanear QR */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => { setStatus("idle"); setIsOpen(true); }}
+                    size="icon"
+                    className={`${BTN} bg-[#02B381] hover:bg-[#029970]`}
+                  >
+                    <QrCode className={ICON} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">Escanear QR</TooltipContent>
+              </Tooltip>
+            </>
+          )}
 
-        {/* 5. Seguridad - siempre visible */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              onClick={() => setLocation("/seguridad")}
-              size="icon"
-              className={`${BTN} bg-red-600 hover:bg-red-700`}
-            >
-              <Shield className={ICON} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">Seguridad</TooltipContent>
-        </Tooltip>
-      </div>
+          {/* 5. Seguridad - siempre visible */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={() => setLocation("/seguridad")}
+                size="icon"
+                className={`${BTN} bg-red-600 hover:bg-red-700`}
+              >
+                <Shield className={ICON} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left">Seguridad</TooltipContent>
+          </Tooltip>
+        </div>
+      )}
 
       {/* QR Scanner Modal */}
       <Dialog open={isOpen} onOpenChange={handleClose}>
