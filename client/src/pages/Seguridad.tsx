@@ -538,35 +538,41 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
         </div>
       </div>
 
-      {/* Foto - compacto */}
+      {/* Evidencia fotográfica - prominente */}
       <div>
+        <label className="text-[10px] font-semibold text-muted-foreground mb-1.5 block">Evidencia fotográfica</label>
         <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} className="hidden" />
         <input ref={galleryRef} type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
         {fotoPreview ? (
-          <div className="relative">
-            <img src={fotoPreview} alt="Evidencia" className="w-full h-20 object-cover rounded-lg border" />
-            <button
-              onClick={() => { setFotoBase64(null); setFotoPreview(null); }}
-              className="absolute top-1.5 right-1.5 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+          <div className="relative rounded-xl overflow-hidden border-2 border-emerald-400 bg-emerald-50">
+            <img src={fotoPreview} alt="Evidencia" className="w-full h-32 object-cover" />
+            <div className="absolute top-1.5 right-1.5 flex gap-1">
+              <button
+                onClick={() => { setFotoBase64(null); setFotoPreview(null); }}
+                className="bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center backdrop-blur-sm"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="absolute bottom-1.5 left-1.5 bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+              <Camera className="w-3 h-3" /> Evidencia capturada
+            </div>
           </div>
         ) : (
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => cameraRef.current?.click()}
-              className="flex-1 h-10 border-2 border-dashed border-red-300 rounded-lg flex items-center justify-center gap-1.5 hover:bg-red-50 transition-colors"
+              className="h-14 border-2 border-dashed border-red-300 rounded-xl flex flex-col items-center justify-center gap-1 hover:bg-red-50 active:scale-95 transition-all"
             >
-              <Camera className="w-4 h-4 text-red-400" />
-              <span className="text-[10px] font-medium text-red-500">Tomar Foto</span>
+              <Camera className="w-5 h-5 text-red-400" />
+              <span className="text-[10px] font-semibold text-red-500">Tomar Foto</span>
             </button>
             <button
               onClick={() => galleryRef.current?.click()}
-              className="flex-1 h-10 border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-colors"
+              className="h-14 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 hover:bg-slate-50 active:scale-95 transition-all"
             >
-              <ImageIcon className="w-4 h-4 text-slate-400" />
-              <span className="text-[10px] font-medium text-slate-500">Galería</span>
+              <ImageIcon className="w-5 h-5 text-slate-400" />
+              <span className="text-[10px] font-semibold text-slate-500">Galería</span>
             </button>
           </div>
         )}
@@ -616,101 +622,136 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
         )}
       </div>
 
-      {/* Ubicación + Asignar - en una fila */}
-      <div className="grid grid-cols-2 gap-2">
-        {/* Ubicación */}
-        <div className="relative">
-          <label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Ubicación</label>
-          <div className="flex gap-1">
+      {/* Ubicación - botón grande que abre selector full-width */}
+      <div>
+        <label className="text-[10px] font-semibold text-muted-foreground mb-1.5 block">Ubicación (nivel / zona)</label>
+        <button
+          type="button"
+          onClick={() => setShowUbicDropdown(!showUbicDropdown)}
+          className={`w-full h-11 rounded-xl border-2 flex items-center gap-2 px-3 transition-all active:scale-[0.98] ${
+            ubicacion
+              ? 'border-emerald-400 bg-emerald-50 text-emerald-800'
+              : 'border-dashed border-slate-300 bg-muted/20 text-muted-foreground hover:border-slate-400'
+          }`}
+        >
+          <MapPin className={`w-4 h-4 shrink-0 ${ubicacion ? 'text-emerald-600' : 'text-slate-400'}`} />
+          <span className="text-xs font-medium truncate flex-1 text-left">{ubicacion || 'Seleccionar nivel o zona...'}</span>
+          {ubicacion && (
             <button
               type="button"
-              onClick={() => setShowUbicDropdown(!showUbicDropdown)}
-              className="h-8 w-8 rounded-md border flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+              onClick={(e) => { e.stopPropagation(); setUbicacion(''); }}
+              className="w-5 h-5 rounded-full bg-emerald-200 text-emerald-700 flex items-center justify-center shrink-0"
             >
-              <MapPin className="w-3.5 h-3.5" />
+              <X className="w-3 h-3" />
             </button>
-            <Input
-              value={ubicacion}
-              onChange={(e) => setUbicacion(e.target.value)}
-              placeholder="Nivel, zona..."
-              className="text-xs h-8 flex-1"
-            />
-          </div>
-          {showUbicDropdown && nivelesData && (
-            <div className="absolute z-[60] top-full mt-1 left-0 w-[calc(200%+0.5rem)] bg-background border rounded-lg shadow-xl max-h-52 overflow-auto">
-              {nivelesData.map((n) => (
-                <div key={n.nivel}>
-                  <button
-                    type="button"
-                    className="w-full text-left px-3 py-2 text-xs font-semibold hover:bg-muted flex items-center justify-between border-b"
-                    onClick={() => {
-                      if (expandedNivel === n.nivel) {
-                        setExpandedNivel(null);
-                      } else {
-                        setExpandedNivel(n.nivel);
-                      }
-                    }}
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <Building2 className="w-3 h-3 text-muted-foreground" />
-                      {n.nivel}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">{n.unidades.length} uds</span>
-                  </button>
-                  {expandedNivel === n.nivel && (
-                    <div className="bg-muted/30">
-                      <button
-                        type="button"
-                        className="w-full text-left px-5 py-1.5 text-xs hover:bg-muted/60 text-emerald-600 font-medium"
-                        onClick={() => {
-                          setUbicacion(n.nivel);
-                          setShowUbicDropdown(false);
-                          setExpandedNivel(null);
-                        }}
-                      >
-                        {n.nivel} (general)
-                      </button>
-                      {n.unidades.map((u) => (
+          )}
+        </button>
+        {/* Modal de selección de ubicación - full width overlay */}
+        {showUbicDropdown && (
+          <>
+            <div className="fixed inset-0 bg-black/30 z-[100]" onClick={() => { setShowUbicDropdown(false); setExpandedNivel(null); }} />
+            <div className="fixed left-2 right-2 bottom-2 z-[101] bg-background rounded-2xl shadow-2xl border max-h-[60vh] flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+                <h3 className="text-sm font-bold flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-red-500" /> Seleccionar Ubicación
+                </h3>
+                <button
+                  onClick={() => { setShowUbicDropdown(false); setExpandedNivel(null); }}
+                  className="w-7 h-7 rounded-full bg-muted flex items-center justify-center"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {/* Input manual */}
+              <div className="px-4 py-2 border-b">
+                <Input
+                  value={ubicacion}
+                  onChange={(e) => setUbicacion(e.target.value)}
+                  placeholder="Escribir ubicación manual..."
+                  className="text-sm h-9"
+                  autoFocus
+                />
+              </div>
+              {/* Lista de niveles */}
+              <div className="overflow-auto flex-1">
+                {nivelesData && nivelesData.map((n) => (
+                  <div key={n.nivel}>
+                    <button
+                      type="button"
+                      className="w-full text-left px-4 py-3 text-sm font-semibold hover:bg-muted/60 active:bg-muted flex items-center justify-between border-b"
+                      onClick={() => setExpandedNivel(expandedNivel === n.nivel ? null : n.nivel)}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-slate-500" />
+                        {n.nivel}
+                      </span>
+                      <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{n.unidades.length} uds</span>
+                    </button>
+                    {expandedNivel === n.nivel && (
+                      <div className="bg-muted/20 border-b">
                         <button
-                          key={u}
                           type="button"
-                          className="w-full text-left px-5 py-1.5 text-xs hover:bg-muted/60"
+                          className="w-full text-left px-6 py-2.5 text-sm hover:bg-emerald-50 active:bg-emerald-100 text-emerald-700 font-semibold flex items-center gap-2"
                           onClick={() => {
-                            setUbicacion(`${n.nivel} - ${u}`);
+                            setUbicacion(n.nivel);
                             setShowUbicDropdown(false);
                             setExpandedNivel(null);
                           }}
                         >
-                          {u}
+                          <MapPin className="w-3.5 h-3.5" /> Seleccionar {n.nivel} (general)
                         </button>
-                      ))}
-                    </div>
-                  )}
+                        {n.unidades.map((u) => (
+                          <button
+                            key={u}
+                            type="button"
+                            className="w-full text-left px-6 py-2.5 text-sm hover:bg-muted/60 active:bg-muted border-t border-muted/30"
+                            onClick={() => {
+                              setUbicacion(`${n.nivel} - ${u}`);
+                              setShowUbicDropdown(false);
+                              setExpandedNivel(null);
+                            }}
+                          >
+                            {u}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {/* Botón confirmar si escribió manual */}
+              {ubicacion && (
+                <div className="px-4 py-2 border-t bg-muted/20">
+                  <Button
+                    onClick={() => { setShowUbicDropdown(false); setExpandedNivel(null); }}
+                    className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl"
+                  >
+                    Confirmar: {ubicacion}
+                  </Button>
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
+      </div>
 
-        {/* Asignar segurista */}
-        <div>
-          <label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Asignar a</label>
-          <select
-            value={asignadoA || ''}
-            onChange={(e) => setAsignadoA(e.target.value ? Number(e.target.value) : undefined)}
-            className="w-full h-8 rounded-md border bg-background text-xs px-2 focus:outline-none focus:ring-2 focus:ring-red-500/20"
-          >
-            <option value="">Sin asignar</option>
-            {(() => {
-              // Solo mostrar seguristas en el dropdown de asignación
-              const seguristas = (usuariosProyecto || []).filter((u: any) => u.role === 'segurista');
-              const sorted = [...seguristas].sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
-              return sorted.map((u: any) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ));
-            })()}
-          </select>
-        </div>
+      {/* Asignar segurista - botón grande */}
+      <div>
+        <label className="text-[10px] font-semibold text-muted-foreground mb-1.5 block">Asignar segurista</label>
+        <select
+          value={asignadoA || ''}
+          onChange={(e) => setAsignadoA(e.target.value ? Number(e.target.value) : undefined)}
+          className="w-full h-11 rounded-xl border-2 bg-background text-sm px-3 font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
+        >
+          <option value="">Sin asignar</option>
+          {(() => {
+            const seguristas = (usuariosProyecto || []).filter((u: any) => u.role === 'segurista');
+            const sorted = [...seguristas].sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
+            return sorted.map((u: any) => (
+              <option key={u.id} value={u.id}>{u.name}</option>
+            ));
+          })()}
+        </select>
       </div>
 
       {/* Botón enviar - sticky en mobile */}

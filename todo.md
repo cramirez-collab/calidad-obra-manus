@@ -4627,3 +4627,6 @@
 - [x] Restringir navegación para rol segurista (solo Bienvenida, Seguridad, WhatsApp seguridad, Contratistas read-only)
 - [ ] Alarma/notificación fuerte a seguristas cuando incidencia es crítica o alta
 - [ ] En tarjeta de incidente "Asignar a" solo mostrar seguristas
+- [x] Rediseñar selector de ubicación/nivel más grande y accesible (modal/sheet en vez de dropdown pequeño)
+- [x] Hacer evidencia fotográfica más visible y clara en el formulario
+- [x] Optimizar layout mobile-first del formulario de reporte completo
