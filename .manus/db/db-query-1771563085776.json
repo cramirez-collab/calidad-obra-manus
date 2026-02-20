@@ -1,0 +1,38 @@
+{
+  "query": "SELECT u.role, COUNT(*) as cnt FROM proyecto_usuarios pu LEFT JOIN users u ON pu.usuarioId = u.id WHERE pu.proyectoId = 1 AND pu.activo = 1 GROUP BY u.role;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT u.role, COUNT(*) as cnt FROM proyecto_usuarios pu LEFT JOIN users u ON pu.usuarioId = u.id WHERE pu.proyectoId = 1 AND pu.activo = 1 GROUP BY u.role;",
+  "rows": [
+    {
+      "role": "admin",
+      "cnt": "3"
+    },
+    {
+      "role": "NULL",
+      "cnt": "9"
+    },
+    {
+      "role": "supervisor",
+      "cnt": "4"
+    },
+    {
+      "role": "residente",
+      "cnt": "19"
+    },
+    {
+      "role": "superadmin",
+      "cnt": "1"
+    },
+    {
+      "role": "desarrollador",
+      "cnt": "4"
+    },
+    {
+      "role": "segurista",
+      "cnt": "12"
+    }
+  ],
+  "messages": [],
+  "stdout": "role\tcnt\nadmin\t3\nNULL\t9\nsupervisor\t4\nresidente\t19\nsuperadmin\t1\ndesarrollador\t4\nsegurista\t12\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

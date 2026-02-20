@@ -4617,3 +4617,4 @@
 - [x] Reducir tamaño de botones de tipo de incidente y severidad
 - [x] Asegurar campo ubicación, asignación segurista y botón guardar siempre visibles
 - [x] Optimizar layout para que no requiera scroll excesivo
+- [x] Corregir dropdown "Asignar a" para que jale usuarios del proyecto desde la BD

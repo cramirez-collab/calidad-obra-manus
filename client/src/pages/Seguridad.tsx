@@ -645,9 +645,18 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
             className="w-full h-8 rounded-md border bg-background text-xs px-2 focus:outline-none focus:ring-2 focus:ring-red-500/20"
           >
             <option value="">Sin asignar</option>
-            {usuariosProyecto?.filter((u: any) => u.role === 'segurista' || u.role === 'supervisor' || u.role === 'admin' || u.role === 'superadmin').map((u: any) => (
-              <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
-            ))}
+            {(() => {
+              const roleOrder = ['segurista', 'supervisor', 'admin', 'superadmin', 'jefe_residente', 'residente'];
+              const roleLabels: Record<string, string> = { segurista: 'Segurista', supervisor: 'Supervisor', admin: 'Admin', superadmin: 'Superadmin', jefe_residente: 'Jefe Res.', residente: 'Residente' };
+              const sorted = [...(usuariosProyecto || [])].sort((a: any, b: any) => {
+                const ai = roleOrder.indexOf(a.role) === -1 ? 99 : roleOrder.indexOf(a.role);
+                const bi = roleOrder.indexOf(b.role) === -1 ? 99 : roleOrder.indexOf(b.role);
+                return ai - bi || (a.name || '').localeCompare(b.name || '');
+              });
+              return sorted.map((u: any) => (
+                <option key={u.id} value={u.id}>{u.name} ({roleLabels[u.role] || u.role})</option>
+              ));
+            })()}
           </select>
         </div>
       </div>

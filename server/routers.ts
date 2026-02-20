@@ -4683,7 +4683,9 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
       .input(z.object({ proyectoId: z.number() }))
       .query(async ({ input }) => {
         const usuarios = await db.getUsuariosByProyecto(input.proyectoId);
-        return usuarios.map((u: any) => ({ id: u.id, name: u.name, role: u.role, fotoUrl: u.fotoUrl }));
+        return usuarios
+          .filter((u: any) => u.usuario)
+          .map((u: any) => ({ id: u.usuario.id, name: u.usuario.name, role: u.usuario.role, fotoUrl: u.usuario.fotoUrl }));
       }),
 
     // Eliminar incidente (solo admin/superadmin)

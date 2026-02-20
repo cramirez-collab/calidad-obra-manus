@@ -1,0 +1,478 @@
+{
+  "query": "SELECT pu.id, pu.proyectoId, pu.usuarioId, pu.rolEnProyecto, pu.activo, u.name, u.role FROM proyecto_usuarios pu LEFT JOIN users u ON pu.usuarioId = u.id WHERE pu.proyectoId = 1 AND pu.activo = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT pu.id, pu.proyectoId, pu.usuarioId, pu.rolEnProyecto, pu.activo, u.name, u.role FROM proyecto_usuarios pu LEFT JOIN users u ON pu.usuarioId = u.id WHERE pu.proyectoId = 1 AND pu.activo = 1;",
+  "rows": [
+    {
+      "id": "210015",
+      "proyectoId": "1",
+      "usuarioId": "1",
+      "rolEnProyecto": "admin",
+      "activo": "1",
+      "name": "Carlos Ramirez",
+      "role": "superadmin"
+    },
+    {
+      "id": "210016",
+      "proyectoId": "1",
+      "usuarioId": "540085",
+      "rolEnProyecto": "admin",
+      "activo": "1",
+      "name": "Julian Rodríguez Ramírez",
+      "role": "admin"
+    },
+    {
+      "id": "210024",
+      "proyectoId": "1",
+      "usuarioId": "721649",
+      "rolEnProyecto": "admin",
+      "activo": "1",
+      "name": "Estefany Sanchez",
+      "role": "admin"
+    },
+    {
+      "id": "210027",
+      "proyectoId": "1",
+      "usuarioId": "721666",
+      "rolEnProyecto": "supervisor",
+      "activo": "1",
+      "name": "Ing.Daniel Vazquez",
+      "role": "supervisor"
+    },
+    {
+      "id": "210025",
+      "proyectoId": "1",
+      "usuarioId": "781860",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Omar Palencia",
+      "role": "supervisor"
+    },
+    {
+      "id": "330001",
+      "proyectoId": "1",
+      "usuarioId": "1410108",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Karen Navith",
+      "role": "residente"
+    },
+    {
+      "id": "330003",
+      "proyectoId": "1",
+      "usuarioId": "1410178",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Natalia Diaz",
+      "role": "residente"
+    },
+    {
+      "id": "360001",
+      "proyectoId": "1",
+      "usuarioId": "1470049",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Esteban Guerrero ",
+      "role": "residente"
+    },
+    {
+      "id": "360002",
+      "proyectoId": "1",
+      "usuarioId": "1470059",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Jairo Briseño",
+      "role": "residente"
+    },
+    {
+      "id": "360003",
+      "proyectoId": "1",
+      "usuarioId": "1470083",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Saul Tovar",
+      "role": "residente"
+    },
+    {
+      "id": "360004",
+      "proyectoId": "1",
+      "usuarioId": "1470095",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Eduardo Rodriguez ",
+      "role": "residente"
+    },
+    {
+      "id": "360005",
+      "proyectoId": "1",
+      "usuarioId": "1470115",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Katy Orozco ",
+      "role": "residente"
+    },
+    {
+      "id": "420001",
+      "proyectoId": "1",
+      "usuarioId": "1530050",
+      "rolEnProyecto": "supervisor",
+      "activo": "1",
+      "name": "Zaira Alvarez",
+      "role": "desarrollador"
+    },
+    {
+      "id": "420002",
+      "proyectoId": "1",
+      "usuarioId": "1530056",
+      "rolEnProyecto": "supervisor",
+      "activo": "1",
+      "name": "Marco López",
+      "role": "desarrollador"
+    },
+    {
+      "id": "420003",
+      "proyectoId": "1",
+      "usuarioId": "1530063",
+      "rolEnProyecto": "supervisor",
+      "activo": "1",
+      "name": "Andres Quiroz",
+      "role": "desarrollador"
+    },
+    {
+      "id": "420004",
+      "proyectoId": "1",
+      "usuarioId": "1530070",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Xitlali Reyes",
+      "role": "residente"
+    },
+    {
+      "id": "420005",
+      "proyectoId": "1",
+      "usuarioId": "1530085",
+      "rolEnProyecto": "segurista",
+      "activo": "1",
+      "name": "Pablo Mercado",
+      "role": "segurista"
+    },
+    {
+      "id": "420006",
+      "proyectoId": "1",
+      "usuarioId": "1530090",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Genaro Solis",
+      "role": "residente"
+    },
+    {
+      "id": "420007",
+      "proyectoId": "1",
+      "usuarioId": "1530106",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Jesús Contreras",
+      "role": "residente"
+    },
+    {
+      "id": "450001",
+      "proyectoId": "1",
+      "usuarioId": "1650044",
+      "rolEnProyecto": "supervisor",
+      "activo": "1",
+      "name": "Jorge Esquivel",
+      "role": "supervisor"
+    },
+    {
+      "id": "540001",
+      "proyectoId": "1",
+      "usuarioId": "4200419",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Rafael Manriquez",
+      "role": "residente"
+    },
+    {
+      "id": "540002",
+      "proyectoId": "1",
+      "usuarioId": "4201178",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Esteban Guerrero ",
+      "role": "residente"
+    },
+    {
+      "id": "600001",
+      "proyectoId": "1",
+      "usuarioId": "4351934",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Jesus Ferrer",
+      "role": "residente"
+    },
+    {
+      "id": "600002",
+      "proyectoId": "1",
+      "usuarioId": "4351962",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Juan Ruiz",
+      "role": "residente"
+    },
+    {
+      "id": "600003",
+      "proyectoId": "1",
+      "usuarioId": "4352044",
+      "rolEnProyecto": "segurista",
+      "activo": "1",
+      "name": "Mayra Perez",
+      "role": "segurista"
+    },
+    {
+      "id": "600004",
+      "proyectoId": "1",
+      "usuarioId": "4352184",
+      "rolEnProyecto": "segurista",
+      "activo": "1",
+      "name": "Juan Javier Morales",
+      "role": "segurista"
+    },
+    {
+      "id": "600005",
+      "proyectoId": "1",
+      "usuarioId": "4357159",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Eduardo Rubicel ",
+      "role": "residente"
+    },
+    {
+      "id": "600006",
+      "proyectoId": "1",
+      "usuarioId": "4357176",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Gustavo Orozco",
+      "role": "residente"
+    },
+    {
+      "id": "600007",
+      "proyectoId": "1",
+      "usuarioId": "4357204",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Gerardo Rojas",
+      "role": "residente"
+    },
+    {
+      "id": "630001",
+      "proyectoId": "1",
+      "usuarioId": "5130888",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Jesus Contreras",
+      "role": "supervisor"
+    },
+    {
+      "id": "690001",
+      "proyectoId": "1",
+      "usuarioId": "7681577",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Paola Mora",
+      "role": "residente"
+    },
+    {
+      "id": "780001",
+      "proyectoId": "1",
+      "usuarioId": "7890028",
+      "rolEnProyecto": "admin",
+      "activo": "1",
+      "name": "Pablo Galindo",
+      "role": "admin"
+    },
+    {
+      "id": "840001",
+      "proyectoId": "1",
+      "usuarioId": "9330025",
+      "rolEnProyecto": "desarrollador",
+      "activo": "1",
+      "name": "Andres Quiroz",
+      "role": "desarrollador"
+    },
+    {
+      "id": "870001",
+      "proyectoId": "1",
+      "usuarioId": "10920068",
+      "rolEnProyecto": "segurista",
+      "activo": "1",
+      "name": "Eduardo González",
+      "role": "segurista"
+    },
+    {
+      "id": "870002",
+      "proyectoId": "1",
+      "usuarioId": "10920071",
+      "rolEnProyecto": "segurista",
+      "activo": "1",
+      "name": "Mary Galindo",
+      "role": "segurista"
+    },
+    {
+      "id": "900001",
+      "proyectoId": "1",
+      "usuarioId": "11130033",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "Cintya K",
+      "role": "residente"
+    },
+    {
+      "id": "960001",
+      "proyectoId": "1",
+      "usuarioId": "11700013",
+      "rolEnProyecto": "segurista",
+      "activo": "1",
+      "name": "Cynthia Montoya",
+      "role": "segurista"
+    },
+    {
+      "id": "930001",
+      "proyectoId": "1",
+      "usuarioId": "11730003",
+      "rolEnProyecto": "segurista",
+      "activo": "1",
+      "name": "Barbara Daniela Aguado Rocha",
+      "role": "segurista"
+    },
+    {
+      "id": "930002",
+      "proyectoId": "1",
+      "usuarioId": "11730004",
+      "rolEnProyecto": "segurista",
+      "activo": "1",
+      "name": "Guillermo Sanchez Erape",
+      "role": "segurista"
+    },
+    {
+      "id": "930003",
+      "proyectoId": "1",
+      "usuarioId": "11730005",
+      "rolEnProyecto": "segurista",
+      "activo": "1",
+      "name": "Isabel Estrada Hernandez",
+      "role": "segurista"
+    },
+    {
+      "id": "930004",
+      "proyectoId": "1",
+      "usuarioId": "11730006",
+      "rolEnProyecto": "segurista",
+      "activo": "1",
+      "name": "Miguel Angel Padilla Castillo",
+      "role": "segurista"
+    },
+    {
+      "id": "930005",
+      "proyectoId": "1",
+      "usuarioId": "11730007",
+      "rolEnProyecto": "segurista",
+      "activo": "1",
+      "name": "Raymundo Ivan Aguilar Lopez",
+      "role": "segurista"
+    },
+    {
+      "id": "930006",
+      "proyectoId": "1",
+      "usuarioId": "11730008",
+      "rolEnProyecto": "segurista",
+      "activo": "1",
+      "name": "JP Gonzalez Rolfe",
+      "role": "segurista"
+    },
+    {
+      "id": "210017",
+      "proyectoId": "1",
+      "usuarioId": "780297",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "210018",
+      "proyectoId": "1",
+      "usuarioId": "840001",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "210019",
+      "proyectoId": "1",
+      "usuarioId": "421490",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "210020",
+      "proyectoId": "1",
+      "usuarioId": "810145",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "210021",
+      "proyectoId": "1",
+      "usuarioId": "540077",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "210022",
+      "proyectoId": "1",
+      "usuarioId": "781800",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "210023",
+      "proyectoId": "1",
+      "usuarioId": "781651",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "210026",
+      "proyectoId": "1",
+      "usuarioId": "540580",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "210028",
+      "proyectoId": "1",
+      "usuarioId": "781773",
+      "rolEnProyecto": "residente",
+      "activo": "1",
+      "name": "NULL",
+      "role": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tproyectoId\tusuarioId\trolEnProyecto\tactivo\tname\trole\n210015\t1\t1\tadmin\t1\tCarlos Ramirez\tsuperadmin\n210016\t1\t540085\tadmin\t1\tJulian Rodríguez Ramírez\tadmin\n210024\t1\t721649\tadmin\t1\tEstefany Sanchez\tadmin\n210027\t1\t721666\tsupervisor\t1\tIng.Daniel Vazquez\tsupervisor\n210025\t1\t781860\tresidente\t1\tOmar Palencia\tsupervisor\n330001\t1\t1410108\tresidente\t1\tKaren Navith\tresidente\n330003\t1\t1410178\tresidente\t1\tNatalia Diaz\tresidente\n360001\t1\t1470049\tresidente\t1\tEsteban Guerrero \tresidente\n360002\t1\t1470059\tresidente\t1\tJairo Briseño\tresidente\n360003\t1\t1470083\tresidente\t1\tSaul Tovar\tresidente\n360004\t1\t1470095\tresidente\t1\tEduardo Rodriguez \tresidente\n360005\t1\t1470115\tresidente\t1\tKaty Orozco \tresidente\n420001\t1\t1530050\tsupervisor\t1\tZaira Alvarez\tdesarrollador\n420002\t1\t1530056\tsupervisor\t1\tMarco López\tdesarrollador\n420003\t1\t1530063\tsupervisor\t1\tAndres Quiroz\tdesarrollador\n420004\t1\t1530070\tresidente\t1\tXitlali Reyes\tresidente\n420005\t1\t1530085\tsegurista\t1\tPablo Mercado\tsegurista\n420006\t1\t1530090\tresidente\t1\tGenaro Solis\tresidente\n420007\t1\t1530106\tresidente\t1\tJesús Contreras\tresidente\n450001\t1\t1650044\tsupervisor\t1\tJorge Esquivel\tsupervisor\n540001\t1\t4200419\tresidente\t1\tRafael Manriquez\tresidente\n540002\t1\t4201178\tresidente\t1\tEsteban Guerrero \tresidente\n600001\t1\t4351934\tresidente\t1\tJesus Ferrer\tresidente\n600002\t1\t4351962\tresidente\t1\tJuan Ruiz\tresidente\n600003\t1\t4352044\tsegurista\t1\tMayra Perez\tsegurista\n600004\t1\t4352184\tsegurista\t1\tJuan Javier Morales\tsegurista\n600005\t1\t4357159\tresidente\t1\tEduardo Rubicel \tresidente\n600006\t1\t4357176\tresidente\t1\tGustavo Orozco\tresidente\n600007\t1\t4357204\tresidente\t1\tGerardo Rojas\tresidente\n630001\t1\t5130888\tresidente\t1\tJesus Contreras\tsupervisor\n690001\t1\t7681577\tresidente\t1\tPaola Mora\tresidente\n780001\t1\t7890028\tadmin\t1\tPablo Galindo\tadmin\n840001\t1\t9330025\tdesarrollador\t1\tAndres Quiroz\tdesarrollador\n870001\t1\t10920068\tsegurista\t1\tEduardo González\tsegurista\n870002\t1\t10920071\tsegurista\t1\tMary Galindo\tsegurista\n900001\t1\t11130033\tresidente\t1\tCintya K\tresidente\n960001\t1\t11700013\tsegurista\t1\tCynthia Montoya\tsegurista\n930001\t1\t11730003\tsegurista\t1\tBarbara Daniela Aguado Rocha\tsegurista\n930002\t1\t11730004\tsegurista\t1\tGuillermo Sanchez Erape\tsegurista\n930003\t1\t11730005\tsegurista\t1\tIsabel Estrada Hernandez\tsegurista\n930004\t1\t11730006\tsegurista\t1\tMiguel Angel Padilla Castillo\tsegurista\n930005\t1\t11730007\tsegurista\t1\tRaymundo Ivan Aguilar Lopez\tsegurista\n930006\t1\t11730008\tsegurista\t1\tJP Gonzalez Rolfe\tsegurista\n210017\t1\t780297\tresidente\t1\tNULL\tNULL\n210018\t1\t840001\tresidente\t1\tNULL\tNULL\n210019\t1\t421490\tresidente\t1\tNULL\tNULL\n210020\t1\t810145\tresidente\t1\tNULL\tNULL\n210021\t1\t540077\tresidente\t1\tNULL\tNULL\n210022\t1\t781800\tresidente\t1\tNULL\tNULL\n210023\t1\t781651\tresidente\t1\tNULL\tNULL\n210026\t1\t540580\tresidente\t1\tNULL\tNULL\n210028\t1\t781773\tresidente\t1\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 102
+}

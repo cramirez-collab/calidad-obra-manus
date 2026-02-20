@@ -1,0 +1,270 @@
+{
+  "query": "SELECT u.id, u.name, u.role FROM proyecto_usuarios pu LEFT JOIN users u ON pu.usuarioId = u.id WHERE pu.proyectoId = 1 AND pu.activo = 1 ORDER BY u.role, u.name LIMIT 60;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT u.id, u.name, u.role FROM proyecto_usuarios pu LEFT JOIN users u ON pu.usuarioId = u.id WHERE pu.proyectoId = 1 AND pu.activo = 1 ORDER BY u.role, u.name LIMIT 60;",
+  "rows": [
+    {
+      "id": "NULL",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "NULL",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "NULL",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "NULL",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "NULL",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "NULL",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "NULL",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "NULL",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "NULL",
+      "name": "NULL",
+      "role": "NULL"
+    },
+    {
+      "id": "1",
+      "name": "Carlos Ramirez",
+      "role": "superadmin"
+    },
+    {
+      "id": "721649",
+      "name": "Estefany Sanchez",
+      "role": "admin"
+    },
+    {
+      "id": "540085",
+      "name": "Julian Rodríguez Ramírez",
+      "role": "admin"
+    },
+    {
+      "id": "7890028",
+      "name": "Pablo Galindo",
+      "role": "admin"
+    },
+    {
+      "id": "721666",
+      "name": "Ing.Daniel Vazquez",
+      "role": "supervisor"
+    },
+    {
+      "id": "5130888",
+      "name": "Jesus Contreras",
+      "role": "supervisor"
+    },
+    {
+      "id": "1650044",
+      "name": "Jorge Esquivel",
+      "role": "supervisor"
+    },
+    {
+      "id": "781860",
+      "name": "Omar Palencia",
+      "role": "supervisor"
+    },
+    {
+      "id": "11130033",
+      "name": "Cintya K",
+      "role": "residente"
+    },
+    {
+      "id": "1470095",
+      "name": "Eduardo Rodriguez ",
+      "role": "residente"
+    },
+    {
+      "id": "4357159",
+      "name": "Eduardo Rubicel ",
+      "role": "residente"
+    },
+    {
+      "id": "1470049",
+      "name": "Esteban Guerrero ",
+      "role": "residente"
+    },
+    {
+      "id": "4201178",
+      "name": "Esteban Guerrero ",
+      "role": "residente"
+    },
+    {
+      "id": "1530090",
+      "name": "Genaro Solis",
+      "role": "residente"
+    },
+    {
+      "id": "4357204",
+      "name": "Gerardo Rojas",
+      "role": "residente"
+    },
+    {
+      "id": "4357176",
+      "name": "Gustavo Orozco",
+      "role": "residente"
+    },
+    {
+      "id": "1470059",
+      "name": "Jairo Briseño",
+      "role": "residente"
+    },
+    {
+      "id": "1530106",
+      "name": "Jesús Contreras",
+      "role": "residente"
+    },
+    {
+      "id": "4351934",
+      "name": "Jesus Ferrer",
+      "role": "residente"
+    },
+    {
+      "id": "4351962",
+      "name": "Juan Ruiz",
+      "role": "residente"
+    },
+    {
+      "id": "1410108",
+      "name": "Karen Navith",
+      "role": "residente"
+    },
+    {
+      "id": "1470115",
+      "name": "Katy Orozco ",
+      "role": "residente"
+    },
+    {
+      "id": "1410178",
+      "name": "Natalia Diaz",
+      "role": "residente"
+    },
+    {
+      "id": "7681577",
+      "name": "Paola Mora",
+      "role": "residente"
+    },
+    {
+      "id": "4200419",
+      "name": "Rafael Manriquez",
+      "role": "residente"
+    },
+    {
+      "id": "1470083",
+      "name": "Saul Tovar",
+      "role": "residente"
+    },
+    {
+      "id": "1530070",
+      "name": "Xitlali Reyes",
+      "role": "residente"
+    },
+    {
+      "id": "1530063",
+      "name": "Andres Quiroz",
+      "role": "desarrollador"
+    },
+    {
+      "id": "9330025",
+      "name": "Andres Quiroz",
+      "role": "desarrollador"
+    },
+    {
+      "id": "1530056",
+      "name": "Marco López",
+      "role": "desarrollador"
+    },
+    {
+      "id": "1530050",
+      "name": "Zaira Alvarez",
+      "role": "desarrollador"
+    },
+    {
+      "id": "11730003",
+      "name": "Barbara Daniela Aguado Rocha",
+      "role": "segurista"
+    },
+    {
+      "id": "11700013",
+      "name": "Cynthia Montoya",
+      "role": "segurista"
+    },
+    {
+      "id": "10920068",
+      "name": "Eduardo González",
+      "role": "segurista"
+    },
+    {
+      "id": "11730004",
+      "name": "Guillermo Sanchez Erape",
+      "role": "segurista"
+    },
+    {
+      "id": "11730005",
+      "name": "Isabel Estrada Hernandez",
+      "role": "segurista"
+    },
+    {
+      "id": "11730008",
+      "name": "JP Gonzalez Rolfe",
+      "role": "segurista"
+    },
+    {
+      "id": "4352184",
+      "name": "Juan Javier Morales",
+      "role": "segurista"
+    },
+    {
+      "id": "10920071",
+      "name": "Mary Galindo",
+      "role": "segurista"
+    },
+    {
+      "id": "4352044",
+      "name": "Mayra Perez",
+      "role": "segurista"
+    },
+    {
+      "id": "11730006",
+      "name": "Miguel Angel Padilla Castillo",
+      "role": "segurista"
+    },
+    {
+      "id": "1530085",
+      "name": "Pablo Mercado",
+      "role": "segurista"
+    },
+    {
+      "id": "11730007",
+      "name": "Raymundo Ivan Aguilar Lopez",
+      "role": "segurista"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trole\nNULL\tNULL\tNULL\nNULL\tNULL\tNULL\nNULL\tNULL\tNULL\nNULL\tNULL\tNULL\nNULL\tNULL\tNULL\nNULL\tNULL\tNULL\nNULL\tNULL\tNULL\nNULL\tNULL\tNULL\nNULL\tNULL\tNULL\n1\tCarlos Ramirez\tsuperadmin\n721649\tEstefany Sanchez\tadmin\n540085\tJulian Rodríguez Ramírez\tadmin\n7890028\tPablo Galindo\tadmin\n721666\tIng.Daniel Vazquez\tsupervisor\n5130888\tJesus Contreras\tsupervisor\n1650044\tJorge Esquivel\tsupervisor\n781860\tOmar Palencia\tsupervisor\n11130033\tCintya K\tresidente\n1470095\tEduardo Rodriguez \tresidente\n4357159\tEduardo Rubicel \tresidente\n1470049\tEsteban Guerrero \tresidente\n4201178\tEsteban Guerrero \tresidente\n1530090\tGenaro Solis\tresidente\n4357204\tGerardo Rojas\tresidente\n4357176\tGustavo Orozco\tresidente\n1470059\tJairo Briseño\tresidente\n1530106\tJesús Contreras\tresidente\n4351934\tJesus Ferrer\tresidente\n4351962\tJuan Ruiz\tresidente\n1410108\tKaren Navith\tresidente\n1470115\tKaty Orozco \tresidente\n1410178\tNatalia Diaz\tresidente\n7681577\tPaola Mora\tresidente\n4200419\tRafael Manriquez\tresidente\n1470083\tSaul Tovar\tresidente\n1530070\tXitlali Reyes\tresidente\n1530063\tAndres Quiroz\tdesarrollador\n9330025\tAndres Quiroz\tdesarrollador\n1530056\tMarco López\tdesarrollador\n1530050\tZaira Alvarez\tdesarrollador\n11730003\tBarbara Daniela Aguado Rocha\tsegurista\n11700013\tCynthia Montoya\tsegurista\n10920068\tEduardo González\tsegurista\n11730004\tGuillermo Sanchez Erape\tsegurista\n11730005\tIsabel Estrada Hernandez\tsegurista\n11730008\tJP Gonzalez Rolfe\tsegurista\n4352184\tJuan Javier Morales\tsegurista\n10920071\tMary Galindo\tsegurista\n4352044\tMayra Perez\tsegurista\n11730006\tMiguel Angel Padilla Castillo\tsegurista\n1530085\tPablo Mercado\tsegurista\n11730007\tRaymundo Ivan Aguilar Lopez\tsegurista\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}
