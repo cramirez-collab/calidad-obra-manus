@@ -520,13 +520,13 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
             onChange={(e) => setDescripcion(e.target.value)}
             placeholder="Describe brevemente el incidente..."
             rows={3}
-            className="resize-none text-sm pr-12"
+            className="resize-none text-sm pl-12"
           />
           <button
             type="button"
             onClick={isRecordingDesc ? stopRecordingDesc : startRecordingDesc}
             disabled={vozMut.isPending}
-            className={`absolute right-2 top-2 h-8 w-8 rounded-full flex items-center justify-center transition-all ${
+            className={`absolute left-2 top-2 h-8 w-8 rounded-full flex items-center justify-center transition-all ${
               isRecordingDesc
                 ? 'bg-red-500 text-white animate-pulse'
                 : vozMut.isPending
@@ -543,7 +543,7 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
             )}
           </button>
           {isRecordingDesc && (
-            <span className="absolute right-12 top-3 text-[10px] text-red-500 font-mono">
+            <span className="absolute left-12 top-3 text-[10px] text-red-500 font-mono">
               {Math.floor(recordingTimeDesc / 60)}:{(recordingTimeDesc % 60).toString().padStart(2, '0')}
             </span>
           )}
@@ -560,12 +560,6 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
         <label className="text-xs font-semibold text-muted-foreground mb-1 block">Ubicación (zona/nivel)</label>
         <div className="relative">
           <div className="flex gap-2">
-            <Input
-              value={ubicacion}
-              onChange={(e) => setUbicacion(e.target.value)}
-              placeholder="Ej: Nivel 3, Depto 101"
-              className="text-sm flex-1"
-            />
             <button
               type="button"
               onClick={() => setShowUbicDropdown(!showUbicDropdown)}
@@ -573,6 +567,12 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
             >
               <MapPin className="w-4 h-4" />
             </button>
+            <Input
+              value={ubicacion}
+              onChange={(e) => setUbicacion(e.target.value)}
+              placeholder="Ej: Nivel 3, Depto 101"
+              className="text-sm flex-1"
+            />
           </div>
           {showUbicDropdown && nivelesData && (
             <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-background border rounded-lg shadow-lg max-h-60 overflow-auto">
