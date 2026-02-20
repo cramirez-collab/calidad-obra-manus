@@ -4587,3 +4587,8 @@
 - [x] Vista personalizada del segurista: al iniciar sesión ver directamente sus incidentes asignados (sección Mis Asignados)
 - [x] Notificación push + in-app al segurista cuando se le asigna un incidente desde la tarjeta
 - [x] Dar de alta 13 seguristas del documento con sus empresas (11 creados/actualizados, empresa SSG creada, password: 123456)
+
+### Filtro Mis Asignados + Rol Segurista en Roles (Feb 2026)
+- [x] Filtro "Solo mis asignados" en pestaña Incidentes (botón naranja toggle)
+- [x] Agregar rol Segurista a la pantalla de roles con sus permisos (Reportar, Subir evidencias, Ver asignados)
+- [x] Verificar 12 seguristas activos en BD con clave 123456 (4 duplicados Cynthia desactivados, 12 en proyecto Hidalma)

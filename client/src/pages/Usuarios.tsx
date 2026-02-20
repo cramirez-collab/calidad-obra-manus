@@ -885,7 +885,7 @@ export default function Usuarios() {
             <CardTitle className="text-base">Permisos por Rol</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
               <div className="p-3 rounded-lg border">
                 <Badge className={roleColors.superadmin}>Superadmin</Badge>
                 <ul className="mt-2 text-xs text-muted-foreground space-y-1">
@@ -932,6 +932,14 @@ export default function Usuarios() {
                   <li>• Solo puede ver (no modificar)</li>
                   <li>• Descargar bitácora</li>
                   <li>• Descargar cualquier PDF</li>
+                </ul>
+              </div>
+              <div className="p-3 rounded-lg border">
+                <Badge className={roleColors.segurista}>Segurista</Badge>
+                <ul className="mt-2 text-xs text-muted-foreground space-y-1">
+                  <li>• Reportar incidentes</li>
+                  <li>• Subir evidencias</li>
+                  <li>• Ver sus asignados</li>
                 </ul>
               </div>
             </div>

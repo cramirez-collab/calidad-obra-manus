@@ -464,6 +464,7 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
   const { user } = useAuth();
   const [filtroEstado, setFiltroEstado] = useState<string>("");
   const [filtroTipo, setFiltroTipo] = useState<string>("");
+  const [soloMisAsignados, setSoloMisAsignados] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [accionCorrectiva, setAccionCorrectiva] = useState("");
   const [showCerrarModal, setShowCerrarModal] = useState(false);
@@ -570,6 +571,16 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
           <option value="">Todos los tipos</option>
           {allTiposForFilter.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
+        <button
+          onClick={() => setSoloMisAsignados(!soloMisAsignados)}
+          className={`text-xs border rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors ${
+            soloMisAsignados
+              ? 'bg-orange-500 text-white border-orange-500'
+              : 'bg-background border-border text-muted-foreground hover:bg-muted'
+          }`}
+        >
+          Mis asignados
+        </button>
       </div>
 
       {/* Lista */}
@@ -583,7 +594,7 @@ function TabIncidentes({ proyectoId, onOpenChat }: { proyectoId: number; onOpenC
         </div>
       ) : (
         <div className="space-y-2">
-          {incidentes.map((inc: any) => {
+          {incidentes.filter((inc: any) => !soloMisAsignados || inc.asignadoA === user?.id).map((inc: any) => {
             const tp = tipoInfo(inc.tipo);
             const sv = sevInfo(inc.severidad);
             const es = estadoInfo(inc.estado);
