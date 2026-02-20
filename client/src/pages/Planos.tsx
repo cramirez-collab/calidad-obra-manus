@@ -46,6 +46,7 @@ export default function Planos() {
   const [, navigate] = useLocation();
   const searchString = useSearch();
   const isAdmin = user?.role === "superadmin" || user?.role === "admin";
+  const canCapture = isAdmin || user?.role === "supervisor" || user?.role === "jefe_residente" || user?.role === "residente";
   const { selectedProjectId } = useProject();
 
   // ─── Queries ───
@@ -357,8 +358,8 @@ export default function Planos() {
     setPinFilter(null);
     setTempPin(null);
     setShowViewer(true);
-    // Default to pin mode for admin
-    if (isAdmin) setCaptureMode("pin");
+    // Default to pin mode for users who can capture
+    if (canCapture) setCaptureMode("pin");
   };
 
   const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
@@ -492,7 +493,7 @@ export default function Planos() {
   // ═══════════════════════════════════════════════════════════
   // MODO PIN EN PLANO: Tap inmediato → coloca pin rojo draggable → confirmar → CapturaRapida
   // ═══════════════════════════════════════════════════════════
-  const isPinMode = captureMode === "pin" && isAdmin;
+  const isPinMode = captureMode === "pin" && canCapture;
 
   const placePinAtPosition = useCallback((clientX: number, clientY: number) => {
     if (!isPinMode) return;
@@ -1122,7 +1123,7 @@ export default function Planos() {
         </div>
 
         {/* ═══ 3 BOTONES DE MODO ═══ */}
-        {isAdmin && (
+        {canCapture && (
           <div className="flex gap-2">
             {/* Pin en Plano */}
             <button

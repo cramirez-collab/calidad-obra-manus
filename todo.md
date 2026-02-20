@@ -4660,3 +4660,9 @@
 - [ ] Crear endpoint misTareas: ítems creados por usuario + pendientes de aprobación
 - [ ] Crear página/sección "Mis Tareas" en frontend con filtros
 - [ ] Agregar acceso a "Mis Tareas" en navegación
+
+## Permisos de Captura por Pin para Supervisores
+- [x] Permitir que supervisores capturen por pin en planos (botón flotante + página Planos)
+- [x] Variable canCapture que incluya supervisor además de admin/superadmin
+- [x] Botones de modo (Pin, Nuevo, QR) visibles para supervisores en Planos
+- [x] Botón flotante Pin visible para supervisores
