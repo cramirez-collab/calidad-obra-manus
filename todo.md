@@ -4655,3 +4655,8 @@
 - [ ] UI historial de reportes con lista y comparacion
 - [ ] Eliminar reportes del historial
 - [x] Ajustar conteos de TabStats a una sola línea (5 columnas)
+- [ ] Filtro "Mis actividades" para ver solo items creados por el usuario actual
+- [ ] Filtro "Pendientes de aprobación" para ver items que requieren aprobación del usuario
+- [ ] Crear endpoint misTareas: ítems creados por usuario + pendientes de aprobación
+- [ ] Crear página/sección "Mis Tareas" en frontend con filtros
+- [ ] Agregar acceso a "Mis Tareas" en navegación

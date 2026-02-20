@@ -29,6 +29,7 @@ const GenerarQR = lazy(() => import("./pages/GenerarQR"));
 const Configuracion = lazy(() => import("./pages/Configuracion"));
 const Metas = lazy(() => import("./pages/Metas"));
 const DashboardResidente = lazy(() => import("./pages/DashboardResidente"));
+const MisTareas = lazy(() => import("./pages/MisTareas"));
 const Login = lazy(() => import("./pages/Login"));
 
 
@@ -124,7 +125,7 @@ function AppRoutes() {
       {/* KPIs eliminado - usar Estadísticas */}
       
       {/* Flujo Rápido */}
-      <Route path="/mis-tareas" component={DashboardResidente} />
+      <Route path="/mis-tareas" component={MisTareas} />
       
       {/* Seguimiento público (QR) */}
       <Route path="/seguimiento/:codigo" component={Seguimiento} />

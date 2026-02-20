@@ -946,6 +946,83 @@ export const appRouter = router({
         return await db.getItemById(input.id);
       }),
     
+    // Mis Tareas: ítems creados por el usuario + pendientes de aprobación
+    misTareas: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number().optional(),
+        filtro: z.enum(['todos', 'creados', 'pendientes_aprobacion']).default('todos'),
+      }))
+      .query(async ({ input, ctx }) => {
+        const userId = ctx.user.id;
+        const database = await db.getDb();
+        const { items: itemsTable, users, unidades, especialidades, empresas } = await import('../drizzle/schema');
+        const { eq, and, or, desc, sql } = await import('drizzle-orm');
+        
+        let conditions: any[] = [];
+        if (input.proyectoId) {
+          conditions.push(eq(itemsTable.proyectoId, input.proyectoId));
+        }
+        
+        if (input.filtro === 'creados') {
+          conditions.push(eq(itemsTable.creadoPorId, userId));
+        } else if (input.filtro === 'pendientes_aprobacion') {
+          conditions.push(eq(itemsTable.status, 'pendiente_aprobacion'));
+        } else {
+          // todos: creados por mí OR pendientes de aprobación
+          conditions.push(
+            or(
+              eq(itemsTable.creadoPorId, userId),
+              eq(itemsTable.status, 'pendiente_aprobacion')
+            )
+          );
+        }
+        
+        const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+        if (!database) throw new Error('Database not available');
+        
+        const results = await database
+          .select({
+            id: itemsTable.id,
+            codigo: itemsTable.codigo,
+            numeroInterno: itemsTable.numeroInterno,
+            status: itemsTable.status,
+            fotoAntesUrl: itemsTable.fotoAntesUrl,
+            fotoAntesMarcadaUrl: itemsTable.fotoAntesMarcadaUrl,
+            fotoDespuesUrl: itemsTable.fotoDespuesUrl,
+            fechaCreacion: itemsTable.fechaCreacion,
+            fechaFotoDespues: itemsTable.fechaFotoDespues,
+            fechaAprobacion: itemsTable.fechaAprobacion,
+            creadoPorId: itemsTable.creadoPorId,
+            asignadoAId: itemsTable.asignadoAId,
+            aprobadoPorId: itemsTable.aprobadoPorId,
+            unidadNombre: unidades.nombre,
+            especialidadNombre: especialidades.nombre,
+            empresaNombre: empresas.nombre,
+            creadoPorNombre: users.name,
+          })
+          .from(itemsTable)
+          .leftJoin(unidades, eq(itemsTable.unidadId, unidades.id))
+          .leftJoin(especialidades, eq(itemsTable.especialidadId, especialidades.id))
+          .leftJoin(empresas, eq(itemsTable.empresaId, empresas.id))
+          .leftJoin(users, eq(itemsTable.creadoPorId, users.id))
+          .where(whereClause)
+          .orderBy(desc(itemsTable.fechaCreacion))
+          .limit(200);
+        
+        // Conteos
+        const totalCreados = results.filter(r => r.creadoPorId === userId).length;
+        const totalPendientes = results.filter(r => r.status === 'pendiente_aprobacion').length;
+        
+        return {
+          items: results,
+          conteos: {
+            total: results.length,
+            creados: totalCreados,
+            pendientesAprobacion: totalPendientes,
+          }
+        };
+      }),
+
     // PROTEGIDO: Solo usuarios registrados pueden leer QR de ítems
     getByCodigo: protectedProcedure
       .input(z.object({ codigo: z.string() }))
