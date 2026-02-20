@@ -360,6 +360,7 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
   const [showUbicDropdown, setShowUbicDropdown] = useState(false);
   const [expandedNivel, setExpandedNivel] = useState<string | null>(null);
   const [asignadoA, setAsignadoA] = useState<number | undefined>(undefined);
+  const [showSegSelect, setShowSegSelect] = useState(false);
 
   // Fetch usuarios del proyecto para asignar segurista
   const { data: usuariosProyecto } = trpc.seguridad.usuariosProyecto.useQuery({ proyectoId });
@@ -735,23 +736,65 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
         )}
       </div>
 
-      {/* Asignar segurista - botón grande */}
+      {/* Asignar segurista - modal bottom-sheet custom */}
       <div>
         <label className="text-[10px] font-semibold text-muted-foreground mb-1.5 block">Asignar segurista</label>
-        <select
-          value={asignadoA || ''}
-          onChange={(e) => setAsignadoA(e.target.value ? Number(e.target.value) : undefined)}
-          className="w-full h-11 rounded-xl border-2 bg-background text-[8pt] px-3 font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
+        <button
+          type="button"
+          onClick={() => setShowSegSelect(!showSegSelect)}
+          className={`w-full h-11 rounded-xl border-2 flex items-center gap-2 px-3 transition-all active:scale-[0.98] ${
+            asignadoA
+              ? 'border-purple-400 bg-purple-50 text-purple-800'
+              : 'border-muted hover:border-red-300'
+          }`}
         >
-          <option value="">Sin asignar</option>
-          {(() => {
-            const seguristas = (usuariosProyecto || []).filter((u: any) => u.role === 'segurista');
-            const sorted = [...seguristas].sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
-            return sorted.map((u: any) => (
-              <option key={u.id} value={u.id}>{u.name}</option>
-            ));
-          })()}
-        </select>
+          <svg className="w-4 h-4 text-purple-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+          <span className="text-[8pt] font-medium truncate">{(asignadoA && usuariosProyecto?.find((u: any) => u.id === asignadoA)?.name) || 'Sin asignar'}</span>
+          {asignadoA && (
+            <span className="ml-auto" onClick={(e) => { e.stopPropagation(); setAsignadoA(undefined); }}>
+              <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </span>
+          )}
+          {!asignadoA && <svg className="w-4 h-4 ml-auto text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>}
+        </button>
+        {showSegSelect && (
+          <>
+            <div className="fixed inset-0 bg-black/30 z-[100]" onClick={() => setShowSegSelect(false)} />
+            <div className="fixed left-2 right-2 bottom-2 z-[101] bg-background rounded-2xl shadow-2xl border max-h-[50vh] flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between p-3 border-b">
+                <h3 className="text-[10pt] font-bold">Asignar segurista</h3>
+                <button onClick={() => setShowSegSelect(false)} className="p-1 rounded-full hover:bg-muted">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <div className="overflow-y-auto p-2 space-y-1">
+                <button
+                  onClick={() => { setAsignadoA(undefined); setShowSegSelect(false); }}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-[8pt] transition-colors ${
+                    !asignadoA ? 'bg-purple-100 text-purple-800 font-semibold' : 'hover:bg-muted'
+                  }`}
+                >
+                  Sin asignar
+                </button>
+                {(() => {
+                  const seguristas = (usuariosProyecto || []).filter((u: any) => u.role === 'segurista');
+                  const sorted = [...seguristas].sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
+                  return sorted.map((u: any) => (
+                    <button
+                      key={u.id}
+                      onClick={() => { setAsignadoA(u.id); setShowSegSelect(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-[8pt] transition-colors ${
+                        asignadoA === u.id ? 'bg-purple-100 text-purple-800 font-semibold' : 'hover:bg-muted'
+                      }`}
+                    >
+                      {u.name}
+                    </button>
+                  ));
+                })()}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Botón enviar - sticky en mobile */}
