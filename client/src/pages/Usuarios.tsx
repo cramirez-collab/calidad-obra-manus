@@ -885,8 +885,8 @@ export default function Usuarios() {
             <CardTitle className="text-base">Permisos por Rol</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-              <div className="p-3 rounded-lg border">
+            <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory md:grid md:grid-cols-2 lg:grid-cols-7 md:overflow-visible">
+              <div className="p-3 rounded-lg border min-w-[160px] snap-start flex-shrink-0 md:min-w-0 md:flex-shrink">
                 <Badge className={roleColors.superadmin}>Superadmin</Badge>
                 <ul className="mt-2 text-xs text-muted-foreground space-y-1">
                   <li>• Acceso total al sistema</li>
@@ -894,7 +894,7 @@ export default function Usuarios() {
                   <li>• Gestión de usuarios</li>
                 </ul>
               </div>
-              <div className="p-3 rounded-lg border">
+              <div className="p-3 rounded-lg border min-w-[160px] snap-start flex-shrink-0 md:min-w-0 md:flex-shrink">
                 <Badge className={roleColors.admin}>Administrador</Badge>
                 <ul className="mt-2 text-xs text-muted-foreground space-y-1">
                   <li>• Gestión de catálogos</li>
@@ -902,7 +902,7 @@ export default function Usuarios() {
                   <li>• Ver estadísticas globales</li>
                 </ul>
               </div>
-              <div className="p-3 rounded-lg border">
+              <div className="p-3 rounded-lg border min-w-[160px] snap-start flex-shrink-0 md:min-w-0 md:flex-shrink">
                 <Badge className={roleColors.supervisor}>Supervisor</Badge>
                 <ul className="mt-2 text-xs text-muted-foreground space-y-1">
                   <li>• Aprobar/rechazar ítems</li>
@@ -910,7 +910,7 @@ export default function Usuarios() {
                   <li>• Ver estadísticas</li>
                 </ul>
               </div>
-              <div className="p-3 rounded-lg border">
+              <div className="p-3 rounded-lg border min-w-[160px] snap-start flex-shrink-0 md:min-w-0 md:flex-shrink">
                 <Badge className={roleColors.jefe_residente}>Jefe de Residente</Badge>
                 <ul className="mt-2 text-xs text-muted-foreground space-y-1">
                   <li>• Agregar foto "después"</li>
@@ -918,7 +918,7 @@ export default function Usuarios() {
                   <li>• Crear nuevos ítems</li>
                 </ul>
               </div>
-              <div className="p-3 rounded-lg border">
+              <div className="p-3 rounded-lg border min-w-[160px] snap-start flex-shrink-0 md:min-w-0 md:flex-shrink">
                 <Badge className={roleColors.residente}>Residente</Badge>
                 <ul className="mt-2 text-xs text-muted-foreground space-y-1">
                   <li>• Crear nuevos ítems</li>
@@ -926,7 +926,7 @@ export default function Usuarios() {
                   <li>• Ver sus propios ítems</li>
                 </ul>
               </div>
-              <div className="p-3 rounded-lg border">
+              <div className="p-3 rounded-lg border min-w-[160px] snap-start flex-shrink-0 md:min-w-0 md:flex-shrink">
                 <Badge className={roleColors.desarrollador}>Desarrollador</Badge>
                 <ul className="mt-2 text-xs text-muted-foreground space-y-1">
                   <li>• Solo puede ver (no modificar)</li>
@@ -934,7 +934,7 @@ export default function Usuarios() {
                   <li>• Descargar cualquier PDF</li>
                 </ul>
               </div>
-              <div className="p-3 rounded-lg border">
+              <div className="p-3 rounded-lg border min-w-[160px] snap-start flex-shrink-0 md:min-w-0 md:flex-shrink">
                 <Badge className={roleColors.segurista}>Segurista</Badge>
                 <ul className="mt-2 text-xs text-muted-foreground space-y-1">
                   <li>• Reportar incidentes</li>
