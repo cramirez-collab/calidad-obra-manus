@@ -4636,3 +4636,21 @@
 - [ ] Generar reporte ejecutivo PDF del módulo de seguridad con IA (análisis de BD, puntos críticos, recomendaciones)
 - [ ] Endpoint backend para generar reporte de seguridad con LLM
 - [ ] UI para generar, ver y compartir reporte PDF de seguridad
+- [ ] Crear tabla reportes_seguridad en schema para historial
+- [ ] Migrar BD con nueva tabla
+- [ ] Guardar reportes generados en BD automaticamente
+- [ ] Endpoint listar historial de reportes
+- [ ] Endpoint ver reporte individual guardado
+- [ ] Incluir URLs de fotos de evidencia en el contexto del LLM
+- [ ] Mostrar fotos de evidencia en el PDF generado
+- [ ] UI historial de reportes con lista y comparacion
+- [ ] Eliminar reportes del historial
+- [ ] Crear tabla reportes_seguridad en schema para historial
+- [ ] Migrar BD con nueva tabla
+- [ ] Guardar reportes generados en BD automaticamente
+- [ ] Endpoint listar historial de reportes
+- [ ] Endpoint ver reporte individual guardado
+- [ ] Incluir URLs de fotos de evidencia en el contexto del LLM
+- [ ] Mostrar fotos de evidencia en el PDF generado
+- [ ] UI historial de reportes con lista y comparacion
+- [ ] Eliminar reportes del historial

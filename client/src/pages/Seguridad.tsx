@@ -1509,51 +1509,78 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
 }
 
 // ==========================================
-// COMPONENTE REPORTE DE SEGURIDAD CON IA
+// COMPONENTE REPORTE DE SEGURIDAD CON IA + HISTORIAL
 // ==========================================
 function ReporteSeguridad({ proyectoId }: { proyectoId: number }) {
   const [reporteMarkdown, setReporteMarkdown] = useState<string | null>(null);
   const [showReporte, setShowReporte] = useState(false);
   const [fechaGen, setFechaGen] = useState('');
   const [proyectoNombre, setProyectoNombre] = useState('');
+  const [showHistorial, setShowHistorial] = useState(false);
+  const [comparandoId, setComparandoId] = useState<number | null>(null);
+  const [fotosReporte, setFotosReporte] = useState<string[]>([]);
+  const [reporteActualKPIs, setReporteActualKPIs] = useState<any>(null);
+
+  const utils = trpc.useUtils();
+  const { data: historial } = trpc.seguridad.listarReportes.useQuery({ proyectoId });
+  const { data: reporteDetalle } = trpc.seguridad.verReporte.useQuery(
+    { id: comparandoId! },
+    { enabled: !!comparandoId }
+  );
 
   const generarMut = trpc.seguridad.generarReporte.useMutation({
     onSuccess: (data) => {
       setReporteMarkdown(data.markdown);
       setFechaGen(data.fechaGeneracion);
       setProyectoNombre(data.proyecto);
+      setFotosReporte(data.fotosEvidencia || []);
+      setReporteActualKPIs(null);
       setShowReporte(true);
-      toast.success('Reporte generado exitosamente');
+      utils.seguridad.listarReportes.invalidate();
+      toast.success('Reporte generado y guardado');
     },
     onError: (err) => {
       toast.error('Error generando reporte: ' + err.message);
     },
   });
 
-  const handleGenerar = () => {
-    generarMut.mutate({ proyectoId });
+  const eliminarMut = trpc.seguridad.eliminarReporte.useMutation({
+    onSuccess: () => {
+      utils.seguridad.listarReportes.invalidate();
+      toast.success('Reporte eliminado');
+    },
+  });
+
+  const handleGenerar = () => { generarMut.mutate({ proyectoId }); };
+
+  const handleVerHistorico = (rep: any) => {
+    setComparandoId(rep.id);
+    setReporteMarkdown(null); // se cargará del query
+    setFechaGen(rep.fechaGeneracion);
+    setProyectoNombre('');
+    setReporteActualKPIs(rep);
+    setFotosReporte(rep.fotosEvidenciaUrls ? JSON.parse(rep.fotosEvidenciaUrls) : []);
+    setShowReporte(true);
   };
+
+  // Cuando se carga el detalle del reporte histórico
+  useEffect(() => {
+    if (reporteDetalle && comparandoId) {
+      setReporteMarkdown(reporteDetalle.markdown);
+      setProyectoNombre(reporteDetalle.titulo);
+      if (reporteDetalle.fotosEvidenciaUrls) {
+        try { setFotosReporte(JSON.parse(reporteDetalle.fotosEvidenciaUrls)); } catch(_) {}
+      }
+    }
+  }, [reporteDetalle, comparandoId]);
 
   const handleCompartir = async () => {
     if (!reporteMarkdown) return;
-    // Crear blob de texto para compartir
     const textoPlano = reporteMarkdown
-      .replace(/#{1,6}\s/g, '')
-      .replace(/\*\*/g, '')
-      .replace(/\|/g, ' ')
-      .replace(/-{3,}/g, '');
-    
+      .replace(/#{1,6}\s/g, '').replace(/\*\*/g, '').replace(/\|/g, ' ').replace(/-{3,}/g, '');
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Reporte Seguridad - ${proyectoNombre}`,
-          text: textoPlano.slice(0, 2000),
-        });
-      } catch (e) {
-        // User cancelled share
-      }
+      try { await navigator.share({ title: `Reporte Seguridad - ${proyectoNombre}`, text: textoPlano.slice(0, 2000) }); } catch (_) {}
     } else {
-      // Fallback: copiar al clipboard
       await navigator.clipboard.writeText(textoPlano);
       toast.success('Reporte copiado al portapapeles');
     }
@@ -1561,17 +1588,15 @@ function ReporteSeguridad({ proyectoId }: { proyectoId: number }) {
 
   const handleDescargarPDF = () => {
     if (!reporteMarkdown) return;
-    // Crear ventana de impresión con el contenido formateado
     const printWindow = window.open('', '_blank');
     if (!printWindow) { toast.error('Permite ventanas emergentes para descargar PDF'); return; }
-    
-    // Convertir markdown básico a HTML
     const html = reporteMarkdown
       .replace(/^### (.+)$/gm, '<h3 style="color:#dc2626;margin:16px 0 8px;">$1</h3>')
       .replace(/^## (.+)$/gm, '<h2 style="color:#b91c1c;margin:20px 0 10px;border-bottom:2px solid #fecaca;padding-bottom:4px;">$1</h2>')
       .replace(/^# (.+)$/gm, '<h1 style="color:#991b1b;margin:0 0 16px;text-align:center;">$1</h1>')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;height:auto;margin:8px 0;border-radius:8px;" />')
       .replace(/^- (.+)$/gm, '<li style="margin:2px 0;">$1</li>')
       .replace(/^\d+\. (.+)$/gm, '<li style="margin:2px 0;">$1</li>')
       .replace(/\n\n/g, '<br/><br/>')
@@ -1579,26 +1604,83 @@ function ReporteSeguridad({ proyectoId }: { proyectoId: number }) {
         const cells = match.split('|').filter(c => c.trim());
         return '<tr>' + cells.map(c => `<td style="border:1px solid #e5e7eb;padding:4px 8px;font-size:11px;">${c.trim()}</td>`).join('') + '</tr>';
       });
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html><head><title>Reporte Seguridad - ${proyectoNombre}</title>
-      <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; font-size: 12px; line-height: 1.5; color: #1f2937; }
-        table { border-collapse: collapse; width: 100%; margin: 8px 0; }
-        th, td { border: 1px solid #e5e7eb; padding: 4px 8px; text-align: left; font-size: 11px; }
-        th { background: #fef2f2; font-weight: bold; }
-        h1 { font-size: 20px; } h2 { font-size: 16px; } h3 { font-size: 14px; }
-        @media print { body { padding: 0; } }
-      </style></head><body>${html}
-      <script>setTimeout(() => { window.print(); }, 500);</script>
-      </body></html>
-    `);
+    // Agregar fotos de evidencia al final si existen
+    const fotosHtml = fotosReporte.length > 0 ? `<h2 style="color:#b91c1c;margin:20px 0 10px;border-bottom:2px solid #fecaca;padding-bottom:4px;">Evidencia Fotografica</h2><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">${fotosReporte.slice(0, 20).map((f, i) => `<img src="${f}" alt="Evidencia ${i+1}" style="width:100%;height:auto;border-radius:8px;border:1px solid #e5e7eb;" />`).join('')}</div>` : '';
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Reporte Seguridad - ${proyectoNombre}</title>
+      <style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;font-size:12px;line-height:1.5;color:#1f2937;}table{border-collapse:collapse;width:100%;margin:8px 0;}th,td{border:1px solid #e5e7eb;padding:4px 8px;text-align:left;font-size:11px;}th{background:#fef2f2;font-weight:bold;}h1{font-size:20px;}h2{font-size:16px;}h3{font-size:14px;}img{page-break-inside:avoid;}@media print{body{padding:0;}}</style></head><body>${html}${fotosHtml}<script>setTimeout(()=>{window.print();},500);</script></body></html>`);
     printWindow.document.close();
+  };
+
+  // Comparación de KPIs entre último y penúltimo reporte
+  const renderComparacion = () => {
+    if (!historial || historial.length < 2) return null;
+    const actual = historial[0];
+    const anterior = historial[1];
+    const campos = [
+      { key: 'totalIncidentes', label: 'Total', color: 'text-gray-700' },
+      { key: 'abiertos', label: 'Abiertos', color: 'text-red-600' },
+      { key: 'enProceso', label: 'Proceso', color: 'text-amber-600' },
+      { key: 'prevencion', label: 'Prevención', color: 'text-blue-600' },
+      { key: 'cerrados', label: 'Cerrados', color: 'text-green-600' },
+    ];
+    return (
+      <Card className="p-3 mt-2">
+        <p className="text-[10px] font-semibold text-muted-foreground mb-2">Comparación vs reporte anterior</p>
+        <div className="grid grid-cols-5 gap-1">
+          {campos.map(c => {
+            const valAct = (actual as any)[c.key] || 0;
+            const valAnt = (anterior as any)[c.key] || 0;
+            const diff = valAct - valAnt;
+            return (
+              <div key={c.key} className="text-center">
+                <p className={`text-sm font-bold ${c.color}`}>{valAct}</p>
+                <p className="text-[8px] text-muted-foreground">{c.label}</p>
+                {diff !== 0 && (
+                  <p className={`text-[9px] font-semibold ${diff > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {diff > 0 ? `+${diff}` : diff}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+    );
+  };
+
+  // Renderizar markdown con soporte para imágenes
+  const renderMarkdownLine = (line: string, i: number) => {
+    if (line.startsWith('# ')) return <h1 key={i} className="text-lg font-bold text-red-800 mb-2 mt-4">{line.slice(2)}</h1>;
+    if (line.startsWith('## ')) return <h2 key={i} className="text-sm font-bold text-red-700 mb-1 mt-3 border-b border-red-200 pb-1">{line.slice(3)}</h2>;
+    if (line.startsWith('### ')) return <h3 key={i} className="text-xs font-bold text-red-600 mb-1 mt-2">{line.slice(4)}</h3>;
+    // Imágenes markdown
+    const imgMatch = line.match(/!\[([^\]]*)\]\(([^)]+)\)/);
+    if (imgMatch) {
+      return <img key={i} src={imgMatch[2]} alt={imgMatch[1]} className="w-full max-h-48 object-cover rounded-lg my-2 border" />;
+    }
+    if (line.startsWith('|')) {
+      const cells = line.split('|').filter(c => c.trim());
+      if (line.includes('---')) return null;
+      return (
+        <div key={i} className="flex border-b border-gray-200">
+          {cells.map((cell, j) => (
+            <div key={j} className="flex-1 px-2 py-1 text-[10px] border-r border-gray-100 last:border-r-0">
+              {cell.trim().replace(/\*\*/g, '')}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    if (line.startsWith('- **') || line.startsWith('- ')) {
+      return <div key={i} className="flex gap-1 ml-2 text-[11px]"><span>•</span><span dangerouslySetInnerHTML={{ __html: line.slice(2).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') }} /></div>;
+    }
+    if (line.trim() === '') return <div key={i} className="h-2" />;
+    return <p key={i} className="text-[11px] leading-relaxed" dangerouslySetInnerHTML={{ __html: line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') }} />;
   };
 
   return (
     <>
+      {/* Generar nuevo reporte */}
       <Card className="p-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
@@ -1606,76 +1688,102 @@ function ReporteSeguridad({ proyectoId }: { proyectoId: number }) {
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold">Reporte Ejecutivo IA</p>
-            <p className="text-[10px] text-muted-foreground">Analisis completo con puntos criticos y plan de accion</p>
+            <p className="text-[10px] text-muted-foreground">Con fotos de evidencia y comparacion de KPIs</p>
           </div>
-          <Button
-            size="sm"
-            className="bg-red-600 hover:bg-red-700 text-white text-xs"
-            onClick={handleGenerar}
-            disabled={generarMut.isPending}
-          >
-            {generarMut.isPending ? (
-              <><Loader2 className="w-3 h-3 animate-spin mr-1" /> Generando...</>
-            ) : (
-              <><FileText className="w-3 h-3 mr-1" /> Generar</>
-            )}
+          <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white text-xs" onClick={handleGenerar} disabled={generarMut.isPending}>
+            {generarMut.isPending ? <><Loader2 className="w-3 h-3 animate-spin mr-1" /> Generando...</> : <><FileText className="w-3 h-3 mr-1" /> Generar</>}
           </Button>
         </div>
         {generarMut.isPending && (
           <div className="mt-3 p-3 bg-red-50 rounded-lg">
             <div className="flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-red-600" />
-              <span className="text-xs text-red-700">Analizando datos y generando reporte con IA... (15-30 seg)</span>
+              <span className="text-xs text-red-700">Analizando datos, fotos y generando reporte con IA... (15-30 seg)</span>
             </div>
           </div>
         )}
       </Card>
 
+      {/* Comparación de KPIs */}
+      {renderComparacion()}
+
+      {/* Historial de reportes */}
+      {historial && historial.length > 0 && (
+        <Card className="p-3 mt-2">
+          <button className="flex items-center gap-2 w-full text-left" onClick={() => setShowHistorial(!showHistorial)}>
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs font-semibold flex-1">Historial de Reportes ({historial.length})</span>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showHistorial ? 'rotate-180' : ''}`} />
+          </button>
+          {showHistorial && (
+            <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+              {historial.map((rep: any) => (
+                <div key={rep.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-semibold truncate">{rep.titulo}</p>
+                    <p className="text-[9px] text-muted-foreground">
+                      {new Date(rep.fechaGeneracion).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {rep.generadoPor && ` · ${rep.generadoPor}`}
+                    </p>
+                    <div className="flex gap-2 mt-1">
+                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-gray-100">{rep.totalIncidentes || 0} inc</span>
+                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-red-50 text-red-600">{rep.abiertos || 0} abiert</span>
+                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-green-50 text-green-600">{rep.cerrados || 0} cerr</span>
+                      {rep.fotosEvidenciaUrls && <span className="text-[8px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600"><Camera className="w-2.5 h-2.5 inline" /> fotos</span>}
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={() => handleVerHistorico(rep)}>
+                      <Eye className="w-3 h-3" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px] text-red-500 hover:text-red-700" onClick={() => { if (confirm('Eliminar este reporte?')) eliminarMut.mutate({ id: rep.id }); }}>
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
       {/* Modal del reporte */}
-      <Dialog open={showReporte} onOpenChange={setShowReporte}>
+      <Dialog open={showReporte} onOpenChange={(open) => { setShowReporte(open); if (!open) { setComparandoId(null); setReporteActualKPIs(null); } }}>
         <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-hidden flex flex-col p-0">
           <DialogHeader className="p-4 pb-2 border-b bg-red-50">
             <DialogTitle className="text-sm flex items-center gap-2">
               <Shield className="w-4 h-4 text-red-600" />
-              Reporte de Seguridad - {proyectoNombre}
+              {comparandoId ? proyectoNombre : `Reporte de Seguridad - ${proyectoNombre}`}
             </DialogTitle>
-            <p className="text-[10px] text-muted-foreground">{fechaGen ? new Date(fechaGen).toLocaleString('es-MX') : ''}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {fechaGen ? new Date(fechaGen).toLocaleString('es-MX') : ''}
+              {fotosReporte.length > 0 && ` · ${fotosReporte.length} fotos de evidencia`}
+            </p>
           </DialogHeader>
-          <ScrollArea className="flex-1 p-4 overflow-auto max-h-[70vh]">
+          <ScrollArea className="flex-1 p-4 overflow-auto max-h-[65vh]">
             <div className="prose prose-sm max-w-none text-xs leading-relaxed whitespace-pre-wrap">
-              {reporteMarkdown?.split('\n').map((line, i) => {
-                if (line.startsWith('# ')) return <h1 key={i} className="text-lg font-bold text-red-800 mb-2 mt-4">{line.slice(2)}</h1>;
-                if (line.startsWith('## ')) return <h2 key={i} className="text-sm font-bold text-red-700 mb-1 mt-3 border-b border-red-200 pb-1">{line.slice(3)}</h2>;
-                if (line.startsWith('### ')) return <h3 key={i} className="text-xs font-bold text-red-600 mb-1 mt-2">{line.slice(4)}</h3>;
-                if (line.startsWith('|')) {
-                  const cells = line.split('|').filter(c => c.trim());
-                  if (line.includes('---')) return null;
-                  return (
-                    <div key={i} className="flex border-b border-gray-200">
-                      {cells.map((cell, j) => (
-                        <div key={j} className="flex-1 px-2 py-1 text-[10px] border-r border-gray-100 last:border-r-0">
-                          {cell.trim().replace(/\*\*/g, '')}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                }
-                if (line.startsWith('- **') || line.startsWith('- ')) {
-                  return <div key={i} className="flex gap-1 ml-2 text-[11px]"><span>•</span><span dangerouslySetInnerHTML={{ __html: line.slice(2).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') }} /></div>;
-                }
-                if (line.trim() === '') return <div key={i} className="h-2" />;
-                return <p key={i} className="text-[11px] leading-relaxed" dangerouslySetInnerHTML={{ __html: line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') }} />;
-              })}
+              {reporteMarkdown?.split('\n').map((line, i) => renderMarkdownLine(line, i))}
             </div>
+            {/* Galería de fotos de evidencia al final */}
+            {fotosReporte.length > 0 && (
+              <div className="mt-4 border-t pt-3">
+                <h3 className="text-xs font-bold text-red-600 mb-2 flex items-center gap-1"><Camera className="w-3.5 h-3.5" /> Evidencia Fotografica ({fotosReporte.length})</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {fotosReporte.slice(0, 20).map((foto, i) => (
+                    <img key={i} src={foto} alt={`Evidencia ${i+1}`} className="w-full h-32 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.open(foto, '_blank')} />
+                  ))}
+                </div>
+              </div>
+            )}
           </ScrollArea>
           <div className="p-3 border-t flex gap-2">
             <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={handleDescargarPDF}>
-              <Download className="w-3 h-3 mr-1" /> Descargar PDF
+              <Download className="w-3 h-3 mr-1" /> PDF
             </Button>
             <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={handleCompartir}>
               <Share2 className="w-3 h-3 mr-1" /> Compartir
             </Button>
-            <Button size="sm" className="flex-1 text-xs bg-red-600 hover:bg-red-700 text-white" onClick={() => setShowReporte(false)}>
+            <Button size="sm" className="flex-1 text-xs bg-red-600 hover:bg-red-700 text-white" onClick={() => { setShowReporte(false); setComparandoId(null); }}>
               Cerrar
             </Button>
           </div>

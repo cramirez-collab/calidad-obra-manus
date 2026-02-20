@@ -45,6 +45,7 @@ import {
   evidenciasSeguridad, InsertEvidenciaSeguridad,
   tiposIncidenciaCustom, InsertTipoIncidenciaCustom,
   plantillasIncidencia, InsertPlantillaIncidencia,
+  reportesSeguridad, InsertReporteSeguridad,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -7257,4 +7258,54 @@ export async function seedPlantillasDefault(proyectoId: number) {
     { proyectoId, nombre: "Sin guantes", tipo: "epp_faltante", severidad: "media", descripcion: "Trabajador manipulando material sin guantes de protección", orden: 10 },
   ];
   await db.insert(plantillasIncidencia).values(defaults);
+}
+
+
+// ==================== REPORTES SEGURIDAD ====================
+
+export async function crearReporteSeguridad(data: InsertReporteSeguridad) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  const [result] = await db.insert(reportesSeguridad).values(data);
+  return result.insertId;
+}
+
+export async function getReportesSeguridad(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    id: reportesSeguridad.id,
+    proyectoId: reportesSeguridad.proyectoId,
+    generadoPorId: reportesSeguridad.generadoPorId,
+    titulo: reportesSeguridad.titulo,
+    resumenCorto: reportesSeguridad.resumenCorto,
+    totalIncidentes: reportesSeguridad.totalIncidentes,
+    abiertos: reportesSeguridad.abiertos,
+    enProceso: reportesSeguridad.enProceso,
+    prevencion: reportesSeguridad.prevencion,
+    cerrados: reportesSeguridad.cerrados,
+    totalSeguristas: reportesSeguridad.totalSeguristas,
+    fotosEvidenciaUrls: reportesSeguridad.fotosEvidenciaUrls,
+    fechaGeneracion: reportesSeguridad.fechaGeneracion,
+    generadoPor: users.name,
+  })
+    .from(reportesSeguridad)
+    .leftJoin(users, eq(reportesSeguridad.generadoPorId, users.id))
+    .where(eq(reportesSeguridad.proyectoId, proyectoId))
+    .orderBy(desc(reportesSeguridad.fechaGeneracion));
+}
+
+export async function getReporteSeguridadById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.select()
+    .from(reportesSeguridad)
+    .where(eq(reportesSeguridad.id, id));
+  return result;
+}
+
+export async function eliminarReporteSeguridad(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  await db.delete(reportesSeguridad).where(eq(reportesSeguridad.id, id));
 }

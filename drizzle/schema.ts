@@ -1006,3 +1006,29 @@ export const plantillasIncidencia = mysqlTable("plantillas_incidencia", {
 
 export type PlantillaIncidencia = typeof plantillasIncidencia.$inferSelect;
 export type InsertPlantillaIncidencia = typeof plantillasIncidencia.$inferInsert;
+
+/**
+ * Historial de reportes ejecutivos de seguridad generados por IA
+ * Guarda el markdown, metadata y permite comparar evolución entre períodos
+ */
+export const reportesSeguridad = mysqlTable("reportes_seguridad", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  generadoPorId: int("generadoPorId").notNull(),
+  titulo: varchar("titulo", { length: 255 }).notNull(),
+  markdown: text("markdown").notNull(), // Contenido completo del reporte en markdown
+  resumenCorto: text("resumenCorto"), // Resumen de 1-2 líneas para la lista
+  // Snapshot de KPIs al momento de generar para comparación
+  totalIncidentes: int("totalIncidentes").default(0),
+  abiertos: int("abiertos").default(0),
+  enProceso: int("enProceso").default(0),
+  prevencion: int("prevencion").default(0),
+  cerrados: int("cerrados").default(0),
+  totalSeguristas: int("totalSeguristas").default(0),
+  // Fotos de evidencia incluidas en el reporte
+  fotosEvidenciaUrls: text("fotosEvidenciaUrls"), // JSON array de URLs de fotos
+  fechaGeneracion: timestamp("fechaGeneracion").defaultNow().notNull(),
+});
+
+export type ReporteSeguridad = typeof reportesSeguridad.$inferSelect;
+export type InsertReporteSeguridad = typeof reportesSeguridad.$inferInsert;

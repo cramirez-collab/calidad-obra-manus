@@ -533,6 +533,13 @@
       "when": 1771554530288,
       "tag": "0075_dashing_kinsey_walden",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "5",
+      "when": 1771570606888,
+      "tag": "0076_bent_proteus",
+      "breakpoints": true
     }
   ]
 }

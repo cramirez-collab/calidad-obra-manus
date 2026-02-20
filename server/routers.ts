@@ -4995,7 +4995,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         return { ok: true };
       }),
 
-    // Generar reporte ejecutivo de seguridad con IA
+    // Generar reporte ejecutivo de seguridad con IA (guarda en BD + incluye fotos)
     generarReporte: protectedProcedure
       .input(z.object({ proyectoId: z.number() }))
       .mutation(async ({ ctx, input }) => {
@@ -5009,6 +5009,18 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         const usuariosProyecto = await db.getUsuariosByProyecto(input.proyectoId);
         const seguristas = usuariosProyecto.filter((u: any) => u.rolEnProyecto === 'segurista');
         const notasVoz = await db.getNotasVozByProyecto(input.proyectoId);
+
+        // Recopilar fotos de evidencia de todos los incidentes
+        const fotosEvidencia: string[] = [];
+        for (const inc of incidentes) {
+          // Foto principal del incidente
+          if ((inc as any).fotoUrl) fotosEvidencia.push((inc as any).fotoUrl);
+          // Evidencias adicionales
+          try {
+            const evidencias = await db.getEvidenciasByIncidente(inc.id);
+            evidencias.forEach((ev: any) => { if (ev.fotoUrl) fotosEvidencia.push(ev.fotoUrl); });
+          } catch (_) { /* skip */ }
+        }
 
         // Estadísticas de incidentes
         const totalIncidentes = incidentes.length;
@@ -5044,6 +5056,11 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
 
         const fechaReporte = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+        // Incluir fotos de evidencia en el contexto para el LLM
+        const fotosInfo = fotosEvidencia.length > 0
+          ? `\n\nFOTOS DE EVIDENCIA DISPONIBLES (${fotosEvidencia.length} fotos):\nIncluye las URLs de las fotos como imagenes en el reporte usando formato Markdown: ![Evidencia](url)\nURLs: ${fotosEvidencia.slice(0, 20).join(', ')}`
+          : '\n\nNo hay fotos de evidencia disponibles aun.';
+
         const dataContext = JSON.stringify({
           proyecto: proyecto?.nombre || 'Sin nombre',
           direccion: proyecto?.direccion || '',
@@ -5063,9 +5080,10 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           incidentesDetalle: incidentes.slice(0, 50).map((i: any) => ({
             codigo: i.codigo, tipo: i.tipo, severidad: i.severidad,
             descripcion: i.descripcion, ubicacion: i.ubicacion,
-            estado: i.estado, fecha: i.createdAt,
+            estado: i.estado, fecha: i.createdAt, fotoUrl: (i as any).fotoUrl,
           })),
           notasDeVoz: transcripciones,
+          fotosEvidencia: fotosEvidencia.slice(0, 20),
           diasSinAccidentesCriticos: totalIncidentes === 0 ? 'Sin incidentes registrados' :
             criticos === 0 ? 'Sin accidentes criticos registrados' : 'Hay accidentes criticos pendientes',
         }, null, 2);
@@ -5074,22 +5092,71 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           messages: [
             {
               role: 'system',
-              content: `Eres un experto en seguridad industrial y salud ocupacional en obras de construccion. Genera reportes ejecutivos profesionales en español. Usa formato Markdown. No uses acentos en el texto para compatibilidad. El reporte debe ser accionable, directo y enfocado en puntos criticos.`
+              content: `Eres un experto en seguridad industrial y salud ocupacional en obras de construccion. Genera reportes ejecutivos profesionales en español. Usa formato Markdown. No uses acentos en el texto para compatibilidad. El reporte debe ser accionable, directo y enfocado en puntos criticos. Si hay fotos de evidencia disponibles, incluyelas en el reporte usando formato Markdown de imagen: ![Descripcion](url)`
             },
             {
               role: 'user',
-              content: `Genera un REPORTE EJECUTIVO DE SEGURIDAD para el proyecto de construccion con los siguientes datos:\n\n${dataContext}\n\nEl reporte debe incluir:\n\n1. **ENCABEZADO**: Titulo "REPORTE EJECUTIVO DE SEGURIDAD", nombre del proyecto, direccion, fecha\n2. **RESUMEN EJECUTIVO**: Parrafo breve del estado general de seguridad\n3. **INDICADORES CLAVE (KPIs)**: Tabla con Total incidentes, Abiertos, En proceso, Prevencion, Cerrados, Criticos, Altos\n4. **ANALISIS POR TIPO DE INCIDENTE**: Tabla con distribucion y porcentajes\n5. **ANALISIS POR SEVERIDAD**: Tabla con distribucion y nivel de riesgo\n6. **ZONAS CRITICAS**: Analisis de ubicaciones con mayor incidencia\n7. **EQUIPO DE SEGURIDAD**: Lista de seguristas activos y cobertura\n8. **NOTAS DE VOZ / OBSERVACIONES DE CAMPO**: Resumen de transcripciones\n9. **PUNTOS CRITICOS DE ENFOQUE**: Lista priorizada de los 5-7 puntos mas urgentes que requieren atencion inmediata\n10. **PLAN DE ACCION RECOMENDADO**: Tabla con accion, responsable sugerido, prioridad, plazo\n11. **CONCLUSIONES Y RECOMENDACIONES**: Parrafo final con vision estrategica\n\nSi hay 0 incidentes, enfoca el reporte en: estado de preparacion del equipo, recomendaciones preventivas, areas de riesgo potencial en obra de construccion, y plan de accion proactivo. Analiza las notas de voz como indicadores de la cultura de seguridad.\n\nSe profesional, concreto y accionable. No inventes datos que no esten en el contexto.`
+              content: `Genera un REPORTE EJECUTIVO DE SEGURIDAD para el proyecto de construccion con los siguientes datos:\n\n${dataContext}${fotosInfo}\n\nEl reporte debe incluir:\n\n1. **ENCABEZADO**: Titulo "REPORTE EJECUTIVO DE SEGURIDAD", nombre del proyecto, direccion, fecha\n2. **RESUMEN EJECUTIVO**: Parrafo breve del estado general de seguridad\n3. **INDICADORES CLAVE (KPIs)**: Tabla con Total incidentes, Abiertos, En proceso, Prevencion, Cerrados, Criticos, Altos\n4. **ANALISIS POR TIPO DE INCIDENTE**: Tabla con distribucion y porcentajes\n5. **ANALISIS POR SEVERIDAD**: Tabla con distribucion y nivel de riesgo\n6. **ZONAS CRITICAS**: Analisis de ubicaciones con mayor incidencia\n7. **EQUIPO DE SEGURIDAD**: Lista de seguristas activos y cobertura\n8. **EVIDENCIA FOTOGRAFICA**: Si hay fotos disponibles, incluir las imagenes con su descripcion usando ![](url)\n9. **NOTAS DE VOZ / OBSERVACIONES DE CAMPO**: Resumen de transcripciones\n10. **PUNTOS CRITICOS DE ENFOQUE**: Lista priorizada de los 5-7 puntos mas urgentes\n11. **PLAN DE ACCION RECOMENDADO**: Tabla con accion, responsable sugerido, prioridad, plazo\n12. **CONCLUSIONES Y RECOMENDACIONES**: Parrafo final con vision estrategica\n\nSi hay 0 incidentes, enfoca el reporte en: estado de preparacion del equipo, recomendaciones preventivas, areas de riesgo potencial en obra de construccion, y plan de accion proactivo.\n\nSe profesional, concreto y accionable. No inventes datos que no esten en el contexto.`
             }
           ]
         });
 
         const reporteMarkdown = String(llmResponse.choices?.[0]?.message?.content || 'Error generando reporte');
 
+        // Generar resumen corto para la lista
+        const lineas = reporteMarkdown.split('\n').filter(l => l.trim().length > 20);
+        const resumenCorto = lineas.slice(0, 2).join(' ').substring(0, 200);
+
+        // Guardar en BD
+        const reporteId = await db.crearReporteSeguridad({
+          proyectoId: input.proyectoId,
+          generadoPorId: ctx.user.id,
+          titulo: `Reporte Ejecutivo - ${fechaReporte}`,
+          markdown: reporteMarkdown,
+          resumenCorto,
+          totalIncidentes,
+          abiertos,
+          enProceso,
+          prevencion,
+          cerrados,
+          totalSeguristas: seguristas.length,
+          fotosEvidenciaUrls: fotosEvidencia.length > 0 ? JSON.stringify(fotosEvidencia) : null,
+        });
+
         return {
+          id: reporteId,
           markdown: reporteMarkdown,
           fechaGeneracion: new Date().toISOString(),
           proyecto: proyecto?.nombre || 'Sin nombre',
+          fotosEvidencia,
         };
+      }),
+
+    // Listar historial de reportes
+    listarReportes: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getReportesSeguridad(input.proyectoId);
+      }),
+
+    // Ver reporte individual
+    verReporte: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const reporte = await db.getReporteSeguridadById(input.id);
+        if (!reporte) throw new TRPCError({ code: 'NOT_FOUND', message: 'Reporte no encontrado' });
+        return reporte;
+      }),
+
+    // Eliminar reporte
+    eliminarReporte: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (!['admin', 'superadmin'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        await db.eliminarReporteSeguridad(input.id);
+        return { ok: true };
       }),
   }),
 });
