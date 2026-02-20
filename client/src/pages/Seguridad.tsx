@@ -303,6 +303,10 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
   const { data: nivelesData } = trpc.seguridad.nivelesYUnidades.useQuery({ proyectoId });
   const [showUbicDropdown, setShowUbicDropdown] = useState(false);
   const [expandedNivel, setExpandedNivel] = useState<string | null>(null);
+  const [asignadoA, setAsignadoA] = useState<number | undefined>(undefined);
+
+  // Fetch usuarios del proyecto para asignar segurista
+  const { data: usuariosProyecto } = trpc.seguridad.usuariosProyecto.useQuery({ proyectoId });
 
   // Fetch custom types for this project
   const { data: tiposCustom } = trpc.seguridad.tiposIncidencia.useQuery({ proyectoId });
@@ -335,6 +339,7 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
       setUbicacion("");
       setFotoBase64(null);
       setFotoPreview(null);
+      setAsignadoA(undefined);
       utils.seguridad.listar.invalidate();
       utils.seguridad.estadisticas.invalidate();
     },
@@ -387,6 +392,7 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
       descripcion: descripcion.trim(),
       ubicacion: ubicacion.trim() || undefined,
       fotoBase64: fotoBase64 || undefined,
+      asignadoA: asignadoA || undefined,
     });
   };
 
@@ -410,11 +416,11 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Plantillas rápidas */}
       {plantillas && plantillas.length > 0 && (
         <div>
-          <label className="text-xs font-semibold text-muted-foreground mb-1.5 block flex items-center gap-1">
+          <label className="text-[10px] font-semibold text-muted-foreground mb-1 block flex items-center gap-1">
             <Zap className="w-3 h-3 text-orange-500" /> Reporte rápido
           </label>
           <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
@@ -424,7 +430,7 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
                 <button
                   key={p.id}
                   onClick={() => aplicarPlantilla(p)}
-                  className={`shrink-0 snap-start px-2.5 py-1.5 rounded-lg border text-[10px] font-medium transition-all whitespace-nowrap ${sevColors[p.severidad] || 'border-gray-200 bg-gray-50'} hover:shadow-sm active:scale-95`}
+                  className={`shrink-0 snap-start px-2.5 py-1 rounded-lg border text-[10px] font-medium transition-all whitespace-nowrap ${sevColors[p.severidad] || 'border-gray-200 bg-gray-50'} hover:shadow-sm active:scale-95`}
                 >
                   {p.nombre}
                 </button>
@@ -434,99 +440,98 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
         </div>
       )}
 
-      {/* Tipo - Grid de selección rápida */}
+      {/* Tipo - Grid compacto 4 columnas */}
       <div>
-        <label className="text-xs font-semibold text-muted-foreground mb-2 block">Tipo de incidente *</label>
-        <div className="grid grid-cols-3 gap-2">
+        <label className="text-[10px] font-semibold text-muted-foreground mb-1.5 block">Tipo de incidente *</label>
+        <div className="grid grid-cols-4 gap-1.5">
           {allTipos.map((t) => (
             <button
               key={t.value}
               onClick={() => setTipo(prev => prev === t.value ? "" : t.value)}
-              className={`p-2.5 rounded-xl border-2 text-center transition-all flex flex-col items-center justify-center gap-1 ${
+              className={`py-1.5 px-1 rounded-lg border-2 text-center transition-all flex flex-col items-center justify-center gap-0.5 ${
                 tipo === t.value
                   ? "border-red-500 bg-red-50 shadow-sm"
                   : "border-transparent bg-muted/30 hover:bg-muted/60"
               }`}
             >
-              {(() => { const TIcon = t.Icon; return <TIcon className={`w-5 h-5 mx-auto ${tipo === t.value ? t.iconColor : 'text-muted-foreground'}`} />; })()}
-              <span className="text-[10px] font-medium leading-tight">{t.label}</span>
+              {(() => { const TIcon = t.Icon; return <TIcon className={`w-4 h-4 ${tipo === t.value ? t.iconColor : 'text-muted-foreground'}`} />; })()}
+              <span className="text-[8px] font-medium leading-tight">{t.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Severidad */}
+      {/* Severidad - inline compacto */}
       <div>
-        <label className="text-xs font-semibold text-muted-foreground mb-2 block">Severidad *</label>
-        <div className="grid grid-cols-4 gap-2">
+        <label className="text-[10px] font-semibold text-muted-foreground mb-1.5 block">Severidad *</label>
+        <div className="flex gap-1.5">
           {SEVERIDADES.map((s) => (
             <button
               key={s.value}
               onClick={() => setSeveridad(prev => prev === s.value ? "" : s.value)}
-              className={`py-2.5 px-2 rounded-xl border-2 text-center transition-all ${
+              className={`flex-1 py-1.5 px-1 rounded-lg border-2 text-center transition-all flex items-center justify-center gap-1.5 ${
                 severidad === s.value
                   ? `border-current ${s.bgLight} ${s.textColor} shadow-sm`
                   : "border-transparent bg-muted/30 hover:bg-muted/60"
               }`}
             >
-              <div className={`h-2.5 w-2.5 rounded-full ${s.color} mx-auto mb-1`} />
+              <div className={`h-2 w-2 rounded-full ${s.color} shrink-0`} />
               <span className="text-[10px] font-medium">{s.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Foto */}
+      {/* Foto - compacto */}
       <div>
-        <label className="text-xs font-semibold text-muted-foreground mb-2 block">Evidencia fotográfica</label>
         <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} className="hidden" />
         <input ref={galleryRef} type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
         {fotoPreview ? (
           <div className="relative">
-            <img src={fotoPreview} alt="Evidencia" className="w-full h-40 object-cover rounded-xl border" />
+            <img src={fotoPreview} alt="Evidencia" className="w-full h-28 object-cover rounded-lg border" />
             <button
               onClick={() => { setFotoBase64(null); setFotoPreview(null); }}
-              className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center"
+              className="absolute top-1.5 right-1.5 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex gap-2">
             <button
               onClick={() => cameraRef.current?.click()}
-              className="h-20 border-2 border-dashed border-red-300 rounded-xl flex flex-col items-center justify-center gap-1 hover:bg-red-50 transition-colors"
+              className="flex-1 h-10 border-2 border-dashed border-red-300 rounded-lg flex items-center justify-center gap-1.5 hover:bg-red-50 transition-colors"
             >
-              <Camera className="w-6 h-6 text-red-400" />
+              <Camera className="w-4 h-4 text-red-400" />
               <span className="text-[10px] font-medium text-red-500">Tomar Foto</span>
             </button>
             <button
               onClick={() => galleryRef.current?.click()}
-              className="h-20 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 hover:bg-slate-50 transition-colors"
+              className="flex-1 h-10 border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center gap-1.5 hover:bg-slate-50 transition-colors"
             >
-              <ImageIcon className="w-6 h-6 text-slate-400" />
-              <span className="text-[10px] font-medium text-slate-500">Subir de Galería</span>
+              <ImageIcon className="w-4 h-4 text-slate-400" />
+              <span className="text-[10px] font-medium text-slate-500">Galería</span>
             </button>
           </div>
         )}
       </div>
 
-      {/* Descripción con botón de voz */}
+      {/* Descripción con botón de voz - compacto */}
       <div>
-        <label className="text-xs font-semibold text-muted-foreground mb-1 block">Descripción *</label>
+        <label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Descripción *</label>
         <div className="relative">
           <Textarea
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
             placeholder="Describe brevemente el incidente..."
-            rows={3}
-            className="resize-none text-sm pl-12"
+            rows={2}
+            className="resize-none text-sm pl-10"
           />
           <button
             type="button"
             onClick={isRecordingDesc ? stopRecordingDesc : startRecordingDesc}
             disabled={vozMut.isPending}
-            className={`absolute left-2 top-2 h-8 w-8 rounded-full flex items-center justify-center transition-all ${
+            className={`absolute left-1.5 top-1.5 h-7 w-7 rounded-full flex items-center justify-center transition-all ${
               isRecordingDesc
                 ? 'bg-red-500 text-white animate-pulse'
                 : vozMut.isPending
@@ -535,47 +540,48 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
             }`}
           >
             {vozMut.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : isRecordingDesc ? (
-              <Square className="w-3 h-3 fill-current" />
+              <Square className="w-2.5 h-2.5 fill-current" />
             ) : (
-              <Mic className="w-4 h-4" />
+              <Mic className="w-3.5 h-3.5" />
             )}
           </button>
           {isRecordingDesc && (
-            <span className="absolute left-12 top-3 text-[10px] text-red-500 font-mono">
+            <span className="absolute left-10 top-2.5 text-[10px] text-red-500 font-mono">
               {Math.floor(recordingTimeDesc / 60)}:{(recordingTimeDesc % 60).toString().padStart(2, '0')}
             </span>
           )}
         </div>
         {vozMut.isPending && (
-          <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-            <Loader2 className="w-3 h-3 animate-spin" /> Transcribiendo y resumiendo...
+          <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+            <Loader2 className="w-3 h-3 animate-spin" /> Transcribiendo...
           </p>
         )}
       </div>
 
-      {/* Ubicación con desplegable de niveles/unidades + texto libre */}
-      <div>
-        <label className="text-xs font-semibold text-muted-foreground mb-1 block">Ubicación (zona/nivel)</label>
+      {/* Ubicación + Asignar - en una fila */}
+      <div className="grid grid-cols-2 gap-2">
+        {/* Ubicación */}
         <div className="relative">
-          <div className="flex gap-2">
+          <label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Ubicación</label>
+          <div className="flex gap-1">
             <button
               type="button"
               onClick={() => setShowUbicDropdown(!showUbicDropdown)}
-              className="h-9 w-9 rounded-lg border flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
+              className="h-8 w-8 rounded-md border flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
             >
-              <MapPin className="w-4 h-4" />
+              <MapPin className="w-3.5 h-3.5" />
             </button>
             <Input
               value={ubicacion}
               onChange={(e) => setUbicacion(e.target.value)}
-              placeholder="Ej: Nivel 3, Depto 101"
-              className="text-sm flex-1"
+              placeholder="Nivel, zona..."
+              className="text-xs h-8 flex-1"
             />
           </div>
           {showUbicDropdown && nivelesData && (
-            <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-background border rounded-lg shadow-lg max-h-60 overflow-auto">
+            <div className="absolute z-[60] top-full mt-1 left-0 w-[calc(200%+0.5rem)] bg-background border rounded-lg shadow-xl max-h-52 overflow-auto">
               {nivelesData.map((n) => (
                 <div key={n.nivel}>
                   <button
@@ -599,20 +605,20 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
                     <div className="bg-muted/30">
                       <button
                         type="button"
-                        className="w-full text-left px-6 py-1.5 text-xs hover:bg-muted/60 text-emerald-600 font-medium"
+                        className="w-full text-left px-5 py-1.5 text-xs hover:bg-muted/60 text-emerald-600 font-medium"
                         onClick={() => {
                           setUbicacion(n.nivel);
                           setShowUbicDropdown(false);
                           setExpandedNivel(null);
                         }}
                       >
-                        Seleccionar {n.nivel} (general)
+                        {n.nivel} (general)
                       </button>
                       {n.unidades.map((u) => (
                         <button
                           key={u}
                           type="button"
-                          className="w-full text-left px-6 py-1.5 text-xs hover:bg-muted/60"
+                          className="w-full text-left px-5 py-1.5 text-xs hover:bg-muted/60"
                           onClick={() => {
                             setUbicacion(`${n.nivel} - ${u}`);
                             setShowUbicDropdown(false);
@@ -629,20 +635,37 @@ function TabReportar({ proyectoId }: { proyectoId: number }) {
             </div>
           )}
         </div>
+
+        {/* Asignar segurista */}
+        <div>
+          <label className="text-[10px] font-semibold text-muted-foreground mb-1 block">Asignar a</label>
+          <select
+            value={asignadoA || ''}
+            onChange={(e) => setAsignadoA(e.target.value ? Number(e.target.value) : undefined)}
+            className="w-full h-8 rounded-md border bg-background text-xs px-2 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+          >
+            <option value="">Sin asignar</option>
+            {usuariosProyecto?.filter((u: any) => u.role === 'segurista' || u.role === 'supervisor' || u.role === 'admin' || u.role === 'superadmin').map((u: any) => (
+              <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Botón enviar */}
-      <Button
-        onClick={handleSubmit}
-        disabled={crearMut.isPending || !tipo || !severidad || !descripcion.trim()}
-        className="w-full h-12 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-xl"
-      >
-        {crearMut.isPending ? (
-          <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Reportando...</>
-        ) : (
-          <><Send className="w-4 h-4 mr-2" /> Reportar Incidente</>
-        )}
-      </Button>
+      {/* Botón enviar - sticky en mobile */}
+      <div className="sticky bottom-0 pt-2 pb-1 bg-background">
+        <Button
+          onClick={handleSubmit}
+          disabled={crearMut.isPending || !tipo || !severidad || !descripcion.trim()}
+          className="w-full h-11 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm font-semibold rounded-xl shadow-lg"
+        >
+          {crearMut.isPending ? (
+            <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Reportando...</>
+          ) : (
+            <><Send className="w-4 h-4 mr-2" /> Reportar Incidente</>
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -4091,6 +4091,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         ubicacion: z.string().optional(),
         unidadId: z.number().optional(),
         fotoBase64: z.string().optional(),
+        asignadoA: z.number().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         let fotoUrl: string | undefined;
@@ -4115,6 +4116,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           fotoUrl,
           fotoBase64: input.fotoBase64 ? undefined : undefined,
           estado: "abierto",
+          asignadoA: input.asignadoA || null,
         });
 
         // Obtener el incidente creado para el código SEG

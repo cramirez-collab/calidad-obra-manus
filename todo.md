@@ -4613,3 +4613,7 @@
 - [x] Semáforo por empresa en dashboard: verde (0 abiertos), amarillo (1-2), rojo (3+)
 - [x] Mover icono micrófono y pin de ubicación al lado izquierdo de sus campos en formulario de reporte de seguridad
 - [x] Ajustar botones flotantes en mobile para que no tapen contenido del formulario de seguridad
+- [x] Rediseñar formulario de reporte de seguridad: compacto, rápido, todo en una pantalla mobile
+- [x] Reducir tamaño de botones de tipo de incidente y severidad
+- [x] Asegurar campo ubicación, asignación segurista y botón guardar siempre visibles
+- [x] Optimizar layout para que no requiera scroll excesivo
