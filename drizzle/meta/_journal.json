@@ -519,6 +519,13 @@
       "when": 1771484392649,
       "tag": "0073_red_rumiko_fujikawa",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "5",
+      "when": 1771548890571,
+      "tag": "0074_black_roulette",
+      "breakpoints": true
     }
   ]
 }

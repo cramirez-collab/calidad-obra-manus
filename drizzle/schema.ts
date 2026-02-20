@@ -83,7 +83,7 @@ export const proyectoUsuarios = mysqlTable("proyecto_usuarios", {
   id: int("id").autoincrement().primaryKey(),
   proyectoId: int("proyectoId").notNull(),
   usuarioId: int("usuarioId").notNull(),
-  rolEnProyecto: mysqlEnum("rolEnProyecto", ["admin", "supervisor", "jefe_residente", "residente", "desarrollador"]).default("residente").notNull(),
+  rolEnProyecto: mysqlEnum("rolEnProyecto", ["admin", "supervisor", "jefe_residente", "residente", "desarrollador", "segurista"]).default("residente").notNull(),
   activo: boolean("activo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

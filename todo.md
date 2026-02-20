@@ -4579,3 +4579,6 @@
 ### Fix Botones Tipo Incidente (Feb 2026)
 - [x] Centrar icono arriba del texto en botones de tipo de incidente (flex-col items-center gap-1)
 - [x] Doble tap para deseleccionar tipo y severidad (toggle: tap selecciona, tap de nuevo deselecciona)
+
+### Fix Rol Segurista (Feb 2026)
+- [x] Agregar "segurista" al enum rolEnProyecto en proyecto_usuarios para que se puedan crear usuarios con ese rol

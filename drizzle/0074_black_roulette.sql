@@ -1,0 +1,1 @@
+ALTER TABLE `proyecto_usuarios` MODIFY COLUMN `rolEnProyecto` enum('admin','supervisor','jefe_residente','residente','desarrollador','segurista') NOT NULL DEFAULT 'residente';
