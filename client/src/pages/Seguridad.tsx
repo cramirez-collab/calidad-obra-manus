@@ -845,6 +845,7 @@ function TabIncidentes({ proyectoId, onOpenChat, filtroEstadoExterno, onClearFil
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [pdfLoading, setPdfLoading] = useState<number | null>(null);
   const [showAsignarId, setShowAsignarId] = useState<number | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
@@ -977,7 +978,7 @@ function TabIncidentes({ proyectoId, onOpenChat, filtroEstadoExterno, onClearFil
                 <div className="flex items-start gap-3">
                   {/* Foto thumbnail */}
                   {inc.fotoUrl ? (
-                    <img src={inc.fotoUrl} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+                    <img src={inc.fotoUrl} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 cursor-pointer ring-0 hover:ring-2 hover:ring-red-400 transition-all" onClick={(e) => { e.stopPropagation(); setLightboxUrl(inc.fotoUrl); }} />
                   ) : (
                     <div className="w-14 h-14 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
                       {(() => { const TpIcon = tp?.Icon || ClipboardList; return <TpIcon className={`w-6 h-6 ${tp?.iconColor || 'text-gray-500'}`} />; })()}
@@ -1175,6 +1176,16 @@ function TabIncidentes({ proyectoId, onOpenChat, filtroEstadoExterno, onClearFil
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Lightbox foto ampliada */}
+      {lightboxUrl && (
+        <div className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-4" onClick={() => setLightboxUrl(null)}>
+          <button className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors z-10" onClick={() => setLightboxUrl(null)}>
+            <X className="h-6 w-6" />
+          </button>
+          <img src={lightboxUrl} className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
 
       {/* Modal cerrar incidente */}
       <Dialog open={showCerrarModal} onOpenChange={setShowCerrarModal}>

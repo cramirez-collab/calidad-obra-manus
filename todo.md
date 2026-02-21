@@ -4670,3 +4670,6 @@
 ## Restricción de eliminación de pines + Notificación al supervisor
 - [x] Restringir eliminación de pines solo a admins (frontend: ocultar botón, backend: validar rol)
 - [x] Notificación al supervisor cuando un residente coloca un pin nuevo en plano
+
+## Modal de imagen ampliada en lista de ítems
+- [x] Al tocar la foto miniatura del ítem en la lista, abrir modal grande para visualizar a detalle
