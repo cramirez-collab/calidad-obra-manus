@@ -4673,3 +4673,7 @@
 
 ## Modal de imagen ampliada en lista de ítems
 - [x] Al tocar la foto miniatura del ítem en la lista, abrir modal grande para visualizar a detalle
+
+## Color de especialidad según estado de pruebas
+- [x] Icono especialidad naranja si alguna prueba está en proceso
+- [x] Icono especialidad verde si todas las pruebas están aceptadas

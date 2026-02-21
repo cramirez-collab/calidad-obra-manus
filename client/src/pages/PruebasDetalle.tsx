@@ -341,6 +341,14 @@ export default function PruebasDetalle() {
                 p.intentoFinal?.estado === "rojo" || (!p.intentoFinal && p.intento1?.estado === "rojo")
               ).length;
 
+              // Determinar color del icono según estado de pruebas
+              const evaluadas = sistema.pruebas.filter((p: any) =>
+                p.intento1?.estado || p.intentoFinal?.estado
+              ).length;
+              const todasVerdes = totalPruebas > 0 && verdes === totalPruebas;
+              const enProceso = evaluadas > 0 && !todasVerdes;
+              const iconBg = todasVerdes ? 'bg-emerald-500' : rojos > 0 ? 'bg-red-500' : enProceso ? 'bg-orange-500' : 'bg-[#002C63]';
+
               return (
                 <div key={sistema.sistema} className="bg-white border border-gray-100 rounded-xl overflow-hidden">
                   {/* System header */}
@@ -348,7 +356,7 @@ export default function PruebasDetalle() {
                     onClick={() => toggleSistema(sistema.sistema)}
                     className="w-full flex items-center gap-3 p-3 sm:p-4 hover:bg-gray-50 transition-colors text-left"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-[#002C63] flex items-center justify-center shrink-0">
+                    <div className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 transition-colors`}>
                       <Zap className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
