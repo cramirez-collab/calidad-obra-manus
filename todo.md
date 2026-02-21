@@ -4677,3 +4677,8 @@
 ## Color de especialidad según estado de pruebas
 - [x] Icono especialidad naranja si alguna prueba está en proceso
 - [x] Icono especialidad verde si todas las pruebas están aceptadas
+
+## Mejoras PruebasDetalle - Especialidades
+- [x] Barra de progreso por especialidad mostrando % de pruebas completadas
+- [x] Indicador numérico de estado (ej: 3/7 ok) junto al icono
+- [x] Filtro por estado de especialidad (en proceso, con fallas, todas ok)

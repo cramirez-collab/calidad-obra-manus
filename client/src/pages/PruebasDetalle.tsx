@@ -24,6 +24,7 @@ import {
   Zap,
   ImageIcon,
   FileText,
+  Filter,
 } from "lucide-react";
 import ProtocoloReport from "@/components/ProtocoloReport";
 
@@ -52,6 +53,7 @@ export default function PruebasDetalle() {
   const [showBitacora, setShowBitacora] = useState(false);
   const [showEvidencia, setShowEvidencia] = useState<string | null>(null);
   const [showProtocolo, setShowProtocolo] = useState(false);
+  const [filtroEspecialidad, setFiltroEspecialidad] = useState<"todos" | "en_proceso" | "con_fallas" | "todas_ok" | "sin_evaluar">("todos");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -282,14 +284,33 @@ export default function PruebasDetalle() {
           </Button>
         </div>
 
-        {/* Quick actions */}
-        <div className="flex gap-2 mb-4">
+        {/* Quick actions + filter */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           <Button variant="ghost" size="sm" onClick={expandAll} className="text-xs">
             <ChevronDown className="w-3.5 h-3.5 mr-1" /> Expandir todo
           </Button>
           <Button variant="ghost" size="sm" onClick={collapseAll} className="text-xs">
             <ChevronUp className="w-3.5 h-3.5 mr-1" /> Colapsar todo
           </Button>
+          <div className="flex-1" />
+          <div className="flex items-center gap-1">
+            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+            {(["todos", "en_proceso", "con_fallas", "todas_ok", "sin_evaluar"] as const).map((f) => {
+              const labels: Record<string, string> = { todos: "Todos", en_proceso: "En proceso", con_fallas: "Con fallas", todas_ok: "Todas ok", sin_evaluar: "Sin evaluar" };
+              const colors: Record<string, string> = { todos: "bg-gray-100 text-gray-700", en_proceso: "bg-orange-100 text-orange-700", con_fallas: "bg-red-100 text-red-700", todas_ok: "bg-emerald-100 text-emerald-700", sin_evaluar: "bg-gray-50 text-gray-500" };
+              return (
+                <button
+                  key={f}
+                  onClick={() => setFiltroEspecialidad(f)}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all ${
+                    filtroEspecialidad === f ? colors[f] + " ring-1 ring-current" : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+                  }`}
+                >
+                  {labels[f]}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Bitacora panel */}
@@ -346,8 +367,18 @@ export default function PruebasDetalle() {
                 p.intento1?.estado || p.intentoFinal?.estado
               ).length;
               const todasVerdes = totalPruebas > 0 && verdes === totalPruebas;
+              const tieneFallas = rojos > 0;
               const enProceso = evaluadas > 0 && !todasVerdes;
-              const iconBg = todasVerdes ? 'bg-emerald-500' : rojos > 0 ? 'bg-red-500' : enProceso ? 'bg-orange-500' : 'bg-[#002C63]';
+              const sinEvaluar = evaluadas === 0;
+              const iconBg = todasVerdes ? 'bg-emerald-500' : tieneFallas ? 'bg-red-500' : enProceso ? 'bg-orange-500' : 'bg-[#002C63]';
+              const progressPct = totalPruebas > 0 ? Math.round((verdes / totalPruebas) * 100) : 0;
+              const progressBarColor = todasVerdes ? 'bg-emerald-500' : tieneFallas ? 'bg-red-400' : enProceso ? 'bg-orange-400' : 'bg-gray-200';
+
+              // Filtro
+              if (filtroEspecialidad === "en_proceso" && !enProceso) return null;
+              if (filtroEspecialidad === "con_fallas" && !tieneFallas) return null;
+              if (filtroEspecialidad === "todas_ok" && !todasVerdes) return null;
+              if (filtroEspecialidad === "sin_evaluar" && !sinEvaluar) return null;
 
               return (
                 <div key={sistema.sistema} className="bg-white border border-gray-100 rounded-xl overflow-hidden">
@@ -360,7 +391,21 @@ export default function PruebasDetalle() {
                       <Zap className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="font-semibold text-[#002C63] text-sm">{sistema.sistema}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-[#002C63] text-sm">{sistema.sistema}</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                          todasVerdes ? 'bg-emerald-100 text-emerald-700' : tieneFallas ? 'bg-red-100 text-red-700' : enProceso ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {verdes}/{totalPruebas} ok
+                        </span>
+                      </div>
+                      {/* Mini progress bar */}
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full transition-all duration-500 ${progressBarColor}`} style={{ width: `${progressPct}%` }} />
+                        </div>
+                        <span className="text-[10px] font-semibold text-muted-foreground w-8 text-right">{progressPct}%</span>
+                      </div>
                       <div className="flex gap-2 mt-0.5 text-[11px]">
                         <span className="text-muted-foreground">{totalPruebas} pruebas</span>
                         {verdes > 0 && <span className="text-emerald-600">{verdes} ok</span>}
