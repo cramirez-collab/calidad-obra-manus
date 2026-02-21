@@ -4687,3 +4687,7 @@
 - [x] Resumen global con contadores (X ok, Y en proceso, Z con fallas) arriba de la lista
 - [x] Ordenar especialidades por prioridad: fallas > en proceso > sin evaluar > todas ok
 - [x] Exportar reporte PDF de pruebas del departamento
+
+## Fixes PruebasDetalle - Header y Color Gradual
+- [x] Arreglar header del depto para que sea horizontal (no vertical)
+- [x] Color gradual del icono de especialidad: azul (0%) → naranja claro → naranja fuerte → verde (>50% criticas) → verde Objetiva (100%)

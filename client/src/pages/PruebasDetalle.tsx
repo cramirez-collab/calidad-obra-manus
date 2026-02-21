@@ -333,68 +333,53 @@ ${sistemas.map((s: any) => {
     <DashboardLayout>
       <div className="max-w-4xl mx-auto px-3 py-4 sm:px-6 sm:py-6">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-2 mb-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setLocation("/pruebas")}
-            className="shrink-0 -ml-2"
+            className="shrink-0 -ml-2 h-8 w-8"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-[#002C63]">Depto {unidad?.nombre || id}</h1>
-              {unidad?.nivel && (
-                <Badge variant="outline" className="text-xs border-[#002C63]/20 text-[#002C63]/70">
-                  N{unidad.nivel}
-                </Badge>
-              )}
-              {unidad?.liberado && (
-                <Badge className="bg-emerald-100 text-emerald-700 text-xs border-0">
-                  <Shield className="w-3 h-3 mr-0.5" /> Liberado
-                </Badge>
-              )}
-            </div>
-            {unidad && (
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden max-w-48">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      unidad.liberado ? "bg-emerald-500" : unidad.progreso >= 50 ? "bg-amber-400" : "bg-orange-400"
-                    }`}
-                    style={{ width: `${unidad.progreso}%` }}
-                  />
-                </div>
-                <span className="text-xs font-semibold text-muted-foreground">{unidad.progreso}%</span>
+          <h1 className="text-base sm:text-xl font-bold text-[#002C63] truncate">Depto {unidad?.nombre || id}</h1>
+          {unidad?.nivel && (
+            <Badge variant="outline" className="text-[10px] sm:text-xs border-[#002C63]/20 text-[#002C63]/70 shrink-0">
+              N{unidad.nivel}
+            </Badge>
+          )}
+          {unidad?.liberado && (
+            <Badge className="bg-emerald-100 text-emerald-700 text-[10px] sm:text-xs border-0 shrink-0">
+              <Shield className="w-3 h-3 mr-0.5" /> Liberado
+            </Badge>
+          )}
+        </div>
+        {/* Progress + action buttons */}
+        <div className="flex items-center gap-2 mb-3">
+          {unidad && (
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden max-w-48">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    unidad.liberado ? "bg-emerald-500" : unidad.progreso >= 50 ? "bg-amber-400" : "bg-orange-400"
+                  }`}
+                  style={{ width: `${unidad.progreso}%` }}
+                />
               </div>
-            )}
+              <span className="text-xs font-semibold text-muted-foreground">{unidad.progreso}%</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1 shrink-0">
+            <Button variant="outline" size="sm" onClick={() => setShowProtocolo(true)} className="shrink-0 text-[10px] sm:text-xs h-7 px-2">
+              <FileText className="w-3 h-3 sm:mr-1" /><span className="hidden sm:inline">Protocolo</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowBitacora(!showBitacora)} className="shrink-0 text-[10px] sm:text-xs h-7 px-2">
+              <History className="w-3 h-3 sm:mr-1" /><span className="hidden sm:inline">Log</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportarPDF} disabled={pdfExporting || !detalle} className="shrink-0 text-[10px] sm:text-xs h-7 px-2">
+              {pdfExporting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3 sm:mr-1" />}<span className="hidden sm:inline">PDF</span>
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowProtocolo(true)}
-            className="shrink-0 text-xs"
-          >
-            <FileText className="w-3.5 h-3.5 mr-1" /> Protocolo
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowBitacora(!showBitacora)}
-            className="shrink-0 text-xs"
-          >
-            <History className="w-3.5 h-3.5 mr-1" /> Log
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={exportarPDF}
-            disabled={pdfExporting || !detalle}
-            className="shrink-0 text-xs"
-          >
-            {pdfExporting ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1" />} PDF
-          </Button>
         </div>
 
         {/* Quick actions + filter */}
@@ -526,7 +511,7 @@ ${sistemas.map((s: any) => {
                 p.intentoFinal?.estado === "rojo" || (!p.intentoFinal && p.intento1?.estado === "rojo")
               ).length;
 
-              // Determinar color del icono según estado de pruebas
+              // Determinar color del icono según estado de pruebas - escala gradual
               const evaluadas = sistema.pruebas.filter((p: any) =>
                 p.intento1?.estado || p.intentoFinal?.estado
               ).length;
@@ -534,9 +519,27 @@ ${sistemas.map((s: any) => {
               const tieneFallas = rojos > 0;
               const enProceso = evaluadas > 0 && !todasVerdes;
               const sinEvaluar = evaluadas === 0;
-              const iconBg = todasVerdes ? 'bg-emerald-500' : tieneFallas ? 'bg-red-500' : enProceso ? 'bg-orange-500' : 'bg-[#002C63]';
               const progressPct = totalPruebas > 0 ? Math.round((verdes / totalPruebas) * 100) : 0;
-              const progressBarColor = todasVerdes ? 'bg-emerald-500' : tieneFallas ? 'bg-red-400' : enProceso ? 'bg-orange-400' : 'bg-gray-200';
+
+              // Escala gradual de color del icono:
+              // 0% evaluadas = azul Objetiva (#002C63)
+              // 1-25% = naranja claro (#FDBA74)
+              // 26-49% = naranja fuerte (#F97316)
+              // 50-99% = verde intermedio (#10B981) - >50% de criticas/importantes
+              // 100% = verde Objetiva (#02B381)
+              let iconBgStyle = '';
+              if (todasVerdes) {
+                iconBgStyle = 'bg-[#02B381]'; // verde Objetiva - todas hechas
+              } else if (sinEvaluar) {
+                iconBgStyle = 'bg-[#002C63]'; // azul Objetiva - sin pruebas
+              } else if (progressPct >= 50) {
+                iconBgStyle = 'bg-emerald-500'; // verde - >50%
+              } else if (progressPct >= 25) {
+                iconBgStyle = 'bg-orange-500'; // naranja fuerte
+              } else {
+                iconBgStyle = 'bg-orange-300'; // naranja claro
+              }
+              const progressBarColor = todasVerdes ? 'bg-[#02B381]' : progressPct >= 50 ? 'bg-emerald-500' : progressPct >= 25 ? 'bg-orange-500' : enProceso ? 'bg-orange-300' : 'bg-gray-200';
 
               // Filtro
               if (filtroEspecialidad === "en_proceso" && !enProceso) return null;
@@ -551,7 +554,7 @@ ${sistemas.map((s: any) => {
                     onClick={() => toggleSistema(sistema.sistema)}
                     className="w-full flex items-center gap-3 p-3 sm:p-4 hover:bg-gray-50 transition-colors text-left"
                   >
-                    <div className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 transition-colors`}>
+                    <div className={`w-8 h-8 rounded-lg ${iconBgStyle} flex items-center justify-center shrink-0 transition-colors`}>
                       <Zap className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
