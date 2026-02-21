@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { useProject } from "@/contexts/ProjectContext";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -25,6 +25,7 @@ import {
   ImageIcon,
   FileText,
   Filter,
+  Download,
 } from "lucide-react";
 import ProtocoloReport from "@/components/ProtocoloReport";
 
@@ -214,6 +215,109 @@ export default function PruebasDetalle() {
   };
 
   const isSupervisor = user?.role === "admin" || user?.role === "superadmin" || user?.role === "supervisor" || user?.role === "jefe_residente";
+  const [pdfExporting, setPdfExporting] = useState(false);
+
+  const exportarPDF = useCallback(() => {
+    if (!detalle || !unidad) return;
+    setPdfExporting(true);
+    try {
+      // Build data
+      const sistemas = detalle.map((s: any) => {
+        const total = s.pruebas.length;
+        const verdes = s.pruebas.filter((p: any) => p.intentoFinal?.estado === "verde" || (!p.intentoFinal && p.intento1?.estado === "verde")).length;
+        const rojos = s.pruebas.filter((p: any) => p.intentoFinal?.estado === "rojo" || (!p.intentoFinal && p.intento1?.estado === "rojo")).length;
+        const evaluadas = s.pruebas.filter((p: any) => p.intento1?.estado || p.intentoFinal?.estado).length;
+        const todasOk = total > 0 && verdes === total;
+        const estado = todasOk ? "TODAS OK" : rojos > 0 ? "CON FALLAS" : evaluadas > 0 ? "EN PROCESO" : "SIN EVALUAR";
+        return { nombre: s.sistema, total, verdes, rojos, evaluadas, estado, pruebas: s.pruebas };
+      });
+
+      const resumen = sistemas.reduce((acc: any, s: any) => {
+        if (s.estado === "TODAS OK") acc.ok++;
+        else if (s.estado === "CON FALLAS") acc.fallas++;
+        else if (s.estado === "EN PROCESO") acc.proceso++;
+        else acc.sinEval++;
+        acc.totalPruebas += s.total;
+        acc.totalVerdes += s.verdes;
+        acc.totalRojos += s.rojos;
+        return acc;
+      }, { ok: 0, fallas: 0, proceso: 0, sinEval: 0, totalPruebas: 0, totalVerdes: 0, totalRojos: 0 });
+
+      // Generate HTML for print
+      const html = `
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Reporte Pruebas - Depto ${unidad.nombre}</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 11px; color: #333; margin: 20px; }
+  h1 { color: #002C63; font-size: 18px; margin-bottom: 4px; }
+  h2 { color: #002C63; font-size: 14px; margin: 16px 0 8px; border-bottom: 2px solid #002C63; padding-bottom: 4px; }
+  .subtitle { color: #666; font-size: 12px; margin-bottom: 16px; }
+  .resumen { display: flex; gap: 12px; margin-bottom: 16px; }
+  .resumen-card { flex: 1; text-align: center; padding: 8px; border-radius: 8px; border: 1px solid #ddd; }
+  .resumen-card.ok { background: #ecfdf5; border-color: #a7f3d0; }
+  .resumen-card.proceso { background: #fff7ed; border-color: #fed7aa; }
+  .resumen-card.fallas { background: #fef2f2; border-color: #fecaca; }
+  .resumen-card.sin { background: #f9fafb; border-color: #e5e7eb; }
+  .resumen-num { font-size: 20px; font-weight: bold; }
+  .resumen-label { font-size: 9px; text-transform: uppercase; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  th { background: #002C63; color: white; padding: 6px 8px; text-align: left; font-size: 10px; }
+  td { padding: 5px 8px; border-bottom: 1px solid #eee; font-size: 10px; }
+  tr:nth-child(even) { background: #f9fafb; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: bold; }
+  .badge-ok { background: #d1fae5; color: #065f46; }
+  .badge-falla { background: #fee2e2; color: #991b1b; }
+  .badge-proceso { background: #ffedd5; color: #9a3412; }
+  .badge-sin { background: #f3f4f6; color: #6b7280; }
+  .badge-na { background: #f3f4f6; color: #6b7280; }
+  .badge-pendiente { background: #f9fafb; color: #9ca3af; }
+  .badge-verde { background: #d1fae5; color: #065f46; }
+  .badge-rojo { background: #fee2e2; color: #991b1b; }
+  .sistema-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .sistema-icon { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; }
+  .footer { margin-top: 24px; text-align: center; color: #999; font-size: 9px; border-top: 1px solid #eee; padding-top: 8px; }
+  @media print { body { margin: 10px; } }
+</style></head><body>
+<h1>Reporte de Pruebas - Depto ${unidad.nombre}</h1>
+<p class="subtitle">Nivel: ${unidad.nivel || "N/A"} | Progreso: ${unidad.progreso}% | ${unidad.liberado ? "LIBERADO" : "No liberado"} | Generado: ${new Date().toLocaleString("es-MX")}</p>
+
+<div class="resumen">
+  <div class="resumen-card ok"><div class="resumen-num" style="color:#065f46">${resumen.ok}</div><div class="resumen-label" style="color:#065f46">Todas ok</div></div>
+  <div class="resumen-card proceso"><div class="resumen-num" style="color:#9a3412">${resumen.proceso}</div><div class="resumen-label" style="color:#9a3412">En proceso</div></div>
+  <div class="resumen-card fallas"><div class="resumen-num" style="color:#991b1b">${resumen.fallas}</div><div class="resumen-label" style="color:#991b1b">Con fallas</div></div>
+  <div class="resumen-card sin"><div class="resumen-num" style="color:#6b7280">${resumen.sinEval}</div><div class="resumen-label" style="color:#6b7280">Sin evaluar</div></div>
+</div>
+
+${sistemas.map((s: any) => {
+  const bgColor = s.estado === "TODAS OK" ? "#059669" : s.estado === "CON FALLAS" ? "#dc2626" : s.estado === "EN PROCESO" ? "#f97316" : "#002C63";
+  const badgeClass = s.estado === "TODAS OK" ? "badge-ok" : s.estado === "CON FALLAS" ? "badge-falla" : s.estado === "EN PROCESO" ? "badge-proceso" : "badge-sin";
+  return `
+<h2><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${bgColor};margin-right:6px;vertical-align:middle;"></span>${s.nombre} <span class="badge ${badgeClass}">${s.estado}</span> <span style="font-weight:normal;font-size:11px;color:#666;">${s.verdes}/${s.total} ok</span></h2>
+<table>
+  <tr><th>Prueba</th><th style="width:80px;text-align:center">Intento 1</th><th style="width:80px;text-align:center">Final</th></tr>
+  ${s.pruebas.map((p: any) => {
+    const i1 = p.intento1?.estado || "pendiente";
+    const iF = p.intentoFinal?.estado || "pendiente";
+    return `<tr><td>${p.nombre}</td><td style="text-align:center"><span class="badge badge-${i1}">${i1 === "verde" ? "Pasa" : i1 === "rojo" ? "No pasa" : i1 === "na" ? "N/A" : "Pendiente"}</span></td><td style="text-align:center"><span class="badge badge-${iF}">${iF === "verde" ? "Pasa" : iF === "rojo" ? "No pasa" : iF === "na" ? "N/A" : "Pendiente"}</span></td></tr>`;
+  }).join("")}
+</table>`;
+}).join("")}
+
+<div class="footer">Objetiva - Control de Calidad de Obra | Reporte generado automaticamente</div>
+</body></html>`;
+
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
+      }
+    } finally {
+      setPdfExporting(false);
+    }
+  }, [detalle, unidad]);
 
   if (!selectedProjectId) {
     return (
@@ -281,6 +385,15 @@ export default function PruebasDetalle() {
             className="shrink-0 text-xs"
           >
             <History className="w-3.5 h-3.5 mr-1" /> Log
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportarPDF}
+            disabled={pdfExporting || !detalle}
+            className="shrink-0 text-xs"
+          >
+            {pdfExporting ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1" />} PDF
           </Button>
         </div>
 
@@ -351,8 +464,59 @@ export default function PruebasDetalle() {
             <Loader2 className="w-6 h-6 animate-spin text-[#02B381]" />
           </div>
         ) : detalle && detalle.length > 0 ? (
+          <>
+          {/* Resumen global */}
+          {(() => {
+            const resumen = detalle.reduce((acc: any, s: any) => {
+              const total = s.pruebas.length;
+              const v = s.pruebas.filter((p: any) => p.intentoFinal?.estado === "verde" || (!p.intentoFinal && p.intento1?.estado === "verde")).length;
+              const r = s.pruebas.filter((p: any) => p.intentoFinal?.estado === "rojo" || (!p.intentoFinal && p.intento1?.estado === "rojo")).length;
+              const ev = s.pruebas.filter((p: any) => p.intento1?.estado || p.intentoFinal?.estado).length;
+              const allGreen = total > 0 && v === total;
+              if (allGreen) acc.ok++;
+              else if (r > 0) acc.fallas++;
+              else if (ev > 0) acc.proceso++;
+              else acc.sinEval++;
+              acc.totalPruebas += total;
+              acc.totalVerdes += v;
+              acc.totalRojos += r;
+              return acc;
+            }, { ok: 0, fallas: 0, proceso: 0, sinEval: 0, totalPruebas: 0, totalVerdes: 0, totalRojos: 0 });
+            return (
+              <div className="grid grid-cols-4 gap-2 mb-4">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-center">
+                  <div className="text-lg font-bold text-emerald-700">{resumen.ok}</div>
+                  <div className="text-[10px] text-emerald-600 font-medium">Todas ok</div>
+                </div>
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-2.5 text-center">
+                  <div className="text-lg font-bold text-orange-700">{resumen.proceso}</div>
+                  <div className="text-[10px] text-orange-600 font-medium">En proceso</div>
+                </div>
+                <div className="bg-red-50 border border-red-200 rounded-xl p-2.5 text-center">
+                  <div className="text-lg font-bold text-red-700">{resumen.fallas}</div>
+                  <div className="text-[10px] text-red-600 font-medium">Con fallas</div>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-center">
+                  <div className="text-lg font-bold text-gray-600">{resumen.sinEval}</div>
+                  <div className="text-[10px] text-gray-500 font-medium">Sin evaluar</div>
+                </div>
+              </div>
+            );
+          })()}
           <div className="space-y-3">
-            {detalle.map((sistema: any) => {
+            {[...detalle].sort((a: any, b: any) => {
+              const getPriority = (s: any) => {
+                const total = s.pruebas.length;
+                const v = s.pruebas.filter((p: any) => p.intentoFinal?.estado === "verde" || (!p.intentoFinal && p.intento1?.estado === "verde")).length;
+                const r = s.pruebas.filter((p: any) => p.intentoFinal?.estado === "rojo" || (!p.intentoFinal && p.intento1?.estado === "rojo")).length;
+                const ev = s.pruebas.filter((p: any) => p.intento1?.estado || p.intentoFinal?.estado).length;
+                if (r > 0) return 0; // fallas primero
+                if (ev > 0 && !(total > 0 && v === total)) return 1; // en proceso
+                if (ev === 0) return 2; // sin evaluar
+                return 3; // todas ok al final
+              };
+              return getPriority(a) - getPriority(b);
+            }).map((sistema: any) => {
               const isExpanded = expandedSistemas.has(sistema.sistema);
               const totalPruebas = sistema.pruebas.length;
               const verdes = sistema.pruebas.filter((p: any) =>
@@ -495,6 +659,7 @@ export default function PruebasDetalle() {
               );
             })}
           </div>
+          </>
         ) : (
           <div className="text-center py-12 text-muted-foreground">
             <p>No hay pruebas configuradas.</p>

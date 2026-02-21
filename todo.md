@@ -4682,3 +4682,8 @@
 - [x] Barra de progreso por especialidad mostrando % de pruebas completadas
 - [x] Indicador numérico de estado (ej: 3/7 ok) junto al icono
 - [x] Filtro por estado de especialidad (en proceso, con fallas, todas ok)
+
+## Mejoras PruebasDetalle - Resumen, Orden y PDF
+- [x] Resumen global con contadores (X ok, Y en proceso, Z con fallas) arriba de la lista
+- [x] Ordenar especialidades por prioridad: fallas > en proceso > sin evaluar > todas ok
+- [x] Exportar reporte PDF de pruebas del departamento
