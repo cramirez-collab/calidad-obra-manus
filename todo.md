@@ -4666,3 +4666,7 @@
 - [x] Variable canCapture que incluya supervisor además de admin/superadmin
 - [x] Botones de modo (Pin, Nuevo, QR) visibles para supervisores en Planos
 - [x] Botón flotante Pin visible para supervisores
+
+## Restricción de eliminación de pines + Notificación al supervisor
+- [x] Restringir eliminación de pines solo a admins (frontend: ocultar botón, backend: validar rol)
+- [x] Notificación al supervisor cuando un residente coloca un pin nuevo en plano

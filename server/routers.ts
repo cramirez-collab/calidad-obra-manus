@@ -3191,10 +3191,35 @@ export const appRouter = router({
             nota: input.nota || null,
             creadoPorId: ctx.user.id,
           });
+
+          // Notificar a supervisores/admins cuando un residente coloca un pin
+          try {
+            const creadorRole = ctx.user.role;
+            if (!['superadmin', 'admin'].includes(creadorRole)) {
+              const plano = await db.getPlanoById(input.planoId);
+              const planoNombre = plano?.nombre || `Plano #${input.planoId}`;
+              const creadorNombre = ctx.user.name || 'Un usuario';
+              const supervisores = await db.getAllUsers();
+              const destinatarios = supervisores.filter(
+                (u: any) => ['superadmin', 'admin', 'supervisor'].includes(u.role) && u.id !== ctx.user.id
+              );
+              for (const dest of destinatarios) {
+                await db.createNotificacion({
+                  usuarioId: dest.id,
+                  tipo: 'pin_creado',
+                  titulo: 'Nuevo Pin en Plano',
+                  mensaje: `${creadorNombre} colocó un pin en "${planoNombre}"${input.nota ? `: ${input.nota}` : ''}`,
+                });
+              }
+            }
+          } catch (e) {
+            console.error('[Pin] Error notificando supervisores:', e);
+          }
+
           return { id };
         }),
 
-      eliminar: noSeguristaProcedure
+      eliminar: adminProcedure
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input }) => {
           await db.deletePlanoPin(input.id);
