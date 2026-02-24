@@ -4691,3 +4691,9 @@
 ## Fixes PruebasDetalle - Header y Color Gradual
 - [x] Arreglar header del depto para que sea horizontal (no vertical)
 - [x] Color gradual del icono de especialidad: azul (0%) → naranja claro → naranja fuerte → verde (>50% criticas) → verde Objetiva (100%)
+
+## Blindar Chat de Items
+- [x] Auditar permisos backend: todos los usuarios deben poder escribir en el chat
+- [x] Auditar frontend: manejo de errores robusto, nunca falle
+- [x] Corregir problemas encontrados
+- [x] Tests de chat (529 tests passing)

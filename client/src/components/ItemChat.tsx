@@ -63,7 +63,10 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Queries
-  const { data: mensajes, isLoading } = trpc.mensajes.byItem.useQuery({ itemId });
+  const { data: mensajes, isLoading, isError, error: queryError, refetch } = trpc.mensajes.byItem.useQuery(
+    { itemId },
+    { retry: 3, retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000) }
+  );
   const { data: usuarios } = trpc.users.listForMentions.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined
   );
@@ -74,13 +77,23 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
       setMensaje("");
       setMenciones([]);
       utils.mensajes.byItem.invalidate({ itemId });
-      // Scroll al final
       setTimeout(() => {
         scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
       }, 100);
     },
     onError: (error) => {
-      toast.error("Error al enviar mensaje: " + error.message);
+      console.error('[ItemChat] Error al enviar mensaje:', error);
+      // Retry automático: si es error de red, reintentar
+      if (error.data?.code === 'INTERNAL_SERVER_ERROR' || error.message.includes('fetch')) {
+        toast.error("Error de conexión. Reintentando...");
+        setTimeout(() => {
+          if (mensaje.trim()) {
+            createMensaje.mutate({ itemId, texto: mensaje, menciones: menciones.length > 0 ? menciones : undefined });
+          }
+        }, 2000);
+      } else {
+        toast.error("Error al enviar mensaje: " + error.message);
+      }
     }
   });
 
@@ -343,6 +356,14 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
         {isLoading ? (
           <div className="flex items-center justify-center h-32">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+            <p className="text-sm text-destructive mb-2">Error al cargar mensajes</p>
+            <p className="text-xs text-muted-foreground mb-3">{queryError?.message || 'Intenta de nuevo'}</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              Reintentar
+            </Button>
           </div>
         ) : mensajes && mensajes.length > 0 ? (
           <div className="space-y-4">

@@ -2685,14 +2685,15 @@ export const appRouter = router({
         return await db.getMensajesByItem(input.itemId);
       }),
     
-    // Crear mensaje
-    create: noSeguristaProcedure
+    // Crear mensaje - TODOS los usuarios autenticados pueden escribir
+    create: protectedProcedure
       .input(z.object({
         itemId: z.number(),
         texto: z.string().min(1),
         menciones: z.array(z.number()).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
+        // 1. Guardar mensaje (operación crítica)
         const id = await db.createMensaje({
           itemId: input.itemId,
           usuarioId: ctx.user.id,
@@ -2700,64 +2701,78 @@ export const appRouter = router({
           menciones: input.menciones,
         });
         
-        // Registrar en auditoría
-        await db.createAuditoria({
-          usuarioId: ctx.user.id,
-          usuarioNombre: ctx.user.name || 'Usuario',
-          usuarioRol: ctx.user.role,
-          accion: 'crear_mensaje',
-          categoria: 'item',
-          entidadTipo: 'mensaje',
-          entidadId: id,
-          detalles: `Mensaje creado en ítem #${input.itemId}`,
-        });
+        // 2. Operaciones secundarias en try/catch para que nunca bloqueen el mensaje
+        try {
+          await db.createAuditoria({
+            usuarioId: ctx.user.id,
+            usuarioNombre: ctx.user.name || 'Usuario',
+            usuarioRol: ctx.user.role,
+            accion: 'crear_mensaje',
+            categoria: 'item',
+            entidadTipo: 'mensaje',
+            entidadId: id,
+            detalles: `Mensaje creado en ítem #${input.itemId}`,
+          });
+        } catch (e) {
+          console.error('[Chat] Error registrando auditoría de mensaje:', e);
+        }
         
-        // Incrementar badge de mensajes no leídos para usuarios mencionados
-        if (input.menciones && input.menciones.length > 0) {
-          // Obtener info del ítem para push notifications
-          const itemInfoMencion = await db.getItemInfoForPush(input.itemId);
-          
-          for (const userId of input.menciones) {
-            await db.incrementBadge(userId, 'mensajesNoLeidos');
-            // Crear notificación
-            await db.createNotificacion({
-              usuarioId: userId,
-              itemId: input.itemId,
-              proyectoId: itemInfoMencion?.proyectoId || undefined,
-              tipo: 'mencion',
-              titulo: 'Te mencionaron en un comentario',
-              mensaje: `${ctx.user.name || 'Un usuario'} te mencionó en el ítem #${input.itemId}`,
-            });
-            
-            // Enviar notificación push con info del ítem
-            const pushSubsMencion = await db.getPushSubscriptionsByUsuario(userId);
-            if (pushSubsMencion.length > 0 && itemInfoMencion) {
-              await pushService.sendPushToMultiple(pushSubsMencion, {
-                title: 'Te Mencionaron',
-                body: `${ctx.user.name || 'Un usuario'} te mencionó`,
-                itemCodigo: itemInfoMencion.codigo,
-                unidadNombre: itemInfoMencion.unidadNombre,
-                defectoNombre: itemInfoMencion.defectoNombre,
-                itemId: input.itemId,
-                data: { url: `/items/${input.itemId}`, itemId: input.itemId, tipo: 'mencion' }
-              });
-            }
-          }
-          // Emitir evento de socket para notificaciones en tiempo real
+        // 3. Siempre emitir socket para actualización en tiempo real
+        try {
           socketEvents.itemUpdated({ id: input.itemId, action: 'mensaje_nuevo' });
+        } catch (e) {
+          console.error('[Chat] Error emitiendo socket:', e);
+        }
+        
+        // 4. Notificaciones de menciones (no bloquean el mensaje)
+        if (input.menciones && input.menciones.length > 0) {
+          try {
+            const itemInfoMencion = await db.getItemInfoForPush(input.itemId);
+            
+            for (const userId of input.menciones) {
+              try {
+                await db.incrementBadge(userId, 'mensajesNoLeidos');
+                await db.createNotificacion({
+                  usuarioId: userId,
+                  itemId: input.itemId,
+                  proyectoId: itemInfoMencion?.proyectoId || undefined,
+                  tipo: 'mencion',
+                  titulo: 'Te mencionaron en un comentario',
+                  mensaje: `${ctx.user.name || 'Un usuario'} te mencionó en el ítem #${input.itemId}`,
+                });
+                
+                const pushSubsMencion = await db.getPushSubscriptionsByUsuario(userId);
+                if (pushSubsMencion.length > 0 && itemInfoMencion) {
+                  await pushService.sendPushToMultiple(pushSubsMencion, {
+                    title: 'Te Mencionaron',
+                    body: `${ctx.user.name || 'Un usuario'} te mencionó`,
+                    itemCodigo: itemInfoMencion.codigo,
+                    unidadNombre: itemInfoMencion.unidadNombre,
+                    defectoNombre: itemInfoMencion.defectoNombre,
+                    itemId: input.itemId,
+                    data: { url: `/items/${input.itemId}`, itemId: input.itemId, tipo: 'mencion' }
+                  });
+                }
+              } catch (mentionErr) {
+                console.error(`[Chat] Error notificando mención a usuario ${userId}:`, mentionErr);
+              }
+            }
+          } catch (e) {
+            console.error('[Chat] Error procesando menciones:', e);
+          }
         }
         
         return { id, success: true };
       }),
     
-    // Editar mensaje (solo admin/superadmin o autor)
-    update: noSeguristaProcedure
+    // Editar mensaje (solo admin/superadmin/supervisor)
+    update: protectedProcedure
       .input(z.object({
         id: z.number(),
         texto: z.string().min(1),
       }))
       .mutation(async ({ ctx, input }) => {
-        // Solo admin/superadmin pueden editar cualquier mensaje
+        // Solo admin/superadmin/supervisor pueden editar cualquier mensaje
         if (!['superadmin', 'admin', 'supervisor'].includes(ctx.user.role)) {
           throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para editar este mensaje' });
         }
