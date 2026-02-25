@@ -337,6 +337,76 @@ export default function Estadisticas() {
             </p>
           </div>
           <div className="flex gap-2">
+            {/* Botón PDF Pendientes de Aprobación */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                if (!itemsReporteData?.items) {
+                  toast.error('No hay datos disponibles');
+                  return;
+                }
+                const pendientes = itemsReporteData.items.filter((i: any) => i.status === 'pendiente_aprobacion');
+                if (pendientes.length === 0) {
+                  toast.info('No hay ítems pendientes de aprobación');
+                  return;
+                }
+                const win = window.open('', '_blank');
+                if (!win) { toast.error('Permite ventanas emergentes'); return; }
+                const removeAccents = (str: string) => str?.normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
+                const rows = pendientes.map((item: any, idx: number) => {
+                  const fecha = item.fechaCreacion ? new Date(item.fechaCreacion).toLocaleDateString('es-MX') : 'N/A';
+                  return `<tr style="${idx % 2 === 0 ? '' : 'background:#f8fafc'}">
+                    <td style="padding:6px 8px;border:1px solid #e2e8f0;font-size:11px;font-weight:600">${removeAccents(item.codigo || '')}</td>
+                    <td style="padding:6px 8px;border:1px solid #e2e8f0;font-size:11px">${removeAccents(item.titulo || item.descripcion || '').substring(0, 80)}</td>
+                    <td style="padding:6px 8px;border:1px solid #e2e8f0;font-size:11px">${removeAccents(item.empresaNombre || 'N/A')}</td>
+                    <td style="padding:6px 8px;border:1px solid #e2e8f0;font-size:11px">${removeAccents(item.especialidadNombre || 'N/A')}</td>
+                    <td style="padding:6px 8px;border:1px solid #e2e8f0;font-size:11px">${removeAccents(item.unidadNombre || 'N/A')}</td>
+                    <td style="padding:6px 8px;border:1px solid #e2e8f0;font-size:11px">${removeAccents(item.residenteNombre || 'N/A')}</td>
+                    <td style="padding:6px 8px;border:1px solid #e2e8f0;font-size:11px">${removeAccents(item.creadoPorNombre || 'N/A')}</td>
+                    <td style="padding:6px 8px;border:1px solid #e2e8f0;font-size:11px;white-space:nowrap">${fecha}</td>
+                    <td style="padding:6px 8px;border:1px solid #e2e8f0;font-size:11px;text-align:center">${item.fotoAntesUrl ? '<span style="color:#02B381">Si</span>' : '<span style="color:#ef4444">No</span>'}</td>
+                    <td style="padding:6px 8px;border:1px solid #e2e8f0;font-size:11px;text-align:center">${item.fotoDespuesUrl ? '<span style="color:#02B381">Si</span>' : '<span style="color:#ef4444">No</span>'}</td>
+                  </tr>`;
+                }).join('');
+                win.document.write(`<!DOCTYPE html><html><head><title>Pendientes Aprobacion</title>
+                  <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+                    @media print { body { margin: 10px; } .no-print { display: none; } table { font-size: 10px; } }
+                  </style></head><body>
+                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;border-bottom:3px solid #02B381;padding-bottom:12px">
+                    <div>
+                      <h1 style="margin:0;font-size:20px;color:#002C63">Items Pendientes de Aprobacion</h1>
+                      <p style="margin:4px 0 0;font-size:13px;color:#666">Proyecto: ${removeAccents(proyectoNombre)} | Total: ${pendientes.length} items | Fecha: ${new Date().toLocaleDateString('es-MX')}</p>
+                    </div>
+                  </div>
+                  <table style="width:100%;border-collapse:collapse">
+                    <thead><tr style="background:#002C63;color:white">
+                      <th style="padding:8px;text-align:left;font-size:11px">Codigo</th>
+                      <th style="padding:8px;text-align:left;font-size:11px">Descripcion</th>
+                      <th style="padding:8px;text-align:left;font-size:11px">Empresa</th>
+                      <th style="padding:8px;text-align:left;font-size:11px">Especialidad</th>
+                      <th style="padding:8px;text-align:left;font-size:11px">Unidad</th>
+                      <th style="padding:8px;text-align:left;font-size:11px">Residente</th>
+                      <th style="padding:8px;text-align:left;font-size:11px">Capturado por</th>
+                      <th style="padding:8px;text-align:left;font-size:11px">Fecha</th>
+                      <th style="padding:8px;text-align:center;font-size:11px">F.Antes</th>
+                      <th style="padding:8px;text-align:center;font-size:11px">F.Despues</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                  </table>
+                  <div class="no-print" style="margin-top:20px;text-align:center">
+                    <button onclick="window.print()" style="padding:10px 24px;background:#02B381;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px">Imprimir / Guardar PDF</button>
+                  </div>
+                </body></html>`);
+                win.document.close();
+                toast.success(`PDF generado con ${pendientes.length} pendientes`);
+              }}
+              className="text-amber-600 border-amber-200 hover:bg-amber-50"
+            >
+              <ShieldCheck className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Pendientes</span>
+            </Button>
             {/* Botón Descargar PDF - Reporte Completo */}
             <Button 
               variant="outline" 

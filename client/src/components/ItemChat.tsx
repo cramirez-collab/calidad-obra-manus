@@ -24,7 +24,9 @@ import {
   Camera,
   Image as ImageIcon,
   SmilePlus,
-  Images
+  Images,
+  FileText,
+  Download
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -412,6 +414,61 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
 
   const canModifyMessages = user && ['superadmin', 'admin', 'supervisor'].includes(user.role);
 
+  // Exportar chat a PDF
+  const exportChatPDF = () => {
+    if (!mensajes || mensajes.length === 0) {
+      toast.error("No hay mensajes para exportar");
+      return;
+    }
+    
+    const win = window.open('', '_blank');
+    if (!win) { toast.error("Permite ventanas emergentes"); return; }
+    
+    const removeAccents = (str: string) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    
+    const rows = mensajes.map((msg: any) => {
+      const fecha = format(new Date(msg.createdAt), "dd/MM/yyyy HH:mm", { locale: es });
+      const nombre = removeAccents(msg.usuario?.name || 'Usuario');
+      const tipo = msg.tipo === 'foto' ? 'Foto' : 'Texto';
+      const texto = removeAccents(msg.texto || '');
+      return `<tr>
+        <td style="padding:6px 10px;border:1px solid #ddd;font-size:12px;white-space:nowrap">${fecha}</td>
+        <td style="padding:6px 10px;border:1px solid #ddd;font-size:12px;font-weight:600">${nombre}</td>
+        <td style="padding:6px 10px;border:1px solid #ddd;font-size:12px;text-align:center">${tipo}</td>
+        <td style="padding:6px 10px;border:1px solid #ddd;font-size:12px">${texto}${msg.tipo === 'foto' && msg.fotoUrl ? `<br/><img src="${msg.fotoUrl}" style="max-width:200px;max-height:150px;margin-top:4px;border-radius:4px"/>` : ''}</td>
+      </tr>`;
+    }).join('');
+    
+    const codigo = removeAccents(itemCodigo || `Item-${itemId}`);
+    
+    win.document.write(`<!DOCTYPE html><html><head><title>Chat ${codigo}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        @media print { body { margin: 10px; } .no-print { display: none; } }
+      </style></head><body>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;border-bottom:3px solid #02B381;padding-bottom:12px">
+        <div>
+          <h1 style="margin:0;font-size:20px;color:#002C63">Conversacion del Item ${codigo}</h1>
+          <p style="margin:4px 0 0;font-size:13px;color:#666">Exportado: ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: es })} | Total mensajes: ${mensajes.length}</p>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin-top:10px">
+        <thead><tr style="background:#002C63;color:white">
+          <th style="padding:8px 10px;text-align:left;font-size:12px">Fecha</th>
+          <th style="padding:8px 10px;text-align:left;font-size:12px">Usuario</th>
+          <th style="padding:8px 10px;text-align:center;font-size:12px">Tipo</th>
+          <th style="padding:8px 10px;text-align:left;font-size:12px">Mensaje</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="no-print" style="margin-top:20px;text-align:center">
+        <button onclick="window.print()" style="padding:10px 24px;background:#02B381;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px">Imprimir / Guardar PDF</button>
+      </div>
+    </body></html>`);
+    win.document.close();
+    toast.success("PDF generado");
+  };
+
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
@@ -502,6 +559,15 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
           {itemCodigo && <p className="text-xs text-muted-foreground">{itemCodigo}</p>}
         </div>
         <div className="ml-auto flex items-center gap-1">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={exportChatPDF}
+            title="Exportar chat a PDF"
+          >
+            <Download className="h-4 w-4 text-muted-foreground" />
+          </Button>
           <Button 
             variant="ghost" 
             size="icon" 

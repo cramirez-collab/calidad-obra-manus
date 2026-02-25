@@ -4709,3 +4709,7 @@
 - [x] Verificar sesión de Estefany (id: 721649, rol: residente, activa)
 - [x] Reacciones rápidas con emojis (👍, ✅, ❌, 👀) en mensajes del chat
 - [x] Galería de fotos del chat por ítem (todas las fotos enviadas en el hilo)
+
+## Exportar Chat y PDF Pendientes Supervisión
+- [x] Botón exportar conversación del chat a PDF en la ficha del ítem (ItemDetail)
+- [x] Botón descargar PDF de todos los ítems pendientes de aprobación de supervisión en estadísticas
