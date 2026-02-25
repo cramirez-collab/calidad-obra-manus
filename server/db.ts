@@ -20,6 +20,7 @@ import {
   metas, InsertMeta,
   defectos, InsertDefecto,
   mensajes, InsertMensaje,
+  mensajeReacciones, InsertMensajeReaccion,
   userBadges, InsertUserBadge,
   auditoria, InsertAuditoria,
   pushSubscriptions, InsertPushSubscription,
@@ -3025,7 +3026,7 @@ export async function getMensajesByItem(itemId: number) {
   }));
 }
 
-export async function createMensaje(data: { itemId: number; usuarioId: number; texto: string; menciones?: number[]; tipo?: 'texto' | 'foto'; fotoUrl?: string }) {
+export async function createMensaje(data: { itemId: number; usuarioId: number; texto: string; menciones?: number[]; tipo?: string; fotoUrl?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -3034,7 +3035,7 @@ export async function createMensaje(data: { itemId: number; usuarioId: number; t
     usuarioId: data.usuarioId,
     texto: data.texto,
     menciones: data.menciones ? JSON.stringify(data.menciones) : null,
-    tipo: data.tipo || 'texto',
+    tipo: (data.tipo as any) || 'texto',
     fotoUrl: data.fotoUrl || null,
   });
   
@@ -3055,6 +3056,63 @@ export async function deleteMensaje(id: number) {
   await db.update(mensajes)
     .set({ eliminado: true })
     .where(eq(mensajes.id, id));
+}
+
+// ==================== REACCIONES DE MENSAJES ====================
+
+export async function getReaccionesByMensajes(mensajeIds: number[]) {
+  const db = await getDb();
+  if (!db || mensajeIds.length === 0) return [];
+  const data = await db.select().from(mensajeReacciones)
+    .where(inArray(mensajeReacciones.mensajeId, mensajeIds));
+  return data;
+}
+
+export async function toggleReaccion(mensajeId: number, usuarioId: number, emoji: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Check if reaction exists
+  const existing = await db.select().from(mensajeReacciones)
+    .where(and(
+      eq(mensajeReacciones.mensajeId, mensajeId),
+      eq(mensajeReacciones.usuarioId, usuarioId),
+      eq(mensajeReacciones.emoji, emoji)
+    ))
+    .limit(1);
+  if (existing.length > 0) {
+    // Remove reaction
+    await db.delete(mensajeReacciones).where(eq(mensajeReacciones.id, existing[0].id));
+    return { added: false };
+  } else {
+    // Add reaction
+    await db.insert(mensajeReacciones).values({ mensajeId, usuarioId, emoji });
+    return { added: true };
+  }
+}
+
+export async function getFotosMensajesByItem(itemId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const fotosData = await db.select().from(mensajes)
+    .where(and(
+      eq(mensajes.itemId, itemId),
+      eq(mensajes.tipo, 'foto'),
+      eq(mensajes.eliminado, false)
+    ))
+    .orderBy(desc(mensajes.createdAt));
+  
+  if (fotosData.length === 0) return [];
+  const usuarioIds = Array.from(new Set(fotosData.map(m => m.usuarioId)));
+  const usuariosData = await db.select().from(users)
+    .where(inArray(users.id, usuarioIds));
+  
+  return fotosData.map(m => ({
+    id: m.id,
+    fotoUrl: m.fotoUrl,
+    texto: m.texto,
+    usuarioNombre: usuariosData.find(u => u.id === m.usuarioId)?.name || 'Usuario',
+    createdAt: m.createdAt,
+  }));
 }
 
 // ==================== BADGES DE USUARIO ====================

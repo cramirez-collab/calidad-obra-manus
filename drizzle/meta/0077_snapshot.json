@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "d2ef1158-1695-408e-989c-31021b0fd0ec",
+  "id": "dbc334b5-c6a0-41ae-a3da-f23284bd34fb",
   "prevId": "3bd4d4ed-6756-4864-8a7a-ad856195aa30",
   "tables": {
     "actividad_usuarios": {
@@ -2458,6 +2458,59 @@
       },
       "checkConstraint": {}
     },
+    "mensaje_reacciones": {
+      "name": "mensaje_reacciones",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "mensajeId": {
+          "name": "mensajeId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "usuarioId": {
+          "name": "usuarioId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "emoji": {
+          "name": "emoji",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "mensaje_reacciones_id": {
+          "name": "mensaje_reacciones_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
     "mensajes": {
       "name": "mensajes",
       "columns": {
@@ -2498,7 +2551,7 @@
         },
         "tipo": {
           "name": "tipo",
-          "type": "enum('texto','foto')",
+          "type": "enum('texto','voz','foto')",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,

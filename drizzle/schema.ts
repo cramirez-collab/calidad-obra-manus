@@ -427,8 +427,8 @@ export const mensajes = mysqlTable("mensajes", {
   usuarioId: int("usuarioId").notNull(),
   texto: text("texto").notNull(),
   menciones: text("menciones"), // JSON array de userIds mencionados
-  tipo: mysqlEnum("tipo", ["texto", "foto"]).default("texto").notNull(),
-  fotoUrl: text("fotoUrl"),
+  tipo: mysqlEnum("tipo", ["texto", "voz", "foto"]).default("texto").notNull(),
+  fotoUrl: text("fotoUrl"), // URL de foto adjunta
   editado: boolean("editado").default(false).notNull(),
   eliminado: boolean("eliminado").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -437,6 +437,20 @@ export const mensajes = mysqlTable("mensajes", {
 
 export type Mensaje = typeof mensajes.$inferSelect;
 export type InsertMensaje = typeof mensajes.$inferInsert;
+
+/**
+ * Tabla de reacciones a mensajes de chat
+ */
+export const mensajeReacciones = mysqlTable("mensaje_reacciones", {
+  id: int("id").autoincrement().primaryKey(),
+  mensajeId: int("mensajeId").notNull(),
+  usuarioId: int("usuarioId").notNull(),
+  emoji: varchar("emoji", { length: 10 }).notNull(), // 👍, ✅, ❌, 👀
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MensajeReaccion = typeof mensajeReacciones.$inferSelect;
+export type InsertMensajeReaccion = typeof mensajeReacciones.$inferInsert;
 
 /**
  * Tabla de badges/contadores por usuario

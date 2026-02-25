@@ -4699,8 +4699,13 @@
 - [x] Tests de chat (529 tests passing)
 
 ## Fix Chat - Estefany no puede escribir + 3 mejoras
-- [x] Diagnosticar por qué Estefany no puede escribir en chat de ítems (enviarFoto estaba en router incorrecto, permisos ya son protectedProcedure)
-- [x] Asegurar que TODOS los usuarios (todos los roles) puedan escribir en el chat (protectedProcedure en create, update, enviarFoto)
-- [x] Indicador "escribiendo..." cuando otro usuario está escribiendo (no implementado - requiere WebSocket dedicado, se descarta por complejidad)
-- [x] Enviar fotos en el chat de ítems
-- [x] Notificación push a todos los participantes del hilo cuando llega un mensaje nuevo
+- [ ] Diagnosticar por qué Estefany no puede escribir en chat de ítems
+- [ ] Asegurar que TODOS los usuarios (todos los roles) puedan escribir en el chat
+- [ ] Indicador "escribiendo..." cuando otro usuario está escribiendo
+- [ ] Enviar fotos en el chat de ítems
+- [ ] Notificación push a todos los participantes del hilo cuando llega un mensaje nuevo
+
+## Mejoras Chat Ítems - Reacciones, Galería, Sesión Estefany
+- [x] Verificar sesión de Estefany (id: 721649, rol: residente, activa)
+- [x] Reacciones rápidas con emojis (👍, ✅, ❌, 👀) en mensajes del chat
+- [x] Galería de fotos del chat por ítem (todas las fotos enviadas en el hilo)
