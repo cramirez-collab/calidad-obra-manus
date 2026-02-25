@@ -540,6 +540,13 @@
       "when": 1771570606888,
       "tag": "0076_bent_proteus",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "5",
+      "when": 1771993121337,
+      "tag": "0077_clear_fantastic_four",
+      "breakpoints": true
     }
   ]
 }

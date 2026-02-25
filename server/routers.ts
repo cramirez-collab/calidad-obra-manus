@@ -2724,7 +2724,37 @@ export const appRouter = router({
           console.error('[Chat] Error emitiendo socket:', e);
         }
         
-        // 4. Notificaciones de menciones (no bloquean el mensaje)
+        // 4. Notificar a todos los participantes del hilo (excepto al autor y los mencionados)
+        try {
+          const todosMsg = await db.getMensajesByItem(input.itemId);
+          const mencionados = new Set(input.menciones || []);
+          const participantIds = Array.from(new Set(todosMsg.map((m: any) => m.usuarioId).filter((uid: number) => uid !== ctx.user.id && !mencionados.has(uid))));
+          const itemInfoPart = await db.getItemInfoForPush(input.itemId);
+          
+          for (const uid of participantIds) {
+            try {
+              await db.incrementBadge(uid, 'mensajesNoLeidos');
+              const subs = await db.getPushSubscriptionsByUsuario(uid);
+              if (subs.length > 0 && itemInfoPart) {
+                await pushService.sendPushToMultiple(subs, {
+                  title: 'Nuevo mensaje',
+                  body: `${ctx.user.name || 'Usuario'}: ${input.texto.substring(0, 60)}`,
+                  itemCodigo: itemInfoPart.codigo,
+                  unidadNombre: itemInfoPart.unidadNombre,
+                  defectoNombre: itemInfoPart.defectoNombre,
+                  itemId: input.itemId,
+                  data: { url: `/items/${input.itemId}`, itemId: input.itemId, tipo: 'mensaje_chat' }
+                });
+              }
+            } catch (e) {
+              console.error(`[Chat] Error notificando participante ${uid}:`, e);
+            }
+          }
+        } catch (e) {
+          console.error('[Chat] Error notificando participantes del hilo:', e);
+        }
+        
+        // 5. Notificaciones de menciones (no bloquean el mensaje)
         if (input.menciones && input.menciones.length > 0) {
           try {
             const itemInfoMencion = await db.getItemInfoForPush(input.itemId);
@@ -2796,6 +2826,70 @@ export const appRouter = router({
           detalles: `Mensaje eliminado`,
         });
         return { success: true };
+      }),
+
+    // Enviar mensaje con foto en chat de ítem
+    enviarFoto: protectedProcedure
+      .input(z.object({
+        itemId: z.number(),
+        fotoBase64: z.string(),
+        texto: z.string().optional().default(''),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Subir foto a S3
+        const base64Data = input.fotoBase64.includes(',') ? input.fotoBase64.split(',')[1] : input.fotoBase64;
+        const buffer = Buffer.from(base64Data, 'base64');
+        const ext = input.fotoBase64.includes('image/png') ? 'png' : 'jpg';
+        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+        const key = `items/chat-fotos/${input.itemId}/${nanoid(10)}.${ext}`;
+        const { url: fotoUrl } = await storagePut(key, buffer, mimeType);
+
+        const id = await db.createMensaje({
+          itemId: input.itemId,
+          usuarioId: ctx.user.id,
+          texto: input.texto || '[Foto]',
+          tipo: 'foto',
+          fotoUrl,
+        });
+
+        // Notificar a todos los participantes del hilo (excepto al autor)
+        try {
+          const todosMsg = await db.getMensajesByItem(input.itemId);
+          const participantIds = Array.from(new Set(todosMsg.map((m: any) => m.usuarioId).filter((uid: number) => uid !== ctx.user.id)));
+          const itemInfo = await db.getItemInfoForPush(input.itemId);
+          
+          for (const uid of participantIds) {
+            try {
+              await db.incrementBadge(uid, 'mensajesNoLeidos');
+              await db.createNotificacion({
+                usuarioId: uid,
+                itemId: input.itemId,
+                proyectoId: itemInfo?.proyectoId || undefined,
+                tipo: 'mencion',
+                titulo: 'Nueva foto en chat',
+                mensaje: `${ctx.user.name || 'Un usuario'} envió una foto en el ítem ${itemInfo?.codigo || '#' + input.itemId}`,
+              });
+              const subs = await db.getPushSubscriptionsByUsuario(uid);
+              if (subs.length > 0 && itemInfo) {
+                await pushService.sendPushToMultiple(subs, {
+                  title: 'Foto en Chat',
+                  body: `${ctx.user.name || 'Usuario'} envió una foto`,
+                  itemCodigo: itemInfo.codigo,
+                  unidadNombre: itemInfo.unidadNombre,
+                  defectoNombre: itemInfo.defectoNombre,
+                  itemId: input.itemId,
+                  data: { url: `/items/${input.itemId}`, itemId: input.itemId, tipo: 'foto_chat' }
+                });
+              }
+            } catch (e) {
+              console.error(`[Chat] Error notificando participante ${uid}:`, e);
+            }
+          }
+        } catch (e) {
+          console.error('[Chat] Error notificando participantes:', e);
+        }
+
+        return { id, success: true, fotoUrl };
       }),
   }),
 

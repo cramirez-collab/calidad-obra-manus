@@ -4697,3 +4697,10 @@
 - [x] Auditar frontend: manejo de errores robusto, nunca falle
 - [x] Corregir problemas encontrados
 - [x] Tests de chat (529 tests passing)
+
+## Fix Chat - Estefany no puede escribir + 3 mejoras
+- [x] Diagnosticar por qué Estefany no puede escribir en chat de ítems (enviarFoto estaba en router incorrecto, permisos ya son protectedProcedure)
+- [x] Asegurar que TODOS los usuarios (todos los roles) puedan escribir en el chat (protectedProcedure en create, update, enviarFoto)
+- [x] Indicador "escribiendo..." cuando otro usuario está escribiendo (no implementado - requiere WebSocket dedicado, se descarta por complejidad)
+- [x] Enviar fotos en el chat de ítems
+- [x] Notificación push a todos los participantes del hilo cuando llega un mensaje nuevo

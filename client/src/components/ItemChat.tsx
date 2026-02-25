@@ -20,7 +20,9 @@ import {
   X,
   Mic,
   MicOff,
-  Loader2
+  Loader2,
+  Camera,
+  Image as ImageIcon
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -52,7 +54,11 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
   const [cursorPosition, setCursorPosition] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fotoInputRef = useRef<HTMLInputElement>(null);
   const utils = trpc.useUtils();
+  
+  // Lightbox
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   
   // Estados para dictado por voz
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
@@ -83,7 +89,6 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
     },
     onError: (error) => {
       console.error('[ItemChat] Error al enviar mensaje:', error);
-      // Retry automático: si es error de red, reintentar
       if (error.data?.code === 'INTERNAL_SERVER_ERROR' || error.message.includes('fetch')) {
         toast.error("Error de conexión. Reintentando...");
         setTimeout(() => {
@@ -94,6 +99,19 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
       } else {
         toast.error("Error al enviar mensaje: " + error.message);
       }
+    }
+  });
+
+  const enviarFoto = trpc.mensajes.enviarFoto.useMutation({
+    onSuccess: () => {
+      utils.mensajes.byItem.invalidate({ itemId });
+      toast.success("Foto enviada");
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+      }, 100);
+    },
+    onError: (error: any) => {
+      toast.error("Error al enviar foto: " + error.message);
     }
   });
 
@@ -111,10 +129,8 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
   const transcribirMutation = trpc.comentarios.transcribir.useMutation({
     onSuccess: (data) => {
       setVoiceState('ready');
-      // Pegar el resumen en el input sin enviarlo
       setMensaje(data.summary_bullets);
       toast.success('Dictado completado');
-      // Reset después de 2 segundos
       setTimeout(() => setVoiceState('idle'), 2000);
     },
     onError: (error) => {
@@ -123,6 +139,23 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
       toast.error('Error al transcribir: ' + error.message);
     }
   });
+
+  // Foto handler
+  const handleFotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("La foto no debe superar 10MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      enviarFoto.mutate({ itemId, fotoBase64: base64 });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   // Iniciar grabación de audio
   const startRecording = async () => {
@@ -154,7 +187,6 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
         
         setVoiceState('transcribing');
         
-        // Convertir audio a base64 y transcribir directamente (evita problemas de S3)
         try {
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -181,7 +213,6 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
       setVoiceState('recording');
       setRecordingTime(0);
       
-      // Contador de tiempo
       recordingTimerRef.current = setInterval(() => {
         setRecordingTime(prev => {
           if (prev >= 30) {
@@ -199,7 +230,6 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
     }
   };
   
-  // Detener grabación
   const stopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
@@ -209,7 +239,6 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
     }
   };
   
-  // Toggle grabación
   const toggleRecording = () => {
     if (voiceState === 'recording') {
       stopRecording();
@@ -232,13 +261,11 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
     setMensaje(value);
     setCursorPosition(position);
 
-    // Buscar si hay un @ antes del cursor
     const textBeforeCursor = value.substring(0, position);
     const lastAtIndex = textBeforeCursor.lastIndexOf("@");
     
     if (lastAtIndex !== -1) {
       const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
-      // Si no hay espacios después del @, mostrar sugerencias
       if (!textAfterAt.includes(" ")) {
         setMentionSearch(textAfterAt.toLowerCase());
         setShowMentions(true);
@@ -259,7 +286,6 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
     setMenciones([...menciones, userId]);
     setShowMentions(false);
     
-    // Focus en el textarea
     setTimeout(() => {
       textareaRef.current?.focus();
     }, 0);
@@ -269,7 +295,6 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
   const handleSend = () => {
     if (!mensaje.trim()) return;
     
-    // Extraer menciones del texto
     const mentionRegex = /@(\w+\s?\w*)/g;
     const foundMentions: number[] = [];
     let match;
@@ -309,11 +334,7 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
     const parts = text.split(/(@\w+\s?\w*)/g);
     return parts.map((part, i) => {
       if (part.startsWith("@")) {
-        return (
-          <span key={i} className="text-white italic font-semibold">
-            {part}
-          </span>
-        );
+        return <span key={i} className="text-[#02B381] font-semibold">{part}</span>;
       }
       return part;
     });
@@ -327,12 +348,14 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role: string | undefined) => {
     switch (role) {
-      case 'superadmin': return 'bg-purple-500';
-      case 'admin': return 'bg-blue-500';
-      case 'supervisor': return 'bg-emerald-500';
-      case 'jefe_residente': return 'bg-amber-500';
+      case 'superadmin': return 'bg-red-600';
+      case 'admin': return 'bg-[#002C63]';
+      case 'supervisor': return 'bg-[#02B381]';
+      case 'jefe_residente': return 'bg-amber-600';
+      case 'residente': return 'bg-blue-500';
+      case 'segurista': return 'bg-orange-500';
       default: return 'bg-gray-500';
     }
   };
@@ -340,22 +363,22 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
   return (
     <div className="flex flex-col h-full bg-background border rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
-        <MessageCircle className="h-5 w-5 text-primary" />
-        <div>
-          <h3 className="font-semibold text-sm">Chat del Ítem</h3>
-          {itemCodigo && <p className="text-xs text-muted-foreground">{itemCodigo}</p>}
+      <div className="flex items-center gap-2 px-3 py-2.5 border-b bg-[#002C63]/5">
+        <MessageCircle className="h-4 w-4 text-[#002C63]" />
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-sm text-[#002C63]">Chat del Ítem</h3>
+          {itemCodigo && <p className="text-[10px] text-muted-foreground">{itemCodigo}</p>}
         </div>
-        <span className="ml-auto text-xs text-muted-foreground">
-          {mensajes?.length || 0} mensajes
+        <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+          {mensajes?.length || 0} msgs
         </span>
       </div>
 
       {/* Mensajes */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef as any}>
+      <ScrollArea className="flex-1 p-3" ref={scrollRef as any}>
         {isLoading ? (
-          <div className="flex items-center justify-center h-32">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
@@ -366,70 +389,69 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
             </Button>
           </div>
         ) : mensajes && mensajes.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {mensajes.map((msg: any) => {
               const isOwn = msg.usuarioId === user?.id;
+              const isFoto = msg.tipo === 'foto';
               return (
                 <div 
                   key={msg.id} 
                   className={`flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}
                 >
-                  <UserAvatar 
-                    name={msg.usuario?.name} 
-                    fotoUrl={msg.usuario?.fotoUrl}
-                    fotoBase64={(msg.usuario as any)?.fotoBase64}
-                    size="lg"
-                    showName={false}
-                  />
-                  
-                  <div className={`flex flex-col max-w-[75%] ${isOwn ? 'items-end' : ''}`}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium">
+                  <Avatar className={`h-7 w-7 shrink-0 ${getRoleColor(msg.usuario?.role)}`}>
+                    <AvatarFallback className="text-white text-[10px] font-semibold">
+                      {getInitials(msg.usuario?.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className={`max-w-[80%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-[10px] font-medium text-[#002C63]">
                         {msg.usuario?.name || 'Usuario'}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[9px] text-muted-foreground">
                         {format(new Date(msg.createdAt), "d MMM HH:mm", { locale: es })}
                       </span>
-                      {msg.editado && (
-                        <span className="text-xs text-muted-foreground italic">(editado)</span>
-                      )}
+                      {msg.editado && <span className="text-[8px] text-muted-foreground italic">(editado)</span>}
                     </div>
-                    
-                    <div className={`group relative rounded-lg px-3 py-2 ${
+                    <div className={`rounded-xl px-3 py-2 text-sm ${
                       isOwn 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted'
+                        ? 'bg-[#02B381] text-white rounded-tr-sm' 
+                        : 'bg-muted rounded-tl-sm'
                     }`}>
-                      <p className="text-sm whitespace-pre-wrap break-words">
-                        {formatMessageText(msg.texto)}
-                      </p>
-                      
-                      {/* Acciones del mensaje */}
-                      {canModifyMessages && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className={`absolute -right-8 top-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity ${
-                                isOwn ? '-left-8 -right-auto' : ''
-                              }`}
-                            >
-                              <MoreVertical className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align={isOwn ? "start" : "end"}>
-                            <DropdownMenuItem 
-                              className="text-destructive"
-                              onClick={() => deleteMensaje.mutate({ id: msg.id })}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Eliminar
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      {isFoto && msg.fotoUrl ? (
+                        <div className="space-y-1">
+                          <img 
+                            src={msg.fotoUrl} 
+                            alt="Foto" 
+                            className="max-w-[200px] max-h-[200px] rounded-lg cursor-pointer object-cover border border-white/20"
+                            onClick={() => setLightboxUrl(msg.fotoUrl)}
+                          />
+                          {msg.texto && msg.texto !== '[Foto]' && (
+                            <p className="text-xs mt-1">{formatMessageText(msg.texto)}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap break-words text-[13px]">{formatMessageText(msg.texto)}</p>
                       )}
                     </div>
+                    {/* Acciones de mensaje */}
+                    {canModifyMessages && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-5 w-5 mt-0.5 opacity-40 hover:opacity-100">
+                            <MoreVertical className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align={isOwn ? "end" : "start"}>
+                          <DropdownMenuItem 
+                            className="text-destructive"
+                            onClick={() => deleteMensaje.mutate({ id: msg.id })}
+                          >
+                            <Trash2 className="h-3 w-3 mr-2" /> Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 </div>
               );
@@ -437,7 +459,7 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-            <MessageCircle className="h-8 w-8 mb-2 opacity-50" />
+            <MessageCircle className="h-8 w-8 mb-2 opacity-30" />
             <p className="text-sm">No hay mensajes aún</p>
             <p className="text-xs">Sé el primero en comentar</p>
           </div>
@@ -445,24 +467,24 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
       </ScrollArea>
 
       {/* Input de mensaje */}
-      <div className="p-3 border-t bg-muted/30">
+      <div className="p-2.5 border-t bg-muted/20">
         <div className="relative">
           {/* Popover de menciones */}
           {showMentions && filteredUsers && filteredUsers.length > 0 && (
-            <div className="absolute bottom-full left-0 right-0 mb-1 bg-popover border rounded-lg shadow-lg p-1 z-50">
+            <div className="absolute bottom-full left-0 right-0 mb-1 bg-popover border rounded-lg shadow-lg p-1 z-50 max-h-40 overflow-y-auto">
               {filteredUsers.map((u: any) => (
                 <button
                   key={u.id}
-                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted rounded text-left text-sm"
+                  className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded text-left text-sm"
                   onClick={() => insertMention(u.id, u.name || 'Usuario')}
                 >
-                  <Avatar className={`h-8 w-8 ${getRoleColor(u.role)}`}>
-                    <AvatarFallback className="text-white text-sm font-semibold">
+                  <Avatar className={`h-6 w-6 ${getRoleColor(u.role)}`}>
+                    <AvatarFallback className="text-white text-[9px] font-semibold">
                       {getInitials(u.name)}
                     </AvatarFallback>
                   </Avatar>
-                  <span>{u.name}</span>
-                  <span className="text-xs text-muted-foreground ml-auto capitalize">
+                  <span className="text-xs truncate">{u.name}</span>
+                  <span className="text-[9px] text-muted-foreground ml-auto capitalize">
                     {u.role?.replace('_', ' ')}
                   </span>
                 </button>
@@ -470,15 +492,39 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
             </div>
           )}
           
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 items-end">
+            {/* Botón de foto */}
+            <input
+              ref={fotoInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleFotoSelect}
+            />
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-9 w-9 shrink-0 text-[#002C63] hover:bg-[#002C63]/10"
+              onClick={() => fotoInputRef.current?.click()}
+              disabled={enviarFoto.isPending}
+              title="Enviar foto"
+            >
+              {enviarFoto.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Camera className="h-4 w-4" />
+              )}
+            </Button>
+            
             <div className="flex-1 relative">
               <Textarea
                 ref={textareaRef}
                 value={mensaje}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Escribe un mensaje... Usa @ para mencionar"
-                className="min-h-[44px] max-h-32 resize-none pr-10"
+                placeholder="Escribe... Usa @ para mencionar"
+                className="min-h-[38px] max-h-24 resize-none text-sm pr-8 py-2"
                 rows={1}
               />
               <Popover>
@@ -486,27 +532,27 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="absolute right-1 top-1 h-8 w-8"
+                    className="absolute right-0.5 top-0.5 h-7 w-7"
                   >
-                    <AtSign className="h-4 w-4 text-muted-foreground" />
+                    <AtSign className="h-3.5 w-3.5 text-muted-foreground" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-64 p-1" align="end">
-                  <p className="text-xs text-muted-foreground px-2 py-1 mb-1">
+                <PopoverContent className="w-56 p-1" align="end">
+                  <p className="text-[10px] text-muted-foreground px-2 py-1">
                     Mencionar usuario
                   </p>
-                  <ScrollArea className="h-48">
+                  <ScrollArea className="h-40">
                     {usuarios?.filter(u => u.id !== user?.id).map((u: any) => (
                       <button
                         key={u.id}
-                        className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded text-left text-sm"
+                        className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded text-left text-xs"
                         onClick={() => {
                           setMensaje(prev => prev + `@${u.name} `);
                           setMenciones([...menciones, u.id]);
                         }}
                       >
-                        <Avatar className={`h-8 w-8 ${getRoleColor(u.role)}`}>
-                          <AvatarFallback className="text-white text-sm font-semibold">
+                        <Avatar className={`h-6 w-6 ${getRoleColor(u.role)}`}>
+                          <AvatarFallback className="text-white text-[9px] font-semibold">
                             {getInitials(u.name)}
                           </AvatarFallback>
                         </Avatar>
@@ -518,66 +564,81 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
               </Popover>
             </div>
             
-            {/* Botón de micrófono para dictado por voz */}
+            {/* Botón de micrófono */}
             <Button 
               onClick={toggleRecording}
               disabled={voiceState === 'transcribing' || voiceState === 'summarizing'}
-              variant={voiceState === 'recording' ? 'destructive' : 'outline'}
-              className={`h-[44px] px-3 relative ${voiceState === 'recording' ? 'animate-pulse' : ''}`}
-              title={voiceState === 'recording' ? 'Detener grabación' : 'Dictar mensaje'}
+              variant={voiceState === 'recording' ? 'destructive' : 'ghost'}
+              size="icon"
+              className={`h-9 w-9 shrink-0 ${voiceState === 'recording' ? 'animate-pulse' : 'text-[#002C63] hover:bg-[#002C63]/10'}`}
+              title={voiceState === 'recording' ? 'Detener' : 'Dictar'}
             >
               {voiceState === 'idle' || voiceState === 'ready' || voiceState === 'error' ? (
                 <Mic className="h-4 w-4" />
               ) : voiceState === 'recording' ? (
-                <>
-                  <MicOff className="h-4 w-4" />
-                  <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs rounded-full px-1.5 py-0.5 min-w-[20px]">
-                    {recordingTime}s
-                  </span>
-                </>
+                <MicOff className="h-4 w-4" />
               ) : (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
             </Button>
             
+            {/* Botón enviar */}
             <Button 
               onClick={handleSend} 
               disabled={!mensaje.trim() || createMensaje.isPending}
-              className="h-[44px] px-4"
+              size="icon"
+              className="h-9 w-9 shrink-0 bg-[#02B381] hover:bg-[#029a6e]"
             >
-              <Send className="h-4 w-4" />
+              {createMensaje.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
             </Button>
           </div>
           
           {/* Estado del dictado */}
           {voiceState !== 'idle' && (
-            <div className={`text-xs mt-1 flex items-center gap-1 ${
+            <div className={`text-[10px] mt-1 flex items-center gap-1 ${
               voiceState === 'error' ? 'text-destructive' : 
-              voiceState === 'ready' ? 'text-green-600' : 'text-muted-foreground'
+              voiceState === 'ready' ? 'text-[#02B381]' : 'text-muted-foreground'
             }`}>
               {voiceState === 'recording' && (
-                <><span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> Grabando... (máx 30s)</>
+                <><span className="inline-block w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span> Grabando {recordingTime}s</>
               )}
               {voiceState === 'transcribing' && (
-                <><Loader2 className="h-3 w-3 animate-spin" /> Transcribiendo audio...</>
+                <><Loader2 className="h-3 w-3 animate-spin" /> Transcribiendo...</>
               )}
               {voiceState === 'summarizing' && (
-                <><Loader2 className="h-3 w-3 animate-spin" /> Generando resumen técnico...</>
+                <><Loader2 className="h-3 w-3 animate-spin" /> Generando resumen...</>
               )}
-              {voiceState === 'ready' && (
-                <>✅ Resumen listo - revisa y envía</>
-              )}
-              {voiceState === 'error' && (
-                <>❌ {voiceError || 'Error de dictado'}</>
-              )}
+              {voiceState === 'ready' && <>Resumen listo - revisa y envía</>}
+              {voiceState === 'error' && <>{voiceError || 'Error de dictado'}</>}
             </div>
           )}
-          
-          <p className="text-xs text-muted-foreground mt-1">
-            Enter para enviar · Shift+Enter para nueva línea · 🎙️ Dictar mensaje
-          </p>
         </div>
       </div>
+
+      {/* Lightbox para fotos */}
+      {lightboxUrl && (
+        <div 
+          className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button 
+            className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/70 z-10"
+            onClick={() => setLightboxUrl(null)}
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <img 
+            src={lightboxUrl} 
+            alt="Foto ampliada" 
+            className="max-w-full max-h-full object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }

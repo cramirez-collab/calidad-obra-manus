@@ -427,6 +427,8 @@ export const mensajes = mysqlTable("mensajes", {
   usuarioId: int("usuarioId").notNull(),
   texto: text("texto").notNull(),
   menciones: text("menciones"), // JSON array de userIds mencionados
+  tipo: mysqlEnum("tipo", ["texto", "foto"]).default("texto").notNull(),
+  fotoUrl: text("fotoUrl"),
   editado: boolean("editado").default(false).notNull(),
   eliminado: boolean("eliminado").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

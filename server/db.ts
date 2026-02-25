@@ -3025,7 +3025,7 @@ export async function getMensajesByItem(itemId: number) {
   }));
 }
 
-export async function createMensaje(data: { itemId: number; usuarioId: number; texto: string; menciones?: number[] }) {
+export async function createMensaje(data: { itemId: number; usuarioId: number; texto: string; menciones?: number[]; tipo?: 'texto' | 'foto'; fotoUrl?: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
@@ -3033,7 +3033,9 @@ export async function createMensaje(data: { itemId: number; usuarioId: number; t
     itemId: data.itemId,
     usuarioId: data.usuarioId,
     texto: data.texto,
-    menciones: data.menciones ? JSON.stringify(data.menciones) : null
+    menciones: data.menciones ? JSON.stringify(data.menciones) : null,
+    tipo: data.tipo || 'texto',
+    fotoUrl: data.fotoUrl || null,
   });
   
   return result[0].insertId;
