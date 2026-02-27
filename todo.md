@@ -4713,3 +4713,8 @@
 ## Exportar Chat y PDF Pendientes Supervisión
 - [x] Botón exportar conversación del chat a PDF en la ficha del ítem (ItemDetail)
 - [x] Botón descargar PDF de todos los ítems pendientes de aprobación de supervisión en estadísticas
+
+## Fixes UI y Sesión Persistente
+- [x] Arreglar texto "pendientes" cortado (la "s" se ve en otra línea) en Bienvenida
+- [x] Mantener sesión siempre activa (never expire OAuth/cookie) - 10 años + renovación automática
+- [x] Modal lightbox al tocar foto miniatura del ítem en la lista de Bienvenida

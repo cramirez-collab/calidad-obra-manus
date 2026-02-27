@@ -197,6 +197,9 @@ export default function Bienvenida() {
   const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
   const [showPlanoViewer, setShowPlanoViewer] = useState(false);
 
+  // Estado para lightbox de foto
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
   // Estado para Reporte IA
   const [showReporteIA, setShowReporteIA] = useState(false);
   const [generandoAnalisis, setGenerandoAnalisis] = useState(false);
@@ -1016,7 +1019,7 @@ export default function Bienvenida() {
               <h1 className="text-lg sm:text-xl font-semibold text-[#002C63]">
                 Hola, {user?.name?.split(' ')[0] || 'Usuario'}
               </h1>
-              <p className="text-xs text-[#6E6E6E]">
+              <p className="text-xs text-[#6E6E6E] whitespace-nowrap">
                 {filteredPendientes.length} pendientes
               </p>
             </div>
@@ -1355,8 +1358,16 @@ export default function Bienvenida() {
                         />
                       )}
                       
-                      {/* Miniatura de foto antes */}
-                      <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg overflow-hidden shrink-0 bg-slate-100">
+                      {/* Miniatura de foto antes - clickeable para lightbox */}
+                      <div 
+                        className={`h-12 w-12 sm:h-14 sm:w-14 rounded-lg overflow-hidden shrink-0 bg-slate-100 ${item.fotoAntesUrl ? 'cursor-pointer ring-1 ring-transparent hover:ring-[#02B381] transition-all' : ''}`}
+                        onClick={(e) => {
+                          if (item.fotoAntesUrl) {
+                            e.stopPropagation();
+                            setLightboxUrl(getImageUrl(item.fotoAntesUrl));
+                          }
+                        }}
+                      >
                         {item.fotoAntesUrl ? (
                           <img
                             src={getImageUrl(item.fotoAntesUrl)}
@@ -2300,6 +2311,26 @@ export default function Bienvenida() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Lightbox para foto ampliada */}
+      {lightboxUrl && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/70 z-10"
+            onClick={() => setLightboxUrl(null)}
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Foto ampliada"
+            className="max-w-full max-h-[90vh] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </DashboardLayout>
   );
 }
