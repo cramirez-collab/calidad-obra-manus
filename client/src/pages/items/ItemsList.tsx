@@ -34,7 +34,10 @@ import {
   UserPlus,
   UserCog,
   ShieldCheck,
-  Lock
+  Lock,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -112,6 +115,25 @@ export default function ItemsList() {
     residenteId: "",
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [orderBy, setOrderBy] = useState<'createdAt' | 'fechaCreacion' | 'fechaAprobacion' | 'fechaCierre' | 'numeroInterno' | 'status'>('createdAt');
+  const [orderDir, setOrderDir] = useState<'asc' | 'desc'>('desc');
+
+  const toggleSort = (col: typeof orderBy) => {
+    if (orderBy === col) {
+      setOrderDir(d => d === 'desc' ? 'asc' : 'desc');
+    } else {
+      setOrderBy(col);
+      setOrderDir('desc');
+    }
+    setPage(0);
+  };
+
+  const SortIcon = ({ col }: { col: typeof orderBy }) => {
+    if (orderBy !== col) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
+    return orderDir === 'desc' 
+      ? <ArrowDown className="h-3 w-3 ml-1 text-[#02B381]" />
+      : <ArrowUp className="h-3 w-3 ml-1 text-[#02B381]" />;
+  };
   
   // Leer parámetros de URL para aplicar filtros (desde Stacking u otras páginas)
   useEffect(() => {
@@ -175,7 +197,9 @@ export default function ItemsList() {
     asignadoAId: filters.residenteId ? parseInt(filters.residenteId) : undefined,
     limit: PAGE_SIZE,
     offset: page * PAGE_SIZE,
-  }), [filters, selectedProjectId, page]);
+    orderBy,
+    orderDir,
+  }), [filters, selectedProjectId, page, orderBy, orderDir]);
 
   const { data, isLoading } = trpc.items.list.useQuery(queryFilters);
   
@@ -447,6 +471,51 @@ export default function ItemsList() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Barra de ordenamiento */}
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="text-muted-foreground font-medium mr-1">Ordenar:</span>
+          <Button
+            variant={orderBy === 'createdAt' ? 'default' : 'outline'}
+            size="sm"
+            className="h-7 text-xs px-2.5"
+            onClick={() => toggleSort('createdAt')}
+          >
+            Creado <SortIcon col="createdAt" />
+          </Button>
+          <Button
+            variant={orderBy === 'fechaAprobacion' ? 'default' : 'outline'}
+            size="sm"
+            className="h-7 text-xs px-2.5"
+            onClick={() => toggleSort('fechaAprobacion')}
+          >
+            Aprobado <SortIcon col="fechaAprobacion" />
+          </Button>
+          <Button
+            variant={orderBy === 'status' ? 'default' : 'outline'}
+            size="sm"
+            className="h-7 text-xs px-2.5"
+            onClick={() => toggleSort('status')}
+          >
+            OK <SortIcon col="status" />
+          </Button>
+          <Button
+            variant={orderBy === 'fechaCierre' ? 'default' : 'outline'}
+            size="sm"
+            className="h-7 text-xs px-2.5"
+            onClick={() => toggleSort('fechaCierre')}
+          >
+            Cerrado <SortIcon col="fechaCierre" />
+          </Button>
+          <Button
+            variant={orderBy === 'numeroInterno' ? 'default' : 'outline'}
+            size="sm"
+            className="h-7 text-xs px-2.5"
+            onClick={() => toggleSort('numeroInterno')}
+          >
+            # Int. <SortIcon col="numeroInterno" />
+          </Button>
+        </div>
 
         {/* Lista de ítems */}
         <div className="grid gap-4">

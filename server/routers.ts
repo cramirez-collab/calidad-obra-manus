@@ -929,15 +929,14 @@ export const appRouter = router({
         numeroInterno: z.number().optional(),
         limit: z.number().max(2000).default(500),
         offset: z.number().default(0),
+        orderBy: z.enum(['createdAt', 'fechaCreacion', 'fechaAprobacion', 'fechaCierre', 'numeroInterno', 'status']).default('createdAt'),
+        orderDir: z.enum(['asc', 'desc']).default('desc'),
       }))
       .query(async ({ input, ctx }) => {
         const filters: db.ItemFilters = { ...input };
         const limit = input.limit;
         const offset = input.offset;
-        // TODOS los usuarios registrados pueden ver TODOS los ítems del proyecto
-        // Los filtros son opcionales para quien quiera usarlos
-        // Ya no se filtra por rol - todos ven todo para estar enterados
-        return await db.getItems(filters, limit, offset);
+        return await db.getItems(filters, limit, offset, input.orderBy, input.orderDir);
       }),
     
     get: protectedProcedure

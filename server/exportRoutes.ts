@@ -36,7 +36,7 @@ router.get("/api/export/items", async (req, res) => {
     if (req.query.especialidadId) filters.especialidadId = parseInt(req.query.especialidadId as string);
     if (req.query.status) filters.status = req.query.status as string;
     
-    const result = await db.getItems(filters, 1, 10000);
+    const result = await db.getItems(filters, 10000, 0);
     const items = result?.items || [];
     
     const [empresas, unidades, especialidades] = await Promise.all([
@@ -113,7 +113,7 @@ router.get("/api/export/items/csv", async (req, res) => {
     if (req.query.especialidadId) filters.especialidadId = parseInt(req.query.especialidadId as string);
     if (req.query.status) filters.status = req.query.status as string;
     
-    const result = await db.getItems(filters, 1, 10000);
+    const result = await db.getItems(filters, 10000, 0);
     const items = result?.items || [];
     
     const [empresas, unidades, especialidades] = await Promise.all([

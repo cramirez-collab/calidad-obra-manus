@@ -1310,7 +1310,7 @@ export interface ItemFilters {
   numeroInterno?: number;
 }
 
-export async function getItems(filters: ItemFilters = {}, limit = 100, offset = 0) {
+export async function getItems(filters: ItemFilters = {}, limit = 100, offset = 0, orderBy = 'createdAt', orderDir: 'asc' | 'desc' = 'desc') {
   const db = await getDb();
   if (!db) return { items: [], total: 0 };
 
@@ -1382,8 +1382,20 @@ export async function getItems(filters: ItemFilters = {}, limit = 100, offset = 
     updatedAt: items.updatedAt,
   };
 
+  // Mapa de columnas ordenables
+  const orderColumnMap: Record<string, any> = {
+    createdAt: items.createdAt,
+    fechaCreacion: items.fechaCreacion,
+    fechaAprobacion: items.fechaAprobacion,
+    fechaCierre: items.fechaCierre,
+    numeroInterno: items.numeroInterno,
+    status: items.status,
+  };
+  const orderColumn = orderColumnMap[orderBy] || items.createdAt;
+  const orderFn = orderDir === 'asc' ? asc(orderColumn) : desc(orderColumn);
+
   const [itemsResult, countResult] = await Promise.all([
-    db.select(selectFields).from(items).where(whereClause).orderBy(desc(items.createdAt)).limit(limit).offset(offset),
+    db.select(selectFields).from(items).where(whereClause).orderBy(orderFn).limit(limit).offset(offset),
     db.select({ count: sql<number>`count(*)` }).from(items).where(whereClause)
   ]);
 

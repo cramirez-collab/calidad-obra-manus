@@ -4737,3 +4737,6 @@
 
 ## Vista Todos los Ítems con Multifiltro
 - [x] Mostrar TODOS los ítems sin límite de 100, con paginación (500 por página, hasta 2000)
+
+## Ordenamiento en Lista de Ítems
+- [x] Agregar ordenamiento por: creado, aprobado, OK, cerrado, # interno en la lista de ítems
