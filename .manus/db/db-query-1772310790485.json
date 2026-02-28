@@ -1,0 +1,34 @@
+{
+  "query": "SELECT 'proyectos' as tabla, COUNT(*) as total FROM proyectos UNION ALL SELECT 'items', COUNT(*) FROM items UNION ALL SELECT 'items_hidalma', COUNT(*) FROM items WHERE proyectoId = 1 UNION ALL SELECT 'items_mayas', COUNT(*) FROM items WHERE proyectoId = 150001 UNION ALL SELECT 'items_null', COUNT(*) FROM items WHERE proyectoId IS NULL UNION ALL SELECT 'items_999999', COUNT(*) FROM items WHERE proyectoId = 999999;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT 'proyectos' as tabla, COUNT(*) as total FROM proyectos UNION ALL SELECT 'items', COUNT(*) FROM items UNION ALL SELECT 'items_hidalma', COUNT(*) FROM items WHERE proyectoId = 1 UNION ALL SELECT 'items_mayas', COUNT(*) FROM items WHERE proyectoId = 150001 UNION ALL SELECT 'items_null', COUNT(*) FROM items WHERE proyectoId IS NULL UNION ALL SELECT 'items_999999', COUNT(*) FROM items WHERE proyectoId = 999999;",
+  "rows": [
+    {
+      "tabla": "items_mayas",
+      "total": "0"
+    },
+    {
+      "tabla": "items_hidalma",
+      "total": "51"
+    },
+    {
+      "tabla": "items_999999",
+      "total": "0"
+    },
+    {
+      "tabla": "proyectos",
+      "total": "2"
+    },
+    {
+      "tabla": "items_null",
+      "total": "0"
+    },
+    {
+      "tabla": "items",
+      "total": "51"
+    }
+  ],
+  "messages": [],
+  "stdout": "tabla\ttotal\nitems_mayas\t0\nitems_hidalma\t51\nitems_999999\t0\nproyectos\t2\nitems_null\t0\nitems\t51\n",
+  "stderr": "",
+  "execution_time_ms": 373
+}

@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM items WHERE Field LIKE '%proyecto%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SHOW COLUMNS FROM items WHERE Field LIKE '%proyecto%';",
+  "rows": [
+    {
+      "Field": "proyectoId",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "MUL",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nproyectoId\tint(11)\tYES\tMUL\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 346
+}

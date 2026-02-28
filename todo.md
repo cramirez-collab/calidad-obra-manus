@@ -4740,3 +4740,9 @@
 
 ## Ordenamiento en Lista de Ítems
 - [x] Agregar ordenamiento por: creado, aprobado, OK, cerrado, # interno en la lista de ítems
+
+## Bug: Ítems no visibles en proyecto Mayas
+- [x] Diagnosticar y corregir por qué no se ven ítems en Mayas
+- [x] Verificar aislamiento total de datos entre proyectos (Hidalma vs Mayas)
+- [x] Limpiar ítems de test (NULL y 999999) de la BD
+- [x] Eliminar proyecto duplicado 180001 (inactivo)

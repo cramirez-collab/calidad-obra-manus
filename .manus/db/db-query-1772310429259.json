@@ -1,0 +1,22 @@
+{
+  "query": "SELECT proyectoId, COUNT(*) as total FROM items GROUP BY proyectoId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT proyectoId, COUNT(*) as total FROM items GROUP BY proyectoId;",
+  "rows": [
+    {
+      "proyectoId": "NULL",
+      "total": "168"
+    },
+    {
+      "proyectoId": "1",
+      "total": "51"
+    },
+    {
+      "proyectoId": "999999",
+      "total": "84"
+    }
+  ],
+  "messages": [],
+  "stdout": "proyectoId\ttotal\nNULL\t168\n1\t51\n999999\t84\n",
+  "stderr": "",
+  "execution_time_ms": 349
+}

@@ -1,0 +1,25 @@
+{
+  "query": "SELECT p.id, p.nombre, COUNT(i.id) as total_items FROM proyectos p LEFT JOIN items i ON i.proyectoId = p.id GROUP BY p.id, p.nombre ORDER BY p.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT p.id, p.nombre, COUNT(i.id) as total_items FROM proyectos p LEFT JOIN items i ON i.proyectoId = p.id GROUP BY p.id, p.nombre ORDER BY p.id;",
+  "rows": [
+    {
+      "id": "1",
+      "nombre": "Hidalma ",
+      "total_items": "51"
+    },
+    {
+      "id": "150001",
+      "nombre": "Mayas Habitat",
+      "total_items": "0"
+    },
+    {
+      "id": "180001",
+      "nombre": "Mayas Habitat",
+      "total_items": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\ttotal_items\n1\tHidalma \t51\n150001\tMayas Habitat\t0\n180001\tMayas Habitat\t0\n",
+  "stderr": "",
+  "execution_time_ms": 383
+}
