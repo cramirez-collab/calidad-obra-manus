@@ -927,7 +927,7 @@ export const appRouter = router({
         fechaHasta: z.date().optional(),
         busqueda: z.string().optional(),
         numeroInterno: z.number().optional(),
-        limit: z.number().default(100),
+        limit: z.number().max(2000).default(500),
         offset: z.number().default(0),
       }))
       .query(async ({ input, ctx }) => {

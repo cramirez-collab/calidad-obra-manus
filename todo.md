@@ -4734,3 +4734,6 @@
 - [x] Navegación entre fotos (flechas izquierda/derecha) sin cerrar lightbox
 - [x] Galería antes/después con thumbnails y flechas en Seguimiento
 - [x] Botón de descarga de foto en alta resolución desde lightbox
+
+## Vista Todos los Ítems con Multifiltro
+- [x] Mostrar TODOS los ítems sin límite de 100, con paginación (500 por página, hasta 2000)

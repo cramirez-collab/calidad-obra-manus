@@ -156,6 +156,14 @@ export default function ItemsList() {
     return (esp as any)?.atributos || [];
   }, [filters.especialidadId, especialidades]);
 
+  const PAGE_SIZE = 500;
+  const [page, setPage] = useState(0);
+  
+  // Reset page cuando cambian filtros
+  useEffect(() => {
+    setPage(0);
+  }, [filters, selectedProjectId]);
+
   const queryFilters = useMemo(() => ({
     proyectoId: selectedProjectId || undefined,
     empresaId: filters.empresaId ? parseInt(filters.empresaId) : undefined,
@@ -164,12 +172,15 @@ export default function ItemsList() {
     status: filters.status || undefined,
     busqueda: filters.busqueda || undefined,
     numeroInterno: filters.numeroInterno ? parseInt(filters.numeroInterno) : undefined,
-    asignadoAId: filters.residenteId ? parseInt(filters.residenteId) : undefined, // Filtrar por usuario ASIGNADO
-    limit: 100,
-    offset: 0,
-  }), [filters, selectedProjectId]);
+    asignadoAId: filters.residenteId ? parseInt(filters.residenteId) : undefined,
+    limit: PAGE_SIZE,
+    offset: page * PAGE_SIZE,
+  }), [filters, selectedProjectId, page]);
 
   const { data, isLoading } = trpc.items.list.useQuery(queryFilters);
+  
+  const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 0;
+  const hasMore = data ? (page + 1) * PAGE_SIZE < data.total : false;
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return "-";
@@ -586,6 +597,52 @@ export default function ItemsList() {
             })
           )}
         </div>
+
+        {/* Paginación */}
+        {data && data.total > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Mostrando {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, data.total)} de {data.total} ítems
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 0}
+                onClick={() => setPage(0)}
+              >
+                «
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 0}
+                onClick={() => setPage(p => Math.max(0, p - 1))}
+              >
+                ‹ Anterior
+              </Button>
+              <span className="text-sm font-medium px-2">
+                {page + 1} / {totalPages || 1}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!hasMore}
+                onClick={() => setPage(p => p + 1)}
+              >
+                Siguiente ›
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!hasMore}
+                onClick={() => setPage(totalPages - 1)}
+              >
+                »
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* AlertDialog de confirmación para eliminar */}
