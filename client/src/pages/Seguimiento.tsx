@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ZoomableLightbox } from "@/components/ZoomableLightbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { useParams, useLocation } from "wouter";
 import { useState, useRef, useEffect } from "react";
+
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
@@ -69,6 +71,9 @@ export default function Seguimiento() {
   }, [user, authLoading]);
   
   const [fotoDespues, setFotoDespues] = useState<string | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [lightboxGallery, setLightboxGallery] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadSection, setShowUploadSection] = useState(false);
 
@@ -527,7 +532,19 @@ export default function Seguimiento() {
                   <span className="h-2 w-2 rounded-full bg-amber-500" />
                   <h4 className="font-medium text-sm">Antes (Problema detectado)</h4>
                 </div>
-                <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100">
+                <div 
+                  className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100 cursor-pointer hover:ring-2 hover:ring-[#02B381] transition-all"
+                  onClick={() => {
+                    const antes = item.fotoAntesMarcadaUrl || item.fotoAntesUrl;
+                    const despues = fotoDespues || item.fotoDespuesUrl;
+                    const gallery = [antes, despues].filter(Boolean).map(u => getImageUrl(u!));
+                    if (gallery.length > 0) {
+                      setLightboxGallery(gallery);
+                      setLightboxIndex(0);
+                      setLightboxUrl(gallery[0]);
+                    }
+                  }}
+                >
                   {item.fotoAntesMarcadaUrl || item.fotoAntesUrl ? (
                     <img
                       src={getImageUrl(item.fotoAntesMarcadaUrl || item.fotoAntesUrl || "")}
@@ -551,7 +568,20 @@ export default function Seguimiento() {
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
                   <h4 className="font-medium text-sm">Después (Corrección)</h4>
                 </div>
-                <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100">
+                <div 
+                  className="aspect-[4/3] rounded-lg overflow-hidden border bg-slate-100 cursor-pointer hover:ring-2 hover:ring-[#02B381] transition-all"
+                  onClick={() => {
+                    const antes = item.fotoAntesMarcadaUrl || item.fotoAntesUrl;
+                    const despues = fotoDespues || item.fotoDespuesUrl;
+                    const gallery = [antes, despues].filter(Boolean).map(u => getImageUrl(u!));
+                    if (gallery.length > 0) {
+                      const despuesIdx = antes ? 1 : 0;
+                      setLightboxGallery(gallery);
+                      setLightboxIndex(despues ? despuesIdx : 0);
+                      setLightboxUrl(gallery[0]);
+                    }
+                  }}
+                >
                   {/* Mostrar foto subida (preview) o foto guardada */}
                   {fotoDespues ? (
                     <img
@@ -661,6 +691,16 @@ export default function Seguimiento() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Lightbox */}
+        {lightboxUrl && (
+          <ZoomableLightbox
+            url={lightboxUrl}
+            gallery={lightboxGallery.length > 1 ? lightboxGallery : undefined}
+            initialIndex={lightboxIndex}
+            onClose={() => { setLightboxUrl(null); setLightboxGallery([]); }}
+          />
+        )}
 
         {/* Footer */}
         <div className="text-center text-xs text-muted-foreground py-4">

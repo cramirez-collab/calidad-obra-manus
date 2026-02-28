@@ -4728,3 +4728,9 @@
 
 ## Estilo de @mentions
 - [x] Cambiar @mentions en el chat a color negro y cursiva
+
+## Mejoras ZoomableLightbox Global
+- [x] Aplicar ZoomableLightbox en TODAS las páginas con fotos (MisTareas, Seguimiento, ReporteFotográfico)
+- [x] Navegación entre fotos (flechas izquierda/derecha) sin cerrar lightbox
+- [x] Galería antes/después con thumbnails y flechas en Seguimiento
+- [x] Botón de descarga de foto en alta resolución desde lightbox

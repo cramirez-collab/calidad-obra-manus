@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { ZoomableLightbox } from "@/components/ZoomableLightbox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -89,6 +90,7 @@ export default function ReporteFotografico() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   // Construir filtros para la query
   const queryFilters = useMemo(() => {
@@ -849,7 +851,10 @@ export default function ReporteFotografico() {
                     <p className="text-sm truncate">{item.titulo}</p>
                     <div className="flex gap-2">
                       {item.fotoAntesUrl ? (
-                        <div className="h-16 w-16 rounded overflow-hidden bg-slate-100">
+                        <div 
+                          className="h-16 w-16 rounded overflow-hidden bg-slate-100 cursor-pointer ring-1 ring-transparent hover:ring-[#02B381] transition-all"
+                          onClick={() => setLightboxUrl(getImageUrl(item.fotoAntesUrl))}
+                        >
                           <img 
                             src={getImageUrl(item.fotoAntesUrl)} 
                             alt="Antes" 
@@ -862,7 +867,10 @@ export default function ReporteFotografico() {
                         </div>
                       )}
                       {item.fotoDespuesUrl ? (
-                        <div className="h-16 w-16 rounded overflow-hidden bg-slate-100">
+                        <div 
+                          className="h-16 w-16 rounded overflow-hidden bg-slate-100 cursor-pointer ring-1 ring-transparent hover:ring-[#02B381] transition-all"
+                          onClick={() => setLightboxUrl(getImageUrl(item.fotoDespuesUrl))}
+                        >
                           <img 
                             src={getImageUrl(item.fotoDespuesUrl)} 
                             alt="Después" 
@@ -892,6 +900,10 @@ export default function ReporteFotografico() {
           </CardContent>
         </Card>
       </div>
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <ZoomableLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      )}
     </DashboardLayout>
   );
 }

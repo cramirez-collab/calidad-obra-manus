@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
+import { ZoomableLightbox } from "@/components/ZoomableLightbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 
 type Filtro = 'todos' | 'creados' | 'pendientes_aprobacion';
 
@@ -32,6 +33,7 @@ export default function MisTareas() {
   const [, setLocation] = useLocation();
   const { selectedProjectId } = useProject();
   const [filtro, setFiltro] = useState<Filtro>('todos');
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const { data, isLoading } = trpc.items.misTareas.useQuery(
     { proyectoId: selectedProjectId || undefined, filtro },
@@ -143,7 +145,11 @@ export default function MisTareas() {
                         <img 
                           src={item.fotoAntesMarcadaUrl || item.fotoAntesUrl}
                           alt=""
-                          className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                          className="w-12 h-12 rounded-lg object-cover flex-shrink-0 cursor-pointer ring-1 ring-transparent hover:ring-[#02B381] transition-all"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLightboxUrl(item.fotoAntesMarcadaUrl || item.fotoAntesUrl);
+                          }}
                         />
                       ) : (
                         <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
@@ -193,6 +199,10 @@ export default function MisTareas() {
           </div>
         )}
       </div>
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <ZoomableLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      )}
     </DashboardLayout>
   );
 }

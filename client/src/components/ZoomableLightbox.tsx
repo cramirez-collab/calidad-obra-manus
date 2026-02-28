@@ -1,12 +1,24 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { X, ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight, Download } from "lucide-react";
 
 interface ZoomableLightboxProps {
+  /** URL de la imagen actual (retrocompatible con uso simple) */
   url: string;
   onClose: () => void;
+  /** Lista de URLs para navegación entre fotos */
+  gallery?: string[];
+  /** Índice inicial en la galería */
+  initialIndex?: number;
+  /** Callback cuando cambia la foto en la galería */
+  onIndexChange?: (index: number) => void;
 }
 
-export function ZoomableLightbox({ url, onClose }: ZoomableLightboxProps) {
+export function ZoomableLightbox({ url, onClose, gallery, initialIndex, onIndexChange }: ZoomableLightboxProps) {
+  const urls = gallery && gallery.length > 0 ? gallery : [url];
+  const [currentIndex, setCurrentIndex] = useState(initialIndex ?? 0);
+  const currentUrl = urls[currentIndex] || url;
+  const hasMultiple = urls.length > 1;
+
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -21,6 +33,21 @@ export function ZoomableLightbox({ url, onClose }: ZoomableLightboxProps) {
   const MIN_SCALE = 0.5;
   const MAX_SCALE = 5;
 
+  const resetView = useCallback(() => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  }, []);
+
+  const goTo = useCallback((idx: number) => {
+    if (idx < 0 || idx >= urls.length) return;
+    setCurrentIndex(idx);
+    resetView();
+    onIndexChange?.(idx);
+  }, [urls.length, resetView, onIndexChange]);
+
+  const goPrev = useCallback(() => goTo(currentIndex - 1), [goTo, currentIndex]);
+  const goNext = useCallback(() => goTo(currentIndex + 1), [goTo, currentIndex]);
+
   const handleZoomIn = useCallback(() => {
     setScale((s) => Math.min(s * 1.4, MAX_SCALE));
   }, []);
@@ -28,17 +55,28 @@ export function ZoomableLightbox({ url, onClose }: ZoomableLightboxProps) {
   const handleZoomOut = useCallback(() => {
     setScale((s) => {
       const newScale = Math.max(s / 1.4, MIN_SCALE);
-      if (newScale <= 1) {
-        setPosition({ x: 0, y: 0 });
-      }
+      if (newScale <= 1) setPosition({ x: 0, y: 0 });
       return newScale;
     });
   }, []);
 
-  const handleReset = useCallback(() => {
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
-  }, []);
+  const handleDownload = useCallback(async () => {
+    try {
+      const response = await fetch(currentUrl);
+      const blob = await response.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      const ext = currentUrl.split(".").pop()?.split("?")[0] || "jpg";
+      a.download = `foto_${currentIndex + 1}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    } catch {
+      // Fallback: open in new tab
+      window.open(currentUrl, "_blank");
+    }
+  }, [currentUrl, currentIndex]);
 
   // Scroll wheel zoom (desktop)
   useEffect(() => {
@@ -113,7 +151,6 @@ export function ZoomableLightbox({ url, onClose }: ZoomableLightboxProps) {
   }, [lastPinchDist, isDragging, dragStart]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    // If was pinching, just reset pinch state
     if (isPinching) {
       setIsPinching(false);
       setLastPinchDist(null);
@@ -124,20 +161,19 @@ export function ZoomableLightbox({ url, onClose }: ZoomableLightboxProps) {
     setLastPinchDist(null);
     setIsDragging(false);
 
-    // Double tap detection - only for single finger taps
+    // Double tap detection
     if (e.changedTouches.length === 1) {
       const now = Date.now();
       const timeSinceLastTap = now - lastTapTimeRef.current;
 
       if (timeSinceLastTap < 350 && timeSinceLastTap > 50) {
-        // Double tap detected
         e.preventDefault();
         if (doubleTapTimerRef.current) {
           clearTimeout(doubleTapTimerRef.current);
           doubleTapTimerRef.current = null;
         }
         if (scale > 1.2) {
-          handleReset();
+          resetView();
         } else {
           setScale(2.5);
           setPosition({ x: 0, y: 0 });
@@ -147,52 +183,46 @@ export function ZoomableLightbox({ url, onClose }: ZoomableLightboxProps) {
         lastTapTimeRef.current = now;
       }
     }
-  }, [scale, handleReset, isPinching]);
+  }, [scale, resetView, isPinching]);
 
-  // Keyboard: Escape to close, +/- to zoom
+  // Keyboard: Escape, +/-, arrows
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       if (e.key === "+" || e.key === "=") handleZoomIn();
       if (e.key === "-") handleZoomOut();
-      if (e.key === "0") handleReset();
+      if (e.key === "0") resetView();
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, handleZoomIn, handleZoomOut, handleReset]);
+  }, [onClose, handleZoomIn, handleZoomOut, resetView, goPrev, goNext]);
 
-  // Prevent body scroll when lightbox is open
+  // Prevent body scroll
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, []);
 
   // Cleanup timer
   useEffect(() => {
-    return () => {
-      if (doubleTapTimerRef.current) clearTimeout(doubleTapTimerRef.current);
-    };
+    return () => { if (doubleTapTimerRef.current) clearTimeout(doubleTapTimerRef.current); };
   }, []);
 
-  // Prevent default touch behavior on the container to avoid browser zoom/scroll
+  // Prevent browser zoom on multi-touch
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const preventDefault = (e: TouchEvent) => {
-      if (e.touches.length > 1) {
-        e.preventDefault();
-      }
+      if (e.touches.length > 1) e.preventDefault();
     };
     el.addEventListener("touchmove", preventDefault, { passive: false });
     return () => el.removeEventListener("touchmove", preventDefault);
   }, []);
 
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === containerRef.current) {
-      onClose();
-    }
+    if (e.target === containerRef.current) onClose();
   }, [onClose]);
 
   const zoomPercent = Math.round(scale * 100);
@@ -204,21 +234,61 @@ export function ZoomableLightbox({ url, onClose }: ZoomableLightboxProps) {
       onClick={handleBackdropClick}
       style={{ touchAction: "none" }}
     >
-      {/* Close button - top right, always visible */}
-      <button
-        onClick={onClose}
-        className="absolute top-3 right-3 z-30 flex items-center justify-center w-12 h-12 rounded-full bg-black/70 border border-white/30 text-white active:bg-white/30 transition-colors"
-        style={{ WebkitTapHighlightColor: "transparent" }}
-      >
-        <X className="h-6 w-6" />
-      </button>
+      {/* Top bar */}
+      <div className="absolute top-3 left-3 right-3 z-30 flex items-center justify-between pointer-events-none">
+        {/* Left: zoom % + counter */}
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <div className="bg-black/70 border border-white/30 text-white px-3 py-2 rounded-full text-sm font-bold min-w-[60px] text-center">
+            {zoomPercent}%
+          </div>
+          {hasMultiple && (
+            <div className="bg-black/70 border border-white/30 text-white px-3 py-2 rounded-full text-sm font-bold">
+              {currentIndex + 1}/{urls.length}
+            </div>
+          )}
+        </div>
 
-      {/* Zoom percentage indicator - top left */}
-      <div className="absolute top-3 left-3 z-30 bg-black/70 border border-white/30 text-white px-3 py-2 rounded-full text-sm font-bold min-w-[60px] text-center">
-        {zoomPercent}%
+        {/* Right: download + close */}
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <button
+            onClick={handleDownload}
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-black/70 border border-white/30 text-white active:bg-white/30 transition-colors"
+            style={{ WebkitTapHighlightColor: "transparent" }}
+            title="Descargar foto"
+          >
+            <Download className="h-5 w-5" />
+          </button>
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-black/70 border border-white/30 text-white active:bg-white/30 transition-colors"
+            style={{ WebkitTapHighlightColor: "transparent" }}
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
       </div>
 
-      {/* Bottom zoom controls - large buttons for mobile */}
+      {/* Navigation arrows */}
+      {hasMultiple && currentIndex > 0 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); goPrev(); }}
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-30 flex items-center justify-center w-12 h-12 rounded-full bg-black/70 border border-white/30 text-white active:bg-white/30 transition-colors"
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          <ChevronLeft className="h-7 w-7" />
+        </button>
+      )}
+      {hasMultiple && currentIndex < urls.length - 1 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); goNext(); }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-30 flex items-center justify-center w-12 h-12 rounded-full bg-black/70 border border-white/30 text-white active:bg-white/30 transition-colors"
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          <ChevronRight className="h-7 w-7" />
+        </button>
+      )}
+
+      {/* Bottom zoom controls */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-black/70 border border-white/30 backdrop-blur-sm rounded-full px-3 py-2">
         <button
           onClick={(e) => { e.stopPropagation(); handleZoomOut(); }}
@@ -229,7 +299,6 @@ export function ZoomableLightbox({ url, onClose }: ZoomableLightboxProps) {
           <ZoomOut className="h-6 w-6" />
         </button>
 
-        {/* Zoom slider visual */}
         <div className="w-20 sm:w-28 h-1.5 bg-white/20 rounded-full relative">
           <div
             className="absolute top-0 left-0 h-full bg-white rounded-full"
@@ -249,7 +318,7 @@ export function ZoomableLightbox({ url, onClose }: ZoomableLightboxProps) {
         <div className="w-px h-8 bg-white/30" />
 
         <button
-          onClick={(e) => { e.stopPropagation(); handleReset(); }}
+          onClick={(e) => { e.stopPropagation(); resetView(); }}
           className="flex items-center justify-center w-11 h-11 rounded-full text-white bg-white/10 active:bg-white/30 transition-colors"
           style={{ WebkitTapHighlightColor: "transparent" }}
         >
@@ -257,7 +326,7 @@ export function ZoomableLightbox({ url, onClose }: ZoomableLightboxProps) {
         </button>
       </div>
 
-      {/* Double tap hint - shows briefly */}
+      {/* Double tap hint */}
       <DoubleTapHint />
 
       {/* Image container */}
@@ -274,7 +343,7 @@ export function ZoomableLightbox({ url, onClose }: ZoomableLightboxProps) {
       >
         <img
           ref={imgRef}
-          src={url}
+          src={currentUrl}
           alt="Foto ampliada"
           className="max-w-[95vw] max-h-[80vh] object-contain rounded-lg shadow-2xl"
           style={{
@@ -286,11 +355,28 @@ export function ZoomableLightbox({ url, onClose }: ZoomableLightboxProps) {
           onClick={(e) => e.stopPropagation()}
         />
       </div>
+
+      {/* Thumbnail strip for gallery */}
+      {hasMultiple && (
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 bg-black/60 border border-white/20 rounded-lg px-2 py-1.5 max-w-[90vw] overflow-x-auto">
+          {urls.map((u, i) => (
+            <button
+              key={i}
+              onClick={(e) => { e.stopPropagation(); goTo(i); }}
+              className={`w-10 h-10 rounded-md overflow-hidden flex-shrink-0 border-2 transition-all ${
+                i === currentIndex ? "border-white scale-110" : "border-transparent opacity-60 hover:opacity-100"
+              }`}
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              <img src={u} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-/** Brief hint that appears on first open to teach double-tap */
 function DoubleTapHint() {
   const [visible, setVisible] = useState(true);
 
