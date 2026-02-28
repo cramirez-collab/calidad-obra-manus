@@ -1,3 +1,4 @@
+import { ZoomableLightbox } from "@/components/ZoomableLightbox";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
@@ -2313,23 +2314,7 @@ export default function Bienvenida() {
       </Dialog>
       {/* Lightbox para foto ampliada */}
       {lightboxUrl && (
-        <div 
-          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
-          onClick={() => setLightboxUrl(null)}
-        >
-          <button
-            className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/70 z-10"
-            onClick={() => setLightboxUrl(null)}
-          >
-            <X className="h-6 w-6" />
-          </button>
-          <img
-            src={lightboxUrl}
-            alt="Foto ampliada"
-            className="max-w-full max-h-[90vh] object-contain rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
+        <ZoomableLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
       )}
     </DashboardLayout>
   );

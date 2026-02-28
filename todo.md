@@ -4718,3 +4718,6 @@
 - [x] Arreglar texto "pendientes" cortado (la "s" se ve en otra línea) en Bienvenida
 - [x] Mantener sesión siempre activa (never expire OAuth/cookie) - 10 años + renovación automática
 - [x] Modal lightbox al tocar foto miniatura del ítem en la lista de Bienvenida
+
+## Zoom en Lightbox de Fotos
+- [x] Agregar zoom in/out (pinch + botones) en todos los modales lightbox de fotos

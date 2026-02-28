@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { ZoomableLightbox } from "@/components/ZoomableLightbox";
 import { trpc } from "@/lib/trpc";
 
 // Estados del dictado por voz
@@ -525,25 +526,7 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
 
         {/* Lightbox */}
         {lightboxUrl && (
-          <div 
-            className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
-            onClick={() => setLightboxUrl(null)}
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4 text-white hover:bg-white/20 z-10"
-              onClick={() => setLightboxUrl(null)}
-            >
-              <X className="h-6 w-6" />
-            </Button>
-            <img 
-              src={lightboxUrl} 
-              alt="Foto ampliada"
-              className="max-w-full max-h-full object-contain rounded-lg"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
+          <ZoomableLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
         )}
       </div>
     );
@@ -732,25 +715,7 @@ export function ItemChat({ itemId, itemCodigo }: ItemChatProps) {
 
       {/* Lightbox */}
       {lightboxUrl && (
-        <div 
-          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4"
-          onClick={() => setLightboxUrl(null)}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 right-4 text-white hover:bg-white/20 z-10"
-            onClick={() => setLightboxUrl(null)}
-          >
-            <X className="h-6 w-6" />
-          </Button>
-          <img 
-            src={lightboxUrl} 
-            alt="Foto ampliada"
-            className="max-w-full max-h-full object-contain rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
+        <ZoomableLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
       )}
 
       {/* Input de mensaje */}

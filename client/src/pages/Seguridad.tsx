@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { ZoomableLightbox } from "@/components/ZoomableLightbox";
 import { trpc } from "@/lib/trpc";
 import { useProject } from "@/contexts/ProjectContext";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -1179,12 +1180,7 @@ function TabIncidentes({ proyectoId, onOpenChat, filtroEstadoExterno, onClearFil
 
       {/* Lightbox foto ampliada */}
       {lightboxUrl && (
-        <div className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-4" onClick={() => setLightboxUrl(null)}>
-          <button className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors z-10" onClick={() => setLightboxUrl(null)}>
-            <X className="h-6 w-6" />
-          </button>
-          <img src={lightboxUrl} className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
-        </div>
+        <ZoomableLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
       )}
 
       {/* Modal cerrar incidente */}
@@ -2794,12 +2790,7 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
 
       {/* Lightbox */}
       {lightboxUrl && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setLightboxUrl(null)}>
-          <button className="absolute top-4 right-4 h-8 w-8 rounded-full bg-white/20 text-white flex items-center justify-center" onClick={() => setLightboxUrl(null)}>
-            <X className="h-5 w-5" />
-          </button>
-          <img src={lightboxUrl} className="max-w-full max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
-        </div>
+        <ZoomableLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
       )}
 
       {/* Hidden file input for photos */}
