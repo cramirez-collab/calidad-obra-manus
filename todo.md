@@ -4721,3 +4721,7 @@
 
 ## Zoom en Lightbox de Fotos
 - [x] Agregar zoom in/out (pinch + botones) en todos los modales lightbox de fotos
+
+## Responsividad Móvil/Tablet
+- [x] Corregir botones de zoom (+/-) no visibles en móvil/tablet en ZoomableLightbox
+- [x] Corregir doble tap para zoom que no funciona en móvil/tablet
