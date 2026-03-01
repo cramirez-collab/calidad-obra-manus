@@ -14,7 +14,7 @@ import {
   CalendarDays, Plus, Send, Scissors, Trash2, ChevronLeft, ChevronRight,
   Download, Upload, Image as ImageIcon, BarChart3, TrendingUp, Eye, Edit,
   X, Check, AlertTriangle, Clock, FileSpreadsheet, BookTemplate, GitCompare,
-  Save, FolderOpen, Copy
+  Save, FolderOpen, Copy, FileDown
 } from "lucide-react";
 
 // Helpers de fecha
@@ -1408,6 +1408,140 @@ function PlantillasView({ proyectoId, onBack, onCargar }: {
   );
 }
 
+// ===== EXPORTAR COMPARATIVA PDF =====
+function exportarComparativaPDF(comparativa: any, usuarios: any[]) {
+  const getUsuarioName = (userId: number) => {
+    const u = usuarios.find((u: any) => u.id === userId);
+    return u?.name || `#${userId}`;
+  };
+
+  const fmtWeek = (inicio: any, fin: any) => {
+    const d1 = new Date(Number(inicio));
+    const d2 = new Date(Number(fin));
+    return `${d1.getDate().toString().padStart(2,'0')}/${(d1.getMonth()+1).toString().padStart(2,'0')}/${d1.getFullYear()} - ${d2.getDate().toString().padStart(2,'0')}/${(d2.getMonth()+1).toString().padStart(2,'0')}/${d2.getFullYear()}`;
+  };
+
+  const s1 = comparativa.semana1;
+  const s2 = comparativa.semana2;
+  const diff = s2.eficienciaCalculada - s1.eficienciaCalculada;
+
+  const allEsp = Array.from(new Set([
+    ...s1.porEspecialidad.map((e: any) => e.especialidad),
+    ...s2.porEspecialidad.map((e: any) => e.especialidad),
+  ])) as string[];
+
+  const espRows = allEsp.map(esp => {
+    const e1 = s1.porEspecialidad.find((e: any) => e.especialidad === esp);
+    const e2 = s2.porEspecialidad.find((e: any) => e.especialidad === esp);
+    const pct1 = e1?.eficiencia || 0;
+    const pct2 = e2?.eficiencia || 0;
+    const d = pct2 - pct1;
+    return `<tr>
+      <td style="padding:6px 10px;border:1px solid #ddd;font-weight:500">${esp}</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;text-align:right;color:${pct1>=80?'#059669':pct1>=50?'#d97706':'#dc2626'}">${pct1.toFixed(1)}%</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;text-align:right;color:${pct2>=80?'#059669':pct2>=50?'#d97706':'#dc2626'}">${pct2.toFixed(1)}%</td>
+      <td style="padding:6px 10px;border:1px solid #ddd;text-align:right;font-weight:700;color:${d>0?'#059669':d<0?'#dc2626':'#666'}">${d>0?'+':''}${d.toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+
+  // Actividades detalladas por semana
+  const actTable = (sem: any, label: string) => {
+    const rows = sem.actividades.map((a: any) => {
+      const pct = a.cantidadProgramada > 0 ? ((a.cantidadRealizada || 0) / a.cantidadProgramada * 100) : 0;
+      return `<tr>
+        <td style="padding:4px 8px;border:1px solid #ddd;font-size:11px">${a.especialidad || '-'}</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;font-size:11px">${a.actividad || '-'}</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;font-size:11px;text-align:center">${a.nivel || '-'}</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;font-size:11px;text-align:center">${a.unidad || '-'}</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;font-size:11px;text-align:right">${a.cantidadProgramada}</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;font-size:11px;text-align:right">${a.cantidadRealizada ?? '-'}</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;font-size:11px;text-align:right;color:${pct>=80?'#059669':pct>=50?'#d97706':'#dc2626'}">${pct.toFixed(1)}%</td>
+      </tr>`;
+    }).join('');
+    return `<h3 style="margin:20px 0 8px;color:#002C63">${label}</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:#f3f4f6">
+        <th style="padding:6px 8px;border:1px solid #ddd;text-align:left">Especialidad</th>
+        <th style="padding:6px 8px;border:1px solid #ddd;text-align:left">Actividad</th>
+        <th style="padding:6px 8px;border:1px solid #ddd;text-align:center">Nivel</th>
+        <th style="padding:6px 8px;border:1px solid #ddd;text-align:center">Unidad</th>
+        <th style="padding:6px 8px;border:1px solid #ddd;text-align:right">Programada</th>
+        <th style="padding:6px 8px;border:1px solid #ddd;text-align:right">Realizada</th>
+        <th style="padding:6px 8px;border:1px solid #ddd;text-align:right">Eficiencia</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  };
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Comparativa Semanal</title>
+  <style>
+    @page { size: landscape; margin: 15mm; }
+    body { font-family: Arial, sans-serif; color: #333; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #02B381; padding-bottom: 10px; margin-bottom: 20px; }
+    .logo { font-size: 22px; font-weight: bold; color: #002C63; }
+    .logo span { color: #02B381; }
+    .summary { display: flex; gap: 20px; margin-bottom: 20px; }
+    .summary-card { flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 16px; text-align: center; }
+    .big-num { font-size: 36px; font-weight: 700; }
+    .green { color: #059669; } .amber { color: #d97706; } .red { color: #dc2626; }
+    .diff-card { border: 2px solid ${diff>0?'#059669':diff<0?'#dc2626':'#999'}; border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 20px; background: ${diff>0?'#f0fdf4':diff<0?'#fef2f2':'#f9fafb'}; }
+  </style></head><body>
+  <div class="header">
+    <div class="logo">Objetiva <span>QC</span></div>
+    <div style="text-align:right;font-size:12px;color:#666">
+      Comparativa Semanal<br>
+      Generado: ${new Date().toLocaleDateString('es-MX')}
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="summary-card">
+      <div style="font-size:13px;color:#666;margin-bottom:4px">Semana 1: ${fmtWeek(s1.semanaInicio, s1.semanaFin)}</div>
+      <div style="font-size:12px;margin-bottom:8px">Usuario: ${getUsuarioName(s1.usuarioId)}</div>
+      <div class="big-num ${s1.eficienciaCalculada>=80?'green':s1.eficienciaCalculada>=50?'amber':'red'}">${s1.eficienciaCalculada.toFixed(1)}%</div>
+      <div style="font-size:11px;color:#666">${s1.actividades.length} actividades</div>
+    </div>
+    <div class="summary-card">
+      <div style="font-size:13px;color:#666;margin-bottom:4px">Semana 2: ${fmtWeek(s2.semanaInicio, s2.semanaFin)}</div>
+      <div style="font-size:12px;margin-bottom:8px">Usuario: ${getUsuarioName(s2.usuarioId)}</div>
+      <div class="big-num ${s2.eficienciaCalculada>=80?'green':s2.eficienciaCalculada>=50?'amber':'red'}">${s2.eficienciaCalculada.toFixed(1)}%</div>
+      <div style="font-size:11px;color:#666">${s2.actividades.length} actividades</div>
+    </div>
+  </div>
+
+  <div class="diff-card">
+    <span style="font-size:18px;font-weight:700;color:${diff>0?'#059669':diff<0?'#dc2626':'#666'}">
+      ${diff>0?'Mejora de +':'Variación de '}${diff.toFixed(1)}% en eficiencia
+    </span>
+  </div>
+
+  <h3 style="color:#002C63;margin:16px 0 8px">Eficiencia por Especialidad</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:#f3f4f6">
+      <th style="padding:8px 10px;border:1px solid #ddd;text-align:left">Especialidad</th>
+      <th style="padding:8px 10px;border:1px solid #ddd;text-align:right">Semana 1</th>
+      <th style="padding:8px 10px;border:1px solid #ddd;text-align:right">Semana 2</th>
+      <th style="padding:8px 10px;border:1px solid #ddd;text-align:right">Diferencia</th>
+    </tr></thead>
+    <tbody>${espRows}</tbody>
+  </table>
+
+  ${actTable(s1, `Detalle Semana 1: ${fmtWeek(s1.semanaInicio, s1.semanaFin)}`)}
+  ${actTable(s2, `Detalle Semana 2: ${fmtWeek(s2.semanaInicio, s2.semanaFin)}`)}
+
+  <div style="margin-top:30px;text-align:center;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:10px">
+    ObjetivaQC &mdash; Control de Calidad de Obra &mdash; &copy; ${new Date().getFullYear()} Objetiva. Derechos Reservados.
+  </div>
+  </body></html>`;
+
+  const w = window.open('', '_blank');
+  if (w) {
+    w.document.write(html);
+    w.document.close();
+    setTimeout(() => w.print(), 500);
+  }
+}
+
 // ===== COMPARATIVA VIEW =====
 function ComparativaView({ proyectoId, programas, usuarios, onBack }: {
   proyectoId: number;
@@ -1482,6 +1616,15 @@ function ComparativaView({ proyectoId, programas, usuarios, onBack }: {
           </div>
         </CardContent>
       </Card>
+
+      {/* Botón exportar PDF */}
+      {comparativa && (
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" onClick={() => exportarComparativaPDF(comparativa, usuarios)}>
+            <FileDown className="w-4 h-4 mr-1" /> Exportar PDF
+          </Button>
+        </div>
+      )}
 
       {!id1 || !id2 || id1 === id2 ? (
         <Card>

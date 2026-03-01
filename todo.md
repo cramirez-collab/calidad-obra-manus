@@ -4767,3 +4767,7 @@
 ## Mejoras Programa Semanal (Fase 3)
 - [x] Plantillas de actividades: guardar/cargar conjuntos de actividades frecuentes
 - [x] Vista comparativa semanal lado a lado (dos semanas)
+
+## Mejoras Programa Semanal (Fase 4)
+- [x] Notificación al supervisor cuando residente entrega programa semanal
+- [x] Exportar comparativa semanal a PDF

@@ -5439,6 +5439,45 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           status: 'entregado',
           fechaEntrega: new Date(),
         });
+
+        // Notificar a supervisores y admins del proyecto
+        try {
+          const proyectoUsers = await db.getUsuariosByProyecto(programa.proyectoId);
+          const supervisores = proyectoUsers.filter(
+            (pu: any) => pu.usuario && ['supervisor', 'admin', 'superadmin'].includes(pu.usuario.role || '')
+          );
+          const inicio = new Date(Number(programa.semanaInicio));
+          const fin = new Date(Number(programa.semanaFin));
+          const semanaStr = `${inicio.getDate().toString().padStart(2,'0')}/${(inicio.getMonth()+1).toString().padStart(2,'0')} - ${fin.getDate().toString().padStart(2,'0')}/${(fin.getMonth()+1).toString().padStart(2,'0')}`;
+
+          for (const pu of supervisores) {
+            if (!pu.usuario || pu.usuario.id === ctx.user.id) continue;
+            // Push notification
+            try {
+              const pushSubs = await db.getPushSubscriptionsByUsuarios([pu.usuario.id]);
+              if (pushSubs.length > 0) {
+                await pushService.sendPushToMultiple(pushSubs, {
+                  title: 'Programa Semanal Entregado',
+                  body: `${ctx.user.name || 'Residente'} entregó su programa semanal (${semanaStr})`,
+                  data: { url: '/programa-semanal', tipo: 'programa_entregado' },
+                });
+              }
+            } catch (pushErr) {
+              console.error('[ProgramaSemanal] Error push:', pushErr);
+            }
+            // In-app notification
+            await db.createNotificacion({
+              usuarioId: pu.usuario.id,
+              proyectoId: programa.proyectoId,
+              tipo: 'programa_entregado',
+              titulo: 'Programa Semanal Entregado',
+              mensaje: `${ctx.user.name || 'Residente'} entregó su programa semanal para la semana ${semanaStr}. Revísalo.`,
+            });
+          }
+        } catch (notifErr) {
+          console.error('[ProgramaSemanal] Error notificando supervisores:', notifErr);
+        }
+
         return { ok: true };
       }),
 
