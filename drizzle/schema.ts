@@ -1059,7 +1059,8 @@ export type InsertReporteSeguridad = typeof reportesSeguridad.$inferInsert;
 export const programaSemanal = mysqlTable("programa_semanal", {
   id: int("id").autoincrement().primaryKey(),
   proyectoId: int("proyectoId").notNull(),
-  usuarioId: int("usuarioId").notNull(), // Quién lo crea (residente/especialista)
+  usuarioId: int("usuarioId").notNull(), // A quién se le asigna (residente/especialista)
+  creadoPorId: int("creadoPorId"), // Quién lo creó en el sistema (admin/supervisor)
   semanaInicio: timestamp("semanaInicio").notNull(), // Lunes de la semana
   semanaFin: timestamp("semanaFin").notNull(), // Domingo de la semana
   fechaEntrega: timestamp("fechaEntrega"), // Cuándo lo subió

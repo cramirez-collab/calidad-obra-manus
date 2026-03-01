@@ -1,0 +1,1 @@
+ALTER TABLE `programa_semanal` ADD `creadoPorId` int;

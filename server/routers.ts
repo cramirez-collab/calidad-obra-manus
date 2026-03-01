@@ -5394,6 +5394,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         const result = await db.createProgramaSemanal({
           proyectoId: input.proyectoId,
           usuarioId: targetUserId,
+          creadoPorId: ctx.user.id, // Siempre registrar quién lo creó en el sistema
           semanaInicio: new Date(input.semanaInicio),
           semanaFin: new Date(input.semanaFin),
           notas: input.notas,
@@ -5493,6 +5494,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
     update: protectedProcedure
       .input(z.object({
         id: z.number(),
+        usuarioId: z.number().optional(), // admin/superadmin puede reasignar usuario
         notas: z.string().optional(),
         actividades: z.array(z.object({
           especialidad: z.string(),
@@ -5524,7 +5526,12 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           throw new TRPCError({ code: 'FORBIDDEN' });
         }
 
-        await db.updateProgramaSemanal(input.id, { notas: input.notas });
+        // Si admin cambia el usuario asignado (solo en borrador)
+        const updateData: any = { notas: input.notas };
+        if (input.usuarioId && ['admin', 'superadmin', 'supervisor'].includes(ctx.user.role || '') && programa.status === 'borrador') {
+          updateData.usuarioId = input.usuarioId;
+        }
+        await db.updateProgramaSemanal(input.id, updateData);
 
         // Reemplazar actividades
         await db.deleteActividadesByPrograma(input.id);

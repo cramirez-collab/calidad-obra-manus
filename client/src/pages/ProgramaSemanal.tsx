@@ -200,6 +200,7 @@ export default function ProgramaSemanal() {
       onDelete={(id) => { deleteMut.mutate({ id }); setView("list"); setSelectedProgramaId(null); }}
       userId={user!.id}
       userRole={user!.role || "residente"}
+      usuarios={usuariosEspecialidad}
     />;
   }
 
@@ -1165,7 +1166,7 @@ function generarPDFProgramaSemanal(data: any) {
 }
 
 // ===== DETALLE PROGRAMA =====
-function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, userId, userRole }: {
+function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, userId, userRole, usuarios }: {
   programaId: number;
   onBack: () => void;
   onCorte: () => void;
@@ -1173,6 +1174,7 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
   onDelete: (id: number) => void;
   userId: number;
   userRole: string;
+  usuarios: any[];
 }) {
   const { data, isLoading } = trpc.programaSemanal.getById.useQuery({ id: programaId });
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -1231,6 +1233,28 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
             </div>
           </div>
           {data.notas && <p className="text-sm text-muted-foreground border-t pt-2 mt-2">{data.notas}</p>}
+
+          {/* Auditoría: Creado por vs Asignado a */}
+          <div className="border-t pt-2 mt-2 space-y-1">
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+              <div className="flex items-center gap-1.5">
+                <UserCircle className="w-4 h-4 text-emerald-600" />
+                <span className="text-muted-foreground">Asignado a:</span>
+                <span className="font-medium">
+                  {usuarios.find((u: any) => u.id === data.usuarioId)?.name || `Usuario #${data.usuarioId}`}
+                </span>
+              </div>
+              {data.creadoPorId && data.creadoPorId !== data.usuarioId && (
+                <div className="flex items-center gap-1.5">
+                  <Edit className="w-3.5 h-3.5 text-blue-500" />
+                  <span className="text-muted-foreground">Creado por:</span>
+                  <span className="font-medium text-blue-600">
+                    {usuarios.find((u: any) => u.id === data.creadoPorId)?.name || `Usuario #${data.creadoPorId}`}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
