@@ -4757,3 +4757,9 @@
 - [x] Frontend: Corte de miércoles con % avance
 - [x] Frontend: Dashboard de eficiencia con gráficos
 - [x] Registrar rutas en App.tsx y sidebar
+
+## Mejoras Programa Semanal (Fase 2)
+- [x] Alertas automáticas viernes si no entregó programa
+- [x] Alertas automáticas miércoles si no hizo corte
+- [x] Historial de eficiencia con gráfico de tendencia semanal por usuario
+- [x] Reporte PDF del programa semanal con tabla y planos

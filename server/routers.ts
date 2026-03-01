@@ -5657,6 +5657,51 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         await db.deleteProgramaPlano(input.id);
         return { ok: true };
       }),
+
+    // Exportar datos para PDF
+    exportarPDF: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const programa = await db.getProgramaSemanalById(input.id);
+        if (!programa) throw new TRPCError({ code: 'NOT_FOUND' });
+        const actividades = await db.getActividadesByPrograma(input.id);
+        const planos = await db.getPlanosByPrograma(input.id);
+        const usuario = await db.getUserById(programa.usuarioId);
+        
+        // Calcular eficiencia por especialidad
+        const porEspecialidad = new Map<string, { prog: number; real: number }>();
+        for (const a of actividades) {
+          const key = a.especialidad;
+          if (!porEspecialidad.has(key)) porEspecialidad.set(key, { prog: 0, real: 0 });
+          const entry = porEspecialidad.get(key)!;
+          entry.prog += parseFloat(a.cantidadProgramada as any) || 0;
+          entry.real += parseFloat(a.cantidadRealizada as any) || 0;
+        }
+
+        return {
+          programa: {
+            ...programa,
+            semanaInicio: programa.semanaInicio.toISOString(),
+            semanaFin: programa.semanaFin.toISOString(),
+            fechaEntrega: programa.fechaEntrega?.toISOString() || null,
+            fechaCorte: programa.fechaCorte?.toISOString() || null,
+          },
+          usuario: usuario ? { name: usuario.name, role: usuario.role } : null,
+          actividades: actividades.map(a => ({
+            ...a,
+            cantidadProgramada: parseFloat(a.cantidadProgramada as any) || 0,
+            cantidadRealizada: parseFloat(a.cantidadRealizada as any) || 0,
+            porcentajeAvance: parseFloat(a.porcentajeAvance as any) || 0,
+          })),
+          planos: planos.map(p => ({ ...p, imagenUrl: p.imagenUrl })),
+          eficienciaPorEspecialidad: Array.from(porEspecialidad.entries()).map(([esp, v]) => ({
+            especialidad: esp,
+            programada: v.prog,
+            realizada: v.real,
+            eficiencia: v.prog > 0 ? Math.round((v.real / v.prog) * 10000) / 100 : 0,
+          })),
+        };
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

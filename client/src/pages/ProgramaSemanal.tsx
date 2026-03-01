@@ -523,6 +523,145 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
   );
 }
 
+// ===== GENERAR PDF =====
+function generarPDFProgramaSemanal(data: any) {
+  const statusLabels: Record<string, string> = { borrador: 'Borrador', entregado: 'Entregado', corte_realizado: 'Corte Realizado' };
+  const actividades = data.actividades || [];
+  const planos = data.planos || [];
+  const hasCorte = data.status === 'corte_realizado';
+
+  // Calcular eficiencia por especialidad
+  const porEsp = new Map<string, { prog: number; real: number }>();
+  for (const a of actividades) {
+    if (!porEsp.has(a.especialidad)) porEsp.set(a.especialidad, { prog: 0, real: 0 });
+    const e = porEsp.get(a.especialidad)!;
+    e.prog += parseFloat(a.cantidadProgramada) || 0;
+    e.real += parseFloat(a.cantidadRealizada) || 0;
+  }
+
+  const totalProg = actividades.reduce((s: number, a: any) => s + (parseFloat(a.cantidadProgramada) || 0), 0);
+  const totalReal = actividades.reduce((s: number, a: any) => s + (parseFloat(a.cantidadRealizada) || 0), 0);
+  const efGlobal = totalProg > 0 ? ((totalReal / totalProg) * 100).toFixed(1) : '—';
+
+  const planosHtml = planos.length > 0 ? `
+    <h3 style="margin-top:20px;font-size:14px;color:#002C63;">Planos / Croquis</h3>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px;">
+      ${planos.map((p: any) => `
+        <div style="text-align:center;">
+          <img src="${p.imagenUrl}" style="max-width:100%;max-height:250px;border:1px solid #ddd;border-radius:4px;" crossorigin="anonymous" />
+          ${p.titulo ? `<p style="font-size:10px;color:#666;margin-top:4px;">${p.titulo}</p>` : ''}
+        </div>
+      `).join('')}
+    </div>` : '';
+
+  const efPorEspHtml = hasCorte && porEsp.size > 0 ? `
+    <h3 style="margin-top:20px;font-size:14px;color:#002C63;">Eficiencia por Especialidad</h3>
+    <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:11px;">
+      <thead>
+        <tr style="background:#002C63;color:white;">
+          <th style="padding:6px 8px;text-align:left;">Especialidad</th>
+          <th style="padding:6px 8px;text-align:right;">Programada</th>
+          <th style="padding:6px 8px;text-align:right;">Realizada</th>
+          <th style="padding:6px 8px;text-align:right;">Eficiencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${Array.from(porEsp.entries()).map(([esp, v]) => {
+          const pct = v.prog > 0 ? ((v.real / v.prog) * 100).toFixed(1) : '0.0';
+          const color = parseFloat(pct) >= 80 ? '#16a34a' : parseFloat(pct) >= 50 ? '#d97706' : '#dc2626';
+          return `<tr style="border-bottom:1px solid #eee;">
+            <td style="padding:5px 8px;font-weight:600;">${esp}</td>
+            <td style="padding:5px 8px;text-align:right;">${v.prog.toFixed(2)}</td>
+            <td style="padding:5px 8px;text-align:right;">${v.real.toFixed(2)}</td>
+            <td style="padding:5px 8px;text-align:right;font-weight:700;color:${color};">${pct}%</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>` : '';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Programa Semanal - ${formatWeekRange(data.semanaInicio, data.semanaFin)}</title>
+      <style>
+        @media print { body { margin: 0; } @page { size: landscape; margin: 10mm; } }
+        body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #333; max-width: 1100px; margin: 0 auto; padding: 20px; }
+        h1 { color: #002C63; font-size: 18px; margin-bottom: 4px; }
+        .meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0; }
+        .meta-item { background: #f8f9fa; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #002C63; }
+        .meta-item label { font-size: 10px; color: #666; text-transform: uppercase; }
+        .meta-item p { font-size: 14px; font-weight: 600; margin: 2px 0 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th { background: #002C63; color: white; padding: 6px 8px; font-size: 11px; text-align: left; }
+        td { padding: 5px 8px; border-bottom: 1px solid #eee; font-size: 11px; }
+        tr:nth-child(even) { background: #f9fafb; }
+        .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+      </style>
+    </head>
+    <body>
+      <h1>PROGRAMA DE ACTIVIDADES</h1>
+      <p style="color:#666;font-size:13px;margin-top:0;">Semana: ${formatWeekRange(data.semanaInicio, data.semanaFin)}</p>
+
+      <div class="meta">
+        <div class="meta-item"><label>Estado</label><p>${statusLabels[data.status] || data.status}</p></div>
+        <div class="meta-item"><label>Entrega</label><p>${data.fechaEntrega ? formatDateShort(data.fechaEntrega) : 'Pendiente'}</p></div>
+        <div class="meta-item"><label>Corte</label><p>${data.fechaCorte ? formatDateShort(data.fechaCorte) : 'Pendiente'}</p></div>
+        <div class="meta-item"><label>Eficiencia Global</label><p style="color:${parseFloat(efGlobal) >= 80 ? '#16a34a' : parseFloat(efGlobal) >= 50 ? '#d97706' : '#dc2626'};font-size:18px;">${hasCorte ? efGlobal + '%' : '—'}</p></div>
+      </div>
+
+      ${data.notas ? `<p style="font-size:11px;color:#666;margin:8px 0;padding:8px;background:#fffbeb;border-radius:4px;"><strong>Notas:</strong> ${data.notas}</p>` : ''}
+
+      <h3 style="font-size:14px;color:#002C63;margin-top:16px;">Actividades Programadas</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Especialidad</th>
+            <th>Actividad</th>
+            <th>Nivel</th>
+            <th>Área</th>
+            <th>Ref. Eje</th>
+            <th>Unidad</th>
+            <th style="text-align:right;">Programada</th>
+            ${hasCorte ? '<th style="text-align:right;">Realizada</th><th style="text-align:right;">%</th>' : ''}
+          </tr>
+        </thead>
+        <tbody>
+          ${actividades.map((a: any) => {
+            const pct = parseFloat(a.porcentajeAvance) || 0;
+            const color = pct >= 80 ? '#16a34a' : pct >= 50 ? '#d97706' : '#dc2626';
+            return `<tr>
+              <td style="font-weight:600;">${a.especialidad}</td>
+              <td>${a.actividad}</td>
+              <td>${a.nivel || '—'}</td>
+              <td>${a.area || '—'}</td>
+              <td>${a.referenciaEje || '—'}</td>
+              <td>${a.unidad}</td>
+              <td style="text-align:right;font-family:monospace;">${a.cantidadProgramada}</td>
+              ${hasCorte ? `<td style="text-align:right;font-family:monospace;">${a.cantidadRealizada || '0'}</td><td style="text-align:right;font-weight:700;color:${color};">${pct.toFixed(1)}%</td>` : ''}
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+
+      ${efPorEspHtml}
+      ${planosHtml}
+
+      <div class="footer">
+        <p>ObjetivaQC — Control de Calidad de Obra — Generado ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+      </div>
+
+      <script>window.onload = () => setTimeout(() => window.print(), 500);</script>
+    </body>
+    </html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
 // ===== DETALLE PROGRAMA =====
 function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, userId, userRole }: {
   programaId: number;
@@ -678,6 +817,9 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
 
       {/* Acciones */}
       <div className="flex gap-2 justify-end flex-wrap">
+        <Button variant="outline" size="sm" onClick={() => generarPDFProgramaSemanal(data)}>
+          <Download className="w-4 h-4 mr-1" /> PDF
+        </Button>
         {canDelete && (
           <Button variant="destructive" size="sm" onClick={() => onDelete(programaId)}>
             <Trash2 className="w-4 h-4 mr-1" /> Eliminar
@@ -808,16 +950,101 @@ function EficienciaView({ data, usuarios, onBack }: {
   usuarios: any[];
   onBack: () => void;
 }) {
+  const [selectedUserId, setSelectedUserId] = useState<string>("todos");
+
+  // Agrupar datos por usuario
+  const dataByUser = useMemo(() => {
+    const map = new Map<number, any[]>();
+    for (const d of data) {
+      if (!map.has(d.usuarioId)) map.set(d.usuarioId, []);
+      map.get(d.usuarioId)!.push(d);
+    }
+    return map;
+  }, [data]);
+
+  // Datos filtrados
+  const filteredData = useMemo(() => {
+    if (selectedUserId === "todos") return data;
+    return data.filter((d: any) => d.usuarioId === parseInt(selectedUserId));
+  }, [data, selectedUserId]);
+
+  // Datos ordenados cronológicamente (más antiguo primero)
+  const sortedData = useMemo(() => [...filteredData].reverse(), [filteredData]);
+
+  // Calcular tendencia (pendiente de regresión lineal)
+  const tendencia = useMemo(() => {
+    if (sortedData.length < 2) return { slope: 0, direction: "estable" as const };
+    const n = sortedData.length;
+    const xs = sortedData.map((_: any, i: number) => i);
+    const ys = sortedData.map((d: any) => parseFloat(d.eficienciaGlobal) || 0);
+    const sumX = xs.reduce((a: number, b: number) => a + b, 0);
+    const sumY = ys.reduce((a: number, b: number) => a + b, 0);
+    const sumXY = xs.reduce((a: number, x: number, i: number) => a + x * ys[i], 0);
+    const sumX2 = xs.reduce((a: number, x: number) => a + x * x, 0);
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    return {
+      slope,
+      direction: slope > 1 ? "mejorando" as const : slope < -1 ? "empeorando" as const : "estable" as const,
+    };
+  }, [sortedData]);
+
+  // Ranking de usuarios por eficiencia promedio
+  const ranking = useMemo(() => {
+    const entries: { userId: number; name: string; avg: number; count: number }[] = [];
+    dataByUser.forEach((items, userId) => {
+      const avg = items.reduce((s: number, d: any) => s + (parseFloat(d.eficienciaGlobal) || 0), 0) / items.length;
+      const usuario = usuarios.find((u: any) => u.id === userId);
+      entries.push({ userId, name: usuario?.name || `#${userId}`, avg, count: items.length });
+    });
+    return entries.sort((a, b) => b.avg - a.avg);
+  }, [dataByUser, usuarios]);
+
+  // SVG Line chart
+  const svgChart = useMemo(() => {
+    if (sortedData.length === 0) return null;
+    const W = 600, H = 200, PAD = 40;
+    const maxPct = 100;
+    const points = sortedData.map((d: any, i: number) => {
+      const x = PAD + (i / Math.max(sortedData.length - 1, 1)) * (W - PAD * 2);
+      const y = H - PAD - ((parseFloat(d.eficienciaGlobal) || 0) / maxPct) * (H - PAD * 2);
+      return { x, y, pct: parseFloat(d.eficienciaGlobal) || 0, date: d.semanaInicio };
+    });
+    const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+    // Línea de tendencia
+    const trendY1 = H - PAD - ((tendencia.slope * 0 + (sortedData.reduce((s: number, d: any) => s + (parseFloat(d.eficienciaGlobal) || 0), 0) / sortedData.length - tendencia.slope * (sortedData.length - 1) / 2)) / maxPct) * (H - PAD * 2);
+    const trendY2 = H - PAD - ((tendencia.slope * (sortedData.length - 1) + (sortedData.reduce((s: number, d: any) => s + (parseFloat(d.eficienciaGlobal) || 0), 0) / sortedData.length - tendencia.slope * (sortedData.length - 1) / 2)) / maxPct) * (H - PAD * 2);
+    return { W, H, PAD, points, linePath, trendY1, trendY2, maxPct };
+  }, [sortedData, tendencia]);
+
+  const avg = filteredData.length > 0
+    ? (filteredData.reduce((s: number, d: any) => s + (parseFloat(d.eficienciaGlobal) || 0), 0) / filteredData.length)
+    : 0;
+  const best = filteredData.length > 0 ? Math.max(...filteredData.map((d: any) => parseFloat(d.eficienciaGlobal) || 0)) : 0;
+  const worst = filteredData.length > 0 ? Math.min(...filteredData.map((d: any) => parseFloat(d.eficienciaGlobal) || 0)) : 0;
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ChevronLeft className="w-4 h-4" /> Volver
         </Button>
         <h2 className="text-lg font-bold">Eficiencia Histórica</h2>
+        <div className="ml-auto">
+          <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filtrar por usuario" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos los usuarios</SelectItem>
+              {usuarios.map((u: any) => (
+                <SelectItem key={u.id} value={String(u.id)}>{u.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {data.length === 0 ? (
+      {filteredData.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
             <BarChart3 className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
@@ -826,48 +1053,131 @@ function EficienciaView({ data, usuarios, onBack }: {
         </Card>
       ) : (
         <>
-          {/* Resumen */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* KPIs */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-xs text-muted-foreground">Semanas con corte</p>
-                <p className="text-2xl font-bold">{data.length}</p>
+                <p className="text-xs text-muted-foreground">Semanas</p>
+                <p className="text-2xl font-bold">{filteredData.length}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-xs text-muted-foreground">Eficiencia promedio</p>
-                <p className="text-2xl font-bold text-emerald-600">
-                  {(data.reduce((s: number, d: any) => s + (parseFloat(d.eficienciaGlobal) || 0), 0) / data.length).toFixed(1)}%
+                <p className="text-xs text-muted-foreground">Promedio</p>
+                <p className={`text-2xl font-bold ${avg >= 80 ? "text-emerald-600" : avg >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                  {avg.toFixed(1)}%
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-xs text-muted-foreground">Mejor semana</p>
-                <p className="text-2xl font-bold text-emerald-600">
-                  {Math.max(...data.map((d: any) => parseFloat(d.eficienciaGlobal) || 0)).toFixed(1)}%
-                </p>
+                <p className="text-xs text-muted-foreground">Mejor</p>
+                <p className="text-2xl font-bold text-emerald-600">{best.toFixed(1)}%</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-xs text-muted-foreground">Peor semana</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {Math.min(...data.map((d: any) => parseFloat(d.eficienciaGlobal) || 0)).toFixed(1)}%
+                <p className="text-xs text-muted-foreground">Peor</p>
+                <p className="text-2xl font-bold text-red-600">{worst.toFixed(1)}%</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-xs text-muted-foreground">Tendencia</p>
+                <p className={`text-lg font-bold ${tendencia.direction === "mejorando" ? "text-emerald-600" : tendencia.direction === "empeorando" ? "text-red-600" : "text-amber-600"}`}>
+                  {tendencia.direction === "mejorando" ? "↑ Mejorando" : tendencia.direction === "empeorando" ? "↓ Empeorando" : "→ Estable"}
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Gráfico de barras simple con CSS */}
+          {/* Gráfico SVG de línea con tendencia */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Tendencia de Eficiencia</CardTitle>
+              <CardTitle className="text-base flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" /> Tendencia Semanal
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              {svgChart && (
+                <svg viewBox={`0 0 ${svgChart.W} ${svgChart.H}`} className="w-full h-auto" style={{ maxHeight: 250 }}>
+                  {/* Grid horizontal */}
+                  {[0, 25, 50, 75, 100].map(pct => {
+                    const y = svgChart.H - svgChart.PAD - (pct / svgChart.maxPct) * (svgChart.H - svgChart.PAD * 2);
+                    return (
+                      <g key={pct}>
+                        <line x1={svgChart.PAD} y1={y} x2={svgChart.W - svgChart.PAD} y2={y} stroke="#e5e7eb" strokeWidth="1" />
+                        <text x={svgChart.PAD - 5} y={y + 4} textAnchor="end" fontSize="10" fill="#9ca3af">{pct}%</text>
+                      </g>
+                    );
+                  })}
+                  {/* Línea de tendencia (dashed) */}
+                  <line
+                    x1={svgChart.PAD} y1={svgChart.trendY1}
+                    x2={svgChart.W - svgChart.PAD} y2={svgChart.trendY2}
+                    stroke={tendencia.direction === "mejorando" ? "#10b981" : tendencia.direction === "empeorando" ? "#ef4444" : "#f59e0b"}
+                    strokeWidth="2" strokeDasharray="6 4" opacity="0.6"
+                  />
+                  {/* Línea principal */}
+                  <path d={svgChart.linePath} fill="none" stroke="#002C63" strokeWidth="2.5" strokeLinejoin="round" />
+                  {/* Puntos */}
+                  {svgChart.points.map((p: any, i: number) => (
+                    <g key={i}>
+                      <circle cx={p.x} cy={p.y} r="5" fill={p.pct >= 80 ? "#10b981" : p.pct >= 50 ? "#f59e0b" : "#ef4444"} stroke="white" strokeWidth="2" />
+                      <text x={p.x} y={p.y - 10} textAnchor="middle" fontSize="9" fontWeight="bold" fill="#374151">{p.pct.toFixed(0)}%</text>
+                    </g>
+                  ))}
+                  {/* Etiquetas de fecha en eje X */}
+                  {svgChart.points.filter((_: any, i: number) => i % Math.max(1, Math.floor(svgChart.points.length / 8)) === 0 || i === svgChart.points.length - 1).map((p: any, i: number) => (
+                    <text key={i} x={p.x} y={svgChart.H - 8} textAnchor="middle" fontSize="9" fill="#9ca3af">
+                      {formatDateShort(p.date)}
+                    </text>
+                  ))}
+                </svg>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Ranking de usuarios (solo si hay más de 1 usuario) */}
+          {ranking.length > 1 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Ranking por Eficiencia Promedio</CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 sm:p-4">
+                <div className="space-y-2">
+                  {ranking.map((r, idx) => (
+                    <div key={r.userId} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                        idx === 0 ? "bg-amber-500" : idx === 1 ? "bg-slate-400" : idx === 2 ? "bg-amber-700" : "bg-slate-300"
+                      }`}>{idx + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{r.name}</p>
+                        <p className="text-xs text-muted-foreground">{r.count} semanas</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${r.avg >= 80 ? "bg-emerald-500" : r.avg >= 50 ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${Math.min(100, r.avg)}%` }} />
+                        </div>
+                        <span className={`text-sm font-bold min-w-[3rem] text-right ${r.avg >= 80 ? "text-emerald-600" : r.avg >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                          {r.avg.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Gráfico de barras */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Eficiencia por Semana</CardTitle>
             </CardHeader>
             <CardContent className="p-4">
               <div className="flex items-end gap-1 h-48">
-                {[...data].reverse().map((d: any, idx: number) => {
+                {sortedData.map((d: any, idx: number) => {
                   const pct = parseFloat(d.eficienciaGlobal) || 0;
                   const color = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500";
                   const usuario = usuarios.find((u: any) => u.id === d.usuarioId);
@@ -894,12 +1204,15 @@ function EficienciaView({ data, usuarios, onBack }: {
                     <th className="text-left p-2">Semana</th>
                     <th className="text-left p-2">Usuario</th>
                     <th className="text-right p-2">Eficiencia</th>
+                    <th className="text-right p-2 hidden sm:table-cell">Variación</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.map((d: any) => {
+                  {sortedData.map((d: any, idx: number) => {
                     const usuario = usuarios.find((u: any) => u.id === d.usuarioId);
                     const pct = parseFloat(d.eficienciaGlobal) || 0;
+                    const prevPct = idx > 0 ? (parseFloat(sortedData[idx - 1].eficienciaGlobal) || 0) : pct;
+                    const diff = pct - prevPct;
                     return (
                       <tr key={d.id} className="border-b">
                         <td className="p-2">{formatDateShort(d.semanaInicio)}</td>
@@ -908,6 +1221,13 @@ function EficienciaView({ data, usuarios, onBack }: {
                           <span className={`font-bold ${pct >= 80 ? "text-emerald-600" : pct >= 50 ? "text-amber-600" : "text-red-600"}`}>
                             {pct.toFixed(1)}%
                           </span>
+                        </td>
+                        <td className="p-2 text-right hidden sm:table-cell">
+                          {idx > 0 && (
+                            <span className={`text-xs font-medium ${diff > 0 ? "text-emerald-600" : diff < 0 ? "text-red-600" : "text-muted-foreground"}`}>
+                              {diff > 0 ? "+" : ""}{diff.toFixed(1)}%
+                            </span>
+                          )}
                         </td>
                       </tr>
                     );

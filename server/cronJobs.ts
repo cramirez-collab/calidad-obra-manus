@@ -6,9 +6,11 @@
 
 import cron from 'node-cron';
 import { getDb } from './db';
-import { items, pushSubscriptions, defectos, unidades } from '../drizzle/schema';
-import { eq, and, lt, inArray } from 'drizzle-orm';
+import { items, pushSubscriptions, defectos, unidades, programaSemanal, users } from '../drizzle/schema';
+import { eq, and, lt, inArray, isNull, ne } from 'drizzle-orm';
 import pushService from './pushService';
+import { sendEmail } from './emailService';
+import { notifyOwner } from './_core/notification';
 
 // Zona horaria de México (CST/CDT)
 const TIMEZONE = 'America/Mexico_City';
@@ -175,6 +177,207 @@ async function notificarItemsPendientesUrgentes() {
 /**
  * Inicializa los cron jobs
  */
+/**
+ * Alerta viernes 12pm: usuarios que no han entregado su programa semanal
+ */
+async function alertaProgramaNoEntregado() {
+  console.log('[CronJobs] Verificando programas semanales no entregados...');
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    // Calcular lunes de esta semana
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    monday.setHours(0, 0, 0, 0);
+
+    // Buscar programas entregados esta semana
+    const programasEntregados = await db.select({
+      usuarioId: programaSemanal.usuarioId,
+      proyectoId: programaSemanal.proyectoId,
+    })
+      .from(programaSemanal)
+      .where(
+        and(
+          eq(programaSemanal.semanaInicio, monday),
+          ne(programaSemanal.status, 'borrador')
+        )
+      );
+
+    const entregadosSet = new Set(programasEntregados.map(p => `${p.usuarioId}-${p.proyectoId}`));
+
+    // Buscar usuarios activos con rol de residente/jefe_residente que deberían entregar
+    const usuariosActivos = await db.select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      proyectoActivoId: users.proyectoActivoId,
+    })
+      .from(users)
+      .where(
+        and(
+          eq(users.activo, true),
+          inArray(users.role, ['residente', 'jefe_residente'])
+        )
+      );
+
+    const noEntregaron: { name: string; email: string | null; proyectoId: number }[] = [];
+
+    for (const u of usuariosActivos) {
+      if (!u.proyectoActivoId) continue;
+      const key = `${u.id}-${u.proyectoActivoId}`;
+      if (!entregadosSet.has(key)) {
+        noEntregaron.push({ name: u.name || 'Sin nombre', email: u.email, proyectoId: u.proyectoActivoId });
+      }
+    }
+
+    if (noEntregaron.length === 0) {
+      console.log('[CronJobs] Todos los usuarios han entregado su programa semanal');
+      return;
+    }
+
+    console.log(`[CronJobs] ${noEntregaron.length} usuarios no han entregado programa semanal`);
+
+    // Enviar push a usuarios que no entregaron
+    for (const u of noEntregaron) {
+      // Buscar suscripciones push del usuario
+      const userObj = usuariosActivos.find(x => x.name === u.name);
+      if (!userObj) continue;
+
+      const subs = await db.select()
+        .from(pushSubscriptions)
+        .where(and(
+          eq(pushSubscriptions.usuarioId, userObj.id),
+          eq(pushSubscriptions.activo, true)
+        ));
+
+      for (const sub of subs) {
+        await pushService.sendPushNotification(
+          { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+          {
+            title: '⚠️ Programa Semanal pendiente',
+            body: 'No has entregado tu programa semanal. Fecha límite: hoy viernes.',
+            data: { url: '/programa-semanal', tipo: 'programa_pendiente' }
+          }
+        ).catch(() => {});
+      }
+
+      // Enviar email si tiene
+      if (u.email) {
+        await sendEmail({
+          to: u.email,
+          subject: '⚠️ Programa Semanal pendiente de entrega',
+          html: `<h2>Programa Semanal Pendiente</h2><p>Hola ${u.name},</p><p>Aún no has entregado tu programa semanal. La fecha límite es hoy viernes.</p><p>Ingresa a <a href="https://objetivaqc.com/programa-semanal">ObjetivaQC</a> para entregar tu programa.</p>`,
+        }).catch(() => {});
+      }
+    }
+
+    // Notificar al owner con resumen
+    const nombres = noEntregaron.map(u => u.name).join(', ');
+    await notifyOwner({
+      title: `⚠️ ${noEntregaron.length} programas semanales sin entregar`,
+      content: `Usuarios pendientes: ${nombres}`,
+    }).catch(() => {});
+
+    console.log(`[CronJobs] Alertas enviadas a ${noEntregaron.length} usuarios por programa no entregado`);
+  } catch (error) {
+    console.error('[CronJobs] Error en alerta de programa no entregado:', error);
+  }
+}
+
+/**
+ * Alerta miércoles 12pm: usuarios que no han hecho corte semanal
+ */
+async function alertaCorteNoRealizado() {
+  console.log('[CronJobs] Verificando cortes semanales no realizados...');
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    // Calcular lunes de esta semana
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    monday.setHours(0, 0, 0, 0);
+
+    // Buscar programas entregados esta semana SIN corte
+    const programasSinCorte = await db.select({
+      id: programaSemanal.id,
+      usuarioId: programaSemanal.usuarioId,
+      proyectoId: programaSemanal.proyectoId,
+    })
+      .from(programaSemanal)
+      .where(
+        and(
+          eq(programaSemanal.semanaInicio, monday),
+          eq(programaSemanal.status, 'entregado') // Entregado pero sin corte
+        )
+      );
+
+    if (programasSinCorte.length === 0) {
+      console.log('[CronJobs] Todos los programas entregados ya tienen corte');
+      return;
+    }
+
+    console.log(`[CronJobs] ${programasSinCorte.length} programas sin corte de miércoles`);
+
+    const userIds = Array.from(new Set(programasSinCorte.map(p => p.usuarioId)));
+    const usuariosInfo = await db.select({ id: users.id, name: users.name, email: users.email })
+      .from(users)
+      .where(inArray(users.id, userIds));
+
+    const userMap = new Map(usuariosInfo.map(u => [u.id, u]));
+
+    for (const prog of programasSinCorte) {
+      const usuario = userMap.get(prog.usuarioId);
+      if (!usuario) continue;
+
+      // Push
+      const subs = await db.select()
+        .from(pushSubscriptions)
+        .where(and(
+          eq(pushSubscriptions.usuarioId, prog.usuarioId),
+          eq(pushSubscriptions.activo, true)
+        ));
+
+      for (const sub of subs) {
+        await pushService.sendPushNotification(
+          { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+          {
+            title: '✂️ Corte semanal pendiente',
+            body: 'No has realizado el corte de avance de tu programa semanal. Fecha límite: hoy miércoles.',
+            data: { url: '/programa-semanal', tipo: 'corte_pendiente' }
+          }
+        ).catch(() => {});
+      }
+
+      // Email
+      if (usuario.email) {
+        await sendEmail({
+          to: usuario.email,
+          subject: '✂️ Corte semanal pendiente',
+          html: `<h2>Corte Semanal Pendiente</h2><p>Hola ${usuario.name},</p><p>Aún no has realizado el corte de avance de tu programa semanal. La fecha límite es hoy miércoles.</p><p>Ingresa a <a href="https://objetivaqc.com/programa-semanal">ObjetivaQC</a> para registrar tu avance.</p>`,
+        }).catch(() => {});
+      }
+    }
+
+    // Notificar al owner
+    const nombres = programasSinCorte.map(p => userMap.get(p.usuarioId)?.name || 'Desconocido').join(', ');
+    await notifyOwner({
+      title: `✂️ ${programasSinCorte.length} cortes semanales pendientes`,
+      content: `Usuarios pendientes: ${nombres}`,
+    }).catch(() => {});
+
+    console.log(`[CronJobs] Alertas enviadas a ${programasSinCorte.length} usuarios por corte no realizado`);
+  } catch (error) {
+    console.error('[CronJobs] Error en alerta de corte no realizado:', error);
+  }
+}
+
 export function initializeCronJobs() {
   console.log('[CronJobs] Sistema de tareas programadas iniciado.');
   console.log(`[CronJobs] Zona horaria: ${TIMEZONE}`);
@@ -185,8 +388,22 @@ export function initializeCronJobs() {
     await notificarItemsPendientesUrgentes();
   }, { timezone: TIMEZONE });
   
+  // Alerta viernes 12pm: programas no entregados
+  cron.schedule('0 12 * * 5', async () => {
+    console.log('[CronJobs] Ejecutando alerta de programas no entregados (viernes)...');
+    await alertaProgramaNoEntregado();
+  }, { timezone: TIMEZONE });
+
+  // Alerta miércoles 12pm: cortes no realizados
+  cron.schedule('0 12 * * 3', async () => {
+    console.log('[CronJobs] Ejecutando alerta de cortes no realizados (miércoles)...');
+    await alertaCorteNoRealizado();
+  }, { timezone: TIMEZONE });
+  
   console.log('[CronJobs] Cron configurado: Notificaciones de ítems urgentes (9am y 3pm, L-S)');
+  console.log('[CronJobs] Cron configurado: Alerta programa no entregado (viernes 12pm)');
+  console.log('[CronJobs] Cron configurado: Alerta corte no realizado (miércoles 12pm)');
 }
 
 // Exportar funciones para pruebas manuales
-export { notificarItemsPendientesUrgentes };
+export { notificarItemsPendientesUrgentes, alertaProgramaNoEntregado, alertaCorteNoRealizado };
