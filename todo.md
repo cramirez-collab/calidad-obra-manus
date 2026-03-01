@@ -4823,3 +4823,17 @@
 - [x] Reporte de Eficiencia PDF por empresa (programas semanales: cumplimiento, actividades programadas vs ejecutadas)
 - [x] Botones azul con letra blanca en barra de acciones de Bienvenida para ambos reportes
 - [x] Eliminar botones de Reporte Calidad y Reporte Eficiencia de la barra de acciones de Bienvenida
+
+## Chat por incidencia de Seguridad (Fase 14)
+- [x] Tabla de mensajes de chat de seguridad en BD
+- [x] Backend: procedures CRUD de chat (listar, crear, eliminar, editar mensajes)
+- [x] @mentions solo seguristas/admin/superadmin con notificaciones push
+- [x] Frontend: panel de chat en cada incidencia de seguridad (botón de chat)
+- [x] Soporte de fotos en chat con editor de marcas
+- [x] Soporte de notas de voz con transcripción IA y 5 bullets
+- [x] Optimizado para móvil (input no obstruido)
+- [x] Polling automático cada 5 segundos para mensajes nuevos
+- [x] Bitácora de seguridad por incidente
+- [x] Panel de evidencias con subida de fotos
+- [x] Asignar responsable a incidente
+- [x] Exportar reporte PDF de incidente

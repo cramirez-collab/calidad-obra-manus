@@ -2183,7 +2183,10 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { data: incidenteData } = trpc.seguridad.getById.useQuery({ id: incidenteId });
-  const { data: mensajes, isLoading } = trpc.seguridad.mensajesByIncidente.useQuery({ incidenteId });
+  const { data: mensajes, isLoading } = trpc.seguridad.mensajesByIncidente.useQuery(
+    { incidenteId },
+    { refetchInterval: 5000 }
+  );
   const { data: usuariosProyecto } = trpc.seguridad.usuariosProyecto.useQuery(
     { proyectoId: incidenteData?.proyectoId || 0 },
     { enabled: !!incidenteData?.proyectoId }
@@ -2323,7 +2326,9 @@ function IncidenteChat({ incidenteId, incidenteInfo, onBack }: { incidenteId: nu
     textareaRef.current?.focus();
   };
 
+  // @mentions: solo seguristas, admin y superadmin
   const filteredUsers = (usuariosProyecto || []).filter((u: any) =>
+    ['segurista', 'admin', 'superadmin'].includes(u.role) &&
     u.name?.toLowerCase().includes(mentionFilter)
   ).slice(0, 5);
 

@@ -4641,9 +4641,9 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
               const usuariosProyecto = await db.getUsuariosByProyecto(incidente.proyectoId);
               const mentionedNames = mentions.map(m => m.replace('@', '').toLowerCase());
               const mentionedUsers = usuariosProyecto.filter((u: any) =>
-                mentionedNames.some(name => u.name?.toLowerCase().includes(name))
+                mentionedNames.some(name => (u.usuario?.name || u.name || '').toLowerCase().includes(name))
               );
-              const mentionedIds = mentionedUsers.map((u: any) => u.id).filter((uid: number) => uid !== ctx.user.id);
+              const mentionedIds = mentionedUsers.map((u: any) => u.usuario?.id || u.id).filter((uid: number) => uid !== ctx.user.id);
               if (mentionedIds.length > 0) {
                 const pushSubs = await db.getPushSubscriptionsByUsuarios(mentionedIds);
                 if (pushSubs.length > 0) {

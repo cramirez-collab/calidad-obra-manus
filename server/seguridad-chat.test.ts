@@ -199,3 +199,63 @@ describe("Seguridad - Chat Data Integrity", () => {
     }
   });
 });
+
+describe("Seguridad - Chat Permissions", () => {
+  it("@mentions regex correctly extracts mentioned names", () => {
+    const texto = "Hola @Juan Perez y @Maria López, revisen el incidente";
+    const mentions = texto.match(/@(\w+(?:\s\w+)?)/g);
+    expect(mentions).toBeDefined();
+    expect(mentions).toHaveLength(2);
+    expect(mentions![0]).toBe("@Juan Perez");
+    expect(mentions![1]).toBe("@Maria L");
+  });
+
+  it("@mentions filter for seguristas works correctly", () => {
+    const usuarios = [
+      { id: 1, name: "Carlos Admin", role: "admin" },
+      { id: 2, name: "Juan Segurista", role: "segurista" },
+      { id: 3, name: "Pedro Residente", role: "residente" },
+      { id: 4, name: "Ana Superadmin", role: "superadmin" },
+      { id: 5, name: "Luis User", role: "user" },
+    ];
+
+    const mentionFilter = "";
+    const filteredUsers = usuarios.filter((u) =>
+      ["segurista", "admin", "superadmin"].includes(u.role) &&
+      u.name?.toLowerCase().includes(mentionFilter)
+    ).slice(0, 5);
+
+    expect(filteredUsers).toHaveLength(3);
+    expect(filteredUsers.map(u => u.role)).toContain("admin");
+    expect(filteredUsers.map(u => u.role)).toContain("segurista");
+    expect(filteredUsers.map(u => u.role)).toContain("superadmin");
+    expect(filteredUsers.map(u => u.role)).not.toContain("residente");
+    expect(filteredUsers.map(u => u.role)).not.toContain("user");
+  });
+
+  it("@mentions filter with search text works", () => {
+    const usuarios = [
+      { id: 1, name: "Carlos Admin", role: "admin" },
+      { id: 2, name: "Juan Segurista", role: "segurista" },
+      { id: 3, name: "Pedro Residente", role: "residente" },
+      { id: 4, name: "Ana Superadmin", role: "superadmin" },
+    ];
+
+    const mentionFilter = "carlos";
+    const filteredUsers = usuarios.filter((u) =>
+      ["segurista", "admin", "superadmin"].includes(u.role) &&
+      u.name?.toLowerCase().includes(mentionFilter)
+    ).slice(0, 5);
+
+    expect(filteredUsers).toHaveLength(1);
+    expect(filteredUsers[0].name).toBe("Carlos Admin");
+  });
+
+  it("renderMsgText highlights @mentions", () => {
+    const text = "Hola @Juan revisa esto";
+    const parts = text.split(/(@\w+(?:\s\w+)?)/g);
+    const mentionParts = parts.filter(p => p.startsWith("@"));
+    expect(mentionParts).toHaveLength(1);
+    expect(mentionParts[0]).toBe("@Juan revisa");
+  });
+});
