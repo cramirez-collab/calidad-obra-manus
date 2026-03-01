@@ -4781,3 +4781,7 @@
 ## Mejoras Programa Semanal (Fase 7)
 - [x] Resumen ejecutivo mensual (4 semanas, eficiencia promedio, tendencia)
 - [x] Ranking de cumplimiento (quién entrega a tiempo vs tardío)
+
+## Mejoras Programa Semanal (Fase 8)
+- [x] Exportar ranking de cumplimiento a PDF
+- [x] Metas de eficiencia por usuario: tabla BD, configuración, alertas cuando no se alcance

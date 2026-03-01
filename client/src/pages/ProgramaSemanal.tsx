@@ -14,7 +14,7 @@ import {
   CalendarDays, Plus, Send, Scissors, Trash2, ChevronLeft, ChevronRight,
   Download, Upload, Image as ImageIcon, BarChart3, TrendingUp, Eye, Edit,
   X, Check, AlertTriangle, Clock, FileSpreadsheet, BookTemplate, GitCompare,
-  Save, FolderOpen, Copy, FileDown
+  Save, FolderOpen, Copy, FileDown, Target
 } from "lucide-react";
 
 // Helpers de fecha
@@ -74,7 +74,7 @@ type PlanoRow = {
 };
 
 // Vista principal
-type ViewMode = "list" | "create" | "detail" | "corte" | "eficiencia" | "plantillas" | "comparativa" | "resumen" | "ranking";
+type ViewMode = "list" | "create" | "detail" | "corte" | "eficiencia" | "plantillas" | "comparativa" | "resumen" | "ranking" | "metas";
 
 export default function ProgramaSemanal() {
   const { user } = useAuth();
@@ -255,6 +255,14 @@ export default function ProgramaSemanal() {
     />;
   }
 
+  if (view === "metas") {
+    return <MetasEficienciaView
+      proyectoId={selectedProjectId!}
+      usuarios={usuariosEspecialidad}
+      onBack={() => setView("list")}
+    />;
+  }
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -281,6 +289,9 @@ export default function ProgramaSemanal() {
           </Button>
           <Button size="sm" variant="outline" onClick={() => setView("ranking")}>
             <TrendingUp className="w-4 h-4 mr-1" /> Ranking
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setView("metas")}>
+            <Target className="w-4 h-4 mr-1" /> Metas
           </Button>
           <Button size="sm" onClick={() => { setPlantillaActividades(null); setView("create"); }}>
             <Plus className="w-4 h-4 mr-1" /> Nuevo Programa
@@ -2196,6 +2207,11 @@ function RankingCumplimientoView({ proyectoId, usuarios, onBack }: {
             </Select>
           </>
         )}
+        {data?.ranking && data.ranking.length > 0 && (
+          <Button size="sm" variant="outline" onClick={() => exportarRankingPDF(data.ranking, filtroTodo ? undefined : mes, filtroTodo ? undefined : anio)}>
+            <FileDown className="w-4 h-4 mr-1" /> Exportar PDF
+          </Button>
+        )}
       </div>
 
       {isLoading ? (
@@ -2318,6 +2334,309 @@ function RankingCumplimientoView({ proyectoId, usuarios, onBack }: {
             </CardContent>
           </Card>
         </>
+      )}
+    </div>
+  );
+}
+
+
+// ===== EXPORTAR RANKING A PDF =====
+function exportarRankingPDF(ranking: any[], mes?: number, anio?: number) {
+  const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const periodo = mes && anio ? `${meses[mes - 1]} ${anio}` : "Historial Completo";
+  
+  const rows = ranking.map((r: any, i: number) => `
+    <tr style="background:${i % 2 === 0 ? '#f9fafb' : '#fff'}">
+      <td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;font-weight:bold">${i + 1}</td>
+      <td style="padding:6px 10px;border:1px solid #e5e7eb">${r.nombre}</td>
+      <td style="padding:6px 10px;border:1px solid #e5e7eb">${r.especialidad || r.role || '-'}</td>
+      <td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center">${r.total}</td>
+      <td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;color:#16a34a">${r.aTiempo}</td>
+      <td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;color:#dc2626">${r.tarde}</td>
+      <td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;color:#6b7280">${r.pendiente}</td>
+      <td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;font-weight:bold;color:${r.pctATiempo >= 80 ? '#16a34a' : r.pctATiempo >= 50 ? '#ca8a04' : '#dc2626'}">${r.pctATiempo.toFixed(1)}%</td>
+      <td style="padding:6px 10px;border:1px solid #e5e7eb;text-align:center;font-weight:bold">${r.eficienciaPromedio != null ? r.eficienciaPromedio.toFixed(1) + '%' : '-'}</td>
+    </tr>
+  `).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Ranking de Cumplimiento</title>
+    <style>@page{size:landscape;margin:1.5cm}body{font-family:Arial,sans-serif;font-size:11px}
+    h1{text-align:center;color:#111;font-size:18px;margin-bottom:4px}
+    h2{text-align:center;color:#666;font-size:13px;margin-top:0;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th{background:#1e293b;color:white;padding:8px 10px;border:1px solid #334155;font-size:10px;text-transform:uppercase}
+    .footer{text-align:center;margin-top:20px;color:#999;font-size:9px}
+    .podium{display:flex;justify-content:center;gap:30px;margin:15px 0}
+    .podium-item{text-align:center;padding:10px 20px;border-radius:8px}
+    .gold{background:#fef3c7;border:2px solid #f59e0b}.silver{background:#f1f5f9;border:2px solid #94a3b8}.bronze{background:#fed7aa;border:2px solid #f97316}
+    </style></head><body>
+    <h1>Ranking de Cumplimiento — Programa Semanal</h1>
+    <h2>${periodo}</h2>
+    ${ranking.length >= 3 ? `<div class="podium">
+      <div class="podium-item silver"><div style="font-size:20px">🥈</div><div style="font-weight:bold">${ranking[1]?.nombre}</div><div>${ranking[1]?.pctATiempo.toFixed(1)}%</div></div>
+      <div class="podium-item gold"><div style="font-size:24px">🥇</div><div style="font-weight:bold">${ranking[0]?.nombre}</div><div>${ranking[0]?.pctATiempo.toFixed(1)}%</div></div>
+      <div class="podium-item bronze"><div style="font-size:20px">🥉</div><div style="font-weight:bold">${ranking[2]?.nombre}</div><div>${ranking[2]?.pctATiempo.toFixed(1)}%</div></div>
+    </div>` : ''}
+    <table><thead><tr>
+      <th>#</th><th>Nombre</th><th>Especialidad</th><th>Total</th><th>A Tiempo</th><th>Tarde</th><th>Pendiente</th><th>% Cumplimiento</th><th>Eficiencia Prom.</th>
+    </tr></thead><tbody>${rows}</tbody></table>
+    <div class="footer">Generado el ${new Date().toLocaleDateString('es-MX', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' })}</div>
+    </body></html>`;
+
+  const w = window.open('', '_blank');
+  if (w) { w.document.write(html); w.document.close(); setTimeout(() => w.print(), 500); }
+}
+
+// ===== METAS DE EFICIENCIA VIEW =====
+function MetasEficienciaView({ proyectoId, usuarios, onBack }: {
+  proyectoId: number;
+  usuarios: any[];
+  onBack: () => void;
+}) {
+  const utils = trpc.useUtils();
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [metaEf, setMetaEf] = useState(80);
+  const [metaCumpl, setMetaCumpl] = useState(80);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newUserId, setNewUserId] = useState<string>("");
+
+  const { data: metas, isLoading } = trpc.programaSemanal.getMetasEficiencia.useQuery(
+    { proyectoId },
+    { enabled: !!proyectoId }
+  );
+
+  const { data: alertasData } = trpc.programaSemanal.verificarAlertasMetas.useQuery(
+    { proyectoId },
+    { enabled: !!proyectoId }
+  );
+
+  const upsertMut = trpc.programaSemanal.upsertMetaEficiencia.useMutation({
+    onSuccess: () => {
+      utils.programaSemanal.getMetasEficiencia.invalidate();
+      utils.programaSemanal.verificarAlertasMetas.invalidate();
+      toast.success("Meta guardada");
+      setEditingUserId(null);
+      setShowAddForm(false);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const deleteMut = trpc.programaSemanal.deleteMetaEficiencia.useMutation({
+    onSuccess: () => {
+      utils.programaSemanal.getMetasEficiencia.invalidate();
+      utils.programaSemanal.verificarAlertasMetas.invalidate();
+      toast.success("Meta eliminada");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const alertas = alertasData?.alertas || [];
+  const metasList = metas || [];
+
+  // Usuarios sin meta configurada
+  const usuariosSinMeta = usuarios.filter(u => !metasList.some((m: any) => m.usuarioId === u.id));
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ChevronLeft className="w-4 h-4 mr-1" /> Volver
+        </Button>
+        <h2 className="text-lg font-bold flex items-center gap-2">
+          <Target className="w-5 h-5 text-emerald-600" />
+          Metas de Eficiencia por Usuario
+        </h2>
+      </div>
+
+      {/* Alertas activas */}
+      {alertas.length > 0 && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-red-700 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Alertas — Metas no alcanzadas (últimas 4 semanas)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {alertas.map((a: any, i: number) => (
+              <div key={i} className="flex items-center gap-2 text-sm">
+                <span className={`inline-block w-2 h-2 rounded-full ${a.tipo === 'eficiencia' ? 'bg-orange-500' : 'bg-red-500'}`} />
+                <span className="font-medium">{a.nombre}</span>
+                <span className="text-muted-foreground">—</span>
+                <span className="text-muted-foreground">
+                  {a.tipo === 'eficiencia' ? 'Eficiencia' : 'Cumplimiento'}: 
+                  <span className="font-bold text-red-600 ml-1">{a.actual}%</span>
+                  <span className="text-muted-foreground mx-1">/ meta:</span>
+                  <span className="font-bold">{a.meta}%</span>
+                  <span className="text-red-600 ml-1">(-{a.diferencia}%)</span>
+                </span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tabla de metas configuradas */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm">Metas Configuradas</CardTitle>
+            {!showAddForm && usuariosSinMeta.length > 0 && (
+              <Button size="sm" variant="outline" onClick={() => { setShowAddForm(true); setMetaEf(80); setMetaCumpl(80); setNewUserId(""); }}>
+                <Plus className="w-4 h-4 mr-1" /> Agregar Meta
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Formulario agregar */}
+          {showAddForm && (
+            <div className="bg-accent/30 rounded-lg p-3 mb-3 space-y-2">
+              <div className="flex gap-2 items-end flex-wrap">
+                <div className="flex-1 min-w-[200px]">
+                  <label className="text-xs text-muted-foreground">Usuario</label>
+                  <Select value={newUserId} onValueChange={setNewUserId}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Seleccionar usuario" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {usuariosSinMeta.map((u: any) => (
+                        <SelectItem key={u.id} value={String(u.id)}>{u.name} — {(u as any).especialidad || u.role}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-28">
+                  <label className="text-xs text-muted-foreground">Meta Eficiencia %</label>
+                  <Input type="number" min={0} max={100} value={metaEf} onChange={e => setMetaEf(Number(e.target.value))} className="h-8 text-xs" />
+                </div>
+                <div className="w-28">
+                  <label className="text-xs text-muted-foreground">Meta Cumplimiento %</label>
+                  <Input type="number" min={0} max={100} value={metaCumpl} onChange={e => setMetaCumpl(Number(e.target.value))} className="h-8 text-xs" />
+                </div>
+                <Button size="sm" disabled={!newUserId || upsertMut.isPending}
+                  onClick={() => upsertMut.mutate({ proyectoId, usuarioId: parseInt(newUserId), metaEficiencia: metaEf, metaCumplimiento: metaCumpl })}>
+                  <Check className="w-3 h-3 mr-1" /> Guardar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setShowAddForm(false)}>
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {isLoading ? (
+            <div className="animate-pulse space-y-2">
+              {[1,2,3].map(i => <div key={i} className="h-10 bg-muted rounded" />)}
+            </div>
+          ) : metasList.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No hay metas configuradas. Agrega una para empezar a monitorear.</p>
+          ) : (
+            <div className="space-y-1">
+              {/* Header */}
+              <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-2 py-1 border-b">
+                <div className="col-span-4">Usuario</div>
+                <div className="col-span-2 text-center">Meta Eficiencia</div>
+                <div className="col-span-2 text-center">Meta Cumplimiento</div>
+                <div className="col-span-2 text-center">Estado</div>
+                <div className="col-span-2 text-right">Acciones</div>
+              </div>
+              {metasList.map((meta: any) => {
+                const user = usuarios.find(u => u.id === meta.usuarioId);
+                const alerta = alertas.filter((a: any) => a.usuarioId === meta.usuarioId);
+                const isEditing = editingUserId === meta.usuarioId;
+
+                return (
+                  <div key={meta.id} className="grid grid-cols-12 gap-2 items-center px-2 py-2 rounded hover:bg-accent/20 text-sm">
+                    <div className="col-span-4 flex items-center gap-2 min-w-0">
+                      <span className="font-medium truncate">{user?.name || `Usuario #${meta.usuarioId}`}</span>
+                      <span className="text-xs text-muted-foreground truncate">{(user as any)?.especialidad || ''}</span>
+                    </div>
+                    <div className="col-span-2 text-center">
+                      {isEditing ? (
+                        <Input type="number" min={0} max={100} value={metaEf} onChange={e => setMetaEf(Number(e.target.value))} className="h-7 text-xs w-20 mx-auto" />
+                      ) : (
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">{meta.metaEficiencia}%</Badge>
+                      )}
+                    </div>
+                    <div className="col-span-2 text-center">
+                      {isEditing ? (
+                        <Input type="number" min={0} max={100} value={metaCumpl} onChange={e => setMetaCumpl(Number(e.target.value))} className="h-7 text-xs w-20 mx-auto" />
+                      ) : (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{meta.metaCumplimiento}%</Badge>
+                      )}
+                    </div>
+                    <div className="col-span-2 text-center">
+                      {alerta.length > 0 ? (
+                        <Badge variant="destructive" className="text-xs">
+                          <AlertTriangle className="w-3 h-3 mr-1" />
+                          {alerta.length} alerta{alerta.length > 1 ? 's' : ''}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                          <Check className="w-3 h-3 mr-1" /> OK
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="col-span-2 flex justify-end gap-1">
+                      {isEditing ? (
+                        <>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
+                            onClick={() => upsertMut.mutate({ proyectoId, usuarioId: meta.usuarioId, metaEficiencia: metaEf, metaCumplimiento: metaCumpl })}>
+                            <Check className="w-3 h-3 text-green-600" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingUserId(null)}>
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
+                            onClick={() => { setEditingUserId(meta.usuarioId); setMetaEf(meta.metaEficiencia); setMetaCumpl(meta.metaCumplimiento); }}>
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500"
+                            onClick={() => { if (confirm("¿Eliminar esta meta?")) deleteMut.mutate({ id: meta.id }); }}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Resumen visual */}
+      {metasList.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Resumen de Cumplimiento de Metas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="bg-green-50 rounded-lg p-3">
+                <div className="text-2xl font-bold text-green-700">
+                  {metasList.filter((m: any) => !alertas.some((a: any) => a.usuarioId === m.usuarioId)).length}
+                </div>
+                <div className="text-xs text-green-600">En meta</div>
+              </div>
+              <div className="bg-red-50 rounded-lg p-3">
+                <div className="text-2xl font-bold text-red-700">
+                  {new Set(alertas.map((a: any) => a.usuarioId)).size}
+                </div>
+                <div className="text-xs text-red-600">Bajo meta</div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <div className="text-2xl font-bold text-gray-700">{metasList.length}</div>
+                <div className="text-xs text-gray-600">Total configurados</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -1130,3 +1130,19 @@ export const programaPlantilla = mysqlTable("programa_plantilla", {
 
 export type ProgramaPlantilla = typeof programaPlantilla.$inferSelect;
 export type InsertProgramaPlantilla = typeof programaPlantilla.$inferInsert;
+
+/**
+ * Metas de eficiencia por usuario para programa semanal
+ */
+export const metaEficienciaUsuario = mysqlTable("meta_eficiencia_usuario", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  usuarioId: int("usuarioId").notNull(),
+  metaEficiencia: int("metaEficiencia").notNull().default(80), // % objetivo de eficiencia
+  metaCumplimiento: int("metaCumplimiento").notNull().default(80), // % objetivo de entrega a tiempo
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type MetaEficienciaUsuario = typeof metaEficienciaUsuario.$inferSelect;
+export type InsertMetaEficienciaUsuario = typeof metaEficienciaUsuario.$inferInsert;

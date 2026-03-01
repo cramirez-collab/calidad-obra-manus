@@ -51,6 +51,7 @@ import {
   programaActividad, InsertProgramaActividad,
   programaPlano, InsertProgramaPlano,
   programaPlantilla, InsertProgramaPlantilla,
+  metaEficienciaUsuario, InsertMetaEficienciaUsuario,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -7617,4 +7618,54 @@ export async function getComparativaSemanal(programaId1: number, programaId2: nu
     programa1: { ...p1, actividades: acts1 },
     programa2: { ...p2, actividades: acts2 },
   };
+}
+
+
+// ===== METAS DE EFICIENCIA POR USUARIO =====
+
+export async function getMetasEficiencia(proyectoId: number) {
+  const db = await getDb();
+  return db!.select().from(metaEficienciaUsuario)
+    .where(and(
+      eq(metaEficienciaUsuario.proyectoId, proyectoId),
+      eq(metaEficienciaUsuario.activo, true)
+    ));
+}
+
+export async function getMetaEficienciaByUsuario(proyectoId: number, usuarioId: number) {
+  const db = await getDb();
+  const rows = await db!.select().from(metaEficienciaUsuario)
+    .where(and(
+      eq(metaEficienciaUsuario.proyectoId, proyectoId),
+      eq(metaEficienciaUsuario.usuarioId, usuarioId),
+      eq(metaEficienciaUsuario.activo, true)
+    ))
+    .limit(1);
+  return rows[0] || null;
+}
+
+export async function upsertMetaEficiencia(data: { proyectoId: number; usuarioId: number; metaEficiencia: number; metaCumplimiento: number }) {
+  const db = await getDb();
+  const existing = await getMetaEficienciaByUsuario(data.proyectoId, data.usuarioId);
+  if (existing) {
+    await db!.update(metaEficienciaUsuario)
+      .set({ metaEficiencia: data.metaEficiencia, metaCumplimiento: data.metaCumplimiento })
+      .where(eq(metaEficienciaUsuario.id, existing.id));
+    return { ...existing, ...data };
+  } else {
+    const result = await db!.insert(metaEficienciaUsuario).values({
+      proyectoId: data.proyectoId,
+      usuarioId: data.usuarioId,
+      metaEficiencia: data.metaEficiencia,
+      metaCumplimiento: data.metaCumplimiento,
+    });
+    return { id: result[0].insertId, ...data };
+  }
+}
+
+export async function deleteMetaEficiencia(id: number) {
+  const db = await getDb();
+  await db!.update(metaEficienciaUsuario)
+    .set({ activo: false })
+    .where(eq(metaEficienciaUsuario.id, id));
 }

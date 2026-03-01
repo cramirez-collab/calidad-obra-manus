@@ -6012,6 +6012,81 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
 
         return { ranking };
       }),
+
+    // ===== METAS DE EFICIENCIA =====
+    getMetasEficiencia: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getMetasEficiencia(input.proyectoId);
+      }),
+
+    upsertMetaEficiencia: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        usuarioId: z.number(),
+        metaEficiencia: z.number().min(0).max(100),
+        metaCumplimiento: z.number().min(0).max(100),
+      }))
+      .mutation(async ({ input }) => {
+        return db.upsertMetaEficiencia(input);
+      }),
+
+    deleteMetaEficiencia: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteMetaEficiencia(input.id);
+        return { success: true };
+      }),
+
+    // Verificar alertas de metas no alcanzadas
+    verificarAlertasMetas: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        const metas = await db.getMetasEficiencia(input.proyectoId);
+        if (metas.length === 0) return { alertas: [] };
+
+        const result2 = await db.getProgramasSemanales(input.proyectoId);
+        const allProgramas = result2.programas;
+        // Últimas 4 semanas
+        const now = Date.now();
+        const fourWeeksAgo = now - 28 * 24 * 60 * 60 * 1000;
+        const recientes = allProgramas.filter((p: any) => Number(p.semanaInicio) >= fourWeeksAgo);
+
+        const alertas: { usuarioId: number; nombre: string; tipo: string; meta: number; actual: number; diferencia: number }[] = [];
+        const usuarios = await db.getUsuariosByProyecto(input.proyectoId);
+        const usuariosMap = new Map(usuarios.map((u: any) => [u.id, u]));
+
+        for (const meta of metas) {
+          const userProgs = recientes.filter((p: any) => p.usuarioId === meta.usuarioId);
+          if (userProgs.length === 0) continue;
+          const user = usuariosMap.get(meta.usuarioId);
+          const nombre = (user as any)?.name || `Usuario #${meta.usuarioId}`;
+
+          // Verificar eficiencia
+          const eficiencias = userProgs.filter((p: any) => p.eficienciaGlobal != null).map((p: any) => parseFloat(p.eficienciaGlobal));
+          if (eficiencias.length > 0) {
+            const promEf = eficiencias.reduce((s: number, e: number) => s + e, 0) / eficiencias.length;
+            if (promEf < meta.metaEficiencia) {
+              alertas.push({ usuarioId: meta.usuarioId, nombre, tipo: 'eficiencia', meta: meta.metaEficiencia, actual: Math.round(promEf * 10) / 10, diferencia: Math.round((meta.metaEficiencia - promEf) * 10) / 10 });
+            }
+          }
+
+          // Verificar cumplimiento de entrega
+          let aTiempo = 0;
+          for (const p of userProgs) {
+            const entrega = p.fechaEntrega ? new Date(p.fechaEntrega) : null;
+            const fin = new Date(Number(p.semanaFin));
+            const viernes = new Date(fin); viernes.setDate(viernes.getDate() - 2); viernes.setHours(23,59,59,999);
+            if (entrega && entrega <= viernes) aTiempo++;
+          }
+          const pctCumpl = userProgs.length > 0 ? (aTiempo / userProgs.length) * 100 : 0;
+          if (pctCumpl < meta.metaCumplimiento) {
+            alertas.push({ usuarioId: meta.usuarioId, nombre, tipo: 'cumplimiento', meta: meta.metaCumplimiento, actual: Math.round(pctCumpl * 10) / 10, diferencia: Math.round((meta.metaCumplimiento - pctCumpl) * 10) / 10 });
+          }
+        }
+
+        return { alertas };
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;
