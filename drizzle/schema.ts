@@ -1147,3 +1147,51 @@ export const metaEficienciaUsuario = mysqlTable("meta_eficiencia_usuario", {
 });
 export type MetaEficienciaUsuario = typeof metaEficienciaUsuario.$inferSelect;
 export type InsertMetaEficienciaUsuario = typeof metaEficienciaUsuario.$inferInsert;
+
+
+// ==================== MÓDULO DE PAGOS ====================
+
+/**
+ * Solicitudes de pago
+ */
+export const solicitudesPago = mysqlTable("solicitudes_pago", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  concepto: text("concepto").notNull(),
+  monto: decimal("monto", { precision: 12, scale: 2 }).notNull(),
+  moneda: varchar("moneda", { length: 10 }).notNull().default("MXN"),
+  proveedor: varchar("proveedor", { length: 255 }),
+  noFactura: varchar("noFactura", { length: 100 }),
+  notas: text("notas"),
+  // Status: borrador, pendiente, autorizado, rechazado, ejecutado, cancelado
+  statusPago: varchar("statusPago", { length: 30 }).notNull().default("pendiente"),
+  solicitanteId: int("solicitanteId").notNull(),
+  autorizadorId: int("autorizadorId"),
+  fechaAutorizacion: timestamp("fechaAutorizacion"),
+  fechaEjecucion: timestamp("fechaEjecucion"),
+  motivoRechazo: text("motivoRechazo"),
+  motivoCancelacion: text("motivoCancelacion"),
+  // Datos extraídos por IA del comprobante
+  datosExtraidosIA: json("datosExtraidosIA"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SolicitudPago = typeof solicitudesPago.$inferSelect;
+export type InsertSolicitudPago = typeof solicitudesPago.$inferInsert;
+
+/**
+ * Archivos adjuntos de solicitudes de pago (facturas, comprobantes, etc.)
+ */
+export const archivosPago = mysqlTable("archivos_pago", {
+  id: int("id").autoincrement().primaryKey(),
+  solicitudPagoId: int("solicitudPagoId").notNull(),
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  url: text("url").notNull(),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(),
+  mimeType: varchar("mimeType", { length: 100 }),
+  tamano: int("tamano"), // bytes
+  tipo: varchar("tipo", { length: 50 }).notNull().default("adjunto"), // adjunto, factura, comprobante
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ArchivoPago = typeof archivosPago.$inferSelect;
+export type InsertArchivoPago = typeof archivosPago.$inferInsert;

@@ -52,6 +52,8 @@ import {
   programaPlano, InsertProgramaPlano,
   programaPlantilla, InsertProgramaPlantilla,
   metaEficienciaUsuario, InsertMetaEficienciaUsuario,
+  solicitudesPago, InsertSolicitudPago,
+  archivosPago, InsertArchivoPago,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -7668,4 +7670,87 @@ export async function deleteMetaEficiencia(id: number) {
   await db!.update(metaEficienciaUsuario)
     .set({ activo: false })
     .where(eq(metaEficienciaUsuario.id, id));
+}
+
+
+// ==================== PAGOS ====================
+
+export async function listSolicitudesPago(proyectoId: number, filtros?: { status?: string; solicitanteId?: number }) {
+  const db = await getDb();
+  const conditions: any[] = [eq(solicitudesPago.proyectoId, proyectoId)];
+  if (filtros?.status) {
+    conditions.push(eq(solicitudesPago.statusPago, filtros.status));
+  }
+  if (filtros?.solicitanteId) {
+    conditions.push(eq(solicitudesPago.solicitanteId, filtros.solicitanteId));
+  }
+  return db!.select().from(solicitudesPago).where(and(...conditions)).orderBy(desc(solicitudesPago.createdAt));
+}
+
+export async function getSolicitudPago(id: number) {
+  const db = await getDb();
+  const rows = await db!.select().from(solicitudesPago).where(eq(solicitudesPago.id, id));
+  return rows[0] || null;
+}
+
+export async function createSolicitudPago(data: InsertSolicitudPago) {
+  const db = await getDb();
+  const result = await db!.insert(solicitudesPago).values(data);
+  return { id: result[0].insertId, ...data };
+}
+
+export async function updateSolicitudPago(id: number, data: Partial<InsertSolicitudPago>) {
+  const db = await getDb();
+  await db!.update(solicitudesPago).set(data).where(eq(solicitudesPago.id, id));
+  return getSolicitudPago(id);
+}
+
+export async function deleteSolicitudPago(id: number) {
+  const db = await getDb();
+  // Eliminar archivos asociados primero
+  await db!.delete(archivosPago).where(eq(archivosPago.solicitudPagoId, id));
+  await db!.delete(solicitudesPago).where(eq(solicitudesPago.id, id));
+}
+
+export async function listArchivosPago(solicitudPagoId: number) {
+  const db = await getDb();
+  return db!.select().from(archivosPago).where(eq(archivosPago.solicitudPagoId, solicitudPagoId)).orderBy(desc(archivosPago.createdAt));
+}
+
+export async function createArchivoPago(data: InsertArchivoPago) {
+  const db = await getDb();
+  const result = await db!.insert(archivosPago).values(data);
+  return { id: result[0].insertId, ...data };
+}
+
+export async function deleteArchivoPago(id: number) {
+  const db = await getDb();
+  const archivo = await db!.select().from(archivosPago).where(eq(archivosPago.id, id));
+  await db!.delete(archivosPago).where(eq(archivosPago.id, id));
+  return archivo[0] || null;
+}
+
+export async function getPagosStats(proyectoId: number) {
+  const db = await getDb();
+  const all = await db!.select().from(solicitudesPago).where(eq(solicitudesPago.proyectoId, proyectoId));
+  const total = all.reduce((sum, p) => sum + Number(p.monto || 0), 0);
+  const pendientes = all.filter(p => p.statusPago === 'pendiente');
+  const autorizados = all.filter(p => p.statusPago === 'autorizado');
+  const ejecutados = all.filter(p => p.statusPago === 'ejecutado');
+  const rechazados = all.filter(p => p.statusPago === 'rechazado');
+  const cancelados = all.filter(p => p.statusPago === 'cancelado');
+  return {
+    total,
+    totalCount: all.length,
+    pendientesCount: pendientes.length,
+    pendientesMonto: pendientes.reduce((s, p) => s + Number(p.monto || 0), 0),
+    autorizadosCount: autorizados.length,
+    autorizadosMonto: autorizados.reduce((s, p) => s + Number(p.monto || 0), 0),
+    ejecutadosCount: ejecutados.length,
+    ejecutadosMonto: ejecutados.reduce((s, p) => s + Number(p.monto || 0), 0),
+    rechazadosCount: rechazados.length,
+    rechazadosMonto: rechazados.reduce((s, p) => s + Number(p.monto || 0), 0),
+    canceladosCount: cancelados.length,
+    canceladosMonto: cancelados.reduce((s, p) => s + Number(p.monto || 0), 0),
+  };
 }

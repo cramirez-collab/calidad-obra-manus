@@ -6210,5 +6210,303 @@ Reglas:
         }
       }),
   }),
+
+  // ==================== PAGOS ====================
+  pagos: router({
+    stats: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getPagosStats(input.proyectoId);
+      }),
+
+    list: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        status: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        return db.listSolicitudesPago(input.proyectoId, { status: input.status });
+      }),
+
+    get: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const pago = await db.getSolicitudPago(input.id);
+        if (!pago) throw new TRPCError({ code: 'NOT_FOUND', message: 'Solicitud no encontrada' });
+        const archivos = await db.listArchivosPago(input.id);
+        return { ...pago, archivos };
+      }),
+
+    create: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        concepto: z.string().min(1),
+        monto: z.string().min(1),
+        moneda: z.string().default('MXN'),
+        proveedor: z.string().optional(),
+        noFactura: z.string().optional(),
+        notas: z.string().optional(),
+        datosExtraidosIA: z.any().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await db.createSolicitudPago({
+          ...input,
+          solicitanteId: ctx.user.id,
+          statusPago: 'pendiente',
+        });
+        // Notificación push a admins/supervisores
+        try {
+          const admins = await db.getUsersByRole('superadmin');
+          const supervisores = await db.getUsersByRole('supervisor');
+          const targets = [...admins, ...supervisores];
+          for (const admin of targets) {
+            const subs = await db.getPushSubscriptionsByUsuario(admin.id);
+            for (const sub of subs) {
+              pushService.sendPushNotification(
+                { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+                {
+                  title: 'Nueva Solicitud de Pago',
+                  body: `${ctx.user.name} solicita $${input.monto} - ${input.concepto}`,
+                  data: { url: '/pagos', tipo: 'pago_nuevo' },
+                }
+              ).catch(() => {});
+            }
+          }
+        } catch (e) { /* silent */ }
+        // Notificación in-app
+        try {
+          const admins = await db.getUsersByRole('superadmin');
+          for (const admin of admins) {
+            await db.createNotificacion({
+              usuarioId: admin.id,
+              proyectoId: input.proyectoId,
+              tipo: 'pago_nuevo',
+              titulo: 'Nueva Solicitud de Pago',
+              mensaje: `${ctx.user.name} solicita $${input.monto} MXN - ${input.concepto}`,
+            });
+          }
+        } catch (e) { /* silent */ }
+        return result;
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        concepto: z.string().optional(),
+        monto: z.string().optional(),
+        proveedor: z.string().optional(),
+        noFactura: z.string().optional(),
+        notas: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const pago = await db.getSolicitudPago(input.id);
+        if (!pago) throw new TRPCError({ code: 'NOT_FOUND' });
+        // Solo el solicitante o admin puede editar, y solo si está pendiente
+        const isAdmin = ['superadmin', 'admin'].includes(ctx.user.role);
+        if (pago.solicitanteId !== ctx.user.id && !isAdmin) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo el solicitante puede editar' });
+        }
+        if (!['pendiente', 'rechazado'].includes(pago.statusPago)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Solo se puede editar pagos pendientes o rechazados' });
+        }
+        const { id, ...data } = input;
+        return db.updateSolicitudPago(id, data);
+      }),
+
+    autorizar: supervisorProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const pago = await db.getSolicitudPago(input.id);
+        if (!pago) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (pago.statusPago !== 'pendiente') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Solo se puede autorizar pagos pendientes' });
+        }
+        const result = await db.updateSolicitudPago(input.id, {
+          statusPago: 'autorizado',
+          autorizadorId: ctx.user.id,
+          fechaAutorizacion: new Date(),
+        });
+        // Notificación al solicitante
+        try {
+          const subs = await db.getPushSubscriptionsByUsuario(pago.solicitanteId);
+          for (const sub of subs) {
+            pushService.sendPushNotification(
+              { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+              {
+                title: 'Pago Autorizado',
+                body: `Tu solicitud de $${pago.monto} ha sido autorizada por ${ctx.user.name}`,
+                data: { url: '/pagos', tipo: 'pago_autorizado' },
+              }
+            ).catch(() => {});
+          }
+          await db.createNotificacion({
+            usuarioId: pago.solicitanteId,
+            proyectoId: pago.proyectoId,
+              tipo: 'pago_autorizado',
+              titulo: 'Pago Autorizado',
+              mensaje: `Tu solicitud de $${pago.monto} MXN - ${pago.concepto} ha sido autorizada`,
+          });
+        } catch (e) { /* silent */ }
+        return result;
+      }),
+
+    rechazar: supervisorProcedure
+      .input(z.object({ id: z.number(), motivo: z.string().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        const pago = await db.getSolicitudPago(input.id);
+        if (!pago) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (pago.statusPago !== 'pendiente') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Solo se puede rechazar pagos pendientes' });
+        }
+        const result = await db.updateSolicitudPago(input.id, {
+          statusPago: 'rechazado',
+          autorizadorId: ctx.user.id,
+          motivoRechazo: input.motivo,
+        });
+        // Notificación al solicitante
+        try {
+          const subs = await db.getPushSubscriptionsByUsuario(pago.solicitanteId);
+          for (const sub of subs) {
+            pushService.sendPushNotification(
+              { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+              {
+                title: 'Pago Rechazado',
+                body: `Tu solicitud de $${pago.monto} fue rechazada: ${input.motivo}`,
+                data: { url: '/pagos', tipo: 'pago_rechazado' },
+              }
+            ).catch(() => {});
+          }
+          await db.createNotificacion({
+            usuarioId: pago.solicitanteId,
+            proyectoId: pago.proyectoId,
+              tipo: 'pago_rechazado',
+              titulo: 'Pago Rechazado',
+              mensaje: `Tu solicitud de $${pago.monto} MXN fue rechazada: ${input.motivo}`,
+          });
+        } catch (e) { /* silent */ }
+        return result;
+      }),
+
+    ejecutar: supervisorProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const pago = await db.getSolicitudPago(input.id);
+        if (!pago) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (pago.statusPago !== 'autorizado') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Solo se puede ejecutar pagos autorizados' });
+        }
+        return db.updateSolicitudPago(input.id, {
+          statusPago: 'ejecutado',
+          fechaEjecucion: new Date(),
+        });
+      }),
+
+    cancelar: protectedProcedure
+      .input(z.object({ id: z.number(), motivo: z.string().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        const pago = await db.getSolicitudPago(input.id);
+        if (!pago) throw new TRPCError({ code: 'NOT_FOUND' });
+        const isAdmin = ['superadmin', 'admin', 'supervisor'].includes(ctx.user.role);
+        if (pago.solicitanteId !== ctx.user.id && !isAdmin) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        if (['ejecutado', 'cancelado'].includes(pago.statusPago)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No se puede cancelar un pago ejecutado o ya cancelado' });
+        }
+        return db.updateSolicitudPago(input.id, {
+          statusPago: 'cancelado',
+          motivoCancelacion: input.motivo,
+        });
+      }),
+
+    eliminar: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteSolicitudPago(input.id);
+        return { success: true };
+      }),
+
+    // Upload de archivo adjunto
+    uploadArchivo: protectedProcedure
+      .input(z.object({
+        solicitudPagoId: z.number(),
+        nombre: z.string(),
+        base64: z.string(),
+        mimeType: z.string(),
+        tamano: z.number(),
+        tipo: z.string().default('adjunto'),
+      }))
+      .mutation(async ({ input }) => {
+        const buffer = Buffer.from(input.base64, 'base64');
+        const ext = input.nombre.split('.').pop() || 'bin';
+        const fileKey = `pagos/${input.solicitudPagoId}/${nanoid(12)}.${ext}`;
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        return db.createArchivoPago({
+          solicitudPagoId: input.solicitudPagoId,
+          nombre: input.nombre,
+          url,
+          fileKey,
+          mimeType: input.mimeType,
+          tamano: input.tamano,
+          tipo: input.tipo,
+        });
+      }),
+
+    deleteArchivo: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return db.deleteArchivoPago(input.id);
+      }),
+
+    // IA: Extraer datos de foto de comprobante
+    extraerDatosComprobante: protectedProcedure
+      .input(z.object({
+        imageBase64: z.string(),
+        mimeType: z.string().default('image/jpeg'),
+      }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: 'system',
+              content: `Eres un asistente que extrae datos de comprobantes de pago, facturas y recibos de construcción.
+Analiza la imagen y extrae los siguientes campos si están presentes:
+- concepto: descripción del pago
+- monto: cantidad numérica (solo el número, sin símbolos)
+- proveedor: nombre del proveedor o empresa
+- noFactura: número de factura o folio
+- fecha: fecha del comprobante (formato YYYY-MM-DD)
+- notas: cualquier otro dato relevante
+
+Responde SOLO con JSON válido con la estructura:
+{"concepto":"","monto":"","proveedor":"","noFactura":"","fecha":"","notas":""}
+Si un campo no se puede extraer, déjalo como cadena vacía.`
+            },
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: 'Extrae los datos de este comprobante de pago:' },
+                { type: 'image_url', image_url: { url: `data:${input.mimeType};base64,${input.imageBase64}`, detail: 'high' } },
+              ],
+            },
+          ],
+        });
+        try {
+          const content = response.choices[0]?.message?.content || '{}';
+          const cleanContent = typeof content === 'string' ? content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim() : '';
+          const datos = JSON.parse(cleanContent);
+          return {
+            concepto: String(datos.concepto || '').trim(),
+            monto: String(datos.monto || '').replace(/[^0-9.]/g, ''),
+            proveedor: String(datos.proveedor || '').trim(),
+            noFactura: String(datos.noFactura || '').trim(),
+            fecha: String(datos.fecha || '').trim(),
+            notas: String(datos.notas || '').trim(),
+          };
+        } catch (e) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No se pudieron extraer datos del comprobante' });
+        }
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

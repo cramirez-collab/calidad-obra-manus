@@ -4793,3 +4793,14 @@
 - [x] Agregar columna 'material' a la tabla de actividades y frontend
 - [x] Asistente IA para generar/completar actividades del programa semanal
 - [x] Datos de prueba basados en ejemplos reales del usuario (5 programas: Albañilería, RIEPSA, Hidráulica)
+
+## Mejoras Módulo de Pagos (Fase 10)
+- [x] Subir archivos adjuntos (facturas, comprobantes) para autorización de pago (S3)
+- [x] Captura de foto de comprobante con IA para extraer datos automáticamente
+- [x] Editar solicitud de pago existente
+- [x] Eliminar solicitud de pago
+- [x] Cancelar solicitud de pago
+- [x] Exportar histórico de pagos a Excel/CSV
+- [x] Notificaciones push al crear/autorizar/rechazar pagos
+- [x] Notificaciones in-app al crear/autorizar/rechazar pagos
+- [x] Botón de acceso rápido a Pagos en Bienvenida
