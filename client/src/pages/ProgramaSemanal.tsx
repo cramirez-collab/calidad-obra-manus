@@ -74,7 +74,7 @@ type PlanoRow = {
 };
 
 // Vista principal
-type ViewMode = "list" | "create" | "detail" | "corte" | "eficiencia" | "plantillas" | "comparativa";
+type ViewMode = "list" | "create" | "detail" | "corte" | "eficiencia" | "plantillas" | "comparativa" | "resumen" | "ranking";
 
 export default function ProgramaSemanal() {
   const { user } = useAuth();
@@ -239,6 +239,22 @@ export default function ProgramaSemanal() {
     />;
   }
 
+  if (view === "resumen") {
+    return <ResumenMensualView
+      proyectoId={selectedProjectId!}
+      usuarios={usuariosEspecialidad}
+      onBack={() => setView("list")}
+    />;
+  }
+
+  if (view === "ranking") {
+    return <RankingCumplimientoView
+      proyectoId={selectedProjectId!}
+      usuarios={usuariosEspecialidad}
+      onBack={() => setView("list")}
+    />;
+  }
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -259,6 +275,12 @@ export default function ProgramaSemanal() {
           </Button>
           <Button size="sm" variant="outline" onClick={() => setView("eficiencia")}>
             <BarChart3 className="w-4 h-4 mr-1" /> Eficiencia
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setView("resumen")}>
+            <FileSpreadsheet className="w-4 h-4 mr-1" /> Resumen
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setView("ranking")}>
+            <TrendingUp className="w-4 h-4 mr-1" /> Ranking
           </Button>
           <Button size="sm" onClick={() => { setPlantillaActividades(null); setView("create"); }}>
             <Plus className="w-4 h-4 mr-1" /> Nuevo Programa
@@ -1873,6 +1895,430 @@ function ComparativaView({ proyectoId, programas, usuarios, onBack }: {
           </Card>
         </>
       ) : null}
+    </div>
+  );
+}
+
+
+// ===== RESUMEN EJECUTIVO MENSUAL =====
+function ResumenMensualView({ proyectoId, usuarios, onBack }: {
+  proyectoId: number;
+  usuarios: any[];
+  onBack: () => void;
+}) {
+  const now = new Date();
+  const [mes, setMes] = useState(now.getMonth() + 1);
+  const [anio, setAnio] = useState(now.getFullYear());
+  const [filterUsuario, setFilterUsuario] = useState<string>("todos");
+
+  const { data, isLoading } = trpc.programaSemanal.resumenMensual.useQuery(
+    { proyectoId, mes, anio, usuarioId: filterUsuario !== "todos" ? Number(filterUsuario) : undefined },
+    { enabled: !!proyectoId }
+  );
+
+  const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ChevronLeft className="w-4 h-4" /> Volver
+        </Button>
+        <h2 className="text-lg font-bold flex-1 flex items-center gap-2">
+          <FileSpreadsheet className="w-5 h-5 text-blue-600" />
+          Resumen Ejecutivo Mensual
+        </h2>
+      </div>
+
+      {/* Selectores */}
+      <div className="flex gap-2 flex-wrap items-center">
+        <Select value={String(mes)} onValueChange={(v) => setMes(Number(v))}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {meses.map((m, i) => (
+              <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={String(anio)} onValueChange={(v) => setAnio(Number(v))}>
+          <SelectTrigger className="w-[120px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[2024, 2025, 2026, 2027].map(y => (
+              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterUsuario} onValueChange={setFilterUsuario}>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue placeholder="Todos los usuarios" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos los usuarios</SelectItem>
+            {usuarios.map((u: any) => (
+              <SelectItem key={u.id} value={String(u.id)}>{u.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => <Card key={i} className="animate-pulse"><CardContent className="p-6 h-24" /></Card>)}
+        </div>
+      ) : !data || data.totalProgramas === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center text-muted-foreground">
+            <FileSpreadsheet className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p className="font-medium">Sin programas en {meses[mes - 1]} {anio}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* KPIs */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold">{data.totalProgramas}</p>
+                <p className="text-xs text-muted-foreground">Programas</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className={`text-2xl font-bold ${data.eficienciaPromedio != null && data.eficienciaPromedio >= 80 ? "text-emerald-600" : data.eficienciaPromedio != null && data.eficienciaPromedio >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                  {data.eficienciaPromedio != null ? `${data.eficienciaPromedio.toFixed(1)}%` : "—"}
+                </p>
+                <p className="text-xs text-muted-foreground">Eficiencia Promedio</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className={`text-2xl font-bold ${data.tendencia >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                  {data.tendencia >= 0 ? "+" : ""}{data.tendencia.toFixed(1)}%
+                </p>
+                <p className="text-xs text-muted-foreground">Tendencia</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold text-emerald-600">{data.cumplimiento.aTiempo}</p>
+                <p className="text-xs text-muted-foreground">A Tiempo / {data.cumplimiento.totalEntregados + data.cumplimiento.pendientes}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Gráfico de cumplimiento */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Cumplimiento de Entregas</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                  <span className="text-sm">A tiempo ({data.cumplimiento.aTiempo})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                  <span className="text-sm">Tardío ({data.cumplimiento.tarde})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-gray-300" />
+                  <span className="text-sm">Pendiente ({data.cumplimiento.pendientes})</span>
+                </div>
+              </div>
+              {/* Barra de progreso */}
+              <div className="w-full h-8 rounded-full overflow-hidden flex bg-gray-100">
+                {data.cumplimiento.aTiempo > 0 && (
+                  <div className="bg-emerald-500 h-full flex items-center justify-center text-white text-xs font-bold"
+                    style={{ width: `${(data.cumplimiento.aTiempo / data.totalProgramas) * 100}%` }}>
+                    {Math.round((data.cumplimiento.aTiempo / data.totalProgramas) * 100)}%
+                  </div>
+                )}
+                {data.cumplimiento.tarde > 0 && (
+                  <div className="bg-red-500 h-full flex items-center justify-center text-white text-xs font-bold"
+                    style={{ width: `${(data.cumplimiento.tarde / data.totalProgramas) * 100}%` }}>
+                    {Math.round((data.cumplimiento.tarde / data.totalProgramas) * 100)}%
+                  </div>
+                )}
+                {data.cumplimiento.pendientes > 0 && (
+                  <div className="bg-gray-300 h-full flex items-center justify-center text-xs font-bold"
+                    style={{ width: `${(data.cumplimiento.pendientes / data.totalProgramas) * 100}%` }}>
+                    {Math.round((data.cumplimiento.pendientes / data.totalProgramas) * 100)}%
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Gráfico de eficiencia semanal */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Eficiencia por Semana</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="space-y-2">
+                {data.semanas.map((s: any, idx: number) => {
+                  const ef = s.eficiencia;
+                  const usuario = usuarios.find((u: any) => u.id === s.usuarioId);
+                  return (
+                    <div key={s.id} className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground w-24 shrink-0">
+                        S{idx + 1}: {formatDateShort(s.semanaInicio)}
+                      </span>
+                      <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden relative">
+                        {ef != null && (
+                          <div
+                            className={`h-full rounded-full transition-all ${ef >= 80 ? "bg-emerald-500" : ef >= 50 ? "bg-amber-500" : "bg-red-500"}`}
+                            style={{ width: `${Math.min(ef, 100)}%` }}
+                          />
+                        )}
+                        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">
+                          {ef != null ? `${ef.toFixed(1)}%` : "Sin corte"}
+                        </span>
+                      </div>
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${s.cumplimiento === "a_tiempo" ? "bg-emerald-100 text-emerald-800 border-emerald-300" : s.cumplimiento === "tarde" ? "bg-red-100 text-red-800 border-red-300" : "bg-gray-100 text-gray-600 border-gray-300"}`}>
+                        {s.cumplimiento === "a_tiempo" ? "✓" : s.cumplimiento === "tarde" ? "✗" : "—"}
+                      </span>
+                      {usuario && <span className="text-xs text-muted-foreground hidden sm:block">{usuario.name}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tendencia visual */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Tendencia del Mes</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4 justify-center">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">1ª mitad</p>
+                  {(() => {
+                    const conCorte = data.semanas.filter((s: any) => s.eficiencia != null);
+                    const mitad = Math.ceil(conCorte.length / 2);
+                    const primera = conCorte.slice(0, mitad);
+                    const ef1 = primera.length > 0 ? primera.reduce((s: number, x: any) => s + x.eficiencia, 0) / primera.length : 0;
+                    return <p className="text-xl font-bold">{ef1.toFixed(1)}%</p>;
+                  })()}
+                </div>
+                <div className={`text-3xl ${data.tendencia >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                  {data.tendencia >= 0 ? "→ ↑" : "→ ↓"}
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">2ª mitad</p>
+                  {(() => {
+                    const conCorte = data.semanas.filter((s: any) => s.eficiencia != null);
+                    const mitad = Math.ceil(conCorte.length / 2);
+                    const segunda = conCorte.slice(mitad);
+                    const ef2 = segunda.length > 0 ? segunda.reduce((s: number, x: any) => s + x.eficiencia, 0) / segunda.length : 0;
+                    return <p className="text-xl font-bold">{ef2.toFixed(1)}%</p>;
+                  })()}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ===== RANKING DE CUMPLIMIENTO =====
+function RankingCumplimientoView({ proyectoId, usuarios, onBack }: {
+  proyectoId: number;
+  usuarios: any[];
+  onBack: () => void;
+}) {
+  const now = new Date();
+  const [mes, setMes] = useState(now.getMonth() + 1);
+  const [anio, setAnio] = useState(now.getFullYear());
+  const [filtroTodo, setFiltroTodo] = useState(false);
+
+  const { data, isLoading } = trpc.programaSemanal.rankingCumplimiento.useQuery(
+    { proyectoId, mes: filtroTodo ? undefined : mes, anio: filtroTodo ? undefined : anio },
+    { enabled: !!proyectoId }
+  );
+
+  const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+  const getMedal = (idx: number) => {
+    if (idx === 0) return "🥇";
+    if (idx === 1) return "🥈";
+    if (idx === 2) return "🥉";
+    return `${idx + 1}`;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ChevronLeft className="w-4 h-4" /> Volver
+        </Button>
+        <h2 className="text-lg font-bold flex-1 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-amber-600" />
+          Ranking de Cumplimiento
+        </h2>
+      </div>
+
+      {/* Selectores */}
+      <div className="flex gap-2 flex-wrap items-center">
+        <Button size="sm" variant={filtroTodo ? "default" : "outline"} onClick={() => setFiltroTodo(!filtroTodo)}>
+          {filtroTodo ? "Todo el historial" : "Por mes"}
+        </Button>
+        {!filtroTodo && (
+          <>
+            <Select value={String(mes)} onValueChange={(v) => setMes(Number(v))}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {meses.map((m, i) => (
+                  <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={String(anio)} onValueChange={(v) => setAnio(Number(v))}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[2024, 2025, 2026, 2027].map(y => (
+                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => <Card key={i} className="animate-pulse"><CardContent className="p-6 h-16" /></Card>)}
+        </div>
+      ) : !data || data.ranking.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center text-muted-foreground">
+            <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p className="font-medium">Sin datos de cumplimiento</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Podio top 3 */}
+          {data.ranking.length >= 3 && (
+            <div className="grid grid-cols-3 gap-3">
+              {data.ranking.slice(0, 3).map((r: any, idx: number) => (
+                <Card key={r.userId} className={`${idx === 0 ? "border-amber-400 bg-amber-50/50" : idx === 1 ? "border-gray-300 bg-gray-50/50" : "border-orange-300 bg-orange-50/30"}`}>
+                  <CardContent className="p-3 text-center">
+                    <p className="text-2xl mb-1">{getMedal(idx)}</p>
+                    <p className="font-semibold text-sm truncate">{r.nombre}</p>
+                    <p className="text-xs text-muted-foreground">{r.especialidad || r.role}</p>
+                    <p className={`text-lg font-bold mt-1 ${r.pctATiempo >= 80 ? "text-emerald-600" : r.pctATiempo >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                      {r.pctATiempo.toFixed(0)}%
+                    </p>
+                    <p className="text-xs text-muted-foreground">a tiempo</p>
+                    {r.eficienciaPromedio != null && (
+                      <p className="text-xs mt-1">Ef: {r.eficienciaPromedio.toFixed(1)}%</p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Tabla completa */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Detalle por Usuario</CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 sm:p-4">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse min-w-[600px]">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left p-2 font-medium">#</th>
+                      <th className="text-left p-2 font-medium">Usuario</th>
+                      <th className="text-left p-2 font-medium">Especialidad</th>
+                      <th className="text-center p-2 font-medium">Total</th>
+                      <th className="text-center p-2 font-medium">A Tiempo</th>
+                      <th className="text-center p-2 font-medium">Tarde</th>
+                      <th className="text-center p-2 font-medium">Pendiente</th>
+                      <th className="text-center p-2 font-medium">% Cumpl.</th>
+                      <th className="text-center p-2 font-medium">Eficiencia</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.ranking.map((r: any, idx: number) => (
+                      <tr key={r.userId} className={`border-b ${idx < 3 ? "bg-amber-50/30" : ""}`}>
+                        <td className="p-2 font-medium">{getMedal(idx)}</td>
+                        <td className="p-2 font-medium">{r.nombre}</td>
+                        <td className="p-2 text-muted-foreground">{r.especialidad || r.role}</td>
+                        <td className="p-2 text-center">{r.total}</td>
+                        <td className="p-2 text-center">
+                          <span className="inline-flex items-center gap-1 text-emerald-700">
+                            <Check className="w-3 h-3" /> {r.aTiempo}
+                          </span>
+                        </td>
+                        <td className="p-2 text-center">
+                          <span className="inline-flex items-center gap-1 text-red-600">
+                            <AlertTriangle className="w-3 h-3" /> {r.tarde}
+                          </span>
+                        </td>
+                        <td className="p-2 text-center text-muted-foreground">{r.pendiente}</td>
+                        <td className="p-2 text-center">
+                          <span className={`font-bold ${r.pctATiempo >= 80 ? "text-emerald-600" : r.pctATiempo >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                            {r.pctATiempo.toFixed(0)}%
+                          </span>
+                        </td>
+                        <td className="p-2 text-center">
+                          {r.eficienciaPromedio != null ? (
+                            <span className={`font-bold ${r.eficienciaPromedio >= 80 ? "text-emerald-600" : r.eficienciaPromedio >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                              {r.eficienciaPromedio.toFixed(1)}%
+                            </span>
+                          ) : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Barra visual de cumplimiento por usuario */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Cumplimiento Visual</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-3">
+              {data.ranking.map((r: any) => (
+                <div key={r.userId} className="flex items-center gap-3">
+                  <span className="text-sm font-medium w-32 truncate shrink-0">{r.nombre}</span>
+                  <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden flex">
+                    {r.aTiempo > 0 && (
+                      <div className="bg-emerald-500 h-full" style={{ width: `${(r.aTiempo / r.total) * 100}%` }} />
+                    )}
+                    {r.tarde > 0 && (
+                      <div className="bg-red-500 h-full" style={{ width: `${(r.tarde / r.total) * 100}%` }} />
+                    )}
+                    {r.pendiente > 0 && (
+                      <div className="bg-gray-300 h-full" style={{ width: `${(r.pendiente / r.total) * 100}%` }} />
+                    )}
+                  </div>
+                  <span className="text-xs font-bold w-12 text-right">{r.pctATiempo.toFixed(0)}%</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

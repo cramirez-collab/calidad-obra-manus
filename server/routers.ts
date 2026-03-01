@@ -5886,6 +5886,132 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           },
         };
       }),
+
+    // Resumen ejecutivo mensual
+    resumenMensual: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        mes: z.number().min(1).max(12),
+        anio: z.number(),
+        usuarioId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const result = await db.getProgramasSemanales(input.proyectoId, { usuarioId: input.usuarioId });
+        const allProgramas = result.programas;
+        // Filtrar por mes/año
+        const programasMes = allProgramas.filter((p: any) => {
+          const d = new Date(p.semanaInicio);
+          return d.getMonth() + 1 === input.mes && d.getFullYear() === input.anio;
+        });
+
+        const semanas = programasMes.map((p: any) => {
+          const ef = p.eficienciaGlobal != null ? parseFloat(p.eficienciaGlobal) : null;
+          const entrega = p.fechaEntrega ? new Date(p.fechaEntrega) : null;
+          const fin = new Date(p.semanaFin);
+          const viernes = new Date(fin); viernes.setDate(viernes.getDate() - 2); viernes.setHours(23,59,59,999);
+          let cumplimiento: 'a_tiempo' | 'tarde' | 'pendiente' = 'pendiente';
+          if (entrega) cumplimiento = entrega <= viernes ? 'a_tiempo' : 'tarde';
+          return {
+            id: p.id,
+            semanaInicio: p.semanaInicio,
+            semanaFin: p.semanaFin,
+            status: p.status,
+            eficiencia: ef,
+            cumplimiento,
+            usuarioId: p.usuarioId,
+            fechaEntrega: p.fechaEntrega,
+          };
+        });
+
+        const conCorte = semanas.filter((s: any) => s.eficiencia != null);
+        const eficienciaPromedio = conCorte.length > 0
+          ? Math.round(conCorte.reduce((sum: number, s: any) => sum + s.eficiencia, 0) / conCorte.length * 100) / 100
+          : null;
+
+        const totalEntregados = semanas.filter((s: any) => s.cumplimiento !== 'pendiente').length;
+        const aTiempo = semanas.filter((s: any) => s.cumplimiento === 'a_tiempo').length;
+        const tarde = semanas.filter((s: any) => s.cumplimiento === 'tarde').length;
+        const pendientes = semanas.filter((s: any) => s.cumplimiento === 'pendiente').length;
+
+        // Tendencia: comparar primera mitad vs segunda mitad
+        const mitad = Math.ceil(conCorte.length / 2);
+        const primera = conCorte.slice(0, mitad);
+        const segunda = conCorte.slice(mitad);
+        const efPrimera = primera.length > 0 ? primera.reduce((s: number, x: any) => s + x.eficiencia, 0) / primera.length : 0;
+        const efSegunda = segunda.length > 0 ? segunda.reduce((s: number, x: any) => s + x.eficiencia, 0) / segunda.length : 0;
+        const tendencia = segunda.length > 0 && primera.length > 0 ? Math.round((efSegunda - efPrimera) * 100) / 100 : 0;
+
+        return {
+          mes: input.mes,
+          anio: input.anio,
+          semanas,
+          totalProgramas: semanas.length,
+          eficienciaPromedio,
+          tendencia,
+          cumplimiento: { aTiempo, tarde, pendientes, totalEntregados },
+        };
+      }),
+
+    // Ranking de cumplimiento por usuario
+    rankingCumplimiento: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        mes: z.number().min(1).max(12).optional(),
+        anio: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const result2 = await db.getProgramasSemanales(input.proyectoId);
+        const allProgramas = result2.programas;
+        // Filtrar por mes/año si se especifica
+        let programas = allProgramas;
+        if (input.mes && input.anio) {
+          programas = allProgramas.filter((p: any) => {
+            const d = new Date(p.semanaInicio);
+            return d.getMonth() + 1 === input.mes && d.getFullYear() === input.anio;
+          });
+        }
+
+        // Agrupar por usuario
+        const userMap = new Map<number, { aTiempo: number; tarde: number; pendiente: number; eficiencias: number[]; total: number }>();
+        for (const p of programas) {
+          if (!userMap.has(p.usuarioId)) userMap.set(p.usuarioId, { aTiempo: 0, tarde: 0, pendiente: 0, eficiencias: [], total: 0 });
+          const u = userMap.get(p.usuarioId)!;
+          u.total++;
+          const entrega = p.fechaEntrega ? new Date(p.fechaEntrega) : null;
+          const fin = new Date(p.semanaFin);
+          const viernes = new Date(fin); viernes.setDate(viernes.getDate() - 2); viernes.setHours(23,59,59,999);
+          if (!entrega || p.status === 'borrador') { u.pendiente++; }
+          else if (entrega <= viernes) { u.aTiempo++; }
+          else { u.tarde++; }
+          if (p.eficienciaGlobal != null) u.eficiencias.push(parseFloat(p.eficienciaGlobal));
+        }
+
+        // Obtener nombres de usuarios
+        const usuarios = await db.getUsuariosByProyecto(input.proyectoId);
+        const usuariosMap = new Map(usuarios.map((u: any) => [u.id, u]));
+
+        const ranking = Array.from(userMap.entries()).map(([userId, data]) => {
+          const user = usuariosMap.get(userId);
+          const efPromedio = data.eficiencias.length > 0
+            ? Math.round(data.eficiencias.reduce((s, e) => s + e, 0) / data.eficiencias.length * 100) / 100
+            : null;
+          const pctATiempo = data.total > 0 ? Math.round((data.aTiempo / data.total) * 10000) / 100 : 0;
+          return {
+            userId,
+            nombre: (user as any)?.name || `Usuario #${userId}`,
+            role: (user as any)?.role || '',
+            especialidad: (user as any)?.especialidad || '',
+            total: data.total,
+            aTiempo: data.aTiempo,
+            tarde: data.tarde,
+            pendiente: data.pendiente,
+            pctATiempo,
+            eficienciaPromedio: efPromedio,
+          };
+        }).sort((a, b) => b.pctATiempo - a.pctATiempo || (b.eficienciaPromedio || 0) - (a.eficienciaPromedio || 0));
+
+        return { ranking };
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

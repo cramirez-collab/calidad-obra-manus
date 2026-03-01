@@ -4777,3 +4777,7 @@
 
 ## Mejoras Programa Semanal (Fase 6)
 - [x] Indicador de cumplimiento de entrega (badge a tiempo/tardío) en lista y detalle
+
+## Mejoras Programa Semanal (Fase 7)
+- [x] Resumen ejecutivo mensual (4 semanas, eficiencia promedio, tendencia)
+- [x] Ranking de cumplimiento (quién entrega a tiempo vs tardío)
