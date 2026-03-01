@@ -4817,3 +4817,8 @@
 - [x] Incluir imágenes de plano en la exportación PDF del programa semanal (página completa con page-break)
 - [x] Herramienta de dibujo/rayado a mano sobre imágenes de plano en vista de programa (DrawableCanvas)
 - [x] Herramienta de dibujo/rayado a mano sobre imágenes de plano en vista de corte (DrawableCanvas)
+
+## Reportes PDF separados (Calidad + Eficiencia)
+- [x] Reporte de Calidad PDF (ítems OQC: aprobados, rechazados, pendientes por empresa/unidad/especialidad)
+- [x] Reporte de Eficiencia PDF por empresa (programas semanales: cumplimiento, actividades programadas vs ejecutadas)
+- [x] Botones azul con letra blanca en barra de acciones de Bienvenida para ambos reportes

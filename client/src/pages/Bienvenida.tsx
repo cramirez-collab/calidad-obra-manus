@@ -36,6 +36,8 @@ import {
   ShieldCheck,
   AlertTriangle,
   CalendarDays,
+  ClipboardCheck,
+  TrendingUp,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ZoomablePlano from "@/components/ZoomablePlano";
@@ -57,6 +59,8 @@ import { formatDate } from "@/lib/dateFormat";
 import { useProject } from "@/contexts/ProjectContext";
 
 import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlanosPDF";
+import { generarReporteCalidadPDF, type ReporteCalidadData } from "@/lib/reporteCalidadPDF";
+import { generarReporteEficienciaPDF, type ReporteEficienciaData } from "@/lib/reporteEficienciaPDF";
 import { openPDFPreview, forceDownloadPDF } from "@/lib/pdfDownload";
 // jsPDF se importa dinámicamente para evitar conflicto con React context
 // Heartbeat via tRPC en vez de socket para usuarios en línea
@@ -74,6 +78,8 @@ export default function Bienvenida() {
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
   const isSegurista = user?.role === 'segurista';
   const [generandoPDF, setGenerandoPDF] = useState(false);
+  const [generandoCalidad, setGenerandoCalidad] = useState(false);
+  const [generandoEficiencia, setGenerandoEficiencia] = useState(false);
 
   // Heartbeat: registra actividad cada 3 min (throttled en servidor a 1/min)
   const heartbeatMut = trpc.avisos.heartbeat.useMutation();
@@ -169,6 +175,72 @@ export default function Bienvenida() {
     }
   };
   
+  // Handler: Reporte de Calidad PDF
+  const handleReporteCalidad = async () => {
+    if (!selectedProjectId || generandoCalidad) return;
+    setGenerandoCalidad(true);
+    try {
+      toast.info("Generando Reporte de Calidad...");
+      const fetchBatch = async (proc: string, params: any) => {
+        const inputPayload = { "0": { json: params } };
+        const res = await fetch(`/api/trpc/${proc}?batch=1&input=${encodeURIComponent(JSON.stringify(inputPayload))}`, { credentials: 'include' });
+        const json = await res.json();
+        const batch = Array.isArray(json) ? json[0] : json;
+        return batch?.result?.data?.json || batch?.result?.data || null;
+      };
+      const pid = selectedProjectId;
+      const [stats, empresas, especialidades, defectosStats, penalizaciones, kpis, firmantes] = await Promise.all([
+        fetchBatch('estadisticas.general', { proyectoId: pid }),
+        fetchBatch('empresas.list', { proyectoId: pid }),
+        fetchBatch('especialidades.list', { proyectoId: pid }),
+        fetchBatch('estadisticas.defectos', { proyectoId: pid }),
+        fetchBatch('estadisticas.penalizaciones', { proyectoId: pid }),
+        fetchBatch('estadisticas.kpis', { proyectoId: pid }),
+        fetchBatch('estadisticas.firmantes', { proyectoId: pid }),
+      ]);
+      const nombre = proyectoActual?.nombre || "Proyecto";
+      await generarReporteCalidadPDF({
+        proyectoNombre: nombre,
+        stats, empresas, especialidades, defectosStats, penalizaciones, kpis, firmantes,
+      });
+      toast.success("Reporte de Calidad generado");
+    } catch (err) {
+      console.error("Error reporte calidad:", err);
+      toast.error("Error al generar reporte de calidad");
+    } finally {
+      setGenerandoCalidad(false);
+    }
+  };
+
+  // Handler: Reporte de Eficiencia por Empresa PDF
+  const handleReporteEficiencia = async () => {
+    if (!selectedProjectId || generandoEficiencia) return;
+    setGenerandoEficiencia(true);
+    try {
+      toast.info("Generando Reporte de Eficiencia...");
+      const inputPayload = { "0": { json: { proyectoId: selectedProjectId } } };
+      const res = await fetch(`/api/trpc/programaSemanal.reporteEficienciaPorEmpresa?batch=1&input=${encodeURIComponent(JSON.stringify(inputPayload))}`, { credentials: 'include' });
+      const json = await res.json();
+      const batch = Array.isArray(json) ? json[0] : json;
+      const data = batch?.result?.data?.json || batch?.result?.data || null;
+      if (!data) {
+        toast.error("No hay datos de eficiencia");
+        return;
+      }
+      const nombre = proyectoActual?.nombre || "Proyecto";
+      await generarReporteEficienciaPDF({
+        proyectoNombre: nombre,
+        ...data,
+      });
+      toast.success("Reporte de Eficiencia generado");
+    } catch (err) {
+      console.error("Error reporte eficiencia:", err);
+      toast.error("Error al generar reporte de eficiencia");
+    } finally {
+      setGenerandoEficiencia(false);
+    }
+  };
+
   // Avisos no leídos
   const { data: avisosNoLeidos } = trpc.avisos.noLeidos.useQuery(
     { proyectoId: selectedProjectId! },
@@ -1093,6 +1165,38 @@ export default function Bienvenida() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Reporte IA</TooltipContent>
+              </Tooltip>
+            )}
+            {/* Botón Reporte de Calidad PDF - Azul con letra blanca */}
+            {isAdmin && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    className="h-8 w-8 sm:h-10 sm:w-10 bg-blue-700 hover:bg-blue-800 text-white"
+                    onClick={handleReporteCalidad}
+                    disabled={generandoCalidad}
+                  >
+                    {generandoCalidad ? <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-white animate-spin" /> : <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5 text-white" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Reporte Calidad</TooltipContent>
+              </Tooltip>
+            )}
+            {/* Botón Reporte de Eficiencia por Empresa PDF - Azul con letra blanca */}
+            {isAdmin && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    className="h-8 w-8 sm:h-10 sm:w-10 bg-blue-700 hover:bg-blue-800 text-white"
+                    onClick={handleReporteEficiencia}
+                    disabled={generandoEficiencia}
+                  >
+                    {generandoEficiencia ? <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-white animate-spin" /> : <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-white" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Reporte Eficiencia</TooltipContent>
               </Tooltip>
             )}
             {/* Botón PDF Reporte Planos con Pines */}

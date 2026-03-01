@@ -5974,6 +5974,125 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         };
       }),
 
+    // Reporte de eficiencia por empresa para PDF
+    reporteEficienciaPorEmpresa: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        const result = await db.getProgramasSemanales(input.proyectoId, { limit: 500 });
+        const allProgramas = result.programas;
+        const empresasData = await db.getAllEmpresas(input.proyectoId);
+        const empresasMap = new Map(empresasData.map((e: any) => [e.id, e.nombre]));
+        
+        // Obtener usuarios del proyecto con su empresa
+        const usuariosProyecto = await db.getUsuariosByProyecto(input.proyectoId);
+        const userEmpresaMap = new Map<number, { nombre: string; empresaId: number | null; empresaNombre: string }>();
+        for (const up of usuariosProyecto) {
+          const u = up.usuario as any;
+          if (u) {
+            userEmpresaMap.set(u.id, {
+              nombre: u.name || u.email || `Usuario #${u.id}`,
+              empresaId: u.empresaId || null,
+              empresaNombre: u.empresaId ? (empresasMap.get(u.empresaId) || 'Sin empresa') : 'Sin empresa',
+            });
+          }
+        }
+        
+        // Agrupar programas por empresa del usuario
+        const porEmpresa = new Map<string, {
+          empresaNombre: string;
+          programas: number;
+          cortes: number;
+          eficiencias: number[];
+          aTiempo: number;
+          tarde: number;
+          pendiente: number;
+          usuarios: Set<number>;
+        }>();
+        
+        for (const p of allProgramas) {
+          const userInfo = userEmpresaMap.get(p.usuarioId);
+          const empNombre = userInfo?.empresaNombre || 'Sin empresa';
+          if (!porEmpresa.has(empNombre)) {
+            porEmpresa.set(empNombre, {
+              empresaNombre: empNombre,
+              programas: 0, cortes: 0, eficiencias: [], aTiempo: 0, tarde: 0, pendiente: 0, usuarios: new Set(),
+            });
+          }
+          const entry = porEmpresa.get(empNombre)!;
+          entry.programas++;
+          entry.usuarios.add(p.usuarioId);
+          if (p.status === 'corte_realizado') {
+            entry.cortes++;
+            if (p.eficienciaGlobal != null) entry.eficiencias.push(parseFloat(p.eficienciaGlobal as any));
+          }
+          const entrega = p.fechaEntrega ? new Date(p.fechaEntrega) : null;
+          const fin = new Date(p.semanaFin);
+          const viernes = new Date(fin); viernes.setDate(viernes.getDate() - 2); viernes.setHours(23,59,59,999);
+          if (!entrega || p.status === 'borrador') entry.pendiente++;
+          else if (entrega <= viernes) entry.aTiempo++;
+          else entry.tarde++;
+        }
+        
+        // Detalle por usuario
+        const porUsuario = new Map<number, {
+          nombre: string;
+          empresaNombre: string;
+          programas: number;
+          cortes: number;
+          eficiencias: number[];
+          aTiempo: number;
+          tarde: number;
+        }>();
+        
+        for (const p of allProgramas) {
+          if (!porUsuario.has(p.usuarioId)) {
+            const userInfo = userEmpresaMap.get(p.usuarioId);
+            porUsuario.set(p.usuarioId, {
+              nombre: userInfo?.nombre || `Usuario #${p.usuarioId}`,
+              empresaNombre: userInfo?.empresaNombre || 'Sin empresa',
+              programas: 0, cortes: 0, eficiencias: [], aTiempo: 0, tarde: 0,
+            });
+          }
+          const entry = porUsuario.get(p.usuarioId)!;
+          entry.programas++;
+          if (p.status === 'corte_realizado') {
+            entry.cortes++;
+            if (p.eficienciaGlobal != null) entry.eficiencias.push(parseFloat(p.eficienciaGlobal as any));
+          }
+          const entrega = p.fechaEntrega ? new Date(p.fechaEntrega) : null;
+          const fin = new Date(p.semanaFin);
+          const viernes = new Date(fin); viernes.setDate(viernes.getDate() - 2); viernes.setHours(23,59,59,999);
+          if (entrega && p.status !== 'borrador') {
+            if (entrega <= viernes) entry.aTiempo++;
+            else entry.tarde++;
+          }
+        }
+        
+        return {
+          porEmpresa: Array.from(porEmpresa.values()).map(e => ({
+            empresaNombre: e.empresaNombre,
+            totalProgramas: e.programas,
+            totalCortes: e.cortes,
+            eficienciaPromedio: e.eficiencias.length > 0 ? Math.round(e.eficiencias.reduce((s, v) => s + v, 0) / e.eficiencias.length * 100) / 100 : null,
+            aTiempo: e.aTiempo,
+            tarde: e.tarde,
+            pendiente: e.pendiente,
+            totalUsuarios: e.usuarios.size,
+          })).sort((a, b) => (b.eficienciaPromedio || 0) - (a.eficienciaPromedio || 0)),
+          porUsuario: Array.from(porUsuario.values()).map(u => ({
+            nombre: u.nombre,
+            empresaNombre: u.empresaNombre,
+            totalProgramas: u.programas,
+            totalCortes: u.cortes,
+            eficienciaPromedio: u.eficiencias.length > 0 ? Math.round(u.eficiencias.reduce((s, v) => s + v, 0) / u.eficiencias.length * 100) / 100 : null,
+            aTiempo: u.aTiempo,
+            tarde: u.tarde,
+          })).sort((a, b) => (b.eficienciaPromedio || 0) - (a.eficienciaPromedio || 0)),
+          totalProgramas: allProgramas.length,
+          totalCortes: allProgramas.filter((p: any) => p.status === 'corte_realizado').length,
+        };
+      }),
+
     // Ranking de cumplimiento por usuario
     rankingCumplimiento: protectedProcedure
       .input(z.object({
