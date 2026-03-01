@@ -4804,3 +4804,7 @@
 - [x] Notificaciones push al crear/autorizar/rechazar pagos
 - [x] Notificaciones in-app al crear/autorizar/rechazar pagos
 - [x] Botón de acceso rápido a Pagos en Bienvenida
+
+## Mejoras Programa Semanal (Fase 11)
+- [x] Permitir a superadmin/admin eliminar programas semanales (cualquier estado)
+- [x] Subir planos/gráficos de referencia en el programa semanal (fix upload S3)

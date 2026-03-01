@@ -386,6 +386,17 @@ export default function ProgramaSemanal() {
                           Entregado: {formatDateShort(p.fechaEntrega)}
                         </span>
                       )}
+                      {['admin', 'superadmin'].includes(user?.role || '') && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`¿Eliminar programa de ${formatWeekRange(p.semanaInicio, p.semanaFin)}? Esta acción no se puede deshacer.`)) {
+                              deleteMut.mutate({ id: p.id });
+                            }
+                          }}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -753,10 +764,11 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
       reader.onload = () => {
         const base64 = (reader.result as string).split(",")[1];
         setPlanos(prev => [...prev, {
-          nivel: "", tipo: "planta", titulo: file.name.replace(/\.[^.]+$/, ""),
+          nivel: "", tipo: "planta" as const, titulo: file.name.replace(/\.[^.]+$/, ""),
           imagenUrl: reader.result as string, // temp local preview
           orden: prev.length,
           _base64: base64, _mimeType: file.type,
+          _uploaded: false,
         } as any]);
       };
       reader.readAsDataURL(file);
@@ -769,22 +781,57 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
     setPlanos(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const handleSubmit = () => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
     const validActividades = actividades.filter(a => a.actividad.trim() && a.cantidadProgramada.trim());
     if (validActividades.length === 0) {
+      toast.error("Agrega al menos una actividad con nombre y cantidad.");
       return;
     }
-    onCreate({
-      proyectoId,
-      semanaInicio: monday.toISOString(),
-      semanaFin: sunday.toISOString(),
-      notas: notas || undefined,
-      actividades: validActividades.map((a, i) => ({ ...a, orden: i })),
-      planos: planos.map((p, i) => ({
-        nivel: p.nivel, tipo: p.tipo, titulo: p.titulo,
-        imagenUrl: p.imagenUrl, imagenKey: p.imagenKey, orden: i,
-      })).filter(p => p.imagenUrl && !p.imagenUrl.startsWith("data:")),
-    });
+    setSubmitting(true);
+    try {
+      // Subir planos pendientes a S3 primero
+      const uploadedPlanos: PlanoRow[] = [];
+      for (const p of planos) {
+        const planoAny = p as any;
+        if (planoAny._base64 && !planoAny._uploaded) {
+          // Subir a S3 vía uploadPlano mutation
+          const result = await uploadPlano.mutateAsync({
+            programaId: 0, // se reasigna en backend al crear
+            nivel: p.nivel || "",
+            tipo: p.tipo || "otro",
+            titulo: p.titulo || "",
+            base64: planoAny._base64,
+            mimeType: planoAny._mimeType || "image/jpeg",
+            orden: uploadedPlanos.length,
+          });
+          uploadedPlanos.push({
+            ...p,
+            imagenUrl: result.url,
+            imagenKey: result.key,
+            orden: uploadedPlanos.length,
+          });
+        } else if (p.imagenUrl && !p.imagenUrl.startsWith("data:")) {
+          uploadedPlanos.push({ ...p, orden: uploadedPlanos.length });
+        }
+      }
+      onCreate({
+        proyectoId,
+        semanaInicio: monday.toISOString(),
+        semanaFin: sunday.toISOString(),
+        notas: notas || undefined,
+        actividades: validActividades.map((a, i) => ({ ...a, orden: i })),
+        planos: uploadedPlanos.map((p, i) => ({
+          nivel: p.nivel, tipo: p.tipo, titulo: p.titulo,
+          imagenUrl: p.imagenUrl, imagenKey: p.imagenKey, orden: i,
+        })),
+      });
+    } catch (err: any) {
+      toast.error("Error subiendo planos: " + (err?.message || "Intenta de nuevo"));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -925,7 +972,7 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
             <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/30 transition-colors">
               <Upload className="w-6 h-6 text-muted-foreground mb-1" />
               <span className="text-xs text-muted-foreground">Subir plano</span>
-              <input type="file" accept="image/*" multiple className="hidden" onChange={handleUploadPlano} />
+              <input type="file" accept="image/*,application/pdf" multiple className="hidden" onChange={handleUploadPlano} />
             </label>
           </div>
         </CardContent>
@@ -934,8 +981,8 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
       {/* Acciones */}
       <div className="flex gap-2 justify-end">
         <Button variant="outline" onClick={onBack}>Cancelar</Button>
-        <Button onClick={handleSubmit} disabled={isLoading || actividades.filter(a => a.actividad.trim()).length === 0}>
-          {isLoading ? "Creando..." : "Crear Programa"}
+        <Button onClick={handleSubmit} disabled={isLoading || submitting || actividades.filter(a => a.actividad.trim()).length === 0}>
+          {submitting ? "Subiendo planos..." : isLoading ? "Creando..." : "Crear Programa"}
         </Button>
       </div>
     </div>
@@ -1108,7 +1155,8 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
   const isAdmin = ['admin', 'superadmin', 'supervisor'].includes(userRole);
   const canEdit = (isOwner || isAdmin) && data.status !== 'corte_realizado';
   const canCorte = (isOwner || isAdmin) && data.status === 'entregado';
-  const canDelete = (isOwner || isAdmin) && data.status === 'borrador';
+  const isAdminOrSuper = ['admin', 'superadmin'].includes(userRole);
+  const canDelete = isAdminOrSuper || (isOwner && data.status === 'borrador');
 
   const planoUrls = (data.planos || []).map((p: any) => p.imagenUrl);
 
@@ -1246,7 +1294,11 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
         </Button>
         <GuardarComoPlantillaBtn programaId={programaId} />
         {canDelete && (
-          <Button variant="destructive" size="sm" onClick={() => onDelete(programaId)}>
+          <Button variant="destructive" size="sm" onClick={() => {
+            if (confirm(`¿Eliminar este programa semanal${data.status !== 'borrador' ? ' (estado: ' + data.status + ')' : ''}? Esta acción no se puede deshacer.`)) {
+              onDelete(programaId);
+            }
+          }}>
             <Trash2 className="w-4 h-4 mr-1" /> Eliminar
           </Button>
         )}

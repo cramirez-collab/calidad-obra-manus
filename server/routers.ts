@@ -5636,17 +5636,22 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         return { ...programa, actividades, planos };
       }),
 
-    // Eliminar programa (solo borradores)
+    // Eliminar programa
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ ctx, input }) => {
         const programa = await db.getProgramaSemanalById(input.id);
         if (!programa) throw new TRPCError({ code: 'NOT_FOUND' });
-        if (programa.status !== 'borrador') {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Solo se pueden eliminar programas en borrador.' });
-        }
-        if (programa.usuarioId !== ctx.user.id && !['admin', 'superadmin'].includes(ctx.user.role || '')) {
-          throw new TRPCError({ code: 'FORBIDDEN' });
+        const isAdminOrSuper = ['admin', 'superadmin'].includes(ctx.user.role || '');
+        // Admin/superadmin pueden eliminar cualquier programa
+        // Otros usuarios solo pueden eliminar sus propios borradores
+        if (!isAdminOrSuper) {
+          if (programa.status !== 'borrador') {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Solo se pueden eliminar programas en borrador.' });
+          }
+          if (programa.usuarioId !== ctx.user.id) {
+            throw new TRPCError({ code: 'FORBIDDEN' });
+          }
         }
         await db.deleteProgramaSemanal(input.id);
         return { ok: true };
