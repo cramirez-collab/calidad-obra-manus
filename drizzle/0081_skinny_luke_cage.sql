@@ -1,0 +1,1 @@
+ALTER TABLE `programa_actividad` ADD `material` varchar(500);

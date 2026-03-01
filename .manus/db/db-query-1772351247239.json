@@ -1,0 +1,52 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'programa_actividad' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'programa_actividad' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "programaId"
+    },
+    {
+      "COLUMN_NAME": "especialidad"
+    },
+    {
+      "COLUMN_NAME": "actividad"
+    },
+    {
+      "COLUMN_NAME": "nivel"
+    },
+    {
+      "COLUMN_NAME": "area"
+    },
+    {
+      "COLUMN_NAME": "referenciaEje"
+    },
+    {
+      "COLUMN_NAME": "unidad_medida"
+    },
+    {
+      "COLUMN_NAME": "cantidadProgramada"
+    },
+    {
+      "COLUMN_NAME": "cantidadRealizada"
+    },
+    {
+      "COLUMN_NAME": "porcentajeAvance"
+    },
+    {
+      "COLUMN_NAME": "material"
+    },
+    {
+      "COLUMN_NAME": "orden"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nprogramaId\nespecialidad\nactividad\nnivel\narea\nreferenciaEje\nunidad_medida\ncantidadProgramada\ncantidadRealizada\nporcentajeAvance\nmaterial\norden\ncreatedAt\n",
+  "stderr": "",
+  "execution_time_ms": 360
+}

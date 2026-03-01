@@ -1,0 +1,80 @@
+{
+  "query": "SELECT p.id as proyectoId, p.nombre, u.id as userId, u.name, pu.rolEnProyecto FROM proyectos p LEFT JOIN proyecto_usuarios pu ON p.id = pu.proyectoId LEFT JOIN users u ON pu.usuarioId = u.id WHERE p.activo = 1 AND p.nombre LIKE '%Hidalma%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT p.id as proyectoId, p.nombre, u.id as userId, u.name, pu.rolEnProyecto FROM proyectos p LEFT JOIN proyecto_usuarios pu ON p.id = pu.proyectoId LEFT JOIN users u ON pu.usuarioId = u.id WHERE p.activo = 1 AND p.nombre LIKE '%Hidalma%' LIMIT 10;",
+  "rows": [
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1",
+      "name": "Carlos Ramirez",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "540085",
+      "name": "Julian Rodríguez Ramírez",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "721649",
+      "name": "Estefany Sanchez",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "rolEnProyecto": "residente"
+    }
+  ],
+  "messages": [],
+  "stdout": "proyectoId\tnombre\tuserId\tname\trolEnProyecto\n1\tHidalma \t1\tCarlos Ramirez\tadmin\n1\tHidalma \t540085\tJulian Rodríguez Ramírez\tadmin\n1\tHidalma \t721649\tEstefany Sanchez\tadmin\n1\tHidalma \tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tresidente\n",
+  "stderr": "",
+  "execution_time_ms": 352
+}

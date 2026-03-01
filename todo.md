@@ -4788,3 +4788,8 @@
 
 ## Icono Programa Semanal en Bienvenida
 - [x] Agregar icono de Programa Semanal en la segunda fila de accesos rápidos de Bienvenida
+
+## Mejoras Programa Semanal (Fase 9) - IA y Material
+- [x] Agregar columna 'material' a la tabla de actividades y frontend
+- [x] Asistente IA para generar/completar actividades del programa semanal
+- [x] Datos de prueba basados en ejemplos reales del usuario (5 programas: Albañilería, RIEPSA, Hidráulica)

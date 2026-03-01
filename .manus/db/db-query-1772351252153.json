@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COLUMN_NAME, COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'programa_actividad' AND COLUMN_NAME LIKE '%uni%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT COLUMN_NAME, COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'programa_actividad' AND COLUMN_NAME LIKE '%uni%';",
+  "rows": [
+    {
+      "COLUMN_NAME": "unidad_medida",
+      "COLUMN_TYPE": "enum('m','m2','m3','ml','pza','kg','lt','jgo','lote','otro')"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tCOLUMN_TYPE\nunidad_medida\tenum('m','m2','m3','ml','pza','kg','lt','jgo','lote','otro')\n",
+  "stderr": "",
+  "execution_time_ms": 365
+}

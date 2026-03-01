@@ -1,0 +1,150 @@
+{
+  "query": "SELECT p.id as proyectoId, p.nombre, u.id as userId, u.name, pu.rolEnProyecto FROM proyectos p JOIN proyecto_usuarios pu ON p.id = pu.proyectoId JOIN users u ON pu.usuarioId = u.id WHERE p.activo = 1 AND pu.rolEnProyecto IN ('residente', 'jefe_residente', 'admin') ORDER BY p.id, pu.rolEnProyecto LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT p.id as proyectoId, p.nombre, u.id as userId, u.name, pu.rolEnProyecto FROM proyectos p JOIN proyecto_usuarios pu ON p.id = pu.proyectoId JOIN users u ON pu.usuarioId = u.id WHERE p.activo = 1 AND pu.rolEnProyecto IN ('residente', 'jefe_residente', 'admin') ORDER BY p.id, pu.rolEnProyecto LIMIT 20;",
+  "rows": [
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "540085",
+      "name": "Julian Rodríguez Ramírez",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "7890028",
+      "name": "Pablo Galindo",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "721649",
+      "name": "Estefany Sanchez",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1",
+      "name": "Carlos Ramirez",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13800304",
+      "name": "Juan Pablo Gonzalez",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1470115",
+      "name": "Katy Orozco ",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13801096",
+      "name": "Daniel García",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "781860",
+      "name": "Omar Palencia",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4200419",
+      "name": "Rafael Manriquez",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1470083",
+      "name": "Saul Tovar",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1470095",
+      "name": "Eduardo Rodriguez ",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4351962",
+      "name": "Juan Ruiz",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13801073",
+      "name": "Angel Muñoz",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1530090",
+      "name": "Genaro Solis",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1530106",
+      "name": "Jesús Contreras",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1470059",
+      "name": "Jairo Briseño",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13800294",
+      "name": "Mary Carmen Galindo",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13530022",
+      "name": "Victor Gonzalez",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4201178",
+      "name": "Esteban Guerrero ",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4351934",
+      "name": "Jesus Ferrer",
+      "rolEnProyecto": "residente"
+    }
+  ],
+  "messages": [],
+  "stdout": "proyectoId\tnombre\tuserId\tname\trolEnProyecto\n1\tHidalma \t540085\tJulian Rodríguez Ramírez\tadmin\n1\tHidalma \t7890028\tPablo Galindo\tadmin\n1\tHidalma \t721649\tEstefany Sanchez\tadmin\n1\tHidalma \t1\tCarlos Ramirez\tadmin\n1\tHidalma \t13800304\tJuan Pablo Gonzalez\tresidente\n1\tHidalma \t1470115\tKaty Orozco \tresidente\n1\tHidalma \t13801096\tDaniel García\tresidente\n1\tHidalma \t781860\tOmar Palencia\tresidente\n1\tHidalma \t4200419\tRafael Manriquez\tresidente\n1\tHidalma \t1470083\tSaul Tovar\tresidente\n1\tHidalma \t1470095\tEduardo Rodriguez \tresidente\n1\tHidalma \t4351962\tJuan Ruiz\tresidente\n1\tHidalma \t13801073\tAngel Muñoz\tresidente\n1\tHidalma \t1530090\tGenaro Solis\tresidente\n1\tHidalma \t1530106\tJesús Contreras\tresidente\n1\tHidalma \t1470059\tJairo Briseño\tresidente\n1\tHidalma \t13800294\tMary Carmen Galindo\tresidente\n1\tHidalma \t13530022\tVictor Gonzalez\tresidente\n1\tHidalma \t4201178\tEsteban Guerrero \tresidente\n1\tHidalma \t4351934\tJesus Ferrer\tresidente\n",
+  "stderr": "",
+  "execution_time_ms": 378
+}

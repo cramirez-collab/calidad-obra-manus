@@ -1,0 +1,642 @@
+{
+  "query": "SELECT p.id as proyectoId, p.nombre, u.id as userId, u.name, u.role, pu.rolEnProyecto FROM proyectos p LEFT JOIN proyecto_usuarios pu ON p.id = pu.proyectoId LEFT JOIN users u ON pu.usuarioId = u.id WHERE p.activo = 1 ORDER BY p.id, u.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT p.id as proyectoId, p.nombre, u.id as userId, u.name, u.role, pu.rolEnProyecto FROM proyectos p LEFT JOIN proyecto_usuarios pu ON p.id = pu.proyectoId LEFT JOIN users u ON pu.usuarioId = u.id WHERE p.activo = 1 ORDER BY p.id, u.id;",
+  "rows": [
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "role": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "role": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "role": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "role": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "role": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "role": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "role": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "role": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "NULL",
+      "name": "NULL",
+      "role": "NULL",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1",
+      "name": "Carlos Ramirez",
+      "role": "superadmin",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "540085",
+      "name": "Julian Rodríguez Ramírez",
+      "role": "admin",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "721649",
+      "name": "Estefany Sanchez",
+      "role": "admin",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "721666",
+      "name": "Ing.Daniel Vazquez",
+      "role": "supervisor",
+      "rolEnProyecto": "supervisor"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "781860",
+      "name": "Omar Palencia",
+      "role": "supervisor",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1410108",
+      "name": "Karen Navith",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1410178",
+      "name": "Natalia Diaz",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1470049",
+      "name": "Esteban Guerrero ",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1470059",
+      "name": "Jairo Briseño",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1470083",
+      "name": "Saul Tovar",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1470095",
+      "name": "Eduardo Rodriguez ",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1470115",
+      "name": "Katy Orozco ",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1530050",
+      "name": "Zaira Alvarez",
+      "role": "desarrollador",
+      "rolEnProyecto": "supervisor"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1530056",
+      "name": "Marco López",
+      "role": "desarrollador",
+      "rolEnProyecto": "supervisor"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1530063",
+      "name": "Andres Quiroz",
+      "role": "desarrollador",
+      "rolEnProyecto": "supervisor"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1530070",
+      "name": "Xitlali Reyes",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1530085",
+      "name": "Pablo Mercado",
+      "role": "residente",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1530090",
+      "name": "Genaro Solis",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1530106",
+      "name": "Jesús Contreras",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "1650044",
+      "name": "Jorge Esquivel",
+      "role": "supervisor",
+      "rolEnProyecto": "supervisor"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4200419",
+      "name": "Rafael Manriquez",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4201178",
+      "name": "Esteban Guerrero ",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4351934",
+      "name": "Jesus Ferrer",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4351962",
+      "name": "Juan Ruiz",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4352044",
+      "name": "Mayra Perez",
+      "role": "segurista",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4352184",
+      "name": "Juan Javier Morales",
+      "role": "segurista",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4357159",
+      "name": "Eduardo Rubicel ",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4357176",
+      "name": "Gustavo Orozco",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "4357204",
+      "name": "Gerardo Rojas",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "5130888",
+      "name": "Jesus Contreras",
+      "role": "supervisor",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "7681577",
+      "name": "Paola Mora",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "7890028",
+      "name": "Pablo Galindo",
+      "role": "admin",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "9330025",
+      "name": "Andres Quiroz",
+      "role": "desarrollador",
+      "rolEnProyecto": "desarrollador"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "10920068",
+      "name": "Eduardo González",
+      "role": "segurista",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "10920071",
+      "name": "Mary Galindo",
+      "role": "segurista",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "11130033",
+      "name": "Cintya K",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "11700013",
+      "name": "Cynthia Montoya",
+      "role": "segurista",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "11730003",
+      "name": "Barbara Daniela Aguado Rocha",
+      "role": "segurista",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "11730004",
+      "name": "Guillermo Sanchez Erape",
+      "role": "segurista",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "11730005",
+      "name": "Isabel Estrada Hernandez",
+      "role": "segurista",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "11730006",
+      "name": "Miguel Angel Padilla Castillo",
+      "role": "segurista",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "11730007",
+      "name": "Raymundo Ivan Aguilar Lopez",
+      "role": "segurista",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "11730008",
+      "name": "JP Gonzalez Rolfe",
+      "role": "segurista",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13530022",
+      "name": "Victor Gonzalez",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13800253",
+      "name": "Barbara Aguado",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13800256",
+      "name": "Guillermo Sanchez",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13800265",
+      "name": "Bryan Gonzalez",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13800276",
+      "name": "Isabel Estrada",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13800283",
+      "name": "Hugo Armando Ortiz",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13800287",
+      "name": "Angel Padilla",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13800290",
+      "name": "Raymundo Aguilar",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13800294",
+      "name": "Mary Carmen Galindo",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13800304",
+      "name": "Juan Pablo Gonzalez",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13800873",
+      "name": "Fernando Mojica",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13801050",
+      "name": "Amalio Mayto",
+      "role": "segurista",
+      "rolEnProyecto": "segurista"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13801073",
+      "name": "Angel Muñoz",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "13801096",
+      "name": "Daniel García",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "14400068",
+      "name": "Edgar Romo",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "1",
+      "nombre": "Hidalma ",
+      "userId": "14400070",
+      "name": "Edgar Romo",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "150001",
+      "nombre": "Mayas Habitat",
+      "userId": "1",
+      "name": "Carlos Ramirez",
+      "role": "superadmin",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "150001",
+      "nombre": "Mayas Habitat",
+      "userId": "2160018",
+      "name": "Ximena Becerril ",
+      "role": "supervisor",
+      "rolEnProyecto": "supervisor"
+    },
+    {
+      "proyectoId": "150001",
+      "nombre": "Mayas Habitat",
+      "userId": "2160022",
+      "name": "Gerardo Hurtado ",
+      "role": "supervisor",
+      "rolEnProyecto": "supervisor"
+    },
+    {
+      "proyectoId": "150001",
+      "nombre": "Mayas Habitat",
+      "userId": "2160064",
+      "name": "Nayibe Cardenas",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "150001",
+      "nombre": "Mayas Habitat",
+      "userId": "4200419",
+      "name": "Rafael Manriquez",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "150001",
+      "nombre": "Mayas Habitat",
+      "userId": "7140780",
+      "name": "Laura Neri",
+      "role": "admin",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "150001",
+      "nombre": "Mayas Habitat",
+      "userId": "7140802",
+      "name": "Marlon Sanchez ",
+      "role": "supervisor",
+      "rolEnProyecto": "supervisor"
+    },
+    {
+      "proyectoId": "150001",
+      "nombre": "Mayas Habitat",
+      "userId": "7140833",
+      "name": "Julian Rodriguez ",
+      "role": "admin",
+      "rolEnProyecto": "admin"
+    },
+    {
+      "proyectoId": "150001",
+      "nombre": "Mayas Habitat",
+      "userId": "8340021",
+      "name": "Vareli",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "150001",
+      "nombre": "Mayas Habitat",
+      "userId": "8340027",
+      "name": "Rafael Manriquez",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    },
+    {
+      "proyectoId": "150001",
+      "nombre": "Mayas Habitat",
+      "userId": "8340076",
+      "name": "Carla Hernandez",
+      "role": "residente",
+      "rolEnProyecto": "residente"
+    }
+  ],
+  "messages": [],
+  "stdout": "proyectoId\tnombre\tuserId\tname\trole\trolEnProyecto\n1\tHidalma \tNULL\tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tNULL\tresidente\n1\tHidalma \tNULL\tNULL\tNULL\tresidente\n1\tHidalma \t1\tCarlos Ramirez\tsuperadmin\tadmin\n1\tHidalma \t540085\tJulian Rodríguez Ramírez\tadmin\tadmin\n1\tHidalma \t721649\tEstefany Sanchez\tadmin\tadmin\n1\tHidalma \t721666\tIng.Daniel Vazquez\tsupervisor\tsupervisor\n1\tHidalma \t781860\tOmar Palencia\tsupervisor\tresidente\n1\tHidalma \t1410108\tKaren Navith\tresidente\tresidente\n1\tHidalma \t1410178\tNatalia Diaz\tresidente\tresidente\n1\tHidalma \t1470049\tEsteban Guerrero \tresidente\tresidente\n1\tHidalma \t1470059\tJairo Briseño\tresidente\tresidente\n1\tHidalma \t1470083\tSaul Tovar\tresidente\tresidente\n1\tHidalma \t1470095\tEduardo Rodriguez \tresidente\tresidente\n1\tHidalma \t1470115\tKaty Orozco \tresidente\tresidente\n1\tHidalma \t1530050\tZaira Alvarez\tdesarrollador\tsupervisor\n1\tHidalma \t1530056\tMarco López\tdesarrollador\tsupervisor\n1\tHidalma \t1530063\tAndres Quiroz\tdesarrollador\tsupervisor\n1\tHidalma \t1530070\tXitlali Reyes\tresidente\tresidente\n1\tHidalma \t1530085\tPablo Mercado\tresidente\tsegurista\n1\tHidalma \t1530090\tGenaro Solis\tresidente\tresidente\n1\tHidalma \t1530106\tJesús Contreras\tresidente\tresidente\n1\tHidalma \t1650044\tJorge Esquivel\tsupervisor\tsupervisor\n1\tHidalma \t4200419\tRafael Manriquez\tresidente\tresidente\n1\tHidalma \t4201178\tEsteban Guerrero \tresidente\tresidente\n1\tHidalma \t4351934\tJesus Ferrer\tresidente\tresidente\n1\tHidalma \t4351962\tJuan Ruiz\tresidente\tresidente\n1\tHidalma \t4352044\tMayra Perez\tsegurista\tsegurista\n1\tHidalma \t4352184\tJuan Javier Morales\tsegurista\tsegurista\n1\tHidalma \t4357159\tEduardo Rubicel \tresidente\tresidente\n1\tHidalma \t4357176\tGustavo Orozco\tresidente\tresidente\n1\tHidalma \t4357204\tGerardo Rojas\tresidente\tresidente\n1\tHidalma \t5130888\tJesus Contreras\tsupervisor\tresidente\n1\tHidalma \t7681577\tPaola Mora\tresidente\tresidente\n1\tHidalma \t7890028\tPablo Galindo\tadmin\tadmin\n1\tHidalma \t9330025\tAndres Quiroz\tdesarrollador\tdesarrollador\n1\tHidalma \t10920068\tEduardo González\tsegurista\tsegurista\n1\tHidalma \t10920071\tMary Galindo\tsegurista\tsegurista\n1\tHidalma \t11130033\tCintya K\tresidente\tresidente\n1\tHidalma \t11700013\tCynthia Montoya\tsegurista\tsegurista\n1\tHidalma \t11730003\tBarbara Daniela Aguado Rocha\tsegurista\tsegurista\n1\tHidalma \t11730004\tGuillermo Sanchez Erape\tsegurista\tsegurista\n1\tHidalma \t11730005\tIsabel Estrada Hernandez\tsegurista\tsegurista\n1\tHidalma \t11730006\tMiguel Angel Padilla Castillo\tsegurista\tsegurista\n1\tHidalma \t11730007\tRaymundo Ivan Aguilar Lopez\tsegurista\tsegurista\n1\tHidalma \t11730008\tJP Gonzalez Rolfe\tsegurista\tsegurista\n1\tHidalma \t13530022\tVictor Gonzalez\tresidente\tresidente\n1\tHidalma \t13800253\tBarbara Aguado\tresidente\tresidente\n1\tHidalma \t13800256\tGuillermo Sanchez\tresidente\tresidente\n1\tHidalma \t13800265\tBryan Gonzalez\tresidente\tresidente\n1\tHidalma \t13800276\tIsabel Estrada\tresidente\tresidente\n1\tHidalma \t13800283\tHugo Armando Ortiz\tresidente\tresidente\n1\tHidalma \t13800287\tAngel Padilla\tresidente\tresidente\n1\tHidalma \t13800290\tRaymundo Aguilar\tresidente\tresidente\n1\tHidalma \t13800294\tMary Carmen Galindo\tresidente\tresidente\n1\tHidalma \t13800304\tJuan Pablo Gonzalez\tresidente\tresidente\n1\tHidalma \t13800873\tFernando Mojica\tresidente\tresidente\n1\tHidalma \t13801050\tAmalio Mayto\tsegurista\tsegurista\n1\tHidalma \t13801073\tAngel Muñoz\tresidente\tresidente\n1\tHidalma \t13801096\tDaniel García\tresidente\tresidente\n1\tHidalma \t14400068\tEdgar Romo\tresidente\tresidente\n1\tHidalma \t14400070\tEdgar Romo\tresidente\tresidente\n150001\tMayas Habitat\t1\tCarlos Ramirez\tsuperadmin\tadmin\n150001\tMayas Habitat\t2160018\tXimena Becerril \tsupervisor\tsupervisor\n150001\tMayas Habitat\t2160022\tGerardo Hurtado \tsupervisor\tsupervisor\n150001\tMayas Habitat\t2160064\tNayibe Cardenas\tresidente\tresidente\n150001\tMayas Habitat\t4200419\tRafael Manriquez\tresidente\tresidente\n150001\tMayas Habitat\t7140780\tLaura Neri\tadmin\tadmin\n150001\tMayas Habitat\t7140802\tMarlon Sanchez \tsupervisor\tsupervisor\n150001\tMayas Habitat\t7140833\tJulian Rodriguez \tadmin\tadmin\n150001\tMayas Habitat\t8340021\tVareli\tresidente\tresidente\n150001\tMayas Habitat\t8340027\tRafael Manriquez\tresidente\tresidente\n150001\tMayas Habitat\t8340076\tCarla Hernandez\tresidente\tresidente\n",
+  "stderr": "",
+  "execution_time_ms": 397
+}

@@ -5362,6 +5362,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           referenciaEje: z.string().optional(),
           unidad: z.enum(['m', 'm2', 'm3', 'ml', 'pza', 'kg', 'lt', 'jgo', 'lote', 'otro']),
           cantidadProgramada: z.string(), // decimal as string
+          material: z.string().optional(),
           orden: z.number(),
         })),
         planos: z.array(z.object({
@@ -5404,6 +5405,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
               referenciaEje: a.referenciaEje,
               unidad: a.unidad,
               cantidadProgramada: a.cantidadProgramada,
+              material: a.material,
               orden: a.orden,
             }))
           );
@@ -5494,6 +5496,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           referenciaEje: z.string().optional(),
           unidad: z.enum(['m', 'm2', 'm3', 'ml', 'pza', 'kg', 'lt', 'jgo', 'lote', 'otro']),
           cantidadProgramada: z.string(),
+          material: z.string().optional(),
           orden: z.number(),
         })),
         planos: z.array(z.object({
@@ -5530,6 +5533,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
               referenciaEje: a.referenciaEje,
               unidad: a.unidad,
               cantidadProgramada: a.cantidadProgramada,
+              material: a.material,
               orden: a.orden,
             }))
           );
@@ -6086,6 +6090,124 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         }
 
         return { alertas };
+      }),
+
+    // ===== ASISTENTE IA =====
+    aiGenerarActividades: protectedProcedure
+      .input(z.object({
+        descripcion: z.string().optional(),
+        imagenUrl: z.string().optional(),
+        especialidad: z.string().optional(),
+        contexto: z.string().optional(), // Actividades existentes como contexto
+      }))
+      .mutation(async ({ input }) => {
+        const { descripcion, imagenUrl, especialidad, contexto } = input;
+        if (!descripcion && !imagenUrl) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Proporciona una descripción o imagen.' });
+        }
+
+        const systemPrompt = `Eres un asistente experto en programación de obra para construcción de edificios residenciales en México.
+Tu tarea es generar actividades para un programa semanal de trabajo.
+
+Reglas:
+- Genera actividades realistas de construcción con datos concretos
+- Cada actividad debe tener: especialidad, actividad (descripción corta), nivel (ej: N10, N11, PB), area, referenciaEje (ej: A-C / 1-4), unidad de medida (m, m2, m3, ml, pza, kg, lt, jgo, lote, otro), cantidadProgramada (número realista), y material (material principal requerido)
+- Las unidades de medida SOLO pueden ser: m, m2, m3, ml, pza, kg, lt, jgo, lote, otro
+- Usa nomenclatura mexicana estándar de construcción
+- Si se proporciona una imagen de un programa existente, extrae las actividades tal como aparecen
+- Si se proporciona una descripción, genera actividades coherentes
+- Responde SOLO con el JSON, sin texto adicional`;
+
+        const userParts: any[] = [];
+
+        if (imagenUrl) {
+          userParts.push({
+            type: 'image_url',
+            image_url: { url: imagenUrl, detail: 'high' },
+          });
+          userParts.push({
+            type: 'text',
+            text: 'Extrae todas las actividades de esta imagen de programa semanal de obra. Incluye especialidad, actividad, nivel, área, eje de referencia, unidad, cantidad programada y material para cada renglón visible.',
+          });
+        }
+
+        if (descripcion) {
+          userParts.push({
+            type: 'text',
+            text: `Genera actividades para el siguiente programa semanal:\n${descripcion}${especialidad ? `\nEspecialidad principal: ${especialidad}` : ''}`,
+          });
+        }
+
+        if (contexto) {
+          userParts.push({
+            type: 'text',
+            text: `Contexto - actividades ya existentes en el programa (no las repitas, complementa):\n${contexto}`,
+          });
+        }
+
+        const response = await invokeLLM({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userParts.length === 1 && userParts[0].type === 'text' ? userParts[0].text : userParts },
+          ],
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'actividades_programa',
+              strict: true,
+              schema: {
+                type: 'object',
+                properties: {
+                  actividades: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        especialidad: { type: 'string', description: 'Especialidad o trade (ej: Albañilería, Inst. Eléctrica)' },
+                        actividad: { type: 'string', description: 'Descripción corta de la actividad' },
+                        nivel: { type: 'string', description: 'Nivel del edificio (ej: N10, PB, Azotea)' },
+                        area: { type: 'string', description: 'Área de trabajo (ej: Dptos, Pasillo, Baños)' },
+                        referenciaEje: { type: 'string', description: 'Ejes de referencia (ej: A-C / 1-4)' },
+                        unidad: { type: 'string', description: 'Unidad de medida: m, m2, m3, ml, pza, kg, lt, jgo, lote, otro' },
+                        cantidadProgramada: { type: 'number', description: 'Cantidad programada para la semana' },
+                        material: { type: 'string', description: 'Material principal requerido' },
+                      },
+                      required: ['especialidad', 'actividad', 'nivel', 'area', 'referenciaEje', 'unidad', 'cantidadProgramada', 'material'],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ['actividades'],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+
+        const content = response.choices?.[0]?.message?.content;
+        if (!content || typeof content !== 'string') {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No se obtuvo respuesta del asistente IA.' });
+        }
+
+        try {
+          const parsed = JSON.parse(content);
+          // Validar y normalizar unidades
+          const validUnits = ['m', 'm2', 'm3', 'ml', 'pza', 'kg', 'lt', 'jgo', 'lote', 'otro'];
+          const actividades = (parsed.actividades || []).map((a: any, i: number) => ({
+            especialidad: String(a.especialidad || '').trim(),
+            actividad: String(a.actividad || '').trim(),
+            nivel: String(a.nivel || '').trim(),
+            area: String(a.area || '').trim(),
+            referenciaEje: String(a.referenciaEje || '').trim(),
+            unidad: validUnits.includes(a.unidad) ? a.unidad : 'otro',
+            cantidadProgramada: String(Math.max(0, Number(a.cantidadProgramada) || 0)),
+            material: String(a.material || '').trim(),
+            orden: i,
+          }));
+          return { actividades };
+        } catch (e) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error al procesar respuesta del asistente IA.' });
+        }
       }),
   }),
 });

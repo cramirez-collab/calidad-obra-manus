@@ -1,0 +1,16 @@
+{
+  "query": "SHOW TABLES LIKE '%proy%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SHOW TABLES LIKE '%proy%';",
+  "rows": [
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (%proy%)": "proyecto_usuarios"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (%proy%)": "proyectos"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (%proy%)\nproyecto_usuarios\nproyectos\n",
+  "stderr": "",
+  "execution_time_ms": 356
+}

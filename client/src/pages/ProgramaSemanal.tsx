@@ -14,7 +14,7 @@ import {
   CalendarDays, Plus, Send, Scissors, Trash2, ChevronLeft, ChevronRight,
   Download, Upload, Image as ImageIcon, BarChart3, TrendingUp, Eye, Edit,
   X, Check, AlertTriangle, Clock, FileSpreadsheet, BookTemplate, GitCompare,
-  Save, FolderOpen, Copy, FileDown, Target
+  Save, FolderOpen, Copy, FileDown, Target, Sparkles, Wand2, Loader2, Camera
 } from "lucide-react";
 
 // Helpers de fecha
@@ -59,6 +59,7 @@ type ActividadRow = {
   cantidadProgramada: string;
   cantidadRealizada?: string;
   porcentajeAvance?: string;
+  material?: string;
   orden: number;
   id?: number;
 };
@@ -442,6 +443,269 @@ function StatusBadge({ status }: { status: string }) {
   return <Badge variant={c.variant} className="text-xs">{c.label}</Badge>;
 }
 
+// ===== ASISTENTE IA =====
+function AIAssistantPanel({ actividades, onAddActividades }: {
+  actividades: ActividadRow[];
+  onAddActividades: (acts: ActividadRow[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<'texto' | 'imagen'>('texto');
+  const [descripcion, setDescripcion] = useState('');
+  const [especialidad, setEspecialidad] = useState('');
+  const [imagenPreview, setImagenPreview] = useState<string | null>(null);
+  const [imagenBase64, setImagenBase64] = useState<string | null>(null);
+  const [imagenMime, setImagenMime] = useState<string>('');
+  const [resultado, setResultado] = useState<ActividadRow[] | null>(null);
+  const [seleccionadas, setSeleccionadas] = useState<Set<number>>(new Set());
+
+  const aiMutation = trpc.programaSemanal.aiGenerarActividades.useMutation({
+    onSuccess: (data) => {
+      const acts: ActividadRow[] = data.actividades.map((a: any, i: number) => ({
+        especialidad: a.especialidad,
+        actividad: a.actividad,
+        nivel: a.nivel,
+        area: a.area,
+        referenciaEje: a.referenciaEje,
+        unidad: a.unidad as any,
+        cantidadProgramada: a.cantidadProgramada,
+        material: a.material || '',
+        orden: i,
+      }));
+      setResultado(acts);
+      setSeleccionadas(new Set(acts.map((_, i) => i)));
+      toast.success(`${acts.length} actividades generadas por IA`);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setImagenPreview(dataUrl);
+      setImagenBase64(dataUrl.split(',')[1]);
+      setImagenMime(file.type);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleGenerar = () => {
+    const contexto = actividades.filter(a => a.actividad.trim()).length > 0
+      ? actividades.filter(a => a.actividad.trim()).map(a => `${a.especialidad}: ${a.actividad} (${a.nivel}, ${a.cantidadProgramada} ${a.unidad})`).join('\n')
+      : undefined;
+
+    if (mode === 'imagen' && imagenPreview) {
+      aiMutation.mutate({
+        imagenUrl: imagenPreview,
+        especialidad: especialidad || undefined,
+        contexto,
+      });
+    } else if (mode === 'texto' && descripcion.trim()) {
+      aiMutation.mutate({
+        descripcion: descripcion.trim(),
+        especialidad: especialidad || undefined,
+        contexto,
+      });
+    } else {
+      toast.error(mode === 'imagen' ? 'Sube una imagen primero' : 'Escribe una descripción');
+    }
+  };
+
+  const handleAgregar = () => {
+    if (!resultado) return;
+    const selected = resultado.filter((_, i) => seleccionadas.has(i));
+    if (selected.length === 0) {
+      toast.error('Selecciona al menos una actividad');
+      return;
+    }
+    onAddActividades(selected);
+    toast.success(`${selected.length} actividades agregadas al programa`);
+    setResultado(null);
+    setDescripcion('');
+    setImagenPreview(null);
+    setOpen(false);
+  };
+
+  const toggleSeleccion = (idx: number) => {
+    setSeleccionadas(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx); else next.add(idx);
+      return next;
+    });
+  };
+
+  if (!open) {
+    return (
+      <Card className="border-dashed border-2 border-purple-300 bg-purple-50/30 dark:bg-purple-950/10">
+        <CardContent className="p-4">
+          <button
+            onClick={() => setOpen(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-purple-700 dark:text-purple-300 hover:text-purple-900 transition-colors"
+          >
+            <Sparkles className="w-5 h-5" />
+            Asistente IA — Generar actividades desde texto o imagen
+          </button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-purple-300 bg-purple-50/20 dark:bg-purple-950/10">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2 text-purple-700 dark:text-purple-300">
+            <Sparkles className="w-4 h-4" /> Asistente IA
+          </CardTitle>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setOpen(false); setResultado(null); }}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 space-y-3">
+        {/* Mode toggle */}
+        <div className="flex gap-2">
+          <Button
+            variant={mode === 'texto' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => { setMode('texto'); setResultado(null); }}
+            className={mode === 'texto' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+          >
+            <Wand2 className="w-3 h-3 mr-1" /> Desde texto
+          </Button>
+          <Button
+            variant={mode === 'imagen' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => { setMode('imagen'); setResultado(null); }}
+            className={mode === 'imagen' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+          >
+            <Camera className="w-3 h-3 mr-1" /> Desde imagen
+          </Button>
+        </div>
+
+        {/* Especialidad filter */}
+        <Input
+          value={especialidad}
+          onChange={e => setEspecialidad(e.target.value)}
+          placeholder="Especialidad (opcional, ej: Albañilería, Inst. Eléctrica)"
+          className="h-8 text-sm"
+        />
+
+        {mode === 'texto' ? (
+          <div className="space-y-2">
+            <Textarea
+              value={descripcion}
+              onChange={e => setDescripcion(e.target.value)}
+              placeholder={`Describe las actividades que necesitas programar, por ejemplo:\n\n"Pegado de block en niveles N10 y N11, departamentos A-C ejes 1-4. También necesito cimbrado de losa en N12 y colocación de piso cerámico en N10."`}
+              rows={4}
+              className="text-sm"
+            />
+            <p className="text-xs text-muted-foreground">Describe las actividades en lenguaje natural. La IA generará la tabla con especialidad, nivel, área, ejes, unidad, cantidad y material.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {imagenPreview ? (
+              <div className="relative">
+                <img src={imagenPreview} alt="Programa" className="w-full max-h-64 object-contain rounded-lg border" />
+                <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7"
+                  onClick={() => { setImagenPreview(null); setImagenBase64(null); }}>
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-purple-300 rounded-lg cursor-pointer hover:bg-purple-50/50 transition-colors">
+                <Camera className="w-8 h-8 text-purple-400 mb-2" />
+                <span className="text-sm text-purple-600 font-medium">Subir foto de programa</span>
+                <span className="text-xs text-muted-foreground mt-1">Toma foto a un programa impreso o en pantalla</span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              </label>
+            )}
+            <p className="text-xs text-muted-foreground">Sube una foto de un programa semanal existente. La IA extraerá las actividades automáticamente.</p>
+          </div>
+        )}
+
+        {/* Generar button */}
+        <Button
+          onClick={handleGenerar}
+          disabled={aiMutation.isPending || (mode === 'texto' ? !descripcion.trim() : !imagenPreview)}
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+        >
+          {aiMutation.isPending ? (
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generando actividades...</>
+          ) : (
+            <><Sparkles className="w-4 h-4 mr-2" /> Generar actividades con IA</>
+          )}
+        </Button>
+
+        {/* Resultados */}
+        {resultado && resultado.length > 0 && (
+          <div className="space-y-2 mt-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-purple-700 dark:text-purple-300">
+                {resultado.length} actividades generadas
+              </p>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="sm" className="text-xs h-7"
+                  onClick={() => setSeleccionadas(new Set(resultado.map((_, i) => i)))}>
+                  Todas
+                </Button>
+                <Button variant="ghost" size="sm" className="text-xs h-7"
+                  onClick={() => setSeleccionadas(new Set())}>
+                  Ninguna
+                </Button>
+              </div>
+            </div>
+            <div className="max-h-64 overflow-y-auto border rounded-lg">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-purple-100 dark:bg-purple-900/30">
+                  <tr>
+                    <th className="p-1.5 w-8"></th>
+                    <th className="text-left p-1.5">Especialidad</th>
+                    <th className="text-left p-1.5">Actividad</th>
+                    <th className="text-left p-1.5">Nivel</th>
+                    <th className="text-left p-1.5">Unidad</th>
+                    <th className="text-right p-1.5">Cant.</th>
+                    <th className="text-left p-1.5">Material</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resultado.map((a, idx) => (
+                    <tr key={idx}
+                      className={`border-t cursor-pointer transition-colors ${seleccionadas.has(idx) ? 'bg-purple-50 dark:bg-purple-900/20' : 'opacity-50'}`}
+                      onClick={() => toggleSeleccion(idx)}
+                    >
+                      <td className="p-1.5 text-center">
+                        <input type="checkbox" checked={seleccionadas.has(idx)} onChange={() => toggleSeleccion(idx)}
+                          className="rounded border-purple-400" />
+                      </td>
+                      <td className="p-1.5 font-medium">{a.especialidad}</td>
+                      <td className="p-1.5">{a.actividad}</td>
+                      <td className="p-1.5">{a.nivel}</td>
+                      <td className="p-1.5">{a.unidad}</td>
+                      <td className="p-1.5 text-right font-mono">{a.cantidadProgramada}</td>
+                      <td className="p-1.5 text-muted-foreground">{a.material}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Button onClick={handleAgregar} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Plus className="w-4 h-4 mr-2" /> Agregar {seleccionadas.size} actividades al programa
+            </Button>
+          </div>
+        )}
+
+        {resultado && resultado.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-2">No se pudieron generar actividades. Intenta con una descripción más detallada.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ===== CREAR PROGRAMA =====
 function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoading, uploadPlano, initialActividades }: {
   proyectoId: number;
@@ -459,7 +723,7 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
   const [actividades, setActividades] = useState<ActividadRow[]>(
     initialActividades && initialActividades.length > 0
       ? initialActividades.map((a, i) => ({ ...a, orden: i }))
-      : [{ especialidad: "", actividad: "", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: "", orden: 0 }]
+      : [{ especialidad: "", actividad: "", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: "", material: "", orden: 0 }]
   );
   const [planos, setPlanos] = useState<PlanoRow[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -468,7 +732,7 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
     setActividades(prev => [...prev, {
       especialidad: prev.length > 0 ? prev[prev.length - 1].especialidad : "",
       actividad: "", nivel: "", area: "", referenciaEje: "",
-      unidad: "m2", cantidadProgramada: "", orden: prev.length,
+      unidad: "m2", cantidadProgramada: "", material: "", orden: prev.length,
     }]);
   };
 
@@ -542,6 +806,17 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
         </CardContent>
       </Card>
 
+      {/* Asistente IA */}
+      <AIAssistantPanel
+        actividades={actividades}
+        onAddActividades={(newActs) => {
+          setActividades(prev => [
+            ...prev.filter(a => a.actividad.trim()),
+            ...newActs.map((a, i) => ({ ...a, orden: prev.length + i })),
+          ]);
+        }}
+      />
+
       {/* Tabla de actividades */}
       <Card>
         <CardHeader className="pb-2">
@@ -561,6 +836,7 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
                   <th className="text-left p-2 font-medium w-20">Ref. Eje</th>
                   <th className="text-left p-2 font-medium w-20">Unidad</th>
                   <th className="text-left p-2 font-medium w-24">Cant. Prog.</th>
+                  <th className="text-left p-2 font-medium">Material</th>
                   <th className="w-10"></th>
                 </tr>
               </thead>
@@ -601,6 +877,10 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
                       <Input type="number" value={a.cantidadProgramada}
                         onChange={e => updateRow(idx, "cantidadProgramada", e.target.value)}
                         placeholder="0" className="h-8 text-xs" />
+                    </td>
+                    <td className="p-1">
+                      <Input value={a.material || ""} onChange={e => updateRow(idx, "material", e.target.value)}
+                        placeholder="Ej: Block 15cm" className="h-8 text-xs" />
                     </td>
                     <td className="p-1">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeRow(idx)}>
@@ -762,6 +1042,7 @@ function generarPDFProgramaSemanal(data: any) {
             <th>Área</th>
             <th>Ref. Eje</th>
             <th>Unidad</th>
+            <th>Material</th>
             <th style="text-align:right;">Programada</th>
             ${hasCorte ? '<th style="text-align:right;">Realizada</th><th style="text-align:right;">%</th>' : ''}
           </tr>
@@ -777,6 +1058,7 @@ function generarPDFProgramaSemanal(data: any) {
               <td>${a.area || '—'}</td>
               <td>${a.referenciaEje || '—'}</td>
               <td>${a.unidad}</td>
+              <td style="color:#666;font-size:10px;">${a.material || '—'}</td>
               <td style="text-align:right;font-family:monospace;">${a.cantidadProgramada}</td>
               ${hasCorte ? `<td style="text-align:right;font-family:monospace;">${a.cantidadRealizada || '0'}</td><td style="text-align:right;font-weight:700;color:${color};">${pct.toFixed(1)}%</td>` : ''}
             </tr>`;
@@ -886,6 +1168,7 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
                   <th className="text-left p-2 font-medium">Área</th>
                   <th className="text-left p-2 font-medium">Ref. Eje</th>
                   <th className="text-left p-2 font-medium">Unidad</th>
+                  <th className="text-left p-2 font-medium">Material</th>
                   <th className="text-right p-2 font-medium">Programada</th>
                   {data.status === 'corte_realizado' && (
                     <>
@@ -906,6 +1189,7 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
                       <td className="p-2">{a.area || "—"}</td>
                       <td className="p-2">{a.referenciaEje || "—"}</td>
                       <td className="p-2">{a.unidad}</td>
+                      <td className="p-2 text-muted-foreground text-xs">{a.material || "—"}</td>
                       <td className="p-2 text-right font-mono">{a.cantidadProgramada}</td>
                       {data.status === 'corte_realizado' && (
                         <>
@@ -1448,6 +1732,7 @@ function PlantillasView({ proyectoId, onBack, onCargar }: {
       referenciaEje: a.referenciaEje || "",
       unidad: (a.unidad || "m2") as Unidad,
       cantidadProgramada: String(a.cantidadProgramada || ""),
+      material: a.material || "",
       orden: i,
     }));
     onCargar(acts);

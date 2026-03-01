@@ -1089,6 +1089,7 @@ export const programaActividad = mysqlTable("programa_actividad", {
   cantidadProgramada: decimal("cantidadProgramada", { precision: 12, scale: 2 }).notNull(),
   cantidadRealizada: decimal("cantidadRealizada", { precision: 12, scale: 2 }),
   porcentajeAvance: decimal("porcentajeAvance", { precision: 5, scale: 2 }),
+  material: varchar("material", { length: 500 }),
   orden: int("orden").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

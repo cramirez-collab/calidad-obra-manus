@@ -1,0 +1,40 @@
+{
+  "query": "SELECT u.id, u.name, pu.rolEnProyecto, pu.proyectoId FROM users u JOIN proyecto_usuarios pu ON u.id = pu.usuarioId WHERE pu.rolEnProyecto = 'residente' AND pu.activo = 1 LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT u.id, u.name, pu.rolEnProyecto, pu.proyectoId FROM users u JOIN proyecto_usuarios pu ON u.id = pu.usuarioId WHERE pu.rolEnProyecto = 'residente' AND pu.activo = 1 LIMIT 5;",
+  "rows": [
+    {
+      "id": "781860",
+      "name": "Omar Palencia",
+      "rolEnProyecto": "residente",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1410108",
+      "name": "Karen Navith",
+      "rolEnProyecto": "residente",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1410178",
+      "name": "Natalia Diaz",
+      "rolEnProyecto": "residente",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1470049",
+      "name": "Esteban Guerrero ",
+      "rolEnProyecto": "residente",
+      "proyectoId": "1"
+    },
+    {
+      "id": "1470059",
+      "name": "Jairo Briseño",
+      "rolEnProyecto": "residente",
+      "proyectoId": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trolEnProyecto\tproyectoId\n781860\tOmar Palencia\tresidente\t1\n1410108\tKaren Navith\tresidente\t1\n1410178\tNatalia Diaz\tresidente\t1\n1470049\tEsteban Guerrero \tresidente\t1\n1470059\tJairo Briseño\tresidente\t1\n",
+  "stderr": "",
+  "execution_time_ms": 362
+}

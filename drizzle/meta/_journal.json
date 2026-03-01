@@ -568,6 +568,13 @@
       "when": 1772344292732,
       "tag": "0080_fixed_marvel_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "5",
+      "when": 1772351025292,
+      "tag": "0081_skinny_luke_cage",
+      "breakpoints": true
     }
   ]
 }
