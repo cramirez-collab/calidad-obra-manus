@@ -331,6 +331,7 @@ export default function ProgramaSemanal() {
                           {formatWeekRange(p.semanaInicio, p.semanaFin)}
                         </span>
                         <StatusBadge status={p.status} />
+                        <EntregaBadge semanaFin={p.semanaFin} fechaEntrega={p.fechaEntrega} status={p.status} />
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         {usuario?.name || `Usuario #${p.usuarioId}`}
@@ -360,6 +361,40 @@ export default function ProgramaSemanal() {
         </div>
       )}
     </div>
+  );
+}
+
+// Helper: determinar cumplimiento de entrega
+function getEntregaCumplimiento(semanaFin: string | Date, fechaEntrega: string | Date | null, status: string): { label: string; color: string; icon: "check" | "clock" | "alert" } | null {
+  if (status === "borrador" || !fechaEntrega) return null;
+  const entrega = new Date(fechaEntrega);
+  const fin = new Date(semanaFin);
+  // Viernes de la semana = domingo - 2 días
+  const viernes = new Date(fin);
+  viernes.setDate(viernes.getDate() - 2);
+  viernes.setHours(23, 59, 59, 999);
+  if (entrega <= viernes) {
+    return { label: "A tiempo", color: "bg-emerald-100 text-emerald-800 border-emerald-300", icon: "check" };
+  }
+  // Sábado = 1 día tarde
+  const sabado = new Date(viernes);
+  sabado.setDate(sabado.getDate() + 1);
+  sabado.setHours(23, 59, 59, 999);
+  if (entrega <= sabado) {
+    return { label: "1 día tarde", color: "bg-amber-100 text-amber-800 border-amber-300", icon: "clock" };
+  }
+  return { label: "Tardío", color: "bg-red-100 text-red-800 border-red-300", icon: "alert" };
+}
+
+function EntregaBadge({ semanaFin, fechaEntrega, status }: { semanaFin: string | Date; fechaEntrega: string | Date | null; status: string }) {
+  const cumplimiento = getEntregaCumplimiento(semanaFin, fechaEntrega, status);
+  if (!cumplimiento) return null;
+  const Icon = cumplimiento.icon === "check" ? Check : cumplimiento.icon === "clock" ? Clock : AlertTriangle;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cumplimiento.color}`}>
+      <Icon className="w-3 h-3" />
+      {cumplimiento.label}
+    </span>
   );
 }
 
@@ -772,6 +807,7 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
           Programa: {formatWeekRange(data.semanaInicio, data.semanaFin)}
         </h2>
         <StatusBadge status={data.status} />
+        <EntregaBadge semanaFin={data.semanaFin} fechaEntrega={data.fechaEntrega} status={data.status} />
       </div>
 
       {/* Info */}

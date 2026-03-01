@@ -4774,3 +4774,6 @@
 
 ## Mejoras Programa Semanal (Fase 5)
 - [x] Filtro por especialidad en la lista de programas semanales
+
+## Mejoras Programa Semanal (Fase 6)
+- [x] Indicador de cumplimiento de entrega (badge a tiempo/tardío) en lista y detalle
