@@ -85,6 +85,7 @@ export default function ProgramaSemanal() {
   const [view, setView] = useState<ViewMode>("list");
   const [selectedProgramaId, setSelectedProgramaId] = useState<number | null>(null);
   const [filterUsuarioId, setFilterUsuarioId] = useState<string>("todos");
+  const [filterEspecialidad, setFilterEspecialidad] = useState<string>("todas");
   const [plantillaActividades, setPlantillaActividades] = useState<ActividadRow[] | null>(null);
 
   // Queries
@@ -143,11 +144,38 @@ export default function ProgramaSemanal() {
 
   const uploadPlanoMut = trpc.programaSemanal.uploadPlano.useMutation();
 
+  // Datos lista (movido arriba para useMemo)
+  const programas = programasData?.programas || [];
+  const total = programasData?.total || 0;
+
+  // Obtener especialidades del proyecto
+  const { data: especialidadesData } = trpc.especialidades.list.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId }
+  );
+
   // Filtrar usuarios que son residentes/especialistas
   const usuariosEspecialidad = useMemo(() => {
     if (!usuarios) return [];
     return usuarios.filter((u: any) => ['residente', 'jefe_residente', 'supervisor', 'admin', 'superadmin'].includes(u.role));
   }, [usuarios]);
+
+  // Especialidades únicas de los programas existentes + catálogo
+  const especialidadesDisponibles = useMemo(() => {
+    const fromCatalogo = (especialidadesData || []).map((e: any) => e.nombre);
+    const fromProgramas = programas.flatMap((p: any) =>
+      (p.actividades || []).map((a: any) => a.especialidad).filter(Boolean)
+    );
+    return Array.from(new Set([...fromCatalogo, ...fromProgramas])).sort();
+  }, [especialidadesData, programas]);
+
+  // Filtrar programas por especialidad
+  const programasFiltrados = useMemo(() => {
+    if (filterEspecialidad === "todas") return programas;
+    return programas.filter((p: any) =>
+      (p.actividades || []).some((a: any) => a.especialidad === filterEspecialidad)
+    );
+  }, [programas, filterEspecialidad]);
 
   if (view === "create") {
     return <CrearPrograma
@@ -182,10 +210,6 @@ export default function ProgramaSemanal() {
       isLoading={corteMut.isPending}
     />;
   }
-
-  // Datos lista
-  const programas = programasData?.programas || [];
-  const total = programasData?.total || 0;
 
   if (view === "eficiencia") {
     return <EficienciaView
@@ -242,8 +266,8 @@ export default function ProgramaSemanal() {
         </div>
       </div>
 
-      {/* Filtro por usuario */}
-      <div className="flex gap-2 items-center">
+      {/* Filtros */}
+      <div className="flex gap-2 items-center flex-wrap">
         <Select value={filterUsuarioId} onValueChange={setFilterUsuarioId}>
           <SelectTrigger className="w-[220px]">
             <SelectValue placeholder="Filtrar por usuario" />
@@ -255,6 +279,22 @@ export default function ProgramaSemanal() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={filterEspecialidad} onValueChange={setFilterEspecialidad}>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue placeholder="Filtrar por especialidad" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Todas las especialidades</SelectItem>
+            {especialidadesDisponibles.map((esp: string) => (
+              <SelectItem key={esp} value={esp}>{esp}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {(filterUsuarioId !== "todos" || filterEspecialidad !== "todas") && (
+          <Button variant="ghost" size="sm" onClick={() => { setFilterUsuarioId("todos"); setFilterEspecialidad("todas"); }}>
+            <X className="w-3 h-3 mr-1" /> Limpiar
+          </Button>
+        )}
       </div>
 
       {/* Lista de programas */}
@@ -266,7 +306,7 @@ export default function ProgramaSemanal() {
             </Card>
           ))}
         </div>
-      ) : programas.length === 0 ? (
+      ) : programasFiltrados.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
             <CalendarDays className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
@@ -278,7 +318,7 @@ export default function ProgramaSemanal() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {programas.map((p: any) => {
+          {programasFiltrados.map((p: any) => {
             const usuario = usuariosEspecialidad.find((u: any) => u.id === p.usuarioId);
             return (
               <Card key={p.id} className="cursor-pointer hover:bg-accent/30 transition-colors"

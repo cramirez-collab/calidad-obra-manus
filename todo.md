@@ -4771,3 +4771,6 @@
 ## Mejoras Programa Semanal (Fase 4)
 - [x] Notificación al supervisor cuando residente entrega programa semanal
 - [x] Exportar comparativa semanal a PDF
+
+## Mejoras Programa Semanal (Fase 5)
+- [x] Filtro por especialidad en la lista de programas semanales
