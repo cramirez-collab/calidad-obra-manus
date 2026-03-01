@@ -49,7 +49,8 @@ import {
   Mail,
   Crosshair,
   Shield,
-  BrainCircuit
+  BrainCircuit,
+  CalendarDays
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -113,6 +114,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
     { icon: ListOrdered, label: "Especialidades", path: "/lista-especialidades" },
     { icon: AlertTriangle, label: "Seguridad", path: "/seguridad" },
+    { icon: CalendarDays, label: "Programa", path: "/programa-semanal" },
   ];
   
   // Agregar enlaces externos solo si están configurados en el proyecto (con títulos personalizados)

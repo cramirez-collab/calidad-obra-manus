@@ -4746,3 +4746,14 @@
 - [x] Verificar aislamiento total de datos entre proyectos (Hidalma vs Mayas)
 - [x] Limpiar ítems de test (NULL y 999999) de la BD
 - [x] Eliminar proyecto duplicado 180001 (inactivo)
+
+## Módulo Programa Semanal
+- [x] Tablas BD: programa_semanal, programa_actividad, programa_plano
+- [x] Helpers DB para programa semanal
+- [x] Procedures tRPC: create, update, realizarCorte, list, getById, eficiencia, delete
+- [x] Frontend: Lista de programas semanales
+- [x] Frontend: Crear/Editar programa con tabla editable inline
+- [x] Frontend: Upload de planos coloreados por nivel
+- [x] Frontend: Corte de miércoles con % avance
+- [x] Frontend: Dashboard de eficiencia con gráficos
+- [x] Registrar rutas en App.tsx y sidebar

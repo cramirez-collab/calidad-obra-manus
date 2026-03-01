@@ -1048,3 +1048,68 @@ export const reportesSeguridad = mysqlTable("reportes_seguridad", {
 
 export type ReporteSeguridad = typeof reportesSeguridad.$inferSelect;
 export type InsertReporteSeguridad = typeof reportesSeguridad.$inferInsert;
+
+
+// ===== MÓDULO PROGRAMA SEMANAL =====
+
+/**
+ * Programa semanal - cada usuario sube su programa de actividades cada viernes
+ * y hace corte de avance cada miércoles
+ */
+export const programaSemanal = mysqlTable("programa_semanal", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  usuarioId: int("usuarioId").notNull(), // Quién lo crea (residente/especialista)
+  semanaInicio: timestamp("semanaInicio").notNull(), // Lunes de la semana
+  semanaFin: timestamp("semanaFin").notNull(), // Domingo de la semana
+  fechaEntrega: timestamp("fechaEntrega"), // Cuándo lo subió
+  fechaCorte: timestamp("fechaCorte"), // Cuándo hizo el corte del miércoles
+  status: mysqlEnum("status_programa", ["borrador", "entregado", "corte_realizado"]).default("borrador").notNull(),
+  eficienciaGlobal: decimal("eficienciaGlobal", { precision: 5, scale: 2 }), // % eficiencia calculado
+  notas: text("notas"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProgramaSemanal = typeof programaSemanal.$inferSelect;
+export type InsertProgramaSemanal = typeof programaSemanal.$inferInsert;
+
+/**
+ * Actividades del programa semanal - cada renglón de la tabla tipo Excel
+ */
+export const programaActividad = mysqlTable("programa_actividad", {
+  id: int("id").autoincrement().primaryKey(),
+  programaId: int("programaId").notNull(), // FK a programa_semanal
+  especialidad: varchar("especialidad", { length: 255 }).notNull(),
+  actividad: varchar("actividad", { length: 500 }).notNull(),
+  nivel: varchar("nivel", { length: 100 }),
+  area: varchar("area", { length: 255 }),
+  referenciaEje: varchar("referenciaEje", { length: 100 }),
+  unidad: mysqlEnum("unidad_medida", ["m", "m2", "m3", "ml", "pza", "kg", "lt", "jgo", "lote", "otro"]).default("m2").notNull(),
+  cantidadProgramada: decimal("cantidadProgramada", { precision: 12, scale: 2 }).notNull(),
+  cantidadRealizada: decimal("cantidadRealizada", { precision: 12, scale: 2 }),
+  porcentajeAvance: decimal("porcentajeAvance", { precision: 5, scale: 2 }),
+  orden: int("orden").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ProgramaActividad = typeof programaActividad.$inferSelect;
+export type InsertProgramaActividad = typeof programaActividad.$inferInsert;
+
+/**
+ * Planos del programa semanal - imágenes de planos coloreados por nivel
+ */
+export const programaPlano = mysqlTable("programa_plano", {
+  id: int("id").autoincrement().primaryKey(),
+  programaId: int("programaId").notNull(), // FK a programa_semanal
+  nivel: varchar("nivel", { length: 100 }),
+  tipo: mysqlEnum("tipo_plano", ["planta", "fachada", "corte", "otro"]).default("planta").notNull(),
+  titulo: varchar("titulo", { length: 255 }),
+  imagenUrl: text("imagenUrl").notNull(),
+  imagenKey: varchar("imagenKey", { length: 255 }),
+  orden: int("orden").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ProgramaPlano = typeof programaPlano.$inferSelect;
+export type InsertProgramaPlano = typeof programaPlano.$inferInsert;

@@ -47,6 +47,9 @@ import {
   tiposIncidenciaCustom, InsertTipoIncidenciaCustom,
   plantillasIncidencia, InsertPlantillaIncidencia,
   reportesSeguridad, InsertReporteSeguridad,
+  programaSemanal, InsertProgramaSemanal,
+  programaActividad, InsertProgramaActividad,
+  programaPlano, InsertProgramaPlano,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -7380,4 +7383,160 @@ export async function eliminarReporteSeguridad(id: number) {
   const db = await getDb();
   if (!db) throw new Error('DB no disponible');
   await db.delete(reportesSeguridad).where(eq(reportesSeguridad.id, id));
+}
+
+
+// ===== PROGRAMA SEMANAL =====
+
+export async function createProgramaSemanal(data: InsertProgramaSemanal) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  const [result] = await db.insert(programaSemanal).values(data).$returningId();
+  return result;
+}
+
+export async function getProgramasSemanales(proyectoId: number, filters?: {
+  usuarioId?: number;
+  status?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) return { programas: [], total: 0 };
+  
+  const conditions: any[] = [eq(programaSemanal.proyectoId, proyectoId)];
+  if (filters?.usuarioId) conditions.push(eq(programaSemanal.usuarioId, filters.usuarioId));
+  if (filters?.status) conditions.push(eq(programaSemanal.status, filters.status as any));
+  
+  const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+  
+  const [countResult] = await db.select({ count: sql<number>`count(*)` })
+    .from(programaSemanal).where(whereClause);
+  
+  const programas = await db.select()
+    .from(programaSemanal)
+    .where(whereClause)
+    .orderBy(desc(programaSemanal.semanaInicio))
+    .limit(filters?.limit || 50)
+    .offset(filters?.offset || 0);
+  
+  return { programas, total: countResult?.count || 0 };
+}
+
+export async function getProgramaSemanalById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.select().from(programaSemanal).where(eq(programaSemanal.id, id));
+  return result;
+}
+
+export async function getProgramaSemanalByWeek(proyectoId: number, usuarioId: number, semanaInicio: Date) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.select().from(programaSemanal)
+    .where(and(
+      eq(programaSemanal.proyectoId, proyectoId),
+      eq(programaSemanal.usuarioId, usuarioId),
+      eq(programaSemanal.semanaInicio, semanaInicio)
+    ));
+  return result;
+}
+
+export async function updateProgramaSemanal(id: number, data: Partial<InsertProgramaSemanal>) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  await db.update(programaSemanal).set(data).where(eq(programaSemanal.id, id));
+}
+
+export async function deleteProgramaSemanal(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  // Eliminar actividades y planos asociados
+  await db.delete(programaActividad).where(eq(programaActividad.programaId, id));
+  await db.delete(programaPlano).where(eq(programaPlano.programaId, id));
+  await db.delete(programaSemanal).where(eq(programaSemanal.id, id));
+}
+
+// Actividades
+export async function createProgramaActividades(actividades: InsertProgramaActividad[]) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  if (actividades.length === 0) return;
+  await db.insert(programaActividad).values(actividades);
+}
+
+export async function getActividadesByPrograma(programaId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(programaActividad)
+    .where(eq(programaActividad.programaId, programaId))
+    .orderBy(programaActividad.orden);
+}
+
+export async function updateProgramaActividad(id: number, data: Partial<InsertProgramaActividad>) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  await db.update(programaActividad).set(data).where(eq(programaActividad.id, id));
+}
+
+export async function deleteActividadesByPrograma(programaId: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  await db.delete(programaActividad).where(eq(programaActividad.programaId, programaId));
+}
+
+// Planos
+export async function createProgramaPlanos(planos: InsertProgramaPlano[]) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  if (planos.length === 0) return;
+  await db.insert(programaPlano).values(planos);
+}
+
+export async function getPlanosByPrograma(programaId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(programaPlano)
+    .where(eq(programaPlano.programaId, programaId))
+    .orderBy(programaPlano.orden);
+}
+
+export async function deletePlanosByPrograma(programaId: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  await db.delete(programaPlano).where(eq(programaPlano.programaId, programaId));
+}
+
+export async function deleteProgramaPlano(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  await db.delete(programaPlano).where(eq(programaPlano.id, id));
+}
+
+// Eficiencia - datos para gráficos
+export async function getEficienciaHistorica(proyectoId: number, filters?: {
+  usuarioId?: number;
+  semanas?: number; // últimas N semanas
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const conditions: any[] = [
+    eq(programaSemanal.proyectoId, proyectoId),
+    eq(programaSemanal.status, 'corte_realizado'),
+  ];
+  if (filters?.usuarioId) conditions.push(eq(programaSemanal.usuarioId, filters.usuarioId));
+  
+  const programas = await db.select({
+    id: programaSemanal.id,
+    usuarioId: programaSemanal.usuarioId,
+    semanaInicio: programaSemanal.semanaInicio,
+    eficienciaGlobal: programaSemanal.eficienciaGlobal,
+  })
+    .from(programaSemanal)
+    .where(and(...conditions))
+    .orderBy(desc(programaSemanal.semanaInicio))
+    .limit(filters?.semanas || 20);
+  
+  return programas;
 }

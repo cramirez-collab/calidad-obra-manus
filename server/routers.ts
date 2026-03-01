@@ -5344,5 +5344,319 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         return { ok: true };
       }),
   }),
+
+  // ===== PROGRAMA SEMANAL =====
+  programaSemanal: router({
+    // Crear programa semanal
+    create: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        semanaInicio: z.string(), // ISO date string del lunes
+        semanaFin: z.string(), // ISO date string del domingo
+        notas: z.string().optional(),
+        actividades: z.array(z.object({
+          especialidad: z.string(),
+          actividad: z.string(),
+          nivel: z.string().optional(),
+          area: z.string().optional(),
+          referenciaEje: z.string().optional(),
+          unidad: z.enum(['m', 'm2', 'm3', 'ml', 'pza', 'kg', 'lt', 'jgo', 'lote', 'otro']),
+          cantidadProgramada: z.string(), // decimal as string
+          orden: z.number(),
+        })),
+        planos: z.array(z.object({
+          nivel: z.string().optional(),
+          tipo: z.enum(['planta', 'fachada', 'corte', 'otro']),
+          titulo: z.string().optional(),
+          imagenUrl: z.string(),
+          imagenKey: z.string().optional(),
+          orden: z.number(),
+        })).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Verificar que no exista ya un programa para esta semana y usuario
+        const existing = await db.getProgramaSemanalByWeek(
+          input.proyectoId,
+          ctx.user.id,
+          new Date(input.semanaInicio)
+        );
+        if (existing) {
+          throw new TRPCError({ code: 'CONFLICT', message: 'Ya existe un programa para esta semana. Edítalo en lugar de crear uno nuevo.' });
+        }
+
+        const result = await db.createProgramaSemanal({
+          proyectoId: input.proyectoId,
+          usuarioId: ctx.user.id,
+          semanaInicio: new Date(input.semanaInicio),
+          semanaFin: new Date(input.semanaFin),
+          notas: input.notas,
+          status: 'borrador',
+        });
+
+        if (input.actividades.length > 0) {
+          await db.createProgramaActividades(
+            input.actividades.map(a => ({
+              programaId: result.id,
+              especialidad: a.especialidad,
+              actividad: a.actividad,
+              nivel: a.nivel,
+              area: a.area,
+              referenciaEje: a.referenciaEje,
+              unidad: a.unidad,
+              cantidadProgramada: a.cantidadProgramada,
+              orden: a.orden,
+            }))
+          );
+        }
+
+        if (input.planos && input.planos.length > 0) {
+          await db.createProgramaPlanos(
+            input.planos.map(p => ({
+              programaId: result.id,
+              nivel: p.nivel,
+              tipo: p.tipo,
+              titulo: p.titulo,
+              imagenUrl: p.imagenUrl,
+              imagenKey: p.imagenKey,
+              orden: p.orden,
+            }))
+          );
+        }
+
+        return { id: result.id };
+      }),
+
+    // Entregar programa (cambiar status a entregado)
+    entregar: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const programa = await db.getProgramaSemanalById(input.id);
+        if (!programa) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (programa.usuarioId !== ctx.user.id && !['admin', 'superadmin', 'supervisor'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        await db.updateProgramaSemanal(input.id, {
+          status: 'entregado',
+          fechaEntrega: new Date(),
+        });
+        return { ok: true };
+      }),
+
+    // Actualizar programa (actividades y planos)
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        notas: z.string().optional(),
+        actividades: z.array(z.object({
+          especialidad: z.string(),
+          actividad: z.string(),
+          nivel: z.string().optional(),
+          area: z.string().optional(),
+          referenciaEje: z.string().optional(),
+          unidad: z.enum(['m', 'm2', 'm3', 'ml', 'pza', 'kg', 'lt', 'jgo', 'lote', 'otro']),
+          cantidadProgramada: z.string(),
+          orden: z.number(),
+        })),
+        planos: z.array(z.object({
+          nivel: z.string().optional(),
+          tipo: z.enum(['planta', 'fachada', 'corte', 'otro']),
+          titulo: z.string().optional(),
+          imagenUrl: z.string(),
+          imagenKey: z.string().optional(),
+          orden: z.number(),
+        })).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const programa = await db.getProgramaSemanalById(input.id);
+        if (!programa) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (programa.status === 'corte_realizado') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No se puede editar un programa con corte realizado.' });
+        }
+        if (programa.usuarioId !== ctx.user.id && !['admin', 'superadmin', 'supervisor'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+
+        await db.updateProgramaSemanal(input.id, { notas: input.notas });
+
+        // Reemplazar actividades
+        await db.deleteActividadesByPrograma(input.id);
+        if (input.actividades.length > 0) {
+          await db.createProgramaActividades(
+            input.actividades.map(a => ({
+              programaId: input.id,
+              especialidad: a.especialidad,
+              actividad: a.actividad,
+              nivel: a.nivel,
+              area: a.area,
+              referenciaEje: a.referenciaEje,
+              unidad: a.unidad,
+              cantidadProgramada: a.cantidadProgramada,
+              orden: a.orden,
+            }))
+          );
+        }
+
+        // Reemplazar planos si se proporcionan
+        if (input.planos) {
+          await db.deletePlanosByPrograma(input.id);
+          if (input.planos.length > 0) {
+            await db.createProgramaPlanos(
+              input.planos.map(p => ({
+                programaId: input.id,
+                nivel: p.nivel,
+                tipo: p.tipo,
+                titulo: p.titulo,
+                imagenUrl: p.imagenUrl,
+                imagenKey: p.imagenKey,
+                orden: p.orden,
+              }))
+            );
+          }
+        }
+
+        return { ok: true };
+      }),
+
+    // Realizar corte de miércoles
+    realizarCorte: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        actividades: z.array(z.object({
+          id: z.number(),
+          cantidadRealizada: z.string(),
+        })),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const programa = await db.getProgramaSemanalById(input.id);
+        if (!programa) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (programa.usuarioId !== ctx.user.id && !['admin', 'superadmin', 'supervisor'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+
+        let totalProgramada = 0;
+        let totalRealizada = 0;
+
+        for (const act of input.actividades) {
+          const realizada = parseFloat(act.cantidadRealizada) || 0;
+          await db.updateProgramaActividad(act.id, {
+            cantidadRealizada: act.cantidadRealizada,
+            porcentajeAvance: String(realizada > 0 ? Math.min(100, realizada) : 0) as any,
+          });
+        }
+
+        // Recalcular eficiencia global
+        const actividades = await db.getActividadesByPrograma(input.id);
+        for (const a of actividades) {
+          const prog = parseFloat(String(a.cantidadProgramada)) || 0;
+          const real = parseFloat(String(a.cantidadRealizada)) || 0;
+          totalProgramada += prog;
+          totalRealizada += real;
+          // Actualizar % individual
+          const pct = prog > 0 ? Math.min(999, (real / prog) * 100) : 0;
+          await db.updateProgramaActividad(a.id, {
+            porcentajeAvance: String(Math.round(pct * 100) / 100) as any,
+          });
+        }
+
+        const eficiencia = totalProgramada > 0 ? (totalRealizada / totalProgramada) * 100 : 0;
+
+        await db.updateProgramaSemanal(input.id, {
+          status: 'corte_realizado',
+          fechaCorte: new Date(),
+          eficienciaGlobal: String(Math.round(eficiencia * 100) / 100) as any,
+        });
+
+        return { ok: true, eficiencia: Math.round(eficiencia * 100) / 100 };
+      }),
+
+    // Listar programas
+    list: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        usuarioId: z.number().optional(),
+        status: z.string().optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return db.getProgramasSemanales(input.proyectoId, input);
+      }),
+
+    // Obtener programa por ID con actividades y planos
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const programa = await db.getProgramaSemanalById(input.id);
+        if (!programa) throw new TRPCError({ code: 'NOT_FOUND' });
+        const actividades = await db.getActividadesByPrograma(input.id);
+        const planos = await db.getPlanosByPrograma(input.id);
+        return { ...programa, actividades, planos };
+      }),
+
+    // Eliminar programa (solo borradores)
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const programa = await db.getProgramaSemanalById(input.id);
+        if (!programa) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (programa.status !== 'borrador') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Solo se pueden eliminar programas en borrador.' });
+        }
+        if (programa.usuarioId !== ctx.user.id && !['admin', 'superadmin'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        await db.deleteProgramaSemanal(input.id);
+        return { ok: true };
+      }),
+
+    // Datos de eficiencia para gráficos
+    eficiencia: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        usuarioId: z.number().optional(),
+        semanas: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return db.getEficienciaHistorica(input.proyectoId, input);
+      }),
+
+    // Upload de plano (imagen)
+    uploadPlano: protectedProcedure
+      .input(z.object({
+        programaId: z.number(),
+        nivel: z.string().optional(),
+        tipo: z.enum(['planta', 'fachada', 'corte', 'otro']),
+        titulo: z.string().optional(),
+        base64: z.string(),
+        mimeType: z.string(),
+        orden: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const buffer = Buffer.from(input.base64, 'base64');
+        const ext = input.mimeType.includes('png') ? 'png' : input.mimeType.includes('webp') ? 'webp' : 'jpg';
+        const key = `programa-semanal/${input.programaId}/plano-${nanoid(8)}.${ext}`;
+        const { url } = await storagePut(key, buffer, input.mimeType);
+
+        await db.createProgramaPlanos([{
+          programaId: input.programaId,
+          nivel: input.nivel,
+          tipo: input.tipo,
+          titulo: input.titulo,
+          imagenUrl: url,
+          imagenKey: key,
+          orden: input.orden || 0,
+        }]);
+
+        return { url, key };
+      }),
+
+    // Eliminar un plano
+    deletePlano: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteProgramaPlano(input.id);
+        return { ok: true };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
