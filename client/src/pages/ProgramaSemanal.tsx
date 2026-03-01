@@ -14,7 +14,7 @@ import {
   CalendarDays, Plus, Send, Scissors, Trash2, ChevronLeft, ChevronRight,
   Download, Upload, Image as ImageIcon, BarChart3, TrendingUp, Eye, Edit,
   X, Check, AlertTriangle, Clock, FileSpreadsheet, BookTemplate, GitCompare,
-  Save, FolderOpen, Copy, FileDown, Target, Sparkles, Wand2, Loader2, Camera
+  Save, FolderOpen, Copy, FileDown, Target, Sparkles, Wand2, Loader2, Camera, UserCircle
 } from "lucide-react";
 
 // Helpers de fecha
@@ -731,6 +731,9 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
   uploadPlano: any;
   initialActividades?: ActividadRow[] | null;
 }) {
+  const { user } = useAuth();
+  const isAdminRole = ['admin', 'superadmin', 'supervisor'].includes(user?.role || '');
+  const [selectedUserId, setSelectedUserId] = useState<number>(userId);
   const [monday] = useState(() => getMonday(new Date()));
   const [sunday] = useState(() => getSunday(getMonday(new Date())));
   const [notas, setNotas] = useState("");
@@ -821,6 +824,7 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
       }
       onCreate({
         proyectoId,
+        usuarioId: selectedUserId !== userId ? selectedUserId : undefined,
         semanaInicio: monday.toISOString(),
         semanaFin: sunday.toISOString(),
         notas: notas || undefined,
@@ -852,6 +856,33 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
             <CalendarDays className="w-4 h-4 text-emerald-600" />
             <span className="font-medium">Semana: {formatWeekRange(monday, sunday)}</span>
           </div>
+
+          {/* Selector de usuario que realiza el programa */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium flex items-center gap-1.5">
+              <UserCircle className="w-4 h-4 text-emerald-600" />
+              Realizado por *
+            </label>
+            {isAdminRole ? (
+              <Select value={String(selectedUserId)} onValueChange={(v) => setSelectedUserId(Number(v))}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Selecciona usuario" />
+                </SelectTrigger>
+                <SelectContent>
+                  {usuarios.map((u: any) => (
+                    <SelectItem key={u.id} value={String(u.id)}>
+                      {u.name}{u.especialidad ? ` — ${u.especialidad}` : ''}{u.empresa ? ` (${u.empresa})` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="text-sm text-muted-foreground bg-muted/50 rounded-md px-3 py-2">
+                {user?.name || 'Usuario actual'}
+              </div>
+            )}
+          </div>
+
           <Textarea placeholder="Notas generales (opcional)" value={notas} onChange={e => setNotas(e.target.value)} rows={2} />
         </CardContent>
       </Card>

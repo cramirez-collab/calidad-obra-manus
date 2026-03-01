@@ -4811,3 +4811,4 @@
 - [x] Fix: botón eliminar programa no visible en móvil (layout reestructurado, ahora con fondo rojo claro, borde y 40x40px)
 - [x] Fix: icono basura eliminar programa no visible en móvil para superadmin (botón nativo 40x40 con bg-red-50 y borde)
 - [x] Eliminar botón/icono de Pagos de Bienvenida y ruta (no aplica en esta app)
+- [x] Agregar campo selector de usuario (quién realiza/sube) en formulario de creación de programa semanal

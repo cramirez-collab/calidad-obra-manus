@@ -5351,6 +5351,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
     create: protectedProcedure
       .input(z.object({
         proyectoId: z.number(),
+        usuarioId: z.number().optional(), // admin/superadmin puede asignar a otro usuario
         semanaInicio: z.string(), // ISO date string del lunes
         semanaFin: z.string(), // ISO date string del domingo
         notas: z.string().optional(),
@@ -5375,19 +5376,24 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         })).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
+        // Si admin/superadmin pasa usuarioId, usar ese; si no, usar el del usuario logueado
+        const targetUserId = (input.usuarioId && ['admin', 'superadmin', 'supervisor'].includes(ctx.user.role || ''))
+          ? input.usuarioId
+          : ctx.user.id;
+
         // Verificar que no exista ya un programa para esta semana y usuario
         const existing = await db.getProgramaSemanalByWeek(
           input.proyectoId,
-          ctx.user.id,
+          targetUserId,
           new Date(input.semanaInicio)
         );
         if (existing) {
-          throw new TRPCError({ code: 'CONFLICT', message: 'Ya existe un programa para esta semana. Edítalo en lugar de crear uno nuevo.' });
+          throw new TRPCError({ code: 'CONFLICT', message: 'Ya existe un programa para esta semana y usuario. Edítalo en lugar de crear uno nuevo.' });
         }
 
         const result = await db.createProgramaSemanal({
           proyectoId: input.proyectoId,
-          usuarioId: ctx.user.id,
+          usuarioId: targetUserId,
           semanaInicio: new Date(input.semanaInicio),
           semanaFin: new Date(input.semanaFin),
           notas: input.notas,
