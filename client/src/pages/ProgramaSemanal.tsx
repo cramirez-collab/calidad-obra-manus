@@ -358,7 +358,7 @@ export default function ProgramaSemanal() {
               <Card key={p.id} className="cursor-pointer hover:bg-accent/30 transition-colors"
                 onClick={() => { setSelectedProgramaId(p.id); setView("detail"); }}>
                 <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-sm">
@@ -371,33 +371,33 @@ export default function ProgramaSemanal() {
                         {usuario?.name || `Usuario #${p.usuarioId}`}
                         {(usuario as any)?.especialidad ? ` — ${(usuario as any).especialidad}` : ""}
                       </p>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm">
-                      {p.eficienciaGlobal != null && (
-                        <div className="flex items-center gap-1">
-                          <TrendingUp className="w-4 h-4 text-emerald-600" />
-                          <span className={`font-bold ${parseFloat(p.eficienciaGlobal) >= 80 ? "text-emerald-600" : parseFloat(p.eficienciaGlobal) >= 50 ? "text-amber-600" : "text-red-600"}`}>
-                            {parseFloat(p.eficienciaGlobal).toFixed(1)}%
+                      <div className="flex items-center gap-3 text-sm mt-1">
+                        {p.eficienciaGlobal != null && (
+                          <div className="flex items-center gap-1">
+                            <TrendingUp className="w-4 h-4 text-emerald-600" />
+                            <span className={`font-bold ${parseFloat(p.eficienciaGlobal) >= 80 ? "text-emerald-600" : parseFloat(p.eficienciaGlobal) >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                              {parseFloat(p.eficienciaGlobal).toFixed(1)}%
+                            </span>
+                          </div>
+                        )}
+                        {p.fechaEntrega && (
+                          <span className="text-xs text-muted-foreground">
+                            Entregado: {formatDateShort(p.fechaEntrega)}
                           </span>
-                        </div>
-                      )}
-                      {p.fechaEntrega && (
-                        <span className="text-xs text-muted-foreground">
-                          Entregado: {formatDateShort(p.fechaEntrega)}
-                        </span>
-                      )}
-                      {['admin', 'superadmin'].includes(user?.role || '') && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (confirm(`¿Eliminar programa de ${formatWeekRange(p.semanaInicio, p.semanaFin)}? Esta acción no se puede deshacer.`)) {
-                              deleteMut.mutate({ id: p.id });
-                            }
-                          }}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
+                        )}
+                      </div>
                     </div>
+                    {['admin', 'superadmin'].includes(user?.role || '') && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-red-500 hover:text-red-700 hover:bg-red-50 touch-manipulation"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`¿Eliminar programa de ${formatWeekRange(p.semanaInicio, p.semanaFin)}? Esta acción no se puede deshacer.`)) {
+                            deleteMut.mutate({ id: p.id });
+                          }
+                        }}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

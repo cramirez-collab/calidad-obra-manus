@@ -4808,3 +4808,4 @@
 ## Mejoras Programa Semanal (Fase 11)
 - [x] Permitir a superadmin/admin eliminar programas semanales (cualquier estado)
 - [x] Subir planos/gráficos de referencia en el programa semanal (fix upload S3)
+- [x] Fix: botón eliminar programa no visible en móvil (layout reestructurado)
