@@ -4763,3 +4763,7 @@
 - [x] Alertas automáticas miércoles si no hizo corte
 - [x] Historial de eficiencia con gráfico de tendencia semanal por usuario
 - [x] Reporte PDF del programa semanal con tabla y planos
+
+## Mejoras Programa Semanal (Fase 3)
+- [x] Plantillas de actividades: guardar/cargar conjuntos de actividades frecuentes
+- [x] Vista comparativa semanal lado a lado (dos semanas)

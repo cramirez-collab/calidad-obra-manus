@@ -5702,6 +5702,151 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           })),
         };
       }),
+
+    // ===== PLANTILLAS =====
+    crearPlantilla: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        nombre: z.string().min(1),
+        descripcion: z.string().optional(),
+        actividades: z.array(z.object({
+          especialidad: z.string(),
+          actividad: z.string(),
+          nivel: z.string().optional(),
+          area: z.string().optional(),
+          referenciaEje: z.string().optional(),
+          unidad: z.string(),
+          cantidadProgramada: z.number().optional(),
+        })),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.createProgramaPlantilla({
+          proyectoId: input.proyectoId,
+          usuarioId: ctx.user.id,
+          nombre: input.nombre,
+          descripcion: input.descripcion,
+          actividades: input.actividades,
+        });
+        return { id };
+      }),
+
+    listarPlantillas: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getPlantillasByProyecto(input.proyectoId);
+      }),
+
+    getPlantilla: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const p = await db.getPlantillaById(input.id);
+        if (!p) throw new TRPCError({ code: 'NOT_FOUND' });
+        return p;
+      }),
+
+    eliminarPlantilla: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const p = await db.getPlantillaById(input.id);
+        if (!p) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (p.usuarioId !== ctx.user.id && !['admin', 'superadmin'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        await db.deletePlantilla(input.id);
+        return { ok: true };
+      }),
+
+    // Guardar actividades actuales como plantilla
+    guardarComoPlantilla: protectedProcedure
+      .input(z.object({
+        programaId: z.number(),
+        nombre: z.string().min(1),
+        descripcion: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const actividades = await db.getActividadesByPrograma(input.programaId);
+        const programa = await db.getProgramaSemanalById(input.programaId);
+        if (!programa) throw new TRPCError({ code: 'NOT_FOUND' });
+        const actividadesPlantilla = actividades.map(a => ({
+          especialidad: a.especialidad,
+          actividad: a.actividad,
+          nivel: a.nivel,
+          area: a.area,
+          referenciaEje: a.referenciaEje,
+          unidad: a.unidad,
+          cantidadProgramada: parseFloat(a.cantidadProgramada as any) || 0,
+        }));
+        const id = await db.createProgramaPlantilla({
+          proyectoId: programa.proyectoId,
+          usuarioId: ctx.user.id,
+          nombre: input.nombre,
+          descripcion: input.descripcion,
+          actividades: actividadesPlantilla,
+        });
+        return { id };
+      }),
+
+    // ===== COMPARATIVA SEMANAL =====
+    comparativa: protectedProcedure
+      .input(z.object({
+        programaId1: z.number(),
+        programaId2: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const data = await db.getComparativaSemanal(input.programaId1, input.programaId2);
+        if (!data) throw new TRPCError({ code: 'NOT_FOUND' });
+        
+        const calcEf = (acts: any[]) => {
+          const total = acts.reduce((s, a) => s + (parseFloat(a.cantidadProgramada) || 0), 0);
+          const real = acts.reduce((s, a) => s + (parseFloat(a.cantidadRealizada) || 0), 0);
+          return total > 0 ? Math.round((real / total) * 10000) / 100 : 0;
+        };
+
+        const porEsp = (acts: any[]) => {
+          const map = new Map<string, { prog: number; real: number }>();
+          for (const a of acts) {
+            if (!map.has(a.especialidad)) map.set(a.especialidad, { prog: 0, real: 0 });
+            const e = map.get(a.especialidad)!;
+            e.prog += parseFloat(a.cantidadProgramada) || 0;
+            e.real += parseFloat(a.cantidadRealizada) || 0;
+          }
+          return Array.from(map.entries()).map(([esp, v]) => ({
+            especialidad: esp,
+            programada: v.prog,
+            realizada: v.real,
+            eficiencia: v.prog > 0 ? Math.round((v.real / v.prog) * 10000) / 100 : 0,
+          }));
+        };
+
+        return {
+          semana1: {
+            ...data.programa1,
+            semanaInicio: data.programa1.semanaInicio.toISOString(),
+            semanaFin: data.programa1.semanaFin.toISOString(),
+            eficienciaCalculada: calcEf(data.programa1.actividades),
+            porEspecialidad: porEsp(data.programa1.actividades),
+            actividades: data.programa1.actividades.map(a => ({
+              ...a,
+              cantidadProgramada: parseFloat(a.cantidadProgramada as any) || 0,
+              cantidadRealizada: parseFloat(a.cantidadRealizada as any) || 0,
+              porcentajeAvance: parseFloat(a.porcentajeAvance as any) || 0,
+            })),
+          },
+          semana2: {
+            ...data.programa2,
+            semanaInicio: data.programa2.semanaInicio.toISOString(),
+            semanaFin: data.programa2.semanaFin.toISOString(),
+            eficienciaCalculada: calcEf(data.programa2.actividades),
+            porEspecialidad: porEsp(data.programa2.actividades),
+            actividades: data.programa2.actividades.map(a => ({
+              ...a,
+              cantidadProgramada: parseFloat(a.cantidadProgramada as any) || 0,
+              cantidadRealizada: parseFloat(a.cantidadRealizada as any) || 0,
+              porcentajeAvance: parseFloat(a.porcentajeAvance as any) || 0,
+            })),
+          },
+        };
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

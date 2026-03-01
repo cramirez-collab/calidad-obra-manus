@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal, json } from "drizzle-orm/mysql-core";
 
 // Enum para roles de usuario (superadmin tiene acceso total, admin/supervisor limitado en config)
 export const userRoleEnum = mysqlEnum("role", ["superadmin", "admin", "supervisor", "jefe_residente", "residente", "desarrollador", "segurista"]);
@@ -1113,3 +1113,20 @@ export const programaPlano = mysqlTable("programa_plano", {
 
 export type ProgramaPlano = typeof programaPlano.$inferSelect;
 export type InsertProgramaPlano = typeof programaPlano.$inferInsert;
+
+/**
+ * Plantillas de actividades reutilizables para programa semanal
+ */
+export const programaPlantilla = mysqlTable("programa_plantilla", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  usuarioId: int("usuarioId").notNull(),
+  nombre: varchar("nombre", { length: 255 }).notNull(),
+  descripcion: text("descripcion"),
+  actividades: json("actividades").notNull(), // JSON array de actividades
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProgramaPlantilla = typeof programaPlantilla.$inferSelect;
+export type InsertProgramaPlantilla = typeof programaPlantilla.$inferInsert;

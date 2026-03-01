@@ -50,6 +50,7 @@ import {
   programaSemanal, InsertProgramaSemanal,
   programaActividad, InsertProgramaActividad,
   programaPlano, InsertProgramaPlano,
+  programaPlantilla, InsertProgramaPlantilla,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -7539,4 +7540,81 @@ export async function getEficienciaHistorica(proyectoId: number, filters?: {
     .limit(filters?.semanas || 20);
   
   return programas;
+}
+
+
+// ==================== PLANTILLAS DE PROGRAMA SEMANAL ====================
+
+/**
+ * Crear plantilla de actividades
+ */
+export async function createProgramaPlantilla(data: InsertProgramaPlantilla) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  const [result] = await db.insert(programaPlantilla).values(data).$returningId();
+  return result.id;
+}
+
+/**
+ * Listar plantillas por proyecto
+ */
+export async function getPlantillasByProyecto(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(programaPlantilla)
+    .where(eq(programaPlantilla.proyectoId, proyectoId))
+    .orderBy(desc(programaPlantilla.updatedAt));
+}
+
+/**
+ * Obtener plantilla por ID
+ */
+export async function getPlantillaById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.select().from(programaPlantilla).where(eq(programaPlantilla.id, id));
+  return result || null;
+}
+
+/**
+ * Actualizar plantilla
+ */
+export async function updatePlantilla(id: number, data: Partial<InsertProgramaPlantilla>) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  await db.update(programaPlantilla).set(data).where(eq(programaPlantilla.id, id));
+}
+
+/**
+ * Eliminar plantilla
+ */
+export async function deletePlantilla(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  await db.delete(programaPlantilla).where(eq(programaPlantilla.id, id));
+}
+
+/**
+ * Comparativa semanal: obtener dos programas con sus actividades para comparar
+ */
+export async function getComparativaSemanal(programaId1: number, programaId2: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB no disponible');
+  
+  const [p1] = await db.select().from(programaSemanal).where(eq(programaSemanal.id, programaId1));
+  const [p2] = await db.select().from(programaSemanal).where(eq(programaSemanal.id, programaId2));
+  
+  if (!p1 || !p2) return null;
+  
+  const acts1 = await db.select().from(programaActividad)
+    .where(eq(programaActividad.programaId, programaId1))
+    .orderBy(programaActividad.orden);
+  const acts2 = await db.select().from(programaActividad)
+    .where(eq(programaActividad.programaId, programaId2))
+    .orderBy(programaActividad.orden);
+  
+  return {
+    programa1: { ...p1, actividades: acts1 },
+    programa2: { ...p2, actividades: acts2 },
+  };
 }

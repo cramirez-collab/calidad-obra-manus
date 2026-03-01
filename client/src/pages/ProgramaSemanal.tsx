@@ -13,7 +13,8 @@ import { ZoomableLightbox } from "@/components/ZoomableLightbox";
 import {
   CalendarDays, Plus, Send, Scissors, Trash2, ChevronLeft, ChevronRight,
   Download, Upload, Image as ImageIcon, BarChart3, TrendingUp, Eye, Edit,
-  X, Check, AlertTriangle, Clock, FileSpreadsheet
+  X, Check, AlertTriangle, Clock, FileSpreadsheet, BookTemplate, GitCompare,
+  Save, FolderOpen, Copy
 } from "lucide-react";
 
 // Helpers de fecha
@@ -73,7 +74,7 @@ type PlanoRow = {
 };
 
 // Vista principal
-type ViewMode = "list" | "create" | "detail" | "corte" | "eficiencia";
+type ViewMode = "list" | "create" | "detail" | "corte" | "eficiencia" | "plantillas" | "comparativa";
 
 export default function ProgramaSemanal() {
   const { user } = useAuth();
@@ -84,6 +85,7 @@ export default function ProgramaSemanal() {
   const [view, setView] = useState<ViewMode>("list");
   const [selectedProgramaId, setSelectedProgramaId] = useState<number | null>(null);
   const [filterUsuarioId, setFilterUsuarioId] = useState<string>("todos");
+  const [plantillaActividades, setPlantillaActividades] = useState<ActividadRow[] | null>(null);
 
   // Queries
   const { data: programasData, isLoading } = trpc.programaSemanal.list.useQuery(
@@ -156,6 +158,7 @@ export default function ProgramaSemanal() {
       onCreate={(data) => createMut.mutate(data)}
       isLoading={createMut.isPending}
       uploadPlano={uploadPlanoMut}
+      initialActividades={plantillaActividades}
     />;
   }
 
@@ -180,6 +183,10 @@ export default function ProgramaSemanal() {
     />;
   }
 
+  // Datos lista
+  const programas = programasData?.programas || [];
+  const total = programasData?.total || 0;
+
   if (view === "eficiencia") {
     return <EficienciaView
       data={eficienciaData || []}
@@ -188,9 +195,25 @@ export default function ProgramaSemanal() {
     />;
   }
 
-  // Vista lista
-  const programas = programasData?.programas || [];
-  const total = programasData?.total || 0;
+  if (view === "plantillas") {
+    return <PlantillasView
+      proyectoId={selectedProjectId!}
+      onBack={() => setView("list")}
+      onCargar={(actividades: ActividadRow[]) => {
+        setPlantillaActividades(actividades);
+        setView("create");
+      }}
+    />;
+  }
+
+  if (view === "comparativa") {
+    return <ComparativaView
+      proyectoId={selectedProjectId!}
+      programas={programas}
+      usuarios={usuariosEspecialidad}
+      onBack={() => setView("list")}
+    />;
+  }
 
   return (
     <div className="space-y-4">
@@ -204,10 +227,16 @@ export default function ProgramaSemanal() {
           <p className="text-sm text-muted-foreground mt-0.5">{total} programa{total !== 1 ? "s" : ""}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button size="sm" variant="outline" onClick={() => setView("plantillas")}>
+            <BookTemplate className="w-4 h-4 mr-1" /> Plantillas
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setView("comparativa")}>
+            <GitCompare className="w-4 h-4 mr-1" /> Comparar
+          </Button>
           <Button size="sm" variant="outline" onClick={() => setView("eficiencia")}>
             <BarChart3 className="w-4 h-4 mr-1" /> Eficiencia
           </Button>
-          <Button size="sm" onClick={() => setView("create")}>
+          <Button size="sm" onClick={() => { setPlantillaActividades(null); setView("create"); }}>
             <Plus className="w-4 h-4 mr-1" /> Nuevo Programa
           </Button>
         </div>
@@ -306,7 +335,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 // ===== CREAR PROGRAMA =====
-function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoading, uploadPlano }: {
+function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoading, uploadPlano, initialActividades }: {
   proyectoId: number;
   userId: number;
   usuarios: any[];
@@ -314,14 +343,16 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
   onCreate: (data: any) => void;
   isLoading: boolean;
   uploadPlano: any;
+  initialActividades?: ActividadRow[] | null;
 }) {
   const [monday] = useState(() => getMonday(new Date()));
   const [sunday] = useState(() => getSunday(getMonday(new Date())));
   const [notas, setNotas] = useState("");
-  const [actividades, setActividades] = useState<ActividadRow[]>([{
-    especialidad: "", actividad: "", nivel: "", area: "", referenciaEje: "",
-    unidad: "m2", cantidadProgramada: "", orden: 0,
-  }]);
+  const [actividades, setActividades] = useState<ActividadRow[]>(
+    initialActividades && initialActividades.length > 0
+      ? initialActividades.map((a, i) => ({ ...a, orden: i }))
+      : [{ especialidad: "", actividad: "", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: "", orden: 0 }]
+  );
   const [planos, setPlanos] = useState<PlanoRow[]>([]);
   const [uploading, setUploading] = useState(false);
 
@@ -820,6 +851,7 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
         <Button variant="outline" size="sm" onClick={() => generarPDFProgramaSemanal(data)}>
           <Download className="w-4 h-4 mr-1" /> PDF
         </Button>
+        <GuardarComoPlantillaBtn programaId={programaId} />
         {canDelete && (
           <Button variant="destructive" size="sm" onClick={() => onDelete(programaId)}>
             <Trash2 className="w-4 h-4 mr-1" /> Eliminar
@@ -1238,6 +1270,390 @@ function EficienciaView({ data, usuarios, onBack }: {
           </Card>
         </>
       )}
+    </div>
+  );
+}
+
+// ===== GUARDAR COMO PLANTILLA =====
+function GuardarComoPlantillaBtn({ programaId }: { programaId: number }) {
+  const [open, setOpen] = useState(false);
+  const [nombre, setNombre] = useState("");
+  const [desc, setDesc] = useState("");
+  const utils = trpc.useUtils();
+  const mut = trpc.programaSemanal.guardarComoPlantilla.useMutation({
+    onSuccess: () => {
+      toast.success("Plantilla guardada");
+      utils.programaSemanal.listarPlantillas.invalidate();
+      setOpen(false);
+      setNombre("");
+      setDesc("");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  if (!open) {
+    return (
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+        <Save className="w-4 h-4 mr-1" /> Guardar Plantilla
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Nombre de plantilla" className="h-8 w-48 text-xs" />
+      <Input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Descripción (opcional)" className="h-8 w-48 text-xs" />
+      <Button size="sm" disabled={!nombre.trim() || mut.isPending}
+        onClick={() => mut.mutate({ programaId, nombre: nombre.trim(), descripcion: desc || undefined })}>
+        {mut.isPending ? "Guardando..." : "Guardar"}
+      </Button>
+      <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
+        <X className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+}
+
+// ===== PLANTILLAS VIEW =====
+function PlantillasView({ proyectoId, onBack, onCargar }: {
+  proyectoId: number;
+  onBack: () => void;
+  onCargar: (actividades: ActividadRow[]) => void;
+}) {
+  const { data: plantillas, isLoading } = trpc.programaSemanal.listarPlantillas.useQuery({ proyectoId });
+  const utils = trpc.useUtils();
+  const deleteMut = trpc.programaSemanal.eliminarPlantilla.useMutation({
+    onSuccess: () => {
+      utils.programaSemanal.listarPlantillas.invalidate();
+      toast.success("Plantilla eliminada");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleCargar = (plantilla: any) => {
+    const acts = (plantilla.actividades as any[]).map((a: any, i: number) => ({
+      especialidad: a.especialidad || "",
+      actividad: a.actividad || "",
+      nivel: a.nivel || "",
+      area: a.area || "",
+      referenciaEje: a.referenciaEje || "",
+      unidad: (a.unidad || "m2") as Unidad,
+      cantidadProgramada: String(a.cantidadProgramada || ""),
+      orden: i,
+    }));
+    onCargar(acts);
+    toast.success(`Plantilla "${plantilla.nombre}" cargada`);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ChevronLeft className="w-4 h-4" /> Volver
+        </Button>
+        <h2 className="text-lg font-bold flex items-center gap-2">
+          <BookTemplate className="w-5 h-5 text-emerald-600" /> Plantillas de Actividades
+        </h2>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => <Card key={i} className="animate-pulse"><CardContent className="p-4 h-20" /></Card>)}
+        </div>
+      ) : !plantillas || plantillas.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <BookTemplate className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
+            <p className="text-muted-foreground">No hay plantillas guardadas.</p>
+            <p className="text-xs text-muted-foreground mt-1">Crea un programa y usa "Guardar Plantilla" para reutilizar actividades.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {plantillas.map((p: any) => {
+            const acts = (p.actividades as any[]) || [];
+            const especialidades = Array.from(new Set(acts.map((a: any) => a.especialidad).filter(Boolean)));
+            return (
+              <Card key={p.id} className="hover:bg-accent/30 transition-colors">
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm">{p.nombre}</h3>
+                      {p.descripcion && <p className="text-xs text-muted-foreground mt-0.5">{p.descripcion}</p>}
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        <Badge variant="secondary" className="text-xs">{acts.length} actividades</Badge>
+                        {especialidades.slice(0, 3).map((e: string) => (
+                          <Badge key={e} variant="outline" className="text-xs">{e}</Badge>
+                        ))}
+                        {especialidades.length > 3 && <Badge variant="outline" className="text-xs">+{especialidades.length - 3}</Badge>}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => handleCargar(p)}>
+                        <Copy className="w-4 h-4 mr-1" /> Usar
+                      </Button>
+                      <Button variant="destructive" size="icon" className="h-8 w-8"
+                        onClick={() => deleteMut.mutate({ id: p.id })}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===== COMPARATIVA VIEW =====
+function ComparativaView({ proyectoId, programas, usuarios, onBack }: {
+  proyectoId: number;
+  programas: any[];
+  usuarios: any[];
+  onBack: () => void;
+}) {
+  const [id1, setId1] = useState<string>("");
+  const [id2, setId2] = useState<string>("");
+
+  const { data: comparativa, isLoading } = trpc.programaSemanal.comparativa.useQuery(
+    { programaId1: parseInt(id1), programaId2: parseInt(id2) },
+    { enabled: !!id1 && !!id2 && id1 !== id2 }
+  );
+
+  // Solo programas con corte realizado
+  const programasConCorte = useMemo(() =>
+    programas.filter((p: any) => p.status === "corte_realizado"),
+    [programas]
+  );
+
+  const getUsuarioName = (userId: number) => {
+    const u = usuarios.find((u: any) => u.id === userId);
+    return u?.name || `#${userId}`;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ChevronLeft className="w-4 h-4" /> Volver
+        </Button>
+        <h2 className="text-lg font-bold flex items-center gap-2">
+          <GitCompare className="w-5 h-5 text-emerald-600" /> Comparativa Semanal
+        </h2>
+      </div>
+
+      {/* Selectores */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Semana 1</label>
+              <Select value={id1} onValueChange={setId1}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar semana" />
+                </SelectTrigger>
+                <SelectContent>
+                  {programasConCorte.map((p: any) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {formatWeekRange(p.semanaInicio, p.semanaFin)} — {getUsuarioName(p.usuarioId)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Semana 2</label>
+              <Select value={id2} onValueChange={setId2}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar semana" />
+                </SelectTrigger>
+                <SelectContent>
+                  {programasConCorte.filter((p: any) => String(p.id) !== id1).map((p: any) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {formatWeekRange(p.semanaInicio, p.semanaFin)} — {getUsuarioName(p.usuarioId)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {!id1 || !id2 || id1 === id2 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <GitCompare className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
+            <p className="text-muted-foreground">Selecciona dos semanas diferentes con corte realizado para comparar.</p>
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
+        <Card className="animate-pulse"><CardContent className="p-8 h-48" /></Card>
+      ) : comparativa ? (
+        <>
+          {/* Resumen lado a lado */}
+          <div className="grid grid-cols-2 gap-4">
+            {[comparativa.semana1, comparativa.semana2].map((sem: any, idx: number) => (
+              <Card key={idx}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">
+                    {formatWeekRange(sem.semanaInicio, sem.semanaFin)}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <div className="text-center">
+                    <p className={`text-3xl font-bold ${
+                      sem.eficienciaCalculada >= 80 ? "text-emerald-600" :
+                      sem.eficienciaCalculada >= 50 ? "text-amber-600" : "text-red-600"
+                    }`}>
+                      {sem.eficienciaCalculada.toFixed(1)}%
+                    </p>
+                    <p className="text-xs text-muted-foreground">Eficiencia Global</p>
+                  </div>
+                  <div className="mt-3 space-y-1">
+                    <p className="text-xs"><span className="text-muted-foreground">Actividades:</span> {sem.actividades.length}</p>
+                    <p className="text-xs"><span className="text-muted-foreground">Usuario:</span> {getUsuarioName(sem.usuarioId)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Diferencia */}
+          {(() => {
+            const diff = comparativa.semana2.eficienciaCalculada - comparativa.semana1.eficienciaCalculada;
+            return (
+              <Card className={diff > 0 ? "border-emerald-300 bg-emerald-50/50" : diff < 0 ? "border-red-300 bg-red-50/50" : ""}>
+                <CardContent className="p-4 text-center">
+                  <p className="text-sm font-medium">
+                    {diff > 0 ? (
+                      <span className="text-emerald-600">Mejora de +{diff.toFixed(1)}% en eficiencia</span>
+                    ) : diff < 0 ? (
+                      <span className="text-red-600">Descenso de {diff.toFixed(1)}% en eficiencia</span>
+                    ) : (
+                      <span className="text-muted-foreground">Sin cambio en eficiencia</span>
+                    )}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
+          {/* Comparativa por especialidad */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Eficiencia por Especialidad</CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 sm:p-4">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left p-2 font-medium">Especialidad</th>
+                      <th className="text-right p-2 font-medium">Sem 1 (%)</th>
+                      <th className="text-right p-2 font-medium">Sem 2 (%)</th>
+                      <th className="text-right p-2 font-medium">Diferencia</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const allEspArr = Array.from(new Set([
+                        ...comparativa.semana1.porEspecialidad.map((e: any) => e.especialidad),
+                        ...comparativa.semana2.porEspecialidad.map((e: any) => e.especialidad),
+                      ]));
+                      return allEspArr.map(esp => {
+                        const e1 = comparativa.semana1.porEspecialidad.find((e: any) => e.especialidad === esp);
+                        const e2 = comparativa.semana2.porEspecialidad.find((e: any) => e.especialidad === esp);
+                        const pct1 = e1?.eficiencia || 0;
+                        const pct2 = e2?.eficiencia || 0;
+                        const diff = pct2 - pct1;
+                        return (
+                          <tr key={esp} className="border-b">
+                            <td className="p-2 font-medium">{esp}</td>
+                            <td className="p-2 text-right font-mono">
+                              <span className={pct1 >= 80 ? "text-emerald-600" : pct1 >= 50 ? "text-amber-600" : "text-red-600"}>
+                                {pct1.toFixed(1)}%
+                              </span>
+                            </td>
+                            <td className="p-2 text-right font-mono">
+                              <span className={pct2 >= 80 ? "text-emerald-600" : pct2 >= 50 ? "text-amber-600" : "text-red-600"}>
+                                {pct2.toFixed(1)}%
+                              </span>
+                            </td>
+                            <td className="p-2 text-right font-bold">
+                              <span className={diff > 0 ? "text-emerald-600" : diff < 0 ? "text-red-600" : "text-muted-foreground"}>
+                                {diff > 0 ? "+" : ""}{diff.toFixed(1)}%
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Gráfico de barras comparativo */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Gráfico Comparativo</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              {(() => {
+                const allEsp = Array.from(new Set([
+                  ...comparativa.semana1.porEspecialidad.map((e: any) => e.especialidad),
+                  ...comparativa.semana2.porEspecialidad.map((e: any) => e.especialidad),
+                ]));
+                const barW = Math.min(60, 500 / Math.max(allEsp.length, 1));
+                const chartW = allEsp.length * (barW * 2 + 20) + 60;
+                const H = 200;
+                return (
+                  <div className="overflow-x-auto">
+                    <svg viewBox={`0 0 ${chartW} ${H + 40}`} className="w-full max-w-[700px] mx-auto" style={{ minWidth: 300 }}>
+                      {/* Grid lines */}
+                      {[0, 25, 50, 75, 100].map(v => (
+                        <g key={v}>
+                          <line x1="40" y1={H - (v / 100) * H} x2={chartW} y2={H - (v / 100) * H} stroke="#e5e7eb" strokeDasharray="4" />
+                          <text x="35" y={H - (v / 100) * H + 4} textAnchor="end" className="text-[10px] fill-muted-foreground">{v}%</text>
+                        </g>
+                      ))}
+                      {/* Bars */}
+                      {allEsp.map((esp, i) => {
+                        const e1 = comparativa.semana1.porEspecialidad.find((e: any) => e.especialidad === esp);
+                        const e2 = comparativa.semana2.porEspecialidad.find((e: any) => e.especialidad === esp);
+                        const pct1 = e1?.eficiencia || 0;
+                        const pct2 = e2?.eficiencia || 0;
+                        const x = 50 + i * (barW * 2 + 20);
+                        return (
+                          <g key={esp}>
+                            <rect x={x} y={H - (pct1 / 100) * H} width={barW - 2} height={(pct1 / 100) * H}
+                              fill="#93c5fd" rx="2" />
+                            <rect x={x + barW} y={H - (pct2 / 100) * H} width={barW - 2} height={(pct2 / 100) * H}
+                              fill="#02B381" rx="2" />
+                            <text x={x + barW} y={H + 15} textAnchor="middle" className="text-[9px] fill-muted-foreground">
+                              {esp.length > 10 ? esp.slice(0, 10) + "..." : esp}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      {/* Legend */}
+                      <rect x={chartW - 160} y={5} width={12} height={12} fill="#93c5fd" rx="2" />
+                      <text x={chartW - 144} y={15} className="text-[10px] fill-muted-foreground">Semana 1</text>
+                      <rect x={chartW - 80} y={5} width={12} height={12} fill="#02B381" rx="2" />
+                      <text x={chartW - 64} y={15} className="text-[10px] fill-muted-foreground">Semana 2</text>
+                    </svg>
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        </>
+      ) : null}
     </div>
   );
 }
