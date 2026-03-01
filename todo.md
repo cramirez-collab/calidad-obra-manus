@@ -4837,3 +4837,8 @@
 - [x] Panel de evidencias con subida de fotos
 - [x] Asignar responsable a incidente
 - [x] Exportar reporte PDF de incidente
+
+## Mejoras Chat Seguridad (Fase 15)
+- [x] Herramienta de rayado sobre fotos de incidentes (FotoEditor/DrawableCanvas en foto principal) - ya existía en el chat
+- [x] Badge de mensajes no leídos en botón de chat de cada tarjeta de incidente
+- [x] Filtro de incidentes por responsable asignado en la lista

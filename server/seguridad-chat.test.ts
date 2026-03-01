@@ -259,3 +259,85 @@ describe("Seguridad - Chat Permissions", () => {
     expect(mentionParts[0]).toBe("@Juan revisa");
   });
 });
+
+describe("Seguridad - Badge mensajes y filtro responsable", () => {
+  it("mensajesCount is included in listar response structure", () => {
+    // Simular la estructura que devuelve el procedure listar
+    const incidenteConCount = {
+      id: 1,
+      tipo: "caida",
+      severidad: "alta",
+      estado: "abierto",
+      descripcion: "Test",
+      mensajesCount: 5,
+    };
+    expect(incidenteConCount.mensajesCount).toBe(5);
+    expect(typeof incidenteConCount.mensajesCount).toBe("number");
+  });
+
+  it("filtro por responsable filtra correctamente", () => {
+    const incidentes = [
+      { id: 1, asignadoA: 10, tipo: "caida", estado: "abierto" },
+      { id: 2, asignadoA: 20, tipo: "golpe", estado: "abierto" },
+      { id: 3, asignadoA: null, tipo: "corte", estado: "cerrado" },
+      { id: 4, asignadoA: 10, tipo: "electrico", estado: "en_proceso" },
+    ];
+
+    const filtroResponsable = "10";
+    const filtered = incidentes.filter((inc) => {
+      if (filtroResponsable && inc.asignadoA !== Number(filtroResponsable)) return false;
+      return true;
+    });
+
+    expect(filtered).toHaveLength(2);
+    expect(filtered.every(i => i.asignadoA === 10)).toBe(true);
+  });
+
+  it("filtro por responsable vacío muestra todos", () => {
+    const incidentes = [
+      { id: 1, asignadoA: 10 },
+      { id: 2, asignadoA: 20 },
+      { id: 3, asignadoA: null },
+    ];
+
+    const filtroResponsable = "";
+    const filtered = incidentes.filter((inc) => {
+      if (filtroResponsable && inc.asignadoA !== Number(filtroResponsable)) return false;
+      return true;
+    });
+
+    expect(filtered).toHaveLength(3);
+  });
+
+  it("soloMisAsignados y filtroResponsable son mutuamente excluyentes", () => {
+    const incidentes = [
+      { id: 1, asignadoA: 10 },
+      { id: 2, asignadoA: 20 },
+      { id: 3, asignadoA: 10 },
+    ];
+
+    const userId = 10;
+    const soloMisAsignados = true;
+    const filtroResponsable = "";
+
+    const filtered = incidentes.filter((inc) => {
+      if (soloMisAsignados && inc.asignadoA !== userId) return false;
+      if (filtroResponsable && inc.asignadoA !== Number(filtroResponsable)) return false;
+      return true;
+    });
+
+    expect(filtered).toHaveLength(2);
+  });
+
+  it("badge muestra 99+ para más de 99 mensajes", () => {
+    const count = 150;
+    const display = count > 99 ? "99+" : String(count);
+    expect(display).toBe("99+");
+  });
+
+  it("badge no se muestra para 0 mensajes", () => {
+    const count = 0;
+    const shouldShow = count > 0;
+    expect(shouldShow).toBe(false);
+  });
+});

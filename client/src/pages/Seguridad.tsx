@@ -840,6 +840,7 @@ function TabIncidentes({ proyectoId, onOpenChat, filtroEstadoExterno, onClearFil
   };
   const [filtroTipo, setFiltroTipo] = useState<string>("");
   const [soloMisAsignados, setSoloMisAsignados] = useState(false);
+  const [filtroResponsable, setFiltroResponsable] = useState<string>("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [accionCorrectiva, setAccionCorrectiva] = useState("");
   const [showCerrarModal, setShowCerrarModal] = useState(false);
@@ -947,8 +948,18 @@ function TabIncidentes({ proyectoId, onOpenChat, filtroEstadoExterno, onClearFil
           <option value="">Todos los tipos</option>
           {allTiposForFilter.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
+        <select
+          value={filtroResponsable}
+          onChange={(e) => { setFiltroResponsable(e.target.value); if (e.target.value) setSoloMisAsignados(false); }}
+          className="text-xs border rounded-lg px-2 py-1.5 bg-background min-w-[110px]"
+        >
+          <option value="">Responsable</option>
+          {(usuarios || []).filter((u: any) => ['segurista', 'admin', 'superadmin'].includes(u.role)).map((u: any) => (
+            <option key={u.id} value={String(u.id)}>{u.name}</option>
+          ))}
+        </select>
         <button
-          onClick={() => setSoloMisAsignados(!soloMisAsignados)}
+          onClick={() => { setSoloMisAsignados(!soloMisAsignados); if (!soloMisAsignados) setFiltroResponsable(""); }}
           className={`text-xs border rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors ${
             soloMisAsignados
               ? 'bg-orange-500 text-white border-orange-500'
@@ -970,7 +981,11 @@ function TabIncidentes({ proyectoId, onOpenChat, filtroEstadoExterno, onClearFil
         </div>
       ) : (
         <div className="space-y-2">
-          {incidentes.filter((inc: any) => !soloMisAsignados || inc.asignadoA === user?.id).map((inc: any) => {
+          {incidentes.filter((inc: any) => {
+            if (soloMisAsignados && inc.asignadoA !== user?.id) return false;
+            if (filtroResponsable && inc.asignadoA !== Number(filtroResponsable)) return false;
+            return true;
+          }).map((inc: any) => {
             const tp = tipoInfo(inc.tipo);
             const sv = sevInfo(inc.severidad);
             const es = estadoInfo(inc.estado);
@@ -1065,13 +1080,18 @@ function TabIncidentes({ proyectoId, onOpenChat, filtroEstadoExterno, onClearFil
                           <Button
                             size="icon"
                             variant="outline"
-                            className="h-6 w-6 border-red-200 text-red-600 hover:bg-red-50 p-0"
+                            className="h-6 w-6 border-red-200 text-red-600 hover:bg-red-50 p-0 relative"
                             onClick={() => onOpenChat(inc.id, { tipo: tp?.label || inc.tipo, tipoValue: inc.tipo, severidad: inc.severidad, sevLabel: sv?.label, estado: estadoInfo(inc.estado)?.label, descripcion: inc.descripcion, codigo: inc.codigo })}
                           >
                             <MessageCircle className="w-3 h-3" />
+                            {inc.mensajesCount > 0 && (
+                              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[7px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5 leading-none">
+                                {inc.mensajesCount > 99 ? '99+' : inc.mensajesCount}
+                              </span>
+                            )}
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>Chat</TooltipContent>
+                        <TooltipContent>Chat ({inc.mensajesCount || 0})</TooltipContent>
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>

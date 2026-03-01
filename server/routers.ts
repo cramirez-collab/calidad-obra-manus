@@ -4344,7 +4344,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         return { id, success: true };
       }),
 
-    // Listar incidentes
+    // Listar incidentes con conteo de mensajes
     listar: protectedProcedure
       .input(z.object({
         proyectoId: z.number(),
@@ -4354,12 +4354,21 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         limit: z.number().optional(),
       }))
       .query(async ({ input }) => {
-        return db.getIncidentesSeguridad(input.proyectoId, {
+        const incidentes = await db.getIncidentesSeguridad(input.proyectoId, {
           tipo: input.tipo,
           severidad: input.severidad,
           estado: input.estado,
           limit: input.limit,
         });
+        // Agregar conteo de mensajes por incidente
+        const ids = incidentes.map((i: any) => i.id);
+        const counts: Record<number, number> = {};
+        if (ids.length > 0) {
+          for (const id of ids) {
+            counts[id] = await db.countMensajesSeguridad(id);
+          }
+        }
+        return incidentes.map((i: any) => ({ ...i, mensajesCount: counts[i.id] || 0 }));
       }),
 
     // Obtener incidente por ID
