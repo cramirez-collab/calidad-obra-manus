@@ -388,15 +388,18 @@ export default function ProgramaSemanal() {
                       </div>
                     </div>
                     {['admin', 'superadmin'].includes(user?.role || '') && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-red-500 hover:text-red-700 hover:bg-red-50 touch-manipulation"
+                      <button
+                        type="button"
+                        className="flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] shrink-0 rounded-lg bg-red-50 border border-red-200 text-red-600 active:bg-red-200 hover:bg-red-100 touch-manipulation transition-colors"
                         onClick={(e) => {
                           e.stopPropagation();
+                          e.preventDefault();
                           if (confirm(`¿Eliminar programa de ${formatWeekRange(p.semanaInicio, p.semanaFin)}? Esta acción no se puede deshacer.`)) {
                             deleteMut.mutate({ id: p.id });
                           }
                         }}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                        <Trash2 className="w-5 h-5" />
+                      </button>
                     )}
                   </div>
                 </CardContent>

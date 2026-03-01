@@ -4808,4 +4808,5 @@
 ## Mejoras Programa Semanal (Fase 11)
 - [x] Permitir a superadmin/admin eliminar programas semanales (cualquier estado)
 - [x] Subir planos/gráficos de referencia en el programa semanal (fix upload S3)
-- [x] Fix: botón eliminar programa no visible en móvil (layout reestructurado)
+- [x] Fix: botón eliminar programa no visible en móvil (layout reestructurado, ahora con fondo rojo claro, borde y 40x40px)
+- [x] Fix: icono basura eliminar programa no visible en móvil para superadmin (botón nativo 40x40 con bg-red-50 y borde)
