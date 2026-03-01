@@ -1167,38 +1167,7 @@ export default function Bienvenida() {
                 <TooltipContent>Reporte IA</TooltipContent>
               </Tooltip>
             )}
-            {/* Botón Reporte de Calidad PDF - Azul con letra blanca */}
-            {isAdmin && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="icon"
-                    className="h-8 w-8 sm:h-10 sm:w-10 bg-blue-700 hover:bg-blue-800 text-white"
-                    onClick={handleReporteCalidad}
-                    disabled={generandoCalidad}
-                  >
-                    {generandoCalidad ? <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-white animate-spin" /> : <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5 text-white" />}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Reporte Calidad</TooltipContent>
-              </Tooltip>
-            )}
-            {/* Botón Reporte de Eficiencia por Empresa PDF - Azul con letra blanca */}
-            {isAdmin && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="icon"
-                    className="h-8 w-8 sm:h-10 sm:w-10 bg-blue-700 hover:bg-blue-800 text-white"
-                    onClick={handleReporteEficiencia}
-                    disabled={generandoEficiencia}
-                  >
-                    {generandoEficiencia ? <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-white animate-spin" /> : <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-white" />}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Reporte Eficiencia</TooltipContent>
-              </Tooltip>
-            )}
+
             {/* Botón PDF Reporte Planos con Pines */}
             {
               (<Tooltip>

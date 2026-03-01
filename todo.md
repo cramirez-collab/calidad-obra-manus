@@ -4822,3 +4822,4 @@
 - [x] Reporte de Calidad PDF (ítems OQC: aprobados, rechazados, pendientes por empresa/unidad/especialidad)
 - [x] Reporte de Eficiencia PDF por empresa (programas semanales: cumplimiento, actividades programadas vs ejecutadas)
 - [x] Botones azul con letra blanca en barra de acciones de Bienvenida para ambos reportes
+- [x] Eliminar botones de Reporte Calidad y Reporte Eficiencia de la barra de acciones de Bienvenida
