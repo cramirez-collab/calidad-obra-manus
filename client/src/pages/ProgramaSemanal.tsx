@@ -10,11 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ZoomableLightbox } from "@/components/ZoomableLightbox";
+import { DrawableCanvas } from "@/components/DrawableCanvas";
 import {
   CalendarDays, Plus, Send, Scissors, Trash2, ChevronLeft, ChevronRight,
   Download, Upload, Image as ImageIcon, BarChart3, TrendingUp, Eye, Edit,
   X, Check, AlertTriangle, Clock, FileSpreadsheet, BookTemplate, GitCompare,
-  Save, FolderOpen, Copy, FileDown, Target, Sparkles, Wand2, Loader2, Camera, UserCircle
+  Save, FolderOpen, Copy, FileDown, Target, Sparkles, Wand2, Loader2, Camera, UserCircle,
+  Pencil, Eraser, Undo2, Palette
 } from "lucide-react";
 
 // Helpers de fecha
@@ -1045,15 +1047,14 @@ function generarPDFProgramaSemanal(data: any) {
   const efGlobal = totalProg > 0 ? ((totalReal / totalProg) * 100).toFixed(1) : '—';
 
   const planosHtml = planos.length > 0 ? `
-    <h3 style="margin-top:20px;font-size:14px;color:#002C63;">Planos / Croquis</h3>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px;">
-      ${planos.map((p: any) => `
-        <div style="text-align:center;">
-          <img src="${p.imagenUrl}" style="max-width:100%;max-height:250px;border:1px solid #ddd;border-radius:4px;" crossorigin="anonymous" />
-          ${p.titulo ? `<p style="font-size:10px;color:#666;margin-top:4px;">${p.titulo}</p>` : ''}
-        </div>
-      `).join('')}
-    </div>` : '';
+    <div style="page-break-before:always;"></div>
+    <h3 style="font-size:16px;color:#002C63;margin-bottom:12px;">Planos / Croquis de Referencia</h3>
+    ${planos.map((p: any) => `
+      <div style="text-align:center;margin-bottom:20px;page-break-inside:avoid;">
+        ${p.titulo ? `<p style="font-size:12px;font-weight:600;color:#002C63;margin-bottom:6px;">${p.titulo} ${p.nivel ? '— ' + p.nivel : ''} ${p.tipo ? '(' + p.tipo + ')' : ''}</p>` : ''}
+        <img src="${p.imagenUrl}" style="max-width:100%;max-height:700px;border:1px solid #ccc;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.1);" crossorigin="anonymous" />
+      </div>
+    `).join('')}` : '';
 
   const efPorEspHtml = hasCorte && porEsp.size > 0 ? `
     <h3 style="margin-top:20px;font-size:14px;color:#002C63;">Eficiencia por Especialidad</h3>
@@ -1179,6 +1180,8 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
   const { data, isLoading } = trpc.programaSemanal.getById.useQuery({ id: programaId });
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
+  const [drawCanvasOpen, setDrawCanvasOpen] = useState(false);
+  const [drawCanvasIdx, setDrawCanvasIdx] = useState(0);
 
   if (isLoading || !data) {
     return <div className="space-y-3">
@@ -1325,9 +1328,20 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
           <CardContent className="p-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {data.planos.map((p: any, idx: number) => (
-                <div key={p.id || idx} className="cursor-pointer" onClick={() => { setLightboxIdx(idx); setLightboxOpen(true); }}>
-                  <img src={p.imagenUrl} alt={p.titulo || `Plano ${idx + 1}`}
-                    className="w-full h-32 object-cover rounded-lg border hover:opacity-80 transition-opacity" />
+                <div key={p.id || idx} className="relative group">
+                  <img
+                    src={p.imagenUrl}
+                    alt={p.titulo || `Plano ${idx + 1}`}
+                    className="w-full h-32 object-cover rounded-lg border hover:opacity-80 transition-opacity cursor-pointer"
+                    onClick={() => { setLightboxIdx(idx); setLightboxOpen(true); }}
+                  />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDrawCanvasIdx(idx); setDrawCanvasOpen(true); }}
+                    className="absolute top-1 right-1 flex items-center justify-center w-8 h-8 rounded-full bg-red-500 text-white shadow-lg active:bg-red-600 touch-manipulation"
+                    title="Rayar / Anotar"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
                   {p.titulo && <p className="text-xs text-muted-foreground mt-1 truncate">{p.titulo}</p>}
                 </div>
               ))}
@@ -1342,6 +1356,14 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
           onClose={() => setLightboxOpen(false)}
           gallery={planoUrls}
           initialIndex={lightboxIdx}
+        />
+      )}
+
+      {drawCanvasOpen && planoUrls.length > 0 && (
+        <DrawableCanvas
+          imageUrl={planoUrls[drawCanvasIdx]}
+          onClose={() => setDrawCanvasOpen(false)}
+          title={data.planos[drawCanvasIdx]?.titulo || `Plano ${drawCanvasIdx + 1}`}
         />
       )}
 
@@ -1384,8 +1406,14 @@ function CortePrograma({ programaId, onBack, onCorte, isLoading }: {
 }) {
   const { data } = trpc.programaSemanal.getById.useQuery({ id: programaId });
   const [realizadas, setRealizadas] = useState<Record<number, string>>({});
+  const [drawCanvasOpen, setDrawCanvasOpen] = useState(false);
+  const [drawCanvasIdx, setDrawCanvasIdx] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
 
   if (!data) return null;
+
+  const planoUrls = (data.planos || []).map((p: any) => p.imagenUrl);
 
   const handleCorte = () => {
     const actividadesCorte = (data.actividades || []).map((a: any) => ({
@@ -1468,6 +1496,57 @@ function CortePrograma({ programaId, onBack, onCorte, isLoading }: {
           </div>
         </CardContent>
       </Card>
+
+      {/* Planos de referencia para el corte */}
+      {data.planos && data.planos.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <ImageIcon className="w-4 h-4" /> Planos de Referencia
+              <span className="text-xs text-muted-foreground font-normal">(toca el lápiz para rayar)</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {data.planos.map((p: any, idx: number) => (
+                <div key={p.id || idx} className="relative">
+                  <img
+                    src={p.imagenUrl}
+                    alt={p.titulo || `Plano ${idx + 1}`}
+                    className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => { setLightboxIdx(idx); setLightboxOpen(true); }}
+                  />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDrawCanvasIdx(idx); setDrawCanvasOpen(true); }}
+                    className="absolute top-1 right-1 flex items-center justify-center w-7 h-7 rounded-full bg-red-500 text-white shadow-lg active:bg-red-600 touch-manipulation"
+                    title="Rayar / Anotar"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  {p.titulo && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{p.titulo}</p>}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {lightboxOpen && planoUrls.length > 0 && (
+        <ZoomableLightbox
+          url={planoUrls[lightboxIdx]}
+          onClose={() => setLightboxOpen(false)}
+          gallery={planoUrls}
+          initialIndex={lightboxIdx}
+        />
+      )}
+
+      {drawCanvasOpen && planoUrls.length > 0 && (
+        <DrawableCanvas
+          imageUrl={planoUrls[drawCanvasIdx]}
+          onClose={() => setDrawCanvasOpen(false)}
+          title={data.planos[drawCanvasIdx]?.titulo || `Plano ${drawCanvasIdx + 1}`}
+        />
+      )}
 
       <div className="flex gap-2 justify-end">
         <Button variant="outline" onClick={onBack}>Cancelar</Button>

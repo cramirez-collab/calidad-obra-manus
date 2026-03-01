@@ -4814,3 +4814,6 @@
 - [x] Agregar campo selector de usuario (quién realiza/sube) en formulario de creación de programa semanal
 - [x] Edición de usuario asignado en programas borrador (backend update acepta usuarioId)
 - [x] Historial de quién creó vs quién fue asignado (campo creadoPorId en BD + vista detalle)
+- [x] Incluir imágenes de plano en la exportación PDF del programa semanal (página completa con page-break)
+- [x] Herramienta de dibujo/rayado a mano sobre imágenes de plano en vista de programa (DrawableCanvas)
+- [x] Herramienta de dibujo/rayado a mano sobre imágenes de plano en vista de corte (DrawableCanvas)
