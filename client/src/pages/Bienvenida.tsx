@@ -34,7 +34,8 @@ import {
   Crosshair,
   CircleCheckBig,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  CalendarDays
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ZoomablePlano from "@/components/ZoomablePlano";
@@ -1041,6 +1042,22 @@ export default function Bienvenida() {
                 <TooltipContent>{action.label}</TooltipContent>
               </Tooltip>
             ))}
+            {/* Botón Programa Semanal */}
+            {
+              (<Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8 sm:h-10 sm:w-10 border-slate-300 hover:bg-slate-50"
+                    onClick={() => setLocation('/programa-semanal')}
+                  >
+                    <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5 text-[#002C63]" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Programa Semanal</TooltipContent>
+              </Tooltip>)
+            }
             {/* Botón Ver Planos con Pines */}
             {
               (<Tooltip>

@@ -4785,3 +4785,6 @@
 ## Mejoras Programa Semanal (Fase 8)
 - [x] Exportar ranking de cumplimiento a PDF
 - [x] Metas de eficiencia por usuario: tabla BD, configuración, alertas cuando no se alcance
+
+## Icono Programa Semanal en Bienvenida
+- [x] Agregar icono de Programa Semanal en la segunda fila de accesos rápidos de Bienvenida
