@@ -1,0 +1,514 @@
+{
+  "query": "SELECT id, openId, name, email, role FROM users ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, openId, name, email, role FROM users ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "5WxHPm9UgE4buz7ckFnHZg",
+      "name": "Carlos Ramirez",
+      "email": "cramirez@objetiva.mx",
+      "role": "superadmin"
+    },
+    {
+      "id": "540085",
+      "openId": "C2uKQGY6vUPeX6yVab7zSQ",
+      "name": "Julian Rodríguez Ramírez",
+      "email": "jrodriguez@objetiva.mx",
+      "role": "admin"
+    },
+    {
+      "id": "721649",
+      "openId": "manual_NdPo0efE9QYcurtX",
+      "name": "Estefany Sanchez",
+      "email": "esanchez@objetiva.mx",
+      "role": "admin"
+    },
+    {
+      "id": "721666",
+      "openId": "manual_Yk7NR5kxwOuoO8KG",
+      "name": "Ing.Daniel Vazquez",
+      "email": "dvazquez@objetiva.mx",
+      "role": "supervisor"
+    },
+    {
+      "id": "781860",
+      "openId": "manual_P-tTdDWTZjYb0Sx8",
+      "name": "Omar Palencia",
+      "email": "opalencia@objetiva.mx",
+      "role": "supervisor"
+    },
+    {
+      "id": "1410108",
+      "openId": "manual_TzVRbxIfI-YaTFZK",
+      "name": "Karen Navith",
+      "email": "kanaah0995@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "1410178",
+      "openId": "manual_oRNl2UNMVcj8awwY",
+      "name": "Natalia Diaz",
+      "email": "ndiaz@waller.mx",
+      "role": "residente"
+    },
+    {
+      "id": "1470049",
+      "openId": "manual_O8Snv7_uJnxbaogh",
+      "name": "Esteban Guerrero ",
+      "email": "arqestebanguerrero.garcab@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "1470059",
+      "openId": "manual_8JP6Qq_H0ZBmGYoC",
+      "name": "Jairo Briseño",
+      "email": "iimsa5825@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "1470083",
+      "openId": "manual_RAbUc3-uINV-9cih",
+      "name": "Saul Tovar",
+      "email": "saulstovar@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "1470095",
+      "openId": "manual_-qMJx4O9EC5C9slN",
+      "name": "Eduardo Rodriguez ",
+      "email": "fac.obrasripesa@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "1470115",
+      "openId": "manual_JhyRv_Zr0E4Y2s8W",
+      "name": "Katy Orozco ",
+      "email": "katyorogumik@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "1530050",
+      "openId": "manual_SuR61sY13GNWUSV5",
+      "name": "Zaira Alvarez",
+      "email": "zaira.alvarez@gbpo.com.mx",
+      "role": "desarrollador"
+    },
+    {
+      "id": "1530056",
+      "openId": "manual_ppuPGVNODvy9oLWK",
+      "name": "Marco López",
+      "email": "marco.lopez@gbpo.com.mx",
+      "role": "desarrollador"
+    },
+    {
+      "id": "1530063",
+      "openId": "manual_imnZ6ltcP-AimeIn",
+      "name": "Andres Quiroz",
+      "email": "andres.quiroz@gbpo.com.mx",
+      "role": "desarrollador"
+    },
+    {
+      "id": "1530070",
+      "openId": "manual_OwdbtQN8Oqc-6vLX",
+      "name": "Xitlali Reyes",
+      "email": "xreyesperez@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "1530085",
+      "openId": "manual_u14knr_vp5CvVNnt",
+      "name": "Pablo Mercado",
+      "email": "pmercado74@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "1530090",
+      "openId": "manual_Qbuvh9GKXc8f7yBk",
+      "name": "Genaro Solis",
+      "email": "genaro.solis.espana@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "1530106",
+      "openId": "manual_RiuGHxaG6Py6JKoA",
+      "name": "Jesús Contreras",
+      "email": "jcontreras@objetiva.mx",
+      "role": "residente"
+    },
+    {
+      "id": "1650044",
+      "openId": "manual_cXpR4Qh4Oa9uC5sB",
+      "name": "Jorge Esquivel",
+      "email": "jesquivel@objetiva.mx",
+      "role": "supervisor"
+    },
+    {
+      "id": "2160018",
+      "openId": "manual_UlIvRXEzdJ9JnQn1",
+      "name": "Ximena Becerril ",
+      "email": "xbecerril@objetiva.mx",
+      "role": "supervisor"
+    },
+    {
+      "id": "2160022",
+      "openId": "manual_FzKdT5-ksAiOKFBM",
+      "name": "Gerardo Hurtado ",
+      "email": "ghurtado@objetiva.mx",
+      "role": "supervisor"
+    },
+    {
+      "id": "2160064",
+      "openId": "manual_E9ipUX5zvfugb8Ug",
+      "name": "Nayibe Cardenas",
+      "email": "nayibecardenas@arcin.mx",
+      "role": "residente"
+    },
+    {
+      "id": "4200419",
+      "openId": "manual_8r1ZLuCiPh3ajoqd",
+      "name": "Rafael Manriquez",
+      "email": "rafaelmanriqueznovotile@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "4201178",
+      "openId": "manual_2QvpcnT3NQXqvrWu",
+      "name": "Esteban Guerrero ",
+      "email": "arqestebanguerrero.garcab@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "4351934",
+      "openId": "manual_2FtVcThqRR98fec7",
+      "name": "Jesus Ferrer",
+      "email": "iimsajferrer@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "4351962",
+      "openId": "manual_kiixxpdA5BZeOEKa",
+      "name": "Juan Ruiz",
+      "email": "jruiz@waller.mx",
+      "role": "residente"
+    },
+    {
+      "id": "4352044",
+      "openId": "manual_of-fwOkEoIYfeMku",
+      "name": "Mayra Perez",
+      "email": "proyecto@lupher.com.mx",
+      "role": "segurista"
+    },
+    {
+      "id": "4352184",
+      "openId": "manual_-dMDe0zsHZ0DMcTu",
+      "name": "Juan Javier Morales",
+      "email": "gbgproyecto@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "4357159",
+      "openId": "manual_zqjrYe_ft4D8lYEO",
+      "name": "Eduardo Rubicel ",
+      "email": "riepsaingenieria@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "4357176",
+      "openId": "manual_ThYK7qTWJvx5NYXm",
+      "name": "Gustavo Orozco",
+      "email": "gustavo@gumi-k.com.mx",
+      "role": "residente"
+    },
+    {
+      "id": "4357204",
+      "openId": "manual_SYBMHXETnb4uC6dT",
+      "name": "Gerardo Rojas",
+      "email": "mowy.rrh@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "5130888",
+      "openId": "manual_lbPZtpsZk3LkxOvc",
+      "name": "Jesus Contreras",
+      "email": "jcontreras@objetiva.mx",
+      "role": "supervisor"
+    },
+    {
+      "id": "7140780",
+      "openId": "manual_uhmNId3JWZ6VPHxC",
+      "name": "Laura Neri",
+      "email": "lneri@objetiva.mx",
+      "role": "admin"
+    },
+    {
+      "id": "7140802",
+      "openId": "manual_2TqwApdcS1kkOsmy",
+      "name": "Marlon Sanchez ",
+      "email": "msanchez@objetiva.mx",
+      "role": "supervisor"
+    },
+    {
+      "id": "7140833",
+      "openId": "manual_RnQ4xS8ZyBaLcDmw",
+      "name": "Julian Rodriguez ",
+      "email": "jrodriguez@objetiva.mx",
+      "role": "admin"
+    },
+    {
+      "id": "7681577",
+      "openId": "manual_Ya3HZUmAeA6dH4uw",
+      "name": "Paola Mora",
+      "email": "paolajjmora4910@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "7890028",
+      "openId": "manual_ZHoub-CE8RLde1Zb",
+      "name": "Pablo Galindo",
+      "email": "pgalindo@objetiva.mx",
+      "role": "admin"
+    },
+    {
+      "id": "8340021",
+      "openId": "manual_ne4NYiKLmzEuGQ8w",
+      "name": "Vareli",
+      "email": "vareli.soberanes@qdtinstalaciones.com",
+      "role": "residente"
+    },
+    {
+      "id": "8340027",
+      "openId": "manual_SJv--KPwiIu7YGaE",
+      "name": "Rafael Manriquez",
+      "email": "rafaelmanriqueznovotile@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "8340076",
+      "openId": "manual_DG7kOONQsKt4fPN6",
+      "name": "Carla Hernandez",
+      "email": "carla.hernandez.ldi@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "9330025",
+      "openId": "manual_lyb5vgpwAxdKJr-y",
+      "name": "Andres Quiroz",
+      "email": "Andres.quiroz@gbpo.com.mx",
+      "role": "desarrollador"
+    },
+    {
+      "id": "10920068",
+      "openId": "manual_VrEiSNssL3HQXYAp",
+      "name": "Eduardo González",
+      "email": "bryangonzalez15217@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "10920071",
+      "openId": "manual_n8ErWmYT08Eortvo",
+      "name": "Mary Galindo",
+      "email": "govalu33@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "11070212",
+      "openId": "manual_WgFzCG4gVndLUqHA",
+      "name": "Cynthia Montoya",
+      "email": "seguridad.montoya4@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "11070214",
+      "openId": "manual_fp977vRd5l-WZvgB",
+      "name": "Cynthia Montoya",
+      "email": "seguridad.montoya4@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "11070217",
+      "openId": "manual_dCorjnWGVG5c8akS",
+      "name": "Cynthia Montoya",
+      "email": "seguridad.montoya4@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "11130033",
+      "openId": "manual_B-2s7C1KHFQn0Dje",
+      "name": "Cintya K",
+      "email": "seguridad.montoya4@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "11700013",
+      "openId": "manual_1--ZGgT2UM78e_RT",
+      "name": "Cynthia Montoya",
+      "email": "seguridad.montoya@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "11700015",
+      "openId": "manual_lGqpVGBDz10dJE4n",
+      "name": "Cynthia Montoya",
+      "email": "seguridad.montoya@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "11730003",
+      "openId": "manual_nLeh8kT2Hi2OsUOg",
+      "name": "Barbara Daniela Aguado Rocha",
+      "email": "barbirocha18@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "11730004",
+      "openId": "manual_9e6xNUiVMYZEPuHP",
+      "name": "Guillermo Sanchez Erape",
+      "email": "guillermoerape@icloud.com",
+      "role": "segurista"
+    },
+    {
+      "id": "11730005",
+      "openId": "manual_pxs99DkhPAGg9gQy",
+      "name": "Isabel Estrada Hernandez",
+      "email": "isabel.estrada.ennco@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "11730006",
+      "openId": "manual_xkSwmBW14DRzoq4t",
+      "name": "Miguel Angel Padilla Castillo",
+      "email": "Angelpadillac86@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "11730007",
+      "openId": "manual_3bqomPJR30KvAcbe",
+      "name": "Raymundo Ivan Aguilar Lopez",
+      "email": "aguilar18ivan@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "11730008",
+      "openId": "manual_E8hqCnHnfZj8uHHI",
+      "name": "JP Gonzalez Rolfe",
+      "email": "arq.jp.gonzalez@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "13530022",
+      "openId": "manual_Rt94Up2YudB8qZCG",
+      "name": "Victor Gonzalez",
+      "email": "victorg@dcon.com.mx",
+      "role": "residente"
+    },
+    {
+      "id": "13800253",
+      "openId": "manual_qll57PAfHQ1wz-Jo",
+      "name": "Barbara Aguado",
+      "email": "barbirocha18@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "13800256",
+      "openId": "manual_82V1rinvpLZJQ_NO",
+      "name": "Guillermo Sanchez",
+      "email": "guillermoerape@icloud.com",
+      "role": "residente"
+    },
+    {
+      "id": "13800265",
+      "openId": "manual_jUzecnsEn58N_ZBT",
+      "name": "Bryan Gonzalez",
+      "email": "bryangonzalez15217@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "13800276",
+      "openId": "manual_huha2iCLVFEFIZIp",
+      "name": "Isabel Estrada",
+      "email": "isabel.estrada.ennco@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "13800283",
+      "openId": "manual_qsDU5-lR0-rkqCoB",
+      "name": "Hugo Armando Ortiz",
+      "email": "gbgproyecto@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "13800287",
+      "openId": "manual_OeHQwcloAOeLi9QI",
+      "name": "Angel Padilla",
+      "email": "angelpadillac86@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "13800290",
+      "openId": "manual_V5a7oTZXn12T3vPH",
+      "name": "Raymundo Aguilar",
+      "email": "aguilar18ivan@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "13800294",
+      "openId": "manual_7RW-ODl6Hob-uUL8",
+      "name": "Mary Carmen Galindo",
+      "email": "govalu33@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "13800304",
+      "openId": "manual_rGwzVIEOpizHjrnR",
+      "name": "Juan Pablo Gonzalez",
+      "email": "arq.jp.gonzalez@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "13800873",
+      "openId": "manual_vbDQsLX9fPQJ8NTu",
+      "name": "Fernando Mojica",
+      "email": "fernando.mojica2016@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "13801050",
+      "openId": "manual_3tNk9NDlFs8YjfL_",
+      "name": "Amalio Mayto",
+      "email": "amaliomayto@gmail.com",
+      "role": "segurista"
+    },
+    {
+      "id": "13801073",
+      "openId": "manual_qkrzpmNgsf3hg9DS",
+      "name": "Angel Muñoz",
+      "email": "angel.munoz.garbac@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "13801096",
+      "openId": "manual_nLf3j5C6fwSwR_hz",
+      "name": "Daniel García",
+      "email": "daniel.garcia.arq.contacto@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "14400068",
+      "openId": "manual_F38aohhswrnW6H5y",
+      "name": "Edgar Romo",
+      "email": "romoedgar137@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "14400070",
+      "openId": "manual_n2zMDJTRhPY2XKK-",
+      "name": "Edgar Romo",
+      "email": "romoedgar137@gmail.com",
+      "role": "residente"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\trole\n1\t5WxHPm9UgE4buz7ckFnHZg\tCarlos Ramirez\tcramirez@objetiva.mx\tsuperadmin\n540085\tC2uKQGY6vUPeX6yVab7zSQ\tJulian Rodríguez Ramírez\tjrodriguez@objetiva.mx\tadmin\n721649\tmanual_NdPo0efE9QYcurtX\tEstefany Sanchez\tesanchez@objetiva.mx\tadmin\n721666\tmanual_Yk7NR5kxwOuoO8KG\tIng.Daniel Vazquez\tdvazquez@objetiva.mx\tsupervisor\n781860\tmanual_P-tTdDWTZjYb0Sx8\tOmar Palencia\topalencia@objetiva.mx\tsupervisor\n1410108\tmanual_TzVRbxIfI-YaTFZK\tKaren Navith\tkanaah0995@gmail.com\tresidente\n1410178\tmanual_oRNl2UNMVcj8awwY\tNatalia Diaz\tndiaz@waller.mx\tresidente\n1470049\tmanual_O8Snv7_uJnxbaogh\tEsteban Guerrero \tarqestebanguerrero.garcab@gmail.com\tresidente\n1470059\tmanual_8JP6Qq_H0ZBmGYoC\tJairo Briseño\tiimsa5825@gmail.com\tresidente\n1470083\tmanual_RAbUc3-uINV-9cih\tSaul Tovar\tsaulstovar@gmail.com\tresidente\n1470095\tmanual_-qMJx4O9EC5C9slN\tEduardo Rodriguez \tfac.obrasripesa@gmail.com\tresidente\n1470115\tmanual_JhyRv_Zr0E4Y2s8W\tKaty Orozco \tkatyorogumik@gmail.com\tresidente\n1530050\tmanual_SuR61sY13GNWUSV5\tZaira Alvarez\tzaira.alvarez@gbpo.com.mx\tdesarrollador\n1530056\tmanual_ppuPGVNODvy9oLWK\tMarco López\tmarco.lopez@gbpo.com.mx\tdesarrollador\n1530063\tmanual_imnZ6ltcP-AimeIn\tAndres Quiroz\tandres.quiroz@gbpo.com.mx\tdesarrollador\n1530070\tmanual_OwdbtQN8Oqc-6vLX\tXitlali Reyes\txreyesperez@gmail.com\tresidente\n1530085\tmanual_u14knr_vp5CvVNnt\tPablo Mercado\tpmercado74@gmail.com\tresidente\n1530090\tmanual_Qbuvh9GKXc8f7yBk\tGenaro Solis\tgenaro.solis.espana@gmail.com\tresidente\n1530106\tmanual_RiuGHxaG6Py6JKoA\tJesús Contreras\tjcontreras@objetiva.mx\tresidente\n1650044\tmanual_cXpR4Qh4Oa9uC5sB\tJorge Esquivel\tjesquivel@objetiva.mx\tsupervisor\n2160018\tmanual_UlIvRXEzdJ9JnQn1\tXimena Becerril \txbecerril@objetiva.mx\tsupervisor\n2160022\tmanual_FzKdT5-ksAiOKFBM\tGerardo Hurtado \tghurtado@objetiva.mx\tsupervisor\n2160064\tmanual_E9ipUX5zvfugb8Ug\tNayibe Cardenas\tnayibecardenas@arcin.mx\tresidente\n4200419\tmanual_8r1ZLuCiPh3ajoqd\tRafael Manriquez\trafaelmanriqueznovotile@gmail.com\tresidente\n4201178\tmanual_2QvpcnT3NQXqvrWu\tEsteban Guerrero \tarqestebanguerrero.garcab@gmail.com\tresidente\n4351934\tmanual_2FtVcThqRR98fec7\tJesus Ferrer\tiimsajferrer@gmail.com\tresidente\n4351962\tmanual_kiixxpdA5BZeOEKa\tJuan Ruiz\tjruiz@waller.mx\tresidente\n4352044\tmanual_of-fwOkEoIYfeMku\tMayra Perez\tproyecto@lupher.com.mx\tsegurista\n4352184\tmanual_-dMDe0zsHZ0DMcTu\tJuan Javier Morales\tgbgproyecto@gmail.com\tsegurista\n4357159\tmanual_zqjrYe_ft4D8lYEO\tEduardo Rubicel \triepsaingenieria@gmail.com\tresidente\n4357176\tmanual_ThYK7qTWJvx5NYXm\tGustavo Orozco\tgustavo@gumi-k.com.mx\tresidente\n4357204\tmanual_SYBMHXETnb4uC6dT\tGerardo Rojas\tmowy.rrh@gmail.com\tresidente\n5130888\tmanual_lbPZtpsZk3LkxOvc\tJesus Contreras\tjcontreras@objetiva.mx\tsupervisor\n7140780\tmanual_uhmNId3JWZ6VPHxC\tLaura Neri\tlneri@objetiva.mx\tadmin\n7140802\tmanual_2TqwApdcS1kkOsmy\tMarlon Sanchez \tmsanchez@objetiva.mx\tsupervisor\n7140833\tmanual_RnQ4xS8ZyBaLcDmw\tJulian Rodriguez \tjrodriguez@objetiva.mx\tadmin\n7681577\tmanual_Ya3HZUmAeA6dH4uw\tPaola Mora\tpaolajjmora4910@gmail.com\tresidente\n7890028\tmanual_ZHoub-CE8RLde1Zb\tPablo Galindo\tpgalindo@objetiva.mx\tadmin\n8340021\tmanual_ne4NYiKLmzEuGQ8w\tVareli\tvareli.soberanes@qdtinstalaciones.com\tresidente\n8340027\tmanual_SJv--KPwiIu7YGaE\tRafael Manriquez\trafaelmanriqueznovotile@gmail.com\tresidente\n8340076\tmanual_DG7kOONQsKt4fPN6\tCarla Hernandez\tcarla.hernandez.ldi@gmail.com\tresidente\n9330025\tmanual_lyb5vgpwAxdKJr-y\tAndres Quiroz\tAndres.quiroz@gbpo.com.mx\tdesarrollador\n10920068\tmanual_VrEiSNssL3HQXYAp\tEduardo González\tbryangonzalez15217@gmail.com\tsegurista\n10920071\tmanual_n8ErWmYT08Eortvo\tMary Galindo\tgovalu33@gmail.com\tsegurista\n11070212\tmanual_WgFzCG4gVndLUqHA\tCynthia Montoya\tseguridad.montoya4@gmail.com\tsegurista\n11070214\tmanual_fp977vRd5l-WZvgB\tCynthia Montoya\tseguridad.montoya4@gmail.com\tsegurista\n11070217\tmanual_dCorjnWGVG5c8akS\tCynthia Montoya\tseguridad.montoya4@gmail.com\tsegurista\n11130033\tmanual_B-2s7C1KHFQn0Dje\tCintya K\tseguridad.montoya4@gmail.com\tresidente\n11700013\tmanual_1--ZGgT2UM78e_RT\tCynthia Montoya\tseguridad.montoya@gmail.com\tsegurista\n11700015\tmanual_lGqpVGBDz10dJE4n\tCynthia Montoya\tseguridad.montoya@gmail.com\tsegurista\n11730003\tmanual_nLeh8kT2Hi2OsUOg\tBarbara Daniela Aguado Rocha\tbarbirocha18@gmail.com\tsegurista\n11730004\tmanual_9e6xNUiVMYZEPuHP\tGuillermo Sanchez Erape\tguillermoerape@icloud.com\tsegurista\n11730005\tmanual_pxs99DkhPAGg9gQy\tIsabel Estrada Hernandez\tisabel.estrada.ennco@gmail.com\tsegurista\n11730006\tmanual_xkSwmBW14DRzoq4t\tMiguel Angel Padilla Castillo\tAngelpadillac86@gmail.com\tsegurista\n11730007\tmanual_3bqomPJR30KvAcbe\tRaymundo Ivan Aguilar Lopez\taguilar18ivan@gmail.com\tsegurista\n11730008\tmanual_E8hqCnHnfZj8uHHI\tJP Gonzalez Rolfe\tarq.jp.gonzalez@gmail.com\tsegurista\n13530022\tmanual_Rt94Up2YudB8qZCG\tVictor Gonzalez\tvictorg@dcon.com.mx\tresidente\n13800253\tmanual_qll57PAfHQ1wz-Jo\tBarbara Aguado\tbarbirocha18@gmail.com\tresidente\n13800256\tmanual_82V1rinvpLZJQ_NO\tGuillermo Sanchez\tguillermoerape@icloud.com\tresidente\n13800265\tmanual_jUzecnsEn58N_ZBT\tBryan Gonzalez\tbryangonzalez15217@gmail.com\tresidente\n13800276\tmanual_huha2iCLVFEFIZIp\tIsabel Estrada\tisabel.estrada.ennco@gmail.com\tresidente\n13800283\tmanual_qsDU5-lR0-rkqCoB\tHugo Armando Ortiz\tgbgproyecto@gmail.com\tresidente\n13800287\tmanual_OeHQwcloAOeLi9QI\tAngel Padilla\tangelpadillac86@gmail.com\tresidente\n13800290\tmanual_V5a7oTZXn12T3vPH\tRaymundo Aguilar\taguilar18ivan@gmail.com\tresidente\n13800294\tmanual_7RW-ODl6Hob-uUL8\tMary Carmen Galindo\tgovalu33@gmail.com\tresidente\n13800304\tmanual_rGwzVIEOpizHjrnR\tJuan Pablo Gonzalez\tarq.jp.gonzalez@gmail.com\tresidente\n13800873\tmanual_vbDQsLX9fPQJ8NTu\tFernando Mojica\tfernando.mojica2016@gmail.com\tresidente\n13801050\tmanual_3tNk9NDlFs8YjfL_\tAmalio Mayto\tamaliomayto@gmail.com\tsegurista\n13801073\tmanual_qkrzpmNgsf3hg9DS\tAngel Muñoz\tangel.munoz.garbac@gmail.com\tresidente\n13801096\tmanual_nLf3j5C6fwSwR_hz\tDaniel García\tdaniel.garcia.arq.contacto@gmail.com\tresidente\n14400068\tmanual_F38aohhswrnW6H5y\tEdgar Romo\tromoedgar137@gmail.com\tresidente\n14400070\tmanual_n2zMDJTRhPY2XKK-\tEdgar Romo\tromoedgar137@gmail.com\tresidente\n",
+  "stderr": "",
+  "execution_time_ms": 363
+}

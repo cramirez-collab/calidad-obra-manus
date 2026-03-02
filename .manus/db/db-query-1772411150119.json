@@ -1,0 +1,145 @@
+{
+  "query": "SELECT id, codigo, tipo_incidente, severidad_incidente, estado_incidente, LEFT(descripcion, 80) as desc_corta, proyectoId, createdAt FROM incidentes_seguridad ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, codigo, tipo_incidente, severidad_incidente, estado_incidente, LEFT(descripcion, 80) as desc_corta, proyectoId, createdAt FROM incidentes_seguridad ORDER BY id;",
+  "rows": [
+    {
+      "id": "90001",
+      "codigo": "SEG00001",
+      "tipo_incidente": "condicion_insegura",
+      "severidad_incidente": "alta",
+      "estado_incidente": "prevencion",
+      "desc_corta": "ESCALERA HECHIZA EN SOTANO 4 EN LA VERTICAR DE LAS ESCALERAS DEL CUBO DE ELEVADO",
+      "proyectoId": "1",
+      "createdAt": "2026-02-20 23:26:03"
+    },
+    {
+      "id": "120001",
+      "codigo": "SEG00002",
+      "tipo_incidente": "condicion_insegura",
+      "severidad_incidente": "alta",
+      "estado_incidente": "abierto",
+      "desc_corta": "Riesgo caída a otro nivel sin anclaje, falta de señalizacion y delimitacion, fal",
+      "proyectoId": "1",
+      "createdAt": "2026-02-21 19:08:04"
+    },
+    {
+      "id": "120002",
+      "codigo": "SEG00003",
+      "tipo_incidente": "condicion_insegura",
+      "severidad_incidente": "media",
+      "estado_incidente": "abierto",
+      "desc_corta": "Material apilado, varillas de cisterna expuestas, no hay delimitacion de acopios",
+      "proyectoId": "1",
+      "createdAt": "2026-02-21 19:10:48"
+    },
+    {
+      "id": "120004",
+      "codigo": "SEG00005",
+      "tipo_incidente": "condicion_insegura",
+      "severidad_incidente": "media",
+      "estado_incidente": "en_proceso",
+      "desc_corta": "Material de mezclas sin artesas adecuadas para los derrames.",
+      "proyectoId": "1",
+      "createdAt": "2026-02-21 19:15:00"
+    },
+    {
+      "id": "150001",
+      "codigo": "SEG00007",
+      "tipo_incidente": "condicion_insegura",
+      "severidad_incidente": "alta",
+      "estado_incidente": "cerrado",
+      "desc_corta": "Tanques sin arriestro seguro y sin capuchon de trabajo",
+      "proyectoId": "1",
+      "createdAt": "2026-02-25 16:36:39"
+    },
+    {
+      "id": "180001",
+      "codigo": "SEG00008",
+      "tipo_incidente": "condicion_insegura",
+      "severidad_incidente": "critica",
+      "estado_incidente": "prevencion",
+      "desc_corta": "Acceso de monta cargas sin proteccion",
+      "proyectoId": "1",
+      "createdAt": "2026-02-26 16:00:10"
+    },
+    {
+      "id": "180002",
+      "codigo": "SEG00009",
+      "tipo_incidente": "condicion_insegura",
+      "severidad_incidente": "media",
+      "estado_incidente": "abierto",
+      "desc_corta": "Bordes con riesgo de caída a otro nivel, desprotegidos, material de descimbra, r",
+      "proyectoId": "1",
+      "createdAt": "2026-02-26 18:51:25"
+    },
+    {
+      "id": "180003",
+      "codigo": "SEG00010",
+      "tipo_incidente": "condicion_insegura",
+      "severidad_incidente": "alta",
+      "estado_incidente": "abierto",
+      "desc_corta": "Huecos de verticales de instalaciones desprotegidos con riesgo de caída a otro n",
+      "proyectoId": "1",
+      "createdAt": "2026-02-26 18:53:13"
+    },
+    {
+      "id": "180004",
+      "codigo": "SEG00011",
+      "tipo_incidente": "condicion_insegura",
+      "severidad_incidente": "alta",
+      "estado_incidente": "abierto",
+      "desc_corta": "Falta rehabilitado de las delimitaciones perimetrales de N9 y retiro de material",
+      "proyectoId": "1",
+      "createdAt": "2026-02-26 18:58:00"
+    },
+    {
+      "id": "180005",
+      "codigo": "SEG00012",
+      "tipo_incidente": "electrico",
+      "severidad_incidente": "media",
+      "estado_incidente": "abierto",
+      "desc_corta": "Falta de tapas en contactos de los tableros distribuidos en distintos niveles.",
+      "proyectoId": "1",
+      "createdAt": "2026-02-26 18:59:49"
+    },
+    {
+      "id": "180006",
+      "codigo": "SEG00013",
+      "tipo_incidente": "acto_inseguro",
+      "severidad_incidente": "media",
+      "estado_incidente": "prevencion",
+      "desc_corta": "Mal uso de los equipos, esa pieza de andamio no cuenta como escalera.",
+      "proyectoId": "1",
+      "createdAt": "2026-02-26 19:01:33"
+    },
+    {
+      "id": "210001",
+      "codigo": "SEG00014",
+      "tipo_incidente": "otro",
+      "severidad_incidente": "baja",
+      "estado_incidente": "prevencion",
+      "desc_corta": "Residuo de espuma por trabajos de rappel en fachada. (Distintos niveles)",
+      "proyectoId": "1",
+      "createdAt": "2026-02-26 19:22:25"
+    },
+    {
+      "id": "240001",
+      "codigo": "SEG00015",
+      "tipo_incidente": "electrico",
+      "severidad_incidente": "alta",
+      "estado_incidente": "en_proceso",
+      "desc_corta": "Extenciones en mal estado, pueden ser causantes de un corto circuito y generar u",
+      "proyectoId": "1",
+      "createdAt": "2026-02-27 01:36:45"
+    }
+  ],
+  "messages": [
+    "120003\tSEG00004\tcondicion_insegura\talta\ten_proceso\tZona de riesgo (cisterna) sin señalización ni delimitacion adecuada.",
+    "Falta de or\t1\t2026-02-21 19:13:08",
+    "120005\tSEG00006\tcondicion_insegura\tcritica\tcerrado\tbordes desprotegidos con riesgo de caida a otro nivel",
+    "falta de barreras fisicas \t1\t2026-02-21 19:17:17"
+  ],
+  "stdout": "id\tcodigo\ttipo_incidente\tseveridad_incidente\testado_incidente\tdesc_corta\tproyectoId\tcreatedAt\n90001\tSEG00001\tcondicion_insegura\talta\tprevencion\tESCALERA HECHIZA EN SOTANO 4 EN LA VERTICAR DE LAS ESCALERAS DEL CUBO DE ELEVADO\t1\t2026-02-20 23:26:03\n120001\tSEG00002\tcondicion_insegura\talta\tabierto\tRiesgo caída a otro nivel sin anclaje, falta de señalizacion y delimitacion, fal\t1\t2026-02-21 19:08:04\n120002\tSEG00003\tcondicion_insegura\tmedia\tabierto\tMaterial apilado, varillas de cisterna expuestas, no hay delimitacion de acopios\t1\t2026-02-21 19:10:48\n120003\tSEG00004\tcondicion_insegura\talta\ten_proceso\tZona de riesgo (cisterna) sin señalización ni delimitacion adecuada.\nFalta de or\t1\t2026-02-21 19:13:08\n120004\tSEG00005\tcondicion_insegura\tmedia\ten_proceso\tMaterial de mezclas sin artesas adecuadas para los derrames.\t1\t2026-02-21 19:15:00\n120005\tSEG00006\tcondicion_insegura\tcritica\tcerrado\tbordes desprotegidos con riesgo de caida a otro nivel\nfalta de barreras fisicas \t1\t2026-02-21 19:17:17\n150001\tSEG00007\tcondicion_insegura\talta\tcerrado\tTanques sin arriestro seguro y sin capuchon de trabajo\t1\t2026-02-25 16:36:39\n180001\tSEG00008\tcondicion_insegura\tcritica\tprevencion\tAcceso de monta cargas sin proteccion\t1\t2026-02-26 16:00:10\n180002\tSEG00009\tcondicion_insegura\tmedia\tabierto\tBordes con riesgo de caída a otro nivel, desprotegidos, material de descimbra, r\t1\t2026-02-26 18:51:25\n180003\tSEG00010\tcondicion_insegura\talta\tabierto\tHuecos de verticales de instalaciones desprotegidos con riesgo de caída a otro n\t1\t2026-02-26 18:53:13\n180004\tSEG00011\tcondicion_insegura\talta\tabierto\tFalta rehabilitado de las delimitaciones perimetrales de N9 y retiro de material\t1\t2026-02-26 18:58:00\n180005\tSEG00012\telectrico\tmedia\tabierto\tFalta de tapas en contactos de los tableros distribuidos en distintos niveles.\t1\t2026-02-26 18:59:49\n180006\tSEG00013\tacto_inseguro\tmedia\tprevencion\tMal uso de los equipos, esa pieza de andamio no cuenta como escalera.\t1\t2026-02-26 19:01:33\n210001\tSEG00014\totro\tbaja\tprevencion\tResiduo de espuma por trabajos de rappel en fachada. (Distintos niveles)\t1\t2026-02-26 19:22:25\n240001\tSEG00015\telectrico\talta\ten_proceso\tExtenciones en mal estado, pueden ser causantes de un corto circuito y generar u\t1\t2026-02-27 01:36:45\n",
+  "stderr": "",
+  "execution_time_ms": 356
+}

@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, openId, name, role FROM users WHERE openId LIKE '%4357159%' OR openId LIKE '%1530070%' OR id = 4357159 OR id = 1530070;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, openId, name, role FROM users WHERE openId LIKE '%4357159%' OR openId LIKE '%1530070%' OR id = 4357159 OR id = 1530070;",
+  "rows": [
+    {
+      "id": "1530070",
+      "openId": "manual_OwdbtQN8Oqc-6vLX",
+      "name": "Xitlali Reyes",
+      "role": "residente"
+    },
+    {
+      "id": "4357159",
+      "openId": "manual_zqjrYe_ft4D8lYEO",
+      "name": "Eduardo Rubicel ",
+      "role": "residente"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\trole\n1530070\tmanual_OwdbtQN8Oqc-6vLX\tXitlali Reyes\tresidente\n4357159\tmanual_zqjrYe_ft4D8lYEO\tEduardo Rubicel \tresidente\n",
+  "stderr": "",
+  "execution_time_ms": 360
+}

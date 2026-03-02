@@ -4849,3 +4849,11 @@
 - [x] Semáforo de cumplimiento por empresa (verde/amarillo/rojo)
 - [x] Tabla comparativa de empresas con KPIs de seguridad
 - [x] Gráfico de barras de incidentes por empresa
+
+## Limpieza de datos de prueba (Fase 17)
+- [ ] Eliminar incidentes de prueba de seguridad de la BD
+- [ ] Eliminar mensajes, evidencias, bitácora y checklists asociados
+
+## Corrección nombres en Ranking de Cumplimiento (Fase 17)
+- [x] Mostrar nombres reales de usuarios en lugar de "Usuario #ID" en ranking de cumplimiento
+- [x] Corregir acceso a usuario en verificarAlertasMetas (mismo bug)

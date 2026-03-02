@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, openId, name, email, role FROM users WHERE id IN (4357159, 1530070) OR openId IN ('4357159', '1530070');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, openId, name, email, role FROM users WHERE id IN (4357159, 1530070) OR openId IN ('4357159', '1530070');",
+  "rows": [
+    {
+      "id": "1530070",
+      "openId": "manual_OwdbtQN8Oqc-6vLX",
+      "name": "Xitlali Reyes",
+      "email": "xreyesperez@gmail.com",
+      "role": "residente"
+    },
+    {
+      "id": "4357159",
+      "openId": "manual_zqjrYe_ft4D8lYEO",
+      "name": "Eduardo Rubicel ",
+      "email": "riepsaingenieria@gmail.com",
+      "role": "residente"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\trole\n1530070\tmanual_OwdbtQN8Oqc-6vLX\tXitlali Reyes\txreyesperez@gmail.com\tresidente\n4357159\tmanual_zqjrYe_ft4D8lYEO\tEduardo Rubicel \triepsaingenieria@gmail.com\tresidente\n",
+  "stderr": "",
+  "execution_time_ms": 363
+}

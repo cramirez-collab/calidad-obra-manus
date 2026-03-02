@@ -6138,19 +6138,21 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
 
         // Obtener nombres de usuarios
         const usuarios = await db.getUsuariosByProyecto(input.proyectoId);
-        const usuariosMap = new Map(usuarios.map((u: any) => [u.id, u]));
+        // getUsuariosByProyecto retorna { usuarioId, usuario: { id, name, role, ... }, ... }
+        const usuariosMap = new Map(usuarios.map((u: any) => [u.usuarioId, u]));
 
         const ranking = Array.from(userMap.entries()).map(([userId, data]) => {
-          const user = usuariosMap.get(userId);
+          const rel = usuariosMap.get(userId);
+          const user = rel?.usuario;
           const efPromedio = data.eficiencias.length > 0
             ? Math.round(data.eficiencias.reduce((s, e) => s + e, 0) / data.eficiencias.length * 100) / 100
             : null;
           const pctATiempo = data.total > 0 ? Math.round((data.aTiempo / data.total) * 10000) / 100 : 0;
           return {
             userId,
-            nombre: (user as any)?.name || `Usuario #${userId}`,
-            role: (user as any)?.role || '',
-            especialidad: (user as any)?.especialidad || '',
+            nombre: user?.name || `Usuario #${userId}`,
+            role: user?.role || rel?.rol || '',
+            especialidad: rel?.especialidad || '',
             total: data.total,
             aTiempo: data.aTiempo,
             tarde: data.tarde,
@@ -6204,13 +6206,13 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
 
         const alertas: { usuarioId: number; nombre: string; tipo: string; meta: number; actual: number; diferencia: number }[] = [];
         const usuarios = await db.getUsuariosByProyecto(input.proyectoId);
-        const usuariosMap = new Map(usuarios.map((u: any) => [u.id, u]));
+        const usuariosMap = new Map(usuarios.map((u: any) => [u.usuarioId, u]));
 
         for (const meta of metas) {
           const userProgs = recientes.filter((p: any) => p.usuarioId === meta.usuarioId);
           if (userProgs.length === 0) continue;
-          const user = usuariosMap.get(meta.usuarioId);
-          const nombre = (user as any)?.name || `Usuario #${meta.usuarioId}`;
+          const rel = usuariosMap.get(meta.usuarioId);
+          const nombre = rel?.usuario?.name || `Usuario #${meta.usuarioId}`;
 
           // Verificar eficiencia
           const eficiencias = userProgs.filter((p: any) => p.eficienciaGlobal != null).map((p: any) => parseFloat(p.eficienciaGlobal));

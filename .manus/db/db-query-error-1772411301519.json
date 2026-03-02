@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, LEFT(descripcion, 60) as desc_corta, status, proyectoId, createdBy, createdAt FROM items WHERE descripcion LIKE '%test%' OR descripcion LIKE '%prueba%' OR descripcion LIKE '%ejemplo%' ORDER BY id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, LEFT(descripcion, 60) as desc_corta, status, proyectoId, createdBy, createdAt FROM items WHERE descripcion LIKE '%test%' OR descripcion LIKE '%prueba%' OR descripcion LIKE '%ejemplo%' ORDER BY id LIMIT 20;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'createdby' in 'field list'"
+  ]
+}
