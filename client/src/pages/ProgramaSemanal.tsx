@@ -1026,8 +1026,24 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
   );
 }
 
+// ===== HELPER: Convertir imagen URL a base64 =====
+async function imageUrlToBase64(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(url); // fallback a URL original
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return url; // fallback a URL original si falla
+  }
+}
+
 // ===== GENERAR PDF =====
-function generarPDFProgramaSemanal(data: any) {
+async function generarPDFProgramaSemanal(data: any) {
   const statusLabels: Record<string, string> = { borrador: 'Borrador', entregado: 'Entregado', corte_realizado: 'Corte Realizado' };
   const actividades = data.actividades || [];
   const planos = data.planos || [];
@@ -1046,15 +1062,25 @@ function generarPDFProgramaSemanal(data: any) {
   const totalReal = actividades.reduce((s: number, a: any) => s + (parseFloat(a.cantidadRealizada) || 0), 0);
   const efGlobal = totalProg > 0 ? ((totalReal / totalProg) * 100).toFixed(1) : '—';
 
-  const planosHtml = planos.length > 0 ? `
-    <div style="page-break-before:always;"></div>
-    <h3 style="font-size:16px;color:#002C63;margin-bottom:12px;">Planos / Croquis de Referencia</h3>
-    ${planos.map((p: any) => `
-      <div style="text-align:center;margin-bottom:20px;page-break-inside:avoid;">
-        ${p.titulo ? `<p style="font-size:12px;font-weight:600;color:#002C63;margin-bottom:6px;">${p.titulo} ${p.nivel ? '— ' + p.nivel : ''} ${p.tipo ? '(' + p.tipo + ')' : ''}</p>` : ''}
-        <img src="${p.imagenUrl}" style="max-width:100%;max-height:700px;border:1px solid #ccc;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.1);" crossorigin="anonymous" />
-      </div>
-    `).join('')}` : '';
+  // Convertir imágenes de planos a base64 para que funcionen en blob HTML
+  let planosHtml = '';
+  if (planos.length > 0) {
+    const planosBase64 = await Promise.all(
+      planos.map(async (p: any) => {
+        const base64 = p.imagenUrl ? await imageUrlToBase64(p.imagenUrl) : '';
+        return { ...p, base64Src: base64 };
+      })
+    );
+    planosHtml = `
+      <div style="page-break-before:always;"></div>
+      <h3 style="font-size:16px;color:#002C63;margin-bottom:12px;">Planos / Croquis de Referencia</h3>
+      ${planosBase64.map((p: any) => `
+        <div style="text-align:center;margin-bottom:20px;page-break-inside:avoid;">
+          ${p.titulo ? `<p style="font-size:12px;font-weight:600;color:#002C63;margin-bottom:6px;">${p.titulo} ${p.nivel ? '— ' + p.nivel : ''} ${p.tipo ? '(' + p.tipo + ')' : ''}</p>` : ''}
+          <img src="${p.base64Src}" style="max-width:100%;max-height:700px;border:1px solid #ccc;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.1);" />
+        </div>
+      `).join('')}`;
+  }
 
   const efPorEspHtml = hasCorte && porEsp.size > 0 ? `
     <h3 style="margin-top:20px;font-size:14px;color:#002C63;">Eficiencia por Especialidad</h3>
@@ -1369,7 +1395,13 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
 
       {/* Acciones */}
       <div className="flex gap-2 justify-end flex-wrap">
-        <Button variant="outline" size="sm" onClick={() => generarPDFProgramaSemanal(data)}>
+        <Button variant="outline" size="sm" onClick={async () => {
+          const btn = document.activeElement as HTMLButtonElement;
+          if (btn) { btn.disabled = true; btn.textContent = 'Generando...'; }
+          try { await generarPDFProgramaSemanal(data); } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = ''; }
+          }
+        }}>
           <Download className="w-4 h-4 mr-1" /> PDF
         </Button>
         <GuardarComoPlantillaBtn programaId={programaId} />

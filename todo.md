@@ -4863,3 +4863,6 @@
 - [x] Auditar y corregir todos los patrones "Usuario #ID" en frontend (pages/*.tsx) - fallbacks legítimos, users.list ya extrae .usuario
 - [x] Agregar avatar/foto de usuario junto al nombre en ranking de cumplimiento (podio, tabla, barra visual)
 - [x] Verificar que export PDF del ranking muestre nombres reales - usa r.nombre que ya viene correcto del backend
+
+## Bug: Imagen de referencia rota en PDF de Programa Semanal (Fase 19)
+- [x] Corregir renderización de imágenes de planos/croquis en el PDF exportado (convertir a base64 antes de insertar en blob HTML)
