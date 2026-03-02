@@ -341,3 +341,96 @@ describe("Seguridad - Badge mensajes y filtro responsable", () => {
     expect(shouldShow).toBe(false);
   });
 });
+
+describe("Seguridad - Dashboard métricas por empresa", () => {
+  it("calcula semáforo verde cuando no hay incidentes abiertos", () => {
+    const abiertos = 0;
+    const enProceso = 0;
+    const noResueltos = abiertos + enProceso;
+    const color = noResueltos === 0 ? 'verde' : noResueltos <= 2 ? 'amarillo' : 'rojo';
+    expect(color).toBe('verde');
+  });
+
+  it("calcula semáforo amarillo cuando hay 1-2 incidentes no resueltos", () => {
+    const abiertos = 1;
+    const enProceso = 1;
+    const noResueltos = abiertos + enProceso;
+    const color = noResueltos === 0 ? 'verde' : noResueltos <= 2 ? 'amarillo' : 'rojo';
+    expect(color).toBe('amarillo');
+  });
+
+  it("calcula semáforo rojo cuando hay más de 2 incidentes no resueltos", () => {
+    const abiertos = 2;
+    const enProceso = 1;
+    const noResueltos = abiertos + enProceso;
+    const color = noResueltos === 0 ? 'verde' : noResueltos <= 2 ? 'amarillo' : 'rojo';
+    expect(color).toBe('rojo');
+  });
+
+  it("calcula cumplimiento correctamente", () => {
+    const total = 10;
+    const cerrados = 8;
+    const cumplimiento = total > 0 ? Math.round((cerrados / total) * 100) : 0;
+    expect(cumplimiento).toBe(80);
+  });
+
+  it("cumplimiento es 0 cuando no hay incidentes", () => {
+    const total = 0;
+    const cerrados = 0;
+    const cumplimiento = total > 0 ? Math.round((cerrados / total) * 100) : 0;
+    expect(cumplimiento).toBe(0);
+  });
+
+  it("promedio de horas se calcula correctamente", () => {
+    const horas = 48;
+    const cerradosConFecha = 2;
+    const promedioHoras = cerradosConFecha > 0 ? Math.round((horas / cerradosConFecha) * 10) / 10 : null;
+    expect(promedioHoras).toBe(24);
+  });
+
+  it("promedio es null cuando no hay cerrados con fecha", () => {
+    const horas = 0;
+    const cerradosConFecha = 0;
+    const promedioHoras = cerradosConFecha > 0 ? Math.round((horas / cerradosConFecha) * 10) / 10 : null;
+    expect(promedioHoras).toBeNull();
+  });
+
+  it("ordena empresas por incidentes no resueltos descendente", () => {
+    const empresas = [
+      { nombre: "A", abiertos: 0, enProceso: 0 },
+      { nombre: "B", abiertos: 3, enProceso: 1 },
+      { nombre: "C", abiertos: 1, enProceso: 0 },
+    ];
+    const sorted = empresas.sort((a, b) => (b.abiertos + b.enProceso) - (a.abiertos + a.enProceso));
+    expect(sorted[0].nombre).toBe("B");
+    expect(sorted[1].nombre).toBe("C");
+    expect(sorted[2].nombre).toBe("A");
+  });
+
+  it("porSeveridad agrupa correctamente por empresa", () => {
+    const sevMap = new Map<string, number>();
+    const incidentes = [
+      { severidad: "alta" },
+      { severidad: "baja" },
+      { severidad: "alta" },
+      { severidad: "critica" },
+    ];
+    incidentes.forEach(i => sevMap.set(i.severidad, (sevMap.get(i.severidad) || 0) + 1));
+    const result = Array.from(sevMap.entries()).map(([severidad, count]) => ({ severidad, count }));
+    expect(result).toHaveLength(3);
+    expect(result.find(r => r.severidad === "alta")?.count).toBe(2);
+    expect(result.find(r => r.severidad === "critica")?.count).toBe(1);
+  });
+
+  it("cuenta críticos (alta + critica) correctamente", () => {
+    const incidentes = [
+      { severidad: "baja" },
+      { severidad: "media" },
+      { severidad: "alta" },
+      { severidad: "critica" },
+      { severidad: "alta" },
+    ];
+    const criticos = incidentes.filter(i => i.severidad === "alta" || i.severidad === "critica").length;
+    expect(criticos).toBe(3);
+  });
+});

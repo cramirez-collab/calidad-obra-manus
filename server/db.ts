@@ -6685,8 +6685,81 @@ export async function getEstadisticasSeguridad(proyectoId: number) {
   const tiempoPromedio = resueltos.length > 0
     ? resueltos.reduce((sum, i) => sum + (i.fechaCierre!.getTime() - i.createdAt.getTime()), 0) / resueltos.length / (1000 * 60 * 60)
     : 0;
-  
-  return { total: todos.length, abiertos, enProceso, prevencion, cerrados, porTipo, porSeveridad, tendencia, tiempoPromedio: Math.round(tiempoPromedio) };
+
+  // Métricas por empresa contratista
+  let porEmpresa: {
+    id: number; nombre: string; total: number; abiertos: number; enProceso: number;
+    prevencion: number; cerrados: number; criticos: number; promedioHoras: number | null;
+    color: 'verde' | 'amarillo' | 'rojo';
+    porSeveridad: { severidad: string; count: number }[];
+  }[] = [];
+  try {
+    const reporterIds = todos.map(i => i.reportadoPor).filter((v, i, a) => a.indexOf(v) === i);
+    if (reporterIds.length > 0) {
+      const er = await db.select({ usuarioId: empresaResidentes.usuarioId, empresaId: empresaResidentes.empresaId })
+        .from(empresaResidentes)
+        .where(and(eq(empresaResidentes.activo, true), inArray(empresaResidentes.usuarioId, reporterIds)));
+      // Also check users.empresaId for users not in empresaResidentes
+      const usersWithEmpresa = await db.select({ id: users.id, empresaId: users.empresaId })
+        .from(users)
+        .where(inArray(users.id, reporterIds));
+      const userEmpMap: Record<number, number> = {};
+      usersWithEmpresa.forEach(u => { if (u.empresaId) userEmpMap[u.id] = u.empresaId; });
+      er.forEach(e => { userEmpMap[e.usuarioId] = e.empresaId; });
+
+      const empIds = Array.from(new Set(Object.values(userEmpMap)));
+      if (empIds.length > 0) {
+        const emps = await db.select({ id: empresas.id, nombre: empresas.nombre }).from(empresas).where(inArray(empresas.id, empIds));
+        const empNombres: Record<number, string> = {};
+        emps.forEach(e => { empNombres[e.id] = e.nombre; });
+
+        const empData: Record<number, {
+          total: number; abiertos: number; enProceso: number; prevencion: number;
+          cerrados: number; criticos: number; horas: number; cerradosConFecha: number;
+          sevMap: Map<string, number>;
+        }> = {};
+
+        for (const i of todos) {
+          const eId = userEmpMap[i.reportadoPor];
+          if (eId) {
+            if (!empData[eId]) empData[eId] = { total: 0, abiertos: 0, enProceso: 0, prevencion: 0, cerrados: 0, criticos: 0, horas: 0, cerradosConFecha: 0, sevMap: new Map() };
+            empData[eId].total++;
+            if (i.estado === 'abierto') empData[eId].abiertos++;
+            if (i.estado === 'en_proceso') empData[eId].enProceso++;
+            if (i.estado === 'prevencion') empData[eId].prevencion++;
+            if (i.estado === 'cerrado') empData[eId].cerrados++;
+            if (i.severidad === 'alta' || i.severidad === 'critica') empData[eId].criticos++;
+            if (i.estado === 'cerrado' && i.fechaCierre) {
+              empData[eId].cerradosConFecha++;
+              empData[eId].horas += (new Date(i.fechaCierre).getTime() - new Date(i.createdAt).getTime()) / 3600000;
+            }
+            empData[eId].sevMap.set(i.severidad, (empData[eId].sevMap.get(i.severidad) || 0) + 1);
+          }
+        }
+
+        porEmpresa = Object.entries(empData).map(([id, d]) => {
+          const noResueltos = d.abiertos + d.enProceso;
+          return {
+            id: Number(id),
+            nombre: empNombres[Number(id)] || '',
+            total: d.total,
+            abiertos: d.abiertos,
+            enProceso: d.enProceso,
+            prevencion: d.prevencion,
+            cerrados: d.cerrados,
+            criticos: d.criticos,
+            promedioHoras: d.cerradosConFecha > 0 ? Math.round((d.horas / d.cerradosConFecha) * 10) / 10 : null,
+            color: noResueltos === 0 ? 'verde' as const : noResueltos <= 2 ? 'amarillo' as const : 'rojo' as const,
+            porSeveridad: Array.from(d.sevMap.entries()).map(([severidad, count]) => ({ severidad, count })),
+          };
+        }).sort((a, b) => (b.abiertos + b.enProceso) - (a.abiertos + a.enProceso));
+      }
+    }
+  } catch (e) {
+    console.error('[Seguridad] Error calculando métricas por empresa:', e);
+  }
+
+  return { total: todos.length, abiertos, enProceso, prevencion, cerrados, porTipo, porSeveridad, tendencia, tiempoPromedio: Math.round(tiempoPromedio), porEmpresa };
 }
 
 // Checklists

@@ -4842,3 +4842,10 @@
 - [x] Herramienta de rayado sobre fotos de incidentes (FotoEditor/DrawableCanvas en foto principal) - ya existía en el chat
 - [x] Badge de mensajes no leídos en botón de chat de cada tarjeta de incidente
 - [x] Filtro de incidentes por responsable asignado en la lista
+
+## Dashboard Métricas de Seguridad por Empresa (Fase 16)
+- [x] Backend: procedure metricasSeguridadPorEmpresa (incidentes por empresa, severidad, estado, tiempo resolución)
+- [x] Frontend: sección de métricas por empresa en tab de estadísticas de seguridad
+- [x] Semáforo de cumplimiento por empresa (verde/amarillo/rojo)
+- [x] Tabla comparativa de empresas con KPIs de seguridad
+- [x] Gráfico de barras de incidentes por empresa

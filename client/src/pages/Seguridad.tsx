@@ -1520,16 +1520,141 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
         </Card>
       )}
 
+      {/* Métricas por Empresa Contratista */}
+      {stats.porEmpresa && stats.porEmpresa.length > 0 && (
+        <Card className="p-3">
+          <h3 className="text-xs font-semibold mb-3 flex items-center gap-1.5">
+            <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+            Métricas por Empresa
+          </h3>
+
+          {/* Semáforo visual */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mb-4">
+            {stats.porEmpresa.map((e: any) => (
+              <div key={e.id} className={`p-2 rounded-lg border text-center transition-all ${
+                e.color === 'verde' ? 'border-green-300 bg-green-50/80' :
+                e.color === 'amarillo' ? 'border-amber-300 bg-amber-50/80' :
+                'border-red-300 bg-red-50/80'
+              }`}>
+                <div className={`w-4 h-4 rounded-full mx-auto mb-1 ${
+                  e.color === 'verde' ? 'bg-green-500 shadow-green-300 shadow-sm' :
+                  e.color === 'amarillo' ? 'bg-amber-500 shadow-amber-300 shadow-sm' :
+                  'bg-red-500 shadow-red-300 shadow-sm animate-pulse'
+                }`} />
+                <p className="text-[10px] font-semibold truncate">{e.nombre}</p>
+                <p className="text-[8px] text-muted-foreground">
+                  {e.abiertos > 0 && <span className="text-red-600">{e.abiertos} abiertos</span>}
+                  {e.abiertos > 0 && e.enProceso > 0 && ' \u00b7 '}
+                  {e.enProceso > 0 && <span className="text-amber-600">{e.enProceso} proceso</span>}
+                  {e.abiertos === 0 && e.enProceso === 0 && <span className="text-green-600">\u2713 OK</span>}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Tabla comparativa */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-[10px]">
+              <thead>
+                <tr className="border-b border-muted">
+                  <th className="text-left py-1.5 font-semibold text-muted-foreground">Empresa</th>
+                  <th className="text-center py-1.5 font-semibold text-muted-foreground">Total</th>
+                  <th className="text-center py-1.5 font-semibold text-red-500">Abiertos</th>
+                  <th className="text-center py-1.5 font-semibold text-amber-500">Proceso</th>
+                  <th className="text-center py-1.5 font-semibold text-green-500">Cerrados</th>
+                  <th className="text-center py-1.5 font-semibold text-red-700">Cr\u00edticos</th>
+                  <th className="text-center py-1.5 font-semibold text-muted-foreground">T. Prom.</th>
+                  <th className="text-center py-1.5 font-semibold text-muted-foreground">Cumpl.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.porEmpresa.map((e: any) => {
+                  const cumplimiento = e.total > 0 ? Math.round((e.cerrados / e.total) * 100) : 0;
+                  return (
+                    <tr key={e.id} className="border-b border-muted/50 hover:bg-muted/30">
+                      <td className="py-1.5 font-medium truncate max-w-[100px]">{e.nombre}</td>
+                      <td className="text-center py-1.5 font-semibold">{e.total}</td>
+                      <td className="text-center py-1.5">
+                        <span className={e.abiertos > 0 ? 'text-red-600 font-semibold' : 'text-muted-foreground'}>{e.abiertos}</span>
+                      </td>
+                      <td className="text-center py-1.5">
+                        <span className={e.enProceso > 0 ? 'text-amber-600 font-semibold' : 'text-muted-foreground'}>{e.enProceso}</span>
+                      </td>
+                      <td className="text-center py-1.5">
+                        <span className="text-green-600">{e.cerrados}</span>
+                      </td>
+                      <td className="text-center py-1.5">
+                        <span className={e.criticos > 0 ? 'text-red-700 font-bold' : 'text-muted-foreground'}>{e.criticos}</span>
+                      </td>
+                      <td className="text-center py-1.5">
+                        <span className={`font-mono text-[9px] px-1 rounded ${
+                          e.promedioHoras !== null
+                            ? (e.promedioHoras < 24 ? 'bg-green-100 text-green-700' : e.promedioHoras < 72 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700')
+                            : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {e.promedioHoras !== null ? (e.promedioHoras < 24 ? `${e.promedioHoras}h` : `${Math.round(e.promedioHoras / 24 * 10) / 10}d`) : '-'}
+                        </span>
+                      </td>
+                      <td className="text-center py-1.5">
+                        <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded-full ${
+                          cumplimiento >= 80 ? 'bg-green-100 text-green-700' :
+                          cumplimiento >= 50 ? 'bg-amber-100 text-amber-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {cumplimiento}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Gráfico de barras horizontal */}
+          <div className="mt-4">
+            <p className="text-[10px] font-semibold text-muted-foreground mb-2">Incidentes por Empresa</p>
+            <div className="space-y-1.5">
+              {stats.porEmpresa.map((e: any) => {
+                const maxTotal = Math.max(...stats.porEmpresa.map((x: any) => x.total), 1);
+                const cerradosPct = e.total > 0 ? (e.cerrados / maxTotal) * 100 : 0;
+                const procesoPct = e.total > 0 ? (e.enProceso / maxTotal) * 100 : 0;
+                const abiertoPct = e.total > 0 ? (e.abiertos / maxTotal) * 100 : 0;
+                const prevencionPct = e.total > 0 ? (e.prevencion / maxTotal) * 100 : 0;
+                return (
+                  <div key={e.id} className="flex items-center gap-2">
+                    <span className="text-[9px] w-20 truncate text-right font-medium">{e.nombre}</span>
+                    <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden flex">
+                      {cerradosPct > 0 && <div className="h-full bg-green-400" style={{ width: `${cerradosPct}%` }} title={`Cerrados: ${e.cerrados}`} />}
+                      {prevencionPct > 0 && <div className="h-full bg-blue-400" style={{ width: `${prevencionPct}%` }} title={`Prevenci\u00f3n: ${e.prevencion}`} />}
+                      {procesoPct > 0 && <div className="h-full bg-amber-400" style={{ width: `${procesoPct}%` }} title={`En proceso: ${e.enProceso}`} />}
+                      {abiertoPct > 0 && <div className="h-full bg-red-400" style={{ width: `${abiertoPct}%` }} title={`Abiertos: ${e.abiertos}`} />}
+                    </div>
+                    <span className="text-[9px] font-semibold w-5 text-right">{e.total}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex gap-3 mt-2 justify-center">
+              <span className="flex items-center gap-1 text-[8px] text-muted-foreground"><div className="w-2 h-2 rounded-full bg-green-400" />Cerrados</span>
+              <span className="flex items-center gap-1 text-[8px] text-muted-foreground"><div className="w-2 h-2 rounded-full bg-blue-400" />Prevenci\u00f3n</span>
+              <span className="flex items-center gap-1 text-[8px] text-muted-foreground"><div className="w-2 h-2 rounded-full bg-amber-400" />Proceso</span>
+              <span className="flex items-center gap-1 text-[8px] text-muted-foreground"><div className="w-2 h-2 rounded-full bg-red-400" />Abiertos</span>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Empty state */}
       {stats.total === 0 && (
         <div className="text-center py-8">
           <BarChart3 className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-          <p className="text-sm text-muted-foreground">Sin datos de seguridad aún</p>
-          <p className="text-xs text-muted-foreground/70 mt-1">Reporta incidentes para ver estadísticas</p>
+          <p className="text-sm text-muted-foreground">Sin datos de seguridad a\u00fan</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">Reporta incidentes para ver estad\u00edsticas</p>
         </div>
       )}
 
-      {/* Botón Generar Reporte IA */}
+      {/* Bot\u00f3n Generar Reporte IA */}
       <ReporteSeguridad proyectoId={proyectoId} />
     </div>
   );
