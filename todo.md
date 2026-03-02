@@ -4857,3 +4857,9 @@
 ## Corrección nombres en Ranking de Cumplimiento (Fase 17)
 - [x] Mostrar nombres reales de usuarios en lugar de "Usuario #ID" en ranking de cumplimiento
 - [x] Corregir acceso a usuario en verificarAlertasMetas (mismo bug)
+
+## Auditoría global "Usuario #ID" y mejoras ranking (Fase 18)
+- [x] Auditar y corregir todos los patrones "Usuario #ID" en backend (routers.ts, db.ts)
+- [x] Auditar y corregir todos los patrones "Usuario #ID" en frontend (pages/*.tsx) - fallbacks legítimos, users.list ya extrae .usuario
+- [x] Agregar avatar/foto de usuario junto al nombre en ranking de cumplimiento (podio, tabla, barra visual)
+- [x] Verificar que export PDF del ranking muestre nombres reales - usa r.nombre que ya viene correcto del backend

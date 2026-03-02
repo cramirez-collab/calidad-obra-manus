@@ -2708,6 +2708,13 @@ function RankingCumplimientoView({ proyectoId, usuarios, onBack }: {
                 <Card key={r.userId} className={`${idx === 0 ? "border-amber-400 bg-amber-50/50" : idx === 1 ? "border-gray-300 bg-gray-50/50" : "border-orange-300 bg-orange-50/30"}`}>
                   <CardContent className="p-3 text-center">
                     <p className="text-2xl mb-1">{getMedal(idx)}</p>
+                    {r.fotoUrl ? (
+                      <img src={r.fotoUrl} alt={r.nombre} className="w-10 h-10 rounded-full mx-auto mb-1 object-cover border-2 border-white shadow-sm" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full mx-auto mb-1 bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-sm font-bold text-slate-600 border-2 border-white shadow-sm">
+                        {(r.nombre || '?').charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <p className="font-semibold text-sm truncate">{r.nombre}</p>
                     <p className="text-xs text-muted-foreground">{r.especialidad || r.role}</p>
                     <p className={`text-lg font-bold mt-1 ${r.pctATiempo >= 80 ? "text-emerald-600" : r.pctATiempo >= 50 ? "text-amber-600" : "text-red-600"}`}>
@@ -2748,7 +2755,18 @@ function RankingCumplimientoView({ proyectoId, usuarios, onBack }: {
                     {data.ranking.map((r: any, idx: number) => (
                       <tr key={r.userId} className={`border-b ${idx < 3 ? "bg-amber-50/30" : ""}`}>
                         <td className="p-2 font-medium">{getMedal(idx)}</td>
-                        <td className="p-2 font-medium">{r.nombre}</td>
+                        <td className="p-2 font-medium">
+                          <div className="flex items-center gap-2">
+                            {r.fotoUrl ? (
+                              <img src={r.fotoUrl} alt={r.nombre} className="w-7 h-7 rounded-full object-cover shrink-0" />
+                            ) : (
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-xs font-bold text-slate-600 shrink-0">
+                                {(r.nombre || '?').charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span className="truncate">{r.nombre}</span>
+                          </div>
+                        </td>
                         <td className="p-2 text-muted-foreground">{r.especialidad || r.role}</td>
                         <td className="p-2 text-center">{r.total}</td>
                         <td className="p-2 text-center">
@@ -2790,7 +2808,16 @@ function RankingCumplimientoView({ proyectoId, usuarios, onBack }: {
             <CardContent className="p-4 space-y-3">
               {data.ranking.map((r: any) => (
                 <div key={r.userId} className="flex items-center gap-3">
-                  <span className="text-sm font-medium w-32 truncate shrink-0">{r.nombre}</span>
+                  <div className="flex items-center gap-2 w-40 shrink-0">
+                    {r.fotoUrl ? (
+                      <img src={r.fotoUrl} alt={r.nombre} className="w-6 h-6 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-[10px] font-bold text-slate-600 shrink-0">
+                        {(r.nombre || '?').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="text-sm font-medium truncate">{r.nombre}</span>
+                  </div>
                   <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden flex">
                     {r.aTiempo > 0 && (
                       <div className="bg-emerald-500 h-full" style={{ width: `${(r.aTiempo / r.total) * 100}%` }} />

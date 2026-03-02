@@ -6153,6 +6153,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
             nombre: user?.name || `Usuario #${userId}`,
             role: user?.role || rel?.rol || '',
             especialidad: rel?.especialidad || '',
+            fotoUrl: user?.fotoUrl || null,
             total: data.total,
             aTiempo: data.aTiempo,
             tarde: data.tarde,
