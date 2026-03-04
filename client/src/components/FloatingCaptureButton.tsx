@@ -142,8 +142,8 @@ export function FloatingCaptureButton() {
         setErrorMessage("La cámara tardó demasiado en responder. Usa el ingreso manual o reintenta.");
         return;
       }
-      if (name === "NotAllowedError") {
-        setErrorMessage("Permiso de cámara DENEGADO. Ve a la configuración del navegador y permite el acceso a la cámara.");
+      if (name === "NotAllowedError" || message.includes("dismissed") || message.includes("Permission dismissed")) {
+        setErrorMessage("Permiso de cámara no concedido. Toca 'Permitir' cuando el navegador solicite acceso a la cámara, o actívalo en la configuración del navegador.");
       } else if (name === "NotFoundError") {
         setErrorMessage("No se detectó ninguna cámara en el dispositivo.");
       } else if (name === "NotReadableError" || name === "AbortError") {

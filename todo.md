@@ -4888,3 +4888,6 @@
 - [x] Frontend: subir nueva evidencia en ronda activa
 - [x] Chat del ítem: mensajes automáticos al crear ronda, rechazar, aprobar (vía historial)
 - [x] Mantener asignación al mismo responsable en todo el ciclo
+
+## Fix: Manejo de permiso de cámara descartado (Fase 23)
+- [x] Mostrar mensaje amigable cuando el usuario descarta el permiso de cámara (Permission dismissed)
