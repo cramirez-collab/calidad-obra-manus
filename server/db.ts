@@ -1407,8 +1407,24 @@ export async function getItems(filters: ItemFilters = {}, limit = 100, offset = 
     db.select({ count: sql<number>`count(*)` }).from(items).where(whereClause)
   ]);
 
+  // Agregar conteo de rondas para badge reincidente
+  const itemIds = itemsResult.map(i => i.id);
+  let rondasMap: Record<number, number> = {};
+  if (itemIds.length > 0) {
+    const rondasCount = await db.select({
+      itemId: itemRondas.itemId,
+      totalRondas: sql<number>`count(*)`
+    }).from(itemRondas)
+      .where(inArray(itemRondas.itemId, itemIds))
+      .groupBy(itemRondas.itemId);
+    rondasMap = Object.fromEntries(rondasCount.map(r => [r.itemId, r.totalRondas]));
+  }
+
   return { 
-    items: itemsResult, 
+    items: itemsResult.map(item => ({
+      ...item,
+      totalRondas: rondasMap[item.id] || 0
+    })), 
     total: countResult[0]?.count || 0 
   };
 }

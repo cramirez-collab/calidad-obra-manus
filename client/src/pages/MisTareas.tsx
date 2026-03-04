@@ -169,6 +169,11 @@ export default function MisTareas() {
                               Mío
                             </Badge>
                           )}
+                          {item.totalRondas > 1 && (
+                            <Badge className="text-[8px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0 font-bold animate-pulse">
+                              R{item.totalRondas}
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex items-center gap-1 mt-0.5 text-[10px] text-gray-500">
                           {item.empresaNombre && <span className="truncate max-w-[100px]">{item.empresaNombre}</span>}

@@ -576,6 +576,11 @@ export default function ItemsList() {
                                   -$2k
                                 </Badge>
                               )}
+                              {(item as any).totalRondas > 1 && (
+                                <Badge className="bg-orange-100 text-orange-700 border border-orange-300 text-[10px] py-0 px-1 font-bold animate-pulse">
+                                  R{(item as any).totalRondas}
+                                </Badge>
+                              )}
                             </div>
                           </div>
                           <div className="flex items-center gap-1">

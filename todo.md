@@ -4891,3 +4891,8 @@
 
 ## Fix: Manejo de permiso de cámara descartado (Fase 23)
 - [x] Mostrar mensaje amigable cuando el usuario descarta el permiso de cámara (Permission dismissed)
+
+## Badge reincidente, push al reabrir, limpieza empresas (Fase 24)
+- [x] Badge R2/R3 en lista de ítems para ítems con más de 1 ronda de revisión (ItemsList + MisTareas)
+- [x] Notificación push al residente cuando su ítem rechazado es reabierto (ya implementado en procedure reabrir)
+- [x] Limpiar empresas iimsa duplicadas - desactivada 300014 (0 ítems), conservada 4290001 (1 ítem, Ferrer)

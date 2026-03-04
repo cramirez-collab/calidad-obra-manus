@@ -1012,8 +1012,26 @@ export const appRouter = router({
         const totalCreados = results.filter(r => r.creadoPorId === userId).length;
         const totalPendientes = results.filter(r => r.status === 'pendiente_aprobacion').length;
         
+        // Agregar conteo de rondas para badge reincidente
+        const { itemRondas } = await import('../drizzle/schema');
+        const { inArray } = await import('drizzle-orm');
+        const itemIds = results.map(r => r.id);
+        let rondasMap: Record<number, number> = {};
+        if (itemIds.length > 0) {
+          const rondasCount = await database.select({
+            itemId: itemRondas.itemId,
+            totalRondas: sql<number>`count(*)`
+          }).from(itemRondas)
+            .where(inArray(itemRondas.itemId, itemIds))
+            .groupBy(itemRondas.itemId);
+          rondasMap = Object.fromEntries(rondasCount.map(r => [r.itemId, r.totalRondas]));
+        }
+
         return {
-          items: results,
+          items: results.map(item => ({
+            ...item,
+            totalRondas: rondasMap[item.id] || 0
+          })),
           conteos: {
             total: results.length,
             creados: totalCreados,
