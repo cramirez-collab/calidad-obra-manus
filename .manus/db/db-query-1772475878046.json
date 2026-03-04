@@ -1,0 +1,25 @@
+{
+  "query": "SELECT id, name, role FROM users WHERE name LIKE '%Ferrer%' OR name LIKE '%Jesus%' OR name LIKE '%Jesús%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, name, role FROM users WHERE name LIKE '%Ferrer%' OR name LIKE '%Jesus%' OR name LIKE '%Jesús%';",
+  "rows": [
+    {
+      "id": "1530106",
+      "name": "Jesús Contreras",
+      "role": "residente"
+    },
+    {
+      "id": "4351934",
+      "name": "Jesus Ferrer",
+      "role": "residente"
+    },
+    {
+      "id": "5130888",
+      "name": "Jesus Contreras",
+      "role": "supervisor"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trole\n1530106\tJesús Contreras\tresidente\n4351934\tJesus Ferrer\tresidente\n5130888\tJesus Contreras\tsupervisor\n",
+  "stderr": "",
+  "execution_time_ms": 364
+}

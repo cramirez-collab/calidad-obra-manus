@@ -453,6 +453,48 @@ export type MensajeReaccion = typeof mensajeReacciones.$inferSelect;
 export type InsertMensajeReaccion = typeof mensajeReacciones.$inferInsert;
 
 /**
+ * Tabla de rondas de evidencia por ítem
+ * Cada ronda representa un ciclo: foto antes → foto después → revisión (aprobado/rechazado)
+ * La ronda 1 se crea automáticamente al crear el ítem (usa las fotos originales del ítem)
+ * Rondas subsiguientes se crean al reabrir un ítem rechazado
+ */
+export const itemRondas = mysqlTable("item_rondas", {
+  id: int("id").autoincrement().primaryKey(),
+  itemId: int("itemId").notNull(),
+  numeroRonda: int("numeroRonda").notNull().default(1),
+  
+  // Fotos de esta ronda
+  fotoAntesUrl: text("fotoAntesUrl"),
+  fotoAntesKey: varchar("fotoAntesKey", { length: 255 }),
+  fotoAntesBase64: text("fotoAntesBase64"),
+  fotoAntesMarcadaUrl: text("fotoAntesMarcadaUrl"),
+  fotoAntesMarcadaKey: varchar("fotoAntesMarcadaKey", { length: 255 }),
+  fotoAntesMarcadaBase64: text("fotoAntesMarcadaBase64"),
+  fotoDespuesUrl: text("fotoDespuesUrl"),
+  fotoDespuesKey: varchar("fotoDespuesKey", { length: 255 }),
+  fotoDespuesBase64: text("fotoDespuesBase64"),
+  
+  // Estado de esta ronda
+  status: mysqlEnum("status", ["pendiente_foto_despues", "pendiente_aprobacion", "aprobado", "rechazado"]).default("pendiente_foto_despues").notNull(),
+  
+  // Usuarios involucrados en esta ronda
+  creadoPorId: int("creadoPorId"), // Quién abrió/reabrió esta ronda
+  revisadoPorId: int("revisadoPorId"), // Quién aprobó/rechazó esta ronda
+  comentarioRevision: text("comentarioRevision"), // Comentario al aprobar/rechazar
+  
+  // Fechas
+  fechaCreacion: timestamp("fechaCreacion").defaultNow().notNull(),
+  fechaFotoDespues: timestamp("fechaFotoDespues"),
+  fechaRevision: timestamp("fechaRevision"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ItemRonda = typeof itemRondas.$inferSelect;
+export type InsertItemRonda = typeof itemRondas.$inferInsert;
+
+/**
  * Tabla de badges/contadores por usuario
  */
 export const userBadges = mysqlTable("user_badges", {

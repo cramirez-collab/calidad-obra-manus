@@ -4866,3 +4866,25 @@
 
 ## Bug: Imagen de referencia rota en PDF de Programa Semanal (Fase 19)
 - [x] Corregir renderización de imágenes de planos/croquis en el PDF exportado (convertir a base64 antes de insertar en blob HTML)
+
+## Bug: Ítems de Jesús Ferez Ferrer no aparecen (Fase 20)
+- [x] Diagnosticar por qué el residente de gas Jesús Ferez Ferrer no puede dar de alta ítems
+- [x] Corregir el problema - vinculado a ambas empresas iimsa Gas
+
+## Auditoría y depuración de datos de ítems (Fase 21)
+- [ ] Extraer todos los ítems con sus relaciones (empresa, especialidad, residente)
+- [ ] Verificar consistencia empresa↔especialidad (que la empresa del ítem tenga la especialidad del ítem)
+- [ ] Verificar consistencia residente↔empresa (que el residente asignado pertenezca a la empresa del ítem)
+- [ ] Identificar y corregir datos mezclados o inconsistentes
+- [ ] Generar reporte de auditoría
+
+## Ciclo de vida completo de ítems con trazabilidad (Fase 22)
+- [x] Tabla item_rondas: historial de rondas de evidencia (ronda 1, 2, 3...) con foto antes/después por ronda
+- [x] Backend: procedure reabrir ítem rechazado (nueva ronda, mismo responsable)
+- [x] Backend: procedure subir nueva evidencia (foto después) en ronda actual
+- [x] Backend: procedure aprobar/rechazar ronda actual
+- [x] Frontend: timeline visual de rondas en detalle del ítem (con fotos antes/después por ronda)
+- [x] Frontend: botón "Reabrir" naranja en ítems rechazados (superadmin/admin/supervisor)
+- [x] Frontend: subir nueva evidencia en ronda activa
+- [x] Chat del ítem: mensajes automáticos al crear ronda, rechazar, aprobar (vía historial)
+- [x] Mantener asignación al mismo responsable en todo el ciclo

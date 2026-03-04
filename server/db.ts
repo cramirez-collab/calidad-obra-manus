@@ -54,6 +54,7 @@ import {
   metaEficienciaUsuario, InsertMetaEficienciaUsuario,
   solicitudesPago, InsertSolicitudPago,
   archivosPago, InsertArchivoPago,
+  itemRondas, InsertItemRonda,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -3635,6 +3636,9 @@ export async function deleteItem(itemId: number) {
   const item = await db.select({ codigo: items.codigo }).from(items).where(eq(items.id, itemId)).limit(1);
   const itemCodigo = item[0]?.codigo;
   
+  // Eliminar rondas de evidencia
+  await db.delete(itemRondas).where(eq(itemRondas.itemId, itemId));
+  
   // Eliminar historial relacionado
   await db.delete(itemHistorial).where(eq(itemHistorial.itemId, itemId));
   
@@ -3670,6 +3674,39 @@ export async function deleteItem(itemId: number) {
   await db.delete(items).where(eq(items.id, itemId));
 }
 
+
+// ==================== RONDAS DE EVIDENCIA ====================
+
+export async function getRondasByItem(itemId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(itemRondas)
+    .where(eq(itemRondas.itemId, itemId))
+    .orderBy(asc(itemRondas.numeroRonda));
+}
+
+export async function getRondaActiva(itemId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rondas = await db.select().from(itemRondas)
+    .where(eq(itemRondas.itemId, itemId))
+    .orderBy(desc(itemRondas.numeroRonda))
+    .limit(1);
+  return rondas[0] || null;
+}
+
+export async function crearRonda(data: InsertItemRonda) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  const [result] = await db.insert(itemRondas).values(data);
+  return result.insertId;
+}
+
+export async function actualizarRonda(rondaId: number, data: Partial<InsertItemRonda>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB no disponible");
+  await db.update(itemRondas).set(data).where(eq(itemRondas.id, rondaId));
+}
 
 // ==================== PRELLENADO ULTRA-RÁPIDO ====================
 

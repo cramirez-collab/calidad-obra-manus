@@ -1157,6 +1157,18 @@ export const appRouter = router({
               } catch (e) { console.log('S3 upload marked background failed'); }
             }
             
+            // Crear Ronda 1 automáticamente
+            try {
+              await db.crearRonda({
+                itemId: itemResult.id,
+                numeroRonda: 1,
+                fotoAntesBase64: input.fotoAntesBase64 || null,
+                fotoAntesMarcadaBase64: input.fotoAntesMarcadaBase64 || null,
+                status: 'pendiente_foto_despues',
+                creadoPorId: ctx.user.id,
+              });
+            } catch (e) { console.log('Error creando ronda 1:', e); }
+            
             // Registrar en historial
             await db.addItemHistorial({
               itemId: itemResult.id,
@@ -1387,6 +1399,15 @@ export const appRouter = router({
             status: 'pendiente_aprobacion',
             comentarioJefeResidente: input.comentario,
           });
+          // Actualizar ronda activa con foto después
+          const rondaActiva = await db.getRondaActiva(input.itemId);
+          if (rondaActiva) {
+            await db.actualizarRonda(rondaActiva.id, {
+              fotoDespuesBase64: input.fotoBase64,
+              status: 'pendiente_aprobacion',
+              fechaFotoDespues: new Date(),
+            });
+          }
         } catch (dbError: any) {
           console.error('Error guardando foto después en DB:', dbError);
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error guardando foto. Intenta de nuevo.' });
@@ -1503,6 +1524,16 @@ export const appRouter = router({
           aprobadoPorId: ctx.user.id,
           cerradoPorId: ctx.user.id, // Quien cierra es quien aprueba
         });
+        // Cerrar ronda activa como aprobada
+        const rondaAprobada = await db.getRondaActiva(input.itemId);
+        if (rondaAprobada) {
+          await db.actualizarRonda(rondaAprobada.id, {
+            status: 'aprobado',
+            revisadoPorId: ctx.user.id,
+            comentarioRevision: input.comentario || 'Aprobado',
+            fechaRevision: new Date(),
+          });
+        }
         
         // Operaciones secundarias en segundo plano
         setImmediate(async () => {
@@ -1602,6 +1633,16 @@ export const appRouter = router({
           // Trazabilidad - quien rechazó
           aprobadoPorId: ctx.user.id,
         });
+        // Cerrar ronda activa como rechazada
+        const rondaRechazada = await db.getRondaActiva(input.itemId);
+        if (rondaRechazada) {
+          await db.actualizarRonda(rondaRechazada.id, {
+            status: 'rechazado',
+            revisadoPorId: ctx.user.id,
+            comentarioRevision: input.comentario,
+            fechaRevision: new Date(),
+          });
+        }
         
         // Operaciones secundarias en segundo plano
         setImmediate(async () => {
@@ -1678,6 +1719,97 @@ export const appRouter = router({
         
         await db.deleteItem(input.id);
         return { success: true };
+      }),
+    
+    // ==================== RONDAS DE EVIDENCIA ====================
+    
+    // Obtener todas las rondas de un ítem
+    getRondas: protectedProcedure
+      .input(z.object({ itemId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getRondasByItem(input.itemId);
+      }),
+    
+    // Reabrir un ítem rechazado: crea nueva ronda y vuelve a pendiente_foto_despues
+    reabrir: noSeguristaProcedure
+      .input(z.object({
+        itemId: z.number(),
+        comentario: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const item = await db.getItemById(input.itemId);
+        if (!item) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ítem no encontrado' });
+        if (item.status !== 'rechazado') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Solo se pueden reabrir ítems rechazados' });
+        }
+        
+        // Obtener ronda actual para saber el número
+        const rondaAnterior = await db.getRondaActiva(input.itemId);
+        const nuevaRondaNum = (rondaAnterior?.numeroRonda || 1) + 1;
+        
+        // Crear nueva ronda
+        const rondaId = await db.crearRonda({
+          itemId: input.itemId,
+          numeroRonda: nuevaRondaNum,
+          status: 'pendiente_foto_despues',
+          creadoPorId: ctx.user.id,
+        });
+        
+        // Resetear el ítem: limpiar foto después y volver a pendiente
+        await db.updateItem(input.itemId, {
+          status: 'pendiente_foto_despues',
+          fotoDespuesUrl: null,
+          fotoDespuesKey: null,
+          fotoDespuesBase64: null,
+          fechaFotoDespues: null,
+          fechaAprobacion: null,
+          fechaCierre: null,
+          comentarioSupervisor: null,
+          cerradoPorId: null,
+        });
+        
+        // Historial
+        await db.addItemHistorial({
+          itemId: input.itemId,
+          usuarioId: ctx.user.id,
+          statusAnterior: 'rechazado',
+          statusNuevo: 'pendiente_foto_despues',
+          comentario: input.comentario || `Reabierto - Ronda ${nuevaRondaNum}`,
+        });
+        
+        // Mensaje automático en el chat del ítem
+        await db.createMensaje({
+          itemId: input.itemId,
+          usuarioId: ctx.user.id,
+          texto: `🔄 **Ítem reabierto - Ronda ${nuevaRondaNum}**\n${input.comentario || 'Se requiere nueva evidencia de corrección.'}`,
+          tipo: 'texto',
+        });
+        
+        // Notificar al residente asignado
+        if (item.asignadoAId) {
+          await db.createNotificacion({
+            usuarioId: item.asignadoAId,
+            itemId: input.itemId,
+            proyectoId: item.proyectoId || undefined,
+            tipo: 'item_pendiente_foto',
+            titulo: `🔄 Ítem reabierto - Ronda ${nuevaRondaNum}`,
+            mensaje: `El ítem "${item.titulo}" fue reabierto. Debes subir nueva evidencia de corrección.`,
+          });
+          try {
+            const pushSubs = await db.getPushSubscriptionsByUsuario(item.asignadoAId);
+            if (pushSubs.length > 0) {
+              const pushService = (await import('./pushService')).default;
+              await pushService.sendPushToMultiple(pushSubs, {
+                title: `🔄 Ítem reabierto - Ronda ${nuevaRondaNum}`,
+                body: `${item.titulo} (${item.codigo}) - Nueva corrección requerida`,
+                itemId: input.itemId,
+                data: { url: `/items/${input.itemId}`, itemId: input.itemId, tipo: 'item_reabierto' }
+              });
+            }
+          } catch (e) { console.log('Error push reapertura:', e); }
+        }
+        
+        return { success: true, rondaId, numeroRonda: nuevaRondaNum };
       }),
     
     // Editar ítem existente (solo superadmin y admin)

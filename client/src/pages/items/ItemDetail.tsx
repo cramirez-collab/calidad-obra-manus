@@ -41,7 +41,9 @@ import {
   X,
   MapPinPlus,
   DollarSign,
-  AlertCircle
+  AlertCircle,
+  RotateCcw,
+  History
 } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import {
@@ -132,6 +134,7 @@ export default function ItemDetail() {
   const utils = trpc.useUtils();
   const { data: item, isLoading } = trpc.items.get.useQuery({ id: itemId });
   const { data: historial } = trpc.items.historial.useQuery({ itemId });
+  const { data: rondas } = trpc.items.getRondas.useQuery({ itemId });
   const { data: comentarios, refetch: refetchComentarios } = trpc.comentarios.byItem.useQuery({ itemId });
   // Catálogos con staleTime alto (5min) - no refetch en cada mount
   const catalogStale = { staleTime: 10 * 60 * 1000, gcTime: 30 * 60 * 1000 };
@@ -439,6 +442,10 @@ export default function ItemDetail() {
   // Admin y superadmin pueden eliminar permanentemente
   const canDelete = ['superadmin', 'admin'].includes(user?.role || '');
   
+  // Reabrir: solo si está rechazado, superadmin/admin/supervisor
+  const canReopen = item?.status === "rechazado" && 
+    ["superadmin", "admin", "supervisor"].includes(user?.role || "");
+  
   // Admin y superadmin pueden editar ítems
   const canEdit = ['superadmin', 'admin'].includes(user?.role || '');
   
@@ -518,6 +525,22 @@ export default function ItemDetail() {
     editItemMutation.mutate(updates as any);
   };
   
+  // Reabrir ítem rechazado
+  const reabrirMutation = trpc.items.reabrir.useMutation({
+    onSuccess: () => {
+      utils.items.get.invalidate({ id: itemId });
+      utils.items.historial.invalidate({ itemId });
+      utils.items.getRondas.invalidate({ itemId });
+      utils.items.list.invalidate();
+      utils.estadisticas.general.invalidate();
+      toast.success("Ítem reabierto - Nueva ronda de revisión iniciada");
+    },
+    onError: (error) => {
+      const msg = error.message?.length > 100 ? 'Error al reabrir. Intenta de nuevo.' : error.message;
+      toast.error(msg);
+    },
+  });
+
   const deleteMutation = trpc.items.delete.useMutation({
     onSuccess: () => {
       toast.success('Ítem eliminado permanentemente de la base de datos');
@@ -1129,6 +1152,22 @@ export default function ItemDetail() {
                 </Tooltip>
               </>
             )}
+            {canReopen && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="h-9 px-3 bg-orange-600 hover:bg-orange-700 text-white gap-1.5"
+                    onClick={() => reabrirMutation.mutate({ itemId })}
+                    disabled={reabrirMutation.isPending}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    <span className="text-xs font-semibold">{reabrirMutation.isPending ? 'Reabriendo...' : 'Reabrir'}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Reabrir ítem para nueva ronda de revisión</TooltipContent>
+              </Tooltip>
+            )}
             {canEdit && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -1305,6 +1344,94 @@ export default function ItemDetail() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Timeline de Rondas de Revisión */}
+            {rondas && rondas.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <History className="h-5 w-5" />
+                    Rondas de Revisión ({rondas.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {rondas.map((ronda: any, idx: number) => (
+                      <div key={ronda.id} className={`rounded-lg border p-4 ${
+                        ronda.resultado === 'aprobada' ? 'border-emerald-200 bg-emerald-50/50' :
+                        ronda.resultado === 'rechazada' ? 'border-red-200 bg-red-50/50' :
+                        'border-blue-200 bg-blue-50/50'
+                      }`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                              ronda.resultado === 'aprobada' ? 'bg-emerald-200 text-emerald-800' :
+                              ronda.resultado === 'rechazada' ? 'bg-red-200 text-red-800' :
+                              'bg-blue-200 text-blue-800'
+                            }`}>
+                              Ronda {ronda.numero}
+                            </span>
+                            <Badge className={`text-[10px] ${
+                              ronda.resultado === 'aprobada' ? 'bg-emerald-100 text-emerald-700' :
+                              ronda.resultado === 'rechazada' ? 'bg-red-100 text-red-700' :
+                              'bg-blue-100 text-blue-700'
+                            }`}>
+                              {ronda.resultado === 'aprobada' ? 'Aprobada' :
+                               ronda.resultado === 'rechazada' ? 'Rechazada' :
+                               'En curso'}
+                            </Badge>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(ronda.createdAt)}
+                          </span>
+                        </div>
+                        
+                        {/* Fotos antes/después de la ronda */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                              Antes
+                            </p>
+                            <div className="aspect-[4/3] rounded-md overflow-hidden border bg-slate-100">
+                              {ronda.fotoAntesUrl ? (
+                                <img src={getImageUrl(ronda.fotoAntesUrl)} alt="Antes" className="w-full h-full object-contain" loading="lazy" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                  <Camera className="h-6 w-6" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                              Después
+                            </p>
+                            <div className="aspect-[4/3] rounded-md overflow-hidden border bg-slate-100">
+                              {ronda.fotoDespuesUrl ? (
+                                <img src={getImageUrl(ronda.fotoDespuesUrl)} alt="Después" className="w-full h-full object-contain" loading="lazy" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-muted-foreground flex-col gap-1">
+                                  <Clock className="h-6 w-6" />
+                                  <span className="text-[10px]">Pendiente</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {ronda.comentario && (
+                          <p className="text-xs mt-2 bg-white/60 p-2 rounded border text-muted-foreground">
+                            {ronda.comentario}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Timeline / Historial */}
             <Card>
