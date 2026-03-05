@@ -1408,40 +1408,12 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
   const handleExportarPDF = async () => {
     setExportando(true);
     try {
-      const resp = await fetch(`/api/trpc/seguridad.reporteEstadisticoPDF?input=${encodeURIComponent(JSON.stringify({ proyectoId }))}`, { credentials: 'include' });
+      const inputPayload = { "0": { json: { proyectoId } } };
+      const resp = await fetch(`/api/trpc/seguridad.reporteEstadisticoPDF?batch=1&input=${encodeURIComponent(JSON.stringify(inputPayload))}`, { credentials: 'include' });
       const json = await resp.json();
-      const data = json.result?.data;
+      const batchResult = Array.isArray(json) ? json[0] : json;
+      const data = batchResult?.result?.data?.json || batchResult?.result?.data;
       if (!data) { toast.error('Error obteniendo datos'); setExportando(false); return; }
-
-      // Convertir fotos a base64
-      const toBase64 = async (url: string): Promise<string> => {
-        try {
-          const r = await fetch(url);
-          const blob = await r.blob();
-          return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = () => resolve('');
-            reader.readAsDataURL(blob);
-          });
-        } catch { return ''; }
-      };
-
-      // Convertir todas las fotos de incidentes y evidencias
-      const fotosMap: Record<number, string> = {};
-      const evidenciasMap: Record<number, string[]> = {};
-      for (const inc of data.incidentes) {
-        if (inc.fotoUrl) {
-          fotosMap[inc.id] = await toBase64(inc.fotoUrl);
-        }
-        if (inc.evidencias?.length > 0) {
-          evidenciasMap[inc.id] = [];
-          for (const ev of inc.evidencias.slice(0, 5)) { // max 5 evidencias por incidente
-            const b64 = await toBase64(ev.fotoUrl);
-            if (b64) evidenciasMap[inc.id].push(b64);
-          }
-        }
-      }
 
       const fecha = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
       const tipoLabel = (t: string) => TIPOS_INCIDENTE.find(x => x.value === t)?.label || t;
@@ -1519,7 +1491,6 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
       // Detalle de incidentes con fotos
       html += `<h2 style="color:#b91c1c;font-size:16px;margin-top:24px;border-bottom:2px solid #fecaca;padding-bottom:4px;">Detalle de Incidentes con Evidencia Fotografica</h2>`;
       for (const inc of data.incidentes) {
-        const foto64 = fotosMap[inc.id] || '';
         html += `
           <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin:10px 0;page-break-inside:avoid;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -1535,8 +1506,8 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
             ${inc.ubicacion ? `<p style="font-size:10px;color:#6b7280;">Ubicacion: ${inc.ubicacion}</p>` : ''}
             <p style="font-size:10px;color:#6b7280;">Reportado por: ${inc.reportadoPorNombre}</p>
             ${inc.accionCorrectiva ? `<p style="font-size:10px;color:#16a34a;">Accion correctiva: ${inc.accionCorrectiva}</p>` : ''}
-            ${foto64 ? `<div style="margin-top:8px;"><p style="font-size:9px;color:#6b7280;margin-bottom:4px;">Foto principal:</p><img src="${foto64}" style="max-width:100%;max-height:280px;border-radius:8px;border:1px solid #e5e7eb;" /></div>` : ''}
-            ${(evidenciasMap[inc.id]?.length > 0) ? `<div style="margin-top:8px;"><p style="font-size:9px;color:#6b7280;margin-bottom:4px;">Evidencias adicionales (${evidenciasMap[inc.id].length}):</p><div style="display:flex;flex-wrap:wrap;gap:6px;">${evidenciasMap[inc.id].map(b64 => `<img src="${b64}" style="max-width:48%;max-height:200px;border-radius:6px;border:1px solid #e5e7eb;" />`).join('')}</div></div>` : ''}
+            ${inc.fotoUrl ? `<div style="margin-top:8px;"><p style="font-size:9px;color:#6b7280;margin-bottom:4px;">Foto principal:</p><img src="${inc.fotoUrl}" style="max-width:100%;max-height:280px;border-radius:8px;border:1px solid #e5e7eb;" /></div>` : ''}
+            ${(inc.evidencias?.length > 0) ? `<div style="margin-top:8px;"><p style="font-size:9px;color:#6b7280;margin-bottom:4px;">Evidencias adicionales (${inc.evidencias.length}):</p><div style="display:flex;flex-wrap:wrap;gap:6px;">${inc.evidencias.slice(0, 5).map((ev: any) => `<img src="${ev.fotoUrl}" style="max-width:48%;max-height:200px;border-radius:6px;border:1px solid #e5e7eb;" />`).join('')}</div></div>` : ''}
           </div>`;
       }
 
@@ -1545,12 +1516,25 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
         <p style="font-size:10px;color:#9ca3af;">ObjetivaQC &mdash; Control de Calidad de Obra &mdash; Generado ${fecha}</p>
       </div>`;
 
+      const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte Seguridad - ${data.proyecto}</title>
+        <style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;font-size:12px;line-height:1.5;color:#1f2937;}@media print{body{padding:10px;}}img{max-width:100%;height:auto;}</style>
+      </head><body>${html}</body></html>`;
       const printWindow = window.open('', '_blank');
-      if (!printWindow) { toast.error('Permite ventanas emergentes'); setExportando(false); return; }
-      printWindow.document.write(`<!DOCTYPE html><html><head><title>Reporte Seguridad - ${data.proyecto}</title>
-        <style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;font-size:12px;line-height:1.5;color:#1f2937;}@media print{body{padding:10px;}}</style>
-      </head><body>${html}<script>setTimeout(()=>{window.print();},800);<\/script></body></html>`);
-      printWindow.document.close();
+      if (printWindow) {
+        printWindow.document.write(fullHtml);
+        printWindow.document.close();
+        toast.success('Reporte abierto. Usa Ctrl+P para guardar como PDF.');
+      } else {
+        // Fallback: descargar como data URI
+        const dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(fullHtml);
+        const a = document.createElement('a');
+        a.href = dataUri;
+        a.download = `Reporte_Seguridad_${data.proyecto.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        toast.success('Reporte descargado. Abrelo en tu navegador y usa Ctrl+P para imprimir como PDF.');
+      }
     } catch (err) {
       toast.error('Error generando PDF');
       console.error(err);
