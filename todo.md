@@ -4913,3 +4913,8 @@
 
 ## Fase 27 - Fix: Botón PDF estadísticas no descarga PDF
 - [x] Generar PDF real con html2pdf.js (descarga directa .pdf sin window.open)
+
+## Fase 28 - Fix: PDF seguridad no descarga en móvil
+- [x] Generar PDF server-side con jsPDF y devolver como descarga directa
+- [x] Endpoint Express GET /api/export/seguridad-pdf con Content-Disposition: attachment
+- [x] Frontend: anchor href al endpoint (funciona en móvil y desktop)

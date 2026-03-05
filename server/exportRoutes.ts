@@ -718,4 +718,296 @@ function getFirmaPageHTML(token: string): string {
 </html>`;
 }
 
+// ============================================================
+// REPORTE ESTADÍSTICO DE SEGURIDAD - PDF REAL (jsPDF server-side)
+// ============================================================
+
+const TIPOS_INC: Record<string, string> = {
+  condicion_insegura: 'Cond. Insegura', acto_inseguro: 'Acto Inseguro', incidente: 'Incidente',
+  accidente: 'Accidente', casi_accidente: 'Casi Accidente', electrico: 'Electrico',
+  caida: 'Caida', golpe: 'Golpe', atrapamiento: 'Atrapamiento', quemadura: 'Quemadura',
+  intoxicacion: 'Intoxicacion', otro: 'Otro',
+};
+const SEV_LABELS: Record<string, string> = { baja: 'Baja', media: 'Media', alta: 'Alta', critica: 'Critica' };
+const SEV_COLORS: Record<string, [number, number, number]> = {
+  baja: [34, 197, 94], media: [234, 179, 8], alta: [249, 115, 22], critica: [220, 38, 38],
+};
+const EST_LABELS: Record<string, string> = { abierto: 'Abierto', en_proceso: 'En Proceso', prevencion: 'Prevencion', cerrado: 'Cerrado' };
+const EST_COLORS: Record<string, [number, number, number]> = {
+  abierto: [220, 38, 38], en_proceso: [217, 119, 6], prevencion: [37, 99, 235], cerrado: [22, 163, 74],
+};
+
+router.get('/api/export/seguridad-pdf', async (req, res) => {
+  try {
+    const proyectoId = parseInt(req.query.proyectoId as string);
+    if (!proyectoId || isNaN(proyectoId)) return res.status(400).send('proyectoId requerido');
+
+    const data = await db.getReporteEstadisticoPDF(proyectoId);
+    if (!data) return res.status(404).send('No hay datos');
+
+    // Importar jsPDF dinámicamente
+    const { jsPDF } = await import('jspdf');
+    const autoTableModule = await import('jspdf-autotable');
+    const autoTable = autoTableModule.default || autoTableModule;
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 14;
+    let y = 15;
+
+    // Helper: check page break
+    const checkPage = (needed: number) => {
+      if (y + needed > 275) { doc.addPage(); y = 15; }
+    };
+
+    // === ENCABEZADO ===
+    doc.setFillColor(185, 28, 28);
+    doc.rect(0, 0, pageW, 28, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('REPORTE ESTADISTICO DE SEGURIDAD', pageW / 2, 12, { align: 'center' });
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Proyecto: ${removeAccents(data.proyecto)}`, pageW / 2, 19, { align: 'center' });
+    const fecha = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+    doc.text(`Generado: ${fecha}`, pageW / 2, 25, { align: 'center' });
+    y = 35;
+
+    // === RESUMEN GENERAL ===
+    doc.setTextColor(185, 28, 28);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Resumen General', margin, y);
+    y += 2;
+    doc.setDrawColor(254, 202, 202);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageW - margin, y);
+    y += 6;
+
+    // Cards de resumen
+    const cards = [
+      { label: 'Total', value: data.stats.total, color: [55, 65, 81] as [number, number, number] },
+      { label: 'Abiertos', value: data.stats.abiertos, color: [220, 38, 38] as [number, number, number] },
+      { label: 'Proceso', value: data.stats.enProceso, color: [217, 119, 6] as [number, number, number] },
+      { label: 'Prevencion', value: data.stats.prevencion || 0, color: [37, 99, 235] as [number, number, number] },
+      { label: 'Cerrados', value: data.stats.cerrados, color: [22, 163, 74] as [number, number, number] },
+    ];
+    const cardW = (pageW - 2 * margin - 4 * 4) / 5;
+    cards.forEach((c, i) => {
+      const x = margin + i * (cardW + 4);
+      doc.setFillColor(249, 250, 251);
+      doc.roundedRect(x, y, cardW, 18, 2, 2, 'F');
+      doc.setTextColor(...c.color);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text(String(c.value), x + cardW / 2, y + 10, { align: 'center' });
+      doc.setFontSize(7);
+      doc.setTextColor(107, 114, 128);
+      doc.setFont('helvetica', 'normal');
+      doc.text(c.label, x + cardW / 2, y + 16, { align: 'center' });
+    });
+    y += 24;
+
+    // === GRÁFICA POR ESTADO ===
+    checkPage(50);
+    doc.setTextColor(185, 28, 28);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Distribucion por Estado', margin, y);
+    y += 6;
+    const maxEstado = Math.max(...cards.map(c => c.value), 1);
+    const barMaxW = 100;
+    cards.forEach(c => {
+      doc.setFontSize(8);
+      doc.setTextColor(55, 65, 81);
+      doc.text(c.label, margin, y + 4);
+      const barW = maxEstado > 0 ? (c.value / maxEstado) * barMaxW : 0;
+      doc.setFillColor(...c.color);
+      doc.roundedRect(margin + 30, y, barW, 6, 1, 1, 'F');
+      doc.setTextColor(...c.color);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.text(String(c.value), margin + 32 + barW, y + 4);
+      doc.setFont('helvetica', 'normal');
+      y += 9;
+    });
+    y += 4;
+
+    // === POR TIPO ===
+    if (data.stats.porTipo?.length > 0) {
+      checkPage(40);
+      doc.setTextColor(185, 28, 28);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Incidentes por Tipo', margin, y);
+      y += 6;
+      const maxTipo = Math.max(...data.stats.porTipo.map((t: any) => t.count), 1);
+      const tipoColors: [number, number, number][] = [
+        [239, 68, 68], [249, 115, 22], [234, 179, 8], [34, 197, 94], [59, 130, 246],
+        [139, 92, 246], [236, 72, 153], [20, 184, 166], [245, 158, 11], [99, 102, 241],
+      ];
+      data.stats.porTipo.forEach((t: any, i: number) => {
+        checkPage(10);
+        const label = TIPOS_INC[t.tipo] || t.tipo;
+        doc.setFontSize(8);
+        doc.setTextColor(55, 65, 81);
+        doc.text(removeAccents(label), margin, y + 4);
+        const barW = maxTipo > 0 ? (t.count / maxTipo) * barMaxW : 0;
+        const color = tipoColors[i % tipoColors.length];
+        doc.setFillColor(...color);
+        doc.roundedRect(margin + 35, y, barW, 6, 1, 1, 'F');
+        doc.setTextColor(...color);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.text(String(t.count), margin + 37 + barW, y + 4);
+        doc.setFont('helvetica', 'normal');
+        y += 9;
+      });
+      y += 4;
+    }
+
+    // === POR SEVERIDAD ===
+    if (data.stats.porSeveridad?.length > 0) {
+      checkPage(40);
+      doc.setTextColor(185, 28, 28);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Incidentes por Severidad', margin, y);
+      y += 6;
+      const maxSev = Math.max(...data.stats.porSeveridad.map((s: any) => s.count), 1);
+      data.stats.porSeveridad.forEach((s: any) => {
+        checkPage(10);
+        const label = SEV_LABELS[s.severidad] || s.severidad;
+        const color = SEV_COLORS[s.severidad] || [107, 114, 128];
+        doc.setFontSize(8);
+        doc.setTextColor(55, 65, 81);
+        doc.text(removeAccents(label), margin, y + 4);
+        const barW = maxSev > 0 ? (s.count / maxSev) * barMaxW : 0;
+        doc.setFillColor(...color);
+        doc.roundedRect(margin + 25, y, barW, 6, 1, 1, 'F');
+        doc.setTextColor(...color);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.text(String(s.count), margin + 27 + barW, y + 4);
+        doc.setFont('helvetica', 'normal');
+        y += 9;
+      });
+      y += 4;
+    }
+
+    // === POR EMPRESA ===
+    if (data.stats.porEmpresa?.length > 0) {
+      checkPage(30);
+      doc.setTextColor(185, 28, 28);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Metricas por Empresa Contratista', margin, y);
+      y += 4;
+
+      (autoTable as any)(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [['Empresa', 'Total', 'Abiertos', 'Proceso', 'Cerrados', 'Criticos', 'Cumpl.']],
+        body: data.stats.porEmpresa.map((e: any) => {
+          const cumpl = e.total > 0 ? Math.round((e.cerrados / e.total) * 100) : 0;
+          return [removeAccents(e.nombre), e.total, e.abiertos, e.enProceso, e.cerrados, e.criticos, `${cumpl}%`];
+        }),
+        styles: { fontSize: 7, cellPadding: 2 },
+        headStyles: { fillColor: [254, 242, 242], textColor: [55, 65, 81], fontStyle: 'bold' },
+        columnStyles: {
+          1: { halign: 'center' }, 2: { halign: 'center' }, 3: { halign: 'center' },
+          4: { halign: 'center' }, 5: { halign: 'center' }, 6: { halign: 'center' },
+        },
+      });
+      y = (doc as any).lastAutoTable?.finalY + 8 || y + 30;
+    }
+
+    // === DETALLE DE INCIDENTES ===
+    checkPage(20);
+    doc.setTextColor(185, 28, 28);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Detalle de Incidentes', margin, y);
+    y += 2;
+    doc.setDrawColor(254, 202, 202);
+    doc.line(margin, y, pageW - margin, y);
+    y += 6;
+
+    for (const inc of data.incidentes) {
+      checkPage(35);
+      // Fondo card
+      doc.setFillColor(249, 250, 251);
+      doc.roundedRect(margin, y, pageW - 2 * margin, 28, 2, 2, 'F');
+
+      // Código + estado + severidad
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(153, 27, 27);
+      doc.text(inc.codigo || 'S/C', margin + 3, y + 5);
+
+      const estColor = EST_COLORS[inc.estado] || [107, 114, 128];
+      doc.setFillColor(...estColor);
+      doc.roundedRect(margin + 25, y + 1, 20, 5, 1, 1, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(6);
+      doc.text(EST_LABELS[inc.estado] || inc.estado, margin + 35, y + 4.5, { align: 'center' });
+
+      const sevColor = SEV_COLORS[inc.severidad] || [107, 114, 128];
+      doc.setFillColor(...sevColor);
+      doc.roundedRect(margin + 47, y + 1, 14, 5, 1, 1, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(6);
+      doc.text(SEV_LABELS[inc.severidad] || inc.severidad, margin + 54, y + 4.5, { align: 'center' });
+
+      // Tipo
+      doc.setTextColor(55, 65, 81);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Tipo: ${removeAccents(TIPOS_INC[inc.tipo] || inc.tipo)}`, margin + 3, y + 11);
+
+      // Descripción
+      if (inc.descripcion) {
+        const desc = removeAccents(inc.descripcion).substring(0, 120);
+        doc.setFontSize(7);
+        doc.text(desc, margin + 3, y + 16, { maxWidth: pageW - 2 * margin - 6 });
+      }
+
+      // Reportado por + fecha
+      doc.setFontSize(6);
+      doc.setTextColor(156, 163, 175);
+      const fechaInc = inc.createdAt ? formatDate(inc.createdAt) : '';
+      doc.text(`${removeAccents(inc.reportadoPorNombre)} | ${fechaInc}`, margin + 3, y + 25);
+
+      if (inc.ubicacion) {
+        doc.text(`Ubic: ${removeAccents(inc.ubicacion).substring(0, 50)}`, margin + 80, y + 25);
+      }
+
+      y += 32;
+    }
+
+    // === PIE DE PÁGINA ===
+    checkPage(15);
+    doc.setDrawColor(229, 231, 235);
+    doc.line(margin, y, pageW - margin, y);
+    y += 5;
+    doc.setFontSize(7);
+    doc.setTextColor(156, 163, 175);
+    doc.text('ObjetivaQC - Control de Calidad de Obra', pageW / 2, y, { align: 'center' });
+    doc.text(`Generado: ${fecha}`, pageW / 2, y + 4, { align: 'center' });
+
+    // Generar buffer y enviar
+    const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+    const filename = `Reporte_Seguridad_${removeAccents(data.proyecto).replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('[ExportPDF] Error generando PDF seguridad:', err);
+    res.status(500).send('Error generando PDF');
+  }
+});
+
 export default router;

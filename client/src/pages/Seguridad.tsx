@@ -1408,194 +1408,24 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
   const handleExportarPDF = async () => {
     setExportando(true);
     try {
-      const inputPayload = { "0": { json: { proyectoId } } };
-      const resp = await fetch(`/api/trpc/seguridad.reporteEstadisticoPDF?batch=1&input=${encodeURIComponent(JSON.stringify(inputPayload))}`, { credentials: 'include' });
-      const json = await resp.json();
-      const batchResult = Array.isArray(json) ? json[0] : json;
-      const data = batchResult?.result?.data?.json || batchResult?.result?.data;
-      if (!data) { toast.error('Error obteniendo datos'); setExportando(false); return; }
-
-      const fecha = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
-      const tipoLabel = (t: string) => TIPOS_INCIDENTE.find(x => x.value === t)?.label || t;
-      const sevLabel = (s: string) => SEVERIDADES.find(x => x.value === s)?.label || s;
-      const estadoLabel = (e: string) => ESTADOS.find(x => x.value === e)?.label || e;
-      const sevColor = (s: string) => s === 'critica' ? '#dc2626' : s === 'alta' ? '#ea580c' : s === 'media' ? '#ca8a04' : '#16a34a';
-      const estadoColor = (e: string) => e === 'abierto' ? '#dc2626' : e === 'en_proceso' ? '#d97706' : e === 'prevencion' ? '#2563eb' : '#16a34a';
-
-      // Generar HTML del PDF
-      let html = `
-        <div style="text-align:center;margin-bottom:24px;">
-          <h1 style="color:#991b1b;font-size:22px;margin:0;">REPORTE ESTADISTICO DE SEGURIDAD</h1>
-          <p style="color:#6b7280;font-size:12px;margin:4px 0;">${data.proyecto} &mdash; ${fecha}</p>
-          <hr style="border:1px solid #fecaca;margin:12px 0;">
-        </div>
-
-        <h2 style="color:#b91c1c;font-size:16px;border-bottom:2px solid #fecaca;padding-bottom:4px;">Resumen General</h2>
-        <table style="width:100%;border-collapse:collapse;margin:8px 0;">
-          <tr>
-            <td style="text-align:center;padding:12px;border:1px solid #e5e7eb;"><strong style="font-size:24px;">${data.stats.total}</strong><br><span style="font-size:10px;color:#6b7280;">Total</span></td>
-            <td style="text-align:center;padding:12px;border:1px solid #e5e7eb;"><strong style="font-size:24px;color:#dc2626;">${data.stats.abiertos}</strong><br><span style="font-size:10px;color:#6b7280;">Abiertos</span></td>
-            <td style="text-align:center;padding:12px;border:1px solid #e5e7eb;"><strong style="font-size:24px;color:#d97706;">${data.stats.enProceso}</strong><br><span style="font-size:10px;color:#6b7280;">En Proceso</span></td>
-            <td style="text-align:center;padding:12px;border:1px solid #e5e7eb;"><strong style="font-size:24px;color:#2563eb;">${data.stats.prevencion || 0}</strong><br><span style="font-size:10px;color:#6b7280;">Prevencion</span></td>
-            <td style="text-align:center;padding:12px;border:1px solid #e5e7eb;"><strong style="font-size:24px;color:#16a34a;">${data.stats.cerrados}</strong><br><span style="font-size:10px;color:#6b7280;">Cerrados</span></td>
-          </tr>
-        </table>`;
-
-      // Gráfica SVG de distribución por estado
-      {
-        const estados = [
-          { label: 'Abiertos', value: data.stats.abiertos || 0, color: '#dc2626' },
-          { label: 'En Proceso', value: data.stats.enProceso || 0, color: '#d97706' },
-          { label: 'Prevención', value: data.stats.prevencion || 0, color: '#2563eb' },
-          { label: 'Cerrados', value: data.stats.cerrados || 0, color: '#16a34a' },
-        ];
-        const maxEstado = Math.max(...estados.map(e => e.value), 1);
-        const barH = 28;
-        const svgH = estados.length * (barH + 10) + 10;
-        html += `<h2 style="color:#b91c1c;font-size:14px;margin-top:20px;">Distribución por Estado</h2>
-          <svg width="100%" viewBox="0 0 600 ${svgH}" xmlns="http://www.w3.org/2000/svg" style="font-family:Arial,sans-serif;">
-            ${estados.map((e, i) => {
-              const y = i * (barH + 10) + 5;
-              const barW = maxEstado > 0 ? (e.value / maxEstado) * 380 : 0;
-              return `<text x="100" y="${y + barH / 2 + 4}" text-anchor="end" font-size="11" fill="#374151">${e.label}</text>
-                <rect x="110" y="${y}" width="${barW}" height="${barH}" rx="4" fill="${e.color}" opacity="0.85"/>
-                <text x="${110 + barW + 8}" y="${y + barH / 2 + 5}" font-size="12" font-weight="bold" fill="${e.color}">${e.value}</text>`;
-            }).join('')}
-          </svg>`;
-      }
-
-      // Por tipo con gráfica SVG
-      if (data.stats.porTipo?.length > 0) {
-        const maxTipoVal = Math.max(...data.stats.porTipo.map((t: any) => t.count), 1);
-        const tipoBarH = 24;
-        const tipoSvgH = data.stats.porTipo.length * (tipoBarH + 8) + 10;
-        const tipoColors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#6366f1', '#10b981', '#e11d48'];
-        html += `<h2 style="color:#b91c1c;font-size:14px;margin-top:20px;">Incidentes por Tipo</h2>
-          <svg width="100%" viewBox="0 0 600 ${tipoSvgH}" xmlns="http://www.w3.org/2000/svg" style="font-family:Arial,sans-serif;">
-            ${data.stats.porTipo.map((t: any, i: number) => {
-              const y = i * (tipoBarH + 8) + 5;
-              const barW = maxTipoVal > 0 ? (t.count / maxTipoVal) * 350 : 0;
-              const color = tipoColors[i % tipoColors.length];
-              return `<text x="130" y="${y + tipoBarH / 2 + 4}" text-anchor="end" font-size="10" fill="#374151">${tipoLabel(t.tipo)}</text>
-                <rect x="140" y="${y}" width="${barW}" height="${tipoBarH}" rx="3" fill="${color}" opacity="0.8"/>
-                <text x="${140 + barW + 6}" y="${y + tipoBarH / 2 + 4}" font-size="11" font-weight="bold" fill="${color}">${t.count}</text>`;
-            }).join('')}
-          </svg>
-          <table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;">
-            <tr style="background:#fef2f2;"><th style="border:1px solid #e5e7eb;padding:6px;text-align:left;">Tipo</th><th style="border:1px solid #e5e7eb;padding:6px;text-align:center;">Cantidad</th></tr>
-            ${data.stats.porTipo.map((t: any) => `<tr><td style="border:1px solid #e5e7eb;padding:6px;">${tipoLabel(t.tipo)}</td><td style="border:1px solid #e5e7eb;padding:6px;text-align:center;font-weight:bold;">${t.count}</td></tr>`).join('')}
-          </table>`;
-      }
-
-      // Por severidad con gráfica SVG
-      if (data.stats.porSeveridad?.length > 0) {
-        const maxSevVal = Math.max(...data.stats.porSeveridad.map((s: any) => s.count), 1);
-        const sevBarH = 28;
-        const sevSvgH = data.stats.porSeveridad.length * (sevBarH + 10) + 10;
-        html += `<h2 style="color:#b91c1c;font-size:14px;margin-top:20px;">Incidentes por Severidad</h2>
-          <svg width="100%" viewBox="0 0 600 ${sevSvgH}" xmlns="http://www.w3.org/2000/svg" style="font-family:Arial,sans-serif;">
-            ${data.stats.porSeveridad.map((s: any, i: number) => {
-              const y = i * (sevBarH + 10) + 5;
-              const barW = maxSevVal > 0 ? (s.count / maxSevVal) * 380 : 0;
-              const color = sevColor(s.severidad);
-              return `<text x="100" y="${y + sevBarH / 2 + 4}" text-anchor="end" font-size="11" fill="#374151">${sevLabel(s.severidad)}</text>
-                <rect x="110" y="${y}" width="${barW}" height="${sevBarH}" rx="4" fill="${color}" opacity="0.85"/>
-                <text x="${110 + barW + 8}" y="${y + sevBarH / 2 + 5}" font-size="12" font-weight="bold" fill="${color}">${s.count}</text>`;
-            }).join('')}
-          </svg>
-          <table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;">
-            <tr style="background:#fef2f2;"><th style="border:1px solid #e5e7eb;padding:6px;text-align:left;">Severidad</th><th style="border:1px solid #e5e7eb;padding:6px;text-align:center;">Cantidad</th></tr>
-            ${data.stats.porSeveridad.map((s: any) => `<tr><td style="border:1px solid #e5e7eb;padding:6px;"><span style="color:${sevColor(s.severidad)};font-weight:bold;">&bull;</span> ${sevLabel(s.severidad)}</td><td style="border:1px solid #e5e7eb;padding:6px;text-align:center;font-weight:bold;">${s.count}</td></tr>`).join('')}
-          </table>`;
-      }
-
-      // Por empresa
-      if (data.stats.porEmpresa?.length > 0) {
-        html += `<h2 style="color:#b91c1c;font-size:14px;margin-top:20px;">Metricas por Empresa Contratista</h2>
-          <table style="width:100%;border-collapse:collapse;font-size:10px;">
-            <tr style="background:#fef2f2;">
-              <th style="border:1px solid #e5e7eb;padding:6px;text-align:left;">Empresa</th>
-              <th style="border:1px solid #e5e7eb;padding:6px;text-align:center;">Total</th>
-              <th style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:#dc2626;">Abiertos</th>
-              <th style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:#d97706;">Proceso</th>
-              <th style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:#16a34a;">Cerrados</th>
-              <th style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:#991b1b;">Criticos</th>
-              <th style="border:1px solid #e5e7eb;padding:6px;text-align:center;">Cumpl.</th>
-            </tr>
-            ${data.stats.porEmpresa.map((e: any) => {
-              const cumpl = e.total > 0 ? Math.round((e.cerrados / e.total) * 100) : 0;
-              const semaforoColor = cumpl >= 80 ? '#16a34a' : cumpl >= 50 ? '#d97706' : '#dc2626';
-              return `<tr>
-                <td style="border:1px solid #e5e7eb;padding:6px;font-weight:500;">${e.nombre}</td>
-                <td style="border:1px solid #e5e7eb;padding:6px;text-align:center;font-weight:bold;">${e.total}</td>
-                <td style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:${e.abiertos > 0 ? '#dc2626' : '#9ca3af'};">${e.abiertos}</td>
-                <td style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:${e.enProceso > 0 ? '#d97706' : '#9ca3af'};">${e.enProceso}</td>
-                <td style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:#16a34a;">${e.cerrados}</td>
-                <td style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:${e.criticos > 0 ? '#991b1b' : '#9ca3af'};font-weight:${e.criticos > 0 ? 'bold' : 'normal'};">${e.criticos}</td>
-                <td style="border:1px solid #e5e7eb;padding:6px;text-align:center;"><span style="background:${semaforoColor};color:white;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:bold;">${cumpl}%</span></td>
-              </tr>`;
-            }).join('')}
-          </table>`;
-      }
-
-      // Detalle de incidentes con fotos
-      html += `<h2 style="color:#b91c1c;font-size:16px;margin-top:24px;border-bottom:2px solid #fecaca;padding-bottom:4px;">Detalle de Incidentes con Evidencia Fotografica</h2>`;
-      for (const inc of data.incidentes) {
-        html += `
-          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin:10px 0;page-break-inside:avoid;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-              <div>
-                <span style="background:#fef2f2;color:#991b1b;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:bold;">${inc.codigo || 'S/C'}</span>
-                <span style="background:${estadoColor(inc.estado)};color:white;padding:2px 8px;border-radius:4px;font-size:10px;margin-left:4px;">${estadoLabel(inc.estado)}</span>
-                <span style="color:${sevColor(inc.severidad)};font-size:10px;font-weight:bold;margin-left:4px;">&bull; ${sevLabel(inc.severidad)}</span>
-              </div>
-              <span style="font-size:10px;color:#6b7280;">${inc.createdAt ? new Date(inc.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}</span>
-            </div>
-            <p style="font-size:11px;font-weight:600;margin:4px 0;">${tipoLabel(inc.tipo)}</p>
-            <p style="font-size:11px;color:#374151;margin:2px 0;">${inc.descripcion || ''}</p>
-            ${inc.ubicacion ? `<p style="font-size:10px;color:#6b7280;">Ubicacion: ${inc.ubicacion}</p>` : ''}
-            <p style="font-size:10px;color:#6b7280;">Reportado por: ${inc.reportadoPorNombre}</p>
-            ${inc.accionCorrectiva ? `<p style="font-size:10px;color:#16a34a;">Accion correctiva: ${inc.accionCorrectiva}</p>` : ''}
-            ${inc.fotoUrl ? `<div style="margin-top:8px;"><p style="font-size:9px;color:#6b7280;margin-bottom:4px;">Foto principal:</p><img src="${inc.fotoUrl}" style="max-width:100%;max-height:280px;border-radius:8px;border:1px solid #e5e7eb;" /></div>` : ''}
-            ${(inc.evidencias?.length > 0) ? `<div style="margin-top:8px;"><p style="font-size:9px;color:#6b7280;margin-bottom:4px;">Evidencias adicionales (${inc.evidencias.length}):</p><div style="display:flex;flex-wrap:wrap;gap:6px;">${inc.evidencias.slice(0, 5).map((ev: any) => `<img src="${ev.fotoUrl}" style="max-width:48%;max-height:200px;border-radius:6px;border:1px solid #e5e7eb;" />`).join('')}</div></div>` : ''}
-          </div>`;
-      }
-
-      // Footer
-      html += `<div style="text-align:center;margin-top:24px;padding-top:12px;border-top:1px solid #e5e7eb;">
-        <p style="font-size:10px;color:#9ca3af;">ObjetivaQC &mdash; Control de Calidad de Obra &mdash; Generado ${fecha}</p>
-      </div>`;
-
-      // Crear contenedor temporal oculto para renderizar el HTML
-      const container = document.createElement('div');
-      container.innerHTML = html;
-      container.style.cssText = 'font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;font-size:12px;line-height:1.5;color:#1f2937;position:absolute;left:-9999px;top:0;';
-      document.body.appendChild(container);
-
-      // Importar html2pdf dinámicamente
-      const html2pdf = (await import('html2pdf.js')).default;
-      const filename = `Reporte_Seguridad_${data.proyecto.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
-
-      const opt: any = {
-        margin: [10, 10, 10, 10],
-        filename,
-        image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-      };
-      await html2pdf().set(opt).from(container).save();
-
-      document.body.removeChild(container);
-      toast.success(`PDF descargado: ${filename}`);
+      // Descarga directa desde endpoint server-side que genera PDF real
+      const link = document.createElement('a');
+      link.href = `/api/export/seguridad-pdf?proyectoId=${proyectoId}`;
+      link.setAttribute('download', '');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Descargando PDF...');
     } catch (err) {
-      toast.error('Error generando PDF');
+      toast.error('Error descargando PDF');
       console.error(err);
     } finally {
       setExportando(false);
     }
   };
 
+  // PDF generation moved to server-side endpoint /api/export/seguridad-pdf
+  // Legacy client-side code removed below
   if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   if (!stats) return null;
 
