@@ -1441,19 +1441,69 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
           </tr>
         </table>`;
 
-      // Por tipo
+      // Gráfica SVG de distribución por estado
+      {
+        const estados = [
+          { label: 'Abiertos', value: data.stats.abiertos || 0, color: '#dc2626' },
+          { label: 'En Proceso', value: data.stats.enProceso || 0, color: '#d97706' },
+          { label: 'Prevención', value: data.stats.prevencion || 0, color: '#2563eb' },
+          { label: 'Cerrados', value: data.stats.cerrados || 0, color: '#16a34a' },
+        ];
+        const maxEstado = Math.max(...estados.map(e => e.value), 1);
+        const barH = 28;
+        const svgH = estados.length * (barH + 10) + 10;
+        html += `<h2 style="color:#b91c1c;font-size:14px;margin-top:20px;">Distribución por Estado</h2>
+          <svg width="100%" viewBox="0 0 600 ${svgH}" xmlns="http://www.w3.org/2000/svg" style="font-family:Arial,sans-serif;">
+            ${estados.map((e, i) => {
+              const y = i * (barH + 10) + 5;
+              const barW = maxEstado > 0 ? (e.value / maxEstado) * 380 : 0;
+              return `<text x="100" y="${y + barH / 2 + 4}" text-anchor="end" font-size="11" fill="#374151">${e.label}</text>
+                <rect x="110" y="${y}" width="${barW}" height="${barH}" rx="4" fill="${e.color}" opacity="0.85"/>
+                <text x="${110 + barW + 8}" y="${y + barH / 2 + 5}" font-size="12" font-weight="bold" fill="${e.color}">${e.value}</text>`;
+            }).join('')}
+          </svg>`;
+      }
+
+      // Por tipo con gráfica SVG
       if (data.stats.porTipo?.length > 0) {
+        const maxTipoVal = Math.max(...data.stats.porTipo.map((t: any) => t.count), 1);
+        const tipoBarH = 24;
+        const tipoSvgH = data.stats.porTipo.length * (tipoBarH + 8) + 10;
+        const tipoColors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#6366f1', '#10b981', '#e11d48'];
         html += `<h2 style="color:#b91c1c;font-size:14px;margin-top:20px;">Incidentes por Tipo</h2>
-          <table style="width:100%;border-collapse:collapse;font-size:11px;">
+          <svg width="100%" viewBox="0 0 600 ${tipoSvgH}" xmlns="http://www.w3.org/2000/svg" style="font-family:Arial,sans-serif;">
+            ${data.stats.porTipo.map((t: any, i: number) => {
+              const y = i * (tipoBarH + 8) + 5;
+              const barW = maxTipoVal > 0 ? (t.count / maxTipoVal) * 350 : 0;
+              const color = tipoColors[i % tipoColors.length];
+              return `<text x="130" y="${y + tipoBarH / 2 + 4}" text-anchor="end" font-size="10" fill="#374151">${tipoLabel(t.tipo)}</text>
+                <rect x="140" y="${y}" width="${barW}" height="${tipoBarH}" rx="3" fill="${color}" opacity="0.8"/>
+                <text x="${140 + barW + 6}" y="${y + tipoBarH / 2 + 4}" font-size="11" font-weight="bold" fill="${color}">${t.count}</text>`;
+            }).join('')}
+          </svg>
+          <table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;">
             <tr style="background:#fef2f2;"><th style="border:1px solid #e5e7eb;padding:6px;text-align:left;">Tipo</th><th style="border:1px solid #e5e7eb;padding:6px;text-align:center;">Cantidad</th></tr>
             ${data.stats.porTipo.map((t: any) => `<tr><td style="border:1px solid #e5e7eb;padding:6px;">${tipoLabel(t.tipo)}</td><td style="border:1px solid #e5e7eb;padding:6px;text-align:center;font-weight:bold;">${t.count}</td></tr>`).join('')}
           </table>`;
       }
 
-      // Por severidad
+      // Por severidad con gráfica SVG
       if (data.stats.porSeveridad?.length > 0) {
+        const maxSevVal = Math.max(...data.stats.porSeveridad.map((s: any) => s.count), 1);
+        const sevBarH = 28;
+        const sevSvgH = data.stats.porSeveridad.length * (sevBarH + 10) + 10;
         html += `<h2 style="color:#b91c1c;font-size:14px;margin-top:20px;">Incidentes por Severidad</h2>
-          <table style="width:100%;border-collapse:collapse;font-size:11px;">
+          <svg width="100%" viewBox="0 0 600 ${sevSvgH}" xmlns="http://www.w3.org/2000/svg" style="font-family:Arial,sans-serif;">
+            ${data.stats.porSeveridad.map((s: any, i: number) => {
+              const y = i * (sevBarH + 10) + 5;
+              const barW = maxSevVal > 0 ? (s.count / maxSevVal) * 380 : 0;
+              const color = sevColor(s.severidad);
+              return `<text x="100" y="${y + sevBarH / 2 + 4}" text-anchor="end" font-size="11" fill="#374151">${sevLabel(s.severidad)}</text>
+                <rect x="110" y="${y}" width="${barW}" height="${sevBarH}" rx="4" fill="${color}" opacity="0.85"/>
+                <text x="${110 + barW + 8}" y="${y + sevBarH / 2 + 5}" font-size="12" font-weight="bold" fill="${color}">${s.count}</text>`;
+            }).join('')}
+          </svg>
+          <table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;">
             <tr style="background:#fef2f2;"><th style="border:1px solid #e5e7eb;padding:6px;text-align:left;">Severidad</th><th style="border:1px solid #e5e7eb;padding:6px;text-align:center;">Cantidad</th></tr>
             ${data.stats.porSeveridad.map((s: any) => `<tr><td style="border:1px solid #e5e7eb;padding:6px;"><span style="color:${sevColor(s.severidad)};font-weight:bold;">&bull;</span> ${sevLabel(s.severidad)}</td><td style="border:1px solid #e5e7eb;padding:6px;text-align:center;font-weight:bold;">${s.count}</td></tr>`).join('')}
           </table>`;

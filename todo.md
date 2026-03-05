@@ -4905,3 +4905,8 @@
 - [x] Botón de exportar en la UI de seguridad (tab estadísticas)
 - [x] Evidencias adicionales por incidente (hasta 5 por incidente)
 - [ ] Filtro por rango de fechas para el reporte
+
+## Fase 26 - Gráficas SVG en Reporte PDF Seguridad
+- [x] Gráfica de barras horizontales SVG por tipo de incidente en el PDF
+- [x] Gráfica de barras horizontales SVG por severidad en el PDF
+- [x] Gráfica de barras SVG por estado (abierto/proceso/prevención/cerrado) en el PDF
