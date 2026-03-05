@@ -4896,3 +4896,12 @@
 - [x] Badge R2/R3 en lista de ítems para ítems con más de 1 ronda de revisión (ItemsList + MisTareas)
 - [x] Notificación push al residente cuando su ítem rechazado es reabierto (ya implementado en procedure reabrir)
 - [x] Limpiar empresas iimsa duplicadas - desactivada 300014 (0 ítems), conservada 4290001 (1 ítem, Ferrer)
+
+## Reporte Estadístico de Seguridad PDF con Evidencia Fotográfica (Fase 25)
+- [x] Resumen ejecutivo: total incidentes, por estado, por severidad, por tipo
+- [x] Desglose por empresa con semáforo de cumplimiento
+- [x] Detalle de cada incidente con foto de evidencia
+- [x] Descarga de evidencia fotográfica (fotos convertidas a base64 en PDF)
+- [x] Botón de exportar en la UI de seguridad (tab estadísticas)
+- [x] Evidencias adicionales por incidente (hasta 5 por incidente)
+- [ ] Filtro por rango de fechas para el reporte

@@ -1403,6 +1403,161 @@ function DashboardSegurista({ proyectoId, onOpenChat }: { proyectoId: number; on
 // ==========================================
 function TabStats({ proyectoId }: { proyectoId: number }) {
   const { data: stats, isLoading } = trpc.seguridad.estadisticas.useQuery({ proyectoId });
+  const [exportando, setExportando] = useState(false);
+
+  const handleExportarPDF = async () => {
+    setExportando(true);
+    try {
+      const resp = await fetch(`/api/trpc/seguridad.reporteEstadisticoPDF?input=${encodeURIComponent(JSON.stringify({ proyectoId }))}`, { credentials: 'include' });
+      const json = await resp.json();
+      const data = json.result?.data;
+      if (!data) { toast.error('Error obteniendo datos'); setExportando(false); return; }
+
+      // Convertir fotos a base64
+      const toBase64 = async (url: string): Promise<string> => {
+        try {
+          const r = await fetch(url);
+          const blob = await r.blob();
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = () => resolve('');
+            reader.readAsDataURL(blob);
+          });
+        } catch { return ''; }
+      };
+
+      // Convertir todas las fotos de incidentes y evidencias
+      const fotosMap: Record<number, string> = {};
+      const evidenciasMap: Record<number, string[]> = {};
+      for (const inc of data.incidentes) {
+        if (inc.fotoUrl) {
+          fotosMap[inc.id] = await toBase64(inc.fotoUrl);
+        }
+        if (inc.evidencias?.length > 0) {
+          evidenciasMap[inc.id] = [];
+          for (const ev of inc.evidencias.slice(0, 5)) { // max 5 evidencias por incidente
+            const b64 = await toBase64(ev.fotoUrl);
+            if (b64) evidenciasMap[inc.id].push(b64);
+          }
+        }
+      }
+
+      const fecha = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+      const tipoLabel = (t: string) => TIPOS_INCIDENTE.find(x => x.value === t)?.label || t;
+      const sevLabel = (s: string) => SEVERIDADES.find(x => x.value === s)?.label || s;
+      const estadoLabel = (e: string) => ESTADOS.find(x => x.value === e)?.label || e;
+      const sevColor = (s: string) => s === 'critica' ? '#dc2626' : s === 'alta' ? '#ea580c' : s === 'media' ? '#ca8a04' : '#16a34a';
+      const estadoColor = (e: string) => e === 'abierto' ? '#dc2626' : e === 'en_proceso' ? '#d97706' : e === 'prevencion' ? '#2563eb' : '#16a34a';
+
+      // Generar HTML del PDF
+      let html = `
+        <div style="text-align:center;margin-bottom:24px;">
+          <h1 style="color:#991b1b;font-size:22px;margin:0;">REPORTE ESTADISTICO DE SEGURIDAD</h1>
+          <p style="color:#6b7280;font-size:12px;margin:4px 0;">${data.proyecto} &mdash; ${fecha}</p>
+          <hr style="border:1px solid #fecaca;margin:12px 0;">
+        </div>
+
+        <h2 style="color:#b91c1c;font-size:16px;border-bottom:2px solid #fecaca;padding-bottom:4px;">Resumen General</h2>
+        <table style="width:100%;border-collapse:collapse;margin:8px 0;">
+          <tr>
+            <td style="text-align:center;padding:12px;border:1px solid #e5e7eb;"><strong style="font-size:24px;">${data.stats.total}</strong><br><span style="font-size:10px;color:#6b7280;">Total</span></td>
+            <td style="text-align:center;padding:12px;border:1px solid #e5e7eb;"><strong style="font-size:24px;color:#dc2626;">${data.stats.abiertos}</strong><br><span style="font-size:10px;color:#6b7280;">Abiertos</span></td>
+            <td style="text-align:center;padding:12px;border:1px solid #e5e7eb;"><strong style="font-size:24px;color:#d97706;">${data.stats.enProceso}</strong><br><span style="font-size:10px;color:#6b7280;">En Proceso</span></td>
+            <td style="text-align:center;padding:12px;border:1px solid #e5e7eb;"><strong style="font-size:24px;color:#2563eb;">${data.stats.prevencion || 0}</strong><br><span style="font-size:10px;color:#6b7280;">Prevencion</span></td>
+            <td style="text-align:center;padding:12px;border:1px solid #e5e7eb;"><strong style="font-size:24px;color:#16a34a;">${data.stats.cerrados}</strong><br><span style="font-size:10px;color:#6b7280;">Cerrados</span></td>
+          </tr>
+        </table>`;
+
+      // Por tipo
+      if (data.stats.porTipo?.length > 0) {
+        html += `<h2 style="color:#b91c1c;font-size:14px;margin-top:20px;">Incidentes por Tipo</h2>
+          <table style="width:100%;border-collapse:collapse;font-size:11px;">
+            <tr style="background:#fef2f2;"><th style="border:1px solid #e5e7eb;padding:6px;text-align:left;">Tipo</th><th style="border:1px solid #e5e7eb;padding:6px;text-align:center;">Cantidad</th></tr>
+            ${data.stats.porTipo.map((t: any) => `<tr><td style="border:1px solid #e5e7eb;padding:6px;">${tipoLabel(t.tipo)}</td><td style="border:1px solid #e5e7eb;padding:6px;text-align:center;font-weight:bold;">${t.count}</td></tr>`).join('')}
+          </table>`;
+      }
+
+      // Por severidad
+      if (data.stats.porSeveridad?.length > 0) {
+        html += `<h2 style="color:#b91c1c;font-size:14px;margin-top:20px;">Incidentes por Severidad</h2>
+          <table style="width:100%;border-collapse:collapse;font-size:11px;">
+            <tr style="background:#fef2f2;"><th style="border:1px solid #e5e7eb;padding:6px;text-align:left;">Severidad</th><th style="border:1px solid #e5e7eb;padding:6px;text-align:center;">Cantidad</th></tr>
+            ${data.stats.porSeveridad.map((s: any) => `<tr><td style="border:1px solid #e5e7eb;padding:6px;"><span style="color:${sevColor(s.severidad)};font-weight:bold;">&bull;</span> ${sevLabel(s.severidad)}</td><td style="border:1px solid #e5e7eb;padding:6px;text-align:center;font-weight:bold;">${s.count}</td></tr>`).join('')}
+          </table>`;
+      }
+
+      // Por empresa
+      if (data.stats.porEmpresa?.length > 0) {
+        html += `<h2 style="color:#b91c1c;font-size:14px;margin-top:20px;">Metricas por Empresa Contratista</h2>
+          <table style="width:100%;border-collapse:collapse;font-size:10px;">
+            <tr style="background:#fef2f2;">
+              <th style="border:1px solid #e5e7eb;padding:6px;text-align:left;">Empresa</th>
+              <th style="border:1px solid #e5e7eb;padding:6px;text-align:center;">Total</th>
+              <th style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:#dc2626;">Abiertos</th>
+              <th style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:#d97706;">Proceso</th>
+              <th style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:#16a34a;">Cerrados</th>
+              <th style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:#991b1b;">Criticos</th>
+              <th style="border:1px solid #e5e7eb;padding:6px;text-align:center;">Cumpl.</th>
+            </tr>
+            ${data.stats.porEmpresa.map((e: any) => {
+              const cumpl = e.total > 0 ? Math.round((e.cerrados / e.total) * 100) : 0;
+              const semaforoColor = cumpl >= 80 ? '#16a34a' : cumpl >= 50 ? '#d97706' : '#dc2626';
+              return `<tr>
+                <td style="border:1px solid #e5e7eb;padding:6px;font-weight:500;">${e.nombre}</td>
+                <td style="border:1px solid #e5e7eb;padding:6px;text-align:center;font-weight:bold;">${e.total}</td>
+                <td style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:${e.abiertos > 0 ? '#dc2626' : '#9ca3af'};">${e.abiertos}</td>
+                <td style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:${e.enProceso > 0 ? '#d97706' : '#9ca3af'};">${e.enProceso}</td>
+                <td style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:#16a34a;">${e.cerrados}</td>
+                <td style="border:1px solid #e5e7eb;padding:6px;text-align:center;color:${e.criticos > 0 ? '#991b1b' : '#9ca3af'};font-weight:${e.criticos > 0 ? 'bold' : 'normal'};">${e.criticos}</td>
+                <td style="border:1px solid #e5e7eb;padding:6px;text-align:center;"><span style="background:${semaforoColor};color:white;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:bold;">${cumpl}%</span></td>
+              </tr>`;
+            }).join('')}
+          </table>`;
+      }
+
+      // Detalle de incidentes con fotos
+      html += `<h2 style="color:#b91c1c;font-size:16px;margin-top:24px;border-bottom:2px solid #fecaca;padding-bottom:4px;">Detalle de Incidentes con Evidencia Fotografica</h2>`;
+      for (const inc of data.incidentes) {
+        const foto64 = fotosMap[inc.id] || '';
+        html += `
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin:10px 0;page-break-inside:avoid;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div>
+                <span style="background:#fef2f2;color:#991b1b;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:bold;">${inc.codigo || 'S/C'}</span>
+                <span style="background:${estadoColor(inc.estado)};color:white;padding:2px 8px;border-radius:4px;font-size:10px;margin-left:4px;">${estadoLabel(inc.estado)}</span>
+                <span style="color:${sevColor(inc.severidad)};font-size:10px;font-weight:bold;margin-left:4px;">&bull; ${sevLabel(inc.severidad)}</span>
+              </div>
+              <span style="font-size:10px;color:#6b7280;">${inc.createdAt ? new Date(inc.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}</span>
+            </div>
+            <p style="font-size:11px;font-weight:600;margin:4px 0;">${tipoLabel(inc.tipo)}</p>
+            <p style="font-size:11px;color:#374151;margin:2px 0;">${inc.descripcion || ''}</p>
+            ${inc.ubicacion ? `<p style="font-size:10px;color:#6b7280;">Ubicacion: ${inc.ubicacion}</p>` : ''}
+            <p style="font-size:10px;color:#6b7280;">Reportado por: ${inc.reportadoPorNombre}</p>
+            ${inc.accionCorrectiva ? `<p style="font-size:10px;color:#16a34a;">Accion correctiva: ${inc.accionCorrectiva}</p>` : ''}
+            ${foto64 ? `<div style="margin-top:8px;"><p style="font-size:9px;color:#6b7280;margin-bottom:4px;">Foto principal:</p><img src="${foto64}" style="max-width:100%;max-height:280px;border-radius:8px;border:1px solid #e5e7eb;" /></div>` : ''}
+            ${(evidenciasMap[inc.id]?.length > 0) ? `<div style="margin-top:8px;"><p style="font-size:9px;color:#6b7280;margin-bottom:4px;">Evidencias adicionales (${evidenciasMap[inc.id].length}):</p><div style="display:flex;flex-wrap:wrap;gap:6px;">${evidenciasMap[inc.id].map(b64 => `<img src="${b64}" style="max-width:48%;max-height:200px;border-radius:6px;border:1px solid #e5e7eb;" />`).join('')}</div></div>` : ''}
+          </div>`;
+      }
+
+      // Footer
+      html += `<div style="text-align:center;margin-top:24px;padding-top:12px;border-top:1px solid #e5e7eb;">
+        <p style="font-size:10px;color:#9ca3af;">ObjetivaQC &mdash; Control de Calidad de Obra &mdash; Generado ${fecha}</p>
+      </div>`;
+
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) { toast.error('Permite ventanas emergentes'); setExportando(false); return; }
+      printWindow.document.write(`<!DOCTYPE html><html><head><title>Reporte Seguridad - ${data.proyecto}</title>
+        <style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;font-size:12px;line-height:1.5;color:#1f2937;}@media print{body{padding:10px;}}</style>
+      </head><body>${html}<script>setTimeout(()=>{window.print();},800);<\/script></body></html>`);
+      printWindow.document.close();
+    } catch (err) {
+      toast.error('Error generando PDF');
+      console.error(err);
+    } finally {
+      setExportando(false);
+    }
+  };
 
   if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   if (!stats) return null;
@@ -1412,6 +1567,17 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
 
   return (
     <div className="space-y-4">
+      {/* Bot\u00f3n Exportar PDF */}
+      <Button
+        size="sm"
+        variant="outline"
+        className="w-full border-red-200 text-red-700 hover:bg-red-50"
+        onClick={handleExportarPDF}
+        disabled={exportando || stats.total === 0}
+      >
+        {exportando ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> Generando PDF...</> : <><Download className="w-3.5 h-3.5 mr-1.5" /> Exportar Reporte Estadistico PDF</>}
+      </Button>
+
       {/* Resumen */}
       <div className="grid grid-cols-5 gap-1.5">
         <Card className="p-2 text-center">

@@ -7880,3 +7880,121 @@ export async function getPagosStats(proyectoId: number) {
     canceladosMonto: cancelados.reduce((s, p) => s + Number(p.monto || 0), 0),
   };
 }
+
+
+// ==================== REPORTE ESTADÍSTICO PDF SEGURIDAD ====================
+
+export async function getReporteEstadisticoPDF(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  // Obtener nombre del proyecto
+  const proyecto = await getProyectoById(proyectoId);
+  const proyectoNombre = proyecto?.nombreReporte || proyecto?.nombre || 'Proyecto';
+
+  // Obtener todos los incidentes
+  const todos = await db.select().from(incidentesSeguridad)
+    .where(eq(incidentesSeguridad.proyectoId, proyectoId))
+    .orderBy(desc(incidentesSeguridad.createdAt));
+
+  // Stats básicos
+  const abiertos = todos.filter(i => i.estado === "abierto").length;
+  const enProceso = todos.filter(i => i.estado === "en_proceso").length;
+  const prevencion = todos.filter(i => i.estado === "prevencion").length;
+  const cerrados = todos.filter(i => i.estado === "cerrado").length;
+
+  // Por tipo
+  const tipoMap = new Map<string, number>();
+  todos.forEach(i => tipoMap.set(i.tipo, (tipoMap.get(i.tipo) || 0) + 1));
+  const porTipo = Array.from(tipoMap.entries()).map(([tipo, count]) => ({ tipo, count })).sort((a, b) => b.count - a.count);
+
+  // Por severidad
+  const sevMap = new Map<string, number>();
+  todos.forEach(i => sevMap.set(i.severidad, (sevMap.get(i.severidad) || 0) + 1));
+  const porSeveridad = Array.from(sevMap.entries()).map(([severidad, count]) => ({ severidad, count }));
+
+  // Obtener nombres de reportadores
+  const userIds = Array.from(new Set(todos.map(i => i.reportadoPor)));
+  const usuarios = userIds.length > 0
+    ? await db.select({ id: users.id, name: users.name, empresaId: users.empresaId }).from(users).where(inArray(users.id, userIds))
+    : [];
+  const userMap: Record<number, { name: string; empresaId: number | null }> = {};
+  usuarios.forEach(u => { userMap[u.id] = { name: u.name || 'Desconocido', empresaId: u.empresaId }; });
+
+  // Métricas por empresa
+  const reporterIds = todos.map(i => i.reportadoPor).filter((v, i, a) => a.indexOf(v) === i);
+  let porEmpresa: { nombre: string; total: number; abiertos: number; enProceso: number; cerrados: number; criticos: number }[] = [];
+  try {
+    if (reporterIds.length > 0) {
+      const er = await db.select({ usuarioId: empresaResidentes.usuarioId, empresaId: empresaResidentes.empresaId })
+        .from(empresaResidentes)
+        .where(and(eq(empresaResidentes.activo, true), inArray(empresaResidentes.usuarioId, reporterIds)));
+      const userEmpMap: Record<number, number> = {};
+      usuarios.forEach(u => { if (u.empresaId) userEmpMap[u.id] = u.empresaId; });
+      er.forEach(e => { userEmpMap[e.usuarioId] = e.empresaId; });
+
+      const empIds = Array.from(new Set(Object.values(userEmpMap)));
+      if (empIds.length > 0) {
+        const emps = await db.select({ id: empresas.id, nombre: empresas.nombre }).from(empresas).where(inArray(empresas.id, empIds));
+        const empNombres: Record<number, string> = {};
+        emps.forEach(e => { empNombres[e.id] = e.nombre; });
+
+        const empData: Record<number, { total: number; abiertos: number; enProceso: number; cerrados: number; criticos: number }> = {};
+        for (const i of todos) {
+          const eId = userEmpMap[i.reportadoPor];
+          if (eId) {
+            if (!empData[eId]) empData[eId] = { total: 0, abiertos: 0, enProceso: 0, cerrados: 0, criticos: 0 };
+            empData[eId].total++;
+            if (i.estado === 'abierto') empData[eId].abiertos++;
+            if (i.estado === 'en_proceso') empData[eId].enProceso++;
+            if (i.estado === 'cerrado') empData[eId].cerrados++;
+            if (i.severidad === 'alta' || i.severidad === 'critica') empData[eId].criticos++;
+          }
+        }
+        porEmpresa = Object.entries(empData).map(([id, d]) => ({
+          nombre: empNombres[Number(id)] || '',
+          ...d,
+        })).sort((a, b) => b.total - a.total);
+      }
+    }
+  } catch (e) {
+    console.error('[ReportePDF] Error métricas empresa:', e);
+  }
+
+  // Obtener evidencias para cada incidente
+  const incidentesConFotos = await Promise.all(todos.map(async (inc) => {
+    let evidencias: { fotoUrl: string; descripcion: string | null; tipo: string }[] = [];
+    try {
+      const evs = await db.select({
+        fotoUrl: evidenciasSeguridad.fotoUrl,
+        descripcion: evidenciasSeguridad.descripcion,
+        tipo: evidenciasSeguridad.tipo,
+      }).from(evidenciasSeguridad)
+        .where(eq(evidenciasSeguridad.incidenteId, inc.id))
+        .orderBy(desc(evidenciasSeguridad.createdAt));
+      evidencias = evs;
+    } catch {}
+
+    return {
+      id: inc.id,
+      codigo: inc.codigo,
+      tipo: inc.tipo,
+      severidad: inc.severidad,
+      estado: inc.estado,
+      descripcion: inc.descripcion,
+      ubicacion: inc.ubicacion,
+      accionCorrectiva: inc.accionCorrectiva,
+      fotoUrl: inc.fotoUrl,
+      fotoMarcadaUrl: inc.fotoMarcadaUrl,
+      reportadoPorNombre: userMap[inc.reportadoPor]?.name || 'Desconocido',
+      createdAt: inc.createdAt,
+      evidencias,
+    };
+  }));
+
+  return {
+    proyecto: proyectoNombre,
+    stats: { total: todos.length, abiertos, enProceso, prevencion, cerrados, porTipo, porSeveridad, porEmpresa },
+    incidentes: incidentesConFotos,
+  };
+}

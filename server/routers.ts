@@ -4551,6 +4551,13 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         return db.getEstadisticasSeguridad(input.proyectoId);
       }),
 
+    // Reporte estadístico completo para PDF (incidentes + fotos + evidencias + stats por empresa)
+    reporteEstadisticoPDF: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getReporteEstadisticoPDF(input.proyectoId);
+      }),
+
     // Checklists
     crearChecklist: protectedProcedure
       .input(z.object({
