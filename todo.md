@@ -4910,3 +4910,6 @@
 - [x] Gráfica de barras horizontales SVG por tipo de incidente en el PDF
 - [x] Gráfica de barras horizontales SVG por severidad en el PDF
 - [x] Gráfica de barras SVG por estado (abierto/proceso/prevención/cerrado) en el PDF
+
+## Fase 27 - Fix: Botón PDF estadísticas no descarga PDF
+- [x] Generar PDF real con html2pdf.js (descarga directa .pdf sin window.open)

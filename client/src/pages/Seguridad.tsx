@@ -1566,25 +1566,28 @@ function TabStats({ proyectoId }: { proyectoId: number }) {
         <p style="font-size:10px;color:#9ca3af;">ObjetivaQC &mdash; Control de Calidad de Obra &mdash; Generado ${fecha}</p>
       </div>`;
 
-      const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte Seguridad - ${data.proyecto}</title>
-        <style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;font-size:12px;line-height:1.5;color:#1f2937;}@media print{body{padding:10px;}}img{max-width:100%;height:auto;}</style>
-      </head><body>${html}</body></html>`;
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(fullHtml);
-        printWindow.document.close();
-        toast.success('Reporte abierto. Usa Ctrl+P para guardar como PDF.');
-      } else {
-        // Fallback: descargar como data URI
-        const dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(fullHtml);
-        const a = document.createElement('a');
-        a.href = dataUri;
-        a.download = `Reporte_Seguridad_${data.proyecto.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        toast.success('Reporte descargado. Abrelo en tu navegador y usa Ctrl+P para imprimir como PDF.');
-      }
+      // Crear contenedor temporal oculto para renderizar el HTML
+      const container = document.createElement('div');
+      container.innerHTML = html;
+      container.style.cssText = 'font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;font-size:12px;line-height:1.5;color:#1f2937;position:absolute;left:-9999px;top:0;';
+      document.body.appendChild(container);
+
+      // Importar html2pdf dinámicamente
+      const html2pdf = (await import('html2pdf.js')).default;
+      const filename = `Reporte_Seguridad_${data.proyecto.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+      const opt: any = {
+        margin: [10, 10, 10, 10],
+        filename,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      await html2pdf().set(opt).from(container).save();
+
+      document.body.removeChild(container);
+      toast.success(`PDF descargado: ${filename}`);
     } catch (err) {
       toast.error('Error generando PDF');
       console.error(err);
