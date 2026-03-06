@@ -1,0 +1,14 @@
+{
+  "query": "SELECT id, nombre FROM proyectos WHERE nombre LIKE '%Mayas%' OR nombre LIKE '%mayas%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre FROM proyectos WHERE nombre LIKE '%Mayas%' OR nombre LIKE '%mayas%';",
+  "rows": [
+    {
+      "id": "150001",
+      "nombre": "Mayas Habitat"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\n150001\tMayas Habitat\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

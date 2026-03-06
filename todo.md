@@ -4946,3 +4946,7 @@
 - [x] Crear página de pendientes de sincronización con vista de ítems atascados y botón reintentar/eliminar
 - [x] Implementar logging server-side de intentos de creación fallidos por usuario
 - [x] Agregar ruta /pendientes en App.tsx y enlace en menú lateral
+
+### Bug: Stacking no se puede organizar en proyecto Mayas (reportado por Julian)
+- [x] Diagnosticar por qué no se puede organizar el stacking en proyecto Mayas
+- [x] Corregir el problema encontrado: unidades activas tenían nivel=1 y orden=0 todas. Corregido nivel según nombre (101-103=N1, 201-203=N2, etc.) y orden secuencial
