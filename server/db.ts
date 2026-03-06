@@ -739,6 +739,44 @@ export async function getUnidadesParaPanoramica(proyectoId: number) {
 }
 
 // Importar unidades desde Excel
+// Inferir nivel automáticamente basado en el nombre de la unidad
+function inferirNivelPorNombre(nombre: string): number | undefined {
+  const n = nombre.trim();
+  // Sótano / Basement
+  if (/^s[oó]tano/i.test(n) || /^basement/i.test(n)) return 0;
+  // Roof / Azotea
+  if (/^roof/i.test(n) || /^azotea/i.test(n)) return 99;
+  // Numérico: primer dígito indica piso (101→1, 201→2, 1501→15)
+  const match = n.match(/^(\d+)/);
+  if (match) {
+    const num = parseInt(match[1]);
+    if (num >= 100) {
+      // 101→1, 201→2, 1501→15
+      return Math.floor(num / 100);
+    }
+    // Si es < 100, podría ser el nivel directo
+    return num;
+  }
+  return undefined;
+}
+
+// Verificar si existe una unidad activa con el mismo nombre en el proyecto
+async function existeUnidadDuplicada(proyectoId: number, nombre: string, excludeId?: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const conditions = [
+    eq(unidades.proyectoId, proyectoId),
+    eq(unidades.nombre, nombre.trim()),
+    eq(unidades.activo, true),
+  ];
+  if (excludeId) {
+    conditions.push(sql`${unidades.id} != ${excludeId}`);
+  }
+  const existing = await db.select({ id: unidades.id }).from(unidades)
+    .where(and(...conditions)).limit(1);
+  return existing.length > 0;
+}
+
 export async function importarUnidadesDesdeExcel(proyectoId: number, unidadesData: Array<{
   nombre: string;
   codigo?: string;
@@ -749,25 +787,61 @@ export async function importarUnidadesDesdeExcel(proyectoId: number, unidadesDat
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
+  // Obtener unidades activas existentes para detectar duplicados
+  const existentes = await db.select({ nombre: unidades.nombre }).from(unidades)
+    .where(and(eq(unidades.proyectoId, proyectoId), eq(unidades.activo, true)));
+  const nombresExistentes = new Set(existentes.map(e => e.nombre.trim().toLowerCase()));
+  
   const resultados = [];
+  const duplicados: string[] = [];
+  
   for (const u of unidadesData) {
+    const nombreNorm = u.nombre.trim().toLowerCase();
+    if (nombresExistentes.has(nombreNorm)) {
+      duplicados.push(u.nombre);
+      continue; // Saltar duplicados
+    }
+    
+    // Inferir nivel si no se proporcionó
+    const nivel = u.nivel || inferirNivelPorNombre(u.nombre) || 1;
+    
     const result = await db.insert(unidades).values({
       proyectoId,
       nombre: u.nombre,
       codigo: u.codigo,
-      nivel: u.nivel || 1,
+      nivel,
       fechaInicio: u.fechaInicio,
       fechaFin: u.fechaFin,
       activo: true,
     });
     resultados.push(result[0].insertId);
+    nombresExistentes.add(nombreNorm);
   }
+  
+  if (duplicados.length > 0) {
+    console.log(`[ImportarUnidades] ${duplicados.length} unidades duplicadas omitidas: ${duplicados.join(', ')}`);
+  }
+  
   return resultados;
 }
 
 export async function createUnidad(data: InsertUnidad) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  
+  // Verificar duplicados si tiene proyectoId
+  if (data.proyectoId && data.nombre) {
+    const duplicada = await existeUnidadDuplicada(data.proyectoId, data.nombre);
+    if (duplicada) {
+      throw new Error(`Ya existe una unidad activa con el nombre "${data.nombre}" en este proyecto`);
+    }
+  }
+  
+  // Inferir nivel si no se proporcionó
+  if (!data.nivel && data.nombre) {
+    data.nivel = inferirNivelPorNombre(data.nombre);
+  }
+  
   const result = await db.insert(unidades).values(data);
   return result[0].insertId;
 }

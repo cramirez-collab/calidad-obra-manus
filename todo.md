@@ -4950,3 +4950,9 @@
 ### Bug: Stacking no se puede organizar en proyecto Mayas (reportado por Julian)
 - [x] Diagnosticar por qué no se puede organizar el stacking en proyecto Mayas
 - [x] Corregir el problema encontrado: unidades activas tenían nivel=1 y orden=0 todas. Corregido nivel según nombre (101-103=N1, 201-203=N2, etc.) y orden secuencial
+
+### Bug: Unidades duplicadas en Mayas - investigar origen
+- [x] Investigar por qué se crearon unidades duplicadas (390xxx) con nivel=1 y orden=0 cuando ya existían las originales (300xxx-330xxx) - Creadas manualmente desde modal de VistaPanoramica el 7/mar 02:32 UTC, sin validación de duplicados ni inferencia de nivel
+- [x] Corregir bug en importación Excel / creación de unidades que no asigna nivel correcto
+- [x] Agregar validación de nivel automático basado en nombre si no se especifica (inferirNivelPorNombre)
+- [x] Agregar detección de duplicados al importar/crear unidades (existeUnidadDuplicada + skip en importación)
