@@ -617,6 +617,36 @@ function DashboardLayoutContent({
 
             {/* Acciones del lado derecho - CAMPANA MÁS VISIBLE */}
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              {/* Indicador de pendientes de sincronización */}
+              {pendingCount > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative flex items-center justify-center h-8 w-8 rounded-lg bg-amber-500/10 text-amber-600 animate-pulse cursor-help">
+                      <RefreshCw className="h-4 w-4" />
+                      <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                        {pendingCount > 9 ? '9+' : pendingCount}
+                      </span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{pendingCount} elemento(s) pendiente(s) de sincronizar</p>
+                    {!online && <p className="text-amber-400 text-xs">Sin conexión a internet</p>}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              {/* Estado de conexión - solo si está offline */}
+              {!online && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-red-500/10 text-red-500">
+                      <WifiOff className="h-4 w-4" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Sin conexión a internet</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
               {/* Campana de notificaciones - PROMINENTE */}
               <NotificationBell />
               <OnlineUsers />

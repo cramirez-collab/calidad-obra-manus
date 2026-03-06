@@ -380,64 +380,105 @@ export default function NuevoItem() {
       online: isOnline(),
     });
     
-    // ESTRATEGIA: Siempre intentar guardar, con reintentos automáticos
-    const maxRetries = 3;
+    // ESTRATEGIA: Intentar guardar online primero, con fallback offline robusto
+    const maxRetries = 2;
     let lastError: any = null;
     
+    // Helper para extraer mensaje de error útil
+    const getErrorMsg = (err: any): string => {
+      if (!err) return 'Error desconocido';
+      if (err.message?.includes('UNAUTHORIZED') || err.data?.code === 'UNAUTHORIZED') {
+        return 'Tu sesión expiró. Cierra la app y vuelve a entrar.';
+      }
+      if (err.message?.includes('FORBIDDEN') || err.data?.code === 'FORBIDDEN') {
+        return err.message || 'No tienes permisos para crear ítems.';
+      }
+      if (err.message?.includes('fetch') || err.message?.includes('network') || err.message?.includes('Failed to fetch')) {
+        return 'Sin conexión al servidor.';
+      }
+      if (err.data?.httpStatus >= 500 || err.message?.includes('INTERNAL_SERVER_ERROR')) {
+        return 'Error del servidor. Intenta más tarde.';
+      }
+      if (err.message?.includes('BAD_REQUEST')) {
+        return 'Datos inválidos. Verifica el formulario.';
+      }
+      return err.message || 'Error al guardar el ítem.';
+    };
+    
+    // Helper para determinar si el error es recuperable (vale la pena reintentar)
+    const isRecoverableError = (err: any): boolean => {
+      if (!err) return false;
+      // Errores de permisos/validación NO son recuperables
+      if (err.message?.includes('UNAUTHORIZED') || err.message?.includes('FORBIDDEN') || err.message?.includes('BAD_REQUEST')) {
+        return false;
+      }
+      // Errores de red SÍ son recuperables
+      return true;
+    };
+    
+    if (!isOnline()) {
+      // SIN INTERNET: Guardar offline directamente
+      try {
+        await savePendingAction({ type: 'create_item', data: itemData });
+        console.log('[NuevoItem] Ítem guardado offline (sin conexión)');
+        toast.info("Sin conexión. Ítem guardado localmente, se sincronizará al reconectar.", {
+          duration: 5000,
+        });
+        setLocation("/items");
+        return;
+      } catch (offlineError) {
+        console.error('[NuevoItem] Error guardando offline:', offlineError);
+        toast.error("Error al guardar localmente. Intenta de nuevo.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+    
+    // CON INTERNET: Intentar crear en servidor con reintentos
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        if (isOnline()) {
-          // CON INTERNET: Crear directo en servidor
-          // Intento silencioso
-          const result = await createItemMutation.mutateAsync(itemData);
-          console.log('[NuevoItem] Ítem creado exitosamente:', result);
-          toast.success("Ítem creado correctamente");
-          setLocation(`/items/${result.id}`);
-          return;
-        } else {
-          // SIN INTERNET: Guardar offline directamente
-          await savePendingAction({
-            type: 'create_item',
-            data: itemData,
-          });
-          console.log('[NuevoItem] Ítem guardado offline');
-          toast.success("Ítem guardado. Se sincronizará automáticamente.", {
-            duration: 4000,
-            icon: '📡',
-          });
-          setLocation("/items");
-          return;
-        }
+        const result = await createItemMutation.mutateAsync(itemData);
+        console.log('[NuevoItem] Ítem creado exitosamente:', result);
+        toast.success("Ítem creado correctamente");
+        setLocation(`/items/${result.id}`);
+        return;
       } catch (error: any) {
         lastError = error;
-        // Error silencioso, reintentando...
+        console.warn(`[NuevoItem] Intento ${attempt}/${maxRetries} falló:`, getErrorMsg(error));
         
-        // Si es el último intento, guardar offline como respaldo
-        if (attempt === maxRetries) {
-          try {
-            await savePendingAction({
-              type: 'create_item',
-              data: itemData,
-            });
-            toast.success("Ítem guardado localmente. Se sincronizará cuando mejore la conexión.", {
-              duration: 5000,
-              icon: '📡',
-            });
-            setLocation("/items");
-            return;
-          } catch (offlineError) {
-            console.error('[NuevoItem] Error guardando offline:', offlineError);
-          }
-        } else {
-          // Esperar antes del siguiente intento (backoff exponencial)
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        // Si el error NO es recuperable, no reintentar
+        if (!isRecoverableError(error)) {
+          console.error('[NuevoItem] Error no recuperable:', getErrorMsg(error));
+          toast.error(getErrorMsg(error), { duration: 8000 });
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // Si no es el último intento, esperar antes de reintentar
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1500 * attempt));
         }
       }
     }
     
-    // Si llegamos aquí, todos los intentos fallaron
+    // Todos los intentos online fallaron → guardar offline como respaldo
+    try {
+      await savePendingAction({ type: 'create_item', data: itemData });
+      const errorMsg = getErrorMsg(lastError);
+      console.warn('[NuevoItem] Guardado offline tras fallos:', errorMsg);
+      toast.warning(
+        `No se pudo enviar al servidor (${errorMsg}). El ítem se guardó localmente y se sincronizará automáticamente.`,
+        { duration: 8000 }
+      );
+      setLocation("/items");
+      return;
+    } catch (offlineError) {
+      console.error('[NuevoItem] Error guardando offline:', offlineError);
+    }
+    
+    // Si llegamos aquí, ni online ni offline funcionaron
     console.error('[NuevoItem] Todos los intentos fallaron:', lastError);
-    toast.error("Error de conexión. El ítem se guardó localmente y se sincronizará después.");
+    toast.error("No se pudo guardar el ítem. Verifica tu conexión e intenta de nuevo.", { duration: 10000 });
     setIsSubmitting(false);
   };
 

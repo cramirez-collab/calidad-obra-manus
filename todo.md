@@ -4918,3 +4918,25 @@
 - [x] Generar PDF server-side con jsPDF y devolver como descarga directa
 - [x] Endpoint Express GET /api/export/seguridad-pdf con Content-Disposition: attachment
 - [x] Frontend: anchor href al endpoint (funciona en móvil y desktop)
+
+## URGENTE - Bug: Natalia no puede guardar datos en la app
+- [ ] Diagnosticar por qué los registros no se guardan
+- [ ] Revisar logs del servidor, errores de red, estado de BD
+- [ ] Corregir el problema
+
+
+## Fix Crítico: Ítems no se guardan (Natalia Diaz) - Bug Report
+
+### Diagnóstico
+- [x] SyncManager elimina ítems de cola offline después de 5 fallos sin notificar al usuario
+- [x] Toast engañoso dice "guardado localmente" pero el ítem puede perderse silenciosamente
+- [x] Errores de mutación se tragan sin mostrar el error real al usuario
+- [x] Sin indicador visual de ítems pendientes de sincronización en la UI
+
+### Correcciones
+- [x] SyncManager: NO eliminar ítems de cola offline, mantenerlos indefinidamente
+- [x] SyncManager: Notificar al usuario cuando un ítem falla repetidamente (toast de advertencia)
+- [x] NuevoItem: Mostrar error real del servidor cuando la mutación falla (no solo "error de conexión")
+- [x] DashboardLayout: Indicador visual de ítems pendientes de sincronización con conteo
+- [ ] Agregar botón de reintento manual en la lista de pendientes
+- [x] Mejorar logging del error real (401/500/timeout/network) para diagnóstico
