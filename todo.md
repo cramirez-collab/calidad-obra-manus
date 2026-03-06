@@ -4938,5 +4938,11 @@
 - [x] SyncManager: Notificar al usuario cuando un ítem falla repetidamente (toast de advertencia)
 - [x] NuevoItem: Mostrar error real del servidor cuando la mutación falla (no solo "error de conexión")
 - [x] DashboardLayout: Indicador visual de ítems pendientes de sincronización con conteo
-- [ ] Agregar botón de reintento manual en la lista de pendientes
+- [x] Agregar botón de reintento manual en la lista de pendientes
 - [x] Mejorar logging del error real (401/500/timeout/network) para diagnóstico
+
+### Mejoras post-fix Natalia
+- [x] Asignar Natalia (1410178) como residenteId en empresa Waller (480003) + empresa_residentes
+- [x] Crear página de pendientes de sincronización con vista de ítems atascados y botón reintentar/eliminar
+- [x] Implementar logging server-side de intentos de creación fallidos por usuario
+- [x] Agregar ruta /pendientes en App.tsx y enlace en menú lateral

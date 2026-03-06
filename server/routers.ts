@@ -1073,6 +1073,7 @@ export const appRouter = router({
         pinPosY: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        try {
         // Verificar duplicados por clientId (evita duplicados por reintentos)
         if (input.clientId) {
           const existente = await db.getItemByClientId(input.clientId);
@@ -1334,6 +1335,25 @@ export const appRouter = router({
         });
         
         return itemResult;
+        } catch (error: any) {
+          // === LOGGING SERVER-SIDE DE FALLOS DE CREACIÓN ===
+          console.error(`[items.create FALLO] Usuario: ${ctx.user.id} (${ctx.user.name}), Rol: ${ctx.user.role}, Empresa: ${input.empresaId}, Error: ${error.message}`);
+          try {
+            await db.createAuditoria({
+              usuarioId: ctx.user.id,
+              usuarioNombre: ctx.user.name || 'Desconocido',
+              usuarioRol: ctx.user.role,
+              accion: 'crear_item_fallido',
+              categoria: 'error',
+              entidadTipo: 'item',
+              detalles: `Fallo al crear ítem: ${error.message}. Empresa: ${input.empresaId}, Unidad: ${input.unidadId}, Título: "${input.titulo}", ClientId: ${input.clientId || 'N/A'}`,
+              valorNuevo: { input: { ...input, fotoAntesBase64: input.fotoAntesBase64 ? '[BASE64]' : undefined, fotoAntesMarcadaBase64: input.fotoAntesMarcadaBase64 ? '[BASE64]' : undefined }, error: error.message, code: error.code },
+            });
+          } catch (logErr) {
+            console.error('[items.create] Error al registrar fallo en auditoría:', logErr);
+          }
+          throw error; // Re-lanzar para que el cliente reciba el error
+        }
       }),
     
     uploadFotoAntes: noDesarrolladorProcedure

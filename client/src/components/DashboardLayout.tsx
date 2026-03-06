@@ -621,15 +621,16 @@ function DashboardLayoutContent({
               {pendingCount > 0 && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="relative flex items-center justify-center h-8 w-8 rounded-lg bg-amber-500/10 text-amber-600 animate-pulse cursor-help">
+                    <a href="/pendientes" className="relative flex items-center justify-center h-8 w-8 rounded-lg bg-amber-500/10 text-amber-600 animate-pulse cursor-pointer hover:bg-amber-500/20 transition-colors">
                       <RefreshCw className="h-4 w-4" />
                       <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
                         {pendingCount > 9 ? '9+' : pendingCount}
                       </span>
-                    </div>
+                    </a>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{pendingCount} elemento(s) pendiente(s) de sincronizar</p>
+                    <p className="text-xs opacity-70">Toca para ver detalles</p>
                     {!online && <p className="text-amber-400 text-xs">Sin conexión a internet</p>}
                   </TooltipContent>
                 </Tooltip>
