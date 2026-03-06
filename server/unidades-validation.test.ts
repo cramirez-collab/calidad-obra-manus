@@ -122,6 +122,47 @@ describe("Detección de duplicados en importación", () => {
   });
 });
 
+describe("Inferencia de ubicación por nivel", () => {
+  const inferirUbicacion = (nivel: number | undefined | null, nombre?: string): string | undefined => {
+    if (nivel === 0) return "Sótano";
+    if (nivel === 99) return "Azotea";
+    if (nivel && nivel > 0) return `N${nivel}`;
+    if (nombre) {
+      const n = nombre.trim();
+      if (/^s[oó]tano/i.test(n)) return "Sótano";
+      if (/^roof/i.test(n) || /^azotea/i.test(n)) return "Azotea";
+    }
+    return undefined;
+  };
+
+  it("debería inferir Sótano para nivel 0", () => {
+    expect(inferirUbicacion(0)).toBe("Sótano");
+  });
+
+  it("debería inferir Azotea para nivel 99", () => {
+    expect(inferirUbicacion(99)).toBe("Azotea");
+  });
+
+  it("debería inferir N1, N2, etc. para niveles positivos", () => {
+    expect(inferirUbicacion(1)).toBe("N1");
+    expect(inferirUbicacion(2)).toBe("N2");
+    expect(inferirUbicacion(5)).toBe("N5");
+    expect(inferirUbicacion(15)).toBe("N15");
+  });
+
+  it("debería usar fallback por nombre cuando nivel es undefined", () => {
+    expect(inferirUbicacion(undefined, "Sotano")).toBe("Sótano");
+    expect(inferirUbicacion(undefined, "Roof6")).toBe("Azotea");
+    expect(inferirUbicacion(undefined, "Azotea")).toBe("Azotea");
+  });
+
+  it("debería retornar undefined cuando no hay info", () => {
+    expect(inferirUbicacion(undefined)).toBeUndefined();
+    expect(inferirUbicacion(null)).toBeUndefined();
+    expect(inferirUbicacion(undefined, "Local")).toBeUndefined();
+  });
+});
+
 describe("Validación de unidades.create via tRPC", () => {
   it("debería rechazar creación de unidad sin nombre", async () => {
     // El schema de zod requiere nombre.min(1)

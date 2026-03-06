@@ -742,20 +742,27 @@ export async function getUnidadesParaPanoramica(proyectoId: number) {
 // Inferir nivel automáticamente basado en el nombre de la unidad
 function inferirNivelPorNombre(nombre: string): number | undefined {
   const n = nombre.trim();
-  // Sótano / Basement
   if (/^s[oó]tano/i.test(n) || /^basement/i.test(n)) return 0;
-  // Roof / Azotea
   if (/^roof/i.test(n) || /^azotea/i.test(n)) return 99;
-  // Numérico: primer dígito indica piso (101→1, 201→2, 1501→15)
   const match = n.match(/^(\d+)/);
   if (match) {
     const num = parseInt(match[1]);
-    if (num >= 100) {
-      // 101→1, 201→2, 1501→15
-      return Math.floor(num / 100);
-    }
-    // Si es < 100, podría ser el nivel directo
+    if (num >= 100) return Math.floor(num / 100);
     return num;
+  }
+  return undefined;
+}
+
+// Inferir ubicación basada en nivel
+function inferirUbicacionPorNivel(nivel: number | undefined | null, nombre?: string): string | undefined {
+  if (nivel === 0) return "Sótano";
+  if (nivel === 99) return "Azotea";
+  if (nivel && nivel > 0) return `N${nivel}`;
+  // Fallback por nombre
+  if (nombre) {
+    const n = nombre.trim();
+    if (/^s[oó]tano/i.test(n)) return "Sótano";
+    if (/^roof/i.test(n) || /^azotea/i.test(n)) return "Azotea";
   }
   return undefined;
 }
@@ -775,6 +782,26 @@ async function existeUnidadDuplicada(proyectoId: number, nombre: string, exclude
   const existing = await db.select({ id: unidades.id }).from(unidades)
     .where(and(...conditions)).limit(1);
   return existing.length > 0;
+}
+
+// Verificar duplicado y devolver info (para validación en tiempo real desde frontend)
+export async function checkUnidadDuplicada(proyectoId: number, nombre: string, excludeId?: number): Promise<{ isDuplicate: boolean; existingId?: number; existingName?: string }> {
+  const db = await getDb();
+  if (!db) return { isDuplicate: false };
+  const conditions = [
+    eq(unidades.proyectoId, proyectoId),
+    eq(unidades.nombre, nombre.trim()),
+    eq(unidades.activo, true),
+  ];
+  if (excludeId) {
+    conditions.push(sql`${unidades.id} != ${excludeId}`);
+  }
+  const existing = await db.select({ id: unidades.id, nombre: unidades.nombre }).from(unidades)
+    .where(and(...conditions)).limit(1);
+  if (existing.length > 0) {
+    return { isDuplicate: true, existingId: existing[0].id, existingName: existing[0].nombre };
+  }
+  return { isDuplicate: false };
 }
 
 export async function importarUnidadesDesdeExcel(proyectoId: number, unidadesData: Array<{
@@ -805,11 +832,15 @@ export async function importarUnidadesDesdeExcel(proyectoId: number, unidadesDat
     // Inferir nivel si no se proporcionó
     const nivel = u.nivel || inferirNivelPorNombre(u.nombre) || 1;
     
+    // Inferir ubicación
+    const ubicacion = inferirUbicacionPorNivel(nivel, u.nombre);
+    
     const result = await db.insert(unidades).values({
       proyectoId,
       nombre: u.nombre,
       codigo: u.codigo,
       nivel,
+      ubicacion,
       fechaInicio: u.fechaInicio,
       fechaFin: u.fechaFin,
       activo: true,
@@ -840,6 +871,11 @@ export async function createUnidad(data: InsertUnidad) {
   // Inferir nivel si no se proporcionó
   if (!data.nivel && data.nombre) {
     data.nivel = inferirNivelPorNombre(data.nombre);
+  }
+  
+  // Inferir ubicación si no se proporcionó
+  if (!data.ubicacion && (data.nivel || data.nombre)) {
+    data.ubicacion = inferirUbicacionPorNivel(data.nivel, data.nombre);
   }
   
   const result = await db.insert(unidades).values(data);

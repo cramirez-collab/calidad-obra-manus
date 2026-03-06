@@ -21,10 +21,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { MapPin, Edit, Plus, Trash2, FileDown, GripVertical, Save, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { MapPin, Edit, Plus, Trash2, FileDown, GripVertical, Save, X, AlertTriangle } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useProject } from "@/contexts/ProjectContext";
+import { useDebounce } from "@/hooks/useDebounce";
 
 type Unidad = {
   id: number;
@@ -57,6 +58,21 @@ export default function Unidades() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
+  
+  // Validación en tiempo real de duplicados
+  const debouncedNombre = useDebounce(formData.nombre.trim(), 400);
+  const checkDuplicateQuery = trpc.unidades.checkDuplicate.useQuery(
+    {
+      proyectoId: selectedProjectId!,
+      nombre: debouncedNombre,
+      excludeId: editingUnidad?.id,
+    },
+    {
+      enabled: !!selectedProjectId && debouncedNombre.length > 0 && isOpen,
+    }
+  );
+  const isDuplicate = checkDuplicateQuery.data?.isDuplicate ?? false;
+  
   // Obtener unidades filtradas por proyecto desde el backend
   const { data: unidades, isLoading } = trpc.unidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
@@ -426,11 +442,42 @@ export default function Unidades() {
                     <Input
                       id="nombre"
                       value={formData.nombre}
-                      onChange={(e) =>
-                        setFormData({ ...formData, nombre: e.target.value })
-                      }
-                      placeholder="Ej: Departamento 101 o '-' para espacio vacío"
+                      onChange={(e) => {
+                        const nombre = e.target.value;
+                        setFormData((prev) => {
+                          const updates: typeof prev = { ...prev, nombre };
+                          // Auto-inferir nivel si está vacío
+                          if (!prev.nivel || prev.nivel === "") {
+                            const n = nombre.trim();
+                            if (/^s[oó]tano/i.test(n)) updates.nivel = "0";
+                            else if (/^roof/i.test(n) || /^azotea/i.test(n)) updates.nivel = "99";
+                            else {
+                              const m = n.match(/^(\d+)/);
+                              if (m) {
+                                const num = parseInt(m[1]);
+                                updates.nivel = num >= 100 ? String(Math.floor(num / 100)) : String(num);
+                              }
+                            }
+                          }
+                          // Auto-inferir ubicación si está vacía
+                          if (!prev.ubicacion || prev.ubicacion === "") {
+                            const nivel = updates.nivel || prev.nivel;
+                            if (nivel === "0") updates.ubicacion = "Sótano";
+                            else if (nivel === "99") updates.ubicacion = "Azotea";
+                            else if (nivel) updates.ubicacion = `N${nivel}`;
+                          }
+                          return updates;
+                        });
+                      }}
+                      placeholder="Ej: 101, 201, Sotano"
+                      className={isDuplicate ? "border-destructive focus-visible:ring-destructive" : ""}
                     />
+                    {isDuplicate && (
+                      <p className="text-xs text-destructive flex items-center gap-1 mt-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        Ya existe una unidad "{debouncedNombre}" activa en este proyecto
+                      </p>
+                    )}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="codigo">Código</Label>
@@ -500,7 +547,7 @@ export default function Unidades() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
+                  disabled={createMutation.isPending || updateMutation.isPending || isDuplicate}
                 >
                   {editingUnidad ? "Guardar Cambios" : "Crear Unidad"}
                 </Button>

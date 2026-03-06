@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM unidades WHERE proyectoId = 150001 AND activo = 0 AND id IN (300001, 300002, 300003, 330001, 330002, 330003, 330004, 330005, 330006, 330007, 330008, 330009, 330010, 330011, 330012)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute DELETE FROM unidades WHERE proyectoId = 150001 AND activo = 0 AND id IN (300001, 300002, 300003, 330001, 330002, 330003, 330004, 330005, 330006, 330007, 330008, 330009, 330010, 330011, 330012)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 205
+}

@@ -616,6 +616,17 @@ export const appRouter = router({
         return await db.getUnidadConDatosCompletos(input.id);
       }),
     
+    // Verificar si existe una unidad con el mismo nombre (validación en tiempo real)
+    checkDuplicate: protectedProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        nombre: z.string().min(1),
+        excludeId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.checkUnidadDuplicada(input.proyectoId, input.nombre, input.excludeId);
+      }),
+    
     create: adminProcedure
       .input(z.object({
         proyectoId: z.number().optional(),

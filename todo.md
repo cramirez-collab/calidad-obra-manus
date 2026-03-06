@@ -4956,3 +4956,8 @@
 - [x] Corregir bug en importación Excel / creación de unidades que no asigna nivel correcto
 - [x] Agregar validación de nivel automático basado en nombre si no se especifica (inferirNivelPorNombre)
 - [x] Agregar detección de duplicados al importar/crear unidades (existeUnidadDuplicada + skip en importación)
+
+### Mejoras post-fix unidades duplicadas
+- [x] Limpiar unidades desactivadas de Mayas (300001-330012) eliminadas - sin ítems asociados
+- [x] Validación en tiempo real de duplicados en modal de creación de unidad
+- [x] Auto-inferencia de ubicación (N1, N2, etc.) al crear unidades sin ubicación + auto-inferencia de nivel

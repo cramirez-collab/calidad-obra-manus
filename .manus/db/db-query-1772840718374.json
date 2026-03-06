@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE unidades SET ubicacion = 'Sótano' WHERE id = 330014 AND nombre = 'Sotano 1'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute UPDATE unidades SET ubicacion = 'Sótano' WHERE id = 330014 AND nombre = 'Sotano 1'",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 66
+}
