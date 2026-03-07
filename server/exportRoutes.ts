@@ -1010,4 +1010,140 @@ router.get('/api/export/seguridad-pdf', async (req, res) => {
   }
 });
 
+// ===== PDF PROGRAMA SEMANAL POR EMPRESA (server-side con PDFKit) =====
+// Genera PDF real que se abre directamente en Acrobat/visor del navegador
+router.get('/api/export/programa-pdf', async (req, res) => {
+  try {
+    const programaId = parseInt(req.query.programaId as string);
+    const especialidad = req.query.especialidad as string;
+    const incluirAnalisis = req.query.analisis === '1';
+
+    if (!programaId || !especialidad) {
+      return res.status(400).json({ error: 'programaId y especialidad son requeridos' });
+    }
+
+    // Obtener datos del programa
+    const programa = await db.getProgramaSemanalById(programaId);
+    if (!programa) {
+      return res.status(404).json({ error: 'Programa no encontrado' });
+    }
+
+    const actividades = await db.getActividadesByPrograma(programaId);
+    const planos = await db.getPlanosByPrograma(programaId);
+
+    const data = { ...programa, actividades, planos };
+
+    // Generar análisis 8Ms si se solicita
+    let analisis8Ms = null;
+    if (incluirAnalisis) {
+      try {
+        const { invokeLLM } = await import('./_core/llm');
+        const filtradas = actividades.filter((a: any) => a.especialidad === especialidad);
+        if (filtradas.length > 0) {
+          const totalProg = filtradas.reduce((s: number, a: any) => s + (parseFloat(a.cantidadProgramada) || 0), 0);
+          const totalReal = filtradas.reduce((s: number, a: any) => s + (parseFloat(a.cantidadRealizada) || 0), 0);
+          const eficiencia = totalProg > 0 ? ((totalReal / totalProg) * 100).toFixed(1) : '0.0';
+
+          const actividadesTexto = filtradas.map((a: any) => {
+            const pct = parseFloat(a.porcentajeAvance) || 0;
+            return `- ${a.actividad} (Nivel: ${a.nivel || 'N/A'}, Area: ${a.area || 'N/A'}): Programado ${a.cantidadProgramada} ${a.unidad}, Realizado ${a.cantidadRealizada || 0} ${a.unidad}, Avance ${pct.toFixed(1)}%`;
+          }).join('\n');
+
+          const response = await invokeLLM({
+            messages: [
+              { role: 'system', content: `Eres un consultor experto en control de calidad de obra. Analiza actividades y genera recomendaciones con metodologia 8Ms + Money. Las 9 categorias: Material, Mano de obra, Maquinaria y equipo, Medios - Informacion planos, Metodo, Medio ambiente, Medidas de seguridad, Medicion, Money. Se breve, maximo 2-3 oraciones por categoria. No uses acentos. Responde en JSON.` },
+              { role: 'user', content: `Especialidad: ${especialidad}\nEficiencia: ${eficiencia}%\nProgramado: ${totalProg.toFixed(2)} | Realizado: ${totalReal.toFixed(2)}\n\nActividades:\n${actividadesTexto}` },
+            ],
+            response_format: {
+              type: 'json_schema',
+              json_schema: {
+                name: 'analisis_8ms',
+                strict: true,
+                schema: {
+                  type: 'object',
+                  properties: {
+                    resumenGeneral: { type: 'string' },
+                    categorias: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          nombre: { type: 'string' },
+                          estado: { type: 'string' },
+                          recomendacion: { type: 'string' },
+                        },
+                        required: ['nombre', 'estado', 'recomendacion'],
+                        additionalProperties: false,
+                      },
+                    },
+                  },
+                  required: ['resumenGeneral', 'categorias'],
+                  additionalProperties: false,
+                },
+              },
+            },
+          });
+
+          const content = response.choices?.[0]?.message?.content;
+          if (content) {
+            analisis8Ms = JSON.parse(content as string);
+          }
+        }
+      } catch (e) {
+        console.error('[PDF] Error generando analisis 8Ms:', e);
+        // Continuar sin análisis
+      }
+    }
+
+    // Generar PDF con PDFKit
+    const { generarPDFCorteEmpresa } = await import('./pdfService');
+    const pdfBuffer = await generarPDFCorteEmpresa(data as any, especialidad, analisis8Ms);
+
+    const safeName = `Corte_${especialidad.replace(/[^a-zA-Z0-9_\-\s]/g, '_')}_${programa.semanaInicio || 'programa'}`;
+
+    // Headers para que se abra directamente en el visor PDF (NO descargar)
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${safeName}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('[ExportPDF] Error generando PDF programa:', err);
+    res.status(500).json({ error: 'Error generando PDF' });
+  }
+});
+
+// PDF Programa Semanal Completo
+router.get('/api/export/programa-completo-pdf', async (req, res) => {
+  try {
+    const programaId = parseInt(req.query.programaId as string);
+    if (!programaId) {
+      return res.status(400).json({ error: 'programaId es requerido' });
+    }
+
+    const programa = await db.getProgramaSemanalById(programaId);
+    if (!programa) {
+      return res.status(404).json({ error: 'Programa no encontrado' });
+    }
+
+    const actividades = await db.getActividadesByPrograma(programaId);
+    const planos = await db.getPlanosByPrograma(programaId);
+    const data = { ...programa, actividades, planos };
+
+    const { generarPDFProgramaCompleto } = await import('./pdfService');
+    const pdfBuffer = await generarPDFProgramaCompleto(data as any);
+
+    const safeName = `Programa_${programa.semanaInicio || 'semanal'}_${programa.semanaFin || ''}`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${safeName}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('[ExportPDF] Error generando PDF programa completo:', err);
+    res.status(500).json({ error: 'Error generando PDF' });
+  }
+});
+
 export default router;

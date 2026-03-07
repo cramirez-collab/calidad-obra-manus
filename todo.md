@@ -5065,3 +5065,14 @@
 - [x] Agregar estados visuales claros: pendiente, sincronizando, error, éxito, timeout
 - [x] Si hay error de red, mostrar mensaje claro y permitir reintentar
 - [x] Limpiar ítems sincronizados exitosamente de la cola
+
+### Fix DEFINITIVO: PDF por empresa debe abrir directamente y poder compartir
+- [x] Migrar generación de PDF al servidor con PDFKit (PDF nativo real)
+- [x] Endpoint /api/export/programa-pdf genera PDF server-side
+- [x] Endpoint /api/export/programa-completo-pdf genera PDF completo server-side
+- [x] Content-Disposition: inline — se abre directamente en visor del navegador/Acrobat
+- [x] Botón compartir usando Web Share API con archivo .pdf real
+- [x] NO requiere descarga previa — abre directo en nueva pestaña
+- [x] Funciona en móvil (iOS Safari, Android Chrome, Desktop)
+- [x] Incluye análisis 8Ms con IA generado server-side
+- [x] 5 tests unitarios para generación de PDF pasando

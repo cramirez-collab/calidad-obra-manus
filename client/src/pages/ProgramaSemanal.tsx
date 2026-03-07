@@ -1816,38 +1816,62 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
                   const pct = prog > 0 ? ((real / prog) * 100) : 0;
                   const color = pct >= 80 ? 'text-emerald-600' : pct >= 50 ? 'text-amber-600' : 'text-red-600';
                   return (
-                    <Button
-                      key={esp}
-                      variant="outline"
-                      size="sm"
-                      className="h-auto py-2 px-3 flex flex-col items-start gap-0.5 text-left"
-                      disabled={analisisLoading === esp}
-                      onClick={async () => {
-                        setAnalisisLoading(esp);
-                        try {
-                          const analisis = await analisis8MsMut.mutateAsync({ programaId, especialidad: esp });
-                          generarPDFPorEmpresaHTML(data, esp, analisis);
-                        } catch (e: any) {
-                          toast.error('Error al generar analisis IA: ' + (e?.message || 'Intenta de nuevo'));
-                          generarPDFPorEmpresaHTML(data, esp, null);
-                        } finally {
-                          setAnalisisLoading(null);
-                        }
-                      }}
-                    >
-                      {analisisLoading === esp ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          <span className="text-[10px]">Analizando con IA...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-xs font-semibold truncate w-full">{esp}</span>
-                          <span className={`text-[10px] font-bold ${color}`}>{pct.toFixed(1)}% eficiencia</span>
-                          <span className="text-[9px] text-muted-foreground">+ Analisis 8Ms</span>
-                        </>
-                      )}
-                    </Button>
+                    <div key={esp} className="flex flex-col gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-auto py-2 px-3 flex flex-col items-start gap-0.5 text-left w-full"
+                        disabled={analisisLoading === esp}
+                        onClick={() => {
+                          setAnalisisLoading(esp);
+                          // Abrir PDF server-side en nueva pestaña (funciona en todos los dispositivos)
+                          const url = `/api/export/programa-pdf?programaId=${programaId}&especialidad=${encodeURIComponent(esp)}&analisis=1`;
+                          window.open(url, '_blank');
+                          // Timeout para quitar el loading (el PDF se genera en el server)
+                          setTimeout(() => setAnalisisLoading(null), 3000);
+                        }}
+                      >
+                        {analisisLoading === esp ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <span className="text-[10px]">Generando PDF...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-xs font-semibold truncate w-full">{esp}</span>
+                            <span className={`text-[10px] font-bold ${color}`}>{pct.toFixed(1)}% eficiencia</span>
+                            <span className="text-[9px] text-muted-foreground">Abrir PDF + Analisis 8Ms</span>
+                          </>
+                        )}
+                      </Button>
+                      {/* Botón compartir separado */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-[10px] text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1"
+                        onClick={async () => {
+                          const url = `/api/export/programa-pdf?programaId=${programaId}&especialidad=${encodeURIComponent(esp)}&analisis=1`;
+                          // Intentar Web Share API con archivo PDF
+                          if (navigator.share) {
+                            try {
+                              const response = await fetch(url);
+                              const blob = await response.blob();
+                              const file = new File([blob], `Corte_${esp}.pdf`, { type: 'application/pdf' });
+                              if (navigator.canShare?.({ files: [file] })) {
+                                await navigator.share({ title: `Corte ${esp}`, files: [file] });
+                                return;
+                              }
+                            } catch (e: any) {
+                              if (e.name === 'AbortError') return;
+                            }
+                          }
+                          // Fallback: copiar URL o abrir
+                          window.open(url, '_blank');
+                        }}
+                      >
+                        <Share2 className="w-3 h-3" /> Compartir
+                      </Button>
+                    </div>
                   );
                 })}
               </div>
@@ -1858,28 +1882,8 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
 
       {/* Acciones */}
       <div className="flex gap-2 justify-end flex-wrap">
-        <Button variant="outline" size="sm" onClick={async () => {
-          const btn = document.activeElement as HTMLButtonElement;
-          if (btn) { btn.disabled = true; btn.textContent = 'Generando PDF...'; }
-          try {
-            let analisisMap: Map<string, any> | undefined;
-            if (data.status === 'corte_realizado') {
-              const especialidades = Array.from(new Set((data.actividades || []).map((a: any) => a.especialidad) as string[])).sort();
-              if (especialidades.length > 0) {
-                if (btn) { btn.textContent = 'Analizando con IA...'; }
-                analisisMap = new Map();
-                for (const esp of especialidades) {
-                  try {
-                    const res = await analisis8MsMut.mutateAsync({ programaId, especialidad: esp });
-                    analisisMap.set(esp, res);
-                  } catch { /* skip failed */ }
-                }
-              }
-            }
-            await generarPDFProgramaSemanal(data, analisisMap);
-          } finally {
-            if (btn) { btn.disabled = false; btn.innerHTML = ''; }
-          }
+        <Button variant="outline" size="sm" onClick={() => {
+          window.open(`/api/export/programa-completo-pdf?programaId=${programaId}`, '_blank');
         }}>
           <Download className="w-4 h-4 mr-1" /> PDF
         </Button>
