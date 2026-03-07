@@ -4982,3 +4982,8 @@
 - [x] Implementar guardar plantilla de actividades como reutilizable (BD) - ya existía
 - [x] Implementar cargar plantilla guardada al crear nuevo programa - ya existía
 - [x] UI para gestionar plantillas guardadas (ver, cargar, eliminar) - ya existía PlantillasView
+
+### Plantilla base + Preview Excel
+- [x] Crear plantilla base predeterminada con actividades comunes de obra (albanileria, ceramicos, tablaroca, instalaciones, etc.)
+- [x] Seed automático de plantilla base al primer acceso del proyecto (en listarPlantillas)
+- [x] Agregar preview/confirmación antes de importar Excel mostrando actividades detectadas

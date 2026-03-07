@@ -5991,6 +5991,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
     listarPlantillas: protectedProcedure
       .input(z.object({ proyectoId: z.number() }))
       .query(async ({ input }) => {
+        await db.seedProgramaPlantillaBase(input.proyectoId);
         return db.getPlantillasByProyecto(input.proyectoId);
       }),
 

@@ -765,6 +765,8 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
     onError: (e) => toast.error(e.message),
   });
 
+  const [excelPreview, setExcelPreview] = useState<ActividadRow[] | null>(null);
+
   const parsearExcelMut = trpc.programaSemanal.parsearExcel.useMutation({
     onSuccess: (data) => {
       const newActs = data.actividades.map((a: any, i: number) => ({
@@ -778,8 +780,7 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
         material: a.material || '',
         orden: i,
       }));
-      setActividades(newActs);
-      toast.success(`${data.total} actividades cargadas desde Excel`);
+      setExcelPreview(newActs);
       setExcelLoading(false);
     },
     onError: (e) => {
@@ -787,6 +788,18 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
       setExcelLoading(false);
     },
   });
+
+  const confirmarExcelPreview = () => {
+    if (excelPreview) {
+      setActividades(excelPreview);
+      toast.success(`${excelPreview.length} actividades cargadas desde Excel`);
+      setExcelPreview(null);
+    }
+  };
+
+  const cancelarExcelPreview = () => {
+    setExcelPreview(null);
+  };
 
   const handleUploadExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -991,8 +1004,61 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
             </div>
           </div>
 
+          {/* Preview de Excel antes de confirmar */}
+          {excelPreview && (
+            <div className="border-2 border-blue-300 rounded-lg p-3 bg-blue-50/50 dark:bg-blue-950/20 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileSpreadsheet className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-bold text-blue-700 dark:text-blue-300">
+                    Preview: {excelPreview.length} actividades detectadas
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={cancelarExcelPreview}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" onClick={confirmarExcelPreview} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Check className="w-3 h-3 mr-1" /> Confirmar e Importar
+                  </Button>
+                </div>
+              </div>
+              <div className="max-h-64 overflow-auto rounded border">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted/60 sticky top-0">
+                    <tr>
+                      <th className="px-2 py-1.5 text-left font-semibold">#</th>
+                      <th className="px-2 py-1.5 text-left font-semibold">ESPECIALIDAD</th>
+                      <th className="px-2 py-1.5 text-left font-semibold">ACTIVIDAD</th>
+                      <th className="px-2 py-1.5 text-left font-semibold">NIVEL</th>
+                      <th className="px-2 py-1.5 text-left font-semibold">AREA</th>
+                      <th className="px-2 py-1.5 text-left font-semibold">REF. EJE</th>
+                      <th className="px-2 py-1.5 text-left font-semibold">UNIDAD</th>
+                      <th className="px-2 py-1.5 text-right font-semibold">VOLUMEN</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {excelPreview.map((a, i) => (
+                      <tr key={i} className={i % 2 === 0 ? 'bg-white dark:bg-background' : 'bg-muted/20'}>
+                        <td className="px-2 py-1 text-muted-foreground">{i + 1}</td>
+                        <td className="px-2 py-1 font-medium">{a.especialidad}</td>
+                        <td className="px-2 py-1">{a.actividad}</td>
+                        <td className="px-2 py-1">{a.nivel}</td>
+                        <td className="px-2 py-1">{a.area}</td>
+                        <td className="px-2 py-1">{a.referenciaEje}</td>
+                        <td className="px-2 py-1">{a.unidad}</td>
+                        <td className="px-2 py-1 text-right">{a.cantidadProgramada || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-muted-foreground">Revisa las actividades antes de confirmar. Al importar, reemplazaran las actividades actuales.</p>
+            </div>
+          )}
+
           {/* Indicador de actividades cargadas */}
-          {actividades.filter(a => a.actividad.trim()).length > 0 && (
+          {!excelPreview && actividades.filter(a => a.actividad.trim()).length > 0 && (
             <div className="flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg px-3 py-2">
               <Check className="w-4 h-4 text-emerald-600" />
               <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
