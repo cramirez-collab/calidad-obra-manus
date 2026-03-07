@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useProject } from "@/contexts/ProjectContext";
@@ -77,7 +77,7 @@ type PlanoRow = {
 };
 
 // Vista principal
-type ViewMode = "list" | "create" | "detail" | "corte" | "eficiencia" | "plantillas" | "comparativa" | "resumen" | "ranking" | "metas";
+type ViewMode = "list" | "create" | "detail" | "corte" | "edit" | "eficiencia" | "plantillas" | "comparativa" | "resumen" | "ranking" | "metas";
 
 export default function ProgramaSemanal() {
   const { user } = useAuth();
@@ -145,6 +145,16 @@ export default function ProgramaSemanal() {
     onError: (e) => toast.error(e.message),
   });
 
+  const updateMut = trpc.programaSemanal.update.useMutation({
+    onSuccess: () => {
+      utils.programaSemanal.list.invalidate();
+      utils.programaSemanal.getById.invalidate();
+      toast.success("Programa actualizado");
+      setView("detail");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const uploadPlanoMut = trpc.programaSemanal.uploadPlano.useMutation();
 
   // Datos lista (movido arriba para useMemo)
@@ -193,6 +203,16 @@ export default function ProgramaSemanal() {
     />;
   }
 
+  if (view === "edit" && selectedProgramaId) {
+    return <EditarPrograma
+      programaId={selectedProgramaId}
+      onBack={() => setView("detail")}
+      onSave={(data) => updateMut.mutate(data)}
+      isLoading={updateMut.isPending}
+      uploadPlano={uploadPlanoMut}
+    />;
+  }
+
   if (view === "detail" && selectedProgramaId) {
     return <DetallePrograma
       programaId={selectedProgramaId}
@@ -200,6 +220,7 @@ export default function ProgramaSemanal() {
       onCorte={() => setView("corte")}
       onEntregar={(id) => entregarMut.mutate({ id })}
       onDelete={(id) => { deleteMut.mutate({ id }); setView("list"); setSelectedProgramaId(null); }}
+      onEdit={() => setView("edit")}
       userId={user!.id}
       userRole={user!.role || "residente"}
       usuarios={usuariosEspecialidad}
@@ -1401,12 +1422,13 @@ async function generarPDFProgramaSemanal(data: any) {
 }
 
 // ===== DETALLE PROGRAMA =====
-function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, userId, userRole, usuarios }: {
+function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, onEdit, userId, userRole, usuarios }: {
   programaId: number;
   onBack: () => void;
   onCorte: () => void;
   onEntregar: (id: number) => void;
   onDelete: (id: number) => void;
+  onEdit: () => void;
   userId: number;
   userRole: string;
   usuarios: any[];
@@ -1613,6 +1635,11 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
           <Download className="w-4 h-4 mr-1" /> PDF
         </Button>
         <GuardarComoPlantillaBtn programaId={programaId} />
+        {canEdit && (
+          <Button variant="outline" size="sm" onClick={onEdit}>
+            <Edit className="w-4 h-4 mr-1" /> Editar Programa
+          </Button>
+        )}
         {canDelete && (
           <Button variant="destructive" size="sm" onClick={() => {
             if (confirm(`¿Eliminar este programa semanal${data.status !== 'borrador' ? ' (estado: ' + data.status + ')' : ''}? Esta acción no se puede deshacer.`)) {
@@ -1632,6 +1659,218 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, us
             <Scissors className="w-4 h-4 mr-1" /> Realizar Corte
           </Button>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ===== EDITAR PROGRAMA =====
+function EditarPrograma({ programaId, onBack, onSave, isLoading, uploadPlano }: {
+  programaId: number;
+  onBack: () => void;
+  onSave: (data: any) => void;
+  isLoading: boolean;
+  uploadPlano: any;
+}) {
+  const { data } = trpc.programaSemanal.getById.useQuery({ id: programaId });
+  const [actividades, setActividades] = useState<ActividadRow[]>([]);
+  const [planos, setPlanos] = useState<any[]>([]);
+  const [notas, setNotas] = useState("");
+  const [initialized, setInitialized] = useState(false);
+  const [uploadingPlano, setUploadingPlano] = useState(false);
+
+  // Inicializar con datos existentes
+  useEffect(() => {
+    if (data && !initialized) {
+      setActividades((data.actividades || []).map((a: any, idx: number) => ({
+        especialidad: a.especialidad || "",
+        actividad: a.actividad || "",
+        nivel: a.nivel || "",
+        area: a.area || "",
+        referenciaEje: a.referenciaEje || "",
+        unidad: a.unidad || "m2",
+        cantidadProgramada: a.cantidadProgramada || "0",
+        material: a.material || "",
+        orden: idx,
+      })));
+      setPlanos((data.planos || []).map((p: any, idx: number) => ({
+        nivel: p.nivel || "",
+        tipo: p.tipo || "planta",
+        titulo: p.titulo || "",
+        imagenUrl: p.imagenUrl,
+        imagenKey: p.imagenKey || "",
+        orden: idx,
+      })));
+      setNotas(data.notas || "");
+      setInitialized(true);
+    }
+  }, [data, initialized]);
+
+  if (!data) return <div className="space-y-3"><Button variant="ghost" size="sm" onClick={onBack}><ChevronLeft className="w-4 h-4" /> Volver</Button><Card className="animate-pulse"><CardContent className="p-8 h-48" /></Card></div>;
+
+  const updateActividad = (idx: number, field: string, value: string) => {
+    setActividades(prev => prev.map((a, i) => i === idx ? { ...a, [field]: value } : a));
+  };
+
+  const addActividad = () => {
+    setActividades(prev => [...prev, {
+      especialidad: prev.length > 0 ? prev[prev.length - 1].especialidad : "",
+      actividad: "", nivel: "", area: "", referenciaEje: "",
+      unidad: "m2", cantidadProgramada: "0", material: "", orden: prev.length,
+    }]);
+  };
+
+  const removeActividad = (idx: number) => {
+    setActividades(prev => prev.filter((_, i) => i !== idx).map((a, i) => ({ ...a, orden: i })));
+  };
+
+  const handleUploadPlano = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPlano(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(',')[1];
+        const result = await uploadPlano.mutateAsync({
+          fileName: file.name,
+          base64Data: base64,
+          mimeType: file.type,
+        });
+        setPlanos(prev => [...prev, {
+          nivel: "", tipo: "planta" as const, titulo: file.name.replace(/\.[^.]+$/, ""),
+          imagenUrl: result.url, imagenKey: result.key || "", orden: prev.length,
+        }]);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      toast.error("Error al subir plano");
+    } finally {
+      setUploadingPlano(false);
+    }
+  };
+
+  const removePlano = (idx: number) => {
+    setPlanos(prev => prev.filter((_, i) => i !== idx).map((p, i) => ({ ...p, orden: i })));
+  };
+
+  const handleSave = () => {
+    const validActs = actividades.filter(a => a.actividad.trim());
+    if (validActs.length === 0) {
+      toast.error("Agrega al menos una actividad con nombre");
+      return;
+    }
+    const actsConDefault = validActs.map((a, i) => ({
+      ...a,
+      cantidadProgramada: a.cantidadProgramada || "0",
+      unidad: a.unidad || "m2",
+      orden: i,
+    }));
+    onSave({
+      id: programaId,
+      notas,
+      actividades: actsConDefault,
+      planos,
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ChevronLeft className="w-4 h-4" /> Volver
+        </Button>
+        <h2 className="text-lg font-bold flex-1">
+          Editar: {formatWeekRange(data.semanaInicio, data.semanaFin)}
+        </h2>
+        <StatusBadge status={data.status} />
+      </div>
+
+      {/* Notas */}
+      <Card>
+        <CardContent className="p-4">
+          <label className="text-sm font-medium">Notas</label>
+          <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Notas del programa..." className="mt-1" />
+        </CardContent>
+      </Card>
+
+      {/* Tabla de actividades editable */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Actividades ({actividades.filter(a => a.actividad.trim()).length})</CardTitle>
+            <Button variant="outline" size="sm" onClick={addActividad}><Plus className="w-4 h-4 mr-1" /> Agregar fila</Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-2 sm:p-4">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse min-w-[900px]">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left p-2 font-medium">Especialidad</th>
+                  <th className="text-left p-2 font-medium">Actividad</th>
+                  <th className="text-left p-2 font-medium w-16">Nivel</th>
+                  <th className="text-left p-2 font-medium">Area</th>
+                  <th className="text-left p-2 font-medium">Ref. Eje</th>
+                  <th className="text-left p-2 font-medium w-20">Unidad</th>
+                  <th className="text-left p-2 font-medium w-24">Volumen</th>
+                  <th className="w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {actividades.map((a, idx) => (
+                  <tr key={idx} className="border-b">
+                    <td className="p-1"><Input value={a.especialidad} onChange={(e) => updateActividad(idx, 'especialidad', e.target.value)} className="h-8 text-xs" /></td>
+                    <td className="p-1"><Input value={a.actividad} onChange={(e) => updateActividad(idx, 'actividad', e.target.value)} className="h-8 text-xs" /></td>
+                    <td className="p-1"><Input value={a.nivel} onChange={(e) => updateActividad(idx, 'nivel', e.target.value)} className="h-8 text-xs" /></td>
+                    <td className="p-1"><Input value={a.area} onChange={(e) => updateActividad(idx, 'area', e.target.value)} className="h-8 text-xs" /></td>
+                    <td className="p-1"><Input value={a.referenciaEje} onChange={(e) => updateActividad(idx, 'referenciaEje', e.target.value)} className="h-8 text-xs" /></td>
+                    <td className="p-1">
+                      <select value={a.unidad} onChange={(e) => updateActividad(idx, 'unidad', e.target.value)} className="h-8 text-xs border rounded px-1 w-full bg-background">
+                        {['m','m2','m3','ml','pza','kg','lt','jgo','lote','otro'].map(u => <option key={u} value={u}>{u}</option>)}
+                      </select>
+                    </td>
+                    <td className="p-1"><Input type="number" value={a.cantidadProgramada} onChange={(e) => updateActividad(idx, 'cantidadProgramada', e.target.value)} className="h-8 text-xs text-right" /></td>
+                    <td className="p-1"><button onClick={() => removeActividad(idx)} className="text-red-500 hover:text-red-700"><X className="w-4 h-4" /></button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Planos */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Planos / Croquis ({planos.length})</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {planos.map((p, idx) => (
+              <div key={idx} className="relative group">
+                <img src={p.imagenUrl} alt={p.titulo || `Plano ${idx + 1}`} className="w-full h-32 object-cover rounded-lg border" />
+                <button onClick={() => removePlano(idx)} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow">
+                  <X className="w-3 h-3" />
+                </button>
+                {p.titulo && <p className="text-xs text-muted-foreground mt-1 truncate">{p.titulo}</p>}
+              </div>
+            ))}
+            <label className="border-2 border-dashed rounded-lg h-32 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 transition-colors">
+              {uploadingPlano ? <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /> : <><Upload className="w-6 h-6 text-muted-foreground" /><span className="text-xs text-muted-foreground mt-1">Subir plano</span></>}
+              <input type="file" accept="image/*" className="hidden" onChange={handleUploadPlano} disabled={uploadingPlano} />
+            </label>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Botones */}
+      <div className="flex gap-2 justify-end">
+        <Button variant="outline" onClick={onBack}>Cancelar</Button>
+        <Button onClick={handleSave} disabled={isLoading}>
+          {isLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+          Guardar Cambios
+        </Button>
       </div>
     </div>
   );

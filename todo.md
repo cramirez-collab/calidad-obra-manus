@@ -5002,3 +5002,13 @@
 - [x] Propagar IP a todas las 8 llamadas de createAuditoria
 - [x] Mostrar IP en la vista de Bitácora (solo superadmin)
 - [x] Migrar BD con nueva columna (ya existía en schema)
+
+### Botón Editar Programa en detalle
+- [ ] Agregar botón "Editar Programa" en vista detalle de programa semanal
+- [ ] Modo edición inline: editar actividades, volúmenes, planos
+- [ ] Procedure backend para actualizar programa (actividades + planos)
+- [ ] Registrar cambios en auditoría con IP
+
+### Plantillas por especialidad
+- [x] Crear plantillas por especialidad: Albanileria, Ceramicos, Tablaroca, Inst. Hidraulica, Electrica, Carpinteria, Herreria, Impermeabilizacion, Limpieza + General
+- [x] Seed automático de plantillas por especialidad al primer acceso (10 plantillas)

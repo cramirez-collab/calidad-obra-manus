@@ -7806,51 +7806,144 @@ export async function seedProgramaPlantillaBase(proyectoId: number) {
     .limit(1);
   if (existing.length > 0) return;
 
-  const actividadesBase = [
-    // ALBANILERIAS
-    { especialidad: "ALBANILERIAS", actividad: "Decimbrado", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    { especialidad: "ALBANILERIAS", actividad: "Perfilado de charolas y ventanas", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    { especialidad: "ALBANILERIAS", actividad: "Desbaste de firme", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    { especialidad: "ALBANILERIAS", actividad: "Pegado de block", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    { especialidad: "ALBANILERIAS", actividad: "Aplanado", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    { especialidad: "ALBANILERIAS", actividad: "Colado de firme", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    { especialidad: "ALBANILERIAS", actividad: "Boquillas", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
-    // CERAMICOS
-    { especialidad: "CERAMICOS", actividad: "Instalacion de pisos", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    { especialidad: "CERAMICOS", actividad: "Instalacion de azulejo en muros", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    { especialidad: "CERAMICOS", actividad: "Emboquillado", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
-    // TABLAROCA
-    { especialidad: "TABLAROCA", actividad: "Cierre 2 cara y plafones", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    { especialidad: "TABLAROCA", actividad: "Aplicacion de pasta", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    { especialidad: "TABLAROCA", actividad: "Aplicacion de pintura", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    // INSTALACION HIDRAULICA
-    { especialidad: "INST. HIDRAULICA", actividad: "Tendido de tuberia", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
-    { especialidad: "INST. HIDRAULICA", actividad: "Colocacion de muebles sanitarios", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
-    { especialidad: "INST. HIDRAULICA", actividad: "Pruebas hidrostaticas", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
-    // INSTALACION ELECTRICA
-    { especialidad: "INST. ELECTRICA", actividad: "Cableado general", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
-    { especialidad: "INST. ELECTRICA", actividad: "Colocacion de apagadores y contactos", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
-    { especialidad: "INST. ELECTRICA", actividad: "Colocacion de luminarias", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
-    // CARPINTERIA
-    { especialidad: "CARPINTERIA", actividad: "Instalacion de puertas", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
-    { especialidad: "CARPINTERIA", actividad: "Instalacion de closets", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
-    // HERRERIA / ALUMINIO
-    { especialidad: "HERRERIA/ALUMINIO", actividad: "Instalacion de ventanas", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
-    { especialidad: "HERRERIA/ALUMINIO", actividad: "Instalacion de barandales", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
-    // IMPERMEABILIZACION
-    { especialidad: "IMPERMEABILIZACION", actividad: "Aplicacion de impermeabilizante", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    // LIMPIEZA
-    { especialidad: "LIMPIEZA", actividad: "Limpieza gruesa", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
-    { especialidad: "LIMPIEZA", actividad: "Limpieza fina", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+  const plantillas = [
+    {
+      nombre: "General - Todas las Especialidades",
+      descripcion: "Plantilla completa con actividades de todas las especialidades de obra residencial.",
+      actividades: [
+        { especialidad: "ALBANILERIAS", actividad: "Decimbrado", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "ALBANILERIAS", actividad: "Perfilado de charolas y ventanas", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "ALBANILERIAS", actividad: "Desbaste de firme", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "CERAMICOS", actividad: "Instalacion de pisos", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "CERAMICOS", actividad: "Instalacion de azulejo en muros", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "TABLAROCA", actividad: "Cierre 2 cara y plafones", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "TABLAROCA", actividad: "Aplicacion de pasta", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "TABLAROCA", actividad: "Aplicacion de pintura", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "INST. HIDRAULICA", actividad: "Tendido de tuberia", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
+        { especialidad: "INST. ELECTRICA", actividad: "Cableado general", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
+        { especialidad: "CARPINTERIA", actividad: "Instalacion de puertas", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "HERRERIA/ALUMINIO", actividad: "Instalacion de ventanas", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "IMPERMEABILIZACION", actividad: "Aplicacion de impermeabilizante", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "LIMPIEZA", actividad: "Limpieza gruesa", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "LIMPIEZA", actividad: "Limpieza fina", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+      ],
+    },
+    {
+      nombre: "Albanilerias",
+      descripcion: "Actividades de albanileria: decimbrado, perfilado, desbaste, block, aplanado, firme, boquillas.",
+      actividades: [
+        { especialidad: "ALBANILERIAS", actividad: "Decimbrado", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "ALBANILERIAS", actividad: "Perfilado de charolas y ventanas", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "ALBANILERIAS", actividad: "Desbaste de firme", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "ALBANILERIAS", actividad: "Pegado de block", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "ALBANILERIAS", actividad: "Aplanado", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "ALBANILERIAS", actividad: "Colado de firme", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "ALBANILERIAS", actividad: "Boquillas", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "ALBANILERIAS", actividad: "Castillos y cadenas", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
+        { especialidad: "ALBANILERIAS", actividad: "Resanes", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+      ],
+    },
+    {
+      nombre: "Ceramicos",
+      descripcion: "Actividades de ceramicos: pisos, azulejo, emboquillado, zoclo, mosaico.",
+      actividades: [
+        { especialidad: "CERAMICOS", actividad: "Instalacion de pisos", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "CERAMICOS", actividad: "Instalacion de azulejo en muros", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "CERAMICOS", actividad: "Emboquillado", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
+        { especialidad: "CERAMICOS", actividad: "Colocacion de zoclo", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
+        { especialidad: "CERAMICOS", actividad: "Colocacion de mosaico", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "CERAMICOS", actividad: "Junteo", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+      ],
+    },
+    {
+      nombre: "Tablaroca",
+      descripcion: "Actividades de tablaroca: cierre, pasta, pintura, plafones, molduras.",
+      actividades: [
+        { especialidad: "TABLAROCA", actividad: "Cierre 2 cara y plafones", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "TABLAROCA", actividad: "Aplicacion de pasta", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "TABLAROCA", actividad: "Aplicacion de pintura", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "TABLAROCA", actividad: "Lijado", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "TABLAROCA", actividad: "Molduras y cornisas", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
+        { especialidad: "TABLAROCA", actividad: "Nichos y detalles", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+      ],
+    },
+    {
+      nombre: "Inst. Hidraulica",
+      descripcion: "Actividades de instalacion hidraulica y sanitaria.",
+      actividades: [
+        { especialidad: "INST. HIDRAULICA", actividad: "Tendido de tuberia", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
+        { especialidad: "INST. HIDRAULICA", actividad: "Colocacion de muebles sanitarios", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "INST. HIDRAULICA", actividad: "Pruebas hidrostaticas", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "INST. HIDRAULICA", actividad: "Conexion de llaves y mezcladoras", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "INST. HIDRAULICA", actividad: "Bajantes y desagues", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
+        { especialidad: "INST. HIDRAULICA", actividad: "Calentadores y boilers", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+      ],
+    },
+    {
+      nombre: "Inst. Electrica",
+      descripcion: "Actividades de instalacion electrica.",
+      actividades: [
+        { especialidad: "INST. ELECTRICA", actividad: "Cableado general", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
+        { especialidad: "INST. ELECTRICA", actividad: "Colocacion de apagadores y contactos", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "INST. ELECTRICA", actividad: "Colocacion de luminarias", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "INST. ELECTRICA", actividad: "Tableros y pastillas", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "INST. ELECTRICA", actividad: "Tierra fisica", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "INST. ELECTRICA", actividad: "Acometida electrica", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+      ],
+    },
+    {
+      nombre: "Carpinteria",
+      descripcion: "Actividades de carpinteria: puertas, closets, cocinas, muebles.",
+      actividades: [
+        { especialidad: "CARPINTERIA", actividad: "Instalacion de puertas", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "CARPINTERIA", actividad: "Instalacion de closets", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "CARPINTERIA", actividad: "Instalacion de cocina integral", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "CARPINTERIA", actividad: "Marcos y chambrana", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "CARPINTERIA", actividad: "Mueble de bano", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+      ],
+    },
+    {
+      nombre: "Herreria / Aluminio",
+      descripcion: "Actividades de herreria y aluminio: ventanas, barandales, puertas, cancel.",
+      actividades: [
+        { especialidad: "HERRERIA/ALUMINIO", actividad: "Instalacion de ventanas", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "HERRERIA/ALUMINIO", actividad: "Instalacion de barandales", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
+        { especialidad: "HERRERIA/ALUMINIO", actividad: "Cancel de bano", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "HERRERIA/ALUMINIO", actividad: "Puerta de aluminio", nivel: "", area: "", referenciaEje: "", unidad: "pza", cantidadProgramada: 0 },
+        { especialidad: "HERRERIA/ALUMINIO", actividad: "Rejas y protecciones", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+      ],
+    },
+    {
+      nombre: "Impermeabilizacion",
+      descripcion: "Actividades de impermeabilizacion.",
+      actividades: [
+        { especialidad: "IMPERMEABILIZACION", actividad: "Aplicacion de impermeabilizante", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "IMPERMEABILIZACION", actividad: "Preparacion de superficie", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "IMPERMEABILIZACION", actividad: "Chaflanes y media cana", nivel: "", area: "", referenciaEje: "", unidad: "ml", cantidadProgramada: 0 },
+        { especialidad: "IMPERMEABILIZACION", actividad: "Prueba de charco", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+      ],
+    },
+    {
+      nombre: "Limpieza",
+      descripcion: "Actividades de limpieza de obra.",
+      actividades: [
+        { especialidad: "LIMPIEZA", actividad: "Limpieza gruesa", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "LIMPIEZA", actividad: "Limpieza fina", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+        { especialidad: "LIMPIEZA", actividad: "Retiro de escombro", nivel: "", area: "", referenciaEje: "", unidad: "m3", cantidadProgramada: 0 },
+        { especialidad: "LIMPIEZA", actividad: "Limpieza de vidrios", nivel: "", area: "", referenciaEje: "", unidad: "m2", cantidadProgramada: 0 },
+      ],
+    },
   ];
 
-  await db.insert(programaPlantilla).values({
-    proyectoId,
-    usuarioId: 0, // Sistema
-    nombre: "Plantilla Base - Actividades de Obra",
-    descripcion: "Plantilla predeterminada con las actividades mas comunes de obra residencial. Edita las cantidades y niveles segun tu proyecto.",
-    actividades: actividadesBase,
-  });
+  for (const p of plantillas) {
+    await db.insert(programaPlantilla).values({
+      proyectoId,
+      usuarioId: 0, // Sistema
+      nombre: p.nombre,
+      descripcion: p.descripcion,
+      actividades: p.actividades,
+    });
+  }
 }
 
 /**
