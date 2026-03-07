@@ -5049,3 +5049,7 @@
 - [x] Cambiar generación de reportes de HTML a PDF real (.pdf) usando html2pdf.js
 - [x] Compartir como archivo .pdf real (no HTML) via Web Share API
 - [x] Aplicar a: PDF por empresa, PDF general del programa, PDF eficiencia global
+### Mejoras sugeridas implementadas
+- [x] Notificación push al residente al realizar corte con resumen de eficiencia
+- [x] Gráfica de tendencia de eficiencia por empresa (últimas 8 semanas) en vista Reportes
+- [x] PDF consolidado de todas las empresas para junta semanal (botón en Reportes)

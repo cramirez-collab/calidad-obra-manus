@@ -17,8 +17,9 @@ import {
   Download, Upload, Image as ImageIcon, BarChart3, TrendingUp, Eye, Edit,
   X, Check, AlertTriangle, Clock, FileSpreadsheet, BookTemplate, GitCompare,
   Save, FolderOpen, Copy, FileDown, Target, Sparkles, Wand2, Loader2, Camera, UserCircle,
-  Pencil, Eraser, Undo2, Palette, Share2
+  Pencil, Eraser, Undo2, Palette, Share2, FileText
 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, Legend } from "recharts";
 
 // Helpers de fecha
 function getMonday(d: Date): Date {
@@ -3883,8 +3884,46 @@ function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
   );
   const [expandedEmpresas, setExpandedEmpresas] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'programas' | 'cortes'>('programas');
+  const { data: tendencia } = trpc.programaSemanal.tendenciaEficiencia.useQuery(
+    { proyectoId, semanas: 8 },
+    { enabled: !!proyectoId }
+  );
   const [analisisLoading, setAnalisisLoading] = useState<string | null>(null);
+  const [consolidadoLoading, setConsolidadoLoading] = useState(false);
   const analisis8MsMut = trpc.programaSemanal.analisis8Ms.useMutation();
+
+  // PDF Consolidado para Junta Semanal
+  const generarPDFConsolidado = async () => {
+    if (!data || !data.empresas?.length) return;
+    setConsolidadoLoading(true);
+    try {
+      const { empresas: emps, eficienciaGlobal: eg } = data;
+      const efRows = (eg || []).map((r: any, i: number) => {
+        const color = r.eficiencia >= 80 ? '#16a34a' : r.eficiencia >= 50 ? '#d97706' : '#dc2626';
+        return `<tr><td style="font-weight:600;color:#666;">${i+1}</td><td style="font-weight:600;">${r.nombre}</td><td style="text-align:right;font-family:monospace;">${r.totalProgramado.toFixed(2)}</td><td style="text-align:right;font-family:monospace;">${r.totalRealizado.toFixed(2)}</td><td style="text-align:right;font-weight:800;color:${color};font-size:13px;">${r.eficiencia.toFixed(1)}%</td><td style="text-align:center;">${r.cortesCount}</td></tr>`;
+      }).join('');
+      let detalleHTML = '';
+      for (const emp of emps) {
+        const cortes = (emp.programas || []).filter((p: any) => p.status === 'corte_realizado').slice(0, 4);
+        if (cortes.length === 0) continue;
+        detalleHTML += `<div style="margin-top:24px;page-break-inside:avoid;"><h3 style="color:#002C63;font-size:14px;border-bottom:2px solid #002C63;padding-bottom:4px;">${emp.nombre} <span style="font-weight:400;color:#666;font-size:12px;">- ${emp.especialidad || ''}</span></h3>`;
+        detalleHTML += `<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead><tr><th style="background:#002C63;color:white;padding:6px 8px;font-size:10px;text-align:left;">Semana</th><th style="background:#002C63;color:white;padding:6px 8px;font-size:10px;text-align:right;">Programado</th><th style="background:#002C63;color:white;padding:6px 8px;font-size:10px;text-align:right;">Realizado</th><th style="background:#002C63;color:white;padding:6px 8px;font-size:10px;text-align:right;">Eficiencia</th><th style="background:#002C63;color:white;padding:6px 8px;font-size:10px;text-align:center;">Actividades</th></tr></thead><tbody>`;
+        for (const p of cortes) {
+          const ef = parseFloat(p.eficienciaGlobal) || 0;
+          const efColor = ef >= 80 ? '#16a34a' : ef >= 50 ? '#d97706' : '#dc2626';
+          detalleHTML += `<tr style="border-bottom:1px solid #eee;"><td style="padding:5px 8px;font-size:11px;">${formatWeekRange(p.semanaInicio, p.semanaFin)}</td><td style="padding:5px 8px;font-size:11px;text-align:right;font-family:monospace;">${parseFloat(p.totalProgramado || 0).toFixed(2)}</td><td style="padding:5px 8px;font-size:11px;text-align:right;font-family:monospace;">${parseFloat(p.totalRealizado || 0).toFixed(2)}</td><td style="padding:5px 8px;font-size:11px;text-align:right;font-weight:700;color:${efColor};">${ef.toFixed(1)}%</td><td style="padding:5px 8px;font-size:11px;text-align:center;">${p.actividadesCount || 0}</td></tr>`;
+        }
+        detalleHTML += `</tbody></table></div>`;
+      }
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte Consolidado - Junta Semanal</title><style>@media print{body{margin:0}@page{size:landscape;margin:10mm}}body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#333;max-width:1100px;margin:0 auto;padding:20px}h1{color:#002C63;font-size:20px;margin-bottom:4px}h2{color:#002C63;font-size:16px;margin-top:24px;border-bottom:2px solid #e5e7eb;padding-bottom:6px}table{width:100%;border-collapse:collapse}th{background:#002C63;color:white;padding:6px 8px;font-size:10px;text-align:left}td{padding:5px 8px;border-bottom:1px solid #eee;font-size:11px}tr:nth-child(even){background:#f9fafb}.footer{margin-top:30px;text-align:center;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:10px}</style></head><body><h1>REPORTE CONSOLIDADO - JUNTA SEMANAL</h1><p style="color:#666;font-size:13px;">Generado: ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p><h2>Eficiencia Global por Empresa</h2><table style="margin-top:8px;"><thead><tr><th style="width:5%;">#</th><th style="width:30%;">Empresa</th><th style="width:15%;text-align:right;">Programado</th><th style="width:15%;text-align:right;">Realizado</th><th style="width:15%;text-align:right;">Eficiencia</th><th style="width:10%;text-align:center;">Cortes</th></tr></thead><tbody>${efRows}</tbody></table><h2>Detalle por Empresa</h2>${detalleHTML || '<p style="color:#999;">Sin cortes realizados</p>'}<div class="footer"><p>ObjetivaQC - Control de Calidad de Obra - Reporte para Junta Semanal</p></div></body></html>`;
+      const fecha = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+      await generarYCompartirPDF(html, `Consolidado_Junta_${fecha.replace(/\s/g, '_')}`, 'both');
+    } catch (e: any) {
+      toast.error('Error al generar PDF consolidado');
+    } finally {
+      setConsolidadoLoading(false);
+    }
+  };
 
   const toggleEmpresa = (key: string) => {
     setExpandedEmpresas(prev => {
@@ -4016,6 +4055,18 @@ function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
             <p className="text-sm text-muted-foreground">{empresas.length} empresa{empresas.length !== 1 ? 's' : ''} con programas</p>
           </div>
         </div>
+        <Button
+          size="sm"
+          onClick={generarPDFConsolidado}
+          disabled={consolidadoLoading}
+          className="bg-[#002C63] hover:bg-[#001d42] text-white"
+        >
+          {consolidadoLoading ? (
+            <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generando...</>
+          ) : (
+            <><FileText className="w-4 h-4 mr-1" /> PDF Junta Semanal</>
+          )}
+        </Button>
       </div>
 
       {/* Eficiencia Global Card */}
@@ -4060,6 +4111,49 @@ function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
                   </div>
                 );
               })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Gráfica de Tendencia de Eficiencia */}
+      {tendencia && tendencia.chartData.length > 1 && (
+        <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50/50 to-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-blue-600" />
+              Tendencia de Eficiencia por Empresa
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">Últimas {tendencia.chartData.length} semanas con corte realizado</p>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="w-full h-[250px] sm:h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={tendencia.chartData} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="fecha" tick={{ fontSize: 10 }} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={(v: number) => `${v}%`} />
+                  <RTooltip
+                    contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' }}
+                    formatter={(value: any) => value != null ? [`${Number(value).toFixed(1)}%`] : ['-']}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
+                  {tendencia.empresas.map((nombre: string, i: number) => {
+                    const colors = ['#002C63', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777', '#65a30d', '#ea580c', '#6366f1'];
+                    return (
+                      <Line
+                        key={nombre}
+                        type="monotone"
+                        dataKey={nombre}
+                        stroke={colors[i % colors.length]}
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                        connectNulls
+                      />
+                    );
+                  })}
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>

@@ -5835,6 +5835,46 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           eficienciaGlobal: String(Math.round(eficiencia * 100) / 100) as any,
         });
 
+        // Notificar al residente asignado con push notification
+        try {
+          const usuario = await db.getUserById(programa.usuarioId);
+          if (usuario) {
+            // Agrupar actividades por especialidad para resumen
+            const actsByEsp = new Map<string, { prog: number; real: number }>();
+            for (const a of actividades) {
+              const esp = a.especialidad || 'Sin especialidad';
+              const curr = actsByEsp.get(esp) || { prog: 0, real: 0 };
+              curr.prog += parseFloat(String(a.cantidadProgramada)) || 0;
+              curr.real += parseFloat(String(a.cantidadRealizada)) || 0;
+              actsByEsp.set(esp, curr);
+            }
+            let resumen = '';
+            for (const [esp, vals] of Array.from(actsByEsp.entries())) {
+              const pct = vals.prog > 0 ? Math.round((vals.real / vals.prog) * 100) : 0;
+              resumen += `${esp}: ${pct}% | `;
+            }
+            resumen = resumen.slice(0, -3);
+
+            const pushSubs = await db.getPushSubscriptionsByUsuario(programa.usuarioId);
+            if (pushSubs.length > 0) {
+              await pushService.sendPushToMultiple(pushSubs, {
+                title: `Corte Realizado - Eficiencia: ${Math.round(eficiencia * 100) / 100}%`,
+                body: resumen,
+                data: { url: '/programa-semanal' },
+              });
+            }
+
+            // Notificar al owner también
+            const { notifyOwner } = await import('./_core/notification');
+            await notifyOwner({
+              title: `Corte Realizado - ${usuario.name}`,
+              content: `Eficiencia global: ${Math.round(eficiencia * 100) / 100}%\n${resumen}`,
+            }).catch(() => {});
+          }
+        } catch (e) {
+          console.error('[Corte] Error enviando notificación:', e);
+        }
+
         return { ok: true, eficiencia: Math.round(eficiencia * 100) / 100 };
       }),
 
@@ -6700,6 +6740,42 @@ Reglas:
       .input(z.object({ proyectoId: z.number() }))
       .query(async ({ input }) => {
         return db.getProgramasPorEmpresa(input.proyectoId);
+      }),
+
+    // Tendencia de eficiencia por empresa (últimas N semanas)
+    tendenciaEficiencia: protectedProcedure
+      .input(z.object({ proyectoId: z.number(), semanas: z.number().optional() }))
+      .query(async ({ input }) => {
+        const programas = await db.getEficienciaHistorica(input.proyectoId, { semanas: input.semanas || 8 });
+        // Agrupar por usuario y semana
+        const porUsuario = new Map<number, { nombre: string; semanas: { fecha: string; eficiencia: number }[] }>();
+        for (const p of programas) {
+          if (!porUsuario.has(p.usuarioId)) {
+            const user = await db.getUserById(p.usuarioId);
+            porUsuario.set(p.usuarioId, { nombre: user?.name || `Usuario ${p.usuarioId}`, semanas: [] });
+          }
+          const entry = porUsuario.get(p.usuarioId)!;
+          const fecha = p.semanaInicio ? new Date(p.semanaInicio).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) : '';
+          entry.semanas.push({ fecha, eficiencia: parseFloat(String(p.eficienciaGlobal)) || 0 });
+        }
+        // Convertir a formato para gráfica: array de semanas con una key por empresa
+        const allFechas = new Set<string>();
+        for (const [, v] of Array.from(porUsuario.entries())) {
+          for (const s of v.semanas) allFechas.add(s.fecha);
+        }
+        const fechasArr = Array.from(allFechas).reverse(); // más antigua primero
+        const series = Array.from(porUsuario.entries()).map(([id, v]) => ({
+          id, nombre: v.nombre, data: v.semanas,
+        }));
+        const chartData = fechasArr.map(fecha => {
+          const point: Record<string, any> = { fecha };
+          for (const s of series) {
+            const match = s.data.find(d => d.fecha === fecha);
+            point[s.nombre] = match ? match.eficiencia : null;
+          }
+          return point;
+        });
+        return { chartData, empresas: series.map(s => s.nombre) };
       }),
 
     // Análisis IA con 8Ms para PDF por empresa
