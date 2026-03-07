@@ -6695,6 +6695,13 @@ Reglas:
         return { actividades, total: actividades.length };
       }),
 
+    // Reportes agrupados por empresa con eficiencia global
+    reportesPorEmpresa: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getProgramasPorEmpresa(input.proyectoId);
+      }),
+
     // Análisis IA con 8Ms para PDF por empresa
     analisis8Ms: protectedProcedure
       .input(z.object({

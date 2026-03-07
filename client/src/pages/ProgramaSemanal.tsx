@@ -77,7 +77,7 @@ type PlanoRow = {
 };
 
 // Vista principal
-type ViewMode = "list" | "create" | "detail" | "corte" | "edit" | "eficiencia" | "plantillas" | "comparativa" | "resumen" | "ranking" | "metas";
+type ViewMode = "list" | "create" | "detail" | "corte" | "edit" | "eficiencia" | "plantillas" | "comparativa" | "resumen" | "ranking" | "metas" | "reportes";
 
 export default function ProgramaSemanal() {
   const { user } = useAuth();
@@ -288,6 +288,14 @@ export default function ProgramaSemanal() {
     />;
   }
 
+  if (view === "reportes") {
+    return <ReportesPorEmpresaView
+      proyectoId={selectedProjectId!}
+      onBack={() => setView("list")}
+      onVerPrograma={(id) => { setSelectedProgramaId(id); setView("detail"); }}
+    />;
+  }
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -317,6 +325,9 @@ export default function ProgramaSemanal() {
           </Button>
           <Button size="sm" variant="outline" onClick={() => setView("metas")}>
             <Target className="w-4 h-4 mr-1" /> Metas
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setView("reportes")} className="border-emerald-600 text-emerald-700 hover:bg-emerald-50">
+            <FileDown className="w-4 h-4 mr-1" /> Reportes
           </Button>
           <Button size="sm" onClick={() => { setPlantillaActividades(null); setView("create"); }}>
             <Plus className="w-4 h-4 mr-1" /> Nuevo Programa
@@ -3860,6 +3871,332 @@ function MetasEficienciaView({ proyectoId, usuarios, onBack }: {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+
+// ===== VISTA REPORTES POR EMPRESA (CASCADA) =====
+function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
+  proyectoId: number;
+  onBack: () => void;
+  onVerPrograma: (id: number) => void;
+}) {
+  const { data, isLoading } = trpc.programaSemanal.reportesPorEmpresa.useQuery(
+    { proyectoId },
+    { enabled: !!proyectoId }
+  );
+  const [expandedEmpresas, setExpandedEmpresas] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'programas' | 'cortes'>('programas');
+  const [analisisLoading, setAnalisisLoading] = useState<string | null>(null);
+  const analisis8MsMut = trpc.programaSemanal.analisis8Ms.useMutation();
+
+  const toggleEmpresa = (key: string) => {
+    setExpandedEmpresas(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+
+  // Generar PDF de eficiencia global
+  const generarPDFEficienciaGlobal = () => {
+    if (!data?.eficienciaGlobal?.length) return;
+    const rows = data.eficienciaGlobal;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Eficiencia Global por Empresa</title>
+    <style>
+      @media print { body { margin: 0; } @page { size: landscape; margin: 10mm; } }
+      body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; }
+      h1 { color: #002C63; font-size: 20px; margin-bottom: 4px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+      th { background: #002C63; color: white; padding: 8px 10px; font-size: 11px; text-align: left; }
+      td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; font-size: 11px; }
+      tr:nth-child(even) { background: #f9fafb; }
+      .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+      .bar-cell { position: relative; }
+      .bar-bg { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; opacity: 0.15; }
+    </style></head><body>
+    <h1>EFICIENCIA GLOBAL POR EMPRESA</h1>
+    <p style="color:#666;font-size:13px;">Proyecto: Reporte consolidado | Generado: ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+    <table>
+      <thead><tr>
+        <th style="width:5%;">#</th>
+        <th style="width:30%;">Empresa</th>
+        <th style="width:15%;text-align:right;">Programado</th>
+        <th style="width:15%;text-align:right;">Realizado</th>
+        <th style="width:12%;text-align:right;">Eficiencia</th>
+        <th style="width:10%;text-align:center;">Cortes</th>
+        <th style="width:13%;text-align:center;">Programas</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map((r: any, i: number) => {
+          const color = r.eficiencia >= 80 ? '#16a34a' : r.eficiencia >= 50 ? '#d97706' : '#dc2626';
+          return `<tr>
+            <td style="font-weight:600;color:#666;">${i + 1}</td>
+            <td style="font-weight:600;">${r.nombre}</td>
+            <td style="text-align:right;font-family:monospace;">${r.totalProgramado.toFixed(2)}</td>
+            <td style="text-align:right;font-family:monospace;">${r.totalRealizado.toFixed(2)}</td>
+            <td style="text-align:right;font-weight:800;color:${color};font-size:13px;">${r.eficiencia.toFixed(1)}%</td>
+            <td style="text-align:center;">${r.cortesCount}</td>
+            <td style="text-align:center;">${r.programasCount}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <div class="footer"><p>ObjetivaQC — Control de Calidad de Obra</p></div>
+    <script>window.onload = () => setTimeout(() => window.print(), 500);</script>
+    </body></html>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  };
+
+  // Generar PDF de corte por empresa con análisis 8Ms
+  const generarPDFCorteConIA = async (empresa: any, programa: any) => {
+    const key = `${empresa.empresaId}-${programa.id}`;
+    setAnalisisLoading(key);
+    try {
+      // Obtener datos completos del programa
+      const especialidades = programa.especialidades || [];
+      if (especialidades.length === 0) {
+        toast.error('No hay especialidades en este programa');
+        return;
+      }
+      // Generar análisis para la primera especialidad
+      const esp = especialidades[0];
+      const analisis = await analisis8MsMut.mutateAsync({
+        programaId: programa.id,
+        especialidad: esp,
+      });
+      // Abrir el detalle del programa para generar el PDF completo
+      onVerPrograma(programa.id);
+      toast.success(`Análisis 8Ms generado para ${esp}`);
+    } catch (e: any) {
+      toast.error(e.message || 'Error al generar análisis');
+    } finally {
+      setAnalisisLoading(null);
+    }
+  };
+
+  if (isLoading || !data) {
+    return (
+      <div className="space-y-3">
+        <Button variant="ghost" size="sm" onClick={onBack}><ChevronLeft className="w-4 h-4" /> Volver</Button>
+        <div className="grid gap-3">
+          {[1,2,3].map(i => <Card key={i} className="animate-pulse"><CardContent className="p-6 h-24" /></Card>)}
+        </div>
+      </div>
+    );
+  }
+
+  const { empresas, eficienciaGlobal } = data;
+  const programasTab = empresas.filter((e: any) => e.totalProgramas > 0);
+  const cortesTab = empresas.filter((e: any) => e.totalCortes > 0);
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            <ChevronLeft className="w-4 h-4" /> Volver
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              <FileDown className="w-5 h-5 text-emerald-600" />
+              Reportes por Empresa
+            </h1>
+            <p className="text-sm text-muted-foreground">{empresas.length} empresa{empresas.length !== 1 ? 's' : ''} con programas</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Eficiencia Global Card */}
+      {eficienciaGlobal.length > 0 && (
+        <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/50 to-white">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-emerald-600" />
+                Eficiencia Global por Empresa
+              </CardTitle>
+              <Button size="sm" variant="outline" onClick={generarPDFEficienciaGlobal} className="border-emerald-600 text-emerald-700 hover:bg-emerald-50">
+                <Download className="w-4 h-4 mr-1" /> PDF Global
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="grid gap-2">
+              {eficienciaGlobal.map((eg: any, i: number) => {
+                const color = eg.eficiencia >= 80 ? 'text-green-600' : eg.eficiencia >= 50 ? 'text-amber-600' : 'text-red-600';
+                const bgColor = eg.eficiencia >= 80 ? 'bg-green-500' : eg.eficiencia >= 50 ? 'bg-amber-500' : 'bg-red-500';
+                return (
+                  <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    <span className="text-xs font-bold text-gray-400 w-5 text-right">{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-semibold truncate">{eg.nombre}</span>
+                        <span className={`text-sm font-bold ${color} tabular-nums`}>{eg.eficiencia.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-1.5">
+                        <div className={`${bgColor} h-1.5 rounded-full transition-all`} style={{ width: `${Math.min(eg.eficiencia, 100)}%` }} />
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">
+                      {eg.cortesCount} corte{eg.cortesCount !== 1 ? 's' : ''}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tabs: Programas / Cortes */}
+      <div className="flex gap-1 p-1 bg-gray-100 rounded-lg w-fit">
+        <button
+          onClick={() => setActiveTab('programas')}
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'programas' ? 'bg-white shadow text-emerald-700' : 'text-gray-600 hover:text-gray-900'}`}
+        >
+          Programas ({programasTab.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('cortes')}
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'cortes' ? 'bg-white shadow text-emerald-700' : 'text-gray-600 hover:text-gray-900'}`}
+        >
+          Cortes y Reportes ({cortesTab.length})
+        </button>
+      </div>
+
+      {/* Cascada por empresa */}
+      <div className="space-y-2">
+        {(activeTab === 'programas' ? programasTab : cortesTab).map((empresa: any) => {
+          const key = `${activeTab}-${empresa.usuarioId}`;
+          const isExpanded = expandedEmpresas.has(key);
+          const programasFiltrados = activeTab === 'programas'
+            ? empresa.programas
+            : empresa.programas.filter((p: any) => p.status === 'corte_realizado');
+
+          return (
+            <Card key={key} className="overflow-hidden">
+              {/* Empresa header - clickable */}
+              <button
+                onClick={() => toggleEmpresa(key)}
+                className="w-full flex items-center justify-between p-3 sm:p-4 hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0 ${empresa.eficienciaAcumulada >= 80 ? 'bg-green-500' : empresa.eficienciaAcumulada >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}>
+                    {empresa.empresaNombre.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate">{empresa.empresaNombre}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {empresa.especialidades?.join(', ') || 'Sin especialidad'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="text-right">
+                    <p className={`text-lg font-bold tabular-nums ${empresa.eficienciaAcumulada >= 80 ? 'text-green-600' : empresa.eficienciaAcumulada >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+                      {empresa.eficienciaAcumulada.toFixed(1)}%
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {programasFiltrados.length} {activeTab === 'programas' ? 'programa' : 'corte'}{programasFiltrados.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                </div>
+              </button>
+
+              {/* Programas/Cortes expandidos */}
+              {isExpanded && (
+                <div className="border-t bg-gray-50/50">
+                  {programasFiltrados.length === 0 ? (
+                    <p className="p-4 text-sm text-muted-foreground text-center">Sin {activeTab === 'programas' ? 'programas' : 'cortes'}</p>
+                  ) : (
+                    <div className="divide-y">
+                      {programasFiltrados.map((prog: any) => {
+                        const statusColors: Record<string, string> = {
+                          borrador: 'bg-gray-100 text-gray-700',
+                          entregado: 'bg-blue-100 text-blue-700',
+                          corte_realizado: 'bg-green-100 text-green-700',
+                        };
+                        const statusLabels: Record<string, string> = {
+                          borrador: 'Borrador',
+                          entregado: 'Entregado',
+                          corte_realizado: 'Corte Realizado',
+                        };
+                        const loadingKey = `${empresa.empresaId}-${prog.id}`;
+                        const isAnalyzing = analisisLoading === loadingKey;
+
+                        return (
+                          <div key={prog.id} className="flex items-center justify-between p-3 px-4 sm:px-6 hover:bg-white transition-colors">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <CalendarDays className="w-4 h-4 text-gray-400 shrink-0" />
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium truncate">
+                                  {formatWeekRange(prog.semanaInicio, prog.semanaFin)}
+                                </p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${statusColors[prog.status] || 'bg-gray-100 text-gray-600'}`}>
+                                    {statusLabels[prog.status] || prog.status}
+                                  </span>
+                                  {prog.eficienciaGlobal != null && (
+                                    <span className={`text-xs font-bold tabular-nums ${parseFloat(prog.eficienciaGlobal) >= 80 ? 'text-green-600' : parseFloat(prog.eficienciaGlobal) >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+                                      {parseFloat(prog.eficienciaGlobal).toFixed(1)}%
+                                    </span>
+                                  )}
+                                  <span className="text-xs text-muted-foreground">{prog.actividadesCount} act.</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => onVerPrograma(prog.id)}
+                                className="h-7 px-2 text-xs"
+                              >
+                                <Eye className="w-3.5 h-3.5 mr-1" /> Ver
+                              </Button>
+                              {activeTab === 'cortes' && prog.status === 'corte_realizado' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => onVerPrograma(prog.id)}
+                                  className="h-7 px-2 text-xs border-emerald-500 text-emerald-700 hover:bg-emerald-50"
+                                  disabled={isAnalyzing}
+                                >
+                                  {isAnalyzing ? (
+                                    <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> IA...</>
+                                  ) : (
+                                    <><Sparkles className="w-3.5 h-3.5 mr-1" /> PDF + 8Ms</>
+                                  )}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </Card>
+          );
+        })}
+
+        {(activeTab === 'programas' ? programasTab : cortesTab).length === 0 && (
+          <Card>
+            <CardContent className="p-8 text-center text-muted-foreground">
+              <FileDown className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p>No hay {activeTab === 'programas' ? 'programas' : 'cortes'} registrados</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

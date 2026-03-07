@@ -5027,3 +5027,17 @@
 - [x] Las 8Ms: Material, Mano de obra, Maquinaria y equipo, Medios/Planos, Método, Medio ambiente, Medidas de seguridad, Medición, Money
 - [x] Integrar análisis 8Ms en la misma hoja del PDF (sin salto de página)
 - [x] Análisis 8Ms integrado en PDF general del programa (botón PDF principal)
+### Vista en cascada de programas, cortes y eficiencia global
+- [ ] Endpoint: programas agrupados por semana y empresa
+- [ ] Endpoint: eficiencia global por empresa (histórico)
+- [ ] UI: Resumen de eficiencia global por empresa (arriba, con PDF descargable)
+- [ ] UI: Programas en cascada por semana > empresa con PDF
+- [ ] UI: Cortes/reportes en cascada por semana > empresa con análisis 8Ms IA
+- [ ] PDF: Reporte global de eficiencia por empresa descargable
+- [ ] PDF: Reportes de corte con análisis 8Ms generados por IA
+### Vista Reportes en Programa Semanal (cascada empresa > fecha)
+- [x] Endpoint: programas agrupados por empresa con eficiencia global
+- [x] Vista Reportes: Eficiencia global por empresa (arriba, con PDF descargable)
+- [x] Vista Reportes: Programas en cascada empresa > semana con carga y PDF
+- [x] Vista Reportes: Cortes en cascada empresa > semana con análisis 8Ms IA + PDF
+- [x] UI/UX espectacular, responsive, branded Objetiva

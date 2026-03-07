@@ -8260,3 +8260,165 @@ export async function getReporteEstadisticoPDF(proyectoId: number) {
     incidentes: incidentesConFotos,
   };
 }
+
+
+// ==================== REPORTES PROGRAMA SEMANAL POR EMPRESA ====================
+
+/**
+ * Obtiene todos los programas semanales de un proyecto agrupados por usuario/empresa,
+ * con eficiencia global calculada y actividades incluidas.
+ */
+export async function getProgramasPorEmpresa(proyectoId: number) {
+  const db = await getDb();
+  if (!db) return { empresas: [], eficienciaGlobal: [] };
+
+  // Obtener todos los programas del proyecto
+  const todosPrograms = await db.select()
+    .from(programaSemanal)
+    .where(eq(programaSemanal.proyectoId, proyectoId))
+    .orderBy(desc(programaSemanal.semanaInicio));
+
+  if (todosPrograms.length === 0) return { empresas: [], eficienciaGlobal: [] };
+
+  // Obtener usuarios con empresa y especialidad
+  const todosUsuarios = await db.select({
+    id: users.id,
+    name: users.name,
+    role: users.role,
+    empresaId: users.empresaId,
+  }).from(users).where(eq(users.activo, true));
+
+  const todasEmpresas = await db.select()
+    .from(empresas)
+    .where(and(eq(empresas.activo, true), eq(empresas.proyectoId, proyectoId)))
+    .orderBy(empresas.nombre);
+
+  const todasEspecialidades = await db.select()
+    .from(especialidades)
+    .where(and(eq(especialidades.activo, true), eq(especialidades.proyectoId, proyectoId)));
+
+  // Obtener relaciones empresa-especialidad
+  const empEspRelaciones = await db.select({
+    empresaId: empresaEspecialidades.empresaId,
+    especialidadId: empresaEspecialidades.especialidadId,
+  }).from(empresaEspecialidades);
+
+  // Obtener actividades de todos los programas
+  const programaIds = todosPrograms.map(p => p.id);
+  const todasActividades = programaIds.length > 0
+    ? await db.select().from(programaActividad).where(inArray(programaActividad.programaId, programaIds)).orderBy(programaActividad.orden)
+    : [];
+
+  // Mapear actividades por programa
+  const actividadesPorPrograma = new Map<number, typeof todasActividades>();
+  for (const act of todasActividades) {
+    const list = actividadesPorPrograma.get(act.programaId) || [];
+    list.push(act);
+    actividadesPorPrograma.set(act.programaId, list);
+  }
+
+  // Mapear especialidad por empresa
+  const espPorEmpresa = new Map<number, string[]>();
+  for (const rel of empEspRelaciones) {
+    const esp = todasEspecialidades.find(e => e.id === rel.especialidadId);
+    if (esp) {
+      const list = espPorEmpresa.get(rel.empresaId) || [];
+      list.push(esp.nombre);
+      espPorEmpresa.set(rel.empresaId, list);
+    }
+  }
+
+  // Agrupar programas por usuario
+  const programasPorUsuario = new Map<number, typeof todosPrograms>();
+  for (const prog of todosPrograms) {
+    const list = programasPorUsuario.get(prog.usuarioId) || [];
+    list.push(prog);
+    programasPorUsuario.set(prog.usuarioId, list);
+  }
+
+  // Construir resultado por empresa/usuario
+  const empresasResult: any[] = [];
+  const eficienciaGlobalMap = new Map<string, { nombre: string; totalProg: number; totalReal: number; cortesCount: number; programasCount: number }>();
+
+  for (const [usuarioId, progs] of Array.from(programasPorUsuario.entries())) {
+    const usuario = todosUsuarios.find(u => u.id === usuarioId);
+    const empresa = usuario?.empresaId ? todasEmpresas.find(e => e.id === usuario.empresaId) : null;
+    const especialidadesEmpresa = empresa ? (espPorEmpresa.get(empresa.id) || []) : [];
+    const nombreEmpresa = empresa?.nombre || usuario?.name || `Usuario #${usuarioId}`;
+
+    // Programas con actividades
+    const programasConActividades = progs.map((p: any) => ({
+      ...p,
+      actividades: actividadesPorPrograma.get(p.id) || [],
+    }));
+
+    // Calcular eficiencia acumulada
+    const cortesRealizados = programasConActividades.filter((p: any) => p.status === 'corte_realizado');
+    let totalProg = 0;
+    let totalReal = 0;
+    for (const corte of cortesRealizados) {
+      for (const act of corte.actividades) {
+        totalProg += parseFloat(String(act.cantidadProgramada)) || 0;
+        totalReal += parseFloat(String(act.cantidadRealizada || '0')) || 0;
+      }
+    }
+
+    const eficienciaAcumulada = totalProg > 0 ? ((totalReal / totalProg) * 100) : 0;
+
+    // Agregar a eficiencia global
+    const key = nombreEmpresa;
+    const existing = eficienciaGlobalMap.get(key);
+    if (existing) {
+      existing.totalProg += totalProg;
+      existing.totalReal += totalReal;
+      existing.cortesCount += cortesRealizados.length;
+      existing.programasCount += progs.length;
+    } else {
+      eficienciaGlobalMap.set(key, {
+        nombre: nombreEmpresa,
+        totalProg,
+        totalReal,
+        cortesCount: cortesRealizados.length,
+        programasCount: progs.length,
+      });
+    }
+
+    empresasResult.push({
+      usuarioId,
+      usuarioNombre: usuario?.name || `Usuario #${usuarioId}`,
+      empresaId: empresa?.id || null,
+      empresaNombre: nombreEmpresa,
+      especialidades: especialidadesEmpresa,
+      eficienciaAcumulada: parseFloat(eficienciaAcumulada.toFixed(1)),
+      totalProgramas: progs.length,
+      totalCortes: cortesRealizados.length,
+      programas: programasConActividades.map((p: any) => ({
+        id: p.id,
+        semanaInicio: p.semanaInicio,
+        semanaFin: p.semanaFin,
+        status: p.status,
+        eficienciaGlobal: p.eficienciaGlobal,
+        fechaEntrega: p.fechaEntrega,
+        fechaCorte: p.fechaCorte,
+        notas: p.notas,
+        actividadesCount: p.actividades.length,
+        especialidades: Array.from(new Set(p.actividades.map((a: any) => a.especialidad))),
+      })),
+    });
+  }
+
+  // Eficiencia global
+  const eficienciaGlobal = Array.from(eficienciaGlobalMap.values()).map(e => ({
+    nombre: e.nombre,
+    eficiencia: e.totalProg > 0 ? parseFloat(((e.totalReal / e.totalProg) * 100).toFixed(1)) : 0,
+    totalProgramado: parseFloat(e.totalProg.toFixed(2)),
+    totalRealizado: parseFloat(e.totalReal.toFixed(2)),
+    cortesCount: e.cortesCount,
+    programasCount: e.programasCount,
+  })).sort((a, b) => b.eficiencia - a.eficiencia);
+
+  return {
+    empresas: empresasResult.sort((a, b) => a.empresaNombre.localeCompare(b.empresaNombre)),
+    eficienciaGlobal,
+  };
+}
