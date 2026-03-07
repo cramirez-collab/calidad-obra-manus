@@ -55,10 +55,47 @@ function checkAndUpdateVersion(): boolean {
   return true;
 }
 
-// Verificar periódicamente contra el servidor (cada 5 min, no cada 60s)
+// ============================================
+// ACTUALIZACIÓN FORZADA AGRESIVA
+// ============================================
+// Verifica cada 60s. Si hay nueva versión → RECARGA INMEDIATA.
+// No pregunta. No espera. No negocia.
+// ============================================
+let forceUpdateInProgress = false;
+
+function forceAppUpdate(serverVersion: number): void {
+  if (forceUpdateInProgress) return;
+  forceUpdateInProgress = true;
+  
+  console.log(`[FORCE-UPDATE] v${CURRENT_VERSION} → v${serverVersion}. Recargando AHORA.`);
+  
+  // Limpiar versión almacenada para que index.html haga limpieza nuclear
+  localStorage.setItem('oqc_installed_version', '0');
+  localStorage.setItem('oqc_app_version', '0');
+  
+  // Desregistrar SW viejo para forzar descarga del nuevo
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(r => r.unregister());
+    }).catch(() => {});
+  }
+  
+  // Limpiar caches
+  if ('caches' in window) {
+    caches.keys().then(names => {
+      Promise.all(names.map(n => caches.delete(n)));
+    }).catch(() => {});
+  }
+  
+  // Recargar con cache-bust
+  setTimeout(() => {
+    window.location.replace(window.location.origin + '/?_v=' + serverVersion + '&_t=' + Date.now());
+  }, 300);
+}
+
 function startVersionChecker(): void {
-  setInterval(async () => {
-    if (document.visibilityState !== 'visible') return; // No verificar si tab oculta
+  // === CHECK CADA 60 SEGUNDOS (agresivo) ===
+  const checkVersion = async () => {
     try {
       const response = await fetch('/api/version?t=' + Date.now(), {
         cache: 'no-store',
@@ -67,20 +104,43 @@ function startVersionChecker(): void {
       if (response.ok) {
         const data = await response.json();
         if (data.version && data.version > CURRENT_VERSION) {
-          console.log(`[VERSION] Nueva versión disponible: v${data.version}`);
-          // Solo actualizar localStorage, el reload lo hace el usuario o al navegar
-          localStorage.setItem('oqc_installed_version', '0');
-          localStorage.setItem('oqc_app_version', '0');
-          // Reload suave - solo si la diferencia es significativa
-          if (data.version - CURRENT_VERSION >= 2) {
-            window.location.reload();
-          }
+          forceAppUpdate(data.version);
         }
       }
     } catch (e) {
       // Silenciar errores de red
     }
-  }, 5 * 60 * 1000); // Cada 5 minutos
+  };
+  
+  // Check inmediato al iniciar
+  setTimeout(checkVersion, 5000);
+  
+  // Check cada 60 segundos
+  setInterval(checkVersion, 60 * 1000);
+  
+  // Check al volver a la app (visibilitychange)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      checkVersion();
+    }
+  });
+  
+  // Check al reconectar
+  window.addEventListener('online', () => {
+    setTimeout(checkVersion, 2000);
+  });
+  
+  // === ESCUCHAR MENSAJES DEL SERVICE WORKER ===
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data?.type === 'FORCE_RELOAD') {
+        console.log(`[SW-UPDATE] SW envió FORCE_RELOAD: v${event.data.version}`);
+        if (event.data.version && event.data.version > CURRENT_VERSION) {
+          forceAppUpdate(event.data.version);
+        }
+      }
+    });
+  }
 }
 
 // ============================================
@@ -529,10 +589,33 @@ if (versionOK) {
           updateViaCache: 'none' 
         });
         console.log(`[SW ${FULL_VERSION}] Registrado`);
+        
+        // Forzar check de actualización del SW
         reg.update();
+        
+        // Si hay SW esperando, forzar activación inmediata
         if (reg.waiting) {
           reg.waiting.postMessage({ type: 'SKIP_WAITING' });
         }
+        
+        // Detectar cuando un nuevo SW está listo y forzar activación
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // Nuevo SW instalado mientras hay uno activo → forzar skip waiting
+                console.log('[SW] Nuevo SW detectado — forzando activación');
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          }
+        });
+        
+        // Verificar actualizaciones del SW cada 60 segundos
+        setInterval(() => {
+          reg.update().catch(() => {});
+        }, 60 * 1000);
       } catch (e) {
         console.error('[SW] Error:', e);
       }

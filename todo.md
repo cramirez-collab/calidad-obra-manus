@@ -5076,3 +5076,22 @@
 - [x] Funciona en móvil (iOS Safari, Android Chrome, Desktop)
 - [x] Incluye análisis 8Ms con IA generado server-side
 - [x] 5 tests unitarios para generación de PDF pasando
+
+### Fix CRÍTICO: Ítems offline de Omar no se sincronizan (6 ítems en cola)
+- [x] Diagnosticado: Son ítems en cola offline (Pendientes de Sincronización), no la lista de BD
+- [x] Diagnosticado: Omar tiene v4.03 sin los fixes de timeout — force-update lo resolverá
+- [x] Force-update implementado: Omar recibirá v4.04 automáticamente en <60s
+- [x] v4.04 incluye timeouts de 30s por operación, 90s global, estados visuales claros
+- [x] items.create ya tiene manejo de duplicados por clientId (no crea duplicados en reintentos)
+- [x] items.create ya devuelve resultado inmediato (S3/notificaciones en background)
+
+### Actualización forzada agresiva para todos los usuarios
+- [x] Implementar sistema de force-update que obligue a TODOS los usuarios a actualizar cuando hay nueva versión
+- [x] SW envia FORCE_RELOAD a todos los clientes al activarse nueva versión
+- [x] main.tsx verifica /api/version cada 60s y fuerza reload inmediato
+- [x] Verificación también al volver a la app (visibilitychange) y al reconectar (online)
+- [x] index.html hace limpieza nuclear si versión no coincide
+- [x] SW detecta nuevo worker instalado y fuerza skipWaiting
+- [x] SW se auto-actualiza cada 60s con reg.update()
+- [x] Incrementar versión a v4.04 (404) en todos los archivos
+- [x] 10 tests unitarios pasando

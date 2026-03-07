@@ -1,13 +1,14 @@
 // ============================================
-// OBJETIVAQC - SERVICE WORKER v4.03
+// OBJETIVAQC - SERVICE WORKER v4.04
 // ============================================
 // VERSIÓN UNIFICADA: Debe coincidir con shared/version.ts VERSION_NUMBER
 // ESTRATEGIA: Network-first para todo, cache solo como fallback offline
 // REGLA: /api/ NUNCA se cachea
+// FORCE-UPDATE: Al activarse, fuerza reload en TODOS los clientes
 // ============================================
-const APP_VERSION = 403;
-const DISPLAY_VERSION = 'v4.03';
-const CACHE_NAME = `oqc-v403`;
+const APP_VERSION = 404;
+const DISPLAY_VERSION = 'v4.04';
+const CACHE_NAME = `oqc-v404`;
 const OFFLINE_URL = '/offline.html';
 
 // Recursos esenciales para modo offline
@@ -71,13 +72,15 @@ self.addEventListener('activate', (event) => {
       await self.clients.claim();
       console.log(`[SW ${DISPLAY_VERSION}] Control tomado`);
       
-      // Notificar a todos los clientes
-      const clients = await self.clients.matchAll();
-      clients.forEach(client => {
+      // ===== FORCE-UPDATE AGRESIVO =====
+      // Notificar a TODOS los clientes que deben recargar INMEDIATAMENTE
+      const allClients = await self.clients.matchAll({ includeUncontrolled: true });
+      allClients.forEach(client => {
         client.postMessage({
-          type: 'SW_UPDATED',
+          type: 'FORCE_RELOAD',
           version: APP_VERSION,
-          displayVersion: DISPLAY_VERSION
+          displayVersion: DISPLAY_VERSION,
+          reason: 'Nueva versión del Service Worker activada'
         });
       });
     })()
@@ -324,6 +327,15 @@ self.addEventListener('message', (event) => {
           data.urls.forEach(url => cache.add(url).catch(() => {}));
         });
       }
+      break;
+      
+    case 'CHECK_UPDATE':
+      // Cliente solicita verificar si hay actualización
+      event.source?.postMessage({ 
+        type: 'VERSION', 
+        version: APP_VERSION, 
+        displayVersion: DISPLAY_VERSION 
+      });
       break;
   }
 });

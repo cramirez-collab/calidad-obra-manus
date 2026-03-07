@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as total_items FROM items; SELECT id, name, email, role FROM users WHERE name LIKE '%omar%' OR name LIKE '%Omar%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT COUNT(*) as total_items FROM items; SELECT id, name, email, role FROM users WHERE name LIKE '%omar%' OR name LIKE '%Omar%' LIMIT 5;",
+  "rows": [
+    {
+      "total_items": "291"
+    },
+    {
+      "total_items": "id\tname\temail\trole"
+    },
+    {
+      "total_items": "781860\tOmar Palencia\topalencia@objetiva.mx\tsupervisor"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_items\n291\nid\tname\temail\trole\n781860\tOmar Palencia\topalencia@objetiva.mx\tsupervisor\n",
+  "stderr": "",
+  "execution_time_ms": 781
+}

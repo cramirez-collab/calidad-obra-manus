@@ -1,0 +1,18 @@
+{
+  "query": "SELECT 'total' as metric, CAST(COUNT(*) AS CHAR) as value FROM items UNION ALL SELECT 'omar_users' as metric, GROUP_CONCAT(CONCAT(id, ':', name, ':', role) SEPARATOR '; ') as value FROM users WHERE LOWER(name) LIKE '%omar%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT 'total' as metric, CAST(COUNT(*) AS CHAR) as value FROM items UNION ALL SELECT 'omar_users' as metric, GROUP_CONCAT(CONCAT(id, ':', name, ':', role) SEPARATOR '; ') as value FROM users WHERE LOWER(name) LIKE '%omar%'",
+  "rows": [
+    {
+      "metric": "total",
+      "value": "291"
+    },
+    {
+      "metric": "omar_users",
+      "value": "781860:Omar Palencia:supervisor"
+    }
+  ],
+  "messages": [],
+  "stdout": "metric\tvalue\ntotal\t291\nomar_users\t781860:Omar Palencia:supervisor\n",
+  "stderr": "",
+  "execution_time_ms": 214
+}
