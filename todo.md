@@ -5044,3 +5044,5 @@
 - [x] Fix: Sincronización offline hipersensible - detectar red y subir ítems pendientes inmediatamente (1ms)
 - [x] Auto-sync al detectar conexión sin intervención del usuario
 - [x] Botón compartir en PDF de eficiencia (Web Share API / fallback copiar)
+- [x] Agregar botón compartir (Web Share API) en PDFs por empresa con análisis IA
+- [x] Agregar botón compartir en PDF general del programa con análisis IA

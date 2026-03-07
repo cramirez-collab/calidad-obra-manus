@@ -1,0 +1,175 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "actividad_usuarios"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "archivos_pago"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "atributos"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "auditoria"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "avisos"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "avisos_lecturas"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "bitacora"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "bitacora_correos"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "bitacora_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "catalogo_pruebas"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "checklist_items_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "checklists_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "comentarios"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "configuracion"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "defectos"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "empresa_especialidades"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "empresa_historial"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "empresa_residentes"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "empresas"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "espacios"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "especialidades"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "evidencias_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "firmas_reporte"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "incidentes_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "item_historial"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "item_rondas"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "items"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "mensaje_reacciones"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "mensajes"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "mensajes_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "meta_eficiencia_usuario"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "metas"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "notas_voz_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "notificaciones"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "plano_pines"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "planos"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "plantillas_incidencia"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "programa_actividad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "programa_plano"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "programa_plantilla"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "programa_semanal"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "proyecto_usuarios"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "proyectos"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "pruebas_bitacora"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "pruebas_resultado"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "push_subscriptions"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "reportes_ia"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "reportes_seguridad"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "solicitudes_pago"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "tipos_incidencia_custom"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "unidades"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "user_badges"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "users"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt": "whatsapp_config"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt\n__drizzle_migrations\nactividad_usuarios\narchivos_pago\natributos\nauditoria\navisos\navisos_lecturas\nbitacora\nbitacora_correos\nbitacora_seguridad\ncatalogo_pruebas\nchecklist_items_seguridad\nchecklists_seguridad\ncomentarios\nconfiguracion\ndefectos\nempresa_especialidades\nempresa_historial\nempresa_residentes\nempresas\nespacios\nespecialidades\nevidencias_seguridad\nfirmas_reporte\nincidentes_seguridad\nitem_historial\nitem_rondas\nitems\nmensaje_reacciones\nmensajes\nmensajes_seguridad\nmeta_eficiencia_usuario\nmetas\nnotas_voz_seguridad\nnotificaciones\nplano_pines\nplanos\nplantillas_incidencia\nprograma_actividad\nprograma_plano\nprograma_plantilla\nprograma_semanal\nproyecto_usuarios\nproyectos\npruebas_bitacora\npruebas_resultado\npush_subscriptions\nreportes_ia\nreportes_seguridad\nsolicitudes_pago\ntipos_incidencia_custom\nunidades\nuser_badges\nusers\nwhatsapp_config\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}
