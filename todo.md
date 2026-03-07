@@ -4961,3 +4961,12 @@
 - [x] Limpiar unidades desactivadas de Mayas (300001-330012) eliminadas - sin ítems asociados
 - [x] Validación en tiempo real de duplicados en modal de creación de unidad
 - [x] Auto-inferencia de ubicación (N1, N2, etc.) al crear unidades sin ubicación + auto-inferencia de nivel
+
+### Bug: No aparece opción "Crear Programa" en Calendario (reportado por Carlos)
+- [x] Botón "Crear Programa" al final del formulario - ahora funciona con flujo Excel simplificado
+- [x] Endpoint backend: generar plantilla Excel estándar descargable con columnas definidas
+- [x] Endpoint backend: parsear Excel subido y extraer actividades
+- [x] Rediseñar CrearPrograma: flujo simplificado (descargar plantilla, subir Excel llenado + fotos, crear programa)
+- [x] Botón "Descargar Plantilla" visible para todos los usuarios
+- [x] Botón "Subir Excel" que parsea y llena la tabla automáticamente
+- [x] Corregir botón "Crear Programa" para que funcione correctamente

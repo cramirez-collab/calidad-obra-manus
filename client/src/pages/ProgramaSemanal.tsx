@@ -747,6 +747,59 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
   );
   const [planos, setPlanos] = useState<PlanoRow[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [excelLoading, setExcelLoading] = useState(false);
+
+  // Mutations para Excel
+  const descargarPlantillaMut = trpc.programaSemanal.generarPlantillaExcel.useMutation({
+    onSuccess: (data) => {
+      const byteArray = Uint8Array.from(atob(data.base64), c => c.charCodeAt(0));
+      const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = data.filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Plantilla descargada');
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const parsearExcelMut = trpc.programaSemanal.parsearExcel.useMutation({
+    onSuccess: (data) => {
+      const newActs = data.actividades.map((a: any, i: number) => ({
+        especialidad: a.especialidad,
+        actividad: a.actividad,
+        nivel: a.nivel,
+        area: a.area,
+        referenciaEje: a.referenciaEje,
+        unidad: a.unidad as any,
+        cantidadProgramada: a.cantidadProgramada,
+        material: a.material || '',
+        orden: i,
+      }));
+      setActividades(newActs);
+      toast.success(`${data.total} actividades cargadas desde Excel`);
+      setExcelLoading(false);
+    },
+    onError: (e) => {
+      toast.error(e.message);
+      setExcelLoading(false);
+    },
+  });
+
+  const handleUploadExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setExcelLoading(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      parsearExcelMut.mutate({ base64 });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   const addRow = () => {
     setActividades(prev => [...prev, {
@@ -890,7 +943,67 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
         </CardContent>
       </Card>
 
-      {/* Asistente IA */}
+      {/* Paso 1: Subir Plantilla Excel */}
+      <Card className="border-emerald-200 bg-emerald-50/20 dark:bg-emerald-950/10">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Paso 1: Cargar Actividades
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Descargar plantilla */}
+            <div className="flex-1 border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/20 transition-colors">
+              <Download className="w-8 h-8 text-emerald-600" />
+              <p className="text-sm font-medium text-center">Descargar Plantilla</p>
+              <p className="text-xs text-muted-foreground text-center">Descarga el Excel, llena tus actividades y subelo</p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => descargarPlantillaMut.mutate({ proyectoId })}
+                disabled={descargarPlantillaMut.isPending}
+              >
+                {descargarPlantillaMut.isPending ? (
+                  <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Generando...</>
+                ) : (
+                  <><Download className="w-3 h-3 mr-1" /> Descargar Excel</>
+                )}
+              </Button>
+            </div>
+
+            {/* Subir Excel llenado */}
+            <div className="flex-1 border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:bg-muted/20 transition-colors">
+              <Upload className="w-8 h-8 text-blue-600" />
+              <p className="text-sm font-medium text-center">Subir Excel Llenado</p>
+              <p className="text-xs text-muted-foreground text-center">Sube tu plantilla con las actividades llenas</p>
+              <label>
+                <Button size="sm" variant="outline" asChild disabled={excelLoading}>
+                  <span className="cursor-pointer">
+                    {excelLoading ? (
+                      <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Procesando...</>
+                    ) : (
+                      <><Upload className="w-3 h-3 mr-1" /> Subir Excel</>
+                    )}
+                  </span>
+                </Button>
+                <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleUploadExcel} disabled={excelLoading} />
+              </label>
+            </div>
+          </div>
+
+          {/* Indicador de actividades cargadas */}
+          {actividades.filter(a => a.actividad.trim()).length > 0 && (
+            <div className="flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg px-3 py-2">
+              <Check className="w-4 h-4 text-emerald-600" />
+              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                {actividades.filter(a => a.actividad.trim()).length} actividades cargadas
+              </span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Asistente IA (alternativa) */}
       <AIAssistantPanel
         actividades={actividades}
         onAddActividades={(newActs) => {
@@ -901,12 +1014,15 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
         }}
       />
 
-      {/* Tabla de actividades */}
+      {/* Tabla de actividades (editable) */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <FileSpreadsheet className="w-4 h-4" /> Actividades Programadas
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileSpreadsheet className="w-4 h-4" /> Actividades Programadas
+            </CardTitle>
+            <Badge variant="secondary">{actividades.filter(a => a.actividad.trim()).length} actividades</Badge>
+          </div>
         </CardHeader>
         <CardContent className="p-2 sm:p-4">
           <div className="overflow-x-auto">
@@ -916,7 +1032,7 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
                   <th className="text-left p-2 font-medium">Especialidad</th>
                   <th className="text-left p-2 font-medium">Actividad</th>
                   <th className="text-left p-2 font-medium w-20">Nivel</th>
-                  <th className="text-left p-2 font-medium">Área</th>
+                  <th className="text-left p-2 font-medium">{"Area"}</th>
                   <th className="text-left p-2 font-medium w-20">Ref. Eje</th>
                   <th className="text-left p-2 font-medium w-20">Unidad</th>
                   <th className="text-left p-2 font-medium w-24">Cant. Prog.</th>
@@ -929,7 +1045,7 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
                   <tr key={idx} className="border-b hover:bg-muted/20">
                     <td className="p-1">
                       <Input value={a.especialidad} onChange={e => updateRow(idx, "especialidad", e.target.value)}
-                        placeholder="Ej: Albañilería" className="h-8 text-xs" />
+                        placeholder="Ej: Albanileria" className="h-8 text-xs" />
                     </td>
                     <td className="p-1">
                       <Input value={a.actividad} onChange={e => updateRow(idx, "actividad", e.target.value)}

@@ -6546,6 +6546,95 @@ Reglas:
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error al procesar respuesta del asistente IA.' });
         }
       }),
+
+    // Generar plantilla Excel estándar para descargar
+    generarPlantillaExcel: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .mutation(async ({ input }) => {
+        const XLSX = await import('xlsx');
+        const headers = [
+          'Especialidad', 'Actividad', 'Nivel', 'Area', 'Ref. Eje',
+          'Unidad (m/m2/m3/ml/pza/kg/lt/jgo/lote/otro)', 'Cantidad Programada', 'Material'
+        ];
+        const exampleRows = [
+          ['Albanileria', 'Pegado de block 15cm', 'N10', 'Dptos A-C', 'A-C / 1-4', 'm2', '120', 'Block 15cm'],
+          ['Albanileria', 'Aplanado de muros', 'N10', 'Pasillo', 'D-F / 1-4', 'm2', '85', 'Mortero'],
+          ['Inst. Electrica', 'Cableado general', 'N11', 'Dptos D-F', 'D-F / 5-8', 'ml', '200', 'Cable THW 12'],
+          ['Inst. Hidraulica', 'Tendido de tuberia agua fria', 'N10', 'Banos', 'A-C / 1-2', 'ml', '45', 'Tubo CPVC 1/2"'],
+          ['Acabados', 'Colocacion de piso ceramico', 'N9', 'Dptos A-C', 'A-C / 1-4', 'm2', '95', 'Piso ceramico 60x60'],
+        ];
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...exampleRows]);
+        // Anchos de columna
+        ws['!cols'] = [
+          { wch: 18 }, { wch: 30 }, { wch: 8 }, { wch: 18 }, { wch: 12 },
+          { wch: 38 }, { wch: 20 }, { wch: 22 }
+        ];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Actividades');
+        // Hoja de instrucciones
+        const instrucciones = [
+          ['INSTRUCCIONES PARA LLENAR LA PLANTILLA'],
+          [''],
+          ['1. Llena las columnas en la hoja "Actividades"'],
+          ['2. No modifiques los encabezados de la primera fila'],
+          ['3. Borra las filas de ejemplo antes de agregar tus actividades'],
+          ['4. Columna "Unidad": solo usa m, m2, m3, ml, pza, kg, lt, jgo, lote, otro'],
+          ['5. Columna "Cantidad Programada": solo numeros (sin texto)'],
+          ['6. Puedes agregar tantas filas como necesites'],
+          ['7. Guarda el archivo y subelo en la app junto con tus fotos de planos'],
+        ];
+        const wsInst = XLSX.utils.aoa_to_sheet(instrucciones);
+        wsInst['!cols'] = [{ wch: 65 }];
+        XLSX.utils.book_append_sheet(wb, wsInst, 'Instrucciones');
+        const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+        const base64 = Buffer.from(buffer).toString('base64');
+        return { base64, filename: 'Plantilla_Programa_Semanal.xlsx' };
+      }),
+
+    // Parsear Excel subido y extraer actividades
+    parsearExcel: protectedProcedure
+      .input(z.object({
+        base64: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const XLSX = await import('xlsx');
+        const buffer = Buffer.from(input.base64, 'base64');
+        const wb = XLSX.read(buffer, { type: 'buffer' });
+        // Buscar hoja "Actividades" o usar la primera
+        const sheetName = wb.SheetNames.find(n => n.toLowerCase().includes('actividad')) || wb.SheetNames[0];
+        const ws = wb.Sheets[sheetName];
+        if (!ws) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No se encontro una hoja valida en el archivo Excel.' });
+        }
+        const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        if (rows.length < 2) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'El archivo no contiene actividades. Asegurate de llenar al menos una fila debajo de los encabezados.' });
+        }
+        // Saltar header (primera fila)
+        const validUnits = ['m', 'm2', 'm3', 'ml', 'pza', 'kg', 'lt', 'jgo', 'lote', 'otro'];
+        const actividades = rows.slice(1)
+          .filter((row: any[]) => row && row.length >= 2 && String(row[1] || '').trim())
+          .map((row: any[], i: number) => {
+            const rawUnit = String(row[5] || 'm2').trim().toLowerCase();
+            const unidad = validUnits.includes(rawUnit) ? rawUnit : 'otro';
+            const cantRaw = String(row[6] || '0').replace(/[^0-9.,]/g, '').replace(',', '.');
+            return {
+              especialidad: String(row[0] || '').trim(),
+              actividad: String(row[1] || '').trim(),
+              nivel: String(row[2] || '').trim(),
+              area: String(row[3] || '').trim(),
+              referenciaEje: String(row[4] || '').trim(),
+              unidad,
+              cantidadProgramada: String(Math.max(0, Number(cantRaw) || 0)),
+              material: String(row[7] || '').trim(),
+              orden: i,
+            };
+          });
+        if (actividades.length === 0) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No se encontraron actividades validas en el archivo. Verifica que la columna "Actividad" tenga datos.' });
+        }
+        return { actividades, total: actividades.length };
+      }),
   }),
 
   // ==================== PAGOS ====================
