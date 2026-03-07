@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
+import { generarYCompartirPDF } from "@/lib/pdfGenerator";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useProject } from "@/contexts/ProjectContext";
 import { Button } from "@/components/ui/button";
@@ -1452,19 +1453,17 @@ async function generarPDFProgramaSemanal(data: any, analisis8MsMap?: Map<string,
       <div class="footer">
         <p>ObjetivaQC — Control de Calidad de Obra — Generado ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
       </div>
-
-      <script>window.onload=function(){var b=document.createElement('div');b.id='action-bar';b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#002C63;padding:8px 16px;display:flex;gap:8px;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.2)';var s1=document.createElement('button');s1.textContent='Imprimir';s1.style.cssText='background:#02B381;color:white;border:none;padding:8px 20px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer';s1.onclick=function(){window.print()};var s2=document.createElement('button');s2.textContent='Compartir';s2.style.cssText='background:#3b82f6;color:white;border:none;padding:8px 20px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer';s2.onclick=async function(){var t=document.title;var h=document.documentElement.outerHTML;var bl=new Blob([h],{type:'text/html'});var f=new File([bl],t.replace(/[^a-zA-Z0-9_-]/g,'_')+'.html',{type:'text/html'});if(navigator.share&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({title:t,files:[f]});return}catch(e){if(e.name==='AbortError')return}}if(navigator.share){try{await navigator.share({title:t,text:'Reporte - '+t});return}catch(e){if(e.name==='AbortError')return}}try{await navigator.clipboard.writeText(window.location.href);alert('Enlace copiado')}catch(e){alert('No se pudo compartir')}};var s3=document.createElement('button');s3.textContent='Cerrar';s3.style.cssText='background:#64748b;color:white;border:none;padding:8px 20px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer';s3.onclick=function(){window.close()};b.appendChild(s1);b.appendChild(s2);b.appendChild(s3);document.body.style.paddingTop='56px';document.body.insertBefore(b,document.body.firstChild);var st=document.createElement('style');st.textContent='@media print{#action-bar{display:none!important}body{padding-top:0!important}}';document.head.appendChild(st)};</script>
     </body>
     </html>`;
 
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  const safeName = `Programa_${data.semanaInicio || 'semanal'}_${data.semanaFin || ''}`;
+  await generarYCompartirPDF(html, safeName, 'both');
 }
 
+
+
 // ===== PDF POR EMPRESA =====
-function generarPDFPorEmpresaHTML(data: any, especialidad: string, analisis8Ms?: { resumenGeneral: string; categorias: { nombre: string; estado: string; recomendacion: string }[] } | null) {
+async function generarPDFPorEmpresaHTML(data: any, especialidad: string, analisis8Ms?: { resumenGeneral: string; categorias: { nombre: string; estado: string; recomendacion: string }[] } | null) {
   const actividades = (data.actividades || []).filter((a: any) => a.especialidad === especialidad);
   if (actividades.length === 0) return;
 
@@ -1584,15 +1583,11 @@ function generarPDFPorEmpresaHTML(data: any, especialidad: string, analisis8Ms?:
       <div class="footer">
         <p>ObjetivaQC \u2014 Control de Calidad de Obra \u2014 Generado ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
       </div>
-
-      <script>window.onload=function(){var b=document.createElement('div');b.id='action-bar';b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#002C63;padding:8px 16px;display:flex;gap:8px;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.2)';var s1=document.createElement('button');s1.textContent='Imprimir';s1.style.cssText='background:#02B381;color:white;border:none;padding:8px 20px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer';s1.onclick=function(){window.print()};var s2=document.createElement('button');s2.textContent='Compartir';s2.style.cssText='background:#3b82f6;color:white;border:none;padding:8px 20px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer';s2.onclick=async function(){var t=document.title;var h=document.documentElement.outerHTML;var bl=new Blob([h],{type:'text/html'});var f=new File([bl],t.replace(/[^a-zA-Z0-9_-]/g,'_')+'.html',{type:'text/html'});if(navigator.share&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({title:t,files:[f]});return}catch(e){if(e.name==='AbortError')return}}if(navigator.share){try{await navigator.share({title:t,text:'Reporte - '+t});return}catch(e){if(e.name==='AbortError')return}}try{await navigator.clipboard.writeText(window.location.href);alert('Enlace copiado')}catch(e){alert('No se pudo compartir')}};var s3=document.createElement('button');s3.textContent='Cerrar';s3.style.cssText='background:#64748b;color:white;border:none;padding:8px 20px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer';s3.onclick=function(){window.close()};b.appendChild(s1);b.appendChild(s2);b.appendChild(s3);document.body.style.paddingTop='56px';document.body.insertBefore(b,document.body.firstChild);var st=document.createElement('style');st.textContent='@media print{#action-bar{display:none!important}body{padding-top:0!important}}';document.head.appendChild(st)};</script>
     </body>
     </html>`;
 
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  const safeName = `Corte_${especialidad}_${data.semanaInicio || 'programa'}`;
+  await generarYCompartirPDF(html, safeName, 'both');
 }
 
 // ===== DETALLE PROGRAMA =====
@@ -3946,15 +3941,12 @@ function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
   };
 
   // Generar PDF de eficiencia global
-  const generarPDFEficienciaGlobal = () => {
+  const generarPDFEficienciaGlobal = async () => {
     const html = buildEficienciaHTML();
     if (!html) return;
-    const actionScript = '<script>window.onload=function(){var b=document.createElement("div");b.id="action-bar";b.style.cssText="position:fixed;top:0;left:0;right:0;z-index:9999;background:#002C63;padding:8px 16px;display:flex;gap:8px;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.2)";var s1=document.createElement("button");s1.textContent="Imprimir";s1.style.cssText="background:#02B381;color:white;border:none;padding:8px 20px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer";s1.onclick=function(){window.print()};var s2=document.createElement("button");s2.textContent="Compartir";s2.style.cssText="background:#3b82f6;color:white;border:none;padding:8px 20px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer";s2.onclick=async function(){var t=document.title;var h=document.documentElement.outerHTML;var bl=new Blob([h],{type:"text/html"});var f=new File([bl],t.replace(/[^a-zA-Z0-9_-]/g,"_")+".html",{type:"text/html"});if(navigator.share&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({title:t,files:[f]});return}catch(e){if(e.name==="AbortError")return}}if(navigator.share){try{await navigator.share({title:t,text:"Reporte - "+t});return}catch(e){if(e.name==="AbortError")return}}try{await navigator.clipboard.writeText(window.location.href);alert("Enlace copiado")}catch(e){alert("No se pudo compartir")}};var s3=document.createElement("button");s3.textContent="Cerrar";s3.style.cssText="background:#64748b;color:white;border:none;padding:8px 20px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer";s3.onclick=function(){window.close()};b.appendChild(s1);b.appendChild(s2);b.appendChild(s3);document.body.style.paddingTop="56px";document.body.insertBefore(b,document.body.firstChild);var st=document.createElement("style");st.textContent="@media print{#action-bar{display:none!important}body{padding-top:0!important}}";document.head.appendChild(st)};<\/script>';
-    const printHtml = html.replace('</body>', actionScript + '</body>');
-    const blob = new Blob([printHtml], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    const fecha = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+    const safeName = `Eficiencia_Global_${fecha.replace(/\s/g, '_')}`;
+    await generarYCompartirPDF(html, safeName, 'both');
   };
 
   // Compartir PDF de eficiencia global (Web Share API)
@@ -3962,47 +3954,8 @@ function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
     const html = buildEficienciaHTML();
     if (!html) return;
     const fecha = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-    const fileName = `Eficiencia_Global_${fecha.replace(/\s/g, '_')}.html`;
-    const blob = new Blob([html], { type: 'text/html' });
-    const file = new File([blob], fileName, { type: 'text/html' });
-
-    // Intentar Web Share API nativa (móvil)
-    if (navigator.share && navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({
-          title: 'Eficiencia Global por Empresa',
-          text: `Reporte de eficiencia global - ${fecha}`,
-          files: [file],
-        });
-        return;
-      } catch (e: any) {
-        if (e.name === 'AbortError') return; // usuario canceló
-      }
-    }
-    // Fallback: compartir solo texto si no soporta archivos
-    if (navigator.share) {
-      try {
-        const rows = data?.eficienciaGlobal || [];
-        const resumen = rows.map((r: any, i: number) => `${i+1}. ${r.nombre}: ${r.eficiencia.toFixed(1)}%`).join('\n');
-        await navigator.share({
-          title: 'Eficiencia Global por Empresa',
-          text: `EFICIENCIA GLOBAL POR EMPRESA\n${fecha}\n\n${resumen}\n\n— ObjetivaQC`,
-        });
-        return;
-      } catch (e: any) {
-        if (e.name === 'AbortError') return;
-      }
-    }
-    // Fallback final: copiar al portapapeles
-    try {
-      const rows = data?.eficienciaGlobal || [];
-      const resumen = rows.map((r: any, i: number) => `${i+1}. ${r.nombre}: ${r.eficiencia.toFixed(1)}%`).join('\n');
-      const texto = `EFICIENCIA GLOBAL POR EMPRESA\n${fecha}\n\n${resumen}\n\n— ObjetivaQC`;
-      await navigator.clipboard.writeText(texto);
-      toast.success('Reporte copiado al portapapeles');
-    } catch {
-      toast.error('No se pudo compartir el reporte');
-    }
+    const safeName = `Eficiencia_Global_${fecha.replace(/\s/g, '_')}`;
+    await generarYCompartirPDF(html, safeName, 'share');
   };
 
   // Generar PDF de corte por empresa con análisis 8Ms

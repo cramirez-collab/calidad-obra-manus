@@ -5046,3 +5046,6 @@
 - [x] Botón compartir en PDF de eficiencia (Web Share API / fallback copiar)
 - [x] Agregar botón compartir (Web Share API) en PDFs por empresa con análisis IA
 - [x] Agregar botón compartir en PDF general del programa con análisis IA
+- [x] Cambiar generación de reportes de HTML a PDF real (.pdf) usando html2pdf.js
+- [x] Compartir como archivo .pdf real (no HTML) via Web Share API
+- [x] Aplicar a: PDF por empresa, PDF general del programa, PDF eficiencia global
