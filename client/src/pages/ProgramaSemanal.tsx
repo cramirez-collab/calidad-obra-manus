@@ -16,7 +16,7 @@ import {
   Download, Upload, Image as ImageIcon, BarChart3, TrendingUp, Eye, Edit,
   X, Check, AlertTriangle, Clock, FileSpreadsheet, BookTemplate, GitCompare,
   Save, FolderOpen, Copy, FileDown, Target, Sparkles, Wand2, Loader2, Camera, UserCircle,
-  Pencil, Eraser, Undo2, Palette
+  Pencil, Eraser, Undo2, Palette, Share2
 } from "lucide-react";
 
 // Helpers de fecha
@@ -3899,11 +3899,11 @@ function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
     });
   };
 
-  // Generar PDF de eficiencia global
-  const generarPDFEficienciaGlobal = () => {
-    if (!data?.eficienciaGlobal?.length) return;
+  // Generar HTML de eficiencia global (reutilizable)
+  const buildEficienciaHTML = () => {
+    if (!data?.eficienciaGlobal?.length) return '';
     const rows = data.eficienciaGlobal;
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Eficiencia Global por Empresa</title>
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Eficiencia Global por Empresa</title>
     <style>
       @media print { body { margin: 0; } @page { size: landscape; margin: 10mm; } }
       body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; }
@@ -3913,8 +3913,6 @@ function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
       td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; font-size: 11px; }
       tr:nth-child(even) { background: #f9fafb; }
       .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
-      .bar-cell { position: relative; }
-      .bar-bg { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; opacity: 0.15; }
     </style></head><body>
     <h1>EFICIENCIA GLOBAL POR EMPRESA</h1>
     <p style="color:#666;font-size:13px;">Proyecto: Reporte consolidado | Generado: ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
@@ -3944,12 +3942,66 @@ function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
       </tbody>
     </table>
     <div class="footer"><p>ObjetivaQC — Control de Calidad de Obra</p></div>
-    <script>window.onload = () => setTimeout(() => window.print(), 500);</script>
     </body></html>`;
-    const blob = new Blob([html], { type: 'text/html' });
+  };
+
+  // Generar PDF de eficiencia global
+  const generarPDFEficienciaGlobal = () => {
+    const html = buildEficienciaHTML();
+    if (!html) return;
+    const printHtml = html.replace('</body>', '<script>window.onload = () => setTimeout(() => window.print(), 500);<\/script></body>');
+    const blob = new Blob([printHtml], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
     setTimeout(() => URL.revokeObjectURL(url), 10000);
+  };
+
+  // Compartir PDF de eficiencia global (Web Share API)
+  const compartirPDFEficiencia = async () => {
+    const html = buildEficienciaHTML();
+    if (!html) return;
+    const fecha = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+    const fileName = `Eficiencia_Global_${fecha.replace(/\s/g, '_')}.html`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const file = new File([blob], fileName, { type: 'text/html' });
+
+    // Intentar Web Share API nativa (móvil)
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({
+          title: 'Eficiencia Global por Empresa',
+          text: `Reporte de eficiencia global - ${fecha}`,
+          files: [file],
+        });
+        return;
+      } catch (e: any) {
+        if (e.name === 'AbortError') return; // usuario canceló
+      }
+    }
+    // Fallback: compartir solo texto si no soporta archivos
+    if (navigator.share) {
+      try {
+        const rows = data?.eficienciaGlobal || [];
+        const resumen = rows.map((r: any, i: number) => `${i+1}. ${r.nombre}: ${r.eficiencia.toFixed(1)}%`).join('\n');
+        await navigator.share({
+          title: 'Eficiencia Global por Empresa',
+          text: `EFICIENCIA GLOBAL POR EMPRESA\n${fecha}\n\n${resumen}\n\n— ObjetivaQC`,
+        });
+        return;
+      } catch (e: any) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+    // Fallback final: copiar al portapapeles
+    try {
+      const rows = data?.eficienciaGlobal || [];
+      const resumen = rows.map((r: any, i: number) => `${i+1}. ${r.nombre}: ${r.eficiencia.toFixed(1)}%`).join('\n');
+      const texto = `EFICIENCIA GLOBAL POR EMPRESA\n${fecha}\n\n${resumen}\n\n— ObjetivaQC`;
+      await navigator.clipboard.writeText(texto);
+      toast.success('Reporte copiado al portapapeles');
+    } catch {
+      toast.error('No se pudo compartir el reporte');
+    }
   };
 
   // Generar PDF de corte por empresa con análisis 8Ms
@@ -4021,9 +4073,14 @@ function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
                 <BarChart3 className="w-4 h-4 text-emerald-600" />
                 Eficiencia Global por Empresa
               </CardTitle>
-              <Button size="sm" variant="outline" onClick={generarPDFEficienciaGlobal} className="border-emerald-600 text-emerald-700 hover:bg-emerald-50">
-                <Download className="w-4 h-4 mr-1" /> PDF Global
-              </Button>
+              <div className="flex gap-1">
+                <Button size="sm" variant="outline" onClick={generarPDFEficienciaGlobal} className="border-emerald-600 text-emerald-700 hover:bg-emerald-50">
+                  <Download className="w-4 h-4 mr-1" /> PDF
+                </Button>
+                <Button size="sm" variant="outline" onClick={compartirPDFEficiencia} className="border-blue-500 text-blue-600 hover:bg-blue-50">
+                  <Share2 className="w-4 h-4 mr-1" /> Compartir
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0">

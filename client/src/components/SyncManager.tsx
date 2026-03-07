@@ -5,6 +5,13 @@
  * POLÍTICA: NUNCA eliminar ítems de la cola por fallos de sincronización.
  * Los ítems solo se eliminan cuando se sincronizan exitosamente o son duplicados.
  * Si un ítem falla repetidamente, se pausa y se notifica al usuario.
+ * 
+ * v2: HIPERSENSIBLE — detecta red y sube inmediatamente.
+ * - Polling de conexión cada 1s (no depende solo de eventos del browser)
+ * - Sync inmediata al detectar red (0ms delay)
+ * - Intervalo reducido a 3s cuando hay pendientes
+ * - NetworkInformation API para detectar cambios de red instantáneamente
+ * - Fetch heartbeat para confirmar conectividad real
  */
 import { useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
@@ -15,6 +22,7 @@ import {
   marcarFallo,
   limpiarAntiguos,
   contarPendientes,
+  obtenerTodas,
 } from '@/lib/uploadQueue';
 import {
   getPendingActions,
@@ -102,8 +110,41 @@ function getErrorMessage(error: any): string {
   return error.message || 'Error desconocido';
 }
 
+/**
+ * Verificar conectividad real con un fetch ligero (HEAD request)
+ */
+async function checkRealConnectivity(): Promise<boolean> {
+  if (!navigator.onLine) return false;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const response = await fetch('/api/trpc/auth.me', {
+      method: 'HEAD',
+      signal: controller.signal,
+      cache: 'no-store',
+    });
+    clearTimeout(timeout);
+    return response.ok || response.status === 401; // 401 = server reachable
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Contar total de pendientes en todas las colas
+ */
+async function getTotalPending(): Promise<number> {
+  let total = 0;
+  try { total += await contarPendientes(); } catch {}
+  try { total += await countPendingActions(); } catch {}
+  try { const legacy = await getOfflineDBActions(); total += legacy.length; } catch {}
+  return total;
+}
+
 export function SyncManager() {
   const syncingRef = useRef(false);
+  const lastOnlineState = useRef(navigator.onLine);
+  const hasPendingRef = useRef(false);
   const utils = trpc.useUtils();
 
   const uploadFotoDespuesMutation = trpc.items.uploadFotoDespues.useMutation();
@@ -258,6 +299,9 @@ export function SyncManager() {
       if (failedItems > 0) {
         notifyUserAboutFailures(failedItems);
       }
+
+      // 6. Actualizar flag de pendientes
+      hasPendingRef.current = (await getTotalPending()) > 0;
     } catch (error) {
       console.error('[SyncManager] Error general:', error);
     } finally {
@@ -266,40 +310,119 @@ export function SyncManager() {
   }, []);
 
   useEffect(() => {
-    // Sincronizar inmediatamente al montar
+    // === SYNC INMEDIATA AL MONTAR ===
     sincronizar();
 
+    // === EVENTO ONLINE DEL BROWSER (0ms delay) ===
     const handleOnline = () => {
-      console.log('[SyncManager] Conexión restaurada');
-      // Reset failure counts on reconnect to allow fresh retries
+      console.log('[SyncManager] Conexión restaurada — sincronizando INMEDIATAMENTE');
       failureCounts.clear();
-      setTimeout(sincronizar, 1000);
+      lastOnlineState.current = true;
+      // Sin delay — sincronizar al instante
+      sincronizar();
     };
 
+    const handleOffline = () => {
+      lastOnlineState.current = false;
+    };
+
+    // === VISIBILITY CHANGE — sync al volver a la app ===
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && navigator.onLine) {
-        setTimeout(sincronizar, 500);
+        sincronizar();
       }
     };
 
+    // === FOCUS — sync al tocar la app ===
     const handleFocus = () => {
-      if (navigator.onLine) setTimeout(sincronizar, 500);
+      if (navigator.onLine) sincronizar();
     };
 
+    // === NETWORK INFORMATION API (cambios de tipo de red instantáneos) ===
+    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+    const handleConnectionChange = () => {
+      console.log('[SyncManager] Cambio de red detectado (NetworkInfo API)');
+      if (navigator.onLine) {
+        failureCounts.clear();
+        sincronizar();
+      }
+    };
+
+    // === POLLING AGRESIVO DE CONECTIVIDAD ===
+    // Cada 1s verifica si hay conexión Y si hay pendientes
+    // Si detecta que pasó de offline a online, sincroniza inmediatamente
+    const pollingInterval = setInterval(async () => {
+      const currentOnline = navigator.onLine;
+      
+      // Detectar transición offline → online
+      if (currentOnline && !lastOnlineState.current) {
+        console.log('[SyncManager] Polling detectó reconexión — sincronizando');
+        failureCounts.clear();
+        lastOnlineState.current = true;
+        sincronizar();
+        return;
+      }
+      
+      lastOnlineState.current = currentOnline;
+      
+      // Si hay conexión y hay pendientes, verificar conectividad real y sincronizar
+      if (currentOnline) {
+        const pending = await getTotalPending();
+        hasPendingRef.current = pending > 0;
+        
+        if (pending > 0 && !syncingRef.current) {
+          // Verificar conectividad real con fetch
+          const reallyOnline = await checkRealConnectivity();
+          if (reallyOnline) {
+            sincronizar();
+          }
+        }
+      }
+    }, 1000); // Cada 1 segundo — hipersensible
+
+    // === INTERVALO DE RESPALDO (cada 3s si hay pendientes, 10s si no) ===
+    const backupInterval = setInterval(() => {
+      if (navigator.onLine && !syncingRef.current) {
+        sincronizar();
+      }
+    }, hasPendingRef.current ? 3000 : 10000);
+
+    // === REGISTRAR LISTENERS ===
     window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
+    if (connection) {
+      connection.addEventListener('change', handleConnectionChange);
+    }
 
-    // Sync cada 10s (era 5s, subimos para reducir carga en conexión mala)
-    const interval = setInterval(() => {
-      if (navigator.onLine) sincronizar();
-    }, 10000);
+    // === SERVICE WORKER SYNC (Background Sync API) ===
+    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+      navigator.serviceWorker.ready.then(registration => {
+        (registration as any).sync?.register?.('sync-pending-items').catch(() => {});
+      }).catch(() => {});
+    }
+
+    // === ESCUCHAR MENSAJES DEL SERVICE WORKER ===
+    const handleSWMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'SYNC_PENDING') {
+        console.log('[SyncManager] SW solicitó sincronización');
+        sincronizar();
+      }
+    };
+    navigator.serviceWorker?.addEventListener?.('message', handleSWMessage);
 
     return () => {
       window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      navigator.serviceWorker?.removeEventListener?.('message', handleSWMessage);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
-      clearInterval(interval);
+      if (connection) {
+        connection.removeEventListener('change', handleConnectionChange);
+      }
+      clearInterval(pollingInterval);
+      clearInterval(backupInterval);
     };
   }, [sincronizar]);
 

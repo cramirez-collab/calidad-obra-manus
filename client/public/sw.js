@@ -196,9 +196,9 @@ function isStaticAsset(pathname) {
          pathname.startsWith('/assets/');
 }
 
-// ==================== SINCRONIZACIÓN ====================
+// ==================== SINCRONIZACIÓN HIPERSENSIBLE ====================
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-items') {
+  if (event.tag === 'sync-items' || event.tag === 'sync-pending-items') {
     event.waitUntil(
       self.clients.matchAll().then(clients => {
         clients.forEach(client => {
@@ -206,6 +206,18 @@ self.addEventListener('sync', (event) => {
         });
       })
     );
+  }
+});
+
+// Escuchar mensajes del cliente para sincronización inmediata
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'FORCE_SYNC') {
+    // Notificar a TODOS los clientes que sincronicen
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({ type: 'SYNC_PENDING', timestamp: Date.now() });
+      });
+    });
   }
 });
 

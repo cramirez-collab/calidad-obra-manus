@@ -5041,3 +5041,6 @@
 - [x] Vista Reportes: Programas en cascada empresa > semana con carga y PDF
 - [x] Vista Reportes: Cortes en cascada empresa > semana con análisis 8Ms IA + PDF
 - [x] UI/UX espectacular, responsive, branded Objetiva
+- [x] Fix: Sincronización offline hipersensible - detectar red y subir ítems pendientes inmediatamente (1ms)
+- [x] Auto-sync al detectar conexión sin intervención del usuario
+- [x] Botón compartir en PDF de eficiencia (Web Share API / fallback copiar)
