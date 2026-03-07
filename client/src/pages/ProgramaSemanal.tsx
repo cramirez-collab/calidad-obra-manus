@@ -1421,6 +1421,111 @@ async function generarPDFProgramaSemanal(data: any) {
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
+// ===== PDF POR EMPRESA =====
+async function generarPDFPorEmpresa(data: any, especialidad: string) {
+  const actividades = (data.actividades || []).filter((a: any) => a.especialidad === especialidad);
+  if (actividades.length === 0) return;
+
+  const totalProg = actividades.reduce((s: number, a: any) => s + (parseFloat(a.cantidadProgramada) || 0), 0);
+  const totalReal = actividades.reduce((s: number, a: any) => s + (parseFloat(a.cantidadRealizada) || 0), 0);
+  const eficiencia = totalProg > 0 ? ((totalReal / totalProg) * 100).toFixed(1) : '0.0';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Corte - ${especialidad} - ${formatWeekRange(data.semanaInicio, data.semanaFin)}</title>
+      <style>
+        @media print { body { margin: 0; } @page { size: landscape; margin: 10mm; } }
+        body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #333; max-width: 1100px; margin: 0 auto; padding: 20px; }
+        h1 { color: #002C63; font-size: 18px; margin-bottom: 4px; }
+        .meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0; }
+        .meta-item { background: #f8f9fa; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #002C63; }
+        .meta-item label { font-size: 10px; color: #666; text-transform: uppercase; }
+        .meta-item p { font-size: 14px; font-weight: 600; margin: 2px 0 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th { background: #002C63; color: white; padding: 6px 8px; font-size: 11px; text-align: left; }
+        td { padding: 5px 8px; border-bottom: 1px solid #eee; font-size: 11px; }
+        tr:nth-child(even) { background: #f9fafb; }
+        .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+        .eficiencia-box { text-align: center; padding: 16px; margin: 16px 0; background: ${parseFloat(eficiencia) >= 80 ? '#f0fdf4' : parseFloat(eficiencia) >= 50 ? '#fffbeb' : '#fef2f2'}; border-radius: 8px; border: 2px solid ${parseFloat(eficiencia) >= 80 ? '#16a34a' : parseFloat(eficiencia) >= 50 ? '#d97706' : '#dc2626'}; }
+        .eficiencia-valor { font-size: 36px; font-weight: 800; color: ${parseFloat(eficiencia) >= 80 ? '#16a34a' : parseFloat(eficiencia) >= 50 ? '#d97706' : '#dc2626'}; }
+        .totales-row { background: #f1f5f9 !important; font-weight: 700; }
+      </style>
+    </head>
+    <body>
+      <h1>CORTE DE PROGRAMA SEMANAL</h1>
+      <p style="color:#002C63;font-size:15px;font-weight:700;margin:4px 0 0;">${especialidad}</p>
+      <p style="color:#666;font-size:13px;margin-top:2px;">Semana: ${formatWeekRange(data.semanaInicio, data.semanaFin)}</p>
+
+      <div class="meta">
+        <div class="meta-item"><label>Entrega</label><p>${data.fechaEntrega ? formatDateShort(data.fechaEntrega) : 'Pendiente'}</p></div>
+        <div class="meta-item"><label>Corte</label><p>${data.fechaCorte ? formatDateShort(data.fechaCorte) : 'Pendiente'}</p></div>
+        <div class="meta-item"><label>Actividades</label><p>${actividades.length}</p></div>
+        <div class="meta-item"><label>Estado</label><p>Corte Realizado</p></div>
+      </div>
+
+      <div class="eficiencia-box">
+        <p style="font-size:12px;color:#666;margin:0;">EFICIENCIA DE ${especialidad.toUpperCase()}</p>
+        <p class="eficiencia-valor">${eficiencia}%</p>
+        <p style="font-size:11px;color:#666;margin:4px 0 0;">Programado: ${totalProg.toFixed(2)} | Realizado: ${totalReal.toFixed(2)}</p>
+      </div>
+
+      <h3 style="font-size:14px;color:#002C63;margin-top:16px;">Detalle de Actividades</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Actividad</th>
+            <th>Nivel</th>
+            <th>\u00c1rea</th>
+            <th>Ref. Eje</th>
+            <th>Unidad</th>
+            <th>Material</th>
+            <th style="text-align:right;">Programada</th>
+            <th style="text-align:right;">Realizada</th>
+            <th style="text-align:right;">%</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${actividades.map((a: any) => {
+            const pct = parseFloat(a.porcentajeAvance) || 0;
+            const color = pct >= 80 ? '#16a34a' : pct >= 50 ? '#d97706' : '#dc2626';
+            return `<tr>
+              <td>${a.actividad}</td>
+              <td>${a.nivel || '\u2014'}</td>
+              <td>${a.area || '\u2014'}</td>
+              <td>${a.referenciaEje || '\u2014'}</td>
+              <td>${a.unidad}</td>
+              <td style="color:#666;font-size:10px;">${a.material || '\u2014'}</td>
+              <td style="text-align:right;font-family:monospace;">${a.cantidadProgramada}</td>
+              <td style="text-align:right;font-family:monospace;">${a.cantidadRealizada || '0'}</td>
+              <td style="text-align:right;font-weight:700;color:${color};">${pct.toFixed(1)}%</td>
+            </tr>`;
+          }).join('')}
+          <tr class="totales-row">
+            <td colspan="6" style="text-align:right;">TOTALES</td>
+            <td style="text-align:right;font-family:monospace;">${totalProg.toFixed(2)}</td>
+            <td style="text-align:right;font-family:monospace;">${totalReal.toFixed(2)}</td>
+            <td style="text-align:right;color:${parseFloat(eficiencia) >= 80 ? '#16a34a' : parseFloat(eficiencia) >= 50 ? '#d97706' : '#dc2626'};">${eficiencia}%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="footer">
+        <p>ObjetivaQC \u2014 Control de Calidad de Obra \u2014 Generado ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+      </div>
+
+      <script>window.onload = () => setTimeout(() => window.print(), 500);</script>
+    </body>
+    </html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
 // ===== DETALLE PROGRAMA =====
 function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, onEdit, userId, userRole, usuarios }: {
   programaId: number;
@@ -1622,6 +1727,45 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
           title={data.planos[drawCanvasIdx]?.titulo || `Plano ${drawCanvasIdx + 1}`}
         />
       )}
+
+      {/* PDF por Empresa - Solo cuando hay corte realizado */}
+      {data.status === 'corte_realizado' && (() => {
+        const especialidades = Array.from(new Set((data.actividades || []).map((a: any) => a.especialidad) as string[])).sort();
+        if (especialidades.length === 0) return null;
+        return (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileDown className="w-4 h-4 text-[#002C63]" />
+                PDF por Empresa
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {especialidades.map((esp: string) => {
+                  const acts = (data.actividades || []).filter((a: any) => a.especialidad === esp);
+                  const prog = acts.reduce((s: number, a: any) => s + (parseFloat(a.cantidadProgramada) || 0), 0);
+                  const real = acts.reduce((s: number, a: any) => s + (parseFloat(a.cantidadRealizada) || 0), 0);
+                  const pct = prog > 0 ? ((real / prog) * 100) : 0;
+                  const color = pct >= 80 ? 'text-emerald-600' : pct >= 50 ? 'text-amber-600' : 'text-red-600';
+                  return (
+                    <Button
+                      key={esp}
+                      variant="outline"
+                      size="sm"
+                      className="h-auto py-2 px-3 flex flex-col items-start gap-0.5 text-left"
+                      onClick={() => generarPDFPorEmpresa(data, esp)}
+                    >
+                      <span className="text-xs font-semibold truncate w-full">{esp}</span>
+                      <span className={`text-[10px] font-bold ${color}`}>{pct.toFixed(1)}% eficiencia</span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Acciones */}
       <div className="flex gap-2 justify-end flex-wrap">

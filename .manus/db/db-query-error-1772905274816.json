@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT \n  e.id AS empresa_id,\n  e.nombre AS empresa,\n  e.proyecto_id,\n  p.nombre AS proyecto,\n  COALESCE(GROUP_CONCAT(DISTINCT esp.nombre ORDER BY esp.nombre SEPARATOR ', '), 'Sin especialidad') AS especialidades\nFROM empresas e\nLEFT JOIN proyectos p ON e.proyecto_id = p.id\nLEFT JOIN empresa_especialidades ee ON e.id = ee.empresa_id\nLEFT JOIN especialidades esp ON ee.especialidad_id = esp.id\nWHERE e.activo = true\nGROUP BY e.id, e.nombre, e.proyecto_id, p.nombre\nORDER BY p.nombre, e.nombre;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute \nSELECT \n  e.id AS empresa_id,\n  e.nombre AS empresa,\n  e.proyecto_id,\n  p.nombre AS proyecto,\n  COALESCE(GROUP_CONCAT(DISTINCT esp.nombre ORDER BY esp.nombre SEPARATOR ', '), 'Sin especialidad') AS especialidades\nFROM empresas e\nLEFT JOIN proyectos p ON e.proyecto_id = p.id\nLEFT JOIN empresa_especialidades ee ON e.id = ee.empresa_id\nLEFT JOIN especialidades esp ON ee.especialidad_id = esp.id\nWHERE e.activo = true\nGROUP BY e.id, e.nombre, e.proyecto_id, p.nombre\nORDER BY p.nombre, e.nombre;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'e.proyecto_id' in 'on clause'"
+  ]
+}

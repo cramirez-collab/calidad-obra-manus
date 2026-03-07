@@ -14,7 +14,11 @@ import {
   Wrench,
   Users,
   Tag,
-  BarChart3
+  BarChart3,
+  AlertTriangle,
+  Scissors,
+  FileCheck,
+  CalendarDays
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
@@ -65,9 +69,105 @@ export default function Home() {
 
   const isAdmin = user?.role === 'superadmin' || user?.role === 'admin';
 
+  // Estado del programa semanal del usuario
+  const { data: statusSemanal } = trpc.programaSemanal.statusSemanal.useQuery(
+    { proyectoId: selectedProjectId! },
+    { enabled: !!selectedProjectId, staleTime: 2 * 60 * 1000, gcTime: 5 * 60 * 1000 }
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6">
+        {/* Banner de estado de Programa Semanal */}
+        {statusSemanal && (
+          <div
+            className="rounded-xl border shadow-sm overflow-hidden cursor-pointer active:scale-[0.99] transition-transform"
+            onClick={() => {
+              if (statusSemanal.programaId) {
+                setLocation('/programa-semanal');
+              } else {
+                setLocation('/programa-semanal');
+              }
+            }}
+          >
+            <div className="flex items-stretch">
+              {/* Programa */}
+              <div className={`flex-1 p-3 sm:p-4 flex items-center gap-3 ${
+                statusSemanal.programaEntregado
+                  ? 'bg-emerald-50 border-r border-emerald-200'
+                  : 'bg-amber-50 border-r border-amber-200'
+              }`}>
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
+                  statusSemanal.programaEntregado
+                    ? 'bg-emerald-100 text-emerald-600'
+                    : 'bg-amber-100 text-amber-600'
+                }`}>
+                  {statusSemanal.programaEntregado
+                    ? <FileCheck className="h-5 w-5" />
+                    : <AlertTriangle className="h-5 w-5" />
+                  }
+                </div>
+                <div className="min-w-0">
+                  <p className={`text-sm font-bold ${
+                    statusSemanal.programaEntregado ? 'text-emerald-700' : 'text-amber-700'
+                  }`}>
+                    {statusSemanal.programaEntregado ? 'Programa Entregado' : 'Falta Programa'}
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                    {statusSemanal.tienePrograma
+                      ? (statusSemanal.status === 'borrador' ? 'En borrador - entregar' : '')
+                      : 'No has creado programa esta semana'
+                    }
+                  </p>
+                </div>
+              </div>
+
+              {/* Corte */}
+              <div className={`flex-1 p-3 sm:p-4 flex items-center gap-3 ${
+                statusSemanal.corteRealizado
+                  ? 'bg-emerald-50'
+                  : statusSemanal.esMiercolesODespues && statusSemanal.programaEntregado
+                    ? 'bg-red-50'
+                    : 'bg-gray-50'
+              }`}>
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
+                  statusSemanal.corteRealizado
+                    ? 'bg-emerald-100 text-emerald-600'
+                    : statusSemanal.esMiercolesODespues && statusSemanal.programaEntregado
+                      ? 'bg-red-100 text-red-600'
+                      : 'bg-gray-100 text-gray-400'
+                }`}>
+                  <Scissors className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className={`text-sm font-bold ${
+                    statusSemanal.corteRealizado
+                      ? 'text-emerald-700'
+                      : statusSemanal.esMiercolesODespues && statusSemanal.programaEntregado
+                        ? 'text-red-700'
+                        : 'text-gray-500'
+                  }`}>
+                    {statusSemanal.corteRealizado
+                      ? 'Corte Realizado'
+                      : 'Falta Corte'
+                    }
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                    {statusSemanal.corteRealizado
+                      ? ''
+                      : statusSemanal.esMiercolesODespues && statusSemanal.programaEntregado
+                        ? 'Realiza el corte semanal'
+                        : !statusSemanal.programaEntregado
+                          ? 'Primero entrega el programa'
+                          : 'Disponible a partir del miercoles'
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stats - Grid compacto */}
         <div className="grid grid-cols-5 gap-2 sm:gap-3">
           {statCards.map((stat, i) => (

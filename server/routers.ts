@@ -5838,6 +5838,41 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
         return { ok: true, eficiencia: Math.round(eficiencia * 100) / 100 };
       }),
 
+    // Estado del programa semanal del usuario actual (para banner en Home)
+    statusSemanal: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        // Calcular lunes y domingo de la semana actual
+        const now = new Date();
+        const day = now.getDay();
+        const diffToMonday = day === 0 ? -6 : 1 - day;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() + diffToMonday);
+        monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+
+        // Buscar programa del usuario para esta semana
+        const programa = await db.getProgramaSemanalByWeek(input.proyectoId, ctx.user.id, monday);
+
+        // Calcular si es miércoles o después (día de corte)
+        const esMiercolesODespues = now.getDay() >= 3 || now.getDay() === 0; // mié=3, jue=4, vie=5, sáb=6, dom=0
+
+        return {
+          tienePrograma: !!programa,
+          programaId: programa?.id || null,
+          status: programa?.status || null,
+          programaEntregado: programa ? programa.status !== 'borrador' : false,
+          corteRealizado: programa?.status === 'corte_realizado',
+          esMiercolesODespues,
+          semana: {
+            inicio: monday.toISOString(),
+            fin: sunday.toISOString(),
+          },
+        };
+      }),
+
     // Listar programas
     list: protectedProcedure
       .input(z.object({

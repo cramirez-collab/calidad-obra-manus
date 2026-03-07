@@ -5012,3 +5012,12 @@
 ### Plantillas por especialidad
 - [x] Crear plantillas por especialidad: Albanileria, Ceramicos, Tablaroca, Inst. Hidraulica, Electrica, Carpinteria, Herreria, Impermeabilizacion, Limpieza + General
 - [x] Seed automático de plantillas por especialidad al primer acceso (10 plantillas)
+- [x] Fix: Xitlali no ve el botón de hacer corte en la esquina inferior derecha
+### Recordatorio de programa semanal en página de inicio
+- [x] Endpoint backend: consultar estado de programa semanal del usuario (semana actual)
+- [x] Banner en Home: mostrar "Programa Entregado" o "Falta Programa" 
+- [x] Banner en Home: mostrar "Corte Realizado" o "Falta Corte"
+- [x] Visible siempre al abrir la app en la página de inicio
+### PDF por empresa en programa con corte realizado
+- [x] Botón para descargar PDF filtrado por empresa en detalle de programa con corte_realizado
+- [x] PDF muestra solo actividades de esa empresa con su eficiencia

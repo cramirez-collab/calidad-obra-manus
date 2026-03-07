@@ -1,0 +1,738 @@
+{
+  "query": "\nSELECT \n  e.id AS empresa_id,\n  e.nombre AS empresa,\n  e.proyectoId,\n  p.nombre AS proyecto,\n  COALESCE(esp.nombre, 'Sin especialidad') AS especialidad\nFROM empresas e\nLEFT JOIN proyectos p ON e.proyectoId = p.id\nLEFT JOIN especialidades esp ON e.especialidadId = esp.id\nWHERE e.activo = true\nORDER BY p.nombre, e.nombre;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute \nSELECT \n  e.id AS empresa_id,\n  e.nombre AS empresa,\n  e.proyectoId,\n  p.nombre AS proyecto,\n  COALESCE(esp.nombre, 'Sin especialidad') AS especialidad\nFROM empresas e\nLEFT JOIN proyectos p ON e.proyectoId = p.id\nLEFT JOIN especialidades esp ON e.especialidadId = esp.id\nWHERE e.activo = true\nORDER BY p.nombre, e.nombre;\n",
+  "rows": [
+    {
+      "empresa_id": "3810001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3630001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4530008",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4530007",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4530006",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4530005",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4530004",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4530003",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4530002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4530001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4500001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4470002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4470001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4440001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4410003",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4410002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4410001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4380007",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4380006",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4380005",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4380004",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3780010",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4380003",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3600001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3600002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4380002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3660001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3660002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3660003",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3660004",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3660005",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3660006",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3660007",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3660008",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3660009",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3660010",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3660011",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3660012",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3690001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3720002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3780009",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3750002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3780001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3780002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3780003",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3780004",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3780005",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3780006",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3780007",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3780008",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3750001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4380001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4350001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3840001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3870001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3900001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3930001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3960001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3960002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3990001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4020001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4050001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4080001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4110001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4110002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4140001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4140002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4140003",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4140004",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4140005",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4170001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4170002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4170003",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4200001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4200002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4230001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4230002",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4230003",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4230004",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4260001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "4320001",
+      "empresa": "Empresa Test UX",
+      "proyectoId": "NULL",
+      "proyecto": "NULL",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "3570001",
+      "empresa": "Andraca",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Seguridad"
+    },
+    {
+      "empresa_id": "510004",
+      "empresa": "Dcon",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Especiales "
+    },
+    {
+      "empresa_id": "480001",
+      "empresa": "Ennco",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Estructura "
+    },
+    {
+      "empresa_id": "480002",
+      "empresa": "Garcab Albañil",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Albañileria "
+    },
+    {
+      "empresa_id": "1950002",
+      "empresa": "Garcab cerámicos ",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Ceramicos"
+    },
+    {
+      "empresa_id": "510001",
+      "empresa": "Garcab TYP",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Tablaroca y Pintura"
+    },
+    {
+      "empresa_id": "2010007",
+      "empresa": "GbG",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Herrerias"
+    },
+    {
+      "empresa_id": "330003",
+      "empresa": "GBPO",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Desarrollador"
+    },
+    {
+      "empresa_id": "510005",
+      "empresa": "Gumik",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Hvac"
+    },
+    {
+      "empresa_id": "4290001",
+      "empresa": "IImsa",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Gas"
+    },
+    {
+      "empresa_id": "510002",
+      "empresa": "iimsa",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Hidráulica "
+    },
+    {
+      "empresa_id": "2010006",
+      "empresa": "Lupher",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Cocinas"
+    },
+    {
+      "empresa_id": "1950001",
+      "empresa": "Novotile",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Pasta"
+    },
+    {
+      "empresa_id": "360001",
+      "empresa": "Objetiva",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Supervision"
+    },
+    {
+      "empresa_id": "540001",
+      "empresa": "Orca",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Aluminio y Vidrio"
+    },
+    {
+      "empresa_id": "510003",
+      "empresa": "Riepsa",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Electrica"
+    },
+    {
+      "empresa_id": "3720001",
+      "empresa": "SSG",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Sin especialidad"
+    },
+    {
+      "empresa_id": "480003",
+      "empresa": "Waller ",
+      "proyectoId": "1",
+      "proyecto": "Hidalma ",
+      "especialidad": "Waller "
+    },
+    {
+      "empresa_id": "2820003",
+      "empresa": "ARCIN",
+      "proyectoId": "150001",
+      "proyecto": "Mayas Habitat",
+      "especialidad": "Albañilerías"
+    },
+    {
+      "empresa_id": "2820002",
+      "empresa": "Novotile",
+      "proyectoId": "150001",
+      "proyecto": "Mayas Habitat",
+      "especialidad": "Tablaroca, pastas y pintura"
+    },
+    {
+      "empresa_id": "2760006",
+      "empresa": "Objetiva ",
+      "proyectoId": "150001",
+      "proyecto": "Mayas Habitat",
+      "especialidad": "Supervision "
+    },
+    {
+      "empresa_id": "2820001",
+      "empresa": "QDT",
+      "proyectoId": "150001",
+      "proyecto": "Mayas Habitat",
+      "especialidad": "Electrica"
+    },
+    {
+      "empresa_id": "2790001",
+      "empresa": "Qdt",
+      "proyectoId": "150001",
+      "proyecto": "Mayas Habitat",
+      "especialidad": "Qdt"
+    }
+  ],
+  "messages": [],
+  "stdout": "empresa_id\tempresa\tproyectoId\tproyecto\tespecialidad\n3810001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3630001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4530008\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4530007\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4530006\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4530005\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4530004\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4530003\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4530002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4530001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4500001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4470002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4470001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4440001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4410003\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4410002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4410001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4380007\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4380006\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4380005\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4380004\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3780010\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4380003\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3600001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3600002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4380002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3660001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3660002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3660003\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3660004\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3660005\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3660006\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3660007\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3660008\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3660009\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3660010\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3660011\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3660012\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3690001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3720002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3780009\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3750002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3780001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3780002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3780003\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3780004\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3780005\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3780006\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3780007\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3780008\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3750001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4380001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4350001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3840001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3870001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3900001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3930001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3960001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3960002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3990001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4020001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4050001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4080001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4110001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4110002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4140001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4140002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4140003\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4140004\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4140005\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4170001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4170002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4170003\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4200001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4200002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4230001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4230002\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4230003\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4230004\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4260001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n4320001\tEmpresa Test UX\tNULL\tNULL\tSin especialidad\n3570001\tAndraca\t1\tHidalma \tSeguridad\n510004\tDcon\t1\tHidalma \tEspeciales \n480001\tEnnco\t1\tHidalma \tEstructura \n480002\tGarcab Albañil\t1\tHidalma \tAlbañileria \n1950002\tGarcab cerámicos \t1\tHidalma \tCeramicos\n510001\tGarcab TYP\t1\tHidalma \tTablaroca y Pintura\n2010007\tGbG\t1\tHidalma \tHerrerias\n330003\tGBPO\t1\tHidalma \tDesarrollador\n510005\tGumik\t1\tHidalma \tHvac\n4290001\tIImsa\t1\tHidalma \tGas\n510002\tiimsa\t1\tHidalma \tHidráulica \n2010006\tLupher\t1\tHidalma \tCocinas\n1950001\tNovotile\t1\tHidalma \tPasta\n360001\tObjetiva\t1\tHidalma \tSupervision\n540001\tOrca\t1\tHidalma \tAluminio y Vidrio\n510003\tRiepsa\t1\tHidalma \tElectrica\n3720001\tSSG\t1\tHidalma \tSin especialidad\n480003\tWaller \t1\tHidalma \tWaller \n2820003\tARCIN\t150001\tMayas Habitat\tAlbañilerías\n2820002\tNovotile\t150001\tMayas Habitat\tTablaroca, pastas y pintura\n2760006\tObjetiva \t150001\tMayas Habitat\tSupervision \n2820001\tQDT\t150001\tMayas Habitat\tElectrica\n2790001\tQdt\t150001\tMayas Habitat\tQdt\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}
