@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,8 @@ import {
   Pencil,
   Save,
   Settings2,
-  X
+  X,
+  AlertTriangle
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -482,6 +483,24 @@ function ModalNuevaUnidad({
   const [codigo, setCodigo] = useState("");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
+  const [debouncedNombre, setDebouncedNombre] = useState("");
+  const [isDuplicate, setIsDuplicate] = useState(false);
+
+  // Debounce nombre for duplicate check
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedNombre(nombre.trim()), 400);
+    return () => clearTimeout(timer);
+  }, [nombre]);
+
+  // Check duplicates
+  const dupCheck = trpc.unidades.checkDuplicate.useQuery(
+    { proyectoId, nombre: debouncedNombre },
+    { enabled: debouncedNombre.length >= 2 }
+  );
+
+  useEffect(() => {
+    setIsDuplicate(dupCheck.data?.isDuplicate === true);
+  }, [dupCheck.data]);
 
   const createMutation = trpc.unidades.create.useMutation({
     onSuccess: () => {
@@ -492,6 +511,7 @@ function ModalNuevaUnidad({
       setCodigo("");
       setFechaInicio("");
       setFechaFin("");
+      setIsDuplicate(false);
     },
     onError: (error) => {
       toast.error("Error al crear unidad: " + error.message);
@@ -502,6 +522,10 @@ function ModalNuevaUnidad({
     e.preventDefault();
     if (!nombre.trim()) {
       toast.error("El nombre es requerido");
+      return;
+    }
+    if (isDuplicate) {
+      toast.error("Ya existe una unidad con ese nombre en este proyecto");
       return;
     }
 
@@ -533,7 +557,13 @@ function ModalNuevaUnidad({
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Ej: Departamento 101"
               autoFocus
+              className={isDuplicate ? "border-red-500 focus-visible:ring-red-500" : ""}
             />
+            {isDuplicate && (
+              <p className="text-xs text-red-500 flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" /> Ya existe una unidad con este nombre
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="codigo">Código</Label>
@@ -568,7 +598,7 @@ function ModalNuevaUnidad({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={createMutation.isPending}>
+            <Button type="submit" disabled={createMutation.isPending || isDuplicate}>
               {createMutation.isPending ? "Creando..." : "Crear Unidad"}
             </Button>
           </DialogFooter>

@@ -4976,3 +4976,9 @@
 - [x] Actualizar parser Excel para mapear las nuevas columnas
 - [x] Actualizar tabla frontend CrearPrograma con las mismas columnas
 - [x] Agregar campo VOLUMEN (cantidadProgramada renombrado a Volumen)
+
+### Mejoras: Duplicados en VistaPanorámica + Plantilla reutilizable
+- [x] Agregar validación de duplicados en modal de creación de unidades de VistaPanorámica
+- [x] Implementar guardar plantilla de actividades como reutilizable (BD) - ya existía
+- [x] Implementar cargar plantilla guardada al crear nuevo programa - ya existía
+- [x] UI para gestionar plantillas guardadas (ver, cargar, eliminar) - ya existía PlantillasView
