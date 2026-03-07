@@ -859,11 +859,21 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    const validActividades = actividades.filter(a => a.actividad.trim() && a.cantidadProgramada.trim());
+    const validActividades = actividades.filter(a => a.actividad.trim());
     if (validActividades.length === 0) {
-      toast.error("Agrega al menos una actividad con nombre y cantidad.");
+      toast.error("Agrega al menos una actividad con nombre.");
       return;
     }
+    // Aviso no bloqueante si faltan volúmenes
+    const sinVolumen = validActividades.filter(a => !a.cantidadProgramada.trim() || parseFloat(a.cantidadProgramada) === 0);
+    if (sinVolumen.length > 0) {
+      toast('Recuerda llenar los volúmenes de ' + sinVolumen.length + ' actividad(es)', { icon: '⚠️', duration: 5000 });
+    }
+    // Default 0 para volúmenes vacíos
+    const actividadesConDefault = validActividades.map(a => ({
+      ...a,
+      cantidadProgramada: a.cantidadProgramada.trim() || "0",
+    }));
     setSubmitting(true);
     try {
       // Subir planos pendientes a S3 primero
@@ -897,7 +907,7 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
         semanaInicio: monday.toISOString(),
         semanaFin: sunday.toISOString(),
         notas: notas || undefined,
-        actividades: validActividades.map((a, i) => ({ ...a, orden: i })),
+        actividades: actividadesConDefault.map((a, i) => ({ ...a, orden: i })),
         planos: uploadedPlanos.map((p, i) => ({
           nivel: p.nivel, tipo: p.tipo, titulo: p.titulo,
           imagenUrl: p.imagenUrl, imagenKey: p.imagenKey, orden: i,

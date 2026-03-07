@@ -4991,3 +4991,7 @@
 ### Bug: Botón Crear Programa no funciona con 0 actividades
 - [x] Botón Crear Programa ahora muestra toast de error y alerta visual cuando faltan actividades
 - [x] Mejorar feedback: banner ámbar "Faltan actividades" + botón clickeable con toast de error
+
+### Permitir crear programa sin volúmenes
+- [x] Volúmenes default 0 si no se llenan, no bloquear creación
+- [x] Aviso no bloqueante: "Recuerda llenar los volúmenes" pero permitir crear
