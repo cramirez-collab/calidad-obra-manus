@@ -1192,10 +1192,31 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
         </CardContent>
       </Card>
 
+      {/* Mensaje si faltan actividades */}
+      {actividades.filter(a => a.actividad.trim()).length === 0 && (
+        <div className="flex items-center gap-2 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg px-4 py-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Faltan actividades para crear el programa</p>
+            <p className="text-xs text-amber-600 dark:text-amber-400">Sube un Excel con actividades, usa una plantilla guardada, o agrega filas manualmente en la tabla de arriba.</p>
+          </div>
+        </div>
+      )}
+
       {/* Acciones */}
       <div className="flex gap-2 justify-end">
         <Button variant="outline" onClick={onBack}>Cancelar</Button>
-        <Button onClick={handleSubmit} disabled={isLoading || submitting || actividades.filter(a => a.actividad.trim()).length === 0}>
+        <Button 
+          onClick={() => {
+            if (actividades.filter(a => a.actividad.trim()).length === 0) {
+              toast.error('Agrega al menos 1 actividad antes de crear el programa');
+              return;
+            }
+            handleSubmit();
+          }} 
+          disabled={isLoading || submitting}
+          className={actividades.filter(a => a.actividad.trim()).length === 0 ? 'opacity-60' : ''}
+        >
           {submitting ? "Subiendo planos..." : isLoading ? "Creando..." : "Crear Programa"}
         </Button>
       </div>

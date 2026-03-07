@@ -4987,3 +4987,7 @@
 - [x] Crear plantilla base predeterminada con actividades comunes de obra (albanileria, ceramicos, tablaroca, instalaciones, etc.)
 - [x] Seed automático de plantilla base al primer acceso del proyecto (en listarPlantillas)
 - [x] Agregar preview/confirmación antes de importar Excel mostrando actividades detectadas
+
+### Bug: Botón Crear Programa no funciona con 0 actividades
+- [x] Botón Crear Programa ahora muestra toast de error y alerta visual cuando faltan actividades
+- [x] Mejorar feedback: banner ámbar "Faltan actividades" + botón clickeable con toast de error
