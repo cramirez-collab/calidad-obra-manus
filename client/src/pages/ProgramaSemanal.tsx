@@ -3898,10 +3898,32 @@ function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
     setConsolidadoLoading(true);
     try {
       const { empresas: emps, eficienciaGlobal: eg } = data;
+
+      // 1. Generar análisis IA 8Ms para cada empresa con cortes
+      const analisisPorEmpresa = new Map<string, any>();
+      for (const emp of emps) {
+        const cortes = (emp.programas || []).filter((p: any) => p.status === 'corte_realizado');
+        if (cortes.length === 0) continue;
+        const ultimoCorte = cortes[0]; // más reciente
+        const especialidades = ultimoCorte.especialidades || [];
+        for (const esp of especialidades) {
+          const key = `${emp.nombre}-${esp}`;
+          try {
+            const analisis = await analisis8MsMut.mutateAsync({
+              programaId: ultimoCorte.id,
+              especialidad: esp,
+            });
+            analisisPorEmpresa.set(key, { empresa: emp.nombre, especialidad: esp, ...analisis });
+          } catch { /* skip failed */ }
+        }
+      }
+
+      // 2. Construir HTML con eficiencia + análisis IA
       const efRows = (eg || []).map((r: any, i: number) => {
         const color = r.eficiencia >= 80 ? '#16a34a' : r.eficiencia >= 50 ? '#d97706' : '#dc2626';
         return `<tr><td style="font-weight:600;color:#666;">${i+1}</td><td style="font-weight:600;">${r.nombre}</td><td style="text-align:right;font-family:monospace;">${r.totalProgramado.toFixed(2)}</td><td style="text-align:right;font-family:monospace;">${r.totalRealizado.toFixed(2)}</td><td style="text-align:right;font-weight:800;color:${color};font-size:13px;">${r.eficiencia.toFixed(1)}%</td><td style="text-align:center;">${r.cortesCount}</td></tr>`;
       }).join('');
+
       let detalleHTML = '';
       for (const emp of emps) {
         const cortes = (emp.programas || []).filter((p: any) => p.status === 'corte_realizado').slice(0, 4);
@@ -3913,9 +3935,34 @@ function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
           const efColor = ef >= 80 ? '#16a34a' : ef >= 50 ? '#d97706' : '#dc2626';
           detalleHTML += `<tr style="border-bottom:1px solid #eee;"><td style="padding:5px 8px;font-size:11px;">${formatWeekRange(p.semanaInicio, p.semanaFin)}</td><td style="padding:5px 8px;font-size:11px;text-align:right;font-family:monospace;">${parseFloat(p.totalProgramado || 0).toFixed(2)}</td><td style="padding:5px 8px;font-size:11px;text-align:right;font-family:monospace;">${parseFloat(p.totalRealizado || 0).toFixed(2)}</td><td style="padding:5px 8px;font-size:11px;text-align:right;font-weight:700;color:${efColor};">${ef.toFixed(1)}%</td><td style="padding:5px 8px;font-size:11px;text-align:center;">${p.actividadesCount || 0}</td></tr>`;
         }
-        detalleHTML += `</tbody></table></div>`;
+        detalleHTML += `</tbody></table>`;
+
+        // Agregar análisis 8Ms de esta empresa
+        const analisisKeys = Array.from(analisisPorEmpresa.keys()).filter(k => k.startsWith(emp.nombre + '-'));
+        if (analisisKeys.length > 0) {
+          detalleHTML += `<div style="margin-top:12px;padding:10px;background:#f0f4ff;border-radius:6px;border-left:3px solid #002C63;">`;
+          detalleHTML += `<p style="font-size:11px;font-weight:700;color:#002C63;margin:0 0 8px;">ANALISIS IA - METODOLOGIA 8Ms</p>`;
+          for (const aKey of analisisKeys) {
+            const a = analisisPorEmpresa.get(aKey);
+            if (!a) continue;
+            detalleHTML += `<p style="font-size:10px;color:#444;margin:4px 0 6px;font-style:italic;">${a.especialidad}: ${a.resumenGeneral}</p>`;
+            detalleHTML += `<table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:8px;"><thead><tr><th style="background:#334155;color:white;padding:3px 6px;text-align:left;width:20%;">Categoria</th><th style="background:#334155;color:white;padding:3px 6px;text-align:center;width:10%;">Estado</th><th style="background:#334155;color:white;padding:3px 6px;text-align:left;">Recomendacion</th></tr></thead><tbody>`;
+            for (const cat of (a.categorias || [])) {
+              const estadoColor = cat.estado === 'critico' ? '#dc2626' : cat.estado === 'atencion' ? '#d97706' : '#16a34a';
+              const estadoBg = cat.estado === 'critico' ? '#fef2f2' : cat.estado === 'atencion' ? '#fffbeb' : '#f0fdf4';
+              const estadoLabel = cat.estado === 'critico' ? 'CRITICO' : cat.estado === 'atencion' ? 'ATENCION' : 'ACEPTABLE';
+              detalleHTML += `<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:3px 6px;font-weight:600;color:#002C63;">${cat.nombre}</td><td style="padding:3px 6px;text-align:center;"><span style="display:inline-block;padding:1px 5px;border-radius:6px;font-size:7px;font-weight:700;color:${estadoColor};background:${estadoBg};border:1px solid ${estadoColor};">${estadoLabel}</span></td><td style="padding:3px 6px;color:#444;">${cat.recomendacion}</td></tr>`;
+            }
+            detalleHTML += `</tbody></table>`;
+          }
+          detalleHTML += `</div>`;
+        }
+        detalleHTML += `</div>`;
       }
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte Consolidado - Junta Semanal</title><style>@media print{body{margin:0}@page{size:landscape;margin:10mm}}body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#333;max-width:1100px;margin:0 auto;padding:20px}h1{color:#002C63;font-size:20px;margin-bottom:4px}h2{color:#002C63;font-size:16px;margin-top:24px;border-bottom:2px solid #e5e7eb;padding-bottom:6px}table{width:100%;border-collapse:collapse}th{background:#002C63;color:white;padding:6px 8px;font-size:10px;text-align:left}td{padding:5px 8px;border-bottom:1px solid #eee;font-size:11px}tr:nth-child(even){background:#f9fafb}.footer{margin-top:30px;text-align:center;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:10px}</style></head><body><h1>REPORTE CONSOLIDADO - JUNTA SEMANAL</h1><p style="color:#666;font-size:13px;">Generado: ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p><h2>Eficiencia Global por Empresa</h2><table style="margin-top:8px;"><thead><tr><th style="width:5%;">#</th><th style="width:30%;">Empresa</th><th style="width:15%;text-align:right;">Programado</th><th style="width:15%;text-align:right;">Realizado</th><th style="width:15%;text-align:right;">Eficiencia</th><th style="width:10%;text-align:center;">Cortes</th></tr></thead><tbody>${efRows}</tbody></table><h2>Detalle por Empresa</h2>${detalleHTML || '<p style="color:#999;">Sin cortes realizados</p>'}<div class="footer"><p>ObjetivaQC - Control de Calidad de Obra - Reporte para Junta Semanal</p></div></body></html>`;
+
+      // 3. Crear el PDF
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte Consolidado - Junta Semanal</title><style>@media print{body{margin:0}@page{size:landscape;margin:10mm}}body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#333;max-width:1100px;margin:0 auto;padding:20px}h1{color:#002C63;font-size:20px;margin-bottom:4px}h2{color:#002C63;font-size:16px;margin-top:24px;border-bottom:2px solid #e5e7eb;padding-bottom:6px}table{width:100%;border-collapse:collapse}th{background:#002C63;color:white;padding:6px 8px;font-size:10px;text-align:left}td{padding:5px 8px;border-bottom:1px solid #eee;font-size:11px}tr:nth-child(even){background:#f9fafb}.footer{margin-top:30px;text-align:center;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:10px}</style></head><body><h1>REPORTE CONSOLIDADO - JUNTA SEMANAL</h1><p style="color:#666;font-size:13px;">Generado: ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p><h2>Eficiencia Global por Empresa</h2><table style="margin-top:8px;"><thead><tr><th style="width:5%;">#</th><th style="width:30%;">Empresa</th><th style="width:15%;text-align:right;">Programado</th><th style="width:15%;text-align:right;">Realizado</th><th style="width:15%;text-align:right;">Eficiencia</th><th style="width:10%;text-align:center;">Cortes</th></tr></thead><tbody>${efRows}</tbody></table><h2>Detalle por Empresa con Analisis IA 8Ms</h2>${detalleHTML || '<p style="color:#999;">Sin cortes realizados</p>'}<div class="footer"><p>ObjetivaQC - Control de Calidad de Obra - Reporte para Junta Semanal</p></div></body></html>`;
+
       const fecha = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
       await generarYCompartirPDF(html, `Consolidado_Junta_${fecha.replace(/\s/g, '_')}`, 'both');
     } catch (e: any) {
@@ -4062,9 +4109,9 @@ function ReportesPorEmpresaView({ proyectoId, onBack, onVerPrograma }: {
           className="bg-[#002C63] hover:bg-[#001d42] text-white"
         >
           {consolidadoLoading ? (
-            <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generando...</>
+            <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Analizando con IA...</>
           ) : (
-            <><FileText className="w-4 h-4 mr-1" /> PDF Junta Semanal</>
+            <><Sparkles className="w-4 h-4 mr-1" /> PDF Junta + IA 8Ms</>
           )}
         </Button>
       </div>

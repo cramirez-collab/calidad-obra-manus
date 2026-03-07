@@ -5053,3 +5053,4 @@
 - [x] Notificación push al residente al realizar corte con resumen de eficiencia
 - [x] Gráfica de tendencia de eficiencia por empresa (últimas 8 semanas) en vista Reportes
 - [x] PDF consolidado de todas las empresas para junta semanal (botón en Reportes)
+- [x] Fix: PDF Junta Semanal - flujo correcto: 1) generar análisis IA de todas las empresas, 2) crear PDF con ese contenido, 3) permitir descargar/compartir
