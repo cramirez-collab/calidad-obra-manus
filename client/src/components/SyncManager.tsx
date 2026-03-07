@@ -6,12 +6,13 @@
  * Los ítems solo se eliminan cuando se sincronizan exitosamente o son duplicados.
  * Si un ítem falla repetidamente, se pausa y se notifica al usuario.
  * 
- * v2: HIPERSENSIBLE — detecta red y sube inmediatamente.
- * - Polling de conexión cada 1s (no depende solo de eventos del browser)
+ * v3: ANTI-HANG — Cada operación tiene timeout estricto. NUNCA se queda colgado.
+ * - Timeout de 30s por operación individual (fotos grandes necesitan más tiempo)
+ * - Timeout global de 120s por ciclo de sync completo
+ * - Si una operación cuelga, se aborta y se marca como fallida
+ * - Polling de conexión cada 3s (reducido de 1s para ahorrar batería)
  * - Sync inmediata al detectar red (0ms delay)
- * - Intervalo reducido a 3s cuando hay pendientes
  * - NetworkInformation API para detectar cambios de red instantáneamente
- * - Fetch heartbeat para confirmar conectividad real
  */
 import { useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
@@ -34,6 +35,11 @@ import {
   removePendingAction as removeOfflineDBAction,
 } from '@/lib/offlineDB';
 
+// ===== TIMEOUTS ESTRICTOS =====
+const SINGLE_OP_TIMEOUT_MS = 30_000;  // 30s max por operación individual
+const GLOBAL_CYCLE_TIMEOUT_MS = 120_000; // 120s max por ciclo completo
+const CONNECTIVITY_CHECK_TIMEOUT_MS = 5_000; // 5s para verificar conectividad
+
 // Máximo de reintentos antes de PAUSAR (no eliminar)
 const MAX_RETRIES_BEFORE_PAUSE = 10;
 // Track failure counts in memory (resets on page reload — allows fresh retries)
@@ -45,9 +51,8 @@ function trackFailure(id: string): boolean {
   const count = (failureCounts.get(id) || 0) + 1;
   failureCounts.set(id, count);
   if (count >= MAX_RETRIES_BEFORE_PAUSE) {
-    // PAUSAR, no eliminar — el ítem se reintentará en el próximo reload
     console.warn(`[SyncManager] Ítem ${id} falló ${count} veces — pausando reintentos (NO eliminado)`);
-    return true; // should be paused (skipped this cycle)
+    return true;
   }
   return false;
 }
@@ -62,7 +67,6 @@ function isPaused(id: string): boolean {
 
 function notifyUserAboutFailures(failedCount: number) {
   const now = Date.now();
-  // Solo notificar cada 60 segundos para no spamear
   if (now - lastFailureNotification < 60000) return;
   lastFailureNotification = now;
   
@@ -73,7 +77,6 @@ function notifyUserAboutFailures(failedCount: number) {
       action: {
         label: 'Reintentar',
         onClick: () => {
-          // Reset all failure counts to allow fresh retries
           failureCounts.clear();
         },
       },
@@ -82,27 +85,45 @@ function notifyUserAboutFailures(failedCount: number) {
 }
 
 /**
+ * Wrapper que agrega timeout a cualquier Promise.
+ * Si la operación no termina en `ms`, se rechaza con error de timeout.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`TIMEOUT: ${label} excedió ${ms}ms`));
+    }, ms);
+
+    promise
+      .then((val) => {
+        clearTimeout(timer);
+        resolve(val);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
+/**
  * Extraer mensaje de error útil para el usuario
  */
 function getErrorMessage(error: any): string {
   if (!error) return 'Error desconocido';
   
-  // Error de autenticación
+  if (error.message?.includes('TIMEOUT')) {
+    return 'Tiempo de espera agotado. La conexión es muy lenta.';
+  }
   if (error.message?.includes('UNAUTHORIZED') || error.data?.code === 'UNAUTHORIZED') {
     return 'Sesión expirada. Cierra y abre la app de nuevo.';
   }
-  
-  // Error de permisos
   if (error.message?.includes('FORBIDDEN') || error.data?.code === 'FORBIDDEN') {
     return 'Sin permisos para esta acción.';
   }
-  
-  // Error de red
   if (error.message?.includes('fetch') || error.message?.includes('network') || error.message?.includes('Failed to fetch')) {
     return 'Sin conexión al servidor.';
   }
-  
-  // Error de servidor
   if (error.data?.httpStatus >= 500 || error.message?.includes('INTERNAL_SERVER_ERROR')) {
     return 'Error del servidor. Intenta más tarde.';
   }
@@ -111,33 +132,33 @@ function getErrorMessage(error: any): string {
 }
 
 /**
- * Verificar conectividad real con un fetch ligero (HEAD request)
+ * Verificar conectividad real con un fetch ligero (HEAD request) — con timeout estricto
  */
 async function checkRealConnectivity(): Promise<boolean> {
   if (!navigator.onLine) return false;
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
+    const timeout = setTimeout(() => controller.abort(), CONNECTIVITY_CHECK_TIMEOUT_MS);
     const response = await fetch('/api/trpc/auth.me', {
       method: 'HEAD',
       signal: controller.signal,
       cache: 'no-store',
     });
     clearTimeout(timeout);
-    return response.ok || response.status === 401; // 401 = server reachable
+    return response.ok || response.status === 401;
   } catch {
     return false;
   }
 }
 
 /**
- * Contar total de pendientes en todas las colas
+ * Contar total de pendientes en todas las colas — con timeout
  */
 async function getTotalPending(): Promise<number> {
   let total = 0;
-  try { total += await contarPendientes(); } catch {}
-  try { total += await countPendingActions(); } catch {}
-  try { const legacy = await getOfflineDBActions(); total += legacy.length; } catch {}
+  try { total += await withTimeout(contarPendientes(), 3000, 'contarPendientes'); } catch {}
+  try { total += await withTimeout(countPendingActions(), 3000, 'countPendingActions'); } catch {}
+  try { const legacy = await withTimeout(getOfflineDBActions(), 3000, 'getOfflineDBActions'); total += legacy.length; } catch {}
   return total;
 }
 
@@ -153,138 +174,168 @@ export function SyncManager() {
   const sincronizar = useCallback(async () => {
     if (syncingRef.current || !navigator.onLine) return;
 
+    // Global cycle timeout — NEVER let a sync cycle run forever
+    const cycleAbort = new AbortController();
+    const cycleTimer = setTimeout(() => {
+      cycleAbort.abort();
+      console.warn('[SyncManager] Ciclo de sync abortado por timeout global');
+    }, GLOBAL_CYCLE_TIMEOUT_MS);
+
     try {
       syncingRef.current = true;
       let failedItems = 0;
 
-      // 1. Limpiar fotos antiguas (>48h)
-      await limpiarAntiguos();
+      // Check if cycle was aborted
+      const checkAbort = () => {
+        if (cycleAbort.signal.aborted) throw new Error('CYCLE_ABORTED');
+      };
+
+      // 1. Limpiar fotos antiguas (>7d)
+      try {
+        await withTimeout(limpiarAntiguos(), 5000, 'limpiarAntiguos');
+      } catch {}
 
       // 2. Sincronizar cola de fotos (uploadQueue)
-      const pendientes = await obtenerPendientes();
       let syncedFotos = 0;
+      try {
+        const pendientes = await withTimeout(obtenerPendientes(), 5000, 'obtenerPendientes');
 
-      for (const upload of pendientes) {
-        const fotoId = `foto-${upload.id}`;
-        if (isPaused(fotoId)) { failedItems++; continue; }
-        
-        try {
-          if (upload.tipo === 'foto_despues') {
-            await uploadFotoDespuesMutation.mutateAsync({
-              itemId: upload.itemId,
-              fotoBase64: upload.foto,
-              comentario: upload.comentario,
-            });
-          }
-          if (upload.id) {
-            await eliminarDeCola(upload.id);
-            clearFailure(fotoId);
-            syncedFotos++;
-          }
-        } catch (error: any) {
-          console.error(`[SyncManager] Error foto ${upload.id}:`, error.message);
-          if (upload.id) {
-            const shouldPause = trackFailure(fotoId);
-            if (shouldPause) {
-              failedItems++;
-              console.warn(`[SyncManager] Foto ${upload.id} pausada — Error: ${getErrorMessage(error)}`);
-            } else {
-              await marcarFallo(upload.id, getErrorMessage(error));
+        for (const upload of pendientes) {
+          checkAbort();
+          const fotoId = `foto-${upload.id}`;
+          if (isPaused(fotoId)) { failedItems++; continue; }
+          
+          try {
+            if (upload.tipo === 'foto_despues') {
+              await withTimeout(
+                uploadFotoDespuesMutation.mutateAsync({
+                  itemId: upload.itemId,
+                  fotoBase64: upload.foto,
+                  comentario: upload.comentario,
+                }),
+                SINGLE_OP_TIMEOUT_MS,
+                `uploadFoto-${upload.id}`
+              );
+            }
+            if (upload.id) {
+              await eliminarDeCola(upload.id);
+              clearFailure(fotoId);
+              syncedFotos++;
+            }
+          } catch (error: any) {
+            console.error(`[SyncManager] Error foto ${upload.id}:`, error.message);
+            if (upload.id) {
+              const shouldPause = trackFailure(fotoId);
+              if (shouldPause) {
+                failedItems++;
+              } else {
+                try { await marcarFallo(upload.id, getErrorMessage(error)); } catch {}
+              }
             }
           }
         }
+      } catch (e: any) {
+        if (e.message === 'CYCLE_ABORTED') throw e;
+        console.error('[SyncManager] Error en cola de fotos:', e);
       }
 
       // 3. Sincronizar cola de ítems offline (offlineStorage)
       let syncedItems = 0;
       try {
-        const offlineActions = await getPendingActions();
+        checkAbort();
+        const offlineActions = await withTimeout(getPendingActions(), 5000, 'getPendingActions');
         for (const action of offlineActions) {
+          checkAbort();
           const actionId = `os-${action.id}`;
           if (isPaused(actionId)) { failedItems++; continue; }
           
           try {
             if (action.type === 'create_item' && action.data) {
-              await createItemMutation.mutateAsync({
-                proyectoId: action.data.proyectoId,
-                empresaId: action.data.empresaId,
-                unidadId: action.data.unidadId,
-                especialidadId: action.data.especialidadId,
-                defectoId: action.data.defectoId,
-                espacioId: action.data.espacioId,
-                titulo: action.data.titulo,
-                fotoAntesBase64: action.data.fotoAntesBase64,
-                fotoAntesMarcadaBase64: action.data.fotoAntesMarcadaBase64,
-                clientId: action.data.clientId,
-                codigoQrPreasignado: action.data.codigoQrPreasignado,
-              });
+              await withTimeout(
+                createItemMutation.mutateAsync({
+                  proyectoId: action.data.proyectoId,
+                  empresaId: action.data.empresaId,
+                  unidadId: action.data.unidadId,
+                  especialidadId: action.data.especialidadId,
+                  defectoId: action.data.defectoId,
+                  espacioId: action.data.espacioId,
+                  titulo: action.data.titulo,
+                  fotoAntesBase64: action.data.fotoAntesBase64,
+                  fotoAntesMarcadaBase64: action.data.fotoAntesMarcadaBase64,
+                  clientId: action.data.clientId,
+                  codigoQrPreasignado: action.data.codigoQrPreasignado,
+                }),
+                SINGLE_OP_TIMEOUT_MS,
+                `createItem-${action.id}`
+              );
               syncedItems++;
             }
             await removePendingAction(action.id);
             clearFailure(actionId);
           } catch (error: any) {
+            if (error.message === 'CYCLE_ABORTED') throw error;
             if (error.message?.includes('duplicate') || error.message?.includes('DUPLICATE')) {
-              // Duplicado = ya existe en servidor, safe to remove
               await removePendingAction(action.id);
               clearFailure(actionId);
               syncedItems++;
             } else {
               const shouldPause = trackFailure(actionId);
-              if (shouldPause) {
-                failedItems++;
-                console.warn(`[SyncManager] Ítem ${action.id} pausado — Error: ${getErrorMessage(error)}`);
-              }
+              if (shouldPause) failedItems++;
               console.error(`[SyncManager] Error ítem ${action.id}:`, error.message);
             }
           }
         }
-      } catch (e) {
-        // offlineStorage puede no estar disponible
+      } catch (e: any) {
+        if (e.message === 'CYCLE_ABORTED') throw e;
       }
 
       // 3b. Sincronizar cola de offlineDB (legacy)
       try {
-        const legacyActions = await getOfflineDBActions();
+        checkAbort();
+        const legacyActions = await withTimeout(getOfflineDBActions(), 5000, 'getOfflineDBActions');
         for (const action of legacyActions) {
+          checkAbort();
           const actionId = `db-${action.id}`;
           if (isPaused(actionId)) { failedItems++; continue; }
           
           try {
             if (((action.type as string) === 'create_item' || action.type === 'createItem') && action.data) {
-              await createItemMutation.mutateAsync({
-                proyectoId: action.data.proyectoId,
-                empresaId: action.data.empresaId,
-                unidadId: action.data.unidadId,
-                especialidadId: action.data.especialidadId,
-                defectoId: action.data.defectoId,
-                espacioId: action.data.espacioId,
-                titulo: action.data.titulo,
-                fotoAntesBase64: action.data.fotoAntesBase64,
-                fotoAntesMarcadaBase64: action.data.fotoAntesMarcadaBase64,
-                clientId: action.data.clientId,
-                codigoQrPreasignado: action.data.codigoQrPreasignado,
-              });
+              await withTimeout(
+                createItemMutation.mutateAsync({
+                  proyectoId: action.data.proyectoId,
+                  empresaId: action.data.empresaId,
+                  unidadId: action.data.unidadId,
+                  especialidadId: action.data.especialidadId,
+                  defectoId: action.data.defectoId,
+                  espacioId: action.data.espacioId,
+                  titulo: action.data.titulo,
+                  fotoAntesBase64: action.data.fotoAntesBase64,
+                  fotoAntesMarcadaBase64: action.data.fotoAntesMarcadaBase64,
+                  clientId: action.data.clientId,
+                  codigoQrPreasignado: action.data.codigoQrPreasignado,
+                }),
+                SINGLE_OP_TIMEOUT_MS,
+                `createItemLegacy-${action.id}`
+              );
               syncedItems++;
             }
             await removeOfflineDBAction(action.id);
             clearFailure(actionId);
           } catch (error: any) {
+            if (error.message === 'CYCLE_ABORTED') throw error;
             if (error.message?.includes('duplicate') || error.message?.includes('DUPLICATE')) {
               await removeOfflineDBAction(action.id);
               clearFailure(actionId);
               syncedItems++;
             } else {
               const shouldPause = trackFailure(actionId);
-              if (shouldPause) {
-                failedItems++;
-                console.warn(`[SyncManager] Legacy ítem ${action.id} pausado — Error: ${getErrorMessage(error)}`);
-              }
+              if (shouldPause) failedItems++;
               console.error(`[SyncManager] Error legacy ítem ${action.id}:`, error.message);
             }
           }
         }
-      } catch (e) {
-        // offlineDB puede no estar disponible
+      } catch (e: any) {
+        if (e.message === 'CYCLE_ABORTED') throw e;
       }
 
       // 4. Invalidar queries si se sincronizó algo
@@ -302,9 +353,14 @@ export function SyncManager() {
 
       // 6. Actualizar flag de pendientes
       hasPendingRef.current = (await getTotalPending()) > 0;
-    } catch (error) {
-      console.error('[SyncManager] Error general:', error);
+    } catch (error: any) {
+      if (error.message === 'CYCLE_ABORTED') {
+        console.warn('[SyncManager] Ciclo abortado por timeout global — se reintentará');
+      } else {
+        console.error('[SyncManager] Error general:', error);
+      }
     } finally {
+      clearTimeout(cycleTimer);
       syncingRef.current = false;
     }
   }, []);
@@ -318,7 +374,6 @@ export function SyncManager() {
       console.log('[SyncManager] Conexión restaurada — sincronizando INMEDIATAMENTE');
       failureCounts.clear();
       lastOnlineState.current = true;
-      // Sin delay — sincronizar al instante
       sincronizar();
     };
 
@@ -348,9 +403,7 @@ export function SyncManager() {
       }
     };
 
-    // === POLLING AGRESIVO DE CONECTIVIDAD ===
-    // Cada 1s verifica si hay conexión Y si hay pendientes
-    // Si detecta que pasó de offline a online, sincroniza inmediatamente
+    // === POLLING DE CONECTIVIDAD (cada 3s — balance entre sensibilidad y batería) ===
     const pollingInterval = setInterval(async () => {
       const currentOnline = navigator.onLine;
       
@@ -366,26 +419,25 @@ export function SyncManager() {
       lastOnlineState.current = currentOnline;
       
       // Si hay conexión y hay pendientes, verificar conectividad real y sincronizar
-      if (currentOnline) {
+      if (currentOnline && !syncingRef.current) {
         const pending = await getTotalPending();
         hasPendingRef.current = pending > 0;
         
-        if (pending > 0 && !syncingRef.current) {
-          // Verificar conectividad real con fetch
+        if (pending > 0) {
           const reallyOnline = await checkRealConnectivity();
           if (reallyOnline) {
             sincronizar();
           }
         }
       }
-    }, 1000); // Cada 1 segundo — hipersensible
+    }, 3000); // Cada 3 segundos
 
-    // === INTERVALO DE RESPALDO (cada 3s si hay pendientes, 10s si no) ===
+    // === INTERVALO DE RESPALDO (cada 15s) ===
     const backupInterval = setInterval(() => {
       if (navigator.onLine && !syncingRef.current) {
         sincronizar();
       }
-    }, hasPendingRef.current ? 3000 : 10000);
+    }, 15000);
 
     // === REGISTRAR LISTENERS ===
     window.addEventListener('online', handleOnline);

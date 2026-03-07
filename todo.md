@@ -5054,3 +5054,14 @@
 - [x] Gráfica de tendencia de eficiencia por empresa (últimas 8 semanas) en vista Reportes
 - [x] PDF consolidado de todas las empresas para junta semanal (botón en Reportes)
 - [x] Fix: PDF Junta Semanal - flujo correcto: 1) generar análisis IA de todas las empresas, 2) crear PDF con ese contenido, 3) permitir descargar/compartir
+
+
+### Fix CRÍTICO: Sincronización se queda cargando infinitamente (reportado por Omar)
+- [x] Agregar timeout agresivo (30s max) a cada operación de sync individual
+- [x] Implementar auto-recovery: si sync falla o timeout, marcar como fallido (no spinner infinito)
+- [x] Agregar reintentos automáticos con backoff (max 10 intentos antes de pausar)
+- [x] Botón "Sincronizar todo" debe tener timeout global (90s) y nunca quedarse colgado
+- [x] Cada ítem individual debe poder reintentarse independientemente
+- [x] Agregar estados visuales claros: pendiente, sincronizando, error, éxito, timeout
+- [x] Si hay error de red, mostrar mensaje claro y permitir reintentar
+- [x] Limpiar ítems sincronizados exitosamente de la cola
