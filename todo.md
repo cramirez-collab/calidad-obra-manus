@@ -4970,3 +4970,9 @@
 - [x] Botón "Descargar Plantilla" visible para todos los usuarios
 - [x] Botón "Subir Excel" que parsea y llena la tabla automáticamente
 - [x] Corregir botón "Crear Programa" para que funcione correctamente
+
+### Actualizar plantilla Excel con columnas exactas de imagen + VOLUMEN
+- [x] Actualizar headers plantilla Excel: ESPECIALIDAD, ACTIVIDADES, NIVEL, AREA, REFERENCIA DE EJE, UNIDAD, VOLUMEN (sin acentos)
+- [x] Actualizar parser Excel para mapear las nuevas columnas
+- [x] Actualizar tabla frontend CrearPrograma con las mismas columnas
+- [x] Agregar campo VOLUMEN (cantidadProgramada renombrado a Volumen)

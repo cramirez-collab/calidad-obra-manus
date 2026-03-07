@@ -6,11 +6,10 @@ describe('Programa Semanal - Plantilla Excel', () => {
     it('should generate a valid base64 Excel file', async () => {
       const XLSX = await import('xlsx');
       const headers = [
-        'Especialidad', 'Actividad', 'Nivel', 'Area', 'Ref. Eje',
-        'Unidad (m/m2/m3/ml/pza/kg/lt/jgo/lote/otro)', 'Cantidad Programada', 'Material'
+        'ESPECIALIDAD', 'ACTIVIDADES', 'NIVEL', 'AREA', 'REFERENCIA DE EJE', 'UNIDAD', 'VOLUMEN'
       ];
       const exampleRows = [
-        ['Albanileria', 'Pegado de block 15cm', 'N10', 'Dptos A-C', 'A-C / 1-4', 'm2', '120', 'Block 15cm'],
+        ['ALBANILERIAS', 'Decimbrado', '10', 'departamentos', '2-7    B-D', 'm2', '120'],
       ];
       const ws = XLSX.utils.aoa_to_sheet([headers, ...exampleRows]);
       const wb = XLSX.utils.book_new();
@@ -30,12 +29,11 @@ describe('Programa Semanal - Plantilla Excel', () => {
     it('should parse a valid Excel file with activities', async () => {
       const XLSX = await import('xlsx');
       const headers = [
-        'Especialidad', 'Actividad', 'Nivel', 'Area', 'Ref. Eje',
-        'Unidad', 'Cantidad Programada', 'Material'
+        'ESPECIALIDAD', 'ACTIVIDADES', 'NIVEL', 'AREA', 'REFERENCIA DE EJE', 'UNIDAD', 'VOLUMEN'
       ];
       const rows = [
-        ['Albanileria', 'Pegado de block', 'N10', 'Dptos A-C', 'A-C / 1-4', 'm2', '120', 'Block 15cm'],
-        ['Inst. Electrica', 'Cableado general', 'N11', 'Dptos D-F', 'D-F / 5-8', 'ml', '200', 'Cable THW 12'],
+        ['ALBANILERIAS', 'Pegado de block', 'N10', 'Dptos A-C', 'A-C / 1-4', 'm2', '120'],
+        ['CERAMICOS', 'Instalacion de pisos', 'N11', 'Dptos D-F', 'D-F / 5-8', 'ml', '200'],
       ];
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       const wb = XLSX.utils.book_new();
@@ -70,20 +68,20 @@ describe('Programa Semanal - Plantilla Excel', () => {
         });
 
       expect(actividades).toHaveLength(2);
-      expect(actividades[0].especialidad).toBe('Albanileria');
+      expect(actividades[0].especialidad).toBe('ALBANILERIAS');
       expect(actividades[0].actividad).toBe('Pegado de block');
       expect(actividades[0].unidad).toBe('m2');
       expect(actividades[0].cantidadProgramada).toBe('120');
-      expect(actividades[1].especialidad).toBe('Inst. Electrica');
+      expect(actividades[1].especialidad).toBe('CERAMICOS');
       expect(actividades[1].unidad).toBe('ml');
       expect(actividades[1].cantidadProgramada).toBe('200');
     });
 
     it('should handle invalid units by defaulting to otro', async () => {
       const XLSX = await import('xlsx');
-      const headers = ['Especialidad', 'Actividad', 'Nivel', 'Area', 'Ref. Eje', 'Unidad', 'Cant', 'Material'];
+      const headers = ['ESPECIALIDAD', 'ACTIVIDADES', 'NIVEL', 'AREA', 'REFERENCIA DE EJE', 'UNIDAD', 'VOLUMEN'];
       const rows = [
-        ['Test', 'Actividad test', 'N1', 'Area', 'Eje', 'metros_cuadrados', '50', 'Material'],
+        ['Test', 'Actividad test', 'N1', 'Area', 'Eje', 'metros_cuadrados', '50'],
       ];
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       const wb = XLSX.utils.book_new();
@@ -103,11 +101,11 @@ describe('Programa Semanal - Plantilla Excel', () => {
 
     it('should skip rows without actividad name', async () => {
       const XLSX = await import('xlsx');
-      const headers = ['Especialidad', 'Actividad', 'Nivel', 'Area', 'Ref. Eje', 'Unidad', 'Cant', 'Material'];
+      const headers = ['ESPECIALIDAD', 'ACTIVIDADES', 'NIVEL', 'AREA', 'REFERENCIA DE EJE', 'UNIDAD', 'VOLUMEN'];
       const rows = [
-        ['Albanileria', 'Pegado de block', 'N10', 'Dptos', 'A-C', 'm2', '120', 'Block'],
-        ['', '', '', '', '', '', '', ''],  // Empty row
-        ['Electrica', 'Cableado', 'N11', 'Dptos', 'D-F', 'ml', '200', 'Cable'],
+        ['ALBANILERIAS', 'Pegado de block', 'N10', 'Dptos', 'A-C', 'm2', '120'],
+        ['', '', '', '', '', '', ''],  // Empty row
+        ['CERAMICOS', 'Cableado', 'N11', 'Dptos', 'D-F', 'ml', '200'],
       ];
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       const wb = XLSX.utils.book_new();
@@ -148,7 +146,7 @@ describe('Programa Semanal - Plantilla Excel', () => {
 
     it('should reject empty Excel file', async () => {
       const XLSX = await import('xlsx');
-      const ws = XLSX.utils.aoa_to_sheet([['Especialidad', 'Actividad']]);
+      const ws = XLSX.utils.aoa_to_sheet([['ESPECIALIDAD', 'ACTIVIDADES']]);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Actividades');
       const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });

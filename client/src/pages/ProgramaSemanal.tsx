@@ -1030,13 +1030,12 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="text-left p-2 font-medium">Especialidad</th>
-                  <th className="text-left p-2 font-medium">Actividad</th>
+                  <th className="text-left p-2 font-medium">Actividades</th>
                   <th className="text-left p-2 font-medium w-20">Nivel</th>
                   <th className="text-left p-2 font-medium">{"Area"}</th>
-                  <th className="text-left p-2 font-medium w-20">Ref. Eje</th>
+                  <th className="text-left p-2 font-medium">Ref. de Eje</th>
                   <th className="text-left p-2 font-medium w-20">Unidad</th>
-                  <th className="text-left p-2 font-medium w-24">Cant. Prog.</th>
-                  <th className="text-left p-2 font-medium">Material</th>
+                  <th className="text-left p-2 font-medium w-24">Volumen</th>
                   <th className="w-10"></th>
                 </tr>
               </thead>
@@ -1077,10 +1076,6 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
                       <Input type="number" value={a.cantidadProgramada}
                         onChange={e => updateRow(idx, "cantidadProgramada", e.target.value)}
                         placeholder="0" className="h-8 text-xs" />
-                    </td>
-                    <td className="p-1">
-                      <Input value={a.material || ""} onChange={e => updateRow(idx, "material", e.target.value)}
-                        placeholder="Ej: Block 15cm" className="h-8 text-xs" />
                     </td>
                     <td className="p-1">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeRow(idx)}>

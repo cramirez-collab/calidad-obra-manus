@@ -6553,21 +6553,22 @@ Reglas:
       .mutation(async ({ input }) => {
         const XLSX = await import('xlsx');
         const headers = [
-          'Especialidad', 'Actividad', 'Nivel', 'Area', 'Ref. Eje',
-          'Unidad (m/m2/m3/ml/pza/kg/lt/jgo/lote/otro)', 'Cantidad Programada', 'Material'
+          'ESPECIALIDAD', 'ACTIVIDADES', 'NIVEL', 'AREA', 'REFERENCIA DE EJE', 'UNIDAD', 'VOLUMEN'
         ];
         const exampleRows = [
-          ['Albanileria', 'Pegado de block 15cm', 'N10', 'Dptos A-C', 'A-C / 1-4', 'm2', '120', 'Block 15cm'],
-          ['Albanileria', 'Aplanado de muros', 'N10', 'Pasillo', 'D-F / 1-4', 'm2', '85', 'Mortero'],
-          ['Inst. Electrica', 'Cableado general', 'N11', 'Dptos D-F', 'D-F / 5-8', 'ml', '200', 'Cable THW 12'],
-          ['Inst. Hidraulica', 'Tendido de tuberia agua fria', 'N10', 'Banos', 'A-C / 1-2', 'ml', '45', 'Tubo CPVC 1/2"'],
-          ['Acabados', 'Colocacion de piso ceramico', 'N9', 'Dptos A-C', 'A-C / 1-4', 'm2', '95', 'Piso ceramico 60x60'],
+          ['ALBANILERIAS', 'Decimbrado', '10', 'departamentos', '2-7    B-D', 'm2', '120'],
+          ['ALBANILERIAS', 'Perfilado de charolas y ventanas', '4', 'departamentos', '2-7    B-D', 'm2', '85'],
+          ['ALBANILERIAS', 'Desbaste de firme', '3', 'departamentos', '2-7    B-D', 'm2', '200'],
+          ['CERAMICOS', 'Instalacion de pisos', '3', 'DPTOS: 308 y 304', '6-7    C-D', 'm2', '45'],
+          ['CERAMICOS', 'Instalacion de pisos', 'PB', 'banos del lobby', '6-7    C-D', 'm2', '95'],
+          ['TABLAROCA', 'cierre 2 cara y plafones', '3', 'DEPARTAMENTOS', '2-7    B-D', 'm2', '60'],
+          ['TABLAROCA', 'Aplicacion de pasta', '3', 'departamentos', '2-7    B-D', 'm2', '75'],
+          ['TABLAROCA', 'Aplicacion de pintura', '2', 'departamentos (206, 205, 202, 201)', '2-5    B-D', 'm2', '110'],
         ];
         const ws = XLSX.utils.aoa_to_sheet([headers, ...exampleRows]);
         // Anchos de columna
         ws['!cols'] = [
-          { wch: 18 }, { wch: 30 }, { wch: 8 }, { wch: 18 }, { wch: 12 },
-          { wch: 38 }, { wch: 20 }, { wch: 22 }
+          { wch: 20 }, { wch: 35 }, { wch: 8 }, { wch: 30 }, { wch: 20 }, { wch: 10 }, { wch: 12 }
         ];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Actividades');
@@ -6578,10 +6579,15 @@ Reglas:
           ['1. Llena las columnas en la hoja "Actividades"'],
           ['2. No modifiques los encabezados de la primera fila'],
           ['3. Borra las filas de ejemplo antes de agregar tus actividades'],
-          ['4. Columna "Unidad": solo usa m, m2, m3, ml, pza, kg, lt, jgo, lote, otro'],
-          ['5. Columna "Cantidad Programada": solo numeros (sin texto)'],
-          ['6. Puedes agregar tantas filas como necesites'],
-          ['7. Guarda el archivo y subelo en la app junto con tus fotos de planos'],
+          ['4. ESPECIALIDAD: nombre de la especialidad (ej: ALBANILERIAS, CERAMICOS, TABLAROCA)'],
+          ['5. ACTIVIDADES: descripcion de la actividad a realizar'],
+          ['6. NIVEL: numero de nivel o PB, Sotano, Azotea'],
+          ['7. AREA: area donde se realiza (ej: departamentos, banos, pasillo)'],
+          ['8. REFERENCIA DE EJE: ejes de referencia (ej: 2-7    B-D)'],
+          ['9. UNIDAD: m, m2, m3, ml, pza, kg, lt, jgo, lote, otro'],
+          ['10. VOLUMEN: cantidad programada (solo numeros)'],
+          ['11. Puedes agregar tantas filas como necesites'],
+          ['12. Guarda el archivo y subelo en la app junto con tus fotos de planos'],
         ];
         const wsInst = XLSX.utils.aoa_to_sheet(instrucciones);
         wsInst['!cols'] = [{ wch: 65 }];
@@ -6611,6 +6617,7 @@ Reglas:
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'El archivo no contiene actividades. Asegurate de llenar al menos una fila debajo de los encabezados.' });
         }
         // Saltar header (primera fila)
+        // Columnas: 0=ESPECIALIDAD, 1=ACTIVIDADES, 2=NIVEL, 3=AREA, 4=REFERENCIA DE EJE, 5=UNIDAD, 6=VOLUMEN
         const validUnits = ['m', 'm2', 'm3', 'ml', 'pza', 'kg', 'lt', 'jgo', 'lote', 'otro'];
         const actividades = rows.slice(1)
           .filter((row: any[]) => row && row.length >= 2 && String(row[1] || '').trim())
@@ -6626,7 +6633,7 @@ Reglas:
               referenciaEje: String(row[4] || '').trim(),
               unidad,
               cantidadProgramada: String(Math.max(0, Number(cantRaw) || 0)),
-              material: String(row[7] || '').trim(),
+              material: '',
               orden: i,
             };
           });
