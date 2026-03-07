@@ -851,6 +851,9 @@ export default function Bitacora() {
                           </div>
                         </th>
                         {isSuperadmin && (
+                          <th className="text-left p-2 font-medium">IP</th>
+                        )}
+                        {isSuperadmin && (
                           <th className="p-2 w-16 text-center font-medium">Acciones</th>
                         )}
                       </tr>
@@ -925,6 +928,13 @@ export default function Bitacora() {
                               )}
                             </div>
                           </td>
+                          {isSuperadmin && (
+                            <td className="p-2">
+                              <span className="text-xs text-muted-foreground font-mono">
+                                {actividad.ip || "-"}
+                              </span>
+                            </td>
+                          )}
                           {isSuperadmin && (
                             <td className="p-2 text-center">
                               <Button

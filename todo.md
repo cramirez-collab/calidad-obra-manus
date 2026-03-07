@@ -4995,3 +4995,10 @@
 ### Permitir crear programa sin volúmenes
 - [x] Volúmenes default 0 si no se llenan, no bloquear creación
 - [x] Aviso no bloqueante: "Recuerda llenar los volúmenes" pero permitir crear
+
+### Registro de IP en auditoría + edición libre
+- [x] Agregar columna IP a tabla auditoría en schema (ya existía)
+- [x] Capturar IP del request en el contexto tRPC (ctx.ip + ctx.userAgent)
+- [x] Propagar IP a todas las 8 llamadas de createAuditoria
+- [x] Mostrar IP en la vista de Bitácora (solo superadmin)
+- [x] Migrar BD con nueva columna (ya existía en schema)

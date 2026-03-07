@@ -1217,6 +1217,8 @@ export const appRouter = router({
               entidadTipo: 'item',
               entidadId: itemResult.id,
               detalles: `Creó ítem ${itemResult.codigo} #${itemResult.numeroInterno || '-'}`,
+              ip: ctx.ip,
+              userAgent: ctx.userAgent,
             });
             
             // Emitir evento de tiempo real
@@ -1359,6 +1361,8 @@ export const appRouter = router({
               entidadTipo: 'item',
               detalles: `Fallo al crear ítem: ${error.message}. Empresa: ${input.empresaId}, Unidad: ${input.unidadId}, Título: "${input.titulo}", ClientId: ${input.clientId || 'N/A'}`,
               valorNuevo: { input: { ...input, fotoAntesBase64: input.fotoAntesBase64 ? '[BASE64]' : undefined, fotoAntesMarcadaBase64: input.fotoAntesMarcadaBase64 ? '[BASE64]' : undefined }, error: error.message, code: error.code },
+              ip: ctx.ip,
+              userAgent: ctx.userAgent,
             });
           } catch (logErr) {
             console.error('[items.create] Error al registrar fallo en auditoría:', logErr);
@@ -1503,6 +1507,8 @@ export const appRouter = router({
               entidadTipo: 'item',
               entidadId: input.itemId,
               detalles: `Subió foto después para ítem ${item.codigo} #${item.numeroInterno || '-'}`,
+              ip: ctx.ip,
+              userAgent: ctx.userAgent,
             });
             
             // Eventos y notificaciones
@@ -1605,6 +1611,8 @@ export const appRouter = router({
               entidadTipo: 'item',
               entidadId: input.itemId,
               detalles: `Aprobó ítem ${item.codigo} #${item.numeroInterno || '-'}`,
+              ip: ctx.ip,
+              userAgent: ctx.userAgent,
             });
             
             socketEvents.itemApproved({ ...item, status: 'aprobado' });
@@ -1714,6 +1722,8 @@ export const appRouter = router({
               entidadTipo: 'item',
               entidadId: input.itemId,
               detalles: `Rechazó ítem ${item.codigo} #${item.numeroInterno || '-'}: ${input.comentario}`,
+              ip: ctx.ip,
+              userAgent: ctx.userAgent,
             });
             
             socketEvents.itemRejected({ ...item, status: 'rechazado' });
@@ -1907,6 +1917,8 @@ export const appRouter = router({
           entidadTipo: 'item',
           entidadId: id,
           detalles: `Editó ítem ${item.codigo}: campos [${cambios}]`,
+          ip: ctx.ip,
+          userAgent: ctx.userAgent,
         });
         
         // Registrar en historial si cambió el status
@@ -2892,6 +2904,8 @@ export const appRouter = router({
             entidadTipo: 'mensaje',
             entidadId: id,
             detalles: `Mensaje creado en ítem #${input.itemId}`,
+            ip: ctx.ip,
+            userAgent: ctx.userAgent,
           });
         } catch (e) {
           console.error('[Chat] Error registrando auditoría de mensaje:', e);
@@ -2974,6 +2988,8 @@ export const appRouter = router({
           entidadTipo: 'mensaje',
           entidadId: input.id,
           detalles: `Mensaje eliminado`,
+          ip: ctx.ip,
+          userAgent: ctx.userAgent,
         });
         return { success: true };
       }),
