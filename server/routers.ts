@@ -6694,6 +6694,102 @@ Reglas:
         }
         return { actividades, total: actividades.length };
       }),
+
+    // Análisis IA con 8Ms para PDF por empresa
+    analisis8Ms: protectedProcedure
+      .input(z.object({
+        programaId: z.number(),
+        especialidad: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const actividades = await db.getActividadesByPrograma(input.programaId);
+        const filtradas = actividades.filter((a: any) => a.especialidad === input.especialidad);
+        if (filtradas.length === 0) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No hay actividades para esta especialidad.' });
+        }
+
+        const totalProg = filtradas.reduce((s: number, a: any) => s + (parseFloat(a.cantidadProgramada) || 0), 0);
+        const totalReal = filtradas.reduce((s: number, a: any) => s + (parseFloat(a.cantidadRealizada) || 0), 0);
+        const eficiencia = totalProg > 0 ? ((totalReal / totalProg) * 100).toFixed(1) : '0.0';
+
+        const actividadesTexto = filtradas.map((a: any) => {
+          const pct = parseFloat(a.porcentajeAvance) || 0;
+          return `- ${a.actividad} (Nivel: ${a.nivel || 'N/A'}, Area: ${a.area || 'N/A'}): Programado ${a.cantidadProgramada} ${a.unidad}, Realizado ${a.cantidadRealizada || 0} ${a.unidad}, Avance ${pct.toFixed(1)}%`;
+        }).join('\n');
+
+        const systemPrompt = `Eres un consultor experto en control de calidad de obra de construccion. Analiza las actividades de un contratista/empresa y genera recomendaciones de mejora usando la metodologia de las 8Ms + Money.
+
+Las 9 categorias son:
+1. Material: problemas con suministro, calidad, almacenamiento o disponibilidad de materiales
+2. Mano de obra: capacitacion, rendimiento, suficiencia de personal, rotacion
+3. Maquinaria y equipo: disponibilidad, mantenimiento, adecuacion de herramientas
+4. Medios - Informacion planos: claridad de planos, especificaciones, comunicacion de cambios
+5. Metodo: procedimientos constructivos, secuencia de trabajo, logistica
+6. Medio ambiente - Condiciones de trabajo: clima, acceso, condiciones del sitio
+7. Medidas de seguridad: EPP, senalizacion, protocolos de seguridad
+8. Medicion: control de cantidades, verificacion de avances, instrumentos
+9. Money: flujo de pagos, estimaciones, costos adicionales
+
+IMPORTANTE:
+- Solo incluye categorias donde detectes problemas reales basados en los datos
+- Se breve y directo, maximo 2-3 oraciones por categoria
+- Si la eficiencia es alta (>80%), reconocelo y da recomendaciones preventivas
+- Si la eficiencia es baja (<50%), se mas enfatico en las areas criticas
+- No uses acentos para compatibilidad con PDF
+- Responde en formato JSON`;
+
+        const userPrompt = `Especialidad: ${input.especialidad}
+Eficiencia global: ${eficiencia}%
+Total programado: ${totalProg.toFixed(2)} | Total realizado: ${totalReal.toFixed(2)}
+
+Actividades:\n${actividadesTexto}`;
+
+        const response = await invokeLLM({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'analisis_8ms',
+              strict: true,
+              schema: {
+                type: 'object',
+                properties: {
+                  resumenGeneral: { type: 'string', description: 'Resumen ejecutivo de 1-2 oraciones' },
+                  categorias: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        nombre: { type: 'string', description: 'Nombre de la categoria (ej: Material, Mano de obra, etc.)' },
+                        estado: { type: 'string', description: 'critico, atencion, o aceptable' },
+                        recomendacion: { type: 'string', description: 'Recomendacion concreta de mejora' },
+                      },
+                      required: ['nombre', 'estado', 'recomendacion'],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ['resumenGeneral', 'categorias'],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+
+        const content = response.choices?.[0]?.message?.content;
+        if (!content) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No se recibio respuesta del analisis IA.' });
+        }
+
+        try {
+          return JSON.parse(content as string);
+        } catch {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error al procesar respuesta del analisis IA.' });
+        }
+      }),
   }),
 
   // ==================== PAGOS ====================

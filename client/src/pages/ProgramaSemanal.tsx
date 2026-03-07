@@ -1422,13 +1422,39 @@ async function generarPDFProgramaSemanal(data: any) {
 }
 
 // ===== PDF POR EMPRESA =====
-async function generarPDFPorEmpresa(data: any, especialidad: string) {
+function generarPDFPorEmpresaHTML(data: any, especialidad: string, analisis8Ms?: { resumenGeneral: string; categorias: { nombre: string; estado: string; recomendacion: string }[] } | null) {
   const actividades = (data.actividades || []).filter((a: any) => a.especialidad === especialidad);
   if (actividades.length === 0) return;
 
   const totalProg = actividades.reduce((s: number, a: any) => s + (parseFloat(a.cantidadProgramada) || 0), 0);
   const totalReal = actividades.reduce((s: number, a: any) => s + (parseFloat(a.cantidadRealizada) || 0), 0);
   const eficiencia = totalProg > 0 ? ((totalReal / totalProg) * 100).toFixed(1) : '0.0';
+
+  const analisisHTML = analisis8Ms ? `
+      <div style="page-break-before: always;"></div>
+      <h2 style="color:#002C63;font-size:16px;margin-top:24px;border-bottom:2px solid #002C63;padding-bottom:6px;">ANALISIS IA - METODOLOGIA 8Ms</h2>
+      <p style="font-size:12px;color:#444;margin:8px 0 16px;font-style:italic;background:#f0f4ff;padding:10px;border-radius:6px;border-left:3px solid #002C63;">${analisis8Ms.resumenGeneral}</p>
+      <table style="width:100%;border-collapse:collapse;margin-top:8px;">
+        <thead>
+          <tr>
+            <th style="background:#002C63;color:white;padding:8px 10px;font-size:11px;text-align:left;width:25%;">Categoria</th>
+            <th style="background:#002C63;color:white;padding:8px 10px;font-size:11px;text-align:center;width:12%;">Estado</th>
+            <th style="background:#002C63;color:white;padding:8px 10px;font-size:11px;text-align:left;">Recomendacion</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${analisis8Ms.categorias.map((cat) => {
+            const estadoColor = cat.estado === 'critico' ? '#dc2626' : cat.estado === 'atencion' ? '#d97706' : '#16a34a';
+            const estadoBg = cat.estado === 'critico' ? '#fef2f2' : cat.estado === 'atencion' ? '#fffbeb' : '#f0fdf4';
+            const estadoLabel = cat.estado === 'critico' ? 'CRITICO' : cat.estado === 'atencion' ? 'ATENCION' : 'ACEPTABLE';
+            return `<tr style="border-bottom:1px solid #e5e7eb;">
+              <td style="padding:8px 10px;font-size:11px;font-weight:600;color:#002C63;">${cat.nombre}</td>
+              <td style="padding:8px 10px;text-align:center;"><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;color:${estadoColor};background:${estadoBg};border:1px solid ${estadoColor};">${estadoLabel}</span></td>
+              <td style="padding:8px 10px;font-size:11px;color:#444;">${cat.recomendacion}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>` : '';
 
   const html = `
     <!DOCTYPE html>
@@ -1478,7 +1504,7 @@ async function generarPDFPorEmpresa(data: any, especialidad: string) {
           <tr>
             <th>Actividad</th>
             <th>Nivel</th>
-            <th>\u00c1rea</th>
+            <th>Area</th>
             <th>Ref. Eje</th>
             <th>Unidad</th>
             <th>Material</th>
@@ -1512,6 +1538,8 @@ async function generarPDFPorEmpresa(data: any, especialidad: string) {
         </tbody>
       </table>
 
+      ${analisisHTML}
+
       <div class="footer">
         <p>ObjetivaQC \u2014 Control de Calidad de Obra \u2014 Generado ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
       </div>
@@ -1543,6 +1571,8 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
   const [lightboxIdx, setLightboxIdx] = useState(0);
   const [drawCanvasOpen, setDrawCanvasOpen] = useState(false);
   const [drawCanvasIdx, setDrawCanvasIdx] = useState(0);
+  const [analisisLoading, setAnalisisLoading] = useState<string | null>(null);
+  const analisis8MsMut = trpc.programaSemanal.analisis8Ms.useMutation();
 
   if (isLoading || !data) {
     return <div className="space-y-3">
@@ -1754,10 +1784,32 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
                       variant="outline"
                       size="sm"
                       className="h-auto py-2 px-3 flex flex-col items-start gap-0.5 text-left"
-                      onClick={() => generarPDFPorEmpresa(data, esp)}
+                      disabled={analisisLoading === esp}
+                      onClick={async () => {
+                        setAnalisisLoading(esp);
+                        try {
+                          const analisis = await analisis8MsMut.mutateAsync({ programaId, especialidad: esp });
+                          generarPDFPorEmpresaHTML(data, esp, analisis);
+                        } catch (e: any) {
+                          toast.error('Error al generar analisis IA: ' + (e?.message || 'Intenta de nuevo'));
+                          generarPDFPorEmpresaHTML(data, esp, null);
+                        } finally {
+                          setAnalisisLoading(null);
+                        }
+                      }}
                     >
-                      <span className="text-xs font-semibold truncate w-full">{esp}</span>
-                      <span className={`text-[10px] font-bold ${color}`}>{pct.toFixed(1)}% eficiencia</span>
+                      {analisisLoading === esp ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span className="text-[10px]">Analizando con IA...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-xs font-semibold truncate w-full">{esp}</span>
+                          <span className={`text-[10px] font-bold ${color}`}>{pct.toFixed(1)}% eficiencia</span>
+                          <span className="text-[9px] text-muted-foreground">+ Analisis 8Ms</span>
+                        </>
+                      )}
                     </Button>
                   );
                 })}

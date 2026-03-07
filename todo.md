@@ -5021,3 +5021,7 @@
 ### PDF por empresa en programa con corte realizado
 - [x] Botón para descargar PDF filtrado por empresa en detalle de programa con corte_realizado
 - [x] PDF muestra solo actividades de esa empresa con su eficiencia
+### Análisis IA con 8Ms en PDF por empresa
+- [x] Endpoint backend: análisis IA de actividades con baja eficiencia usando las 8Ms
+- [x] Integrar análisis IA en el PDF por empresa (sección adicional con recomendaciones)
+- [x] Las 8Ms: Material, Mano de obra, Maquinaria y equipo, Medios/Planos, Método, Medio ambiente, Medidas de seguridad, Medición, Money
