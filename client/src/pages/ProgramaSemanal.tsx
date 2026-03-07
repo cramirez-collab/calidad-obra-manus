@@ -1272,7 +1272,7 @@ async function imageUrlToBase64(url: string): Promise<string> {
 }
 
 // ===== GENERAR PDF =====
-async function generarPDFProgramaSemanal(data: any) {
+async function generarPDFProgramaSemanal(data: any, analisis8MsMap?: Map<string, { resumenGeneral: string; categorias: { nombre: string; estado: string; recomendacion: string }[] }>) {
   const statusLabels: Record<string, string> = { borrador: 'Borrador', entregado: 'Entregado', corte_realizado: 'Corte Realizado' };
   const actividades = data.actividades || [];
   const planos = data.planos || [];
@@ -1405,6 +1405,37 @@ async function generarPDFProgramaSemanal(data: any) {
       </table>
 
       ${efPorEspHtml}
+
+      ${analisis8MsMap && analisis8MsMap.size > 0 ? `
+      <h3 style="font-size:16px;color:#002C63;margin-top:24px;border-bottom:2px solid #002C63;padding-bottom:6px;">ANALISIS IA - METODOLOGIA 8Ms</h3>
+      ${Array.from(analisis8MsMap.entries()).map(([esp, analisis]) => `
+        <div style="margin-top:16px;margin-bottom:12px;">
+          <h4 style="font-size:13px;color:#002C63;margin:0 0 6px;">${esp}</h4>
+          <p style="font-size:10px;color:#444;margin:4px 0 8px;font-style:italic;background:#f0f4ff;padding:8px;border-radius:4px;border-left:3px solid #002C63;">${analisis.resumenGeneral}</p>
+          <table style="width:100%;border-collapse:collapse;font-size:10px;">
+            <thead>
+              <tr>
+                <th style="background:#002C63;color:white;padding:4px 6px;text-align:left;width:22%;">Categoria</th>
+                <th style="background:#002C63;color:white;padding:4px 6px;text-align:center;width:10%;">Estado</th>
+                <th style="background:#002C63;color:white;padding:4px 6px;text-align:left;">Recomendacion</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${analisis.categorias.map((cat) => {
+                const estadoColor = cat.estado === 'critico' ? '#dc2626' : cat.estado === 'atencion' ? '#d97706' : '#16a34a';
+                const estadoBg = cat.estado === 'critico' ? '#fef2f2' : cat.estado === 'atencion' ? '#fffbeb' : '#f0fdf4';
+                const estadoLabel = cat.estado === 'critico' ? 'CRITICO' : cat.estado === 'atencion' ? 'ATENCION' : 'ACEPTABLE';
+                return `<tr style="border-bottom:1px solid #e5e7eb;">
+                  <td style="padding:4px 6px;font-weight:600;color:#002C63;">${cat.nombre}</td>
+                  <td style="padding:4px 6px;text-align:center;"><span style="display:inline-block;padding:1px 6px;border-radius:8px;font-size:8px;font-weight:700;color:${estadoColor};background:${estadoBg};border:1px solid ${estadoColor};">${estadoLabel}</span></td>
+                  <td style="padding:4px 6px;color:#444;">${cat.recomendacion}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `).join('')}` : ''}
+
       ${planosHtml}
 
       <div class="footer">
@@ -1431,7 +1462,6 @@ function generarPDFPorEmpresaHTML(data: any, especialidad: string, analisis8Ms?:
   const eficiencia = totalProg > 0 ? ((totalReal / totalProg) * 100).toFixed(1) : '0.0';
 
   const analisisHTML = analisis8Ms ? `
-      <div style="page-break-before: always;"></div>
       <h2 style="color:#002C63;font-size:16px;margin-top:24px;border-bottom:2px solid #002C63;padding-bottom:6px;">ANALISIS IA - METODOLOGIA 8Ms</h2>
       <p style="font-size:12px;color:#444;margin:8px 0 16px;font-style:italic;background:#f0f4ff;padding:10px;border-radius:6px;border-left:3px solid #002C63;">${analisis8Ms.resumenGeneral}</p>
       <table style="width:100%;border-collapse:collapse;margin-top:8px;">
@@ -1823,8 +1853,24 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
       <div className="flex gap-2 justify-end flex-wrap">
         <Button variant="outline" size="sm" onClick={async () => {
           const btn = document.activeElement as HTMLButtonElement;
-          if (btn) { btn.disabled = true; btn.textContent = 'Generando...'; }
-          try { await generarPDFProgramaSemanal(data); } finally {
+          if (btn) { btn.disabled = true; btn.textContent = 'Generando PDF...'; }
+          try {
+            let analisisMap: Map<string, any> | undefined;
+            if (data.status === 'corte_realizado') {
+              const especialidades = Array.from(new Set((data.actividades || []).map((a: any) => a.especialidad) as string[])).sort();
+              if (especialidades.length > 0) {
+                if (btn) { btn.textContent = 'Analizando con IA...'; }
+                analisisMap = new Map();
+                for (const esp of especialidades) {
+                  try {
+                    const res = await analisis8MsMut.mutateAsync({ programaId, especialidad: esp });
+                    analisisMap.set(esp, res);
+                  } catch { /* skip failed */ }
+                }
+              }
+            }
+            await generarPDFProgramaSemanal(data, analisisMap);
+          } finally {
             if (btn) { btn.disabled = false; btn.innerHTML = ''; }
           }
         }}>

@@ -5025,3 +5025,5 @@
 - [x] Endpoint backend: análisis IA de actividades con baja eficiencia usando las 8Ms
 - [x] Integrar análisis IA en el PDF por empresa (sección adicional con recomendaciones)
 - [x] Las 8Ms: Material, Mano de obra, Maquinaria y equipo, Medios/Planos, Método, Medio ambiente, Medidas de seguridad, Medición, Money
+- [x] Integrar análisis 8Ms en la misma hoja del PDF (sin salto de página)
+- [x] Análisis 8Ms integrado en PDF general del programa (botón PDF principal)
