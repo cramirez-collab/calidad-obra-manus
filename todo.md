@@ -5105,3 +5105,20 @@
 - [x] Lightbox y DrawableCanvas también usan getImageUrl()
 - [x] Versión v4.05 (405) — force-update a todos los usuarios
 - [x] 666 tests pasando (60 archivos)
+
+### v4.06 - Optimizaciones de sync y caché
+- [ ] Compresión de fotos antes de sincronizar (reducir base64 para LTE en obra)
+- [ ] Caché de análisis 8Ms en BD (no regenerar IA cada vez que se abre el PDF)
+- [ ] Sync por prioridad: primero ítems sin foto (ligeros), luego con foto (pesados)
+- [ ] Bump versión a v4.06
+- [ ] Tests unitarios para las 3 mejoras
+
+### Fix: Imágenes de planos en Programa Semanal no se ven (dicen "cargando")
+- [x] Diagnosticado: proxy /api/image hacía redirect a URL firmada S3 — falla en móvil
+- [x] Proxy ahora sirve imagen directamente (pipe) con cache de URLs firmadas (10min TTL)
+- [x] Componente PlanoImage con retry automático (3 intentos, backoff), loading skeleton, error fallback
+- [x] Todas las <img> de planos reemplazadas por PlanoImage en ProgramaSemanal
+- [x] Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+- [x] Timeout de 15s en descarga de imagen del servidor
+- [x] Botón "Reintentar" manual si falla después de 3 intentos
+- [x] v4.06 — 666 tests pasando (60 archivos)

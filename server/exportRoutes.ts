@@ -272,7 +272,21 @@ router.post("/api/upload", upload.single('file'), async (req: any, res) => {
   }
 });
 
-// Proxy para imágenes de usuarios (genera URL firmada)
+// Cache de URLs firmadas en memoria (evita regenerar para cada request)
+const signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
+const SIGNED_URL_TTL_MS = 10 * 60 * 1000; // 10 minutos de caché
+
+// Limpiar cache cada 5 min
+setInterval(() => {
+  const now = Date.now();
+  const keysToDelete: string[] = [];
+  signedUrlCache.forEach((val, key) => {
+    if (val.expiresAt < now) keysToDelete.push(key);
+  });
+  keysToDelete.forEach(k => signedUrlCache.delete(k));
+}, 5 * 60 * 1000);
+
+// Proxy para imágenes — PIPE directo (no redirect) para máxima compatibilidad móvil
 router.get("/api/image/:path(*)", async (req, res) => {
   try {
     const imagePath = req.params.path;
@@ -280,11 +294,69 @@ router.get("/api/image/:path(*)", async (req, res) => {
       return res.status(400).json({ error: "Path de imagen requerido" });
     }
     
-    // Obtener URL firmada de S3
-    const { url } = await storageGet(imagePath);
+    // Verificar cache de URL firmada
+    let signedUrl: string;
+    const cached = signedUrlCache.get(imagePath);
+    if (cached && cached.expiresAt > Date.now()) {
+      signedUrl = cached.url;
+    } else {
+      const result = await storageGet(imagePath);
+      signedUrl = result.url;
+      signedUrlCache.set(imagePath, { url: signedUrl, expiresAt: Date.now() + SIGNED_URL_TTL_MS });
+    }
     
-    // Redirigir a la URL firmada
-    res.redirect(url);
+    // Descargar la imagen y servirla directamente (pipe)
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+    
+    try {
+      const imgResponse = await fetch(signedUrl, {
+        signal: controller.signal,
+        headers: { 'Accept': 'image/*' },
+      });
+      clearTimeout(timeout);
+      
+      if (!imgResponse.ok) {
+        // Si la URL firmada expiró, regenerar
+        signedUrlCache.delete(imagePath);
+        const freshResult = await storageGet(imagePath);
+        const freshResponse = await fetch(freshResult.url, {
+          headers: { 'Accept': 'image/*' },
+        });
+        
+        if (!freshResponse.ok) {
+          return res.status(404).json({ error: "Imagen no encontrada" });
+        }
+        
+        signedUrlCache.set(imagePath, { url: freshResult.url, expiresAt: Date.now() + SIGNED_URL_TTL_MS });
+        
+        const contentType = freshResponse.headers.get('content-type') || 'image/jpeg';
+        const contentLength = freshResponse.headers.get('content-length');
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+        if (contentLength) res.setHeader('Content-Length', contentLength);
+        
+        const arrayBuffer = await freshResponse.arrayBuffer();
+        return res.send(Buffer.from(arrayBuffer));
+      }
+      
+      const contentType = imgResponse.headers.get('content-type') || 'image/jpeg';
+      const contentLength = imgResponse.headers.get('content-length');
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+      if (contentLength) res.setHeader('Content-Length', contentLength);
+      
+      const arrayBuffer = await imgResponse.arrayBuffer();
+      res.send(Buffer.from(arrayBuffer));
+    } catch (fetchErr: any) {
+      clearTimeout(timeout);
+      if (fetchErr.name === 'AbortError') {
+        return res.status(504).json({ error: "Timeout al descargar imagen" });
+      }
+      throw fetchErr;
+    }
   } catch (error) {
     console.error("Error getting image:", error);
     res.status(404).json({ error: "Imagen no encontrada" });

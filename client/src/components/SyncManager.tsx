@@ -6,11 +6,13 @@
  * Los ítems solo se eliminan cuando se sincronizan exitosamente o son duplicados.
  * Si un ítem falla repetidamente, se pausa y se notifica al usuario.
  * 
- * v3: ANTI-HANG — Cada operación tiene timeout estricto. NUNCA se queda colgado.
+ * v4: PRIORITY SYNC + RE-COMPRESSION
+ * - Sync por prioridad: primero ítems sin foto (ligeros), luego con foto (pesados)
+ * - Re-compresión automática de fotos base64 > 200KB antes de sincronizar
  * - Timeout de 30s por operación individual (fotos grandes necesitan más tiempo)
  * - Timeout global de 120s por ciclo de sync completo
  * - Si una operación cuelga, se aborta y se marca como fallida
- * - Polling de conexión cada 3s (reducido de 1s para ahorrar batería)
+ * - Polling de conexión cada 3s
  * - Sync inmediata al detectar red (0ms delay)
  * - NetworkInformation API para detectar cambios de red instantáneamente
  */
@@ -23,7 +25,6 @@ import {
   marcarFallo,
   limpiarAntiguos,
   contarPendientes,
-  obtenerTodas,
 } from '@/lib/uploadQueue';
 import {
   getPendingActions,
@@ -46,6 +47,9 @@ const MAX_RETRIES_BEFORE_PAUSE = 10;
 const failureCounts = new Map<string, number>();
 // Track if we already notified about failures (avoid spam)
 let lastFailureNotification = 0;
+
+// ===== RE-COMPRESSION CONFIG =====
+const MAX_BASE64_SIZE_FOR_SYNC_KB = 200; // Re-comprimir si > 200KB
 
 function trackFailure(id: string): boolean {
   const count = (failureCounts.get(id) || 0) + 1;
@@ -86,7 +90,6 @@ function notifyUserAboutFailures(failedCount: number) {
 
 /**
  * Wrapper que agrega timeout a cualquier Promise.
- * Si la operación no termina en `ms`, se rechaza con error de timeout.
  */
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -132,7 +135,7 @@ function getErrorMessage(error: any): string {
 }
 
 /**
- * Verificar conectividad real con un fetch ligero (HEAD request) — con timeout estricto
+ * Verificar conectividad real con un fetch ligero — con timeout estricto
  */
 async function checkRealConnectivity(): Promise<boolean> {
   if (!navigator.onLine) return false;
@@ -162,6 +165,86 @@ async function getTotalPending(): Promise<number> {
   return total;
 }
 
+/**
+ * Obtener tamaño de un string base64 en KB
+ */
+function getBase64SizeKB(base64: string | undefined | null): number {
+  if (!base64) return 0;
+  const data = base64.split(',')[1] || base64;
+  return Math.round((data.length * 3) / 4 / 1024);
+}
+
+/**
+ * Re-comprimir una imagen base64 si excede el límite para sync.
+ * Usa canvas nativo del navegador — no requiere librería externa.
+ */
+async function recompressForSync(base64: string): Promise<string> {
+  const sizeKB = getBase64SizeKB(base64);
+  if (sizeKB <= MAX_BASE64_SIZE_FOR_SYNC_KB) return base64;
+  
+  console.log(`[SyncManager] Re-comprimiendo foto: ${sizeKB}KB → objetivo ${MAX_BASE64_SIZE_FOR_SYNC_KB}KB`);
+  
+  return new Promise<string>((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        let { width, height } = img;
+        // Reducir a max 800px
+        const maxDim = 800;
+        if (width > maxDim || height > maxDim) {
+          const ratio = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { resolve(base64); return; }
+        
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Intentar con calidad decreciente hasta alcanzar objetivo
+        let quality = 0.65;
+        let result = canvas.toDataURL('image/jpeg', quality);
+        
+        while (getBase64SizeKB(result) > MAX_BASE64_SIZE_FOR_SYNC_KB && quality > 0.25) {
+          quality -= 0.05;
+          result = canvas.toDataURL('image/jpeg', quality);
+        }
+        
+        const finalSize = getBase64SizeKB(result);
+        console.log(`[SyncManager] Re-comprimido: ${sizeKB}KB → ${finalSize}KB (quality: ${quality.toFixed(2)})`);
+        resolve(result);
+      } catch {
+        resolve(base64); // Fallback: usar original
+      }
+    };
+    img.onerror = () => resolve(base64);
+    img.src = base64;
+  });
+}
+
+/**
+ * Determinar si un ítem offline tiene foto (es "pesado")
+ */
+function hasPhoto(data: any): boolean {
+  return !!(data?.fotoAntesBase64 || data?.fotoAntesMarcadaBase64);
+}
+
+/**
+ * Estimar tamaño total de un ítem en KB
+ */
+function estimateItemSizeKB(data: any): number {
+  let size = 1; // 1KB base para metadatos
+  if (data?.fotoAntesBase64) size += getBase64SizeKB(data.fotoAntesBase64);
+  if (data?.fotoAntesMarcadaBase64) size += getBase64SizeKB(data.fotoAntesMarcadaBase64);
+  return size;
+}
+
 export function SyncManager() {
   const syncingRef = useRef(false);
   const lastOnlineState = useRef(navigator.onLine);
@@ -174,7 +257,7 @@ export function SyncManager() {
   const sincronizar = useCallback(async () => {
     if (syncingRef.current || !navigator.onLine) return;
 
-    // Global cycle timeout — NEVER let a sync cycle run forever
+    // Global cycle timeout
     const cycleAbort = new AbortController();
     const cycleTimer = setTimeout(() => {
       cycleAbort.abort();
@@ -185,7 +268,6 @@ export function SyncManager() {
       syncingRef.current = true;
       let failedItems = 0;
 
-      // Check if cycle was aborted
       const checkAbort = () => {
         if (cycleAbort.signal.aborted) throw new Error('CYCLE_ABORTED');
       };
@@ -207,10 +289,13 @@ export function SyncManager() {
           
           try {
             if (upload.tipo === 'foto_despues') {
+              // Re-comprimir foto si es muy grande
+              const fotoComprimida = await recompressForSync(upload.foto);
+              
               await withTimeout(
                 uploadFotoDespuesMutation.mutateAsync({
                   itemId: upload.itemId,
-                  fotoBase64: upload.foto,
+                  fotoBase64: fotoComprimida,
                   comentario: upload.comentario,
                 }),
                 SINGLE_OP_TIMEOUT_MS,
@@ -239,18 +324,42 @@ export function SyncManager() {
         console.error('[SyncManager] Error en cola de fotos:', e);
       }
 
-      // 3. Sincronizar cola de ítems offline (offlineStorage)
+      // 3. Sincronizar cola de ítems offline (offlineStorage) — PRIORITY SYNC
       let syncedItems = 0;
       try {
         checkAbort();
         const offlineActions = await withTimeout(getPendingActions(), 5000, 'getPendingActions');
-        for (const action of offlineActions) {
+        
+        // === PRIORITY SORT ===
+        // Primero ítems sin foto (ligeros, se sincronizan rápido)
+        // Luego ítems con foto (pesados, pueden tardar más)
+        const sorted = [...offlineActions].sort((a, b) => {
+          const aHasPhoto = hasPhoto(a.data);
+          const bHasPhoto = hasPhoto(b.data);
+          if (!aHasPhoto && bHasPhoto) return -1; // sin foto primero
+          if (aHasPhoto && !bHasPhoto) return 1;
+          // Dentro del mismo grupo, los más pequeños primero
+          return estimateItemSizeKB(a.data) - estimateItemSizeKB(b.data);
+        });
+        
+        for (const action of sorted) {
           checkAbort();
           const actionId = `os-${action.id}`;
           if (isPaused(actionId)) { failedItems++; continue; }
           
           try {
             if (action.type === 'create_item' && action.data) {
+              // Re-comprimir fotos si son muy grandes
+              let fotoAntes = action.data.fotoAntesBase64;
+              let fotoMarcada = action.data.fotoAntesMarcadaBase64;
+              
+              if (fotoAntes) {
+                fotoAntes = await recompressForSync(fotoAntes);
+              }
+              if (fotoMarcada) {
+                fotoMarcada = await recompressForSync(fotoMarcada);
+              }
+              
               await withTimeout(
                 createItemMutation.mutateAsync({
                   proyectoId: action.data.proyectoId,
@@ -260,8 +369,8 @@ export function SyncManager() {
                   defectoId: action.data.defectoId,
                   espacioId: action.data.espacioId,
                   titulo: action.data.titulo,
-                  fotoAntesBase64: action.data.fotoAntesBase64,
-                  fotoAntesMarcadaBase64: action.data.fotoAntesMarcadaBase64,
+                  fotoAntesBase64: fotoAntes,
+                  fotoAntesMarcadaBase64: fotoMarcada,
                   clientId: action.data.clientId,
                   codigoQrPreasignado: action.data.codigoQrPreasignado,
                 }),
@@ -289,17 +398,37 @@ export function SyncManager() {
         if (e.message === 'CYCLE_ABORTED') throw e;
       }
 
-      // 3b. Sincronizar cola de offlineDB (legacy)
+      // 3b. Sincronizar cola de offlineDB (legacy) — same priority sort
       try {
         checkAbort();
         const legacyActions = await withTimeout(getOfflineDBActions(), 5000, 'getOfflineDBActions');
-        for (const action of legacyActions) {
+        
+        const sortedLegacy = [...legacyActions].sort((a, b) => {
+          const aHasPhoto = hasPhoto(a.data);
+          const bHasPhoto = hasPhoto(b.data);
+          if (!aHasPhoto && bHasPhoto) return -1;
+          if (aHasPhoto && !bHasPhoto) return 1;
+          return estimateItemSizeKB(a.data) - estimateItemSizeKB(b.data);
+        });
+        
+        for (const action of sortedLegacy) {
           checkAbort();
           const actionId = `db-${action.id}`;
           if (isPaused(actionId)) { failedItems++; continue; }
           
           try {
             if (((action.type as string) === 'create_item' || action.type === 'createItem') && action.data) {
+              // Re-comprimir fotos si son muy grandes
+              let fotoAntes = action.data.fotoAntesBase64;
+              let fotoMarcada = action.data.fotoAntesMarcadaBase64;
+              
+              if (fotoAntes) {
+                fotoAntes = await recompressForSync(fotoAntes);
+              }
+              if (fotoMarcada) {
+                fotoMarcada = await recompressForSync(fotoMarcada);
+              }
+              
               await withTimeout(
                 createItemMutation.mutateAsync({
                   proyectoId: action.data.proyectoId,
@@ -309,8 +438,8 @@ export function SyncManager() {
                   defectoId: action.data.defectoId,
                   espacioId: action.data.espacioId,
                   titulo: action.data.titulo,
-                  fotoAntesBase64: action.data.fotoAntesBase64,
-                  fotoAntesMarcadaBase64: action.data.fotoAntesMarcadaBase64,
+                  fotoAntesBase64: fotoAntes,
+                  fotoAntesMarcadaBase64: fotoMarcada,
                   clientId: action.data.clientId,
                   codigoQrPreasignado: action.data.codigoQrPreasignado,
                 }),
@@ -393,7 +522,7 @@ export function SyncManager() {
       if (navigator.onLine) sincronizar();
     };
 
-    // === NETWORK INFORMATION API (cambios de tipo de red instantáneos) ===
+    // === NETWORK INFORMATION API ===
     const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
     const handleConnectionChange = () => {
       console.log('[SyncManager] Cambio de red detectado (NetworkInfo API)');
@@ -403,11 +532,10 @@ export function SyncManager() {
       }
     };
 
-    // === POLLING DE CONECTIVIDAD (cada 3s — balance entre sensibilidad y batería) ===
+    // === POLLING DE CONECTIVIDAD (cada 3s) ===
     const pollingInterval = setInterval(async () => {
       const currentOnline = navigator.onLine;
       
-      // Detectar transición offline → online
       if (currentOnline && !lastOnlineState.current) {
         console.log('[SyncManager] Polling detectó reconexión — sincronizando');
         failureCounts.clear();
@@ -418,7 +546,6 @@ export function SyncManager() {
       
       lastOnlineState.current = currentOnline;
       
-      // Si hay conexión y hay pendientes, verificar conectividad real y sincronizar
       if (currentOnline && !syncingRef.current) {
         const pending = await getTotalPending();
         hasPendingRef.current = pending > 0;
@@ -430,7 +557,7 @@ export function SyncManager() {
           }
         }
       }
-    }, 3000); // Cada 3 segundos
+    }, 3000);
 
     // === INTERVALO DE RESPALDO (cada 15s) ===
     const backupInterval = setInterval(() => {
@@ -448,7 +575,7 @@ export function SyncManager() {
       connection.addEventListener('change', handleConnectionChange);
     }
 
-    // === SERVICE WORKER SYNC (Background Sync API) ===
+    // === SERVICE WORKER SYNC ===
     if ('serviceWorker' in navigator && 'SyncManager' in window) {
       navigator.serviceWorker.ready.then(registration => {
         (registration as any).sync?.register?.('sync-pending-items').catch(() => {});

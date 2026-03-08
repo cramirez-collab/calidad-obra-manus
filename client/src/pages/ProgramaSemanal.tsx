@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ZoomableLightbox } from "@/components/ZoomableLightbox";
 import { DrawableCanvas } from "@/components/DrawableCanvas";
+import { PlanoImage } from "@/components/PlanoImage";
 import {
   CalendarDays, Plus, Send, Scissors, Trash2, ChevronLeft, ChevronRight,
   Download, Upload, Image as ImageIcon, BarChart3, TrendingUp, Eye, Edit,
@@ -1215,9 +1216,7 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {planos.map((p, idx) => (
               <div key={idx} className="relative group">
-                <img src={getImageUrl(p.imagenUrl)} alt={p.titulo || `Plano ${idx + 1}`}
-                  className="w-full h-32 object-cover rounded-lg border"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.insertAdjacentHTML('beforeend', '<div class="w-full h-32 rounded-lg border bg-slate-100 flex items-center justify-center text-muted-foreground text-xs">Error al cargar plano</div>'); }} />
+                <PlanoImage src={p.imagenUrl} alt={p.titulo || `Plano ${idx + 1}`} className="w-full h-32" />
                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 rounded-b-lg">
                   <Input value={p.titulo} onChange={e => {
                     setPlanos(prev => prev.map((pl, i) => i === idx ? { ...pl, titulo: e.target.value } : pl));
@@ -1759,12 +1758,11 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {data.planos.map((p: any, idx: number) => (
                 <div key={p.id || idx} className="relative group">
-                  <img
-                    src={getImageUrl(p.imagenUrl)}
+                  <PlanoImage
+                    src={p.imagenUrl}
                     alt={p.titulo || `Plano ${idx + 1}`}
-                    className="w-full h-32 object-cover rounded-lg border hover:opacity-80 transition-opacity cursor-pointer"
+                    className="w-full h-32"
                     onClick={() => { setLightboxIdx(idx); setLightboxOpen(true); }}
-                    onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = 'none'; el.parentElement!.insertAdjacentHTML('beforeend', '<div class="w-full h-32 rounded-lg border bg-slate-100 flex items-center justify-center text-muted-foreground text-xs">Error al cargar plano</div>'); }}
                   />
                   <button
                     onClick={(e) => { e.stopPropagation(); setDrawCanvasIdx(idx); setDrawCanvasOpen(true); }}
@@ -2105,7 +2103,7 @@ function EditarPrograma({ programaId, onBack, onSave, isLoading, uploadPlano }: 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {planos.map((p, idx) => (
               <div key={idx} className="relative group">
-                <img src={getImageUrl(p.imagenUrl)} alt={p.titulo || `Plano ${idx + 1}`} className="w-full h-32 object-cover rounded-lg border" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.insertAdjacentHTML('beforeend', '<div class="w-full h-32 rounded-lg border bg-slate-100 flex items-center justify-center text-muted-foreground text-xs">Error al cargar plano</div>'); }} />
+                <PlanoImage src={p.imagenUrl} alt={p.titulo || `Plano ${idx + 1}`} className="w-full h-32" />
                 <button onClick={() => removePlano(idx)} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow">
                   <X className="w-3 h-3" />
                 </button>
@@ -2245,12 +2243,11 @@ function CortePrograma({ programaId, onBack, onCorte, isLoading }: {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {data.planos.map((p: any, idx: number) => (
                 <div key={p.id || idx} className="relative">
-                  <img
-                    src={getImageUrl(p.imagenUrl)}
+                  <PlanoImage
+                    src={p.imagenUrl}
                     alt={p.titulo || `Plano ${idx + 1}`}
-                    className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
+                    className="w-full h-24"
                     onClick={() => { setLightboxIdx(idx); setLightboxOpen(true); }}
-                    onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = 'none'; el.parentElement!.insertAdjacentHTML('beforeend', '<div class="w-full h-24 rounded-lg border bg-slate-100 flex items-center justify-center text-muted-foreground text-xs">Error al cargar plano</div>'); }}
                   />
                   <button
                     onClick={(e) => { e.stopPropagation(); setDrawCanvasIdx(idx); setDrawCanvasOpen(true); }}
