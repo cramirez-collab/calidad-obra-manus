@@ -1,0 +1,1099 @@
+{
+  "query": "SELECT id, nombre, rfc, contacto, telefono, email, \n  (SELECT COUNT(*) FROM items WHERE items.empresaId = empresas.id) as total_items\nFROM empresas ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, nombre, rfc, contacto, telefono, email, \n  (SELECT COUNT(*) FROM items WHERE items.empresaId = empresas.id) as total_items\nFROM empresas ORDER BY id;",
+  "rows": [
+    {
+      "id": "150005",
+      "nombre": "Objetiva ",
+      "rfc": "NULL",
+      "contacto": "Carlos Ramirez ",
+      "telefono": "3331283677",
+      "email": "cramirez@objetiva.mx",
+      "total_items": "0"
+    },
+    {
+      "id": "150007",
+      "nombre": "Ennco",
+      "rfc": "NULL",
+      "contacto": "Karen ",
+      "telefono": "NULL",
+      "email": "navith@ennco.mx",
+      "total_items": "0"
+    },
+    {
+      "id": "240001",
+      "nombre": "Objetiva",
+      "rfc": "NULL",
+      "contacto": "Ing.Carlos Ramirez",
+      "telefono": "3331283677",
+      "email": "cramirez@objetiva.mx",
+      "total_items": "0"
+    },
+    {
+      "id": "240002",
+      "nombre": "Ennco",
+      "rfc": "NULL",
+      "contacto": "Arq. Roberto Maldonado",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "240003",
+      "nombre": "Riepsa",
+      "rfc": "NULL",
+      "contacto": "Ing.Rafael Guevara",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "300014",
+      "nombre": "iimsa",
+      "rfc": "NULL",
+      "contacto": "Jairo ",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "330003",
+      "nombre": "GBPO",
+      "rfc": "NULL",
+      "contacto": "Andres Quiroz",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "360001",
+      "nombre": "Objetiva",
+      "rfc": "NULL",
+      "contacto": "Ing.Carlos Ramirez",
+      "telefono": "3331283677",
+      "email": "cramirez@objetiva.mx",
+      "total_items": "0"
+    },
+    {
+      "id": "390001",
+      "nombre": "Objetiva ",
+      "rfc": "NULL",
+      "contacto": "Julian Rodriguez ",
+      "telefono": "NULL",
+      "email": "jrodriguez@objetiva.mx",
+      "total_items": "0"
+    },
+    {
+      "id": "480001",
+      "nombre": "Ennco",
+      "rfc": "NULL",
+      "contacto": "Karen Navith ",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "480002",
+      "nombre": "Garcab Albañil",
+      "rfc": "NULL",
+      "contacto": "Esteban Guerrero ",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "480003",
+      "nombre": "Waller ",
+      "rfc": "NULL",
+      "contacto": "Natalia Diaz",
+      "telefono": "NULL",
+      "email": "nataliadiazbr@gmail.com",
+      "total_items": "54"
+    },
+    {
+      "id": "510001",
+      "nombre": "Garcab TYP",
+      "rfc": "NULL",
+      "contacto": "Xitlalli Reyes",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "24"
+    },
+    {
+      "id": "510002",
+      "nombre": "iimsa",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "1"
+    },
+    {
+      "id": "510003",
+      "nombre": "Riepsa",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "5"
+    },
+    {
+      "id": "510004",
+      "nombre": "Dcon",
+      "rfc": "NULL",
+      "contacto": "Saul Tovar",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "2"
+    },
+    {
+      "id": "510005",
+      "nombre": "Gumik",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "4"
+    },
+    {
+      "id": "540001",
+      "nombre": "Orca",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "5"
+    },
+    {
+      "id": "1950001",
+      "nombre": "Novotile",
+      "rfc": "NULL",
+      "contacto": "Rafael Manriquez",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "20"
+    },
+    {
+      "id": "1950002",
+      "nombre": "Garcab cerámicos ",
+      "rfc": "NULL",
+      "contacto": "Esteban Guerrero ",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "6"
+    },
+    {
+      "id": "1980015",
+      "nombre": "CR",
+      "rfc": "NULL",
+      "contacto": "Car",
+      "telefono": "NULL",
+      "email": "carlosramirezdeloza@gmail.com",
+      "total_items": "0"
+    },
+    {
+      "id": "2010006",
+      "nombre": "Lupher",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "2010007",
+      "nombre": "GbG",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "2760006",
+      "nombre": "Objetiva ",
+      "rfc": "NULL",
+      "contacto": "lneri@objetiva.mx",
+      "telefono": "NULL",
+      "email": "lneri@objetiva.mx",
+      "total_items": "0"
+    },
+    {
+      "id": "2790001",
+      "nombre": "Qdt",
+      "rfc": "NULL",
+      "contacto": "Luis Garcia ",
+      "telefono": "NULL",
+      "email": "lgarcia@qdt.com",
+      "total_items": "0"
+    },
+    {
+      "id": "2820001",
+      "nombre": "QDT",
+      "rfc": "NULL",
+      "contacto": "Vareli",
+      "telefono": "NULL",
+      "email": "vareli.soberanes@qdtinstalaciones.com",
+      "total_items": "0"
+    },
+    {
+      "id": "2820002",
+      "nombre": "Novotile",
+      "rfc": "NULL",
+      "contacto": "Rafael Manriquez",
+      "telefono": "NULL",
+      "email": "rafaelmanriqueznovotile@gmail.com",
+      "total_items": "0"
+    },
+    {
+      "id": "2820003",
+      "nombre": "ARCIN",
+      "rfc": "NULL",
+      "contacto": "Carla Hernandez",
+      "telefono": "NULL",
+      "email": "carla.hernandez.ldi@gmail.com",
+      "total_items": "0"
+    },
+    {
+      "id": "3570001",
+      "nombre": "Andraca",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "49"
+    },
+    {
+      "id": "3600001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3600002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3630001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3660001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3660002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3660003",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3660004",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3660005",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3660006",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3660007",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3660008",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3660009",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3660010",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3660011",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3660012",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3690001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3720001",
+      "nombre": "SSG",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3720002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3750001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3750002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3780001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3780002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3780003",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3780004",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3780005",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3780006",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3780007",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3780008",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3780009",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3780010",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3810001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3840001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3870001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3900001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3930001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3960001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3960002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "3990001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4020001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4050001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4080001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4110001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4110002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4140001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4140002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4140003",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4140004",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4140005",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4170001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4170002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4170003",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4200001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4200002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4230001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4230002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4230003",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4230004",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4260001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4290001",
+      "nombre": "IImsa",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "1"
+    },
+    {
+      "id": "4320001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4350001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4380001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4380002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4380003",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4380004",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4380005",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4380006",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4380007",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4410001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4410002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4410003",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4440001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4470001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4470002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4500001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530003",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530004",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530005",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530006",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530007",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530008",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530009",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530010",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530011",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530012",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4530013",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4560001",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4560002",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4560003",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    },
+    {
+      "id": "4560004",
+      "nombre": "Empresa Test UX",
+      "rfc": "NULL",
+      "contacto": "NULL",
+      "telefono": "NULL",
+      "email": "NULL",
+      "total_items": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnombre\trfc\tcontacto\ttelefono\temail\ttotal_items\n150005\tObjetiva \tNULL\tCarlos Ramirez \t3331283677\tcramirez@objetiva.mx\t0\n150007\tEnnco\tNULL\tKaren \tNULL\tnavith@ennco.mx\t0\n240001\tObjetiva\tNULL\tIng.Carlos Ramirez\t3331283677\tcramirez@objetiva.mx\t0\n240002\tEnnco\tNULL\tArq. Roberto Maldonado\tNULL\tNULL\t0\n240003\tRiepsa\tNULL\tIng.Rafael Guevara\tNULL\tNULL\t0\n300014\tiimsa\tNULL\tJairo \tNULL\tNULL\t0\n330003\tGBPO\tNULL\tAndres Quiroz\tNULL\tNULL\t0\n360001\tObjetiva\tNULL\tIng.Carlos Ramirez\t3331283677\tcramirez@objetiva.mx\t0\n390001\tObjetiva \tNULL\tJulian Rodriguez \tNULL\tjrodriguez@objetiva.mx\t0\n480001\tEnnco\tNULL\tKaren Navith \tNULL\tNULL\t0\n480002\tGarcab Albañil\tNULL\tEsteban Guerrero \tNULL\tNULL\t0\n480003\tWaller \tNULL\tNatalia Diaz\tNULL\tnataliadiazbr@gmail.com\t54\n510001\tGarcab TYP\tNULL\tXitlalli Reyes\tNULL\tNULL\t24\n510002\tiimsa\tNULL\tNULL\tNULL\tNULL\t1\n510003\tRiepsa\tNULL\tNULL\tNULL\tNULL\t5\n510004\tDcon\tNULL\tSaul Tovar\tNULL\tNULL\t2\n510005\tGumik\tNULL\tNULL\tNULL\tNULL\t4\n540001\tOrca\tNULL\tNULL\tNULL\tNULL\t5\n1950001\tNovotile\tNULL\tRafael Manriquez\tNULL\tNULL\t20\n1950002\tGarcab cerámicos \tNULL\tEsteban Guerrero \tNULL\tNULL\t6\n1980015\tCR\tNULL\tCar\tNULL\tcarlosramirezdeloza@gmail.com\t0\n2010006\tLupher\tNULL\tNULL\tNULL\tNULL\t0\n2010007\tGbG\tNULL\tNULL\tNULL\tNULL\t0\n2760006\tObjetiva \tNULL\tlneri@objetiva.mx\tNULL\tlneri@objetiva.mx\t0\n2790001\tQdt\tNULL\tLuis Garcia \tNULL\tlgarcia@qdt.com\t0\n2820001\tQDT\tNULL\tVareli\tNULL\tvareli.soberanes@qdtinstalaciones.com\t0\n2820002\tNovotile\tNULL\tRafael Manriquez\tNULL\trafaelmanriqueznovotile@gmail.com\t0\n2820003\tARCIN\tNULL\tCarla Hernandez\tNULL\tcarla.hernandez.ldi@gmail.com\t0\n3570001\tAndraca\tNULL\tNULL\tNULL\tNULL\t49\n3600001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3600002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3630001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3660001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3660002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3660003\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3660004\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3660005\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3660006\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3660007\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3660008\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3660009\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3660010\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3660011\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3660012\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3690001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3720001\tSSG\tNULL\tNULL\tNULL\tNULL\t0\n3720002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3750001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3750002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3780001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3780002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3780003\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3780004\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3780005\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3780006\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3780007\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3780008\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3780009\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3780010\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3810001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3840001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3870001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3900001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3930001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3960001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3960002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n3990001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4020001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4050001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4080001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4110001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4110002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4140001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4140002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4140003\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4140004\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4140005\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4170001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4170002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4170003\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4200001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4200002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4230001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4230002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4230003\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4230004\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4260001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4290001\tIImsa\tNULL\tNULL\tNULL\tNULL\t1\n4320001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4350001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4380001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4380002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4380003\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4380004\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4380005\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4380006\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4380007\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4410001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4410002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4410003\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4440001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4470001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4470002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4500001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530003\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530004\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530005\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530006\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530007\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530008\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530009\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530010\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530011\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530012\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4530013\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4560001\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4560002\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4560003\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n4560004\tEmpresa Test UX\tNULL\tNULL\tNULL\tNULL\t0\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

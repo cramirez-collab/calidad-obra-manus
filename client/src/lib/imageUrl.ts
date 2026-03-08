@@ -71,15 +71,17 @@ export function getImageUrl(url: string | null | undefined): string {
   
   // Si ya es una URL completa (http/https)
   if (url.startsWith('http://') || url.startsWith('https://')) {
-    // Si es una URL de CloudFront que puede estar expirada, usar el proxy
+    // Si es una URL de CloudFront, SIEMPRE usar el proxy
+    // CloudFront requiere autenticación (URL firmada) que el proxy maneja
     if (url.includes('cloudfront.net')) {
       try {
         const parsedUrl = new URL(url);
-        const pathParts = parsedUrl.pathname.split('/');
-        // El key empieza después del app ID (ej: /310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/usuarios/...)
-        const keyStartIndex = pathParts.findIndex(p => p === 'usuarios' || p === 'items' || p === 'proyectos');
-        if (keyStartIndex > 0) {
-          const key = pathParts.slice(keyStartIndex).join('/');
+        const pathParts = parsedUrl.pathname.split('/').filter(Boolean);
+        // El key empieza después de los 2 primeros segmentos (appId/bucketId)
+        // Ej: /310519663201051818/LjHhpq7m8HsaWSJ2BF6kdt/programa-semanal/0/plano-xxx.jpg
+        //     → programa-semanal/0/plano-xxx.jpg
+        if (pathParts.length > 2) {
+          const key = pathParts.slice(2).join('/');
           return `/api/image/${key}`;
         }
       } catch {

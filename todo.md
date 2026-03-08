@@ -5122,3 +5122,21 @@
 - [x] Timeout de 15s en descarga de imagen del servidor
 - [x] Botón "Reintentar" manual si falla después de 3 intentos
 - [x] v4.06 — 666 tests pasando (60 archivos)
+
+### Auditoría y limpieza de datos de prueba en BD
+- [x] Identificar empresas de prueba (90 "Empresa Test UX")
+- [x] Identificar ítems de prueba (49 NULL + 96 proyecto 999999 = 145)
+- [x] Identificar usuarios de prueba (0 encontrados)
+- [x] Presentar hallazgos a Carlos para confirmación
+- [x] Eliminadas 43 notificaciones huérfanas
+- [x] Eliminados 49 registros de item_historial huérfanos
+- [x] Eliminados 145 ítems de prueba (0 con NULL, 0 con 999999)
+- [x] Eliminadas 90 empresas "Empresa Test UX"
+- [x] Verificado: 170 ítems reales en proyecto 1 intactos, 31 empresas reales, 0 basura
+
+### Fix: Imágenes de planos de Riepsa y Gumik no aparecen
+- [x] Causa raíz: getImageUrl() solo extraía keys con prefijos 'usuarios/items/proyectos' de CloudFront URLs
+- [x] Planos del programa semanal tienen key 'programa-semanal/0/plano-xxx' que no coincidía
+- [x] Fix: ahora extrae key después de los 2 primeros segmentos del path (appId/bucketId)
+- [x] TODAS las URLs de CloudFront ahora pasan por el proxy /api/image/
+- [x] v4.08 — 666 tests pasando (60 archivos)
