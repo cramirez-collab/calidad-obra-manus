@@ -561,7 +561,7 @@ export default function Estadisticas() {
                   <SelectItem value="all">Todos los usuarios</SelectItem>
                   {usuarios?.map((user) => (
                     <SelectItem key={user.id} value={user.id.toString()}>
-                      {user.name || `Usuario ${user.id}`}
+                      {user.name || 'Sin nombre'}
                     </SelectItem>
                   ))}
                 </SelectContent>

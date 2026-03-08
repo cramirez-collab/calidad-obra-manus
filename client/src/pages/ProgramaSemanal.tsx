@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { generarYCompartirPDF } from "@/lib/pdfGenerator";
+import { getImageUrl } from "@/lib/imageUrl";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useProject } from "@/contexts/ProjectContext";
 import { Button } from "@/components/ui/button";
@@ -405,7 +406,7 @@ export default function ProgramaSemanal() {
                         <EntregaBadge semanaFin={p.semanaFin} fechaEntrega={p.fechaEntrega} status={p.status} />
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {usuario?.name || `Usuario #${p.usuarioId}`}
+                        {usuario?.name || 'Sin nombre'}
                         {(usuario as any)?.especialidad ? ` — ${(usuario as any).especialidad}` : ""}
                       </p>
                       <div className="flex items-center gap-3 text-sm mt-1">
@@ -1214,8 +1215,9 @@ function CrearPrograma({ proyectoId, userId, usuarios, onBack, onCreate, isLoadi
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {planos.map((p, idx) => (
               <div key={idx} className="relative group">
-                <img src={p.imagenUrl} alt={p.titulo || `Plano ${idx + 1}`}
-                  className="w-full h-32 object-cover rounded-lg border" />
+                <img src={getImageUrl(p.imagenUrl)} alt={p.titulo || `Plano ${idx + 1}`}
+                  className="w-full h-32 object-cover rounded-lg border"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.insertAdjacentHTML('beforeend', '<div class="w-full h-32 rounded-lg border bg-slate-100 flex items-center justify-center text-muted-foreground text-xs">Error al cargar plano</div>'); }} />
                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 rounded-b-lg">
                   <Input value={p.titulo} onChange={e => {
                     setPlanos(prev => prev.map((pl, i) => i === idx ? { ...pl, titulo: e.target.value } : pl));
@@ -1625,7 +1627,7 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
   const isAdminOrSuper = ['admin', 'superadmin'].includes(userRole);
   const canDelete = isAdminOrSuper || (isOwner && data.status === 'borrador');
 
-  const planoUrls = (data.planos || []).map((p: any) => p.imagenUrl);
+  const planoUrls = (data.planos || []).map((p: any) => getImageUrl(p.imagenUrl));
 
   return (
     <div className="space-y-4">
@@ -1672,7 +1674,7 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
                 <UserCircle className="w-4 h-4 text-emerald-600" />
                 <span className="text-muted-foreground">Asignado a:</span>
                 <span className="font-medium">
-                  {usuarios.find((u: any) => u.id === data.usuarioId)?.name || `Usuario #${data.usuarioId}`}
+                  {usuarios.find((u: any) => u.id === data.usuarioId)?.name || 'Sin nombre'}
                 </span>
               </div>
               {data.creadoPorId && data.creadoPorId !== data.usuarioId && (
@@ -1680,7 +1682,7 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
                   <Edit className="w-3.5 h-3.5 text-blue-500" />
                   <span className="text-muted-foreground">Creado por:</span>
                   <span className="font-medium text-blue-600">
-                    {usuarios.find((u: any) => u.id === data.creadoPorId)?.name || `Usuario #${data.creadoPorId}`}
+                    {usuarios.find((u: any) => u.id === data.creadoPorId)?.name || 'Sin nombre'}
                   </span>
                 </div>
               )}
@@ -1758,10 +1760,11 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
               {data.planos.map((p: any, idx: number) => (
                 <div key={p.id || idx} className="relative group">
                   <img
-                    src={p.imagenUrl}
+                    src={getImageUrl(p.imagenUrl)}
                     alt={p.titulo || `Plano ${idx + 1}`}
                     className="w-full h-32 object-cover rounded-lg border hover:opacity-80 transition-opacity cursor-pointer"
                     onClick={() => { setLightboxIdx(idx); setLightboxOpen(true); }}
+                    onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = 'none'; el.parentElement!.insertAdjacentHTML('beforeend', '<div class="w-full h-32 rounded-lg border bg-slate-100 flex items-center justify-center text-muted-foreground text-xs">Error al cargar plano</div>'); }}
                   />
                   <button
                     onClick={(e) => { e.stopPropagation(); setDrawCanvasIdx(idx); setDrawCanvasOpen(true); }}
@@ -2102,7 +2105,7 @@ function EditarPrograma({ programaId, onBack, onSave, isLoading, uploadPlano }: 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {planos.map((p, idx) => (
               <div key={idx} className="relative group">
-                <img src={p.imagenUrl} alt={p.titulo || `Plano ${idx + 1}`} className="w-full h-32 object-cover rounded-lg border" />
+                <img src={getImageUrl(p.imagenUrl)} alt={p.titulo || `Plano ${idx + 1}`} className="w-full h-32 object-cover rounded-lg border" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.insertAdjacentHTML('beforeend', '<div class="w-full h-32 rounded-lg border bg-slate-100 flex items-center justify-center text-muted-foreground text-xs">Error al cargar plano</div>'); }} />
                 <button onClick={() => removePlano(idx)} className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow">
                   <X className="w-3 h-3" />
                 </button>
@@ -2145,7 +2148,7 @@ function CortePrograma({ programaId, onBack, onCorte, isLoading }: {
 
   if (!data) return null;
 
-  const planoUrls = (data.planos || []).map((p: any) => p.imagenUrl);
+  const planoUrls = (data.planos || []).map((p: any) => getImageUrl(p.imagenUrl));
 
   const handleCorte = () => {
     const actividadesCorte = (data.actividades || []).map((a: any) => ({
@@ -2243,10 +2246,11 @@ function CortePrograma({ programaId, onBack, onCorte, isLoading }: {
               {data.planos.map((p: any, idx: number) => (
                 <div key={p.id || idx} className="relative">
                   <img
-                    src={p.imagenUrl}
+                    src={getImageUrl(p.imagenUrl)}
                     alt={p.titulo || `Plano ${idx + 1}`}
                     className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => { setLightboxIdx(idx); setLightboxOpen(true); }}
+                    onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = 'none'; el.parentElement!.insertAdjacentHTML('beforeend', '<div class="w-full h-24 rounded-lg border bg-slate-100 flex items-center justify-center text-muted-foreground text-xs">Error al cargar plano</div>'); }}
                   />
                   <button
                     onClick={(e) => { e.stopPropagation(); setDrawCanvasIdx(idx); setDrawCanvasOpen(true); }}
@@ -2340,7 +2344,7 @@ function EficienciaView({ data, usuarios, onBack }: {
     dataByUser.forEach((items, userId) => {
       const avg = items.reduce((s: number, d: any) => s + (parseFloat(d.eficienciaGlobal) || 0), 0) / items.length;
       const usuario = usuarios.find((u: any) => u.id === userId);
-      entries.push({ userId, name: usuario?.name || `#${userId}`, avg, count: items.length });
+      entries.push({ userId, name: usuario?.name || 'Sin nombre', avg, count: items.length });
     });
     return entries.sort((a, b) => b.avg - a.avg);
   }, [dataByUser, usuarios]);
@@ -2727,7 +2731,7 @@ function PlantillasView({ proyectoId, onBack, onCargar }: {
 function exportarComparativaPDF(comparativa: any, usuarios: any[]) {
   const getUsuarioName = (userId: number) => {
     const u = usuarios.find((u: any) => u.id === userId);
-    return u?.name || `#${userId}`;
+    return u?.name || 'Sin nombre';
   };
 
   const fmtWeek = (inicio: any, fin: any) => {
@@ -2880,7 +2884,7 @@ function ComparativaView({ proyectoId, programas, usuarios, onBack }: {
 
   const getUsuarioName = (userId: number) => {
     const u = usuarios.find((u: any) => u.id === userId);
-    return u?.name || `#${userId}`;
+    return u?.name || 'Sin nombre';
   };
 
   return (
@@ -3782,7 +3786,7 @@ function MetasEficienciaView({ proyectoId, usuarios, onBack }: {
                 return (
                   <div key={meta.id} className="grid grid-cols-12 gap-2 items-center px-2 py-2 rounded hover:bg-accent/20 text-sm">
                     <div className="col-span-4 flex items-center gap-2 min-w-0">
-                      <span className="font-medium truncate">{user?.name || `Usuario #${meta.usuarioId}`}</span>
+                      <span className="font-medium truncate">{user?.name || 'Sin nombre'}</span>
                       <span className="text-xs text-muted-foreground truncate">{(user as any)?.especialidad || ''}</span>
                     </div>
                     <div className="col-span-2 text-center">

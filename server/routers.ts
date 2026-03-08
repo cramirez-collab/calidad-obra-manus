@@ -6279,7 +6279,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           const u = up.usuario as any;
           if (u) {
             userEmpresaMap.set(u.id, {
-              nombre: u.name || u.email || `Usuario #${u.id}`,
+              nombre: u.name || u.email || 'Sin nombre',
               empresaId: u.empresaId || null,
               empresaNombre: u.empresaId ? (empresasMap.get(u.empresaId) || 'Sin empresa') : 'Sin empresa',
             });
@@ -6337,7 +6337,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           if (!porUsuario.has(p.usuarioId)) {
             const userInfo = userEmpresaMap.get(p.usuarioId);
             porUsuario.set(p.usuarioId, {
-              nombre: userInfo?.nombre || `Usuario #${p.usuarioId}`,
+              nombre: userInfo?.nombre || 'Sin nombre',
               empresaNombre: userInfo?.empresaNombre || 'Sin empresa',
               programas: 0, cortes: 0, eficiencias: [], aTiempo: 0, tarde: 0,
             });
@@ -6430,7 +6430,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           const pctATiempo = data.total > 0 ? Math.round((data.aTiempo / data.total) * 10000) / 100 : 0;
           return {
             userId,
-            nombre: user?.name || `Usuario #${userId}`,
+            nombre: user?.name || 'Sin nombre',
             role: user?.role || rel?.rol || '',
             especialidad: rel?.especialidad || '',
             fotoUrl: user?.fotoUrl || null,
@@ -6493,7 +6493,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
           const userProgs = recientes.filter((p: any) => p.usuarioId === meta.usuarioId);
           if (userProgs.length === 0) continue;
           const rel = usuariosMap.get(meta.usuarioId);
-          const nombre = rel?.usuario?.name || `Usuario #${meta.usuarioId}`;
+          const nombre = rel?.usuario?.name || 'Sin nombre';
 
           // Verificar eficiencia
           const eficiencias = userProgs.filter((p: any) => p.eficienciaGlobal != null).map((p: any) => parseFloat(p.eficienciaGlobal));
@@ -6752,7 +6752,7 @@ Reglas:
         for (const p of programas) {
           if (!porUsuario.has(p.usuarioId)) {
             const user = await db.getUserById(p.usuarioId);
-            porUsuario.set(p.usuarioId, { nombre: user?.name || `Usuario ${p.usuarioId}`, semanas: [] });
+            porUsuario.set(p.usuarioId, { nombre: user?.name || 'Sin nombre', semanas: [] });
           }
           const entry = porUsuario.get(p.usuarioId)!;
           const fecha = p.semanaInicio ? new Date(p.semanaInicio).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) : '';

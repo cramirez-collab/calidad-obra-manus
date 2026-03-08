@@ -8344,7 +8344,7 @@ export async function getProgramasPorEmpresa(proyectoId: number) {
     const usuario = todosUsuarios.find(u => u.id === usuarioId);
     const empresa = usuario?.empresaId ? todasEmpresas.find(e => e.id === usuario.empresaId) : null;
     const especialidadesEmpresa = empresa ? (espPorEmpresa.get(empresa.id) || []) : [];
-    const nombreEmpresa = empresa?.nombre || usuario?.name || `Usuario #${usuarioId}`;
+    const nombreEmpresa = empresa?.nombre || usuario?.name || 'Sin nombre';
 
     // Programas con actividades
     const programasConActividades = progs.map((p: any) => ({
@@ -8385,7 +8385,7 @@ export async function getProgramasPorEmpresa(proyectoId: number) {
 
     empresasResult.push({
       usuarioId,
-      usuarioNombre: usuario?.name || `Usuario #${usuarioId}`,
+      usuarioNombre: usuario?.name || 'Sin nombre',
       empresaId: empresa?.id || null,
       empresaNombre: nombreEmpresa,
       especialidades: especialidadesEmpresa,

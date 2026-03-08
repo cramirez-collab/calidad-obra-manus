@@ -2,16 +2,19 @@ import { describe, it, expect } from 'vitest';
 import { VERSION_NUMBER, APP_VERSION, FULL_VERSION, SW_BUILD } from '../shared/version';
 
 describe('Force Update Version System', () => {
-  it('VERSION_NUMBER should be 404', () => {
-    expect(VERSION_NUMBER).toBe(404);
+  it('VERSION_NUMBER should be a positive integer >= 405', () => {
+    expect(VERSION_NUMBER).toBeGreaterThanOrEqual(405);
+    expect(Number.isInteger(VERSION_NUMBER)).toBe(true);
   });
 
-  it('APP_VERSION should be "4.04"', () => {
-    expect(APP_VERSION).toBe('4.04');
+  it('APP_VERSION should match VERSION_NUMBER pattern', () => {
+    const expectedMajor = Math.floor(VERSION_NUMBER / 100);
+    const expectedMinor = String(VERSION_NUMBER % 100).padStart(2, '0');
+    expect(APP_VERSION).toBe(`${expectedMajor}.${expectedMinor}`);
   });
 
-  it('FULL_VERSION should be "v4.04"', () => {
-    expect(FULL_VERSION).toBe('v4.04');
+  it('FULL_VERSION should be v + APP_VERSION', () => {
+    expect(FULL_VERSION).toBe(`v${APP_VERSION}`);
   });
 
   it('SW_BUILD should match VERSION_NUMBER', () => {
@@ -26,14 +29,14 @@ describe('Force Update Version System', () => {
       forceUpdate: true,
     };
     
-    expect(expectedResponse.version).toBe(404);
-    expect(expectedResponse.displayVersion).toBe('v4.04');
+    expect(expectedResponse.version).toBe(VERSION_NUMBER);
+    expect(expectedResponse.displayVersion).toBe(FULL_VERSION);
     expect(expectedResponse.forceUpdate).toBe(true);
   });
 
   it('version comparison should detect newer versions', () => {
-    const clientVersion = 403; // Omar's current version
-    const serverVersion = VERSION_NUMBER; // 404
+    const clientVersion = VERSION_NUMBER - 1; // Previous version
+    const serverVersion = VERSION_NUMBER;
     
     expect(serverVersion > clientVersion).toBe(true);
   });

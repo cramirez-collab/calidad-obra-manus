@@ -5095,3 +5095,13 @@
 - [x] SW se auto-actualiza cada 60s con reg.update()
 - [x] Incrementar versión a v4.04 (404) en todos los archivos
 - [x] 10 tests unitarios pasando
+
+### REGLA PERMANENTE: Siempre mostrar NOMBRE de usuario, NUNCA ID numérico
+- [x] Buscar y corregir todos los lugares donde se muestra "Usuario #XXXXX" en vez del nombre
+- [x] En Programa Semanal > Reportes: mostrar nombre del usuario que entregó
+- [x] En cualquier lista/tarjeta: siempre resolver el nombre del usuario desde la BD (7 archivos corregidos)
+- [x] Imágenes de planos en Programa Semanal: todas usan getImageUrl() para resolver URLs S3/CloudFront
+- [x] onError fallback en todas las <img> de planos para mostrar placeholder en vez de imagen rota
+- [x] Lightbox y DrawableCanvas también usan getImageUrl()
+- [x] Versión v4.05 (405) — force-update a todos los usuarios
+- [x] 666 tests pasando (60 archivos)
