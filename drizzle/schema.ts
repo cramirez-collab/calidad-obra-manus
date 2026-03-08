@@ -1238,3 +1238,20 @@ export const archivosPago = mysqlTable("archivos_pago", {
 });
 export type ArchivoPago = typeof archivosPago.$inferSelect;
 export type InsertArchivoPago = typeof archivosPago.$inferInsert;
+
+
+/**
+ * Caché de análisis 8Ms generados por IA.
+ * Evita regenerar el análisis cada vez que se abre el PDF o se consulta.
+ * Se invalida cuando cambian los ítems del programa.
+ */
+export const analisis8msCache = mysqlTable("analisis_8ms_cache", {
+  id: int("id").autoincrement().primaryKey(),
+  programaId: int("programaId").notNull(),
+  especialidad: varchar("especialidad", { length: 255 }).notNull(),
+  itemsHash: varchar("itemsHash", { length: 64 }).notNull(), // Hash de los ítems para invalidar cache
+  resultado: text("resultado").notNull(), // JSON del análisis completo
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type Analisis8msCache = typeof analisis8msCache.$inferSelect;
+export type InsertAnalisis8msCache = typeof analisis8msCache.$inferInsert;

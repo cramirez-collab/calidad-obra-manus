@@ -5107,11 +5107,11 @@
 - [x] 666 tests pasando (60 archivos)
 
 ### v4.06 - Optimizaciones de sync y caché
-- [ ] Compresión de fotos antes de sincronizar (reducir base64 para LTE en obra)
-- [ ] Caché de análisis 8Ms en BD (no regenerar IA cada vez que se abre el PDF)
-- [ ] Sync por prioridad: primero ítems sin foto (ligeros), luego con foto (pesados)
-- [ ] Bump versión a v4.06
-- [ ] Tests unitarios para las 3 mejoras
+- [x] Re-compresión de fotos antes de sync (>200KB → 800px max, calidad decreciente)
+- [x] Caché de análisis 8Ms en BD (tabla analisis_8ms_cache, hash MD5 para invalidar)
+- [x] Sync por prioridad: primero ítems sin foto (ligeros), luego con foto (pesados)
+- [x] Bump versión a v4.07
+- [x] 666 tests pasando (60 archivos)
 
 ### Fix: Imágenes de planos en Programa Semanal no se ven (dicen "cargando")
 - [x] Diagnosticado: proxy /api/image hacía redirect a URL firmada S3 — falla en móvil

@@ -6778,7 +6778,7 @@ Reglas:
         return { chartData, empresas: series.map(s => s.nombre) };
       }),
 
-    // Análisis IA con 8Ms para PDF por empresa
+    // Análisis IA con 8Ms para PDF por empresa (con caché en BD)
     analisis8Ms: protectedProcedure
       .input(z.object({
         programaId: z.number(),
@@ -6794,6 +6794,23 @@ Reglas:
         const totalProg = filtradas.reduce((s: number, a: any) => s + (parseFloat(a.cantidadProgramada) || 0), 0);
         const totalReal = filtradas.reduce((s: number, a: any) => s + (parseFloat(a.cantidadRealizada) || 0), 0);
         const eficiencia = totalProg > 0 ? ((totalReal / totalProg) * 100).toFixed(1) : '0.0';
+
+        // --- CACHÉ 8Ms: generar hash de los datos para detectar cambios ---
+        const hashData = filtradas.map((a: any) => `${a.actividad}|${a.cantidadProgramada}|${a.cantidadRealizada}`).sort().join(';');
+        const { createHash } = await import('crypto');
+        const itemsHash = createHash('md5').update(hashData).digest('hex');
+
+        // Buscar en caché
+        try {
+          const cached = await db.getAnalisis8msCache(input.programaId, input.especialidad, itemsHash);
+          if (cached) {
+            console.log(`[8Ms Cache] HIT para programa ${input.programaId}, especialidad ${input.especialidad}`);
+            return JSON.parse(cached.resultado);
+          }
+          console.log(`[8Ms Cache] MISS para programa ${input.programaId}, especialidad ${input.especialidad}`);
+        } catch (e) {
+          console.error('[8Ms Cache] Error al buscar caché:', e);
+        }
 
         const actividadesTexto = filtradas.map((a: any) => {
           const pct = parseFloat(a.porcentajeAvance) || 0;
@@ -6868,7 +6885,17 @@ Actividades:\n${actividadesTexto}`;
         }
 
         try {
-          return JSON.parse(content as string);
+          const parsed = JSON.parse(content as string);
+          
+          // Guardar en caché para futuras consultas
+          try {
+            await db.saveAnalisis8msCache(input.programaId, input.especialidad, itemsHash, content as string);
+            console.log(`[8Ms Cache] SAVED para programa ${input.programaId}, especialidad ${input.especialidad}`);
+          } catch (e) {
+            console.error('[8Ms Cache] Error al guardar caché:', e);
+          }
+          
+          return parsed;
         } catch {
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error al procesar respuesta del analisis IA.' });
         }

@@ -55,6 +55,7 @@ import {
   solicitudesPago, InsertSolicitudPago,
   archivosPago, InsertArchivoPago,
   itemRondas, InsertItemRonda,
+  analisis8msCache, InsertAnalisis8msCache,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -8421,4 +8422,51 @@ export async function getProgramasPorEmpresa(proyectoId: number) {
     empresas: empresasResult.sort((a, b) => a.empresaNombre.localeCompare(b.empresaNombre)),
     eficienciaGlobal,
   };
+}
+
+
+// ==================== CACHÉ ANÁLISIS 8Ms ====================
+
+/**
+ * Buscar análisis 8Ms en caché.
+ * Solo retorna si el hash de los ítems coincide (datos no han cambiado).
+ */
+export async function getAnalisis8msCache(programaId: number, especialidad: string, itemsHash: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const results = await db.select()
+    .from(analisis8msCache)
+    .where(
+      and(
+        eq(analisis8msCache.programaId, programaId),
+        eq(analisis8msCache.especialidad, especialidad),
+        eq(analisis8msCache.itemsHash, itemsHash),
+      )
+    )
+    .limit(1);
+  return results[0] || null;
+}
+
+/**
+ * Guardar análisis 8Ms en caché.
+ * Elimina entradas anteriores para el mismo programa+especialidad.
+ */
+export async function saveAnalisis8msCache(programaId: number, especialidad: string, itemsHash: string, resultado: string) {
+  const db = await getDb();
+  if (!db) return;
+  // Eliminar caché anterior para este programa+especialidad
+  await db.delete(analisis8msCache)
+    .where(
+      and(
+        eq(analisis8msCache.programaId, programaId),
+        eq(analisis8msCache.especialidad, especialidad),
+      )
+    );
+  // Insertar nuevo
+  await db!.insert(analisis8msCache).values({
+    programaId,
+    especialidad,
+    itemsHash,
+    resultado,
+  });
 }

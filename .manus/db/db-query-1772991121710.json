@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `analisis_8ms_cache` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `programaId` int NOT NULL,\n  `especialidad` varchar(255) NOT NULL,\n  `itemsHash` varchar(64) NOT NULL,\n  `resultado` text NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT `analisis_8ms_cache_id` PRIMARY KEY(`id`),\n  INDEX `idx_cache_lookup` (`programaId`, `especialidad`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute CREATE TABLE IF NOT EXISTS `analisis_8ms_cache` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `programaId` int NOT NULL,\n  `especialidad` varchar(255) NOT NULL,\n  `itemsHash` varchar(64) NOT NULL,\n  `resultado` text NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT `analisis_8ms_cache_id` PRIMARY KEY(`id`),\n  INDEX `idx_cache_lookup` (`programaId`, `especialidad`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 166
+}
