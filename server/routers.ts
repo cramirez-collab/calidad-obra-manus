@@ -1378,17 +1378,46 @@ export const appRouter = router({
         fotoMarcadaBase64: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        const correlationId = `fotoAntes-${input.itemId}-${Date.now()}`;
+        const fotoSizeKB = Math.round(input.fotoBase64.length / 1024);
+        console.log(`[${correlationId}] Recibida foto antes: ${fotoSizeKB}KB, usuario: ${ctx.user.name || ctx.user.id}`);
+        
+        // Validación de tamaño (max 10MB en base64)
+        if (input.fotoBase64.length > 10 * 1024 * 1024) {
+          throw new TRPCError({ code: 'PAYLOAD_TOO_LARGE', message: `La foto es demasiado grande (${Math.round(fotoSizeKB/1024)}MB). Máximo: 10MB.` });
+        }
+        if (!input.fotoBase64.startsWith('data:image/')) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Formato de imagen inválido. Intenta tomar la foto de nuevo.' });
+        }
+        
         const item = await db.getItemById(input.itemId);
         if (!item) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ítem no encontrado' });
         
-        // OPTIMIZACIÓN: Guardar base64 inmediatamente en BD (< 500ms)
-        const updateData: any = { 
-          fotoAntesBase64: input.fotoBase64
-        };
+        const updateData: any = { fotoAntesBase64: input.fotoBase64 };
         if (input.fotoMarcadaBase64) {
           updateData.fotoAntesMarcadaBase64 = input.fotoMarcadaBase64;
         }
-        await db.updateItem(input.itemId, updateData);
+        
+        // Guardar con reintento
+        try {
+          await db.updateItem(input.itemId, updateData);
+          console.log(`[${correlationId}] Item actualizado OK`);
+        } catch (dbError: any) {
+          console.error(`[${correlationId}] Error guardando:`, dbError.code, dbError.message);
+          try {
+            await new Promise(r => setTimeout(r, 500));
+            await db.updateItem(input.itemId, updateData);
+            console.log(`[${correlationId}] Item actualizado OK en reintento`);
+          } catch (retryError: any) {
+            console.error(`[${correlationId}] Error en reintento:`, retryError.code, retryError.message);
+            const isTimeout = retryError.code === 'ETIMEDOUT' || retryError.code === 'PROTOCOL_SEQUENCE_TIMEOUT';
+            const isConnection = retryError.code === 'ECONNREFUSED' || retryError.code === 'ECONNRESET';
+            let userMsg = 'Error guardando foto. Verifica tu conexión e intenta de nuevo.';
+            if (isTimeout) userMsg = 'La conexión tardó demasiado. Verifica tu señal de internet e intenta de nuevo.';
+            if (isConnection) userMsg = 'No se pudo conectar al servidor. Verifica tu conexión e intenta de nuevo.';
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: userMsg });
+          }
+        }
         
         // Subir a S3 en segundo plano (no bloquea al usuario)
         setImmediate(async () => {
@@ -1431,19 +1460,38 @@ export const appRouter = router({
         comentario: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        // OPTIMIZACIÓN ULTRA RÁPIDA: Responder en < 200ms
         const startTime = Date.now();
+        const correlationId = `foto-${input.itemId}-${Date.now()}`;
+        
+        // Validación de tamaño de foto (max 10MB en base64)
+        const fotoSizeKB = Math.round(input.fotoBase64.length / 1024);
+        console.log(`[${correlationId}] Recibida foto después: ${fotoSizeKB}KB, usuario: ${ctx.user.name || ctx.user.id}`);
+        
+        if (input.fotoBase64.length > 10 * 1024 * 1024) {
+          console.error(`[${correlationId}] Foto demasiado grande: ${fotoSizeKB}KB`);
+          throw new TRPCError({ code: 'PAYLOAD_TOO_LARGE', message: `La foto es demasiado grande (${Math.round(fotoSizeKB/1024)}MB). Máximo permitido: 10MB. Intenta tomar la foto con menor resolución.` });
+        }
+        
+        // Validar formato base64
+        if (!input.fotoBase64.startsWith('data:image/')) {
+          console.error(`[${correlationId}] Formato inválido: no es data:image/`);
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Formato de imagen inválido. Intenta tomar la foto de nuevo.' });
+        }
         
         // Validación rápida del ítem
         const item = await db.getItemById(input.itemId);
-        if (!item) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ítem no encontrado' });
+        if (!item) {
+          console.error(`[${correlationId}] Ítem ${input.itemId} no encontrado`);
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Ítem no encontrado' });
+        }
         
         // Permitir subir foto incluso si ya tiene una (para reintentos)
         if (item.status !== 'pendiente_foto_despues' && item.status !== 'pendiente_aprobacion') {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'El ítem no está en estado válido para foto después' });
         }
         
-        // OPERACIÓN ATÓMICA: Guardar base64 y cambiar status inmediatamente
+        // OPERACIÓN ATÓMICA: Guardar base64 y cambiar status
+        // Intento 1: guardar en item + ronda
         try {
           await db.updateItem(input.itemId, {
             fotoDespuesBase64: input.fotoBase64,
@@ -1452,7 +1500,33 @@ export const appRouter = router({
             status: 'pendiente_aprobacion',
             comentarioJefeResidente: input.comentario,
           });
-          // Actualizar ronda activa con foto después
+          console.log(`[${correlationId}] Item actualizado OK en ${Date.now() - startTime}ms`);
+        } catch (dbError: any) {
+          console.error(`[${correlationId}] Error guardando en items:`, dbError.code, dbError.message);
+          // Reintento 1 vez
+          try {
+            await new Promise(r => setTimeout(r, 500));
+            await db.updateItem(input.itemId, {
+              fotoDespuesBase64: input.fotoBase64,
+              jefeResidenteId: ctx.user.id,
+              fechaFotoDespues: new Date(),
+              status: 'pendiente_aprobacion',
+              comentarioJefeResidente: input.comentario,
+            });
+            console.log(`[${correlationId}] Item actualizado OK en reintento`);
+          } catch (retryError: any) {
+            console.error(`[${correlationId}] Error en reintento:`, retryError.code, retryError.message);
+            const isTimeout = retryError.code === 'ETIMEDOUT' || retryError.code === 'PROTOCOL_SEQUENCE_TIMEOUT';
+            const isConnection = retryError.code === 'ECONNREFUSED' || retryError.code === 'ECONNRESET';
+            let userMsg = 'Error guardando foto en la base de datos.';
+            if (isTimeout) userMsg = 'La conexión tardó demasiado. Verifica tu señal de internet e intenta de nuevo.';
+            if (isConnection) userMsg = 'No se pudo conectar al servidor. Verifica tu conexión e intenta de nuevo.';
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: userMsg });
+          }
+        }
+        
+        // Actualizar ronda activa (no crítico, no bloquea)
+        try {
           const rondaActiva = await db.getRondaActiva(input.itemId);
           if (rondaActiva) {
             await db.actualizarRonda(rondaActiva.id, {
@@ -1460,10 +1534,11 @@ export const appRouter = router({
               status: 'pendiente_aprobacion',
               fechaFotoDespues: new Date(),
             });
+            console.log(`[${correlationId}] Ronda ${rondaActiva.id} actualizada OK`);
           }
-        } catch (dbError: any) {
-          console.error('Error guardando foto después en DB:', dbError);
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error guardando foto. Intenta de nuevo.' });
+        } catch (rondaError: any) {
+          // Ronda es secundaria, no fallar por esto
+          console.error(`[${correlationId}] Error actualizando ronda (no crítico):`, rondaError.message);
         }
         
         console.log(`[uploadFotoDespues] Ítem ${item.codigo} actualizado en ${Date.now() - startTime}ms`);

@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal, json } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, longtext, timestamp, varchar, boolean, decimal, json } from "drizzle-orm/mysql-core";
 
 // Enum para roles de usuario (superadmin tiene acceso total, admin/supervisor limitado en config)
 export const userRoleEnum = mysqlEnum("role", ["superadmin", "admin", "supervisor", "jefe_residente", "residente", "desarrollador", "segurista"]);
@@ -20,7 +20,7 @@ export const users = mysqlTable("users", {
   empresaId: int("empresaId"),
   proyectoActivoId: int("proyectoActivoId"), // Proyecto actualmente seleccionado por el usuario
   fotoUrl: text("fotoUrl"), // URL de la foto de perfil del usuario
-  fotoBase64: text("fotoBase64"), // Foto de perfil en base64 (alternativa a S3)
+  fotoBase64: longtext("fotoBase64"), // Foto de perfil en base64 (LONGTEXT para fotos grandes)
   telefono: varchar("telefono", { length: 20 }), // Teléfono de contacto
   terminosAceptados: boolean("terminosAceptados").default(false).notNull(), // Si aceptó términos y condiciones
   fechaAceptacionTerminos: timestamp("fechaAceptacionTerminos"), // Fecha de aceptación de términos
@@ -45,7 +45,7 @@ export const proyectos = mysqlTable("proyectos", {
   descripcion: text("descripcion"),
   logoUrl: text("logoUrl"),
   imagenPortadaUrl: text("imagenPortadaUrl"), // Imagen de portada para tarjeta de proyecto
-  imagenPortadaBase64: text("imagenPortadaBase64"), // Imagen de portada en base64 (alternativa a S3)
+  imagenPortadaBase64: longtext("imagenPortadaBase64"), // Imagen de portada en base64 (LONGTEXT)
   direccion: varchar("direccion", { length: 500 }),
   cliente: varchar("cliente", { length: 255 }),
   fechaInicio: timestamp("fechaInicio"),
@@ -223,13 +223,13 @@ export const items = mysqlTable("items", {
   // Fotos
   fotoAntesUrl: text("fotoAntesUrl"),
   fotoAntesKey: varchar("fotoAntesKey", { length: 255 }),
-  fotoAntesBase64: text("fotoAntesBase64"), // Foto antes en base64 (carga inmediata)
+  fotoAntesBase64: longtext("fotoAntesBase64"), // Foto antes en base64 (LONGTEXT para fotos grandes)
   fotoAntesMarcadaUrl: text("fotoAntesMarcadaUrl"),
   fotoAntesMarcadaKey: varchar("fotoAntesMarcadaKey", { length: 255 }),
-  fotoAntesMarcadaBase64: text("fotoAntesMarcadaBase64"), // Foto antes marcada en base64
+  fotoAntesMarcadaBase64: longtext("fotoAntesMarcadaBase64"), // Foto antes marcada (LONGTEXT)
   fotoDespuesUrl: text("fotoDespuesUrl"),
   fotoDespuesKey: varchar("fotoDespuesKey", { length: 255 }),
-  fotoDespuesBase64: text("fotoDespuesBase64"), // Foto después en base64 (carga inmediata)
+  fotoDespuesBase64: longtext("fotoDespuesBase64"), // Foto después en base64 (LONGTEXT para fotos grandes)
   
   // Estado y flujo de aprobación
   status: mysqlEnum("status", ["pendiente_foto_despues", "pendiente_aprobacion", "aprobado", "rechazado"]).default("pendiente_foto_despues").notNull(),
@@ -466,13 +466,13 @@ export const itemRondas = mysqlTable("item_rondas", {
   // Fotos de esta ronda
   fotoAntesUrl: text("fotoAntesUrl"),
   fotoAntesKey: varchar("fotoAntesKey", { length: 255 }),
-  fotoAntesBase64: text("fotoAntesBase64"),
+  fotoAntesBase64: longtext("fotoAntesBase64"),
   fotoAntesMarcadaUrl: text("fotoAntesMarcadaUrl"),
   fotoAntesMarcadaKey: varchar("fotoAntesMarcadaKey", { length: 255 }),
-  fotoAntesMarcadaBase64: text("fotoAntesMarcadaBase64"),
+  fotoAntesMarcadaBase64: longtext("fotoAntesMarcadaBase64"),
   fotoDespuesUrl: text("fotoDespuesUrl"),
   fotoDespuesKey: varchar("fotoDespuesKey", { length: 255 }),
-  fotoDespuesBase64: text("fotoDespuesBase64"),
+  fotoDespuesBase64: longtext("fotoDespuesBase64"),
   
   // Estado de esta ronda
   status: mysqlEnum("status", ["pendiente_foto_despues", "pendiente_aprobacion", "aprobado", "rechazado"]).default("pendiente_foto_despues").notNull(),
@@ -707,7 +707,7 @@ export const firmasReporte = mysqlTable("firmas_reporte", {
   firmadoPorId: int("firmadoPorId"), // Usuario que firmó
   firmadoPorNombre: varchar("firmadoPorNombre", { length: 255 }),
   firmadoPorEmail: varchar("firmadoPorEmail", { length: 320 }),
-  firmaBase64: text("firmaBase64"), // Imagen de la firma en base64
+  firmaBase64: longtext("firmaBase64"), // Imagen de la firma en base64 (LONGTEXT)
   firmado: boolean("firmado").default(false).notNull(),
   fechaFirma: timestamp("fechaFirma"),
   ipFirma: varchar("ipFirma", { length: 45 }),
@@ -877,9 +877,9 @@ export const incidentesSeguridad = mysqlTable("incidentes_seguridad", {
   ubicacion: varchar("ubicacion", { length: 255 }), // zona/nivel/área
   unidadId: int("unidadId"), // opcional, vinculado a unidad
   fotoUrl: text("fotoUrl"),
-  fotoBase64: text("fotoBase64"),
+  fotoBase64: longtext("fotoBase64"),
   fotoMarcadaUrl: text("fotoMarcadaUrl"), // Foto con marcas/rayado
-  fotoMarcadaBase64: text("fotoMarcadaBase64"), // Foto marcada en base64
+  fotoMarcadaBase64: longtext("fotoMarcadaBase64"), // Foto marcada en base64 (LONGTEXT)
   estado: mysqlEnum("estado_incidente", ["abierto", "en_proceso", "cerrado", "prevencion"]).default("abierto").notNull(),
   accionCorrectiva: text("accionCorrectiva"),
   asignadoA: int("asignadoA"), // userId del segurista/responsable asignado

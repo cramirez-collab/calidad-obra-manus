@@ -5140,3 +5140,15 @@
 - [x] Fix: ahora extrae key después de los 2 primeros segmentos del path (appId/bucketId)
 - [x] TODAS las URLs de CloudFront ahora pasan por el proxy /api/image/
 - [x] v4.08 — 666 tests pasando (60 archivos)
+
+### Fix CRÍTICO: "Error guardando foto. Intenta de nuevo." (reportado por Natalia)
+- [x] Causa raíz: columnas base64 eran tipo TEXT (65KB max) — fotos comprimidas exceden ese límite
+- [x] ALTER TABLE: TODAS las columnas base64 cambiadas a LONGTEXT (4GB max)
+- [x] Schema Drizzle actualizado con longtext() para items, item_rondas, firmas_reporte, incidentes
+- [x] uploadFotoDespues: validación tamaño (max 10MB), formato, reintento 1x con backoff 500ms
+- [x] uploadFotoAntes: misma mejora de validación, reintento, y logging
+- [x] Errores diferenciados: foto grande, timeout, sin conexión, error de servidor
+- [x] Logging con correlationId para debugging en servidor
+- [x] Ronda actualizada como operación no crítica (no bloquea si falla)
+- [x] Frontend mejorado en ItemDetail y Seguimiento: mensajes específicos del servidor
+- [x] v4.09 — 666 tests pasando (60 archivos)

@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE items MODIFY COLUMN fotoAntesBase64 LONGTEXT;\nALTER TABLE items MODIFY COLUMN fotoAntesMarcadaBase64 LONGTEXT;\nALTER TABLE items MODIFY COLUMN fotoDespuesBase64 LONGTEXT;\nALTER TABLE item_rondas MODIFY COLUMN fotoAntesBase64 LONGTEXT;\nALTER TABLE item_rondas MODIFY COLUMN fotoAntesMarcadaBase64 LONGTEXT;\nALTER TABLE item_rondas MODIFY COLUMN fotoDespuesBase64 LONGTEXT;\nALTER TABLE users MODIFY COLUMN fotoBase64 LONGTEXT;\nALTER TABLE proyectos MODIFY COLUMN imagenPortadaBase64 LONGTEXT;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute \nALTER TABLE items MODIFY COLUMN fotoAntesBase64 LONGTEXT;\nALTER TABLE items MODIFY COLUMN fotoAntesMarcadaBase64 LONGTEXT;\nALTER TABLE items MODIFY COLUMN fotoDespuesBase64 LONGTEXT;\nALTER TABLE item_rondas MODIFY COLUMN fotoAntesBase64 LONGTEXT;\nALTER TABLE item_rondas MODIFY COLUMN fotoAntesMarcadaBase64 LONGTEXT;\nALTER TABLE item_rondas MODIFY COLUMN fotoDespuesBase64 LONGTEXT;\nALTER TABLE users MODIFY COLUMN fotoBase64 LONGTEXT;\nALTER TABLE proyectos MODIFY COLUMN imagenPortadaBase64 LONGTEXT;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 705
+}

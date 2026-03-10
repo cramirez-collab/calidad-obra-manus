@@ -370,7 +370,14 @@ export default function ItemDetail() {
         setComentario("");
       }
     } catch (error: any) {
-      toast.error("No se pudo guardar la foto. Verifica tu conexi\u00f3n e intenta de nuevo.");
+      const msg = error?.message || error?.data?.message || '';
+      if (msg.includes('demasiado grande')) {
+        toast.error(msg, { duration: 8000 });
+      } else if (msg.includes('conexión') || msg.includes('internet')) {
+        toast.error(msg, { duration: 8000 });
+      } else {
+        toast.error("No se pudo guardar la foto. Se guardó localmente y se subirá cuando mejore la conexión.", { duration: 8000 });
+      }
     } finally {
       setIsSubmitting(false);
     }

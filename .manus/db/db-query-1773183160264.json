@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE firmas_reporte MODIFY COLUMN firmaBase64 LONGTEXT;\nALTER TABLE incidentes_seguridad MODIFY COLUMN fotoBase64 LONGTEXT;\nALTER TABLE incidentes_seguridad MODIFY COLUMN fotoMarcadaBase64 LONGTEXT;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute \nALTER TABLE firmas_reporte MODIFY COLUMN firmaBase64 LONGTEXT;\nALTER TABLE incidentes_seguridad MODIFY COLUMN fotoBase64 LONGTEXT;\nALTER TABLE incidentes_seguridad MODIFY COLUMN fotoMarcadaBase64 LONGTEXT;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 278
+}
