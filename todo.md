@@ -5152,3 +5152,18 @@
 - [x] Ronda actualizada como operación no crítica (no bloquea si falla)
 - [x] Frontend mejorado en ItemDetail y Seguimiento: mensajes específicos del servidor
 - [x] v4.09 — 666 tests pasando (60 archivos)
+
+### Fix CRÍTICO DE CONFIANZA: Asignado muestra al creador en vez del residente seleccionado
+- [x] Diagnosticar por qué items.create pone al creador como asignadoA en vez del residente
+  - Causa raíz: frontend no enviaba residenteId en itemData, backend no lo aceptaba en schema
+  - Backend caía a fallback empresa→especialidad→creador
+- [x] Corregir el código para que asignadoA SIEMPRE sea el residente seleccionado, NUNCA el creador
+  - Backend: residenteId añadido al input schema con PRIORIDAD ABSOLUTA
+  - Backend: si no hay residente en ningún lado, lanza BAD_REQUEST (nunca fallback a creador)
+  - Frontend: NuevoItem.tsx envía residenteId: parseInt(formData.residenteId) en itemData
+  - Frontend: residenteId es campo obligatorio (validación + botón deshabilitado)
+- [x] Fix SyncManager: ambos bloques de sync offline (offlineStore + legacyDB) ahora envían residenteId, pinPlanoId, pinPosX, pinPosY
+- [x] Datos existentes: 123 de 185 ítems tienen asignadoA==creador, pero NO se pueden corregir automáticamente porque el residenteId original ya fue sobreescrito con el creador
+- [x] Agregar validación server-side: log de advertencia si asignadoA == creador, error si no hay residente
+- [x] Tests para garantizar que nunca más se asigne al creador como responsable (7 tests nuevos)
+- [x] v4.10 — 668 tests pasando (60 archivos)

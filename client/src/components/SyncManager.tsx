@@ -373,6 +373,12 @@ export function SyncManager() {
                   fotoAntesMarcadaBase64: fotoMarcada,
                   clientId: action.data.clientId,
                   codigoQrPreasignado: action.data.codigoQrPreasignado,
+                  // CRÍTICO: Pasar residenteId para asignación correcta
+                  residenteId: action.data.residenteId,
+                  // Pin de ubicación en plano
+                  pinPlanoId: action.data.pinPlanoId,
+                  pinPosX: action.data.pinPosX,
+                  pinPosY: action.data.pinPosY,
                 }),
                 SINGLE_OP_TIMEOUT_MS,
                 `createItem-${action.id}`
@@ -442,6 +448,12 @@ export function SyncManager() {
                   fotoAntesMarcadaBase64: fotoMarcada,
                   clientId: action.data.clientId,
                   codigoQrPreasignado: action.data.codigoQrPreasignado,
+                  // CRÍTICO: Pasar residenteId para asignación correcta
+                  residenteId: action.data.residenteId,
+                  // Pin de ubicación en plano
+                  pinPlanoId: action.data.pinPlanoId,
+                  pinPosX: action.data.pinPosX,
+                  pinPosY: action.data.pinPosY,
                 }),
                 SINGLE_OP_TIMEOUT_MS,
                 `createItemLegacy-${action.id}`

@@ -1082,6 +1082,9 @@ export const appRouter = router({
         pinPlanoId: z.number().optional(),
         pinPosX: z.string().optional(),
         pinPosY: z.string().optional(),
+        // CRÍTICO: Residente seleccionado por el creador (quien debe corregir el detalle)
+        // Este campo tiene PRIORIDAD ABSOLUTA sobre cualquier otro método de asignación
+        residenteId: z.number().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         try {
@@ -1105,18 +1108,23 @@ export const appRouter = router({
         }
         
         // ===== TRAZABILIDAD AGRESIVA =====
+        // REGLA DE ORO: El CREADOR (ctx.user.id) NUNCA es el ASIGNADO.
+        // El creador DESIGNA quién es el asignado (residente responsable de corregir).
         // 1. creadoPorId = ctx.user.id (SIEMPRE: quien crea el ítem)
-        // 2. residenteId = jefe de residente de la empresa (quien debe arreglar el detalle)
+        // 2. residenteId = residente seleccionado por el creador en el formulario
         // 3. asignadoAId = mismo que residenteId (la persona asignada para corregir)
         // Flujo: Creador crea → Asignado arregla y sube foto después → Supervisor aprueba
         
-        // Obtener la empresa para saber quién es el jefe de residente asignado
         const empresa = await db.getEmpresaById(input.empresaId);
         
-        // Determinar el residente responsable (prioridad: jefeResidenteId > residenteId de empresa > residenteId de especialidad)
-        let residenteResponsableId: number = ctx.user.id; // fallback: el creador
+        // PRIORIDAD ABSOLUTA: El residente seleccionado por el usuario en el formulario
+        // NUNCA usar ctx.user.id como fallback para asignadoA
+        let residenteResponsableId: number;
         
-        if (empresa?.jefeResidenteId) {
+        if (input.residenteId) {
+          // PRIORIDAD 0 (ABSOLUTA): Residente seleccionado explícitamente por el creador
+          residenteResponsableId = input.residenteId;
+        } else if (empresa?.jefeResidenteId) {
           // Prioridad 1: Jefe de residente de la empresa
           residenteResponsableId = empresa.jefeResidenteId;
         } else if (empresa?.residenteId) {
@@ -1127,7 +1135,25 @@ export const appRouter = router({
           const especialidad = await db.getEspecialidadById(input.especialidadId);
           if (especialidad?.residenteId) {
             residenteResponsableId = especialidad.residenteId;
+          } else {
+            // Último recurso: NO usar el creador, lanzar error
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'No se pudo determinar el residente responsable. Selecciona un residente en el formulario.',
+            });
           }
+        } else {
+          // Sin residente en input, sin empresa con residente, sin especialidad
+          // NUNCA asignar al creador como responsable
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Debes seleccionar un residente responsable para crear el ítem.',
+          });
+        }
+        
+        // VALIDACIÓN DE SEGURIDAD: Log si el asignado es el mismo que el creador
+        if (residenteResponsableId === ctx.user.id) {
+          console.warn(`[items.create] ADVERTENCIA: asignadoA (${residenteResponsableId}) es igual al creador (${ctx.user.id}). Esto solo es válido si el creador ES el residente de la empresa.`);
         }
         
         const result = await db.createItem({

@@ -361,6 +361,9 @@ export default function NuevoItem() {
       fotoAntesBase64: fotoAntes,
       fotoAntesMarcadaBase64: fotoAntesMarcada || undefined,
       clientId,
+      // CRÍTICO: Pasar el residente seleccionado por el usuario como asignado
+      // El creador (ctx.user.id) es quien crea, el residenteId es quien debe corregir
+      residenteId: parseInt(formData.residenteId),
       // Código QR preasignado (si viene de escanear etiqueta nueva)
       codigoQrPreasignado: qrPreasignado || undefined,
       // Pin de ubicación en plano (priorizar datos del pin colocado desde visor)
