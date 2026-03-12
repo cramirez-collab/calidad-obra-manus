@@ -317,7 +317,7 @@ function DashboardLayoutContent({
           <DropdownMenuContent align="end" className="w-52" onInteractOutside={(e) => e.preventDefault()}>
             {/* Agrupar items por sección */}
             {(() => {
-              const groups = ['Sistema', 'Catálogos', 'Usuarios'];
+              const groups = ['Sistema', 'Catálogos', 'Usuarios', 'Control'];
               const itemsWithGroup = item.children as (MenuItem & { group?: string })[];
               return groups.map((groupName, groupIndex) => {
                 const groupItems = itemsWithGroup.filter(i => i.group === groupName);
@@ -433,7 +433,7 @@ function DashboardLayoutContent({
             <div className="bg-muted/50">
               {/* Agrupar items por sección en móvil */}
               {(() => {
-                const groups = ['Sistema', 'Catálogos', 'Usuarios'];
+                const groups = ['Sistema', 'Catálogos', 'Usuarios', 'Control'];
                 const itemsWithGroup = item.children as (MenuItem & { group?: string })[];
                 return groups.map((groupName, groupIndex) => {
                   const groupItems = itemsWithGroup.filter(i => i.group === groupName);

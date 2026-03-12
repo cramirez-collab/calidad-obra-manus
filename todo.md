@@ -5180,3 +5180,8 @@
 - [x] PDF descargable con PDFKit (server-side) — endpoint POST /api/participacion/pdf
 - [x] Tests: 15 tests de lógica de negocio (días hábiles, penalizaciones, cumplimiento)
 - [x] v4.11 — 684 tests pasando (61 archivos)
+
+### Fix: Participación no visible en Configuración
+- [x] Verificar dónde quedó el enlace de Participación en la navegación
+- [x] Fix: grupo 'Control' faltaba en array hardcodeado de DashboardLayout (solo tenía Sistema, Catálogos, Usuarios)
+- [x] Hacer visible y accesible la sección de Participación dentro de Configuración
