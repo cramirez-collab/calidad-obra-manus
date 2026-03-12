@@ -1389,8 +1389,37 @@ router.get('/api/export/fichas-items/pdf', async (req, res) => {
       return (a.numeroInterno || 0) - (b.numeroInterno || 0);
     });
 
+    // Load chat messages and history for each item in parallel (batches of 10)
+    const itemIds = sorted.map((i: any) => i.id);
+    const mensajesPorItem = new Map<number, any[]>();
+    const historialPorItem = new Map<number, any[]>();
+
+    for (let i = 0; i < itemIds.length; i += 10) {
+      const batch = itemIds.slice(i, i + 10);
+      const [mensajesBatch, historialBatch] = await Promise.all([
+        Promise.all(batch.map((id: number) => db.getMensajesByItem(id).catch(() => []))),
+        Promise.all(batch.map((id: number) => db.getItemHistorial(id).catch(() => []))),
+      ]);
+      batch.forEach((id: number, idx: number) => {
+        mensajesPorItem.set(id, mensajesBatch[idx] || []);
+        historialPorItem.set(id, historialBatch[idx] || []);
+      });
+    }
+
     const fichas = sorted.map((item: any) => {
       const unidad = unidadesMap.get(item.unidadId);
+      const mensajes = (mensajesPorItem.get(item.id) || []).map((m: any) => ({
+        texto: m.texto || '',
+        usuarioNombre: m.usuario?.name || usersMap.get(m.usuarioId) || 'Usuario',
+        tipo: m.tipo || 'texto',
+        createdAt: m.createdAt,
+      }));
+      const historial = (historialPorItem.get(item.id) || []).map((h: any) => ({
+        accion: h.accion || '',
+        descripcion: h.descripcion || h.accion || '',
+        usuarioNombre: usersMap.get(h.usuarioId) || 'Sistema',
+        createdAt: h.createdAt,
+      }));
       return {
         id: item.id,
         codigo: item.codigo || '',
@@ -1413,10 +1442,15 @@ router.get('/api/export/fichas-items/pdf', async (req, res) => {
         fechaCreacion: item.fechaCreacion,
         fechaFotoDespues: item.fechaFotoDespues,
         fechaAprobacion: item.fechaAprobacion,
+        fechaCierre: item.fechaCierre || null,
         fotoAntesUrl: item.fotoAntesUrl,
+        fotoAntesMarcadaUrl: item.fotoAntesMarcadaUrl || null,
         fotoDespuesUrl: item.fotoDespuesUrl,
         comentarioResidente: item.comentarioResidente,
         comentarioSupervisor: item.comentarioSupervisor,
+        comentarioJefeResidente: item.comentarioJefeResidente || null,
+        mensajes,
+        historial,
       };
     });
 

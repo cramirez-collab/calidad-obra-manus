@@ -5227,3 +5227,13 @@
 
 ### Fix: PDF Fichas error "proyectoId requerido"
 - [x] getExportParams() en ItemsList.tsx no incluía proyectoId — corregido
+
+### Mejora PDF Fichas Masivas: contenido completo como ficha unitaria
+- [x] Fotos antes/después incrustadas en cada ficha (descarga real de URLs, batch de 5)
+- [x] Chat/mensajes del ítem (hasta 15 mensajes por ficha)
+- [x] Comentarios de residente, supervisor y jefe residente
+- [x] Fechas: creación, foto después, aprobación, cierre
+- [x] Trazabilidad completa: creado por, asignado a (corrige), residente, aprobado por
+- [x] Historial de eventos (hasta 10 por ficha)
+- [x] Ordenado por nivel de unidad + nombre + número interno
+- [x] 254 páginas, 5.6MB generados correctamente con fotos reales

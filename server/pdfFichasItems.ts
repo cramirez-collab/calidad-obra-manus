@@ -1,8 +1,10 @@
 /**
- * PDF Masivo de Fichas de Items
- * Una ficha por hoja, ordenadas por numero de unidad
+ * PDF Masivo de Fichas de Items — Version completa
+ * Una ficha por hoja con: fotos reales, chat, comentarios, trazabilidad, fechas
  */
 import PDFDocument from 'pdfkit';
+import https from 'https';
+import http from 'http';
 
 const COLORS = {
   primary: '#002C63',
@@ -14,12 +16,20 @@ const COLORS = {
   green: '#16a34a',
   amber: '#d97706',
   red: '#dc2626',
+  blueBg: '#eff6ff',
   greenBg: '#f0fdf4',
   amberBg: '#fffbeb',
   redBg: '#fef2f2',
+  chatBg: '#f1f5f9',
 };
 
 function formatDate(d: Date | string | null): string {
+  if (!d) return '—';
+  const date = new Date(d);
+  return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function formatDateShort(d: Date | string | null): string {
   if (!d) return '—';
   const date = new Date(d);
   return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -42,12 +52,24 @@ function getStatusColor(status: string): string {
   return COLORS.gray;
 }
 
-function hexToRGB(hex: string): [number, number, number] {
-  const h = hex.replace('#', '');
-  return [parseInt(h.substring(0, 2), 16), parseInt(h.substring(2, 4), 16), parseInt(h.substring(4, 6), 16)];
+async function fetchImageBuffer(url: string): Promise<Buffer | null> {
+  if (!url) return null;
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => resolve(null), 8000);
+    const protocol = url.startsWith('https') ? https : http;
+    try {
+      protocol.get(url, { timeout: 7000 }, (res) => {
+        if (res.statusCode !== 200) { clearTimeout(timeout); resolve(null); return; }
+        const chunks: Buffer[] = [];
+        res.on('data', (c: Buffer) => chunks.push(c));
+        res.on('end', () => { clearTimeout(timeout); resolve(Buffer.concat(chunks)); });
+        res.on('error', () => { clearTimeout(timeout); resolve(null); });
+      }).on('error', () => { clearTimeout(timeout); resolve(null); });
+    } catch { clearTimeout(timeout); resolve(null); }
+  });
 }
 
-interface ItemFicha {
+export interface ItemFichaCompleta {
   id: number;
   codigo: string;
   numeroInterno: number;
@@ -69,24 +91,52 @@ interface ItemFicha {
   fechaCreacion: Date | string | null;
   fechaFotoDespues: Date | string | null;
   fechaAprobacion: Date | string | null;
+  fechaCierre: Date | string | null;
   fotoAntesUrl: string | null;
+  fotoAntesMarcadaUrl: string | null;
   fotoDespuesUrl: string | null;
   comentarioResidente: string | null;
   comentarioSupervisor: string | null;
+  comentarioJefeResidente: string | null;
+  // Chat messages
+  mensajes: Array<{
+    texto: string;
+    usuarioNombre: string;
+    tipo: string;
+    createdAt: Date | string;
+  }>;
+  // History/traceability
+  historial: Array<{
+    accion: string;
+    descripcion: string;
+    usuarioNombre: string;
+    createdAt: Date | string;
+  }>;
 }
 
-export async function generarPDFFichasItems(items: ItemFicha[], proyectoNombre: string): Promise<Buffer> {
+export async function generarPDFFichasItems(items: ItemFichaCompleta[], proyectoNombre: string): Promise<Buffer> {
+  // Pre-fetch all images in parallel (batch of 5 at a time to avoid overwhelming)
+  const imageCache = new Map<string, Buffer | null>();
+  const allUrls = items.flatMap(item => [item.fotoAntesUrl, item.fotoAntesMarcadaUrl, item.fotoDespuesUrl].filter(Boolean)) as string[];
+  const uniqueUrls = Array.from(new Set(allUrls));
+  
+  for (let i = 0; i < uniqueUrls.length; i += 5) {
+    const batch = uniqueUrls.slice(i, i + 5);
+    const results = await Promise.all(batch.map(url => fetchImageBuffer(url)));
+    batch.forEach((url, idx) => imageCache.set(url, results[idx]));
+  }
+
   return new Promise<Buffer>((resolve, reject) => {
     try {
       const doc = new PDFDocument({
         size: 'LETTER',
         layout: 'portrait',
-        margins: { top: 30, bottom: 30, left: 35, right: 35 },
+        margins: { top: 28, bottom: 28, left: 32, right: 32 },
         bufferPages: true,
         info: {
           Title: `Fichas de Items - ${proyectoNombre}`,
           Author: 'ObjetivaQC',
-          Subject: 'Reporte masivo de fichas de items',
+          Subject: 'Reporte masivo de fichas de items con evidencia',
         },
       });
 
@@ -97,6 +147,52 @@ export async function generarPDFFichasItems(items: ItemFicha[], proyectoNombre: 
 
       const pageW = doc.page.width - doc.page.margins.left - doc.page.margins.right;
       const startX = doc.page.margins.left;
+      const pageBottom = doc.page.height - doc.page.margins.bottom - 20;
+
+      const ensureSpace = (needed: number) => {
+        if (doc.y + needed > pageBottom) {
+          doc.addPage();
+          return doc.page.margins.top;
+        }
+        return doc.y;
+      };
+
+      const drawSectionTitle = (title: string) => {
+        const y = ensureSpace(20);
+        doc.save();
+        doc.moveTo(startX, y).lineTo(startX + pageW, y).strokeColor(COLORS.border).lineWidth(0.5).stroke();
+        doc.restore();
+        doc.fontSize(9).fillColor(COLORS.primary).text(title, startX + 4, y + 4, { width: pageW - 8 });
+        doc.y = y + 18;
+      };
+
+      const drawField = (label: string, value: string, x: number, yPos: number, w: number): number => {
+        doc.fontSize(6.5).fillColor(COLORS.gray).text(label, x, yPos, { width: w });
+        doc.fontSize(8.5).fillColor(COLORS.darkGray).text(value || '—', x, yPos + 9, { width: w });
+        return yPos + 24;
+      };
+
+      const drawPhoto = (buffer: Buffer | null, label: string, x: number, y: number, w: number, h: number, hasUrl: boolean) => {
+        doc.save();
+        doc.roundedRect(x, y, w, h, 3).strokeColor(COLORS.border).lineWidth(0.5).stroke();
+        doc.restore();
+
+        if (buffer) {
+          try {
+            doc.save();
+            doc.roundedRect(x + 1, y + 1, w - 2, h - 2, 3).clip();
+            doc.image(buffer, x + 1, y + 1, { width: w - 2, height: h - 2, fit: [w - 2, h - 2], align: 'center', valign: 'center' });
+            doc.restore();
+          } catch {
+            doc.fontSize(7).fillColor(COLORS.gray).text('Error cargando imagen', x, y + h / 2 - 5, { width: w, align: 'center' });
+          }
+        } else {
+          doc.fontSize(7).fillColor(COLORS.gray).text(hasUrl ? 'Imagen no disponible' : 'Sin foto', x, y + h / 2 - 5, { width: w, align: 'center' });
+        }
+
+        // Label below photo
+        doc.fontSize(6.5).fillColor(COLORS.primary).text(label, x, y + h + 2, { width: w, align: 'center' });
+      };
 
       items.forEach((item, idx) => {
         if (idx > 0) doc.addPage();
@@ -105,170 +201,161 @@ export async function generarPDFFichasItems(items: ItemFicha[], proyectoNombre: 
 
         // === HEADER BAR ===
         doc.save();
-        doc.rect(startX, y, pageW, 36).fill(COLORS.primary);
+        doc.rect(startX, y, pageW, 32).fill(COLORS.primary);
         doc.restore();
 
-        doc.fontSize(14).fillColor(COLORS.white)
-          .text(`FICHA #${item.numeroInterno || item.id}`, startX + 10, y + 5, { width: pageW * 0.5 });
-        doc.fontSize(9).fillColor(COLORS.white)
-          .text(item.codigo, startX + 10, y + 22, { width: pageW * 0.5 });
+        doc.fontSize(13).fillColor(COLORS.white)
+          .text(`FICHA #${item.numeroInterno || item.id}`, startX + 8, y + 4, { width: pageW * 0.55 });
+        doc.fontSize(8).fillColor(COLORS.white)
+          .text(item.codigo, startX + 8, y + 20, { width: pageW * 0.55 });
 
         // Status badge
         const statusLabel = getStatusLabel(item.status);
         const statusColor = getStatusColor(item.status);
-        const badgeW = 120;
-        const badgeX = startX + pageW - badgeW - 10;
+        const badgeW = 110;
+        const badgeX = startX + pageW - badgeW - 8;
         doc.save();
-        doc.roundedRect(badgeX, y + 8, badgeW, 20, 10).fill(statusColor);
+        doc.roundedRect(badgeX, y + 6, badgeW, 20, 10).fill(statusColor);
         doc.restore();
-        doc.fontSize(9).fillColor(COLORS.white)
-          .text(statusLabel, badgeX, y + 12, { width: badgeW, align: 'center' });
+        doc.fontSize(8).fillColor(COLORS.white)
+          .text(statusLabel, badgeX, y + 10, { width: badgeW, align: 'center' });
 
-        y += 44;
+        y += 38;
 
-        // === PROYECTO & UNIDAD ===
+        // === PROYECTO & UNIDAD BAR ===
         doc.save();
-        doc.rect(startX, y, pageW, 22).fill('#f1f5f9');
+        doc.rect(startX, y, pageW, 18).fill('#f1f5f9');
         doc.restore();
-        doc.fontSize(9).fillColor(COLORS.primary)
-          .text(`Proyecto: ${proyectoNombre}`, startX + 8, y + 5, { width: pageW * 0.5 });
-        doc.fontSize(9).fillColor(COLORS.primary)
-          .text(`Unidad: ${item.unidadNombre}${item.unidadNivel != null ? ` (Nivel ${item.unidadNivel})` : ''}`, startX + pageW * 0.5, y + 5, { width: pageW * 0.5 });
-        y += 28;
+        doc.fontSize(8).fillColor(COLORS.primary)
+          .text(`Proyecto: ${proyectoNombre}`, startX + 6, y + 4, { width: pageW * 0.5 });
+        doc.fontSize(8).fillColor(COLORS.primary)
+          .text(`Unidad: ${item.unidadNombre}${item.unidadNivel != null ? ` (Nivel ${item.unidadNivel})` : ''}`, startX + pageW * 0.5, y + 4, { width: pageW * 0.5 });
+        y += 22;
 
         // === TITULO ===
-        doc.fontSize(12).fillColor(COLORS.darkGray).text(item.titulo, startX + 4, y, { width: pageW - 8 });
-        y = doc.y + 6;
+        doc.fontSize(11).fillColor(COLORS.darkGray).text(item.titulo, startX + 4, y, { width: pageW - 8 });
+        y = doc.y + 3;
 
         // === DESCRIPCION ===
         if (item.descripcion) {
-          doc.fontSize(9).fillColor(COLORS.gray).text(item.descripcion, startX + 4, y, { width: pageW - 8 });
-          y = doc.y + 8;
+          doc.fontSize(8).fillColor(COLORS.gray).text(item.descripcion, startX + 4, y, { width: pageW - 8 });
+          y = doc.y + 4;
         }
 
-        // === INFO GRID (2 columns) ===
-        const drawField = (label: string, value: string, x: number, yPos: number, w: number): number => {
-          doc.fontSize(7).fillColor(COLORS.gray).text(label, x, yPos, { width: w });
-          doc.fontSize(9).fillColor(COLORS.darkGray).text(value || '—', x, yPos + 10, { width: w });
-          return yPos + 26;
-        };
+        doc.y = y;
 
-        const colW = (pageW - 16) / 2;
+        // === DATOS DEL ITEM ===
+        drawSectionTitle('DATOS DEL ITEM');
+        const colW = (pageW - 12) / 2;
         const col1X = startX + 4;
-        const col2X = startX + colW + 12;
+        const col2X = startX + colW + 8;
 
-        // Separator
-        doc.save();
-        doc.moveTo(startX, y).lineTo(startX + pageW, y).strokeColor(COLORS.border).lineWidth(0.5).stroke();
-        doc.restore();
-        y += 6;
-
-        doc.fontSize(10).fillColor(COLORS.primary).text('DATOS DEL ITEM', startX + 4, y);
-        y += 16;
-
-        let y1 = y, y2 = y;
+        let y1 = doc.y, y2 = doc.y;
         y1 = drawField('EMPRESA', item.empresaNombre, col1X, y1, colW);
         y2 = drawField('ESPECIALIDAD', item.especialidadNombre, col2X, y2, colW);
         y1 = drawField('ATRIBUTO', item.atributoNombre, col1X, y1, colW);
         y2 = drawField('DEFECTO', item.defectoNombre, col2X, y2, colW);
         y1 = drawField('ESPACIO', item.espacioNombre, col1X, y1, colW);
         y2 = drawField('UBICACION', item.ubicacionDetalle || '—', col2X, y2, colW);
-        y = Math.max(y1, y2) + 4;
+        doc.y = Math.max(y1, y2);
 
-        // Separator
-        doc.save();
-        doc.moveTo(startX, y).lineTo(startX + pageW, y).strokeColor(COLORS.border).lineWidth(0.5).stroke();
-        doc.restore();
-        y += 6;
-
-        doc.fontSize(10).fillColor(COLORS.primary).text('TRAZABILIDAD', startX + 4, y);
-        y += 16;
-
-        y1 = y; y2 = y;
+        // === TRAZABILIDAD ===
+        drawSectionTitle('TRAZABILIDAD');
+        y1 = doc.y; y2 = doc.y;
         y1 = drawField('CREADO POR', item.creadoPorNombre, col1X, y1, colW);
-        y2 = drawField('ASIGNADO A', item.asignadoANombre, col2X, y2, colW);
+        y2 = drawField('ASIGNADO A (CORRIGE)', item.asignadoANombre, col2X, y2, colW);
         y1 = drawField('RESIDENTE', item.residenteNombre, col1X, y1, colW);
         y2 = drawField('APROBADO POR', item.aprobadoPorNombre, col2X, y2, colW);
-        y = Math.max(y1, y2) + 4;
+        doc.y = Math.max(y1, y2);
 
-        // Separator
-        doc.save();
-        doc.moveTo(startX, y).lineTo(startX + pageW, y).strokeColor(COLORS.border).lineWidth(0.5).stroke();
-        doc.restore();
-        y += 6;
-
-        doc.fontSize(10).fillColor(COLORS.primary).text('FECHAS', startX + 4, y);
-        y += 16;
-
-        y1 = y; y2 = y;
-        y1 = drawField('FECHA CREACION', formatDate(item.fechaCreacion), col1X, y1, colW);
-        y2 = drawField('FECHA FOTO DESPUES', formatDate(item.fechaFotoDespues), col2X, y2, colW);
-        y1 = drawField('FECHA APROBACION', formatDate(item.fechaAprobacion), col1X, y1, colW);
-        y = Math.max(y1, y2) + 4;
+        // === FECHAS ===
+        drawSectionTitle('FECHAS');
+        y1 = doc.y; y2 = doc.y;
+        y1 = drawField('CREACION', formatDateShort(item.fechaCreacion), col1X, y1, colW);
+        y2 = drawField('FOTO DESPUES', formatDateShort(item.fechaFotoDespues), col2X, y2, colW);
+        y1 = drawField('APROBACION', formatDateShort(item.fechaAprobacion), col1X, y1, colW);
+        y2 = drawField('CIERRE', formatDateShort(item.fechaCierre), col2X, y2, colW);
+        doc.y = Math.max(y1, y2);
 
         // === COMENTARIOS ===
-        if (item.comentarioResidente || item.comentarioSupervisor) {
-          doc.save();
-          doc.moveTo(startX, y).lineTo(startX + pageW, y).strokeColor(COLORS.border).lineWidth(0.5).stroke();
-          doc.restore();
-          y += 6;
-
-          doc.fontSize(10).fillColor(COLORS.primary).text('COMENTARIOS', startX + 4, y);
-          y += 16;
-
+        if (item.comentarioResidente || item.comentarioSupervisor || item.comentarioJefeResidente) {
+          drawSectionTitle('COMENTARIOS');
           if (item.comentarioResidente) {
-            doc.fontSize(7).fillColor(COLORS.gray).text('COMENTARIO RESIDENTE', startX + 4, y);
-            y += 10;
-            doc.fontSize(8.5).fillColor(COLORS.darkGray).text(item.comentarioResidente, startX + 4, y, { width: pageW - 8 });
-            y = doc.y + 8;
+            doc.fontSize(6.5).fillColor(COLORS.gray).text('RESIDENTE:', startX + 4, doc.y, { continued: true });
+            doc.fontSize(8).fillColor(COLORS.darkGray).text(` ${item.comentarioResidente}`, { width: pageW - 8 });
+            doc.y += 3;
           }
           if (item.comentarioSupervisor) {
-            doc.fontSize(7).fillColor(COLORS.gray).text('COMENTARIO SUPERVISOR', startX + 4, y);
-            y += 10;
-            doc.fontSize(8.5).fillColor(COLORS.darkGray).text(item.comentarioSupervisor, startX + 4, y, { width: pageW - 8 });
-            y = doc.y + 8;
+            doc.fontSize(6.5).fillColor(COLORS.gray).text('SUPERVISOR:', startX + 4, doc.y, { continued: true });
+            doc.fontSize(8).fillColor(COLORS.darkGray).text(` ${item.comentarioSupervisor}`, { width: pageW - 8 });
+            doc.y += 3;
+          }
+          if (item.comentarioJefeResidente) {
+            doc.fontSize(6.5).fillColor(COLORS.gray).text('JEFE RESIDENTE:', startX + 4, doc.y, { continued: true });
+            doc.fontSize(8).fillColor(COLORS.darkGray).text(` ${item.comentarioJefeResidente}`, { width: pageW - 8 });
+            doc.y += 3;
           }
         }
 
-        // === FOTOS SECTION ===
-        const fotoY = Math.max(y + 8, doc.page.height - doc.page.margins.bottom - 200);
-        if (fotoY < doc.page.height - doc.page.margins.bottom - 40) {
-          doc.save();
-          doc.moveTo(startX, fotoY - 4).lineTo(startX + pageW, fotoY - 4).strokeColor(COLORS.border).lineWidth(0.5).stroke();
-          doc.restore();
+        // === EVIDENCIA FOTOGRAFICA ===
+        const photoH = 160;
+        ensureSpace(photoH + 30);
+        drawSectionTitle('EVIDENCIA FOTOGRAFICA');
 
-          doc.fontSize(10).fillColor(COLORS.primary).text('EVIDENCIA FOTOGRAFICA', startX + 4, fotoY);
-          const photoBoxW = (pageW - 20) / 2;
-          const photoBoxH = 150;
-          const photoY = fotoY + 16;
+        const photoW = (pageW - 16) / 2;
+        const photoY = doc.y;
 
-          // Foto antes placeholder
-          doc.save();
-          doc.roundedRect(startX + 4, photoY, photoBoxW, photoBoxH, 4).strokeColor(COLORS.border).lineWidth(1).stroke();
-          doc.restore();
-          doc.fontSize(8).fillColor(COLORS.gray)
-            .text('FOTO ANTES', startX + 4, photoY + photoBoxH / 2 - 10, { width: photoBoxW, align: 'center' });
-          if (item.fotoAntesUrl) {
-            doc.fontSize(7).fillColor(COLORS.primary)
-              .text('(Ver en app)', startX + 4, photoY + photoBoxH / 2 + 4, { width: photoBoxW, align: 'center' });
-          } else {
-            doc.fontSize(7).fillColor(COLORS.gray)
-              .text('Sin foto', startX + 4, photoY + photoBoxH / 2 + 4, { width: photoBoxW, align: 'center' });
+        // Use marcada if available, otherwise original
+        const fotoAntesKey = item.fotoAntesMarcadaUrl || item.fotoAntesUrl;
+        const fotoAntesBuffer = fotoAntesKey ? (imageCache.get(fotoAntesKey) || null) : null;
+        const fotoDespuesBuffer = item.fotoDespuesUrl ? (imageCache.get(item.fotoDespuesUrl) || null) : null;
+
+        drawPhoto(fotoAntesBuffer, 'ANTES', startX + 4, photoY, photoW, photoH, !!item.fotoAntesUrl);
+        drawPhoto(fotoDespuesBuffer, 'DESPUES', startX + photoW + 12, photoY, photoW, photoH, !!item.fotoDespuesUrl);
+
+        doc.y = photoY + photoH + 16;
+
+        // === CHAT / MENSAJES ===
+        if (item.mensajes && item.mensajes.length > 0) {
+          const textMsgs = item.mensajes.filter(m => m.tipo === 'texto' || m.tipo === 'audio');
+          if (textMsgs.length > 0) {
+            ensureSpace(40);
+            drawSectionTitle(`CHAT (${textMsgs.length} mensajes)`);
+
+            textMsgs.slice(0, 15).forEach((msg) => {
+              ensureSpace(20);
+              doc.save();
+              const msgY = doc.y;
+              doc.roundedRect(startX + 4, msgY, pageW - 8, 1, 0).fill(COLORS.chatBg);
+              doc.restore();
+
+              doc.fontSize(6.5).fillColor(COLORS.primary).text(msg.usuarioNombre, startX + 6, doc.y, { continued: true });
+              doc.fontSize(6).fillColor(COLORS.gray).text(`  ${formatDate(msg.createdAt)}`);
+              doc.fontSize(7.5).fillColor(COLORS.darkGray).text(msg.texto || (msg.tipo === 'audio' ? '[Nota de voz]' : '[Foto]'), startX + 6, doc.y, { width: pageW - 16 });
+              doc.y += 4;
+            });
+
+            if (textMsgs.length > 15) {
+              doc.fontSize(7).fillColor(COLORS.gray).text(`... y ${textMsgs.length - 15} mensajes mas`, startX + 6, doc.y);
+              doc.y += 4;
+            }
           }
+        }
 
-          // Foto despues placeholder
-          const foto2X = startX + photoBoxW + 16;
-          doc.save();
-          doc.roundedRect(foto2X, photoY, photoBoxW, photoBoxH, 4).strokeColor(COLORS.border).lineWidth(1).stroke();
-          doc.restore();
-          doc.fontSize(8).fillColor(COLORS.gray)
-            .text('FOTO DESPUES', foto2X, photoY + photoBoxH / 2 - 10, { width: photoBoxW, align: 'center' });
-          if (item.fotoDespuesUrl) {
-            doc.fontSize(7).fillColor(COLORS.green)
-              .text('(Ver en app)', foto2X, photoY + photoBoxH / 2 + 4, { width: photoBoxW, align: 'center' });
-          } else {
-            doc.fontSize(7).fillColor(COLORS.gray)
-              .text('Sin foto', foto2X, photoY + photoBoxH / 2 + 4, { width: photoBoxW, align: 'center' });
+        // === HISTORIAL DE TRAZABILIDAD ===
+        if (item.historial && item.historial.length > 0) {
+          ensureSpace(40);
+          drawSectionTitle(`HISTORIAL (${item.historial.length} eventos)`);
+
+          item.historial.slice(0, 10).forEach((h) => {
+            ensureSpace(16);
+            doc.fontSize(6.5).fillColor(COLORS.primary).text(`${formatDate(h.createdAt)}`, startX + 6, doc.y, { continued: true });
+            doc.fontSize(7).fillColor(COLORS.darkGray).text(`  ${h.usuarioNombre}: ${h.descripcion || h.accion}`, { width: pageW - 16 });
+            doc.y += 2;
+          });
+
+          if (item.historial.length > 10) {
+            doc.fontSize(7).fillColor(COLORS.gray).text(`... y ${item.historial.length - 10} eventos mas`, startX + 6, doc.y);
           }
         }
       });
@@ -277,11 +364,11 @@ export async function generarPDFFichasItems(items: ItemFicha[], proyectoNombre: 
       const totalPages = doc.bufferedPageRange().count;
       for (let i = 0; i < totalPages; i++) {
         doc.switchToPage(i);
-        doc.fontSize(7).fillColor(COLORS.gray)
+        doc.fontSize(6.5).fillColor(COLORS.gray)
           .text(
             `ObjetivaQC — Fichas de Items — ${proyectoNombre} — ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })} — Pag ${i + 1}/${totalPages}`,
             doc.page.margins.left,
-            doc.page.height - 22,
+            doc.page.height - 20,
             { width: pageW, align: 'center' }
           );
       }

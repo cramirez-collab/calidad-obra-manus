@@ -1,0 +1,8 @@
+PDF Fichas Preview - 3 pages viewed:
+Page 1: FICHA #217 - Lupher - Unidad 103 (Nivel 1) - Foto ANTES con marcas verdes visible, DESPUES "Sin foto" - Historial 1 evento - Trazabilidad: Creado por Mayra Perez, Asignado a Mayra Perez
+Page 2: FICHA #60 - Garcab cerámicos - Unidad 105 (Nivel 1) - Foto ANTES con marca roja visible, DESPUES "Sin foto" - Creado por Estefany Sanchez, Asignado a Esteban Guerrero - Historial 1 evento
+Page 3: FICHA #61 - Garcab cerámicos - Unidad 105 (Nivel 1) - Foto ANTES visible, DESPUES "Sin foto" - Creado por Estefany Sanchez, Asignado a Esteban Guerrero
+
+Total: 254 pages, 5.6MB
+All sections working: Header, Datos, Trazabilidad, Fechas, Evidencia Fotográfica, Historial
+Photos are being embedded correctly from URLs
