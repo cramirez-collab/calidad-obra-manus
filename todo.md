@@ -5185,3 +5185,21 @@
 - [x] Verificar dónde quedó el enlace de Participación en la navegación
 - [x] Fix: grupo 'Control' faltaba en array hardcodeado de DashboardLayout (solo tenía Sistema, Catálogos, Usuarios)
 - [x] Hacer visible y accesible la sección de Participación dentro de Configuración
+
+### Corrección masiva de asignadoA en BD (datos históricos)
+- [x] Identificar todos los ítems donde asignadoAId == creadoPorId (146 de 224 total)
+- [x] Determinar el residente correcto por empresa usando empresa_residentes + ítems bien asignados
+- [x] Ejecutar UPDATE masivo: 27 ítems corregidos
+  - Novotile (21 ítems) -> Paola Mora (id:7681577)
+  - Riepsa (5 ítems) -> Eduardo Rubicel (id:4357159)
+  - Gumik (1 ítem) -> Katy Orozco (id:1470115)
+- [x] 119 restantes son legítimos: Waller/Natalia (60), Carlos test (30), test id:999 (26), Dcon/Saul (2), Lupher/Mayra (1)
+
+### Limpieza BD + Fix Participación (v4.11)
+- [x] Eliminar ítems de prueba: 93 ítems eliminados (empresaId=1, usuarios 999/100/200/300 inexistentes)
+- [x] Eliminar 6 empresas "Test UX" de la BD
+- [x] Limpieza de datos relacionados: 113 historial, 57 rondas, 13 pines, 332 notificaciones eliminados
+- [x] Participación incluye a TODOS los que crean (Objetiva + residentes) — confirmado por Carlos
+- [x] BD final: 131 ítems reales, 68 con asignado≠creador, 63 legítimos auto-asignados (residentes)
+- [x] ZERO usuarios Objetiva auto-asignados
+- [x] 684 tests pasando (61 archivos)
