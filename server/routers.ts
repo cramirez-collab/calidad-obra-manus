@@ -7300,5 +7300,191 @@ Si un campo no se puede extraer, déjalo como cadena vacía.`
         }
       }),
   }),
+
+  // ==================== PARTICIPACIÓN ====================
+  participacion: router({
+    // Estadísticas de participación por empresa-residente
+    stats: adminProcedure
+      .input(z.object({
+        proyectoId: z.number(),
+        fechaDesde: z.string().optional(), // ISO date
+        fechaHasta: z.string().optional(), // ISO date
+      }))
+      .query(async ({ input }) => {
+        const database = await db.getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB no disponible' });
+        const { sql: sqlTag } = await import('drizzle-orm');
+
+        // Rango de fechas: default últimos 30 días
+        const fechaHasta = input.fechaHasta || new Date().toISOString().split('T')[0];
+        const fechaDesdeDefault = new Date();
+        fechaDesdeDefault.setDate(fechaDesdeDefault.getDate() - 30);
+        const fechaDesde = input.fechaDesde || fechaDesdeDefault.toISOString().split('T')[0];
+
+        // 1. Participación por empresa-residente: ítems por día
+        const rawData: any[] = await database.execute(sqlTag`
+          SELECT 
+            i.empresaId,
+            MAX(e.nombre) as empresaNombre,
+            i.residenteId,
+            MAX(u.name) as residenteNombre,
+            DATE(i.fechaCreacion) as dia,
+            COUNT(*) as itemsDia
+          FROM items i
+          JOIN empresas e ON i.empresaId = e.id
+          LEFT JOIN users u ON i.residenteId = u.id
+          WHERE i.proyectoId = ${input.proyectoId}
+            AND DATE(i.fechaCreacion) >= ${fechaDesde}
+            AND DATE(i.fechaCreacion) <= ${fechaHasta}
+          GROUP BY i.empresaId, i.residenteId, DATE(i.fechaCreacion)
+          ORDER BY dia DESC
+        `);
+
+        // 2. Calcular días hábiles en el rango (lun-vie)
+        const start = new Date(fechaDesde + 'T00:00:00');
+        const end = new Date(fechaHasta + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const effectiveEnd = end > today ? today : end;
+        let diasHabiles = 0;
+        const d = new Date(start);
+        while (d <= effectiveEnd) {
+          const dow = d.getDay();
+          if (dow !== 0 && dow !== 6) diasHabiles++;
+          d.setDate(d.getDate() + 1);
+        }
+
+        // 3. Agrupar por empresa-residente
+        const rows = Array.isArray(rawData) ? (rawData as any[]).flat ? (rawData as any[])[0] || rawData : rawData : [];
+        const dataRows = Array.isArray(rows) ? rows : [];
+        
+        const grouped = new Map<string, {
+          empresaId: number;
+          empresaNombre: string;
+          residenteId: number | null;
+          residenteNombre: string;
+          diasConActividad: Set<string>;
+          totalItems: number;
+          itemsPorDia: Map<string, number>;
+          ultimaParticipacion: string;
+        }>();
+
+        for (const row of dataRows) {
+          const key = `${row.empresaId}-${row.residenteId || 0}`;
+          if (!grouped.has(key)) {
+            grouped.set(key, {
+              empresaId: row.empresaId,
+              empresaNombre: row.empresaNombre || 'Sin empresa',
+              residenteId: row.residenteId,
+              residenteNombre: row.residenteNombre || 'Sin residente',
+              diasConActividad: new Set(),
+              totalItems: 0,
+              itemsPorDia: new Map(),
+              ultimaParticipacion: '',
+            });
+          }
+          const g = grouped.get(key)!;
+          const diaStr = row.dia instanceof Date ? row.dia.toISOString().split('T')[0] : String(row.dia);
+          g.diasConActividad.add(diaStr);
+          g.totalItems += Number(row.itemsDia);
+          g.itemsPorDia.set(diaStr, Number(row.itemsDia));
+          if (!g.ultimaParticipacion || diaStr > g.ultimaParticipacion) {
+            g.ultimaParticipacion = diaStr;
+          }
+        }
+
+        // 4. Calcular penalizaciones
+        const PENALIZACION_POR_DIA = 500;
+        const MINIMO_ITEMS_DIA = 5;
+
+        const resultado = Array.from(grouped.values()).map(g => {
+          // Días hábiles sin cumplir mínimo de 5 ítems
+          let diasIncumplimiento = 0;
+          let diasCumplimiento = 0;
+          const d2 = new Date(start);
+          while (d2 <= effectiveEnd) {
+            const dow = d2.getDay();
+            if (dow !== 0 && dow !== 6) {
+              const diaStr = d2.toISOString().split('T')[0];
+              const itemsEseDia = g.itemsPorDia.get(diaStr) || 0;
+              if (itemsEseDia >= MINIMO_ITEMS_DIA) {
+                diasCumplimiento++;
+              } else {
+                diasIncumplimiento++;
+              }
+            }
+            d2.setDate(d2.getDate() + 1);
+          }
+
+          const penalizacion = diasIncumplimiento * PENALIZACION_POR_DIA;
+          const diasSinParticipar = Math.max(0, Math.floor((today.getTime() - new Date(g.ultimaParticipacion + 'T00:00:00').getTime()) / 86400000));
+          const porcentajeCumplimiento = diasHabiles > 0 ? Math.round((diasCumplimiento / diasHabiles) * 100) : 0;
+
+          return {
+            empresaId: g.empresaId,
+            empresaNombre: g.empresaNombre,
+            residenteId: g.residenteId,
+            residenteNombre: g.residenteNombre,
+            totalItems: g.totalItems,
+            diasConActividad: g.diasConActividad.size,
+            diasCumplimiento,
+            diasIncumplimiento,
+            diasSinParticipar,
+            ultimaParticipacion: g.ultimaParticipacion,
+            penalizacion,
+            porcentajeCumplimiento,
+            promedioDiario: g.diasConActividad.size > 0 ? +(g.totalItems / g.diasConActividad.size).toFixed(1) : 0,
+          };
+        });
+
+        // Ordenar de mayor a menor participación
+        resultado.sort((a, b) => b.totalItems - a.totalItems);
+
+        // 5. Empresas del proyecto que NO tienen ítems en el rango
+        const empresasConItems = new Set(resultado.map(r => r.empresaId));
+        const todasEmpresas: any[] = await database.execute(sqlTag`
+          SELECT DISTINCT e.id, e.nombre, e.residenteId, u.name as residenteNombre
+          FROM empresas e
+          LEFT JOIN users u ON e.residenteId = u.id
+          WHERE e.proyectoId = ${input.proyectoId} AND e.activo = 1
+        `);
+        const empresasRows = Array.isArray(todasEmpresas) ? (todasEmpresas as any[])[0] || todasEmpresas : [];
+        const sinParticipacion = (Array.isArray(empresasRows) ? empresasRows : []).filter(
+          (e: any) => !empresasConItems.has(e.id)
+        ).map((e: any) => ({
+          empresaId: e.id,
+          empresaNombre: e.nombre,
+          residenteId: e.residenteId,
+          residenteNombre: e.residenteNombre || 'Sin residente',
+          totalItems: 0,
+          diasConActividad: 0,
+          diasCumplimiento: 0,
+          diasIncumplimiento: diasHabiles,
+          diasSinParticipar: diasHabiles,
+          ultimaParticipacion: '',
+          penalizacion: diasHabiles * PENALIZACION_POR_DIA,
+          porcentajeCumplimiento: 0,
+          promedioDiario: 0,
+        }));
+
+        const penalizacionTotal = [...resultado, ...sinParticipacion].reduce((sum, r) => sum + r.penalizacion, 0);
+
+        return {
+          empresasActivas: resultado,
+          empresasSinParticipacion: sinParticipacion,
+          resumen: {
+            diasHabiles,
+            fechaDesde,
+            fechaHasta,
+            totalEmpresas: resultado.length + sinParticipacion.length,
+            empresasActivas: resultado.length,
+            empresasInactivas: sinParticipacion.length,
+            penalizacionTotal,
+            minimoItemsDia: MINIMO_ITEMS_DIA,
+            penalizacionPorDia: PENALIZACION_POR_DIA,
+          },
+        };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

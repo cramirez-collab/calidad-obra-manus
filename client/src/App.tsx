@@ -27,6 +27,7 @@ const Seguimiento = lazy(() => import("./pages/Seguimiento"));
 // KPIs eliminado - duplicado con Estadísticas
 const GenerarQR = lazy(() => import("./pages/GenerarQR"));
 const Configuracion = lazy(() => import("./pages/Configuracion"));
+const Participacion = lazy(() => import("./pages/Participacion"));
 const Metas = lazy(() => import("./pages/Metas"));
 const DashboardResidente = lazy(() => import("./pages/DashboardResidente"));
 const MisTareas = lazy(() => import("./pages/MisTareas"));
@@ -161,6 +162,7 @@ function AppRoutes() {
       
       {/* Configuración y Metas */}
       <Route path="/configuracion" component={Configuracion} />
+      <Route path="/participacion" component={Participacion} />
       <Route path="/enlaces-externos" component={EnlacesExternos} />
       <Route path="/metas" component={Metas} />
       

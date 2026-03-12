@@ -1218,4 +1218,122 @@ router.get('/api/export/programa-completo-pdf', async (req, res) => {
   }
 });
 
+// ===== PDF PARTICIPACIÓN =====
+router.post('/api/participacion/pdf', async (req, res) => {
+  try {
+    const { proyectoId, fechaDesde, fechaHasta } = req.body;
+    if (!proyectoId) return res.status(400).json({ error: 'proyectoId requerido' });
+
+    // Reuse the same logic as the tRPC procedure
+    const mysql2 = await import('mysql2/promise');
+    const conn = await mysql2.createConnection(process.env.DATABASE_URL!);
+
+    const fHasta = fechaHasta || new Date().toISOString().split('T')[0];
+    const fDesdeDefault = new Date();
+    fDesdeDefault.setDate(fDesdeDefault.getDate() - 30);
+    const fDesde = fechaDesde || fDesdeDefault.toISOString().split('T')[0];
+
+    const [rawRows] = await conn.query(
+      `SELECT i.empresaId, MAX(e.nombre) as empresaNombre, i.residenteId, MAX(u.name) as residenteNombre,
+       DATE(i.fechaCreacion) as dia, COUNT(*) as itemsDia
+       FROM items i JOIN empresas e ON i.empresaId = e.id LEFT JOIN users u ON i.residenteId = u.id
+       WHERE i.proyectoId = ? AND DATE(i.fechaCreacion) >= ? AND DATE(i.fechaCreacion) <= ?
+       GROUP BY i.empresaId, i.residenteId, DATE(i.fechaCreacion) ORDER BY dia DESC`,
+      [proyectoId, fDesde, fHasta]
+    );
+
+    // Calculate business days
+    const start = new Date(fDesde + 'T00:00:00');
+    const end = new Date(fHasta + 'T00:00:00');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const effectiveEnd = end > today ? today : end;
+    let diasHabiles = 0;
+    const d = new Date(start);
+    while (d <= effectiveEnd) {
+      const dow = d.getDay();
+      if (dow !== 0 && dow !== 6) diasHabiles++;
+      d.setDate(d.getDate() + 1);
+    }
+
+    const PENALIZACION_POR_DIA = 500;
+    const MINIMO_ITEMS_DIA = 5;
+
+    // Group by empresa-residente
+    const dataRows = rawRows as any[];
+    const grouped = new Map<string, any>();
+    for (const row of dataRows) {
+      const key = `${row.empresaId}-${row.residenteId || 0}`;
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          empresaId: row.empresaId, empresaNombre: row.empresaNombre || 'Sin empresa',
+          residenteId: row.residenteId, residenteNombre: row.residenteNombre || 'Sin residente',
+          diasConActividad: new Set(), totalItems: 0, itemsPorDia: new Map(), ultimaParticipacion: '',
+        });
+      }
+      const g = grouped.get(key)!;
+      const diaStr = row.dia instanceof Date ? row.dia.toISOString().split('T')[0] : String(row.dia);
+      g.diasConActividad.add(diaStr);
+      g.totalItems += Number(row.itemsDia);
+      g.itemsPorDia.set(diaStr, Number(row.itemsDia));
+      if (!g.ultimaParticipacion || diaStr > g.ultimaParticipacion) g.ultimaParticipacion = diaStr;
+    }
+
+    const resultado = Array.from(grouped.values()).map(g => {
+      let diasIncumplimiento = 0, diasCumplimiento = 0;
+      const d2 = new Date(start);
+      while (d2 <= effectiveEnd) {
+        if (d2.getDay() !== 0 && d2.getDay() !== 6) {
+          const ds = d2.toISOString().split('T')[0];
+          (g.itemsPorDia.get(ds) || 0) >= MINIMO_ITEMS_DIA ? diasCumplimiento++ : diasIncumplimiento++;
+        }
+        d2.setDate(d2.getDate() + 1);
+      }
+      return {
+        empresaNombre: g.empresaNombre, residenteNombre: g.residenteNombre,
+        totalItems: g.totalItems, diasConActividad: g.diasConActividad.size,
+        diasCumplimiento, diasIncumplimiento,
+        diasSinParticipar: Math.max(0, Math.floor((today.getTime() - new Date(g.ultimaParticipacion + 'T00:00:00').getTime()) / 86400000)),
+        ultimaParticipacion: g.ultimaParticipacion,
+        penalizacion: diasIncumplimiento * PENALIZACION_POR_DIA,
+        porcentajeCumplimiento: diasHabiles > 0 ? Math.round((diasCumplimiento / diasHabiles) * 100) : 0,
+        promedioDiario: g.diasConActividad.size > 0 ? +(g.totalItems / g.diasConActividad.size).toFixed(1) : 0,
+      };
+    });
+
+    // Inactive empresas
+    const empresasConItems = new Set(Array.from(grouped.values()).map((g: any) => g.empresaId));
+    const [allEmpresas] = await conn.query(
+      `SELECT DISTINCT e.id, e.nombre, e.residenteId, u.name as residenteNombre
+       FROM empresas e LEFT JOIN users u ON e.residenteId = u.id
+       WHERE e.proyectoId = ? AND e.activo = 1`, [proyectoId]
+    );
+    const sinParticipacion = (allEmpresas as any[]).filter(e => !empresasConItems.has(e.id)).map(e => ({
+      empresaNombre: e.nombre, residenteNombre: e.residenteNombre || 'Sin residente',
+      totalItems: 0, diasConActividad: 0, diasCumplimiento: 0, diasIncumplimiento: diasHabiles,
+      diasSinParticipar: diasHabiles, ultimaParticipacion: '',
+      penalizacion: diasHabiles * PENALIZACION_POR_DIA, porcentajeCumplimiento: 0, promedioDiario: 0,
+    }));
+
+    const penalizacionTotal = [...resultado, ...sinParticipacion].reduce((s, r) => s + r.penalizacion, 0);
+    await conn.end();
+
+    const { generarPDFParticipacion } = await import('./pdfParticipacion');
+    const pdfBuffer = await generarPDFParticipacion(resultado, sinParticipacion, {
+      diasHabiles, fechaDesde: fDesde, fechaHasta: fHasta,
+      totalEmpresas: resultado.length + sinParticipacion.length,
+      empresasActivas: resultado.length, empresasInactivas: sinParticipacion.length,
+      penalizacionTotal, minimoItemsDia: MINIMO_ITEMS_DIA, penalizacionPorDia: PENALIZACION_POR_DIA,
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="participacion_${fDesde}_${fHasta}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('[PDF Participacion] Error:', err);
+    res.status(500).json({ error: 'Error generando PDF' });
+  }
+});
+
 export default router;

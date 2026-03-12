@@ -5167,3 +5167,16 @@
 - [x] Agregar validación server-side: log de advertencia si asignadoA == creador, error si no hay residente
 - [x] Tests para garantizar que nunca más se asigne al creador como responsable (7 tests nuevos)
 - [x] v4.10 — 668 tests pasando (60 archivos)
+
+### Módulo de Participación en Configuración (v4.11)
+- [x] Backend: tRPC `participacion.stats` con SQL de participación por empresa-residente
+- [x] Backend: cálculo de días hábiles, penalización $500/día por incumplimiento de 5 ítems/día
+- [x] Backend: incluye empresas activas SIN participación (penalización completa)
+- [x] Frontend: sección "Participación" en menú Configuración > Control
+- [x] KPIs: empresas activas, sin participación, penalización total, mínimo requerido
+- [x] Tabla ranking con sort por columnas (desktop) y cards expandibles (mobile)
+- [x] Barra de cumplimiento visual (verde/ámbar/rojo)
+- [x] Filtro de fechas (desde/hasta)
+- [x] PDF descargable con PDFKit (server-side) — endpoint POST /api/participacion/pdf
+- [x] Tests: 15 tests de lógica de negocio (días hábiles, penalizaciones, cumplimiento)
+- [x] v4.11 — 684 tests pasando (61 archivos)

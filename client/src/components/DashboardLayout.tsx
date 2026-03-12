@@ -50,7 +50,8 @@ import {
   Crosshair,
   Shield,
   BrainCircuit,
-  CalendarDays
+  CalendarDays,
+  UserCheck
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -157,6 +158,8 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: Users, label: "Usuarios", path: "/usuarios", group: "Usuarios" },
     { icon: History, label: "Bitácora", path: "/bitacora", group: "Usuarios" },
     { icon: Mail, label: "Correos", path: "/bitacora-correos", group: "Usuarios" },
+    // Control
+    { icon: UserCheck, label: "Participación", path: "/participacion", group: "Control" },
   ];
 
   // Seguristas: solo ven Bienvenida, Seguridad, y Contratistas (lectura)
