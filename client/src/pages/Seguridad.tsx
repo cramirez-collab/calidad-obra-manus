@@ -176,12 +176,14 @@ export default function Seguridad() {
             <h1 className="text-lg font-bold">Seguridad</h1>
             <p className="text-xs text-muted-foreground">{proyectoActual?.nombre || "Proyecto"}</p>
           </div>
+          {/* BP - Buenas Prácticas */}
+          <BPTabButton />
           {/* WhatsApp rápido */}
           <a
             href="https://chat.whatsapp.com/BV52XnzehB6GK3XfACTFTh"
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-auto h-10 w-10 rounded-full bg-red-500 flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
+            className="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
             title="Grupo WhatsApp Seguridad"
           >
             <MessageCircle className="h-5 w-5 text-white" />
@@ -222,8 +224,7 @@ export default function Seguridad() {
               </button>
             );
           })}
-          {/* BP - Buenas Prácticas shortcut */}
-          <BPTabButton />
+
         </div>
 
         {/* Content */}
@@ -262,11 +263,10 @@ function BPTabButton() {
       <TooltipTrigger asChild>
         <button
           onClick={() => navigate("/buenas-practicas")}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-medium transition-all text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1 active:scale-95"
+          className="ml-auto h-10 w-10 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg hover:bg-emerald-600 hover:scale-105 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 active:scale-95"
           aria-label="Buenas Prácticas de Seguridad"
         >
-          <ShieldCheck className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">BP</span>
+          <ShieldCheck className="h-5 w-5 text-white" />
         </button>
       </TooltipTrigger>
       <TooltipContent side="bottom" className="max-w-[250px] text-center">

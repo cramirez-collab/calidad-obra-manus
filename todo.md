@@ -5254,3 +5254,4 @@
 - [x] Agregar icono BP (ShieldCheck) en la barra de tabs de la página Seguridad
 - [x] Navegación al módulo /buenas-practicas al hacer click
 - [x] Tooltip con descripción de BP
+- [x] Mover botón BP al header (junto al botón WhatsApp), estilo circular verde esmeralda
