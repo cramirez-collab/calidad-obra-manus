@@ -5249,3 +5249,8 @@
 - [x] Icono de seguridad monocromático (ShieldCheck)
 - [x] Integración en navegación lateral (DashboardLayout)
 - [x] Diseño espectacular alineado con branding Objetiva
+
+### Icono BP en barra de tabs de Seguridad
+- [x] Agregar icono BP (ShieldCheck) en la barra de tabs de la página Seguridad
+- [x] Navegación al módulo /buenas-practicas al hacer click
+- [x] Tooltip con descripción de BP

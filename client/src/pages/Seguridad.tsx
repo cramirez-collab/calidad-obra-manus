@@ -64,7 +64,9 @@ import {
   FileText,
   Share2,
   Download,
+  ShieldCheck,
 } from "lucide-react";
+import { useLocation } from "wouter";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -220,6 +222,8 @@ export default function Seguridad() {
               </button>
             );
           })}
+          {/* BP - Buenas Prácticas shortcut */}
+          <BPTabButton />
         </div>
 
         {/* Content */}
@@ -245,6 +249,31 @@ export default function Seguridad() {
         {activeTab === "voz" && <TabNotasVoz proyectoId={selectedProjectId} />}
       </div>
     </DashboardLayout>
+  );
+}
+
+// ==========================================
+// BP TAB BUTTON - Acceso rápido a Buenas Prácticas
+// ==========================================
+function BPTabButton() {
+  const [, navigate] = useLocation();
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={() => navigate("/buenas-practicas")}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-medium transition-all text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1 active:scale-95"
+          aria-label="Buenas Prácticas de Seguridad"
+        >
+          <ShieldCheck className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">BP</span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="max-w-[250px] text-center">
+        <p className="font-semibold text-xs">Buenas Prácticas (BP)</p>
+        <p className="text-[10px] text-muted-foreground mt-0.5">Registrar o consultar Buenas Prácticas de Seguridad. Documenta prácticas seguras, adjunta evidencias y comparte mejoras.</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
