@@ -5218,3 +5218,9 @@
 - [x] Frontend: "PDF Masivo" en header de Pruebas por Departamento
 - [x] Tests: 6 tests para generación de PDFs (fichas + pruebas)
 - [x] 686 tests pasando (62 archivos)
+
+### Limpieza total de datos de prueba en BD
+- [x] Auditar TODAS las tablas: users, empresas, especialidades, proyecto_usuarios, empresa_residentes, items, etc.
+- [x] Eliminar: 12 ítems prueba, 13 empresas Test UX, 1 empresa_residentes fantasma, 1 duplicado Edgar Romo, 157 notificaciones huérfanas, 168 historial huérfano
+- [x] Verificar 0 registros de prueba: 0 items fantasma, 0 empresas test, 0 empresa_residentes fantasma, 0 duplicados
+- [x] BD final: 127 ítems reales, 31 empresas, 5 empresa_residentes activos
