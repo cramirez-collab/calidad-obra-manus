@@ -1336,4 +1336,186 @@ router.post('/api/participacion/pdf', async (req, res) => {
   }
 });
 
+// ==================== PDF MASIVO: FICHAS DE ITEMS ====================
+router.get('/api/export/fichas-items/pdf', async (req, res) => {
+  try {
+    const proyectoId = parseInt(req.query.proyectoId as string);
+    if (!proyectoId) return res.status(400).json({ error: 'proyectoId requerido' });
+
+    const filters: any = { proyectoId };
+    if (req.query.empresaId) filters.empresaId = parseInt(req.query.empresaId as string);
+    if (req.query.unidadId) filters.unidadId = parseInt(req.query.unidadId as string);
+    if (req.query.especialidadId) filters.especialidadId = parseInt(req.query.especialidadId as string);
+    if (req.query.status) filters.status = req.query.status as string;
+
+    const result = await db.getItems(filters, 10000, 0);
+    const itemsRaw = result?.items || [];
+    if (itemsRaw.length === 0) return res.status(404).json({ error: 'No hay items para exportar' });
+
+    const [allEmpresas, allUnidades, allEspecialidades, allAtributos, allDefectos, allEspacios, allUsers] = await Promise.all([
+      db.getAllEmpresas(proyectoId),
+      db.getAllUnidades(proyectoId),
+      db.getAllEspecialidades(proyectoId),
+      db.getAllAtributos(proyectoId),
+      db.getAllDefectos(proyectoId),
+      db.getAllEspacios(proyectoId),
+      (async () => {
+        const { getDb } = await import('./db');
+        const dbConn = await getDb();
+        if (!dbConn) return [];
+        const { users } = await import('../drizzle/schema');
+        return dbConn.select().from(users);
+      })(),
+    ]);
+
+    const empresasMap = new Map(allEmpresas.map((e: any) => [e.id, e.nombre]));
+    const unidadesMap = new Map(allUnidades.map((u: any) => [u.id, u]));
+    const especialidadesMap = new Map(allEspecialidades.map((e: any) => [e.id, e.nombre]));
+    const atributosMap = new Map(allAtributos.map((a: any) => [a.id, a.nombre]));
+    const defectosMap = new Map(allDefectos.map((d: any) => [d.id, d.nombre]));
+    const espaciosMap = new Map(allEspacios.map((e: any) => [e.id, e.nombre]));
+    const usersMap = new Map(allUsers.map((u: any) => [u.id, u.name]));
+
+    // Sort by unidad level + name
+    const sorted = [...itemsRaw].sort((a: any, b: any) => {
+      const uA = unidadesMap.get(a.unidadId);
+      const uB = unidadesMap.get(b.unidadId);
+      const levelA = uA?.nivel ?? 999;
+      const levelB = uB?.nivel ?? 999;
+      if (levelA !== levelB) return levelA - levelB;
+      const nameA = uA?.nombre || '';
+      const nameB = uB?.nombre || '';
+      if (nameA !== nameB) return nameA.localeCompare(nameB);
+      return (a.numeroInterno || 0) - (b.numeroInterno || 0);
+    });
+
+    const fichas = sorted.map((item: any) => {
+      const unidad = unidadesMap.get(item.unidadId);
+      return {
+        id: item.id,
+        codigo: item.codigo || '',
+        numeroInterno: item.numeroInterno || 0,
+        titulo: item.titulo || '',
+        descripcion: item.descripcion,
+        ubicacionDetalle: item.ubicacionDetalle,
+        status: item.status,
+        empresaNombre: empresasMap.get(item.empresaId) || 'Sin empresa',
+        unidadNombre: unidad?.nombre || 'Sin unidad',
+        unidadNivel: unidad?.nivel ?? null,
+        especialidadNombre: especialidadesMap.get(item.especialidadId) || 'Sin especialidad',
+        atributoNombre: atributosMap.get(item.atributoId) || '—',
+        defectoNombre: defectosMap.get(item.defectoId) || '—',
+        espacioNombre: espaciosMap.get(item.espacioId) || '—',
+        residenteNombre: usersMap.get(item.residenteId) || '—',
+        creadoPorNombre: usersMap.get(item.creadoPorId) || '—',
+        asignadoANombre: usersMap.get(item.asignadoAId) || '—',
+        aprobadoPorNombre: usersMap.get(item.aprobadoPorId) || '—',
+        fechaCreacion: item.fechaCreacion,
+        fechaFotoDespues: item.fechaFotoDespues,
+        fechaAprobacion: item.fechaAprobacion,
+        fotoAntesUrl: item.fotoAntesUrl,
+        fotoDespuesUrl: item.fotoDespuesUrl,
+        comentarioResidente: item.comentarioResidente,
+        comentarioSupervisor: item.comentarioSupervisor,
+      };
+    });
+
+    // Get proyecto name
+    const proyecto = await db.getProyectoById(proyectoId);
+    const proyectoNombre = proyecto?.nombre || 'Proyecto';
+
+    const { generarPDFFichasItems } = await import('./pdfFichasItems');
+    const pdfBuffer = await generarPDFFichasItems(fichas, proyectoNombre);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    res.setHeader('Content-Disposition', `attachment; filename="fichas_items_${dateStr}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('[PDF Fichas Items] Error:', err);
+    res.status(500).json({ error: 'Error generando PDF de fichas' });
+  }
+});
+
+// ==================== PDF MASIVO: REPORTE DE PRUEBAS ====================
+router.get('/api/export/pruebas/pdf', async (req, res) => {
+  try {
+    const proyectoId = parseInt(req.query.proyectoId as string);
+    if (!proyectoId) return res.status(400).json({ error: 'proyectoId requerido' });
+
+    const [catalogo, resultados, allUnidades] = await Promise.all([
+      db.getCatalogoPruebas(proyectoId),
+      db.getResultadosPruebas(proyectoId),
+      db.getAllUnidades(proyectoId),
+    ]);
+
+    const catalogoMap = new Map(catalogo.map((p: any) => [p.id, p]));
+    const unidadesActivas = allUnidades.filter((u: any) => u.activo);
+
+    // Group results by unidad
+    const resultadosPorUnidad = new Map<number, any[]>();
+    resultados.forEach((r: any) => {
+      const arr = resultadosPorUnidad.get(r.unidadId) || [];
+      arr.push(r);
+      resultadosPorUnidad.set(r.unidadId, arr);
+    });
+
+    // Sort unidades by nivel + nombre
+    const sortedUnidades = [...unidadesActivas].sort((a: any, b: any) => {
+      const levelA = a.nivel ?? 999;
+      const levelB = b.nivel ?? 999;
+      if (levelA !== levelB) return levelA - levelB;
+      return (a.nombre || '').localeCompare(b.nombre || '');
+    });
+
+    // Build data structure
+    const unidadesPruebas = sortedUnidades
+      .filter((u: any) => resultadosPorUnidad.has(u.id))
+      .map((u: any) => {
+        const urs = resultadosPorUnidad.get(u.id) || [];
+        return {
+          unidadId: u.id,
+          unidadNombre: u.nombre,
+          unidadNivel: u.nivel,
+          resultados: urs.map((r: any) => {
+            const prueba = catalogoMap.get(r.pruebaId);
+            return {
+              pruebaId: r.pruebaId,
+              pruebaNombre: prueba?.nombre || `Prueba #${r.pruebaId}`,
+              pruebaSistema: prueba?.sistema || 'General',
+              intento: r.intento,
+              estado: r.estado,
+              observacion: r.observacion,
+              evaluadoPorNombre: r.evaluadoPorNombre,
+              evaluadoAt: r.evaluadoAt,
+            };
+          }),
+        };
+      });
+
+    const proyecto = await db.getProyectoById(proyectoId);
+    const proyectoNombre = proyecto?.nombre || 'Proyecto';
+
+    const { generarPDFPruebasReporte } = await import('./pdfPruebasReporte');
+    const pdfBuffer = await generarPDFPruebasReporte(unidadesPruebas, {
+      proyectoNombre,
+      totalUnidades: unidadesPruebas.length,
+      totalPruebas: catalogo.length,
+      fechaGeneracion: new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }),
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    const dateStr2 = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    res.setHeader('Content-Disposition', `attachment; filename="pruebas_reporte_${dateStr2}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('[PDF Pruebas Reporte] Error:', err);
+    res.status(500).json({ error: 'Error generando PDF de pruebas' });
+  }
+});
+
 export default router;

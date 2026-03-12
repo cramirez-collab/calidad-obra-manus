@@ -6,9 +6,9 @@
 // REGLA: /api/ NUNCA se cachea
 // FORCE-UPDATE: Al activarse, fuerza reload en TODOS los clientes
 // ============================================
-const APP_VERSION = 411;
-const DISPLAY_VERSION = 'v4.11';
-const CACHE_NAME = `oqc-v411`;
+const APP_VERSION = 412;
+const DISPLAY_VERSION = 'v4.12';
+const CACHE_NAME = `oqc-v412`;
 const OFFLINE_URL = '/offline.html';
 
 // Recursos esenciales para modo offline

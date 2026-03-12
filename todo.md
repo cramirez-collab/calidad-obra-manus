@@ -5210,3 +5210,11 @@
 - [x] Eliminar 18 ítems de prueba (12 empresaId=1 + 6 creador userId:100 inexistente)
 - [x] Fix gráfica: "Esp null" → "Sin especialidad" en Estadísticas
 - [x] 684 tests pasando
+
+### PDF Masivo: Fichas de Ítems + Reporte de Pruebas (v4.12)
+- [x] Backend: GET /api/export/fichas-items/pdf (PDFKit, 1 ficha por hoja, ordenado por nivel+unidad)
+- [x] Backend: GET /api/export/pruebas/pdf (PDFKit, portada + tabla por unidad, pasa/no pasa)
+- [x] Frontend: "PDF Fichas (1 por hoja)" en dropdown Exportar de ItemsList
+- [x] Frontend: "PDF Masivo" en header de Pruebas por Departamento
+- [x] Tests: 6 tests para generación de PDFs (fichas + pruebas)
+- [x] 686 tests pasando (62 archivos)

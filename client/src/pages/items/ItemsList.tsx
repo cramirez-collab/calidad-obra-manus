@@ -287,8 +287,12 @@ export default function ItemsList() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => window.print()}>
+                <DropdownMenuItem onClick={() => window.open(`/api/export/fichas-items/pdf?${getExportParams()}`, '_blank')}>
                   <FileDown className="h-4 w-4 mr-2 text-red-600" />
+                  PDF Fichas (1 por hoja)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.print()}>
+                  <FileDown className="h-4 w-4 mr-2 text-orange-600" />
                   PDF (Imprimir)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={exportToExcel}>

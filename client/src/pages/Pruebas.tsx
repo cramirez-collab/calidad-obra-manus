@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   Sparkles,
   FileText,
+  Download,
 } from "lucide-react";
 import ProtocoloReport from "@/components/ProtocoloReport";
 
@@ -135,13 +136,23 @@ export default function Pruebas() {
             </p>
           </div>
           {hasCatalogo && (
-            <Button
-              size="sm"
-              onClick={() => setShowProtocolo(true)}
-              className="bg-gradient-to-r from-[#002C63] to-[#02B381] hover:opacity-90 text-white shrink-0"
-            >
-              <FileText className="w-4 h-4 mr-1" /> Protocolos
-            </Button>
+            <div className="flex gap-2 shrink-0">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.open(`/api/export/pruebas/pdf?proyectoId=${selectedProjectId}`, '_blank')}
+                className="border-[#002C63]/30 hover:bg-[#002C63]/10 text-[#002C63]"
+              >
+                <Download className="w-4 h-4 mr-1" /> <span className="hidden sm:inline">PDF Masivo</span>
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setShowProtocolo(true)}
+                className="bg-gradient-to-r from-[#002C63] to-[#02B381] hover:opacity-90 text-white"
+              >
+                <FileText className="w-4 h-4 mr-1" /> <span className="hidden sm:inline">Protocolos</span>
+              </Button>
+            </div>
           )}
         </div>
 

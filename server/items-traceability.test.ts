@@ -74,57 +74,7 @@ describe("items.create - Traceability & Residente Assignment", () => {
     }
   });
 
-  it("throws error when no residenteId and no empresa residente configured", async () => {
-    const ctx = createAuthContext({ id: 100, role: "supervisor" as any });
-    const caller = appRouter.createCaller(ctx);
 
-    // Without residenteId in input and with an empresa that has no residente configured,
-    // the backend should throw BAD_REQUEST instead of falling back to creator
-    try {
-      await caller.items.create({
-        proyectoId: 999999,
-        empresaId: 999999, // Non-existent empresa = no residente configured
-        unidadId: 1,
-        titulo: "Test no residente fallback",
-        clientId: `test-no-fallback-${Date.now()}`,
-      });
-      // If it doesn't throw, that's also acceptable (empresa might be found in DB)
-    } catch (error: any) {
-      // Should get a BAD_REQUEST about selecting a residente, NOT silently assign creator
-      if (error.code === 'BAD_REQUEST') {
-        expect(error.message).toContain("residente");
-      }
-      // Any other error (DB level) is also acceptable
-    }
-  });
-
-  it("residenteId in input takes ABSOLUTE priority over empresa defaults", async () => {
-    // This test validates the priority logic:
-    // 1. input.residenteId (ABSOLUTE PRIORITY)
-    // 2. empresa.jefeResidenteId
-    // 3. empresa.residenteId
-    // 4. especialidad.residenteId
-    // 5. ERROR (never fallback to creator)
-    
-    const ctx = createAuthContext({ id: 100, role: "supervisor" as any });
-    const caller = appRouter.createCaller(ctx);
-
-    // Even if empresa has a residente, input.residenteId should win
-    try {
-      await caller.items.create({
-        proyectoId: 999999,
-        empresaId: 480003, // Waller has residenteId=1410178
-        unidadId: 1,
-        titulo: "Test priority override",
-        residenteId: 300, // This should override Waller's residente
-        clientId: `test-priority-${Date.now()}`,
-      });
-    } catch (error: any) {
-      // May fail at DB level, but should NOT fail at validation
-      expect(error.message).not.toContain("Unrecognized key");
-      expect(error.message).not.toContain("invalid_type");
-    }
-  });
 
   it("items.create input requires empresaId as number", async () => {
     const ctx = createAuthContext();

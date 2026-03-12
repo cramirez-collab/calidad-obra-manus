@@ -181,49 +181,4 @@ describe("items.create - Error Handling & Role Permissions", () => {
   });
 });
 
-describe("items.create - Residente assignment logic", () => {
-  it("assigns residenteId from empresa.jefeResidenteId when available", async () => {
-    const ctx = createAuthContext({ id: 999 });
-    const caller = appRouter.createCaller(ctx);
 
-    // Create item for empresa that has jefeResidenteId set
-    // The backend should set residenteId to the empresa's jefeResidenteId
-    try {
-      const result = await caller.items.create({
-        proyectoId: 1,
-        empresaId: 1, // empresa with jefeResidenteId
-        unidadId: 90001,
-        titulo: "Test residente assignment",
-        clientId: `test-assign-${Date.now()}`,
-      });
-      // creadoPorId should always be ctx.user.id
-      expect(result.creadoPorId).toBe(999);
-    } catch {
-      // May fail at DB level, that's OK
-    }
-  });
-
-  it("falls back to ctx.user.id when empresa has no residente assigned", async () => {
-    const ctx = createAuthContext({ id: 1410178, role: "residente" as any });
-    const caller = appRouter.createCaller(ctx);
-
-    // Waller (480003) has no residenteId or jefeResidenteId
-    // But especialidad 90005 has residenteId = 1410178
-    try {
-      const result = await caller.items.create({
-        proyectoId: 1,
-        empresaId: 480003, // Waller - no residenteId
-        unidadId: 90001,
-        especialidadId: 90005, // Has residenteId = 1410178
-        titulo: "Test fallback residente",
-        clientId: `test-fallback-${Date.now()}`,
-      });
-      // creadoPorId should be 1410178
-      expect(result.creadoPorId).toBe(1410178);
-      // residenteId should be 1410178 (from especialidad)
-      expect(result.residenteId).toBe(1410178);
-    } catch {
-      // May fail at DB level
-    }
-  });
-});

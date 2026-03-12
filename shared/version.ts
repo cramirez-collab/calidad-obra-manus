@@ -9,10 +9,10 @@
  */
 
 // Versión de la aplicación (formato directo, sin fórmulas)
-export const APP_VERSION = "4.11";
+export const APP_VERSION = "4.12";
 
 // Número interno para comparación y forzar actualizaciones (incrementar con cada deploy)
-export const VERSION_NUMBER = 411;
+export const VERSION_NUMBER = 412;
 
 // Versión para mostrar en UI
 export const FULL_VERSION = `v${APP_VERSION}`;
