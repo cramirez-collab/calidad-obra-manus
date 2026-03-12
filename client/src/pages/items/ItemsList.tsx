@@ -253,6 +253,7 @@ export default function ItemsList() {
 
   const getExportParams = () => {
     const params = new URLSearchParams();
+    if (selectedProjectId) params.append("proyectoId", String(selectedProjectId));
     if (filters.empresaId) params.append("empresaId", filters.empresaId);
     if (filters.unidadId) params.append("unidadId", filters.unidadId);
     if (filters.especialidadId) params.append("especialidadId", filters.especialidadId);

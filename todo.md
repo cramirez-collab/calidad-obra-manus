@@ -5224,3 +5224,6 @@
 - [x] Eliminar: 12 ítems prueba, 13 empresas Test UX, 1 empresa_residentes fantasma, 1 duplicado Edgar Romo, 157 notificaciones huérfanas, 168 historial huérfano
 - [x] Verificar 0 registros de prueba: 0 items fantasma, 0 empresas test, 0 empresa_residentes fantasma, 0 duplicados
 - [x] BD final: 127 ítems reales, 31 empresas, 5 empresa_residentes activos
+
+### Fix: PDF Fichas error "proyectoId requerido"
+- [x] getExportParams() en ItemsList.tsx no incluía proyectoId — corregido
