@@ -5203,3 +5203,10 @@
 - [x] BD final: 131 ítems reales, 68 con asignado≠creador, 63 legítimos auto-asignados (residentes)
 - [x] ZERO usuarios Objetiva auto-asignados
 - [x] 684 tests pasando (61 archivos)
+
+### Auditoría BD: "Esp null" y verificación de ítems reales
+- [x] Investigar 36 ítems con especialidad NULL — todos reales de Natalia/Waller, creados sin especialidad
+- [x] Verificar 143 ítems: todos reales, 0 creadores fantasma, 0 empresas inexistentes
+- [x] Eliminar 18 ítems de prueba (12 empresaId=1 + 6 creador userId:100 inexistente)
+- [x] Fix gráfica: "Esp null" → "Sin especialidad" en Estadísticas
+- [x] 684 tests pasando

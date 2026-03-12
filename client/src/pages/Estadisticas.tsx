@@ -245,7 +245,7 @@ export default function Estadisticas() {
     return stats.porEspecialidad.map(item => {
       const esp = especialidades?.find(e => e.id === item.especialidadId);
       return {
-        name: esp?.nombre || `Esp ${item.especialidadId}`,
+        name: esp?.nombre || (item.especialidadId ? `Esp ${item.especialidadId}` : 'Sin especialidad'),
         value: Number(item.count),
         color: esp?.color || "#6B7280",
       };
