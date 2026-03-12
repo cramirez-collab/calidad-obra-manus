@@ -1,0 +1,19 @@
+{
+  "query": "SHOW TABLES LIKE 'buenas_practicas'; SHOW TABLES LIKE 'evidencias_bp';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SHOW TABLES LIKE 'buenas_practicas'; SHOW TABLES LIKE 'evidencias_bp';",
+  "rows": [
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (buenas_practicas)": "buenas_practicas"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (buenas_practicas)": "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (evidencias_bp)"
+    },
+    {
+      "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (buenas_practicas)": "evidencias_bp"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_LjHhpq7m8HsaWSJ2BF6kdt (buenas_practicas)\nbuenas_practicas\nTables_in_LjHhpq7m8HsaWSJ2BF6kdt (evidencias_bp)\nevidencias_bp\n",
+  "stderr": "",
+  "execution_time_ms": 123
+}

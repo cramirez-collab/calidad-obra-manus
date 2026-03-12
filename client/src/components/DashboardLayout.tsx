@@ -49,6 +49,7 @@ import {
   Mail,
   Crosshair,
   Shield,
+  ShieldCheck,
   BrainCircuit,
   CalendarDays,
   UserCheck
@@ -115,6 +116,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
     { icon: ListOrdered, label: "Especialidades", path: "/lista-especialidades" },
     { icon: AlertTriangle, label: "Seguridad", path: "/seguridad" },
+    { icon: ShieldCheck, label: "BP Seguridad", path: "/buenas-practicas" },
     { icon: CalendarDays, label: "Programa", path: "/programa-semanal" },
   ];
   
@@ -160,6 +162,7 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     { icon: Mail, label: "Correos", path: "/bitacora-correos", group: "Usuarios" },
     // Control
     { icon: UserCheck, label: "Participación", path: "/participacion", group: "Control" },
+    { icon: ShieldCheck, label: "Buenas Prácticas", path: "/buenas-practicas", group: "Control" },
   ];
 
   // Seguristas: solo ven Bienvenida, Seguridad, y Contratistas (lectura)

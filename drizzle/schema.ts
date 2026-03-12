@@ -1255,3 +1255,44 @@ export const analisis8msCache = mysqlTable("analisis_8ms_cache", {
 });
 export type Analisis8msCache = typeof analisis8msCache.$inferSelect;
 export type InsertAnalisis8msCache = typeof analisis8msCache.$inferInsert;
+
+
+/**
+ * Tabla de Buenas Prácticas de Seguridad (BP)
+ * Documenta prácticas seguras, mejoras de seguridad y lecciones aprendidas en obra.
+ */
+export const buenasPracticas = mysqlTable("buenas_practicas", {
+  id: int("id").autoincrement().primaryKey(),
+  proyectoId: int("proyectoId").notNull(),
+  codigo: varchar("codigo", { length: 50 }).notNull(), // BP-00001
+  titulo: varchar("titulo", { length: 255 }).notNull(),
+  descripcion: text("descripcion"),
+  categoria: varchar("categoria", { length: 100 }).notNull(), // epp, orden_limpieza, señalizacion, proteccion_colectiva, capacitacion, procedimiento, innovacion, otro
+  prioridad: varchar("prioridad", { length: 20 }).default("media").notNull(), // alta, media, baja
+  estado: varchar("estado", { length: 30 }).default("activa").notNull(), // activa, implementada, archivada
+  ubicacion: varchar("ubicacion", { length: 255 }), // Ubicación en obra donde aplica
+  empresaId: int("empresaId"), // Empresa relacionada (opcional)
+  creadoPorId: int("creadoPorId").notNull(),
+  aprobadoPorId: int("aprobadoPorId"),
+  fechaAprobacion: timestamp("fechaAprobacion"),
+  beneficio: text("beneficio"), // Descripción del beneficio de la práctica
+  activo: boolean("activo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type BuenaPractica = typeof buenasPracticas.$inferSelect;
+export type InsertBuenaPractica = typeof buenasPracticas.$inferInsert;
+
+/**
+ * Evidencias fotográficas de Buenas Prácticas
+ */
+export const evidenciasBP = mysqlTable("evidencias_bp", {
+  id: int("id").autoincrement().primaryKey(),
+  buenaPracticaId: int("buenaPracticaId").notNull(),
+  url: text("url").notNull(),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(),
+  descripcion: varchar("descripcion", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type EvidenciaBP = typeof evidenciasBP.$inferSelect;
+export type InsertEvidenciaBP = typeof evidenciasBP.$inferInsert;

@@ -5237,3 +5237,15 @@
 - [x] Historial de eventos (hasta 10 por ficha)
 - [x] Ordenado por nivel de unidad + nombre + número interno
 - [x] 254 páginas, 5.6MB generados correctamente con fotos reales
+
+### Módulo Buenas Prácticas de Seguridad (BP) (v4.13)
+- [x] Schema BD: tabla buenas_practicas (id, proyectoId, titulo, descripcion, categoria, creadoPorId, fechaCreacion, evidencias)
+- [x] Backend: tRPC router BP (CRUD, listar, filtrar por categoría)
+- [x] Frontend: página BuenasPracticas.tsx con listado, formulario de registro, detalle
+- [x] Botón de acceso con hover mejorado (tooltip, sombra, animación)
+- [x] Tooltip: "Registrar o consultar Buenas Prácticas de Seguridad..."
+- [x] Estados del botón: Normal, Hover, Focus, Activo, Deshabilitado
+- [x] Accesibilidad: mouse, teclado (focus visible), pantallas táctiles
+- [x] Icono de seguridad monocromático (ShieldCheck)
+- [x] Integración en navegación lateral (DashboardLayout)
+- [x] Diseño espectacular alineado con branding Objetiva

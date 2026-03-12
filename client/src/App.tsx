@@ -64,6 +64,7 @@ const Seguridad = lazy(() => import("./pages/Seguridad"));
 const BitacoraCorreos = lazy(() => import("./pages/BitacoraCorreos"));
 const ProgramaSemanal = lazy(() => import("./pages/ProgramaSemanal"));
 const PendientesSinc = lazy(() => import("./pages/PendientesSinc"));
+const BuenasPracticas = lazy(() => import("./pages/BuenasPracticas"));
 
 
 
@@ -150,6 +151,7 @@ function AppRoutes() {
       
       {/* Seguridad */}
       <Route path="/seguridad" component={Seguridad} />
+      <Route path="/buenas-practicas" component={BuenasPracticas} />
       
       {/* Programa Semanal */}
       <Route path="/programa-semanal" component={ProgramaSemanal} />
