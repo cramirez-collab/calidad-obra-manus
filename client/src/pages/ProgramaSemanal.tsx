@@ -468,7 +468,7 @@ export default function ProgramaSemanal() {
                                   </button>
                                 )}
                                 {/* Editar - Botón prominente */}
-                                {(p.status !== 'corte_realizado' || ['admin', 'superadmin'].includes(user?.role || '')) && (
+                                {(
                                   <button
                                     type="button"
                                     className="flex items-center gap-1.5 h-10 px-3 rounded-lg bg-emerald-500 text-white font-semibold text-xs shadow-md hover:bg-emerald-600 active:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-1 touch-manipulation transition-all hover:shadow-lg"
@@ -1686,7 +1686,7 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
   const isOwner = data.usuarioId === userId;
   const isAdmin = ['admin', 'superadmin', 'supervisor'].includes(userRole);
   const isAdminOrSuper = ['admin', 'superadmin'].includes(userRole);
-  const canEdit = (isOwner || isAdmin) && (data.status !== 'corte_realizado' || isAdminOrSuper);
+  const canEdit = isOwner || isAdmin;
   const canCorte = (isOwner || isAdmin) && data.status === 'entregado';
   const canDelete = isAdminOrSuper || (isOwner && data.status === 'borrador');
 

@@ -5833,10 +5833,7 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
       .mutation(async ({ ctx, input }) => {
         const programa = await db.getProgramaSemanalById(input.id);
         if (!programa) throw new TRPCError({ code: 'NOT_FOUND' });
-        // Solo bloquear edición si ya tiene corte realizado (entregado SÍ se puede editar)
-        if (programa.status === 'corte_realizado' && !['admin', 'superadmin'].includes(ctx.user.role || '')) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No se puede editar un programa con corte realizado. Contacta al administrador.' });
-        }
+        // Cualquier usuario puede editar su programa incluso después del corte
         if (programa.usuarioId !== ctx.user.id && !['admin', 'superadmin', 'supervisor'].includes(ctx.user.role || '')) {
           throw new TRPCError({ code: 'FORBIDDEN' });
         }
