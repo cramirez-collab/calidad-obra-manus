@@ -370,7 +370,7 @@ export default function ProgramaSemanal() {
         )}
       </div>
 
-      {/* Lista de programas */}
+      {/* Lista de programas agrupados por semana (cascada) */}
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
@@ -389,64 +389,127 @@ export default function ProgramaSemanal() {
             </Button>
           </CardContent>
         </Card>
-      ) : (
-        <div className="space-y-2">
-          {programasFiltrados.map((p: any) => {
-            const usuario = usuariosEspecialidad.find((u: any) => u.id === p.usuarioId);
-            return (
-              <Card key={p.id} className="cursor-pointer hover:bg-accent/30 transition-colors"
-                onClick={() => { setSelectedProgramaId(p.id); setView("detail"); }}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-sm">
-                          {formatWeekRange(p.semanaInicio, p.semanaFin)}
-                        </span>
-                        <StatusBadge status={p.status} />
-                        <EntregaBadge semanaFin={p.semanaFin} fechaEntrega={p.fechaEntrega} status={p.status} />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {usuario?.name || 'Sin nombre'}
-                        {(usuario as any)?.especialidad ? ` — ${(usuario as any).especialidad}` : ""}
-                      </p>
-                      <div className="flex items-center gap-3 text-sm mt-1">
-                        {p.eficienciaGlobal != null && (
-                          <div className="flex items-center gap-1">
-                            <TrendingUp className="w-4 h-4 text-emerald-600" />
-                            <span className={`font-bold ${parseFloat(p.eficienciaGlobal) >= 80 ? "text-emerald-600" : parseFloat(p.eficienciaGlobal) >= 50 ? "text-amber-600" : "text-red-600"}`}>
-                              {parseFloat(p.eficienciaGlobal).toFixed(1)}%
-                            </span>
-                          </div>
-                        )}
-                        {p.fechaEntrega && (
-                          <span className="text-xs text-muted-foreground">
-                            Entregado: {formatDateShort(p.fechaEntrega)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {['admin', 'superadmin'].includes(user?.role || '') && (
-                      <button
-                        type="button"
-                        className="flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] shrink-0 rounded-lg bg-red-50 border border-red-200 text-red-600 active:bg-red-200 hover:bg-red-100 touch-manipulation transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          if (confirm(`¿Eliminar programa de ${formatWeekRange(p.semanaInicio, p.semanaFin)}? Esta acción no se puede deshacer.`)) {
-                            deleteMut.mutate({ id: p.id });
-                          }
-                        }}>
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+      ) : (() => {
+        // Agrupar por semana
+        const porSemana = new Map<string, any[]>();
+        programasFiltrados.forEach((p: any) => {
+          const key = formatWeekRange(p.semanaInicio, p.semanaFin);
+          if (!porSemana.has(key)) porSemana.set(key, []);
+          porSemana.get(key)!.push(p);
+        });
+        const semanas = Array.from(porSemana.entries());
+        return (
+          <div className="space-y-4">
+            {semanas.map(([semana, progs]) => {
+              // Calcular eficiencia promedio de la semana
+              const conCorte = progs.filter((p: any) => p.eficienciaGlobal != null);
+              const efProm = conCorte.length > 0
+                ? conCorte.reduce((s: number, p: any) => s + parseFloat(p.eficienciaGlobal), 0) / conCorte.length
+                : null;
+              return (
+                <div key={semana}>
+                  {/* Header de semana */}
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                    <div className="h-6 w-1 rounded-full bg-emerald-500" />
+                    <span className="font-bold text-sm">{semana}</span>
+                    <span className="text-xs text-muted-foreground">({progs.length} programa{progs.length !== 1 ? 's' : ''})</span>
+                    {efProm != null && (
+                      <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${efProm >= 80 ? 'bg-emerald-100 text-emerald-700' : efProm >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                        Prom: {efProm.toFixed(1)}%
+                      </span>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                  {/* Cards de la semana */}
+                  <div className="space-y-1.5 pl-3 border-l-2 border-emerald-200 ml-1">
+                    {progs.map((p: any) => {
+                      const usuario = usuariosEspecialidad.find((u: any) => u.id === p.usuarioId);
+                      const ef = p.eficienciaGlobal != null ? parseFloat(p.eficienciaGlobal) : null;
+                      return (
+                        <Card key={p.id} className="cursor-pointer hover:bg-accent/30 transition-colors"
+                          onClick={() => { setSelectedProgramaId(p.id); setView("detail"); }}>
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2">
+                              {/* Eficiencia prominente */}
+                              {ef != null ? (
+                                <div className={`flex flex-col items-center justify-center h-12 w-14 min-w-[56px] rounded-lg font-bold text-sm ${ef >= 80 ? 'bg-emerald-100 text-emerald-700' : ef >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                                  <span className="text-base leading-none">{ef.toFixed(0)}%</span>
+                                  <span className="text-[8px] font-normal opacity-70">efic.</span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center justify-center h-12 w-14 min-w-[56px] rounded-lg bg-muted text-muted-foreground text-xs">
+                                  <CalendarDays className="w-4 h-4" />
+                                </div>
+                              )}
+                              {/* Info */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-medium text-sm truncate">{usuario?.name || 'Sin nombre'}</span>
+                                  <StatusBadge status={p.status} />
+                                  <EntregaBadge semanaFin={p.semanaFin} fechaEntrega={p.fechaEntrega} status={p.status} />
+                                </div>
+                                <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                                  {(usuario as any)?.especialidad || ''}
+                                  {p.fechaEntrega ? ` · Entregado: ${formatDateShort(p.fechaEntrega)}` : ''}
+                                </p>
+                              </div>
+                              {/* Acciones rápidas */}
+                              <div className="flex items-center gap-1 shrink-0">
+                                {/* Descargar PDF */}
+                                {p.status === 'corte_realizado' && (
+                                  <button
+                                    type="button"
+                                    className="flex items-center justify-center h-9 w-9 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 active:bg-blue-200 hover:bg-blue-100 touch-manipulation transition-colors"
+                                    title="Descargar PDF"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.open(`/api/export/programa-completo-pdf?programaId=${p.id}`, '_blank');
+                                    }}>
+                                    <Download className="w-4 h-4" />
+                                  </button>
+                                )}
+                                {/* Editar */}
+                                {(p.status !== 'corte_realizado' || ['admin', 'superadmin'].includes(user?.role || '')) && (
+                                  <button
+                                    type="button"
+                                    className="flex items-center justify-center h-9 w-9 rounded-lg bg-amber-50 border border-amber-200 text-amber-600 active:bg-amber-200 hover:bg-amber-100 touch-manipulation transition-colors"
+                                    title="Editar programa"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedProgramaId(p.id);
+                                      setView("edit");
+                                    }}>
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                )}
+                                {/* Eliminar */}
+                                {['admin', 'superadmin'].includes(user?.role || '') && (
+                                  <button
+                                    type="button"
+                                    className="flex items-center justify-center h-9 w-9 rounded-lg bg-red-50 border border-red-200 text-red-600 active:bg-red-200 hover:bg-red-100 touch-manipulation transition-colors"
+                                    title="Eliminar programa"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      if (confirm(`¿Eliminar programa de ${usuario?.name || 'Sin nombre'}? Esta acción no se puede deshacer.`)) {
+                                        deleteMut.mutate({ id: p.id });
+                                      }
+                                    }}>
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -1621,9 +1684,9 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
 
   const isOwner = data.usuarioId === userId;
   const isAdmin = ['admin', 'superadmin', 'supervisor'].includes(userRole);
-  const canEdit = (isOwner || isAdmin) && data.status !== 'corte_realizado';
-  const canCorte = (isOwner || isAdmin) && data.status === 'entregado';
   const isAdminOrSuper = ['admin', 'superadmin'].includes(userRole);
+  const canEdit = (isOwner || isAdmin) && (data.status !== 'corte_realizado' || isAdminOrSuper);
+  const canCorte = (isOwner || isAdmin) && data.status === 'entregado';
   const canDelete = isAdminOrSuper || (isOwner && data.status === 'borrador');
 
   const planoUrls = (data.planos || []).map((p: any) => getImageUrl(p.imagenUrl));

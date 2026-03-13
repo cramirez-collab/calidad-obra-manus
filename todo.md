@@ -5255,3 +5255,13 @@
 - [x] Navegación al módulo /buenas-practicas al hacer click
 - [x] Tooltip con descripción de BP
 - [x] Mover botón BP al header (junto al botón WhatsApp), estilo circular verde esmeralda
+
+### Mejoras Módulo Programas
+- [x] Calcular eficiencia automáticamente al hacer corte
+- [x] Permitir editar programas entregados y con corte (admins)
+- [x] Descarga PDF visible en cada tarjeta del listado
+- [x] Agrupación por semanas tipo cascada con headers
+- [x] Eficiencia prominente en tarjetas (badge con color)
+- [x] Eficiencia promedio por semana en header de grupo
+- [x] Botón editar rápido en cada tarjeta
+- [x] Hacer el módulo robusto y funcional sin errores

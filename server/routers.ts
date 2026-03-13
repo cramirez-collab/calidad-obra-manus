@@ -5833,8 +5833,9 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
       .mutation(async ({ ctx, input }) => {
         const programa = await db.getProgramaSemanalById(input.id);
         if (!programa) throw new TRPCError({ code: 'NOT_FOUND' });
-        if (programa.status === 'corte_realizado') {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No se puede editar un programa con corte realizado.' });
+        // Solo bloquear edición si ya tiene corte realizado (entregado SÍ se puede editar)
+        if (programa.status === 'corte_realizado' && !['admin', 'superadmin'].includes(ctx.user.role || '')) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No se puede editar un programa con corte realizado. Contacta al administrador.' });
         }
         if (programa.usuarioId !== ctx.user.id && !['admin', 'superadmin', 'supervisor'].includes(ctx.user.role || '')) {
           throw new TRPCError({ code: 'FORBIDDEN' });
@@ -5842,8 +5843,14 @@ Si no hay resultados aún, indica que las pruebas están pendientes de iniciar.`
 
         // Si admin cambia el usuario asignado (solo en borrador)
         const updateData: any = { notas: input.notas };
-        if (input.usuarioId && ['admin', 'superadmin', 'supervisor'].includes(ctx.user.role || '') && programa.status === 'borrador') {
+        if (input.usuarioId && ['admin', 'superadmin', 'supervisor'].includes(ctx.user.role || '')) {
           updateData.usuarioId = input.usuarioId;
+        }
+        // Si se edita un programa con corte, resetear el corte
+        if (programa.status === 'corte_realizado') {
+          updateData.status = 'entregado';
+          updateData.fechaCorte = null;
+          updateData.eficienciaGlobal = null;
         }
         await db.updateProgramaSemanal(input.id, updateData);
 
