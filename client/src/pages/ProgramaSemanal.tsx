@@ -467,11 +467,11 @@ export default function ProgramaSemanal() {
                                     <Download className="w-4 h-4" />
                                   </button>
                                 )}
-                                {/* Editar */}
+                                {/* Editar - Botón prominente */}
                                 {(p.status !== 'corte_realizado' || ['admin', 'superadmin'].includes(user?.role || '')) && (
                                   <button
                                     type="button"
-                                    className="flex items-center justify-center h-9 w-9 rounded-lg bg-amber-50 border border-amber-200 text-amber-600 active:bg-amber-200 hover:bg-amber-100 touch-manipulation transition-colors"
+                                    className="flex items-center gap-1.5 h-10 px-3 rounded-lg bg-emerald-500 text-white font-semibold text-xs shadow-md hover:bg-emerald-600 active:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-1 touch-manipulation transition-all hover:shadow-lg"
                                     title="Editar programa"
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -479,6 +479,7 @@ export default function ProgramaSemanal() {
                                       setView("edit");
                                     }}>
                                     <Edit className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Editar</span>
                                   </button>
                                 )}
                                 {/* Eliminar */}
@@ -1953,8 +1954,8 @@ function DetallePrograma({ programaId, onBack, onCorte, onEntregar, onDelete, on
         </Button>
         <GuardarComoPlantillaBtn programaId={programaId} />
         {canEdit && (
-          <Button variant="outline" size="sm" onClick={onEdit}>
-            <Edit className="w-4 h-4 mr-1" /> Editar Programa
+          <Button size="lg" onClick={onEdit} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-lg hover:shadow-xl transition-all text-base px-6 py-3">
+            <Edit className="w-5 h-5 mr-2" /> Editar Programa
           </Button>
         )}
         {canDelete && (

@@ -1,0 +1,31 @@
+{
+  "query": "SELECT ps.id, ps.usuarioId, ps.eficienciaGlobal, ps.fechaCorte, ps.status_programa FROM programa_semanal ps WHERE ps.status_programa = 'corte_realizado'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT ps.id, ps.usuarioId, ps.eficienciaGlobal, ps.fechaCorte, ps.status_programa FROM programa_semanal ps WHERE ps.status_programa = 'corte_realizado'",
+  "rows": [
+    {
+      "id": "30001",
+      "usuarioId": "1530070",
+      "eficienciaGlobal": "51.67",
+      "fechaCorte": "2026-03-07 17:24:31",
+      "status_programa": "corte_realizado"
+    },
+    {
+      "id": "90002",
+      "usuarioId": "1530070",
+      "eficienciaGlobal": "0.00",
+      "fechaCorte": "2026-03-13 20:52:32",
+      "status_programa": "corte_realizado"
+    },
+    {
+      "id": "90003",
+      "usuarioId": "1470095",
+      "eficienciaGlobal": "80.99",
+      "fechaCorte": "2026-03-13 22:07:13",
+      "status_programa": "corte_realizado"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tusuarioId\teficienciaGlobal\tfechaCorte\tstatus_programa\n30001\t1530070\t51.67\t2026-03-07 17:24:31\tcorte_realizado\n90002\t1530070\t0.00\t2026-03-13 20:52:32\tcorte_realizado\n90003\t1470095\t80.99\t2026-03-13 22:07:13\tcorte_realizado\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

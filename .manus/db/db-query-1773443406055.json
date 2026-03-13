@@ -1,0 +1,43 @@
+{
+  "query": "SELECT id, proyectoId, usuarioId, semanaInicio, semanaFin, fechaEntrega, fechaCorte, status_programa, eficienciaGlobal FROM programa_semanal WHERE status_programa = 'corte_realizado' ORDER BY id DESC",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3B47TRBhQthMPN1.da4a966d722d --database LjHhpq7m8HsaWSJ2BF6kdt --execute SELECT id, proyectoId, usuarioId, semanaInicio, semanaFin, fechaEntrega, fechaCorte, status_programa, eficienciaGlobal FROM programa_semanal WHERE status_programa = 'corte_realizado' ORDER BY id DESC",
+  "rows": [
+    {
+      "id": "90003",
+      "proyectoId": "1",
+      "usuarioId": "1470095",
+      "semanaInicio": "2026-03-02 06:00:00",
+      "semanaFin": "2026-03-09 06:00:00",
+      "fechaEntrega": "2026-03-07 18:42:56",
+      "fechaCorte": "2026-03-13 22:07:13",
+      "status_programa": "corte_realizado",
+      "eficienciaGlobal": "80.99"
+    },
+    {
+      "id": "90002",
+      "proyectoId": "1",
+      "usuarioId": "1530070",
+      "semanaInicio": "2026-03-02 06:00:00",
+      "semanaFin": "2026-03-09 06:00:00",
+      "fechaEntrega": "2026-03-07 18:12:56",
+      "fechaCorte": "2026-03-13 20:52:32",
+      "status_programa": "corte_realizado",
+      "eficienciaGlobal": "0.00"
+    },
+    {
+      "id": "30001",
+      "proyectoId": "1",
+      "usuarioId": "1530070",
+      "semanaInicio": "2026-02-23 06:00:00",
+      "semanaFin": "2026-03-02 06:00:00",
+      "fechaEntrega": "2026-03-01 10:17:47",
+      "fechaCorte": "2026-03-07 17:24:31",
+      "status_programa": "corte_realizado",
+      "eficienciaGlobal": "51.67"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tproyectoId\tusuarioId\tsemanaInicio\tsemanaFin\tfechaEntrega\tfechaCorte\tstatus_programa\teficienciaGlobal\n90003\t1\t1470095\t2026-03-02 06:00:00\t2026-03-09 06:00:00\t2026-03-07 18:42:56\t2026-03-13 22:07:13\tcorte_realizado\t80.99\n90002\t1\t1530070\t2026-03-02 06:00:00\t2026-03-09 06:00:00\t2026-03-07 18:12:56\t2026-03-13 20:52:32\tcorte_realizado\t0.00\n30001\t1\t1530070\t2026-02-23 06:00:00\t2026-03-02 06:00:00\t2026-03-01 10:17:47\t2026-03-07 17:24:31\tcorte_realizado\t51.67\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

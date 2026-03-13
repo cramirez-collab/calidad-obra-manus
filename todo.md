@@ -5265,3 +5265,4 @@
 - [x] Eficiencia promedio por semana en header de grupo
 - [x] Botón editar rápido en cada tarjeta
 - [x] Hacer el módulo robusto y funcional sin errores
+- [x] Hacer botón editar programa más visible en PC, tablet y móvil (verde prominente con texto)
