@@ -7700,9 +7700,15 @@ INSTRUCCIONES:
         }
         messages.push({ role: 'user', content: input.pregunta });
 
-        const response = await invokeLLM({ messages });
-        const rawContent = response.choices?.[0]?.message?.content;
-        const respuesta: string = typeof rawContent === 'string' ? rawContent : (rawContent ? JSON.stringify(rawContent) : 'Lo siento, no pude procesar tu pregunta.');
+        let respuesta: string;
+        try {
+          const response = await invokeLLM({ messages });
+          const rawContent = response.choices?.[0]?.message?.content;
+          respuesta = typeof rawContent === 'string' ? rawContent : (rawContent ? JSON.stringify(rawContent) : 'Lo siento, no pude procesar tu pregunta.');
+        } catch (llmError: any) {
+          console.error('[Asistente] Error en LLM:', llmError?.message || llmError);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error al consultar el asistente IA. Intenta de nuevo en unos segundos.' });
+        }
 
         // Detect category from response
         const categorias = ['items', 'seguridad', 'buenas_practicas', 'programas', 'estadisticas', 'usuarios', 'configuracion', 'navegacion', 'qr'];
@@ -7715,23 +7721,32 @@ INSTRUCCIONES:
           }
         }
 
-        // Save conversation
-        const convId = await db.createConversacion({
-          userId: ctx.user.id,
-          proyectoId: input.proyectoId || null,
-          pregunta: input.pregunta,
-          respuesta,
-          categoria,
-        });
-
-        // Check for improvement suggestion
-        const sugMatch = respuesta.match(/\[Sugerencia de mejora: (.+?)\]/);
-        if (sugMatch) {
-          await db.upsertSugerencia({
-            titulo: sugMatch[1].substring(0, 255),
-            descripcion: `Detectada desde pregunta: "${input.pregunta.substring(0, 200)}"`,
+        // Save conversation (non-blocking)
+        let convId = 0;
+        try {
+          convId = await db.createConversacion({
+            userId: ctx.user.id,
+            proyectoId: input.proyectoId || null,
+            pregunta: input.pregunta,
+            respuesta,
             categoria,
           });
+        } catch (dbError: any) {
+          console.error('[Asistente] Error guardando conversación:', dbError?.message || dbError);
+        }
+
+        // Check for improvement suggestion (non-blocking)
+        const sugMatch = respuesta.match(/\[Sugerencia de mejora: (.+?)\]/);
+        if (sugMatch) {
+          try {
+            await db.upsertSugerencia({
+              titulo: sugMatch[1].substring(0, 255),
+              descripcion: `Detectada desde pregunta: "${input.pregunta.substring(0, 200)}"`,
+              categoria,
+            });
+          } catch (sugError: any) {
+            console.error('[Asistente] Error guardando sugerencia:', sugError?.message || sugError);
+          }
         }
 
         // Clean response (remove suggestion tag)

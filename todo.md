@@ -5284,3 +5284,4 @@
 - [x] Tests unitarios (vitest) para módulo Asistente OQC (22 tests)
 - [x] Mover AsistenteOQC de Bienvenida a DashboardLayout para disponibilidad global en toda la app
 - [x] Rediseñar botón flotante AsistenteOQC: icono headset morado, posición accesible en móvil/tablet/PC
+- [x] BUG: AsistenteOQC chat devuelve error al procesar preguntas (LLM call failing) - Agregado try/catch robusto
