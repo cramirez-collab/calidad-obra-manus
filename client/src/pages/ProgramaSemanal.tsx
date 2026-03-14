@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { generarYCompartirPDF } from "@/lib/pdfGenerator";
 import { getImageUrl } from "@/lib/imageUrl";
@@ -84,6 +85,7 @@ type PlanoRow = {
 type ViewMode = "list" | "create" | "detail" | "corte" | "edit" | "eficiencia" | "plantillas" | "comparativa" | "resumen" | "ranking" | "metas" | "reportes";
 
 export default function ProgramaSemanal() {
+  const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { selectedProjectId } = useProject();
   // toast importado de sonner
@@ -305,12 +307,17 @@ export default function ProgramaSemanal() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <CalendarDays className="w-5 h-5 text-emerald-600" />
-            Programa Semanal
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{total} programa{total !== 1 ? "s" : ""}</p>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setLocation('/bienvenida')}>
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              <CalendarDays className="w-5 h-5 text-emerald-600" />
+              Programa Semanal
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5">{total} programa{total !== 1 ? "s" : ""}</p>
+          </div>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" variant="outline" onClick={() => setView("plantillas")}>

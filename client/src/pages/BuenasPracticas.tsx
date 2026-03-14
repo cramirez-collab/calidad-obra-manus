@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useMemo } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useProject } from "@/contexts/ProjectContext";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -28,6 +29,7 @@ import {
   Award,
   TrendingUp,
   Users,
+  ArrowLeft,
   Building2,
   FileText,
   Star,
@@ -66,6 +68,7 @@ const ESTADOS_BP = [
 type ViewMode = "grid" | "detail";
 
 export default function BuenasPracticas() {
+  const [, setLocation] = useLocation();
   const { selectedProjectId, userProjects } = useProject();
   const { user } = useAuth();
   const [showCreate, setShowCreate] = useState(false);
@@ -100,6 +103,9 @@ export default function BuenasPracticas() {
       <div className="max-w-3xl mx-auto px-3 py-4">
         {/* Header con botón mejorado */}
         <div className="flex items-center gap-3 mb-5">
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setLocation('/bienvenida')}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
             <ShieldCheck className="h-5 w-5 text-white" />
           </div>

@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useProject } from "@/contexts/ProjectContext";
 import { trpc } from "@/lib/trpc";
-import { ListOrdered, Loader2 } from "lucide-react";
+import { useLocation } from "wouter";
+import { ListOrdered, Loader2, ChevronLeft } from "lucide-react";
 
 export default function ListaEspecialidades() {
+  const [, setLocation] = useLocation();
   const { selectedProjectId } = useProject();
   const { data: especialidades, isLoading } = trpc.especialidades.list.useQuery(
     selectedProjectId ? { proyectoId: selectedProjectId } : undefined,
@@ -25,6 +28,11 @@ export default function ListaEspecialidades() {
 
   return (
     <div className="container py-6 max-w-2xl">
+      <div className="mb-3">
+        <Button variant="ghost" size="sm" onClick={() => setLocation('/bienvenida')} className="gap-1">
+          <ChevronLeft className="h-4 w-4" /> Inicio
+        </Button>
+      </div>
       <Card>
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-xl">

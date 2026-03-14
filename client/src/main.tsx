@@ -155,6 +155,7 @@ function isProductionDomain(): boolean {
 
 function showNotificationBlocker(): void {
   if (notificationBlockerShown) return;
+  if (sessionStorage.getItem('oqc_notif_skipped') === '1') return;
   notificationBlockerShown = true;
   
   const blocker = document.createElement('div');
@@ -194,11 +195,26 @@ function showNotificationBlocker(): void {
         font-weight: bold;
         border-radius: 10px;
         cursor: pointer;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         width: 100%;
         max-width: 300px;
       ">
         ACTIVAR NOTIFICACIONES
+      </button>
+      <button id="skip-notifications-btn" style="
+        background: transparent;
+        color: #aaa;
+        border: 1px solid #555;
+        padding: 12px 40px;
+        font-size: 15px;
+        font-weight: 500;
+        border-radius: 10px;
+        cursor: pointer;
+        margin-bottom: 20px;
+        width: 100%;
+        max-width: 300px;
+      ">
+        Omitir por ahora
       </button>
       <div style="color: #888; font-size: 13px; margin-top: 20px;">
         <p style="margin-bottom: 10px;"><strong>Android:</strong> Configuración > Apps > Chrome > Notificaciones</p>
@@ -210,27 +226,57 @@ function showNotificationBlocker(): void {
   
   document.body.appendChild(blocker);
   
+  // Botón Omitir
+  const skipBtn = document.getElementById('skip-notifications-btn');
+  if (skipBtn) {
+    skipBtn.addEventListener('click', () => {
+      blocker.remove();
+      notificationBlockerShown = false;
+      // No volver a mostrar en esta sesión
+      sessionStorage.setItem('oqc_notif_skipped', '1');
+    });
+  }
+
   const btn = document.getElementById('enable-notifications-btn');
   if (btn) {
     btn.addEventListener('click', async () => {
-      btn.textContent = 'Solicitando permisos...';
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
+      try {
+        btn.textContent = 'Solicitando permisos...';
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          blocker.remove();
+          notificationBlockerShown = false;
+          sessionStorage.setItem('oqc_notif_skipped', '1');
+          await registerPushSubscription();
+          await updateAppBadge();
+          showWelcomeNotification();
+        } else {
+          // Si deniegan o cancelan, cerrar el blocker de todos modos para no atrapar al usuario
+          btn.textContent = 'Permisos no concedidos';
+          btn.style.background = '#ff6b6b';
+          setTimeout(() => {
+            blocker.remove();
+            notificationBlockerShown = false;
+            sessionStorage.setItem('oqc_notif_skipped', '1');
+          }, 2000);
+        }
+      } catch (e) {
+        // Error al solicitar permisos - cerrar blocker
         blocker.remove();
         notificationBlockerShown = false;
-        await registerPushSubscription();
-        await updateAppBadge();
-        showWelcomeNotification();
-      } else {
-        btn.textContent = 'Permisos denegados - Inténtalo de nuevo';
-        btn.style.background = '#ff6b6b';
-        setTimeout(() => {
-          btn.textContent = 'ACTIVAR NOTIFICACIONES';
-          btn.style.background = '#02B381';
-        }, 3000);
+        sessionStorage.setItem('oqc_notif_skipped', '1');
       }
     });
   }
+
+  // Auto-cerrar después de 10 segundos si el usuario no interactúa
+  setTimeout(() => {
+    if (document.getElementById('notification-blocker')) {
+      blocker.remove();
+      notificationBlockerShown = false;
+      sessionStorage.setItem('oqc_notif_skipped', '1');
+    }
+  }, 10000);
 }
 
 function removeNotificationBlocker(): void {

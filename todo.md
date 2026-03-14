@@ -5268,3 +5268,6 @@
 - [x] Hacer botón editar programa más visible en PC, tablet y móvil (verde prominente con texto)
 - [x] Permitir a todos los usuarios editar programas después del corte (no solo admins)
 - [x] Convertir lista de programas a acordeón por semana (Semana X · periodo), colapsado por defecto, expandible al tocar
+- [x] Fix: Banner de notificaciones bloquea a usuarios (agregar botón Omitir/Cerrar + auto-close 10s)
+- [x] Agregar botón regresar al inicio en pantallas: BuenasPracticas, ProgramaSemanal, ListaEspecialidades
+- [x] Bug: Blocker de notificaciones no se quita aunque se activen - fix: auto-close + skip + cerrar en todos los casos
