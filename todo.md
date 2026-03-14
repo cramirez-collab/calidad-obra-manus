@@ -5291,3 +5291,5 @@
 - [x] Asistente OQC: Respuestas personalizadas por nombre del usuario, tono cercano y adaptativo
 - [x] Asistente OQC: Respuestas paso a paso enumeradas, claras y detalladas
 - [x] Asistente OQC: Tests multimodal y personalización (33 tests)
+- [x] Fix: Botón imagen del Asistente debe abrir selector de galería/archivos/screenshots (no solo cámara)
+- [x] Verificar que el LLM analice imágenes enviadas y dé respuestas contextuales

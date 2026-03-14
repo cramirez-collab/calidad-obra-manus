@@ -361,7 +361,6 @@ export default function AsistenteOQC({ proyectoId }: AsistenteOQCProps) {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             className="hidden"
             onChange={handleImageSelect}
           />
