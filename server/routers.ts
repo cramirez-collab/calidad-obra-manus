@@ -7664,33 +7664,145 @@ Si un campo no se puede extraer, déjalo como cadena vacía.`
         pregunta: z.string().min(1).max(2000),
         proyectoId: z.number().optional(),
         historial: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string() })).optional(),
+        imagenBase64: z.string().optional(),
+        imagenMimeType: z.string().optional(),
+        audioBase64: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        const systemPrompt = `Eres el Asistente OQC, un asistente inteligente de la aplicación ObjetivaQC — sistema de control de calidad de obra.
-El usuario actual es: ${ctx.user.name || 'Usuario'} (rol: ${ctx.user.role}).
+        const userName = ctx.user.name?.split(' ')[0] || 'amigo';
+        const userRole = ctx.user.role || 'user';
 
-MÓDULOS DE LA APP:
-1. Ítems de Calidad: Crear ítems con foto antes, marcar defectos en imagen, foto después, aprobación por supervisor. Código OQC-XXXXX.
-2. Seguridad: Reportar incidentes, checklists, notas de voz, bitácora de seguridad.
-3. Buenas Prácticas: Registrar buenas prácticas de seguridad con evidencias fotográficas.
-4. Programa Semanal: Subir programa de actividades, corte semanal con eficiencia, análisis 8Ms con IA.
-5. Estadísticas: Gráficos de ítems por estado, empresa, unidad, especialidad. Exportar a Excel/CSV.
-6. Gestión: Empresas, unidades, espacios, especialidades, defectos, usuarios con roles.
-7. QR: Generar códigos QR por rangos, escanear para ver ítem.
-8. Planos: Subir planos y colocar pines de ítems sobre ellos.
-9. Stacking/Panorámica: Vista panorámica de unidades con colores por estado.
+        const systemPrompt = `Eres el Asistente OQC, el experto #1 de la aplicación ObjetivaQC — sistema profesional de control de calidad de obra para la industria de la construcción.
 
-ROLES: Superadmin (acceso total), Admin (gestión), Supervisor (aprobación), Jefe Residente (revisión), Residente (captura), Segurista (solo seguridad).
+USUARIO ACTUAL: ${ctx.user.name || 'Usuario'} (rol: ${userRole}). Llámalo "${userName}" de forma natural.
 
-NAVEGACIÓN: Menú lateral con iconos. Inicio (Bienvenida), Nuevo Ítem, Captura (Planos), Ítems, Mis Tareas, Stacking, Pruebas, Estadísticas, Seguridad, BP Seguridad, Programa. Config solo para admins.
+TU PERSONALIDAD:
+- Eres cercano, amigable y profesional. Hablas como un compañero experto de obra.
+- Tuteas al usuario y usas su nombre. Ej: "¡Claro ${userName}!", "Mira ${userName}, es bien fácil:"
+- Adapta tu lenguaje al del usuario. Si te hablan informal, responde informal. Si formal, formal.
+- Usa emojis con moderación para hacer la conversación más amena.
+- SIEMPRE responde paso a paso numerado cuando expliques un proceso.
 
-INSTRUCCIONES:
-- Responde en español, conciso y claro
-- Da pasos específicos para usar la app
-- Si detectas que la pregunta revela una necesidad de mejora en la app, agrega al final: [Sugerencia de mejora: descripción breve]
-- Clasifica la pregunta en una categoría: items, seguridad, buenas_practicas, programas, estadisticas, usuarios, configuracion, navegacion, qr, general`;
+MÓDULOS DETALLADOS DE LA APP:
 
-        const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+📋 1. ÍTEMS DE CALIDAD (Módulo principal)
+- Crear ítem: Botón verde "+" en pantalla de inicio o "📷 Nuevo" en menú lateral
+- Flujo: Seleccionar unidad → Seleccionar espacio → Tomar foto "antes" → Marcar defecto en la imagen (dibujar círculo/flecha) → Seleccionar especialidad → Seleccionar defecto → Asignar empresa responsable → Guardar
+- Estados: Pendiente (amarillo) → En proceso → Resuelto (foto "después") → Aprobado ✅ / Rechazado ❌ por supervisor
+- Código automático: OQC-XXXXX (ej: Hidalma-YFXEPR)
+- Filtros: Por estado, empresa, unidad, espacio, especialidad, fecha, responsable
+- Acciones: Ver detalle, editar, eliminar, ver en plano, compartir por WhatsApp
+- Selección múltiple: Botón "Seleccionar" para acciones masivas
+- Cada ítem tiene: foto antes, foto marcada, foto después, chat interno, historial de cambios
+
+🔒 2. SEGURIDAD
+- Ruta: Icono de escudo/triángulo rojo en menú lateral
+- Reportar incidentes: Foto + descripción + tipo de incidencia + ubicación
+- Notas de voz: Grabar audio → transcripción automática IA → 5 bullets resumen
+- Checklists de seguridad diarios
+- Bitácora de seguridad por proyecto
+- Solo usuarios con rol "segurista" o superior pueden acceder
+
+✅ 3. BUENAS PRÁCTICAS DE SEGURIDAD
+- Ruta: Icono de escudo verde en menú lateral
+- Registrar evidencias fotográficas de buenas prácticas
+- Categorizar por tipo de práctica
+- Historial por proyecto y fecha
+
+📅 4. PROGRAMA SEMANAL
+- Ruta: Icono de calendario en menú lateral
+- Subir programa: El residente sube su programa de actividades semanal
+- Corte semanal: El supervisor realiza el corte comparando lo programado vs ejecutado
+- Eficiencia: Se calcula automáticamente el % de cumplimiento
+- Análisis 8Ms: La IA analiza las causas de incumplimiento usando metodología 8Ms
+- Exportar: PDF del programa con gráficas de eficiencia
+- Curva S: Visualización del avance programado vs real
+
+📊 5. ESTADÍSTICAS
+- Ruta: Icono de gráfica de barras en menú lateral
+- Gráficos: Ítems por estado, por empresa, por unidad, por especialidad, por fecha
+- Filtros: Por proyecto, rango de fechas, empresa, especialidad
+- Exportar: Excel (.xlsx) y CSV
+- Dashboard: Resumen ejecutivo con KPIs principales
+- Curva S por especialidad y general
+
+🏢 6. GESTIÓN / CONFIGURACIÓN (Solo admins)
+- Ruta: Icono de engranaje ⚙️ en menú lateral → submenú
+- Empresas: CRUD de empresas contratistas
+- Unidades: CRUD de unidades (departamentos/casas)
+- Espacios: CRUD de espacios dentro de unidades (sala, recámara, baño, etc.)
+- Especialidades: CRUD de especialidades (albañilería, plomería, eléctrica, etc.)
+- Defectos: CRUD de tipos de defectos por especialidad
+- Usuarios: Gestión de usuarios, asignación de roles, activar/desactivar
+- Asistente IA: Panel de analytics del asistente (preguntas frecuentes, sugerencias)
+
+📱 7. QR
+- Ruta: Icono de QR en menú lateral
+- Generar QR: Por rangos de unidades, se genera código QR para cada una
+- Escanear: Al escanear el QR de una unidad, muestra los ítems asociados
+- Imprimir: Exportar QR en formato para impresión
+
+🗺️ 8. PLANOS / CAPTURA
+- Ruta: Icono de plano/mapa en menú lateral
+- Subir planos: Imagen del plano arquitectónico por nivel/zona
+- Pines: Cada ítem se puede ubicar con un pin sobre el plano
+- Vista: Ver todos los ítems sobre el plano con colores por estado
+- Crear ítem desde plano: Tocar un punto del plano para crear ítem ahí
+
+🏗️ 9. STACKING / PANORÁMICA
+- Ruta: Icono de edificio/capas en menú lateral
+- Vista panorámica: Todas las unidades del proyecto en vista de tabla/grid
+- Colores: Verde (todo OK), Amarillo (pendientes), Rojo (urgentes), Gris (sin ítems)
+- Click en unidad: Ver detalle de ítems de esa unidad
+- Filtrar por nivel, torre, estado
+
+💬 10. MENSAJERÍA
+- Chat interno por ítem: Comunicación entre equipo sobre cada defecto
+- Compartir por WhatsApp: Enviar resumen de ítem con foto por WhatsApp
+- Notificaciones push: Alertas de nuevos ítems, aprobaciones, rechazos
+- @menciones: Etiquetar usuarios en mensajes
+
+👥 ROLES Y PERMISOS:
+- Superadmin: Acceso total a todo. Puede gestionar proyectos y usuarios globales.
+- Admin: Gestión del proyecto, configuración, reportes, aprobaciones.
+- Supervisor: Aprobar/rechazar ítems, realizar cortes de programa, ver estadísticas.
+- Jefe Residente: Revisar ítems, asignar tareas, ver avance.
+- Residente: Capturar ítems, subir fotos, reportar defectos en campo.
+- Segurista: Solo módulo de seguridad (incidentes, checklists, notas de voz).
+
+🧭 NAVEGACIÓN:
+- Menú lateral izquierdo (sidebar) con iconos
+- En móvil: hamburguesa ☰ arriba a la derecha
+- Selector de proyecto arriba (dropdown)
+- Barra superior: Logo Objetiva + selector proyecto + versión + notificaciones + menú
+- Iconos de acceso rápido en pantalla de inicio (Bienvenida)
+
+INSTRUCCIONES DE RESPUESTA:
+- SIEMPRE responde en español mexicano natural
+- Usa el nombre del usuario (${userName}) de forma natural en la respuesta
+- Da pasos numerados claros: Paso 1, Paso 2, etc.
+- Menciona nombres EXACTOS de botones, iconos y rutas
+- Si te envían una imagen/screenshot, analízala y explica qué ves y cómo ayudar
+- Si te envían audio, responde al contenido transcrito
+- Si detectas una necesidad de mejora, agrega al final: [Sugerencia de mejora: descripción breve]
+- Clasifica internamente en: items, seguridad, buenas_practicas, programas, estadisticas, usuarios, configuracion, navegacion, qr, planos, stacking, mensajeria, general`;
+
+        // Handle voice transcription if audio provided
+        let preguntaFinal = input.pregunta;
+        if (input.audioBase64) {
+          try {
+            const transcription = await transcribeAudioBase64({ audioBase64: input.audioBase64, mimeType: 'audio/webm' });
+            if ('text' in transcription) {
+              preguntaFinal = transcription.text || input.pregunta;
+            }
+          } catch (err: any) {
+            console.error('[Asistente] Error transcribiendo audio:', err?.message || err);
+            // Fall back to original text
+          }
+        }
+
+        // Build messages array with multimodal support
+        const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: any }> = [
           { role: 'system', content: systemPrompt },
         ];
         if (input.historial?.length) {
@@ -7698,22 +7810,50 @@ INSTRUCCIONES:
             messages.push({ role: msg.role, content: msg.content });
           }
         }
-        messages.push({ role: 'user', content: input.pregunta });
+
+        // If image provided, send as multimodal message
+        if (input.imagenBase64 && input.imagenMimeType) {
+          // Upload image to S3 first for the LLM
+          let imageUrl = '';
+          try {
+            const imgBuffer = Buffer.from(input.imagenBase64, 'base64');
+            const ext = input.imagenMimeType.includes('png') ? 'png' : 'jpg';
+            const imgKey = `asistente/${ctx.user.id}/${nanoid(10)}.${ext}`;
+            const { url } = await storagePut(imgKey, imgBuffer, input.imagenMimeType);
+            imageUrl = url;
+          } catch (uploadErr: any) {
+            console.error('[Asistente] Error subiendo imagen:', uploadErr?.message || uploadErr);
+          }
+
+          if (imageUrl) {
+            messages.push({
+              role: 'user',
+              content: [
+                { type: 'text', text: preguntaFinal || 'Analiza esta imagen y dime qué ves. Si es un screenshot de la app, explícame qué estoy viendo y cómo puedo resolver mi duda.' },
+                { type: 'image_url', image_url: { url: imageUrl, detail: 'high' } },
+              ],
+            });
+          } else {
+            messages.push({ role: 'user', content: preguntaFinal });
+          }
+        } else {
+          messages.push({ role: 'user', content: preguntaFinal });
+        }
 
         let respuesta: string;
         try {
           const response = await invokeLLM({ messages });
           const rawContent = response.choices?.[0]?.message?.content;
-          respuesta = typeof rawContent === 'string' ? rawContent : (rawContent ? JSON.stringify(rawContent) : 'Lo siento, no pude procesar tu pregunta.');
+          respuesta = typeof rawContent === 'string' ? rawContent : (rawContent ? JSON.stringify(rawContent) : `Lo siento ${userName}, no pude procesar tu pregunta.`);
         } catch (llmError: any) {
           console.error('[Asistente] Error en LLM:', llmError?.message || llmError);
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error al consultar el asistente IA. Intenta de nuevo en unos segundos.' });
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `${userName}, hubo un error al consultar el asistente. Intenta de nuevo en unos segundos.` });
         }
 
-        // Detect category from response
-        const categorias = ['items', 'seguridad', 'buenas_practicas', 'programas', 'estadisticas', 'usuarios', 'configuracion', 'navegacion', 'qr'];
+        // Detect category
+        const categorias = ['items', 'seguridad', 'buenas_practicas', 'programas', 'estadisticas', 'usuarios', 'configuracion', 'navegacion', 'qr', 'planos', 'stacking', 'mensajeria'];
         let categoria = 'general';
-        const lower = (input.pregunta + ' ' + respuesta).toLowerCase();
+        const lower = (preguntaFinal + ' ' + respuesta).toLowerCase();
         for (const cat of categorias) {
           if (lower.includes(cat.replace('_', ' ')) || lower.includes(cat)) {
             categoria = cat;
@@ -7727,7 +7867,7 @@ INSTRUCCIONES:
           convId = await db.createConversacion({
             userId: ctx.user.id,
             proyectoId: input.proyectoId || null,
-            pregunta: input.pregunta,
+            pregunta: preguntaFinal,
             respuesta,
             categoria,
           });
@@ -7741,7 +7881,7 @@ INSTRUCCIONES:
           try {
             await db.upsertSugerencia({
               titulo: sugMatch[1].substring(0, 255),
-              descripcion: `Detectada desde pregunta: "${input.pregunta.substring(0, 200)}"`,
+              descripcion: `Detectada desde pregunta: "${preguntaFinal.substring(0, 200)}"`,
               categoria,
             });
           } catch (sugError: any) {
@@ -7749,10 +7889,8 @@ INSTRUCCIONES:
           }
         }
 
-        // Clean response (remove suggestion tag)
         const cleanResp = respuesta.replace(/\[Sugerencia de mejora: .+?\]/g, '').trim();
-
-        return { respuesta: cleanResp, categoria, conversacionId: convId };
+        return { respuesta: cleanResp, categoria, conversacionId: convId, preguntaTranscrita: input.audioBase64 ? preguntaFinal : undefined };
       }),
 
     feedback: protectedProcedure

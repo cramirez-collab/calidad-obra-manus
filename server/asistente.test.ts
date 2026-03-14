@@ -8,14 +8,15 @@ import { describe, it, expect } from 'vitest';
 
 const CATEGORIAS = [
   'items', 'seguridad', 'buenas_practicas', 'programas',
-  'estadisticas', 'usuarios', 'configuracion', 'navegacion', 'qr', 'general'
+  'estadisticas', 'usuarios', 'configuracion', 'navegacion', 'qr',
+  'planos', 'stacking', 'mensajeria', 'general'
 ];
 
 const SUGERENCIA_ESTADOS = ['pendiente', 'aplicada', 'descartada'];
 
 describe('Asistente OQC - Category Detection', () => {
   const detectCategory = (pregunta: string, respuesta: string): string => {
-    const categorias = ['items', 'seguridad', 'buenas_practicas', 'programas', 'estadisticas', 'usuarios', 'configuracion', 'navegacion', 'qr'];
+    const categorias = ['items', 'seguridad', 'buenas_practicas', 'programas', 'estadisticas', 'usuarios', 'configuracion', 'navegacion', 'qr', 'planos', 'stacking', 'mensajeria'];
     let categoria = 'general';
     const lower = (pregunta + ' ' + respuesta).toLowerCase();
     for (const cat of categorias) {
@@ -92,7 +93,7 @@ describe('Asistente OQC - Suggestion Extraction', () => {
 
 describe('Asistente OQC - Data Validation', () => {
   it('should have all expected categories', () => {
-    expect(CATEGORIAS).toHaveLength(10);
+    expect(CATEGORIAS).toHaveLength(13);
     expect(CATEGORIAS).toContain('items');
     expect(CATEGORIAS).toContain('general');
   });
@@ -180,5 +181,103 @@ describe('Asistente OQC - Chat History Management', () => {
     const historial: any[] = [];
     const limited = historial.slice(-10);
     expect(limited).toHaveLength(0);
+  });
+});
+
+describe('Asistente OQC - Multimodal Input Validation', () => {
+  it('should validate image base64 input', () => {
+    const input = {
+      pregunta: 'Analiza esta imagen',
+      imagenBase64: 'iVBORw0KGgoAAAANSUhEUg==',
+      imagenMimeType: 'image/png',
+    };
+    expect(input.imagenBase64).toBeTruthy();
+    expect(input.imagenMimeType).toMatch(/^image\/(png|jpeg|jpg|webp|gif)$/);
+  });
+
+  it('should determine correct file extension from mime type', () => {
+    const getExt = (mime: string) => mime.includes('png') ? 'png' : 'jpg';
+    expect(getExt('image/png')).toBe('png');
+    expect(getExt('image/jpeg')).toBe('jpg');
+    expect(getExt('image/webp')).toBe('jpg');
+  });
+
+  it('should validate audio base64 input', () => {
+    const input = {
+      pregunta: 'Nota de voz',
+      audioBase64: 'GkXfo59ChoEBQveBAULygQRC84EI',
+    };
+    expect(input.audioBase64).toBeTruthy();
+    expect(input.audioBase64.length).toBeGreaterThan(0);
+  });
+
+  it('should handle text-only input without multimodal fields', () => {
+    const input = {
+      pregunta: '¿Cómo creo un ítem?',
+      imagenBase64: undefined,
+      audioBase64: undefined,
+    };
+    expect(input.imagenBase64).toBeUndefined();
+    expect(input.audioBase64).toBeUndefined();
+    expect(input.pregunta).toBeTruthy();
+  });
+
+  it('should detect planos category', () => {
+    const categorias = ['items', 'seguridad', 'buenas_practicas', 'programas', 'estadisticas', 'usuarios', 'configuracion', 'navegacion', 'qr', 'planos', 'stacking', 'mensajeria'];
+    let categoria = 'general';
+    const lower = '¿cómo subo un plano? Para subir planos ve a...'.toLowerCase();
+    for (const cat of categorias) {
+      if (lower.includes(cat.replace('_', ' ')) || lower.includes(cat)) {
+        categoria = cat;
+        break;
+      }
+    }
+    expect(categoria).toBe('planos');
+  });
+
+  it('should detect stacking category', () => {
+    const categorias = ['items', 'seguridad', 'buenas_practicas', 'programas', 'estadisticas', 'usuarios', 'configuracion', 'navegacion', 'qr', 'planos', 'stacking', 'mensajeria'];
+    let categoria = 'general';
+    const lower = '¿cómo funciona el stacking? El stacking muestra...'.toLowerCase();
+    for (const cat of categorias) {
+      if (lower.includes(cat.replace('_', ' ')) || lower.includes(cat)) {
+        categoria = cat;
+        break;
+      }
+    }
+    expect(categoria).toBe('stacking');
+  });
+});
+
+describe('Asistente OQC - Personalized Response', () => {
+  it('should extract first name from full name', () => {
+    const fullName = 'Carlos Ramirez';
+    const firstName = fullName.split(' ')[0];
+    expect(firstName).toBe('Carlos');
+  });
+
+  it('should fallback to amigo when name is empty', () => {
+    const name = undefined;
+    const firstName = name?.split(' ')[0] || 'amigo';
+    expect(firstName).toBe('amigo');
+  });
+
+  it('should include user name in personalized error message', () => {
+    const userName = 'Carlos';
+    const errorMsg = `${userName}, hubo un error al consultar el asistente. Intenta de nuevo en unos segundos.`;
+    expect(errorMsg).toContain('Carlos');
+  });
+
+  it('should handle voice transcription result with text field', () => {
+    const transcription = { text: 'Hola, ¿cómo creo un ítem?', language: 'es' };
+    if ('text' in transcription) {
+      expect(transcription.text).toBe('Hola, ¿cómo creo un ítem?');
+    }
+  });
+
+  it('should handle voice transcription error result', () => {
+    const transcription = { error: 'Service unavailable', code: 'SERVICE_ERROR' };
+    const hasText = 'text' in transcription;
+    expect(hasText).toBe(false);
   });
 });

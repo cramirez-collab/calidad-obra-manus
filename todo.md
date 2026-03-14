@@ -5285,3 +5285,9 @@
 - [x] Mover AsistenteOQC de Bienvenida a DashboardLayout para disponibilidad global en toda la app
 - [x] Rediseñar botón flotante AsistenteOQC: icono headset morado, posición accesible en móvil/tablet/PC
 - [x] BUG: AsistenteOQC chat devuelve error al procesar preguntas (LLM call failing) - Agregado try/catch robusto
+- [x] Asistente OQC: System prompt exhaustivo con documentación detallada de cada módulo, botón, ruta y flujo
+- [x] Asistente OQC: Soporte multimodal - subir screenshots/imágenes para análisis visual
+- [x] Asistente OQC: Soporte de notas de voz (grabación + transcripción + respuesta)
+- [x] Asistente OQC: Respuestas personalizadas por nombre del usuario, tono cercano y adaptativo
+- [x] Asistente OQC: Respuestas paso a paso enumeradas, claras y detalladas
+- [x] Asistente OQC: Tests multimodal y personalización (33 tests)
