@@ -617,6 +617,13 @@
       "when": 1773329926988,
       "tag": "0087_mature_blizzard",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "5",
+      "when": 1773513371338,
+      "tag": "0088_purple_wallow",
+      "breakpoints": true
     }
   ]
 }

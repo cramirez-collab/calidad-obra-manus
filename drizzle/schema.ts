@@ -1296,3 +1296,35 @@ export const evidenciasBP = mysqlTable("evidencias_bp", {
 });
 export type EvidenciaBP = typeof evidenciasBP.$inferSelect;
 export type InsertEvidenciaBP = typeof evidenciasBP.$inferInsert;
+
+/**
+ * Conversaciones del Asistente OQC - Chat IA de ayuda
+ */
+export const asistenteConversaciones = mysqlTable("asistente_conversaciones", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  proyectoId: int("proyectoId"),
+  pregunta: text("pregunta").notNull(),
+  respuesta: text("respuesta").notNull(),
+  categoria: varchar("categoria", { length: 100 }).default("general"),
+  util: boolean("util"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AsistenteConversacion = typeof asistenteConversaciones.$inferSelect;
+export type InsertAsistenteConversacion = typeof asistenteConversaciones.$inferInsert;
+
+/**
+ * Sugerencias de mejora generadas por el análisis de conversaciones
+ */
+export const asistenteSugerencias = mysqlTable("asistente_sugerencias", {
+  id: int("id").autoincrement().primaryKey(),
+  titulo: varchar("titulo", { length: 255 }).notNull(),
+  descripcion: text("descripcion").notNull(),
+  categoria: varchar("categoria", { length: 100 }).notNull(),
+  frecuencia: int("frecuencia").default(1).notNull(),
+  estado: varchar("estado", { length: 50 }).default("pendiente").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AsistenteSugerencia = typeof asistenteSugerencias.$inferSelect;
+export type InsertAsistenteSugerencia = typeof asistenteSugerencias.$inferInsert;

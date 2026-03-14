@@ -56,6 +56,8 @@ import {
   archivosPago, InsertArchivoPago,
   itemRondas, InsertItemRonda,
   analisis8msCache, InsertAnalisis8msCache,
+  asistenteConversaciones, InsertAsistenteConversacion,
+  asistenteSugerencias, InsertAsistenteSugerencia,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { nanoid } from 'nanoid';
@@ -8469,4 +8471,96 @@ export async function saveAnalisis8msCache(programaId: number, especialidad: str
     itemsHash,
     resultado,
   });
+}
+
+/// ==================== ASISTENTE OQC ====================
+export async function createConversacion(data: InsertAsistenteConversacion) {
+  const db = await getDb();
+  if (!db) throw new Error('DB not available');
+  const result = await db.insert(asistenteConversaciones).values(data);
+  return result[0].insertId;
+}
+
+export async function getConversaciones(userId: number, limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(asistenteConversaciones)
+    .where(eq(asistenteConversaciones.userId, userId))
+    .orderBy(desc(asistenteConversaciones.createdAt))
+    .limit(limit);
+}
+
+export async function updateConversacionUtil(id: number, util: boolean) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(asistenteConversaciones).set({ util }).where(eq(asistenteConversaciones.id, id));
+}
+
+export async function getConversacionesAnalytics(proyectoId?: number) {
+  const db = await getDb();
+  if (!db) return { totalConversaciones: 0, porCategoria: [], preguntasNoUtiles: [] };
+  const where = proyectoId 
+    ? and(eq(asistenteConversaciones.proyectoId, proyectoId))
+    : undefined;
+  
+  const total = await db.select({ count: sql<number>`COUNT(*)` })
+    .from(asistenteConversaciones)
+    .where(where ?? undefined);
+  
+  const porCategoria = await db.select({
+    categoria: asistenteConversaciones.categoria,
+    total: sql<number>`COUNT(*)`,
+    utiles: sql<number>`SUM(CASE WHEN util = 1 THEN 1 ELSE 0 END)`,
+    noUtiles: sql<number>`SUM(CASE WHEN util = 0 THEN 1 ELSE 0 END)`,
+  })
+    .from(asistenteConversaciones)
+    .where(where ?? undefined)
+    .groupBy(asistenteConversaciones.categoria)
+    .orderBy(sql`COUNT(*) DESC`);
+  
+  const noUtiles = await db.select()
+    .from(asistenteConversaciones)
+    .where(where ? and(where, eq(asistenteConversaciones.util, false)) : eq(asistenteConversaciones.util, false))
+    .orderBy(desc(asistenteConversaciones.createdAt))
+    .limit(20);
+  
+  return {
+    totalConversaciones: total[0]?.count || 0,
+    porCategoria,
+    preguntasNoUtiles: noUtiles,
+  };
+}
+
+export async function listSugerencias() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(asistenteSugerencias)
+    .orderBy(desc(asistenteSugerencias.frecuencia), desc(asistenteSugerencias.createdAt));
+}
+
+export async function upsertSugerencia(data: { titulo: string; descripcion: string; categoria: string }) {
+  const db = await getDb();
+  if (!db) return 0;
+  const existing = await db.select().from(asistenteSugerencias)
+    .where(and(
+      eq(asistenteSugerencias.categoria, data.categoria),
+      eq(asistenteSugerencias.estado, 'pendiente')
+    ))
+    .limit(1);
+  
+  if (existing.length > 0) {
+    await db.update(asistenteSugerencias)
+      .set({ frecuencia: sql`frecuencia + 1`, descripcion: data.descripcion })
+      .where(eq(asistenteSugerencias.id, existing[0].id));
+    return existing[0].id;
+  }
+  
+  const result = await db.insert(asistenteSugerencias).values(data);
+  return result[0].insertId;
+}
+
+export async function updateSugerenciaEstado(id: number, estado: 'pendiente' | 'aplicada' | 'descartada') {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(asistenteSugerencias).set({ estado }).where(eq(asistenteSugerencias.id, id));
 }

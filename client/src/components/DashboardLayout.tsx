@@ -163,6 +163,8 @@ const getMenuItems = (role: string, proyecto: ProyectoConEnlaces): MenuItem[] =>
     // Control
     { icon: UserCheck, label: "Participación", path: "/participacion", group: "Control" },
     { icon: ShieldCheck, label: "Buenas Prácticas", path: "/buenas-practicas", group: "Control" },
+    // IA
+    { icon: BrainCircuit, label: "Asistente IA", path: "/asistente-admin", group: "Sistema" },
   ];
 
   // Seguristas: solo ven Bienvenida, Seguridad, y Contratistas (lectura)

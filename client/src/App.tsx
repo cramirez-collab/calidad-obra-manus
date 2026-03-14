@@ -65,6 +65,7 @@ const BitacoraCorreos = lazy(() => import("./pages/BitacoraCorreos"));
 const ProgramaSemanal = lazy(() => import("./pages/ProgramaSemanal"));
 const PendientesSinc = lazy(() => import("./pages/PendientesSinc"));
 const BuenasPracticas = lazy(() => import("./pages/BuenasPracticas"));
+const AsistenteAdmin = lazy(() => import("./pages/AsistenteAdmin"));
 
 
 
@@ -161,6 +162,9 @@ function AppRoutes() {
       
       <Route path="/notificaciones" component={Notificaciones} />
       <Route path="/bitacora-correos" component={BitacoraCorreos} />
+      
+      {/* Asistente IA Admin */}
+      <Route path="/asistente-admin" component={AsistenteAdmin} />
       
       {/* Configuración y Metas */}
       <Route path="/configuracion" component={Configuracion} />

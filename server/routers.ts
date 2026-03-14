@@ -7655,5 +7655,122 @@ Si un campo no se puede extraer, déjalo como cadena vacía.`
       }),
   }),
 
+  // =============================================
+  // ASISTENTE OQC (Chat IA de Ayuda)
+  // =============================================
+  asistente: router({
+    chat: protectedProcedure
+      .input(z.object({
+        pregunta: z.string().min(1).max(2000),
+        proyectoId: z.number().optional(),
+        historial: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string() })).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const systemPrompt = `Eres el Asistente OQC, un asistente inteligente de la aplicación ObjetivaQC — sistema de control de calidad de obra.
+El usuario actual es: ${ctx.user.name || 'Usuario'} (rol: ${ctx.user.role}).
+
+MÓDULOS DE LA APP:
+1. Ítems de Calidad: Crear ítems con foto antes, marcar defectos en imagen, foto después, aprobación por supervisor. Código OQC-XXXXX.
+2. Seguridad: Reportar incidentes, checklists, notas de voz, bitácora de seguridad.
+3. Buenas Prácticas: Registrar buenas prácticas de seguridad con evidencias fotográficas.
+4. Programa Semanal: Subir programa de actividades, corte semanal con eficiencia, análisis 8Ms con IA.
+5. Estadísticas: Gráficos de ítems por estado, empresa, unidad, especialidad. Exportar a Excel/CSV.
+6. Gestión: Empresas, unidades, espacios, especialidades, defectos, usuarios con roles.
+7. QR: Generar códigos QR por rangos, escanear para ver ítem.
+8. Planos: Subir planos y colocar pines de ítems sobre ellos.
+9. Stacking/Panorámica: Vista panorámica de unidades con colores por estado.
+
+ROLES: Superadmin (acceso total), Admin (gestión), Supervisor (aprobación), Jefe Residente (revisión), Residente (captura), Segurista (solo seguridad).
+
+NAVEGACIÓN: Menú lateral con iconos. Inicio (Bienvenida), Nuevo Ítem, Captura (Planos), Ítems, Mis Tareas, Stacking, Pruebas, Estadísticas, Seguridad, BP Seguridad, Programa. Config solo para admins.
+
+INSTRUCCIONES:
+- Responde en español, conciso y claro
+- Da pasos específicos para usar la app
+- Si detectas que la pregunta revela una necesidad de mejora en la app, agrega al final: [Sugerencia de mejora: descripción breve]
+- Clasifica la pregunta en una categoría: items, seguridad, buenas_practicas, programas, estadisticas, usuarios, configuracion, navegacion, qr, general`;
+
+        const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+          { role: 'system', content: systemPrompt },
+        ];
+        if (input.historial?.length) {
+          for (const msg of input.historial.slice(-10)) {
+            messages.push({ role: msg.role, content: msg.content });
+          }
+        }
+        messages.push({ role: 'user', content: input.pregunta });
+
+        const response = await invokeLLM({ messages });
+        const rawContent = response.choices?.[0]?.message?.content;
+        const respuesta: string = typeof rawContent === 'string' ? rawContent : (rawContent ? JSON.stringify(rawContent) : 'Lo siento, no pude procesar tu pregunta.');
+
+        // Detect category from response
+        const categorias = ['items', 'seguridad', 'buenas_practicas', 'programas', 'estadisticas', 'usuarios', 'configuracion', 'navegacion', 'qr'];
+        let categoria = 'general';
+        const lower = (input.pregunta + ' ' + respuesta).toLowerCase();
+        for (const cat of categorias) {
+          if (lower.includes(cat.replace('_', ' ')) || lower.includes(cat)) {
+            categoria = cat;
+            break;
+          }
+        }
+
+        // Save conversation
+        const convId = await db.createConversacion({
+          userId: ctx.user.id,
+          proyectoId: input.proyectoId || null,
+          pregunta: input.pregunta,
+          respuesta,
+          categoria,
+        });
+
+        // Check for improvement suggestion
+        const sugMatch = respuesta.match(/\[Sugerencia de mejora: (.+?)\]/);
+        if (sugMatch) {
+          await db.upsertSugerencia({
+            titulo: sugMatch[1].substring(0, 255),
+            descripcion: `Detectada desde pregunta: "${input.pregunta.substring(0, 200)}"`,
+            categoria,
+          });
+        }
+
+        // Clean response (remove suggestion tag)
+        const cleanResp = respuesta.replace(/\[Sugerencia de mejora: .+?\]/g, '').trim();
+
+        return { respuesta: cleanResp, categoria, conversacionId: convId };
+      }),
+
+    feedback: protectedProcedure
+      .input(z.object({ conversacionId: z.number(), util: z.boolean() }))
+      .mutation(async ({ input }) => {
+        await db.updateConversacionUtil(input.conversacionId, input.util);
+        return { success: true };
+      }),
+
+    historial: protectedProcedure
+      .input(z.object({ limit: z.number().optional() }))
+      .query(async ({ ctx, input }) => {
+        return db.getConversaciones(ctx.user.id, input.limit || 50);
+      }),
+
+    analytics: protectedProcedure
+      .input(z.object({ proyectoId: z.number().optional() }))
+      .query(async ({ input }) => {
+        return db.getConversacionesAnalytics(input.proyectoId);
+      }),
+
+    sugerencias: protectedProcedure
+      .query(async () => {
+        return db.listSugerencias();
+      }),
+
+    updateSugerencia: protectedProcedure
+      .input(z.object({ id: z.number(), estado: z.enum(['pendiente', 'aplicada', 'descartada']) }))
+      .mutation(async ({ input }) => {
+        await db.updateSugerenciaEstado(input.id, input.estado);
+        return { success: true };
+      }),
+  }),
+
 });
 export type AppRouter = typeof appRouter;

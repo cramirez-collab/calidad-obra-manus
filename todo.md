@@ -5271,3 +5271,14 @@
 - [x] Fix: Banner de notificaciones bloquea a usuarios (agregar botón Omitir/Cerrar + auto-close 10s)
 - [x] Agregar botón regresar al inicio en pantallas: BuenasPracticas, ProgramaSemanal, ListaEspecialidades
 - [x] Bug: Blocker de notificaciones no se quita aunque se activen - fix: auto-close + skip + cerrar en todos los casos
+
+### Asistente OQC (Chat IA de Ayuda)
+- [x] Schema BD: tabla asistente_conversaciones y asistente_sugerencias
+- [x] Backend: tRPC router asistente (chat con LLM, historial, analytics, sugerencias)
+- [x] System prompt con documentación completa de la app por rol
+- [x] Frontend: componente chat flotante con botón ? visible
+- [x] Integración en Bienvenida como botón flotante
+- [x] Panel admin: analytics de preguntas frecuentes y sugerencias de mejora
+- [x] Almacenamiento de conversaciones para aprendizaje continuo
+- [x] Enlace a Panel Admin del Asistente IA en menú Configuración (admins)
+- [x] Tests unitarios (vitest) para módulo Asistente OQC (22 tests)

@@ -62,6 +62,7 @@ import { generarReportePlanosPDF, type PlanoReportData } from "@/lib/reportePlan
 import { generarReporteCalidadPDF, type ReporteCalidadData } from "@/lib/reporteCalidadPDF";
 import { generarReporteEficienciaPDF, type ReporteEficienciaData } from "@/lib/reporteEficienciaPDF";
 import { openPDFPreview, forceDownloadPDF } from "@/lib/pdfDownload";
+import AsistenteOQC from "@/components/AsistenteOQC";
 // jsPDF se importa dinámicamente para evitar conflicto con React context
 // Heartbeat via tRPC en vez de socket para usuarios en línea
 
@@ -2407,6 +2408,7 @@ export default function Bienvenida() {
       {lightboxUrl && (
         <ZoomableLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
       )}
+      <AsistenteOQC proyectoId={selectedProjectId || undefined} />
     </DashboardLayout>
   );
 }
