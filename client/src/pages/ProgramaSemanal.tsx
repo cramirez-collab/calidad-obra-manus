@@ -15,7 +15,7 @@ import { ZoomableLightbox } from "@/components/ZoomableLightbox";
 import { DrawableCanvas } from "@/components/DrawableCanvas";
 import { PlanoImage } from "@/components/PlanoImage";
 import {
-  CalendarDays, Plus, Send, Scissors, Trash2, ChevronLeft, ChevronRight,
+  CalendarDays, Plus, Send, Scissors, Trash2, ChevronLeft, ChevronRight, ChevronDown,
   Download, Upload, Image as ImageIcon, BarChart3, TrendingUp, Eye, Edit,
   X, Check, AlertTriangle, Clock, FileSpreadsheet, BookTemplate, GitCompare,
   Save, FolderOpen, Copy, FileDown, Target, Sparkles, Wand2, Loader2, Camera, UserCircle,
@@ -94,6 +94,7 @@ export default function ProgramaSemanal() {
   const [filterUsuarioId, setFilterUsuarioId] = useState<string>("todos");
   const [filterEspecialidad, setFilterEspecialidad] = useState<string>("todas");
   const [plantillaActividades, setPlantillaActividades] = useState<ActividadRow[] | null>(null);
+  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set());
 
   // Queries
   const { data: programasData, isLoading } = trpc.programaSemanal.list.useQuery(
@@ -370,12 +371,12 @@ export default function ProgramaSemanal() {
         )}
       </div>
 
-      {/* Lista de programas agrupados por semana (cascada) */}
+      {/* Lista de programas agrupados por semana (acordeón) */}
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
             <Card key={i} className="animate-pulse">
-              <CardContent className="p-4 h-24" />
+              <CardContent className="p-4 h-16" />
             </Card>
           ))}
         </div>
@@ -390,37 +391,81 @@ export default function ProgramaSemanal() {
           </CardContent>
         </Card>
       ) : (() => {
-        // Agrupar por semana
-        const porSemana = new Map<string, any[]>();
+        // Agrupar por semana con número de semana ISO
+        const porSemana = new Map<string, { progs: any[]; weekNum: number; label: string }>();
         programasFiltrados.forEach((p: any) => {
-          const key = formatWeekRange(p.semanaInicio, p.semanaFin);
-          if (!porSemana.has(key)) porSemana.set(key, []);
-          porSemana.get(key)!.push(p);
+          const inicio = new Date(p.semanaInicio);
+          // Calcular número de semana ISO
+          const d = new Date(Date.UTC(inicio.getFullYear(), inicio.getMonth(), inicio.getDate()));
+          d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+          const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+          const weekNum = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+          const label = formatWeekRange(p.semanaInicio, p.semanaFin);
+          const key = `S${weekNum}-${label}`;
+          if (!porSemana.has(key)) porSemana.set(key, { progs: [], weekNum, label });
+          porSemana.get(key)!.progs.push(p);
         });
-        const semanas = Array.from(porSemana.entries());
+        const semanas = Array.from(porSemana.entries()).sort((a, b) => b[1].weekNum - a[1].weekNum);
+        const toggleWeek = (key: string) => {
+          setExpandedWeeks(prev => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key); else next.add(key);
+            return next;
+          });
+        };
         return (
-          <div className="space-y-4">
-            {semanas.map(([semana, progs]) => {
+          <div className="space-y-2">
+            {semanas.map(([key, { progs, weekNum, label }]) => {
               // Calcular eficiencia promedio de la semana
               const conCorte = progs.filter((p: any) => p.eficienciaGlobal != null);
               const efProm = conCorte.length > 0
                 ? conCorte.reduce((s: number, p: any) => s + parseFloat(p.eficienciaGlobal), 0) / conCorte.length
                 : null;
+              const isOpen = expandedWeeks.has(key);
+              const entregados = progs.filter((p: any) => p.status !== 'borrador').length;
+              const cortesRealizados = progs.filter((p: any) => p.status === 'corte_realizado').length;
               return (
-                <div key={semana}>
-                  {/* Header de semana */}
-                  <div className="flex items-center gap-2 mb-2 px-1">
-                    <div className="h-6 w-1 rounded-full bg-emerald-500" />
-                    <span className="font-bold text-sm">{semana}</span>
-                    <span className="text-xs text-muted-foreground">({progs.length} programa{progs.length !== 1 ? 's' : ''})</span>
-                    {efProm != null && (
-                      <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${efProm >= 80 ? 'bg-emerald-100 text-emerald-700' : efProm >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
-                        Prom: {efProm.toFixed(1)}%
-                      </span>
-                    )}
-                  </div>
-                  {/* Cards de la semana */}
-                  <div className="space-y-1.5 pl-3 border-l-2 border-emerald-200 ml-1">
+                <div key={key}>
+                  {/* Header de semana - clickeable para expandir/colapsar */}
+                  <button
+                    type="button"
+                    onClick={() => toggleWeek(key)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all touch-manipulation ${
+                      isOpen
+                        ? 'bg-emerald-50 border-emerald-300 shadow-sm'
+                        : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-emerald-200'
+                    }`}
+                  >
+                    <div className={`flex items-center justify-center h-10 w-10 min-w-[40px] rounded-lg font-bold text-sm ${
+                      isOpen ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700'
+                    }`}>
+                      S{weekNum}
+                    </div>
+                    <div className="flex-1 text-left min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">Semana {weekNum}</span>
+                        <span className="text-xs text-muted-foreground hidden sm:inline">· {label}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
+                        <span className="sm:hidden">{label}</span>
+                        <span className="hidden sm:inline">{progs.length} programa{progs.length !== 1 ? 's' : ''}</span>
+                        {entregados > 0 && <span className="hidden sm:inline">· {entregados} entregado{entregados !== 1 ? 's' : ''}</span>}
+                        {cortesRealizados > 0 && <span className="hidden sm:inline">· {cortesRealizados} corte{cortesRealizados !== 1 ? 's' : ''}</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {efProm != null && (
+                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${efProm >= 80 ? 'bg-emerald-100 text-emerald-700' : efProm >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                          {efProm.toFixed(0)}%
+                        </span>
+                      )}
+                      <span className="text-xs text-muted-foreground bg-gray-100 px-1.5 py-0.5 rounded-full">{progs.length}</span>
+                      <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                    </div>
+                  </button>
+                  {/* Cards de la semana - colapsables */}
+                  {isOpen && (
+                  <div className="space-y-1.5 pl-3 border-l-2 border-emerald-200 ml-5 mt-2 animate-in slide-in-from-top-2 duration-200">
                     {progs.map((p: any) => {
                       const usuario = usuariosEspecialidad.find((u: any) => u.id === p.usuarioId);
                       const ef = p.eficienciaGlobal != null ? parseFloat(p.eficienciaGlobal) : null;
@@ -505,6 +550,7 @@ export default function ProgramaSemanal() {
                       );
                     })}
                   </div>
+                  )}
                 </div>
               );
             })}

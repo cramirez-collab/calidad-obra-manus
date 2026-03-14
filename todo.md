@@ -5267,3 +5267,4 @@
 - [x] Hacer el módulo robusto y funcional sin errores
 - [x] Hacer botón editar programa más visible en PC, tablet y móvil (verde prominente con texto)
 - [x] Permitir a todos los usuarios editar programas después del corte (no solo admins)
+- [x] Convertir lista de programas a acordeón por semana (Semana X · periodo), colapsado por defecto, expandible al tocar
