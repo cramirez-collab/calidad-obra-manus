@@ -5282,3 +5282,4 @@
 - [x] Almacenamiento de conversaciones para aprendizaje continuo
 - [x] Enlace a Panel Admin del Asistente IA en menú Configuración (admins)
 - [x] Tests unitarios (vitest) para módulo Asistente OQC (22 tests)
+- [x] Mover AsistenteOQC de Bienvenida a DashboardLayout para disponibilidad global en toda la app

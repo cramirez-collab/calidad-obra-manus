@@ -68,6 +68,7 @@ import { trpc } from "@/lib/trpc";
 import { TermsModal } from "./TermsModal";
 import { useSyncManager } from "@/hooks/useSyncManager";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import AsistenteOQC from "./AsistenteOQC";
 import { Bell as BellIcon, BellRing } from "lucide-react";
 
 // Tipo para items de menú
@@ -1123,6 +1124,9 @@ function DashboardLayoutContent({
         
         {/* Botones flotantes: WhatsApp (Hidalma) + Captura + QR - todos en un solo contenedor derecha */}
         <FloatingCaptureButton />
+        
+        {/* Asistente OQC - disponible en toda la app */}
+        <AsistenteOQC proyectoId={selectedProjectId || undefined} />
         
         {/* Modal de Términos y Condiciones */}
         <TermsModal 
