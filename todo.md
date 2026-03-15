@@ -5293,3 +5293,7 @@
 - [x] Asistente OQC: Tests multimodal y personalización (33 tests)
 - [x] Fix: Botón imagen del Asistente debe abrir selector de galería/archivos/screenshots (no solo cámara)
 - [x] Verificar que el LLM analice imágenes enviadas y dé respuestas contextuales
+- [x] Estadísticas BP: Backend - procedimientos tRPC para stats por categoría, empresa y usuario
+- [x] Estadísticas BP: Frontend - página con gráficas por categoría, empresa y usuario
+- [x] Estadísticas BP: Sistema de insignias para los usuarios más participativos
+- [x] Estadísticas BP: Exportación a PDF del reporte de estadísticas

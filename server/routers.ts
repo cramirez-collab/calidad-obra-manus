@@ -7653,6 +7653,117 @@ Si un campo no se puede extraer, déjalo como cadena vacía.`
         const catRows = Array.isArray(catRaw) && Array.isArray(catRaw[0]) ? catRaw[0] : catRaw;
         return { ...stats, porCategoria: Array.isArray(catRows) ? catRows : [] };
       }),
+
+    // Estadísticas detalladas de BP por categoría, empresa y usuario
+    statsDetalladas: protectedProcedure
+      .input(z.object({ proyectoId: z.number() }))
+      .query(async ({ input }) => {
+        const database = await db.getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB no disponible' });
+        const { sql: sqlTag } = await import('drizzle-orm');
+
+        // Por categoría con desglose de estado
+        const catRaw: any = await database.execute(sqlTag`
+          SELECT categoria,
+            COUNT(*) as total,
+            SUM(CASE WHEN estado = 'activa' THEN 1 ELSE 0 END) as activas,
+            SUM(CASE WHEN estado = 'implementada' THEN 1 ELSE 0 END) as implementadas,
+            SUM(CASE WHEN estado = 'archivada' THEN 1 ELSE 0 END) as archivadas
+          FROM buenas_practicas WHERE proyectoId = ${input.proyectoId} AND activo = 1
+          GROUP BY categoria ORDER BY total DESC
+        `);
+        const porCategoria = Array.isArray(catRaw) && Array.isArray(catRaw[0]) ? catRaw[0] : (Array.isArray(catRaw) ? catRaw : []);
+
+        // Por empresa
+        const empRaw: any = await database.execute(sqlTag`
+          SELECT e.nombre as empresa, e.id as empresaId,
+            COUNT(*) as total,
+            SUM(CASE WHEN bp.estado = 'implementada' THEN 1 ELSE 0 END) as implementadas,
+            SUM(CASE WHEN bp.estado = 'activa' THEN 1 ELSE 0 END) as activas
+          FROM buenas_practicas bp
+          LEFT JOIN empresas e ON bp.empresaId = e.id
+          WHERE bp.proyectoId = ${input.proyectoId} AND bp.activo = 1 AND bp.empresaId IS NOT NULL
+          GROUP BY e.id, e.nombre ORDER BY total DESC
+        `);
+        const porEmpresa = Array.isArray(empRaw) && Array.isArray(empRaw[0]) ? empRaw[0] : (Array.isArray(empRaw) ? empRaw : []);
+
+        // Por usuario (creador)
+        const usrRaw: any = await database.execute(sqlTag`
+          SELECT u.name as nombre, u.fotoUrl, u.id as userId,
+            COUNT(*) as total,
+            SUM(CASE WHEN bp.estado = 'implementada' THEN 1 ELSE 0 END) as implementadas,
+            SUM(CASE WHEN bp.estado = 'activa' THEN 1 ELSE 0 END) as activas,
+            COUNT(DISTINCT bp.categoria) as categoriasDistintas
+          FROM buenas_practicas bp
+          LEFT JOIN users u ON bp.creadoPorId = u.id
+          WHERE bp.proyectoId = ${input.proyectoId} AND bp.activo = 1
+          GROUP BY u.id, u.name, u.fotoUrl ORDER BY total DESC
+        `);
+        const porUsuario = Array.isArray(usrRaw) && Array.isArray(usrRaw[0]) ? usrRaw[0] : (Array.isArray(usrRaw) ? usrRaw : []);
+
+        // Tendencia mensual (últimos 6 meses)
+        const tendRaw: any = await database.execute(sqlTag`
+          SELECT DATE_FORMAT(createdAt, '%Y-%m') as mes,
+            COUNT(*) as total,
+            SUM(CASE WHEN estado = 'implementada' THEN 1 ELSE 0 END) as implementadas
+          FROM buenas_practicas
+          WHERE proyectoId = ${input.proyectoId} AND activo = 1
+            AND createdAt >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+          GROUP BY DATE_FORMAT(createdAt, '%Y-%m')
+          ORDER BY mes ASC
+        `);
+        const tendencia = Array.isArray(tendRaw) && Array.isArray(tendRaw[0]) ? tendRaw[0] : (Array.isArray(tendRaw) ? tendRaw : []);
+
+        // Top BPs más recientes implementadas
+        const topRaw: any = await database.execute(sqlTag`
+          SELECT bp.id, bp.codigo, bp.titulo, bp.categoria, bp.estado, bp.createdAt,
+            u.name as creadoPorNombre, e.nombre as empresaNombre
+          FROM buenas_practicas bp
+          LEFT JOIN users u ON bp.creadoPorId = u.id
+          LEFT JOIN empresas e ON bp.empresaId = e.id
+          WHERE bp.proyectoId = ${input.proyectoId} AND bp.activo = 1 AND bp.estado = 'implementada'
+          ORDER BY bp.fechaAprobacion DESC LIMIT 5
+        `);
+        const topImplementadas = Array.isArray(topRaw) && Array.isArray(topRaw[0]) ? topRaw[0] : (Array.isArray(topRaw) ? topRaw : []);
+
+        // Insignias/badges para usuarios
+        const usuarios = Array.isArray(porUsuario) ? porUsuario : [];
+        const badges = usuarios.map((u: any) => {
+          const insignias: string[] = [];
+          const total = Number(u.total) || 0;
+          const impl = Number(u.implementadas) || 0;
+          const cats = Number(u.categoriasDistintas) || 0;
+          if (total >= 20) insignias.push('Experto BP');
+          else if (total >= 10) insignias.push('Veterano BP');
+          else if (total >= 5) insignias.push('Contribuidor BP');
+          else if (total >= 1) insignias.push('Iniciador BP');
+          if (impl >= 10) insignias.push('Implementador Estrella');
+          else if (impl >= 5) insignias.push('Implementador');
+          if (cats >= 5) insignias.push('Multidisciplinario');
+          if (total >= 3 && impl === total) insignias.push('100% Efectividad');
+          const tasaImpl = total > 0 ? Math.round((impl / total) * 100) : 0;
+          return {
+            userId: u.userId,
+            nombre: u.nombre,
+            fotoUrl: u.fotoUrl,
+            total,
+            implementadas: impl,
+            activas: Number(u.activas) || 0,
+            categoriasDistintas: cats,
+            tasaImplementacion: tasaImpl,
+            insignias,
+          };
+        });
+
+        return {
+          porCategoria: Array.isArray(porCategoria) ? porCategoria : [],
+          porEmpresa: Array.isArray(porEmpresa) ? porEmpresa : [],
+          porUsuario: Array.isArray(porUsuario) ? porUsuario : [],
+          tendencia: Array.isArray(tendencia) ? tendencia : [],
+          topImplementadas: Array.isArray(topImplementadas) ? topImplementadas : [],
+          badges,
+        };
+      }),
   }),
 
   // =============================================

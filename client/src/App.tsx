@@ -66,6 +66,7 @@ const ProgramaSemanal = lazy(() => import("./pages/ProgramaSemanal"));
 const PendientesSinc = lazy(() => import("./pages/PendientesSinc"));
 const BuenasPracticas = lazy(() => import("./pages/BuenasPracticas"));
 const AsistenteAdmin = lazy(() => import("./pages/AsistenteAdmin"));
+const EstadisticasBP = lazy(() => import("./pages/EstadisticasBP"));
 
 
 
@@ -153,6 +154,7 @@ function AppRoutes() {
       {/* Seguridad */}
       <Route path="/seguridad" component={Seguridad} />
       <Route path="/buenas-practicas" component={BuenasPracticas} />
+      <Route path="/estadisticas-bp" component={EstadisticasBP} />
       
       {/* Programa Semanal */}
       <Route path="/programa-semanal" component={ProgramaSemanal} />

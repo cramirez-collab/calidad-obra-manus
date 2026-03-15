@@ -114,6 +114,21 @@ export default function BuenasPracticas() {
             <p className="text-xs text-muted-foreground truncate">{proyectoActual?.nombre || "Proyecto"}</p>
           </div>
 
+          {/* Botón Estadísticas */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-xl border-teal-200 text-teal-700 hover:bg-teal-50 shrink-0"
+                onClick={() => setLocation('/estadisticas-bp')}
+              >
+                <TrendingUp className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Estadísticas e Insignias BP</TooltipContent>
+          </Tooltip>
+
           {/* BOTÓN PRINCIPAL — con hover, tooltip, accesibilidad, estados */}
           <Tooltip>
             <TooltipTrigger asChild>
